@@ -35651,6 +35651,1022 @@
         },
         "operationId": "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel"
       }
+    },
+    "/api/staff/monthly-activities": {
+      "get": {
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9][0-9]*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "COMPLETED",
+                "NEEDS_CORRECTION",
+                "NOT_APPLICABLE"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "period",
+                    "summary",
+                    "items"
+                  ],
+                  "properties": {
+                    "period": {
+                      "type": "object",
+                      "required": [
+                        "month",
+                        "generated",
+                        "generated_at",
+                        "generated_by"
+                      ],
+                      "properties": {
+                        "month": {
+                          "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                          "type": "string"
+                        },
+                        "generated": {
+                          "type": "boolean"
+                        },
+                        "generated_at": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "generated_by": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "required": [
+                        "month",
+                        "school_unit_id",
+                        "school_unit_name",
+                        "total_activities",
+                        "total_applicable",
+                        "completed",
+                        "pending",
+                        "needs_correction",
+                        "not_applicable",
+                        "completion_percentage"
+                      ],
+                      "properties": {
+                        "month": {
+                          "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                          "type": "string"
+                        },
+                        "school_unit_id": {
+                          "anyOf": [
+                            {
+                              "minimum": 1,
+                              "type": "integer"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "school_unit_name": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "total_activities": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "total_applicable": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "completed": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "pending": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "needs_correction": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "not_applicable": {
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "completion_percentage": {
+                          "anyOf": [
+                            {
+                              "minimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "staff_member_id",
+                          "staff_code",
+                          "staff_name",
+                          "school_unit_id",
+                          "school_unit_name",
+                          "month",
+                          "status",
+                          "confirmation_date",
+                          "confirmed_by",
+                          "processing_notes",
+                          "version",
+                          "created_at",
+                          "updated_at"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "staff_member_id": {
+                            "type": "string"
+                          },
+                          "staff_code": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "staff_name": {
+                            "type": "string"
+                          },
+                          "school_unit_id": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "school_unit_name": {
+                            "type": "string"
+                          },
+                          "month": {
+                            "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "COMPLETED",
+                              "NEEDS_CORRECTION",
+                              "NOT_APPLICABLE"
+                            ]
+                          },
+                          "confirmation_date": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "confirmed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "processing_notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiStaffMonthly-activities"
+      }
+    },
+    "/api/staff/monthly-activities/summary": {
+      "get": {
+        "parameters": [
+          {
+            "name": "from_month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to_month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9][0-9]*$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "month",
+                          "school_unit_id",
+                          "school_unit_name",
+                          "total_activities",
+                          "total_applicable",
+                          "completed",
+                          "pending",
+                          "needs_correction",
+                          "not_applicable",
+                          "completion_percentage"
+                        ],
+                        "properties": {
+                          "month": {
+                            "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                            "type": "string"
+                          },
+                          "school_unit_id": {
+                            "anyOf": [
+                              {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "school_unit_name": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "total_activities": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "total_applicable": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "completed": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "pending": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "needs_correction": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "not_applicable": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "completion_percentage": {
+                            "anyOf": [
+                              {
+                                "minimum": 0,
+                                "maximum": 100,
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiStaffMonthly-activitiesSummary"
+      }
+    },
+    "/api/staff/monthly-activities/generate": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "month"
+                ],
+                "properties": {
+                  "month": {
+                    "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "month"
+                ],
+                "properties": {
+                  "month": {
+                    "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "month"
+                ],
+                "properties": {
+                  "month": {
+                    "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "month",
+                    "generated_count",
+                    "already_generated"
+                  ],
+                  "properties": {
+                    "month": {
+                      "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                      "type": "string"
+                    },
+                    "generated_count": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "already_generated": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStaffMonthly-activitiesGenerate"
+      }
+    },
+    "/api/staff/monthly-activities/{activity_id}": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "integer",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "minProperties": 2,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "expected_version"
+                ],
+                "properties": {
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "COMPLETED",
+                      "NEEDS_CORRECTION",
+                      "NOT_APPLICABLE"
+                    ]
+                  },
+                  "confirmation_date": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "processing_notes": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2000,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "minProperties": 2,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "expected_version"
+                ],
+                "properties": {
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "COMPLETED",
+                      "NEEDS_CORRECTION",
+                      "NOT_APPLICABLE"
+                    ]
+                  },
+                  "confirmation_date": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "processing_notes": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2000,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "minProperties": 2,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "expected_version"
+                ],
+                "properties": {
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "COMPLETED",
+                      "NEEDS_CORRECTION",
+                      "NOT_APPLICABLE"
+                    ]
+                  },
+                  "confirmation_date": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "processing_notes": {
+                    "anyOf": [
+                      {
+                        "maxLength": 2000,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "staff_member_id",
+                    "staff_code",
+                    "staff_name",
+                    "school_unit_id",
+                    "school_unit_name",
+                    "month",
+                    "status",
+                    "confirmation_date",
+                    "confirmed_by",
+                    "processing_notes",
+                    "version",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "staff_member_id": {
+                      "type": "string"
+                    },
+                    "staff_code": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "staff_name": {
+                      "type": "string"
+                    },
+                    "school_unit_id": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "school_unit_name": {
+                      "type": "string"
+                    },
+                    "month": {
+                      "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "COMPLETED",
+                        "NEEDS_CORRECTION",
+                        "NOT_APPLICABLE"
+                      ]
+                    },
+                    "confirmation_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "confirmed_by": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "processing_notes": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStaffMonthly-activitiesByActivity_id"
+      }
+    },
+    "/api/staff/monthly-activities/{activity_id}/history": {
+      "get": {
+        "parameters": [
+          {
+            "name": "activity_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "anyOf": [
+                {
+                  "format": "integer",
+                  "default": 0,
+                  "type": "string"
+                },
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "version",
+                          "from_status",
+                          "to_status",
+                          "from_confirmation_date",
+                          "to_confirmation_date",
+                          "from_confirmed_by",
+                          "to_confirmed_by",
+                          "from_processing_notes",
+                          "to_processing_notes",
+                          "action",
+                          "reason",
+                          "actor",
+                          "occurred_at"
+                        ],
+                        "properties": {
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "from_status": {
+                            "anyOf": [
+                              {
+                                "anyOf": [
+                                  {
+                                    "const": "PENDING",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "COMPLETED",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "NEEDS_CORRECTION",
+                                    "type": "string"
+                                  },
+                                  {
+                                    "const": "NOT_APPLICABLE",
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to_status": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "COMPLETED",
+                              "NEEDS_CORRECTION",
+                              "NOT_APPLICABLE"
+                            ]
+                          },
+                          "from_confirmation_date": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to_confirmation_date": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "from_confirmed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to_confirmed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "from_processing_notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "to_processing_notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "GENERATED",
+                              "STATUS_CHANGED",
+                              "NOTES_UPDATED",
+                              "CORRECTION"
+                            ]
+                          },
+                          "reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "actor": {
+                            "type": "string"
+                          },
+                          "occurred_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiStaffMonthly-activitiesByActivity_idHistory"
+      }
+    },
+    "/api/staff/monthly-activities/export": {
+      "get": {
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "pattern": "^[1-9][0-9]*$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "COMPLETED",
+                "NEEDS_CORRECTION",
+                "NOT_APPLICABLE"
+              ]
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xlsx",
+                "pdf"
+              ]
+            }
+          }
+        ],
+        "operationId": "getApiStaffMonthly-activitiesExport"
+      }
     }
   },
   "components": {

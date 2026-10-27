@@ -56,6 +56,7 @@ const expectedPaths = [
   '/staff/new',
   '/staff/import',
   '/staff/analytics',
+  '/staff/monthly-activities',
   '/staff/:id/edit',
   '/staff/:id',
   '/students/operations',

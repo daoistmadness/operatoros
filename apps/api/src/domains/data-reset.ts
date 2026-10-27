@@ -49,6 +49,7 @@ const STUDENT_PLAN: readonly ResetGroup[] = [
 const SCHOOL_STRUCTURE_PLAN: readonly ResetGroup[] = [
   { domain: "School structure review data", tables: ["academic_master_import_previews"] },
   { domain: "Class assignments", tables: ["teacher_class_assignment_audit", "teacher_class_assignments"] },
+  { domain: "Monthly PTK activity", tables: ["staff_monthly_activity_history", "staff_monthly_activities", "staff_monthly_activity_periods"] },
   { domain: "Staff import history", tables: ["staff_employment_history", "staff_import_issues", "staff_import_rows", "staff_import_batches"] },
   { domain: "Staff profiles and school units", tables: [
     "staff_school_unit_assignment_versions", "staff_jenjang_assignments", "staff_identifiers", "staff_contact_details", "staff_education", "staff_members", "school_units",
@@ -119,6 +120,9 @@ const DELETE_GUARDS = [
   { table: "student_import_applied_actions", name: "trg_student_import_actions_no_delete" },
   { table: "student_master_change_history", name: "trg_student_master_change_history_no_delete" },
   { table: "staff_school_unit_assignment_versions", name: "trg_staff_school_unit_assignment_no_delete" },
+  { table: "staff_monthly_activity_periods", name: "trg_staff_monthly_activity_period_no_delete" },
+  { table: "staff_monthly_activity_history", name: "trg_staff_monthly_activity_history_no_delete" },
+  { table: "staff_monthly_activities", name: "trg_staff_monthly_activity_no_delete" },
   { table: "student_progression_audit", name: "trg_student_progression_audit_no_delete" },
   { table: "early_departure_excuse_audits", name: "trg_early_departure_excuse_audits_no_delete" },
   { table: "teacher_class_assignment_audit", name: "trg_teacher_class_assignment_audit_no_delete" },

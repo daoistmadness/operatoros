@@ -21,8 +21,8 @@ function bootstrapDatabase(path: string): void {
   createFreshDatabase(path);
 }
 
-describe("S4.8 data layer", () => {
-  it("opens and validates a fresh disposable S4.8 database", () => {
+describe("S5.0 data layer", () => {
+  it("opens and validates a fresh disposable S5.0 database", () => {
     const path = disposableDatabasePath("fresh");
     bootstrapDatabase(path);
     try {
@@ -34,7 +34,7 @@ describe("S4.8 data layer", () => {
     }
   }, 30000);
 
-  it("creates every table declared by the S4.8 schema snapshot", () => {
+  it("creates every table declared by the S5.0 schema snapshot", () => {
     const path = disposableDatabasePath("fresh-parity");
     bootstrapDatabase(path);
     try {

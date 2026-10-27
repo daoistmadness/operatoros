@@ -6199,6 +6199,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/monthly-activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffMonthly-activitiesGenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/{activity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStaffMonthly-activitiesByActivity_id"];
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/{activity_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesByActivity_idHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -23922,5 +24018,258 @@ export interface operations {
                 };
             };
         };
+    };
+    "getApiStaffMonthly-activities": {
+        parameters: {
+            query: {
+                month: string;
+                school_unit_id?: string;
+                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            month: string;
+                            generated: boolean;
+                            generated_at: string | null;
+                            generated_by: string | null;
+                        };
+                        summary: {
+                            month: string;
+                            school_unit_id: number | null;
+                            school_unit_name: string | null;
+                            total_activities: number;
+                            total_applicable: number;
+                            completed: number;
+                            pending: number;
+                            needs_correction: number;
+                            not_applicable: number;
+                            completion_percentage: number | null;
+                        };
+                        items: {
+                            id: number;
+                            staff_member_id: string;
+                            staff_code: string | null;
+                            staff_name: string;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            month: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                            confirmation_date: string | null;
+                            confirmed_by: string | null;
+                            processing_notes: string | null;
+                            version: number;
+                            created_at: string;
+                            updated_at: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesSummary": {
+        parameters: {
+            query: {
+                from_month: string;
+                to_month: string;
+                school_unit_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            month: string;
+                            school_unit_id: number | null;
+                            school_unit_name: string | null;
+                            total_activities: number;
+                            total_applicable: number;
+                            completed: number;
+                            pending: number;
+                            needs_correction: number;
+                            not_applicable: number;
+                            completion_percentage: number | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffMonthly-activitiesGenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    month: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    month: string;
+                };
+                "multipart/form-data": {
+                    month: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        month: string;
+                        generated_count: number;
+                        already_generated: boolean;
+                    };
+                };
+            };
+        };
+    };
+    "patchApiStaffMonthly-activitiesByActivity_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_id: string | number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+                "multipart/form-data": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        staff_member_id: string;
+                        staff_code: string | null;
+                        staff_name: string;
+                        school_unit_id: number;
+                        school_unit_name: string;
+                        month: string;
+                        /** @enum {string} */
+                        status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                        confirmation_date: string | null;
+                        confirmed_by: string | null;
+                        processing_notes: string | null;
+                        version: number;
+                        created_at: string;
+                        updated_at: string;
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesByActivity_idHistory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_id: string | number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            version: number;
+                            from_status: ("PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE") | null;
+                            /** @enum {string} */
+                            to_status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                            from_confirmation_date: string | null;
+                            to_confirmation_date: string | null;
+                            from_confirmed_by: string | null;
+                            to_confirmed_by: string | null;
+                            from_processing_notes: string | null;
+                            to_processing_notes: string | null;
+                            /** @enum {string} */
+                            action: "GENERATED" | "STATUS_CHANGED" | "NOTES_UPDATED" | "CORRECTION";
+                            reason: string | null;
+                            actor: string;
+                            occurred_at: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesExport": {
+        parameters: {
+            query: {
+                month: string;
+                school_unit_id?: string;
+                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                format: "xlsx" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
     };
 }

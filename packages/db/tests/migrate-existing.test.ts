@@ -5,12 +5,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
 const s47Sql = readFileSync(new URL("../src/s47-schema.sql", import.meta.url), "utf8");
 const s48Sql = readFileSync(new URL("../src/s48-migration.sql", import.meta.url), "utf8");
+const s49Sql = readFileSync(new URL("../src/s49-migration.sql", import.meta.url), "utf8");
 const variantB = await Bun.file(new URL("./fixtures/s46-variant-b.json", import.meta.url)).json() as { targetObjects: string[]; fingerprint: string };
 
 function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
@@ -57,7 +58,7 @@ function academicScope(db: Database): void {
   db.run("INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,1,1,'1A')");
 }
 
-describe("Bun S4.6 through S4.9 migrations", () => {
+describe("Bun S4.6 through S5.0 migrations", () => {
   it("migrates Variant B without changing its matching target objects", () => withDatabases((_, path, freshPath) => {
     const db = source(path, "B");
     academicScope(db);
@@ -173,7 +174,7 @@ describe("Bun S4.6 through S4.9 migrations", () => {
     });
   });
 
-  it("upgrades S4.8 rows and history to S4.9 and matches fresh bootstrap", () => withDatabases((_, path, freshPath) => {
+  it("upgrades S4.8 rows and history to S5.0 and matches fresh bootstrap", () => withDatabases((_, path, freshPath) => {
     const db = new Database(path, { create: true });
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
@@ -197,6 +198,47 @@ describe("Bun S4.6 through S4.9 migrations", () => {
       expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261002_s48" });
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
       expect(migrated.client.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+      validateMigrationSource(migrated.client);
+    } finally { migrated.close(); fresh.close(); }
+  }));
+
+  it("upgrades S4.9 school units and assignment history to S5.0", () => withDatabases((_, path, freshPath) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    db.exec(s49Sql);
+    expect(schemaFingerprint(db)).toBe(S49_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261027_s49','20261002_s48',?,'{}','SYNTHETIC_FIXTURE','2026-10-27T00:00:00Z')", [S49_SCHEMA_FINGERPRINT]);
+    db.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-s49-staff','Synthetic Staff','synthetic staff')");
+    const firstUnit = Number(db.run("INSERT INTO school_units (name) VALUES ('Synthetic Unit One')").lastInsertRowid);
+    const secondUnit = Number(db.run("INSERT INTO school_units (name) VALUES ('Synthetic Unit Two')").lastInsertRowid);
+    const assignmentId = Number(db.run(`INSERT INTO staff_school_unit_assignment_versions
+      (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by)
+      VALUES ('synthetic-s49-staff',?,'2026-01-01','APPLICABLE','Synthetic assignment','synthetic-admin')`, [firstUnit]).lastInsertRowid);
+    db.run(`UPDATE staff_school_unit_assignment_versions SET effective_to='2026-06-30',closed_reason='Synthetic transfer',
+      closed_by='synthetic-admin',closed_at='2026-06-30T00:00:00.000Z' WHERE id=?`, [assignmentId]);
+    db.run(`INSERT INTO staff_school_unit_assignment_versions
+      (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by)
+      VALUES ('synthetic-s49-staff',?,'2026-07-01','UNKNOWN','Synthetic current assignment','synthetic-admin')`, [secondUnit]);
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT id,name FROM school_units ORDER BY id").all()).toEqual([
+        { id: firstUnit, name: "Synthetic Unit One" }, { id: secondUnit, name: "Synthetic Unit Two" },
+      ]);
+      expect(migrated.client.query("SELECT id,effective_to,closed_reason FROM staff_school_unit_assignment_versions WHERE id=?").get(assignmentId)).toEqual({
+        id: assignmentId, effective_to: "2026-06-30", closed_reason: "Synthetic transfer",
+      });
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({
+        version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s49",
+      });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
       validateMigrationSource(migrated.client);
     } finally { migrated.close(); fresh.close(); }
   }));

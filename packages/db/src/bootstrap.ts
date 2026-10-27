@@ -7,8 +7,11 @@ import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION } from "./manifest";
 const schemaSql = readFileSync(new URL("./s47-schema.sql", import.meta.url), "utf8");
 const employeeSql = readFileSync(new URL("./s48-migration.sql", import.meta.url), "utf8");
 const schoolUnitsSql = readFileSync(new URL("./s49-migration.sql", import.meta.url), "utf8");
+const staffMonthlyActivitySql = readFileSync(new URL("./s50-migration.sql", import.meta.url), "utf8");
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
+const schoolUnitTriggerStart = schoolUnitsSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
+if (schoolUnitTriggerStart < 0) throw new Error("SCHOOL_UNIT_TRIGGERS_MISSING");
 
 export function installS47Schema(client: Database, triggers = true): void {
   client.exec(triggers ? schemaSql : schemaSql.slice(0, triggerStart));
@@ -22,8 +25,16 @@ export function installS48EmployeeSchema(client: Database): void {
   client.exec(employeeSql);
 }
 
-export function installS49SchoolUnitSchema(client: Database): void {
-  client.exec(schoolUnitsSql);
+export function installS49SchoolUnitSchema(client: Database, triggers = true): void {
+  client.exec(triggers ? schoolUnitsSql : schoolUnitsSql.slice(0, schoolUnitTriggerStart));
+}
+
+export function installS49SchoolUnitTriggers(client: Database): void {
+  client.exec(schoolUnitsSql.slice(schoolUnitTriggerStart));
+}
+
+export function installS50StaffMonthlyActivitySchema(client: Database): void {
+  client.exec(staffMonthlyActivitySql);
 }
 
 export function createFreshDatabase(path: string): void {
@@ -41,6 +52,7 @@ export function createFreshDatabase(path: string): void {
       installS47Schema(client!);
       installS48EmployeeSchema(client!);
       installS49SchoolUnitSchema(client!);
+      installS50StaffMonthlyActivitySchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +

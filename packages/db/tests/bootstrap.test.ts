@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 
-describe("Bun S4.9 fresh bootstrap", () => {
+describe("Bun S5.0 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -20,6 +20,9 @@ describe("Bun S4.9 fresh bootstrap", () => {
           { name: "school_units" }, { name: "staff_school_unit_assignment_versions" },
         ]);
         expect((db.query("PRAGMA table_info(school_units)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("version");
+        expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('staff_monthly_activity_periods','staff_monthly_activities','staff_monthly_activity_history') ORDER BY name").all()).toEqual([
+          { name: "staff_monthly_activities" }, { name: "staff_monthly_activity_history" }, { name: "staff_monthly_activity_periods" },
+        ]);
         expect(db.query("SELECT version FROM school_units").get()).toBeNull();
         db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Teacher', 'Teacher', 'TEACHING', 1)");
         expect(() => db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Invalid', 'Invalid', 'MADE_UP', 1)")).toThrow();

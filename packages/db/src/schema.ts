@@ -827,6 +827,62 @@ export const staff_school_unit_assignment_versions = sqliteTable("staff_school_u
     check("ck_staff_school_unit_assignment_cancel_fields", sql`(${table.cancelled_reason} IS NULL AND ${table.cancelled_by} IS NULL AND ${table.cancelled_at} IS NULL) OR (${table.cancelled_reason} IS NOT NULL AND length(trim(${table.cancelled_reason})) > 0 AND ${table.cancelled_by} IS NOT NULL AND length(trim(${table.cancelled_by})) > 0 AND ${table.cancelled_at} IS NOT NULL)`),
     check("ck_staff_school_unit_assignment_not_closed_and_cancelled", sql`${table.effective_to} IS NULL OR ${table.cancelled_at} IS NULL`),
 ]);
+export const staff_monthly_activity_periods = sqliteTable("staff_monthly_activity_periods", {
+    "id": integer().primaryKey(),
+    "reporting_year": integer().notNull(),
+    "reporting_month": integer().notNull(),
+    "generated_at": text().notNull(),
+    "generated_by_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_period_identity_uc").on(table.reporting_year, table.reporting_month),
+    check("ck_staff_monthly_activity_period_year", sql`${table.reporting_year} BETWEEN 1 AND 9999`),
+    check("ck_staff_monthly_activity_period_month", sql`${table.reporting_month} BETWEEN 1 AND 12`),
+]);
+export const staff_monthly_activities = sqliteTable("staff_monthly_activities", {
+    "id": integer().primaryKey(),
+    "staff_member_id": text().notNull().references(() => staff_members.id, { onDelete: "restrict" }),
+    "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
+    "period_id": integer().notNull().references(() => staff_monthly_activity_periods.id, { onDelete: "restrict" }),
+    "status": text().notNull().default("PENDING"),
+    "confirmation_date": text(),
+    "confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "processing_notes": text(),
+    "version": integer().notNull().default(1),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_identity_uc").on(table.staff_member_id, table.school_unit_id, table.period_id),
+    index("staff_monthly_activity_period_unit_status_idx").on(table.period_id, table.school_unit_id, table.status),
+    check("ck_staff_monthly_activity_status", sql`${table.status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_confirmation", sql`(${table.status} = 'COMPLETED' AND ${table.confirmation_date} IS NOT NULL AND ${table.confirmed_by_user_id} IS NOT NULL) OR (${table.status} != 'COMPLETED' AND ${table.confirmation_date} IS NULL AND ${table.confirmed_by_user_id} IS NULL)`),
+    check("ck_staff_monthly_activity_confirmation_date", sql`${table.confirmation_date} IS NULL OR (${table.confirmation_date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.confirmation_date}, '+0 days') IS NOT NULL AND date(${table.confirmation_date}, '+0 days') = ${table.confirmation_date})`),
+    check("ck_staff_monthly_activity_notes", sql`${table.processing_notes} IS NULL OR length(trim(${table.processing_notes})) > 0`),
+    check("ck_staff_monthly_activity_version", sql`${table.version} >= 1`),
+]);
+export const staff_monthly_activity_history = sqliteTable("staff_monthly_activity_history", {
+    "id": integer().primaryKey(),
+    "activity_id": integer().notNull().references(() => staff_monthly_activities.id, { onDelete: "restrict" }),
+    "version": integer().notNull(),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "from_confirmation_date": text(),
+    "to_confirmation_date": text(),
+    "from_confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "to_confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "from_processing_notes": text(),
+    "to_processing_notes": text(),
+    "action": text().notNull(),
+    "reason": text(),
+    "actor_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+    "occurred_at": text().notNull(),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_history_version_uc").on(table.activity_id, table.version),
+    check("ck_staff_monthly_activity_history_version", sql`${table.version} >= 1`),
+    check("ck_staff_monthly_activity_history_to_status", sql`${table.to_status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_history_from_status", sql`${table.from_status} IS NULL OR ${table.from_status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_history_action", sql`${table.action} IN ('GENERATED','STATUS_CHANGED','NOTES_UPDATED','CORRECTION')`),
+    check("ck_staff_monthly_activity_history_reason", sql`${table.reason} IS NULL OR length(trim(${table.reason})) > 0`),
+]);
 export const student_academic_mapping_rules = sqliteTable("student_academic_mapping_rules", {
     "id": integer().primaryKey(),
     "mapping_type": text().notNull(),

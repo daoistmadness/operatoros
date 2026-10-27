@@ -95,6 +95,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'HEB Overrides', path: '/config/heb', icon: CalendarDays },
       { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck },
       { name: 'Employee Directory', path: '/staff', icon: UsersIcon },
+      { name: 'Staff Monthly Activity', path: '/staff/monthly-activities', icon: CalendarCheck },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
     ],
   },

@@ -21,7 +21,7 @@ schema metadata, or backup files.
 
 ## Dependency map
 
-The listed order follows current S4.9 SQLite foreign keys where defined, plus
+The listed order follows current S5.0 SQLite foreign keys where defined, plus
 explicit domain links and append-only guards. Reset code deletes every listed
 table explicitly; it does not rely on cascading deletes. Attendance Calendar
 rules and exceptions are configuration. Attendance and Student resets preserve

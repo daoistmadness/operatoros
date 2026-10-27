@@ -49,6 +49,7 @@ import { classOverviewRoutes } from "./domains/class-overview";
 import { dailyAttendanceRoutes } from "./domains/daily-attendance";
 import { attendanceCalendarRoutes } from "./domains/attendance-calendar";
 import { machineAttendancePreviewRoutes } from "./domains/machine-attendance-preview";
+import { staffMonthlyActivityRoutes } from "./domains/staff-monthly-activities";
 import { openApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
@@ -83,6 +84,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
   if (context) {
     authRoutes(app, context);
     coreRoutes(app, context);
+    staffMonthlyActivityRoutes(app, context);
     configRoutes(app, context);
     readinessRoutes(app, context);
     attendanceRoutes(app, context);

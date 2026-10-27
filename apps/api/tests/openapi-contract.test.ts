@@ -82,9 +82,24 @@ describe("full OpenAPI contract", () => {
         const operation = reference.paths[path]?.get as { parameters?: Array<{ name?: string; in?: string }> };
         expect(operation.parameters).toContainEqual(expect.objectContaining({ name: "school_unit_id", in: "query" }));
       }
-      expect(Object.keys(candidateOperations)).toHaveLength(408);
-      expect(Object.keys(operations(reference))).toHaveLength(408);
+      expect(Object.keys(candidateOperations)).toHaveLength(414);
+      expect(Object.keys(operations(reference))).toHaveLength(414);
       expect(reference.paths["/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel"]?.post).toBeDefined();
+      for (const path of [
+        "/api/staff/monthly-activities",
+        "/api/staff/monthly-activities/summary",
+        "/api/staff/monthly-activities/generate",
+        "/api/staff/monthly-activities/{activity_id}",
+        "/api/staff/monthly-activities/{activity_id}/history",
+        "/api/staff/monthly-activities/export",
+      ]) expect(reference.paths[path]).toBeDefined();
+      const activityPatch = reference.paths["/api/staff/monthly-activities/{activity_id}"]!.patch as any;
+      expect(activityPatch.requestBody.content["application/json"].schema.required).toContain("expected_version");
+      expect(activityPatch.requestBody.content["application/json"].schema.properties.expected_version).toMatchObject({ type: "integer", minimum: 1 });
+      expect(activityPatch.responses["200"].content["application/json"].schema.properties.version).toMatchObject({ type: "integer", minimum: 1 });
+      const activityList = reference.paths["/api/staff/monthly-activities"]!.get as any;
+      expect(activityList.parameters.find((parameter: any) => parameter.name === "month").required).toBe(true);
+      expect(activityList.responses["200"].content["application/json"].schema.properties.summary.properties.completion_percentage).toBeDefined();
 
       const schoolUnitPatch = reference.paths["/api/staff/school-units/{school_unit_id}"]!.patch as any;
       expect(schoolUnitPatch.parameters.find((parameter: any) => parameter.name === "school_unit_id").schema).toMatchObject({ type: "integer", minimum: 1 });

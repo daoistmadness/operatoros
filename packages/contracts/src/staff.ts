@@ -1,4 +1,5 @@
 import { Type, type Static } from "@sinclair/typebox";
+export * from "./staff-monthly-activity";
 
 const NullableString = Type.Union([Type.String(), Type.Null()]);
 const StaffStatus = Type.Union([
