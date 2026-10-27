@@ -14,13 +14,15 @@ import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGOR
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
 import { hasPendingRestoreRollback } from "./backup-scratch";
+import { backupAttachmentSources, backupAttachmentsMatch, installBackupAttachments, referencedReportFiles } from "./upp-report-files";
+import { extractBackupPayload, isBackupPayload, writeBackupPayload, type BackupAttachment } from "../security/backup-payload";
 
 type Row = Record<string, any>;
 type Context = any;
 type DecryptedBackupFile = BackupFileVerification | { encrypted: false; encryptedSize: number; encryptedSha256: string; plaintextSize: number; plaintextSha256: string; envelope: null };
 /** Filesystem capacity probe seam: bytes available to the service user (`availableBytes`) and free bytes (`freeBytes`) for the filesystem hosting the resolved path. */
 export type DiskSpaceProbe = (resolvedPath: string) => { availableBytes: number; freeBytes: number };
-export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null; restoreFileSystem?: RestoreFileSystem | null };
+export type SafetyConfig = { backupDir: string; destructiveOperationsEnabled: boolean; reportStorageDir?: string; backupEncryption?: BackupEncryptionConfig | null; diskSpaceProbe?: DiskSpaceProbe | null; restoreFileSystem?: RestoreFileSystem | null };
 
 /** Stable refusal codes for the backup free-space preflight. The HTTP detail string is `"<CODE>: <message>"`. */
 export const BACKUP_LOW_DISK_SPACE = "BACKUP_LOW_DISK_SPACE";
@@ -214,9 +216,11 @@ const defaultDiskSpaceProbe: DiskSpaceProbe = (path) => {
 function diskSpaceProbeFor(config: SafetyConfig): DiskSpaceProbe { return config.diskSpaceProbe ?? defaultDiskSpaceProbe; }
 
 /** Minimum free bytes required for the plaintext snapshot and its base64 envelope, with bounded header/manifest space and a conservative floor for small databases. */
-export function minimumRequiredSpaceBytes(activeDatabasePath: string): number {
+export function minimumRequiredSpaceBytes(activeDatabasePath: string, attachmentBytes = 0): number {
   const size = statSafe(activeDatabasePath) ? statSync(activeDatabasePath).size : 0;
-  return Math.max(size + Math.ceil(size / 3) * 4 + BACKUP_ENVELOPE_HEADER_MAX_BYTES, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
+  const plaintextBytes = size + attachmentBytes;
+  const headerBytes = BACKUP_ENVELOPE_HEADER_MAX_BYTES * (attachmentBytes > 0 ? 2 : 1);
+  return Math.max(plaintextBytes + Math.ceil(plaintextBytes / 3) * 4 + headerBytes, BACKUP_MINIMUM_SPACE_FLOOR_BYTES);
 }
 
 /** Resolves the nearest existing ancestor of the backup destination so the probe covers the filesystem that will host new output and never an unrelated mount. */
@@ -232,7 +236,8 @@ function diskSpaceProbePath(root: string): string {
 
 /** Fails closed (503) when the capacity probe itself fails; refuses (507) when available bytes are below the documented minimum. */
 function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root: string): void {
-  const required = minimumRequiredSpaceBytes(dbPath(context));
+  const attachmentBytes = referencedReportFiles(context.database.client as unknown as Database).reduce((total, entry) => total + entry.sizeBytes, 0);
+  const required = minimumRequiredSpaceBytes(dbPath(context), attachmentBytes);
   let probe: { availableBytes: number; freeBytes: number };
   try { probe = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { throw Object.assign(new Error("Backup free-space probe failed; refusing to create a backup."), { status: 503, code: BACKUP_DISK_SPACE_PROBE_FAILED }); }
   if (probe.availableBytes < required) throw Object.assign(new Error(`Insufficient free disk space for backup: ${required} bytes required, ${probe.availableBytes} bytes available.`), { status: 507, code: BACKUP_LOW_DISK_SPACE });
@@ -256,6 +261,30 @@ function decryptedBackup(config: SafetyConfig, path: string, scratchRoot: string
     } else throw Object.assign(new Error("Legacy plaintext backups require explicit operator opt-in."), { status: 409, code: "LEGACY_PLAINTEXT_BACKUP_REFUSED" });
     return operation(plaintextPath, artifact);
   } finally { rmSync(directory, { recursive: true, force: true }); }
+}
+
+function backupContents(plaintextPath: string, temporaryDirectory: string, manifest: Row): { databasePath: string; attachments: BackupAttachment[] } {
+  const bundled = isBackupPayload(plaintextPath);
+  if (manifest.payload_format_version == null) {
+    if (bundled) throw Object.assign(new Error("Backup payload metadata is missing."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+    const source = new Database(plaintextPath, { readonly: true });
+    try {
+      if (!backupAttachmentsMatch(source, [])) throw Object.assign(new Error("This database backup omits referenced UPP report files."), { status: 409, code: "BACKUP_ATTACHMENTS_MISSING" });
+    } finally { source.close(); }
+    return { databasePath: plaintextPath, attachments: [] };
+  }
+  if (manifest.payload_format_version !== 1 || !bundled) throw Object.assign(new Error("Backup payload format is unsupported."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+  const extracted = extractBackupPayload(plaintextPath, join(temporaryDirectory, "contents"));
+  if (statSync(extracted.databasePath).size !== manifest.sqlite_file_size_bytes ||
+      statSync(plaintextPath).size !== manifest.payload_file_size_bytes ||
+      extracted.attachments.length !== manifest.report_attachment_count) {
+    throw Object.assign(new Error("Backup attachment metadata does not match its payload."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+  }
+  const source = new Database(extracted.databasePath, { readonly: true });
+  try {
+    if (!backupAttachmentsMatch(source, extracted.attachments)) throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code: "BACKUP_ATTACHMENTS_INVALID" });
+  } finally { source.close(); }
+  return extracted;
 }
 
 function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manual" | "scheduled" | "pre_restore_auto", preserve?: string): Row {
@@ -284,8 +313,24 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
     validateSnapshot(temporary, sourceTables, false);
-    const encrypted = encryptBackupFileSync(temporary, encryptedTemporary, config.backupEncryption);
-    const metadata = { filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client), sqlite_file_size_bytes: encrypted.plaintextSize, backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256, encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId, source_db_path: basename(active), backup_tool_version: "1.0" };
+    const references = referencedReportFiles(context.database.client as unknown as Database);
+    let payloadPath = temporary;
+    let payloadInfo: { databaseSizeBytes: number; payloadSizeBytes: number; attachments: { sha256: string; sizeBytes: number }[] } | null = null;
+    if (references.length) {
+      if (!config.reportStorageDir) throw Object.assign(new Error("UPP report storage is required for a complete backup."), { status: 503, code: "UPP_REPORT_STORAGE_UNAVAILABLE" });
+      const attachments = backupAttachmentSources(context.database.client as unknown as Database, config.reportStorageDir);
+      payloadPath = join(temporaryDirectory, "full-backup.payload");
+      payloadInfo = writeBackupPayload(temporary, attachments, payloadPath);
+    }
+    const encrypted = encryptBackupFileSync(payloadPath, encryptedTemporary, config.backupEncryption);
+    const metadata = {
+      filename, created_at: now(), trigger, schema_version: dbSchemaVersion(context.database.client),
+      sqlite_file_size_bytes: payloadInfo?.databaseSizeBytes ?? encrypted.plaintextSize,
+      ...(payloadInfo ? { payload_format_version: 1, payload_file_size_bytes: payloadInfo.payloadSizeBytes, report_attachment_count: payloadInfo.attachments.length } : {}),
+      backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256,
+      encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: config.backupEncryption.activeKeyId,
+      source_db_path: basename(active), backup_tool_version: "1.0",
+    };
     writeFileSync(metadataTemporary, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     chmodSync(metadataTemporary, 0o600);
     syncFile(encryptedTemporary);
@@ -824,14 +869,17 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     if (artifact.encrypted) {
       const envelope = artifact.envelope;
       const plaintextSize = statSync(plaintextPath).size;
+      const expectedPayloadSize = manifest.payload_format_version === 1 ? manifest.payload_file_size_bytes : manifest.sqlite_file_size_bytes;
       if (manifest.encrypted !== true || manifest.filename !== filename || manifest.source_db_path !== basename(dbPath(context)) ||
         manifest.created_at === undefined || !Number.isFinite(Date.parse(manifest.created_at)) || !BACKUP_TRIGGERS.has(manifest.trigger) ||
         manifest.format_version !== envelope.version || manifest.algorithm !== envelope.algorithm || manifest.key_id !== envelope.keyId ||
-        manifest.backup_file_size_bytes !== artifact.encryptedSize || manifest.sqlite_file_size_bytes !== plaintextSize ||
+        manifest.backup_file_size_bytes !== artifact.encryptedSize || expectedPayloadSize !== plaintextSize ||
         manifest.plaintext_sha256 !== artifact.plaintextSha256) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
-    const source = inspectDatabase(plaintextPath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(plaintextPath);
+    const contents = backupContents(plaintextPath, dirname(plaintextPath), manifest);
+    const source = inspectDatabase(contents.databasePath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(contents.databasePath);
     if (artifact.encrypted && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+    const attachmentStorageReady = contents.attachments.length === 0 || Boolean(config.reportStorageDir);
     const same = plaintextChecksum === activeChecksum; const compatible = source.schemaValid && source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
@@ -841,6 +889,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
       ...(source.quick !== "ok" ? ["quick_check_failed"] : []),
       ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
       ...(source.restoreIdentityBlockingReason ? [source.restoreIdentityBlockingReason] : []),
+      ...(!attachmentStorageReady ? ["upp_report_storage_unavailable"] : []),
     ];
     const sourceStudents = source.counts.students ?? null;
     const sourceAttendance = source.counts.attendance ?? null;
@@ -851,7 +900,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     const delta = (sourceCount: number | null, activeCount: number | null) => sourceCount === null || activeCount === null ? null : sourceCount - activeCount;
     const createdAt = typeof manifest.created_at === "string" && Number.isFinite(Date.parse(manifest.created_at)) ? manifest.created_at : undefined;
     const sizeBytes = Number.isSafeInteger(manifest.backup_file_size_bytes) && manifest.backup_file_size_bytes >= 0 ? manifest.backup_file_size_bytes : Number.isSafeInteger(manifest.sqlite_file_size_bytes) && manifest.sqlite_file_size_bytes >= 0 ? manifest.sqlite_file_size_bytes : statSync(plaintextPath).size;
-    return { source: { filename, backup_type: typeof manifest.trigger === "string" ? manifest.trigger : undefined, created_at: createdAt, age_seconds: createdAt ? Math.max(0, Math.floor((Date.now() - Date.parse(createdAt)) / 1000)) : undefined, size_bytes: sizeBytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: Number.isSafeInteger(manifest.format_version) ? manifest.format_version : null, algorithm: typeof manifest.algorithm === "string" ? manifest.algorithm : null, key_id: typeof manifest.key_id === "string" ? manifest.key_id : null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.integrity === "ok" && source.quick === "ok" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible === true, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: delta(sourceStudents, activeStudents), attendance_delta: delta(sourceAttendance, activeAttendance), enrollment_delta: delta(sourceEnrollments, activeEnrollments), same_database_content: same, source_is_older: null, possible_data_loss: same ? false : null, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
+    return { source: { filename, backup_type: typeof manifest.trigger === "string" ? manifest.trigger : undefined, created_at: createdAt, age_seconds: createdAt ? Math.max(0, Math.floor((Date.now() - Date.parse(createdAt)) / 1000)) : undefined, size_bytes: sizeBytes, sha256: sourceChecksum, checksum_matches_manifest: sourceChecksum === manifest.sha256, encrypted: manifest.encrypted === true, format_version: Number.isSafeInteger(manifest.format_version) ? manifest.format_version : null, algorithm: typeof manifest.algorithm === "string" ? manifest.algorithm : null, key_id: typeof manifest.key_id === "string" ? manifest.key_id : null, integrity_check: source.integrity, quick_check: source.quick, foreign_key_violation_count: source.foreignKeyViolationCount, schema_version: source.schema, identity_compatible: source.identityCompatible, application_compatible: compatible, restore_eligible: classification === "LOW_IMPACT" && source.integrity === "ok" && source.quick === "ok" && source.foreignKeyViolationCount === 0 && source.restoreIdentityEligible === true && attachmentStorageReady, blocking_reasons: reasons, warning_reasons: [] }, active: { active_sha256: activeChecksum, active_schema_version: active.schema, active_students: activeStudents, active_attendance: activeAttendance, active_enrollments: activeEnrollments, source_students: sourceStudents, source_attendance: sourceAttendance, source_enrollments: sourceEnrollments, student_delta: delta(sourceStudents, activeStudents), attendance_delta: delta(sourceAttendance, activeAttendance), enrollment_delta: delta(sourceEnrollments, activeEnrollments), same_database_content: same, source_is_older: null, possible_data_loss: same ? false : null, sessions_will_be_revoked: true, restart_required: true, pre_restore_backup_will_be_created: true }, impact_classification: classification };
   });
 }
 
@@ -894,7 +943,10 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     try {
       decryptedBackup(config, `${root}/${filename}`, dirname(active), (plaintextPath, artifact) => {
         if (artifact.encryptedSha256 !== checked.source.sha256) throw Object.assign(new Error("The restore source changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
-        copyFileSync(plaintextPath, candidate);
+        const manifest = JSON.parse(readFileSync(`${root}/${filename}.meta.json`, "utf8")) as Row;
+        if (manifest.sha256 !== artifact.encryptedSha256) throw Object.assign(new Error("The restore manifest changed after verification."), { status: 409, code: "RESTORE_SOURCE_CHANGED" });
+        const contents = backupContents(plaintextPath, dirname(plaintextPath), manifest);
+        copyFileSync(contents.databasePath, candidate);
         chmodSync(candidate, 0o600);
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
         if (candidateInspection.restoreIdentityEligible !== true) throw new Error("Restore candidate has no eligible active administrator and first-run setup is closed.");
@@ -903,6 +955,10 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         try {
           if (!restoredAdministratorCredentialsMatch(candidateDatabase, body, operator)) throw Object.assign(new Error("A password for an active administrator in the selected backup could not be verified."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
         } finally { candidateDatabase.close(); }
+        if (contents.attachments.length) {
+          if (!config.reportStorageDir) throw Object.assign(new Error("UPP report storage is required to restore referenced files."), { status: 409, code: "UPP_REPORT_STORAGE_UNAVAILABLE" });
+          installBackupAttachments(config.reportStorageDir, contents.attachments);
+        }
         return {};
       });
       snapshot = createBackup(context, config, "pre_restore_auto", filename);

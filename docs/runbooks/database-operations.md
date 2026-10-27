@@ -8,7 +8,7 @@ last_reviewed: 2026-10-26
 `backend/attendance.db` is the protected operational database and remains
 S4.3 (`20260725_s43`) until a separately authorized operational migration.
 Do not use it in tests, E2E, development startup, or fixtures. The current
-application schema is S5.0 (`20261027_s50`) and ordinary startup validates
+application schema is S5.1 (`20261027_s51`) and ordinary startup validates
 existing databases and never migrates them automatically.
 
 The S4.3 operational event is complete. The isolated S4.4 academic timeline
@@ -27,8 +27,9 @@ its process-local access context. Do not place local backup locations or live
 checksums in committed documentation.
 
 S4.9 adds school units and dated staff assignments. S5.0 adds monthly PTK
-activity snapshots and immutable transitions. Normal operation pairs current
-main with an S5.0 database. The protected
+activity snapshots and immutable transitions. S5.1 adds the monthly UPP workbook
+archive and submission history. Normal operation pairs current main with an
+S5.1 database. The protected
 database remains unavailable to the current application until it is separately
 migrated under the controlled procedure. Rollback pairs a restored S4.2
 database with application `c06a6220c2c0c2059521c1a396d1b914635aacff` on
@@ -51,8 +52,8 @@ After rehearsal passes, use `scripts/migrate-dev-db-s47.sh --data-dir
 <absolute-development-data-dir> --backup <encrypted-backup-file>`. That
 wrapper verifies the development service identity and stopped state, holds a
 lock, and invokes the TypeScript migration with a fresh matching encrypted
-backup. The runner accepts recognized S4.6, S4.7, S4.8, and S4.9 schemas, rejects unknown
-schemas, and reports `NOOP` for the approved S5.0 target. Verify with `bun run
+backup. The runner accepts recognized S4.6, S4.7, S4.8, S4.9, and S5.0 schemas,
+rejects unknown schemas, and reports `NOOP` for the approved S5.1 target. Verify with `bun run
 db:validate --data-dir <absolute-development-data-dir>`. Ordinary startup
 never migrates. The development launcher uses Bun for session and port
 management and never invokes Python during startup.

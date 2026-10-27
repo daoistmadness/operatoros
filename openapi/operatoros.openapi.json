@@ -36667,6 +36667,451 @@
         ],
         "operationId": "getApiStaffMonthly-activitiesExport"
       }
+    },
+    "/api/upp-reports": {
+      "get": {
+        "operationId": "list_upp_reports",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$"
+            }
+          },
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UppReportListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          }
+        }
+      },
+      "post": {
+        "operationId": "upload_upp_report",
+        "tags": [
+          "UPP reports"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "month",
+                  "file"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*$"
+                  },
+                  "month": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$"
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UppReportSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "409": {
+            "description": "The request was refused."
+          },
+          "503": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}": {
+      "get": {
+        "operationId": "read_upp_report",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UppReportDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}/versions": {
+      "post": {
+        "operationId": "replace_upp_report_version",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "expected_updated_at",
+                  "file"
+                ],
+                "properties": {
+                  "expected_updated_at": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UppReportSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request was refused."
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          },
+          "409": {
+            "description": "The request was refused."
+          },
+          "503": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}/status": {
+      "patch": {
+        "operationId": "change_upp_report_status",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UppReportStatusMultipartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UppReportSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          },
+          "409": {
+            "description": "The request was refused."
+          },
+          "422": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}/download": {
+      "get": {
+        "operationId": "download_upp_report",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original stored workbook bytes.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}/versions/{version_id}/download": {
+      "get": {
+        "operationId": "download_upp_report_version",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original stored workbook bytes.",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          }
+        }
+      }
+    },
+    "/api/upp-reports/{report_id}/evidence/{evidence_id}/download": {
+      "get": {
+        "operationId": "download_upp_report_evidence",
+        "tags": [
+          "UPP reports"
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original stored evidence bytes.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was refused."
+          },
+          "403": {
+            "description": "The request was refused."
+          },
+          "404": {
+            "description": "The request was refused."
+          }
+        }
+      }
     }
   },
   "components": {
@@ -48063,6 +48508,432 @@
             "created_at": {
               "type": "string"
             }
+          }
+        }
+      },
+      "UppSubmissionStatus": {
+        "type": "string",
+        "enum": [
+          "UPLOADED",
+          "READY_FOR_SUBMISSION",
+          "SUBMITTED"
+        ]
+      },
+      "UppReportSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "school_unit_id",
+          "school_unit_name",
+          "month",
+          "file_name",
+          "file_size_bytes",
+          "version_id",
+          "uploaded_at",
+          "uploaded_by",
+          "submission_status",
+          "submitted_at",
+          "submitted_by",
+          "submission_notes",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "school_unit_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "school_unit_name": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{3}-(0[1-9]|1[0-2])$"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file_size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "uploaded_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "submission_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "UPLOADED",
+                  "READY_FOR_SUBMISSION",
+                  "SUBMITTED"
+                ]
+              },
+              {
+                "type": "string",
+                "const": "NOT_UPLOADED"
+              }
+            ]
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "submitted_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "submission_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "UppReportListResponse": {
+        "type": "object",
+        "required": [
+          "month",
+          "items"
+        ],
+        "properties": {
+          "month": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UppReportSummary"
+            }
+          }
+        }
+      },
+      "UppReportVersion": {
+        "type": "object",
+        "required": [
+          "id",
+          "version_number",
+          "file_name",
+          "file_size_bytes",
+          "uploaded_at",
+          "uploaded_by",
+          "notes",
+          "active"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "uploaded_at": {
+            "type": "string"
+          },
+          "uploaded_by": {
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UppReportHistoryItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "from_status",
+          "to_status",
+          "version_number",
+          "actor",
+          "notes",
+          "occurred_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "UPLOAD",
+              "REPLACEMENT",
+              "STATUS_CHANGED"
+            ]
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "UPLOADED",
+                  "READY_FOR_SUBMISSION",
+                  "SUBMITTED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to_status": {
+            "type": "string",
+            "enum": [
+              "UPLOADED",
+              "READY_FOR_SUBMISSION",
+              "SUBMITTED"
+            ]
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actor": {
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "occurred_at": {
+            "type": "string"
+          }
+        }
+      },
+      "UppReportEvidence": {
+        "type": "object",
+        "required": [
+          "id",
+          "file_name",
+          "file_size_bytes",
+          "uploaded_at",
+          "uploaded_by"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "uploaded_at": {
+            "type": "string"
+          },
+          "uploaded_by": {
+            "type": "string"
+          }
+        }
+      },
+      "UppReportDetailResponse": {
+        "type": "object",
+        "required": [
+          "report",
+          "versions",
+          "history",
+          "evidence"
+        ],
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/UppReportSummary"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UppReportVersion"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UppReportHistoryItem"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UppReportEvidence"
+            }
+          }
+        }
+      },
+      "UppReportStatusChangeRequest": {
+        "type": "object",
+        "required": [
+          "status",
+          "expected_updated_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/UppSubmissionStatus"
+          },
+          "expected_updated_at": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "submission_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "UppReportStatusMultipartRequest": {
+        "type": "object",
+        "required": [
+          "status",
+          "expected_updated_at"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/UppSubmissionStatus"
+          },
+          "expected_updated_at": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "submission_notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "format": "binary"
           }
         }
       }

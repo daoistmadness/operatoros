@@ -75,8 +75,8 @@ repository. This sequence uses only local state.
 
    ```bash
    export OPERATOROS_DATA_DIR="$(mktemp -d /tmp/operatoros-offline.XXXXXX)"
-   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261027_s50
-   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261027_s50
+   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261027_s51
+   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261027_s51
    ```
 
    The CLI usage is `<bootstrap|migrate-existing|validate> --data-dir

@@ -12,3 +12,4 @@ export * from "./system";
 export * from "./config";
 export * from "./staff";
 export * from "./backup";
+export * from "./upp-reports";

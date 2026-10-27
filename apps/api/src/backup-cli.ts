@@ -15,6 +15,8 @@ import { BACKUP_RETENTION_LIMIT, evictBeyondRetention } from "./domains/safety";
 import { nodeRestoreFileSystem, performRestoreSwap, type RestoreFileSystem } from "./domains/restore-transaction";
 import { BACKUP_OPERATION_LOCK_FILENAME } from "./domains/backup-operation-lock";
 import { cleanupInterruptedBackupScratch, hasPendingRestoreRollback } from "./domains/backup-scratch";
+import { backupAttachmentSources, backupAttachmentsMatch, installBackupAttachments, referencedReportFiles } from "./domains/upp-report-files";
+import { extractBackupPayload, isBackupPayload, writeBackupPayload, type BackupAttachment } from "./security/backup-payload";
 
 const root = resolve(import.meta.dir, "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
@@ -54,7 +56,9 @@ function clearOrphanedEmptyWal(path: string): void {
   rmSync(shm);
 }
 
-function verifiedArtifact(selected: string, value: ReturnType<typeof config>, plaintextPath: string): { schemaVersion: string; createdAt: string } {
+type VerifiedArtifact = { schemaVersion: string; createdAt: string; databasePath: string; attachments: BackupAttachment[] };
+
+function verifiedArtifact(selected: string, value: ReturnType<typeof config>, plaintextPath: string): VerifiedArtifact {
   if (!value.backupEncryption || !value.backupDir || !value.databasePath) throw new Error("Encrypted backup configuration is required.");
   const path = resolve(isAbsolute(selected) ? selected : join(value.backupDir, selected));
   if (dirname(path) !== resolve(value.backupDir) || !backupName.test(basename(path)) ||
@@ -71,10 +75,24 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, pl
       !["manual", "scheduled", "pre_restore_auto"].includes(manifest.trigger) ||
       typeof manifest.schema_version !== "string" || !manifest.schema_version ||
       manifest.sha256 !== verification.encryptedSha256 || manifest.backup_file_size_bytes !== verification.encryptedSize ||
-      manifest.sqlite_file_size_bytes !== verification.plaintextSize || manifest.plaintext_sha256 !== verification.plaintextSha256) {
+      (manifest.payload_format_version === 1 ? manifest.payload_file_size_bytes : manifest.sqlite_file_size_bytes) !== verification.plaintextSize ||
+      manifest.payload_format_version != null && manifest.payload_format_version !== 1 ||
+      manifest.plaintext_sha256 !== verification.plaintextSha256) {
       throw new Error("BACKUP_VERIFICATION_FAILED");
     }
-    return { schemaVersion: manifest.schema_version, createdAt: manifest.created_at };
+    let databasePath = plaintextPath;
+    let attachments: BackupAttachment[] = [];
+    if (manifest.payload_format_version === 1) {
+      if (!isBackupPayload(plaintextPath)) throw new Error("BACKUP_PAYLOAD_INVALID");
+      const payload = extractBackupPayload(plaintextPath, `${plaintextPath}.contents`);
+      databasePath = payload.databasePath;
+      attachments = payload.attachments;
+      if (statSync(databasePath).size !== manifest.sqlite_file_size_bytes || attachments.length !== manifest.report_attachment_count) throw new Error("BACKUP_PAYLOAD_INVALID");
+    } else if (isBackupPayload(plaintextPath)) throw new Error("BACKUP_PAYLOAD_METADATA_INVALID");
+    const snapshot = new Database(databasePath, { readonly: true });
+    try { if (!backupAttachmentsMatch(snapshot, attachments)) throw new Error("BACKUP_ATTACHMENTS_INVALID"); }
+    finally { snapshot.close(); }
+    return { schemaVersion: manifest.schema_version, createdAt: manifest.created_at, databasePath, attachments };
   } catch (error) {
     rmSync(plaintextPath, { force: true });
     throw error;
@@ -99,8 +117,12 @@ function restoreDisposable(selected: string, targetDir: string): void {
   }
   chmodSync(target.dataDir, 0o700);
   let created = false;
+  const scratch = mkdtempSync(join(tmpdir(), "operatoros-disposable-restore-"));
+  chmodSync(scratch, 0o700);
   try {
-    const { schemaVersion } = verifiedArtifact(selected, value, target.databasePath);
+    const verified = verifiedArtifact(selected, value, join(scratch, "artifact"));
+    const { schemaVersion } = verified;
+    copyFileSync(verified.databasePath, target.databasePath);
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
     try {
@@ -108,15 +130,17 @@ function restoreDisposable(selected: string, targetDir: string): void {
       else validateMigrationSource(database);
       if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
     } finally { database.close(); }
+    if (verified.attachments.length) installBackupAttachments(target.dataDir, verified.attachments);
     syncFile(target.databasePath);
     syncDirectory(target.dataDir);
   } catch (error) {
     if (created) {
       for (const suffix of ["", "-wal", "-shm"]) rmSync(`${target.databasePath}${suffix}`, { force: true });
+      rmSync(join(target.dataDir, "upp-reports"), { recursive: true, force: true });
       try { syncDirectory(target.dataDir); } catch { /* disposable files are not an active recovery source */ }
     }
     throw error;
-  }
+  } finally { rmSync(scratch, { recursive: true, force: true }); }
   console.log(`RESTORED_DISPOSABLE ${target.dataDir}`);
 }
 
@@ -130,7 +154,8 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
   chmodSync(verifyDirectory, 0o700);
   const plaintextPath = join(verifyDirectory, "snapshot.sqlite");
   try {
-    const { schemaVersion, createdAt } = verifiedArtifact(selected, value, plaintextPath);
+    const verified = verifiedArtifact(selected, value, plaintextPath);
+    const { schemaVersion, createdAt } = verified;
     const age = Date.now() - Date.parse(createdAt);
     if (!Number.isFinite(age) || age < 0 || age > 60 * 60 * 1000) throw new Error("FRESH_BACKUP_REQUIRED");
     clearOrphanedEmptyWal(path);
@@ -140,7 +165,7 @@ function migrateVerifiedExisting(selected: string, targetDir: string): void {
       if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
       current = database.serialize();
     } finally { database.close(); }
-    if (backupSha256(current) !== hashBackupFileSync(plaintextPath)) throw new Error("BACKUP_SOURCE_MISMATCH");
+    if (backupSha256(current) !== hashBackupFileSync(verified.databasePath)) throw new Error("BACKUP_SOURCE_MISMATCH");
     console.log(`${migrateExistingDatabase(path)} ${CURRENT_SCHEMA_VERSION}`);
   } finally { rmSync(verifyDirectory, { recursive: true, force: true }); }
 }
@@ -229,6 +254,7 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     const database = openOfflineSnapshot(databasePath);
     let plaintext: Uint8Array;
     let schemaVersion: string;
+    let attachments: ReturnType<typeof backupAttachmentSources> = [];
     try {
       const currentSchema = snapshotSchemaVersion(database);
       if (currentSchema === CURRENT_SCHEMA_VERSION) validateDatabase(database);
@@ -236,12 +262,19 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
       if ((database.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("BACKUP_QUICK_CHECK_FAILED");
       schemaVersion = snapshotSchemaVersion(database);
       plaintext = database.serialize();
+      const references = referencedReportFiles(database);
+      if (references.length) {
+        if (!value.dataPaths) throw new Error("UPP_REPORT_STORAGE_UNAVAILABLE");
+        attachments = backupAttachmentSources(database, value.dataPaths.dataDir);
+      }
     } finally { database.close(); }
     const artifact = join(directory, name); const manifest = join(directory, `${name}.meta.json`);
     const snapshot = join(directory, "snapshot.sqlite");
     writeFileSync(snapshot, plaintext, { mode: 0o600 });
-    const encrypted = encryptBackupFileSync(snapshot, artifact, value.backupEncryption);
-    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: encrypted.plaintextSize, backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256, encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
+    const payload = attachments.length ? join(directory, "full-backup.payload") : snapshot;
+    const payloadInfo = attachments.length ? writeBackupPayload(snapshot, attachments, payload) : null;
+    const encrypted = encryptBackupFileSync(payload, artifact, value.backupEncryption);
+    const metadata = { filename: name, created_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"), trigger, schema_version: schemaVersion, sqlite_file_size_bytes: payloadInfo?.databaseSizeBytes ?? encrypted.plaintextSize, ...(payloadInfo ? { payload_format_version: 1, payload_file_size_bytes: payloadInfo.payloadSizeBytes, report_attachment_count: payloadInfo.attachments.length } : {}), backup_file_size_bytes: encrypted.encryptedSize, sha256: encrypted.encryptedSha256, plaintext_sha256: encrypted.plaintextSha256, encrypted: true, format_version: 1, algorithm: "aes-256-gcm", key_id: value.backupEncryption.activeKeyId, source_db_path: basename(databasePath), backup_tool_version: "1.0" };
     writeFileSync(manifest, `${JSON.stringify(metadata, null, 2)}\n`, { mode: 0o600 });
     syncFile(artifact); syncFile(manifest);
     renameSync(artifact, join(backupDir, name)); renameSync(manifest, join(backupDir, `${name}.meta.json`));
@@ -289,15 +322,19 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
     label = basename(path);
     directory = mkdtempSync(join(dirname(databasePath), ".operatoros-restore-cli-")); chmodSync(directory, 0o700);
     const target = join(directory, `${randomUUID()}.candidate`);
-    const verified = isEncryptedBackupFile(path) ? verifiedArtifact(label, value, target) : null;
+    const verified = isEncryptedBackupFile(path) ? verifiedArtifact(label, value, join(directory, "backup.payload")) : null;
     if (!verified) {
       if (!value.backupEncryption.allowLegacyPlaintext) throw new Error("Legacy plaintext backups require explicit operator opt-in.");
       copyFileSync(path, target);
       chmodSync(target, 0o600);
-    }
+    } else { copyFileSync(verified.databasePath, target); chmodSync(target, 0o600); }
     actor = validateRestoreSnapshot(target, credential, verified?.schemaVersion);
     revokeRestoredSessions(target);
     safety = exists(databasePath) ? publishBackup(value, "pre_restore_auto", label) : null;
+    if (verified?.attachments.length) {
+      if (!value.dataPaths) throw new Error("UPP_REPORT_STORAGE_UNAVAILABLE");
+      installBackupAttachments(value.dataPaths.dataDir, verified.attachments);
+    }
     restoreStarted = true;
     recordRestoreEvent(backupDir, "restore_started", "STARTED", label, actor, operationId, safety, null);
     if (safety) {

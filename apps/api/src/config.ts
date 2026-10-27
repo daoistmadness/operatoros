@@ -4,6 +4,8 @@ import { DEFAULT_LOGIN_RATE_LIMIT } from "./auth/rate-limit";
 import { parseAllowedOrigins, parseTrustedProxyAddresses } from "./security/http";
 import { parseBackupEncryptionConfig, type BackupEncryptionConfig } from "./security/backup-crypto";
 
+export const DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
 export interface BackendConfig {
   hostname: string;
   port: number;
@@ -15,6 +17,7 @@ export interface BackendConfig {
   backupDir?: string;
   dataPaths?: OperatorOSPaths;
   backupEncryption?: BackupEncryptionConfig | null;
+  uppReportMaxFileSizeBytes?: number;
   /** Optional capacity-probe override for deterministic tests (see domains/safety). */
   diskSpaceProbe?: import("./domains/safety").DiskSpaceProbe | null;
   /** Optional restore-swap filesystem override for deterministic failure tests (see domains/restore-transaction). */
@@ -71,6 +74,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     backupDir: dataPaths.backupDir,
     dataPaths,
     backupEncryption: parseBackupEncryptionConfig({ activeKey: env.BACKUP_ENCRYPTION_KEY, activeKeyId: env.BACKUP_ENCRYPTION_KEY_ID, previousKeys: env.BACKUP_ENCRYPTION_PREVIOUS_KEYS, authCookieSecret, allowLegacyPlaintext: env.ALLOW_LEGACY_PLAINTEXT_BACKUPS === "true" }),
+    uppReportMaxFileSizeBytes: positiveInteger(env, "UPP_REPORT_MAX_FILE_SIZE_BYTES", DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES),
     auth: {
       authCookieSecret,
       cookieSecure: env.COOKIE_SECURE === "true",

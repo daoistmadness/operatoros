@@ -82,8 +82,8 @@ describe("full OpenAPI contract", () => {
         const operation = reference.paths[path]?.get as { parameters?: Array<{ name?: string; in?: string }> };
         expect(operation.parameters).toContainEqual(expect.objectContaining({ name: "school_unit_id", in: "query" }));
       }
-      expect(Object.keys(candidateOperations)).toHaveLength(414);
-      expect(Object.keys(operations(reference))).toHaveLength(414);
+      expect(Object.keys(candidateOperations)).toHaveLength(422);
+      expect(Object.keys(operations(reference))).toHaveLength(422);
       expect(reference.paths["/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel"]?.post).toBeDefined();
       for (const path of [
         "/api/staff/monthly-activities",
@@ -93,6 +93,21 @@ describe("full OpenAPI contract", () => {
         "/api/staff/monthly-activities/{activity_id}/history",
         "/api/staff/monthly-activities/export",
       ]) expect(reference.paths[path]).toBeDefined();
+      for (const path of [
+        "/api/upp-reports",
+        "/api/upp-reports/{report_id}",
+        "/api/upp-reports/{report_id}/versions",
+        "/api/upp-reports/{report_id}/status",
+        "/api/upp-reports/{report_id}/download",
+        "/api/upp-reports/{report_id}/versions/{version_id}/download",
+        "/api/upp-reports/{report_id}/evidence/{evidence_id}/download",
+      ]) expect(reference.paths[path]).toBeDefined();
+      const uppUpload = reference.paths["/api/upp-reports"]!.post as any;
+      expect(uppUpload.requestBody.content["multipart/form-data"].schema.required).toEqual(["school_unit_id", "month", "file"]);
+      const uppStatus = reference.paths["/api/upp-reports/{report_id}/status"]!.patch as any;
+      const uppStatusSchema = reference.components?.schemas?.[uppStatus.requestBody.content["multipart/form-data"].schema.$ref.split("/").at(-1)!] as any;
+      expect(uppStatusSchema.properties.evidence.format).toBe("binary");
+      expect(reference.components?.schemas?.UppReportSummary).toBeDefined();
       const activityPatch = reference.paths["/api/staff/monthly-activities/{activity_id}"]!.patch as any;
       expect(activityPatch.requestBody.content["application/json"].schema.required).toContain("expected_version");
       expect(activityPatch.requestBody.content["application/json"].schema.properties.expected_version).toMatchObject({ type: "integer", minimum: 1 });

@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
 import { assertDatabasePath, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
-import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema } from "../src/bootstrap";
+import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
 
@@ -53,7 +53,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(92);
+    expect(REQUIRED_TABLES.length).toBe(96);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
     for (const domain of ["staff_members", "school_units", "staff_school_unit_assignment_versions", "staff_monthly_activity_periods", "staff_monthly_activities", "staff_monthly_activity_history", "dismissal_policies", "teacher_class_assignments"]) {
       expect(REQUIRED_TABLES).toContain(domain);
@@ -81,6 +81,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     installS48EmployeeSchema(client);
     installS49SchoolUnitSchema(client);
     installS50StaffMonthlyActivitySchema(client);
+    installS51UppReportsSchema(client);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', 'test', ?)",
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"]);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, ?, ?, '{}', 'test', ?)",
@@ -99,6 +100,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     installS48EmployeeSchema(client);
     installS49SchoolUnitSchema(client);
     installS50StaffMonthlyActivitySchema(client);
+    installS51UppReportsSchema(client);
     try {
       const userId = Number(client.run("INSERT INTO users (username,password_hash,role) VALUES ('synthetic-admin','hash','admin')").lastInsertRowid);
       client.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-staff','Synthetic Staff','synthetic staff')");

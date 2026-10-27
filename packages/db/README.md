@@ -10,13 +10,13 @@ Import the package from `apps/api` through its public exports. Do not import
 its `src` files directly. The web application must not import this package,
 Drizzle, or the SQLite driver.
 
-Fresh S5.0 databases are created with `bun run db:bootstrap --data-dir <absolute-disposable-directory>`.
+Fresh S5.1 databases are created with `bun run db:bootstrap --data-dir <absolute-disposable-directory>`.
 The directory must be empty. The explicit `bun run db:migrate-existing --data-dir
 <absolute-disposable-directory>` runner accepts approved S4.6 variants and
-recognized S4.7, S4.8, and S4.9 fingerprints. Other source shapes are rejected.
+recognized S4.7, S4.8, S4.9, and S5.0 fingerprints. Other source shapes are rejected.
 For the persistent development database, use the locked operational wrapper
 documented in the database operations runbook. Run
-`bun run db:validate --data-dir <absolute-directory>` to check the S5.0
+`bun run db:validate --data-dir <absolute-directory>` to check the S5.1
 startup contract. These commands never discover an operational data root.
 Back up an existing database before migration. Normal startup validates the
 database and never upgrades it automatically.

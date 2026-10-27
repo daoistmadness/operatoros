@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 
-describe("Bun S5.0 fresh bootstrap", () => {
+describe("Bun S5.1 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -23,7 +23,19 @@ describe("Bun S5.0 fresh bootstrap", () => {
         expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('staff_monthly_activity_periods','staff_monthly_activities','staff_monthly_activity_history') ORDER BY name").all()).toEqual([
           { name: "staff_monthly_activities" }, { name: "staff_monthly_activity_history" }, { name: "staff_monthly_activity_periods" },
         ]);
-        expect(db.query("SELECT version FROM school_units").get()).toBeNull();
+        expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('upp_monthly_reports','upp_report_versions','upp_report_submission_evidence','upp_report_history') ORDER BY name").all()).toEqual([
+          { name: "upp_monthly_reports" }, { name: "upp_report_history" }, { name: "upp_report_submission_evidence" }, { name: "upp_report_versions" },
+        ]);
+        const unitId = Number(db.run("INSERT INTO school_units (name) VALUES ('Synthetic UPP Unit')").lastInsertRowid);
+        const userId = Number(db.run("INSERT INTO users (username,password_hash,role) VALUES ('synthetic-upp-admin','synthetic-hash','admin')").lastInsertRowid);
+        const reportId = Number(db.run("INSERT INTO upp_monthly_reports (school_unit_id,reporting_year,reporting_month) VALUES (?,2026,10)", [unitId]).lastInsertRowid);
+        const versionId = Number(db.run(`INSERT INTO upp_report_versions (report_id,version_number,original_filename,file_sha256,file_size_bytes,uploaded_by_user_id,uploaded_at)
+          VALUES (?,1,'monthly.xlsx',?,12,?,'2026-10-27T00:00:00.000Z')`, [reportId, "a".repeat(64), userId]).lastInsertRowid);
+        expect(() => db.run("UPDATE upp_monthly_reports SET submission_status='SUBMITTED' WHERE id=?", [reportId])).toThrow("UPP_REPORT_INVALID_STATUS_TRANSITION");
+        expect(() => db.run("UPDATE upp_report_versions SET original_filename='changed.xlsx' WHERE id=?", [versionId])).toThrow("UPP_REPORT_VERSION_IMMUTABLE");
+        db.run("UPDATE upp_report_versions SET is_active=0 WHERE id=?", [versionId]);
+        expect(() => db.run("DELETE FROM upp_report_versions WHERE id=?", [versionId])).toThrow("UPP_REPORT_VERSION_IMMUTABLE");
+        expect(db.query("SELECT version FROM school_units").get()).toEqual({ version: 1 });
         db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Teacher', 'Teacher', 'TEACHING', 1)");
         expect(() => db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Invalid', 'Invalid', 'MADE_UP', 1)")).toThrow();
         db.run("INSERT INTO students (id, name) VALUES (1, 'Same Name'), (2, 'Same Name')");

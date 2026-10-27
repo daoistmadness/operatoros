@@ -30,6 +30,12 @@ export const queryKeys = {
     history: ["backups", "history"] as const,
     recoveryHistory: ["backups", "recovery-history"] as const,
   },
+  uppReports: {
+    all: ["upp-reports"] as const,
+    lists: ["upp-reports", "list"] as const,
+    list: (month: string) => ["upp-reports", "list", { month }] as const,
+    detail: (reportId: number) => ["upp-reports", "detail", reportId] as const,
+  },
   reports: {
     all: ["reports"] as const,
     filters: (academicYearId?: number | null, scope?: ReportScope) => ["reports", "filters", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,

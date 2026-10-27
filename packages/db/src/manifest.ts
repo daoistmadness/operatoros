@@ -14,6 +14,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261002_s48",
   "20261027_s49",
   "20261027_s50",
+  "20261027_s51",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -38,8 +39,11 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   if (leftIndex < 0 || rightIndex < 0) return undefined;
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
-export const CURRENT_SCHEMA_FINGERPRINT =
+export const S50_SCHEMA_FINGERPRINT =
   "53c13b4625f61ecf61f6866671e36b327e44739253cf16589b7dc3bc598dc265";
+
+export const CURRENT_SCHEMA_FINGERPRINT =
+  "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -96,6 +100,15 @@ export const REQUIRED_TRIGGERS = [
   "trg_staff_monthly_activity_no_delete",
   "trg_staff_monthly_activity_update_history",
   "trg_staff_monthly_activity_status_transition",
+  "trg_upp_report_status_transition",
+  "trg_upp_report_identity_immutable",
+  "trg_upp_monthly_reports_no_delete",
+  "trg_upp_report_versions_active_once",
+  "trg_upp_report_versions_no_delete",
+  "trg_upp_report_history_no_update",
+  "trg_upp_report_history_no_delete",
+  "trg_upp_report_evidence_no_update",
+  "trg_upp_report_evidence_no_delete",
   "trg_teacher_class_assignment_audit_no_delete",
   "trg_teacher_class_assignment_audit_no_update",
 ] as const;

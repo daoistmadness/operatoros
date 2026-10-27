@@ -96,6 +96,7 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck },
       { name: 'Employee Directory', path: '/staff', icon: UsersIcon },
       { name: 'Staff Monthly Activity', path: '/staff/monthly-activities', icon: CalendarCheck },
+      { name: 'Monthly UPP Reports', path: '/reports/upp', icon: FileText },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
     ],
   },
