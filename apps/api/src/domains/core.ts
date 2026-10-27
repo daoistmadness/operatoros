@@ -34,6 +34,13 @@ function tableExists(client: AuthContext["database"]["client"], name: string): b
   return Boolean(client.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
 }
 
+function existingTables(client: AuthContext["database"]["client"], names: string[]): Set<string> {
+  if (!names.length) return new Set();
+  const placeholders = names.map(() => "?").join(",");
+  const found = client.query(`SELECT name FROM sqlite_master WHERE type='table' AND name IN (${placeholders})`).all(...names) as Array<{ name: string }>;
+  return new Set(found.map((value) => String(value.name)));
+}
+
 function error(set: any, status: number, message: string | Record<string, unknown>): { detail: string | Record<string, unknown> } {
   set.status = status;
   return { detail: message };
@@ -201,6 +208,7 @@ export function studentDetail(client: AuthContext["database"]["client"], value: 
   }));
   const deviceIdentities: Row[] = rows(client, "SELECT id, legacy_student_id, device_identifier, device_source, effective_from, effective_to, is_active FROM student_device_identities WHERE student_master_id = ? ORDER BY effective_from DESC, id DESC", [value.id]).map((device) => ({ ...device, is_active: asBool(device.is_active) }));
   const activeDevice: Row | undefined = deviceIdentities.find((device) => device.is_active);
+  const optionalTables = existingTables(client, ["student_identity_verifications", "student_dapodik_registrations", "student_iom_documents"]);
   const result: Row = {
     id: value.id,
     record_version: createHash("sha256").update([value.id, value.updated_at, ...identityFields.map((field) => value[field] ?? "")].join("|")).digest("hex"),
@@ -218,13 +226,13 @@ export function studentDetail(client: AuthContext["database"]["client"], value: 
     document_status: (() => { const documents = row(client, "SELECT family_card_received, birth_certificate_received, parent_id_received, school_agreement_received, publication_consent_received FROM student_document_statuses WHERE student_master_id = ?", [value.id]); return documents ? Object.fromEntries(Object.entries(documents).map(([key, item]) => [key, asBool(item)])) : null; })(),
     device_identities: deviceIdentities,
     enrollments,
-    identity_verifications: tableExists(client, "student_identity_verifications")
+    identity_verifications: optionalTables.has("student_identity_verifications")
       ? rows(client, "SELECT id, identifier_type, verification_status, verified_at, verified_by, notes, correction_reason, updated_at FROM student_identity_verifications WHERE student_master_id = ? ORDER BY identifier_type", [value.id])
       : [],
-    dapodik_registration: tableExists(client, "student_dapodik_registrations")
+    dapodik_registration: optionalTables.has("student_dapodik_registrations")
       ? (row(client, "SELECT id, status, external_reference, updated_by, notes, correction_reason, synchronized_at, updated_at FROM student_dapodik_registrations WHERE student_master_id = ?", [value.id]) ?? null)
       : null,
-    iom_documents: tableExists(client, "student_iom_documents")
+    iom_documents: optionalTables.has("student_iom_documents")
       ? rows(client, "SELECT id, iom_type, description, file_sha256, file_size_bytes, original_filename, uploaded_by, uploaded_at, updated_at, updated_by FROM student_iom_documents WHERE student_master_id = ? ORDER BY uploaded_at DESC", [value.id])
       : [],
     updated_at: value.updated_at,

@@ -132,7 +132,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
         })
       );
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = await res.json() as any;
 
       // Students
       expect(data.students.active_count).toBe(3);
@@ -164,7 +164,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
         })
       );
       expect(getRes.status).toBe(200);
-      const initial = await getRes.json();
+      const initial = await getRes.json() as any;
       expect(initial.calendar_year).toBe(currentYear);
       expect(initial.cutoff_date).toBe(`${currentYear}-08-31T23:59:59+07:00`);
       expect(initial.advance_notice_days).toBe(60);
@@ -188,7 +188,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
         })
       );
       expect(ackRes.status).toBe(200);
-      const ackData = await ackRes.json();
+      const ackData = await ackRes.json() as any;
       expect(ackData.is_acknowledged).toBe(true);
       expect(ackData.acknowledged_by).toBe("admin_test");
       expect(ackData.notes).toBe("Telah dikoordinasikan dengan tim TU.");
@@ -208,7 +208,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
         })
       );
       expect(settingsRes.status).toBe(200);
-      const settingsData = await settingsRes.json();
+      const settingsData = await settingsRes.json() as any;
       expect(settingsData.advance_notice_days).toBe(90);
     } finally {
       handle.close();
@@ -225,7 +225,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
         })
       );
       expect(res.status).toBe(200);
-      const items = await res.json();
+      const items = await res.json() as any;
       expect(Array.isArray(items)).toBe(true);
 
       const itemTypes = items.map((i: any) => i.item_type);

@@ -1136,6 +1136,86 @@ export interface paths {
         patch: operations["update_staff_education_api_staff__staff_id__education__education_id__patch"];
         trace?: never;
     };
+    "/api/staff/school-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffSchool-units"];
+        put?: never;
+        post: operations["postApiStaffSchool-units"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/school-units/{school_unit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStaffSchool-unitsBySchool_unit_id"];
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/{staff_id}/employment-status": {
         parameters: {
             query?: never;
@@ -1419,6 +1499,294 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffMonthly-activitiesGenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/{activity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStaffMonthly-activitiesByActivity_id"];
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/{activity_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesByActivity_idHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/monthly-activities/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffMonthly-activitiesExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_upp_reports"];
+        put?: never;
+        post: operations["upload_upp_report"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["read_upp_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["replace_upp_report_version"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["change_upp_report_status"];
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_upp_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}/versions/{version_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_upp_report_version"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upp-reports/{report_id}/evidence/{evidence_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["download_upp_report_evidence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/identity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/dapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idDapodik-status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idDapodik-status"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documents"];
+        put?: never;
+        post: operations["postApiStudent-mastersByStudent_master_idIom-documents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"];
         trace?: never;
     };
     "/api/config/jenjang": {
@@ -4273,6 +4641,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/attendance/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read monthly attendance reconciliation for a class */
+        get: operations["getApiAttendanceReconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/reconciliation/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a monthly attendance review decision */
+        post: operations["postApiAttendanceReconciliationReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/attendance/reconciliation/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen a monthly attendance review */
+        post: operations["postApiAttendanceReconciliationReopen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/academic/options": {
         parameters: {
             query?: never;
@@ -4449,6 +4868,70 @@ export interface paths {
         /** Get student indicator insights */
         get: operations["getStudentIndicatorInsights"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operator/dashboard-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiOperatorDashboard-overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operator/bosp-reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiOperatorBosp-reminder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operator/bosp-reminder/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiOperatorBosp-reminderAcknowledge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/operator/bosp-reminder/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiOperatorBosp-reminderSettings"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6068,24 +6551,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/attendance/reconciliation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read monthly attendance reconciliation for a class */
-        get: operations["getApiAttendanceReconciliation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/reconciliation/review": {
+    "/api/uploads/upload": {
         parameters: {
             query?: never;
             header?: never;
@@ -6094,313 +6560,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Record a monthly attendance review decision */
-        post: operations["postApiAttendanceReconciliationReview"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/attendance/reconciliation/reopen": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reopen a monthly attendance review */
-        post: operations["postApiAttendanceReconciliationReopen"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/school-units": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStaffSchool-units"];
-        put?: never;
-        post: operations["postApiStaffSchool-units"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/school-units/{school_unit_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patchApiStaffSchool-unitsBySchool_unit_id"];
-        trace?: never;
-    };
-    "/api/staff/{staff_id}/school-unit-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiStaffByStaff_idSchool-unit-assignments"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/close": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/monthly-activities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStaffMonthly-activities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/monthly-activities/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStaffMonthly-activitiesSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/monthly-activities/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiStaffMonthly-activitiesGenerate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/monthly-activities/{activity_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patchApiStaffMonthly-activitiesByActivity_id"];
-        trace?: never;
-    };
-    "/api/staff/monthly-activities/{activity_id}/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStaffMonthly-activitiesByActivity_idHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/staff/monthly-activities/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStaffMonthly-activitiesExport"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list_upp_reports"];
-        put?: never;
-        post: operations["upload_upp_report"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["read_upp_report"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}/versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["replace_upp_report_version"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["change_upp_report_status"];
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["download_upp_report"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}/versions/{version_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["download_upp_report_version"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/upp-reports/{report_id}/evidence/{evidence_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["download_upp_report_evidence"];
-        put?: never;
-        post?: never;
+        /**
+         * Upload File
+         * @deprecated
+         */
+        post: operations["upload_file_api_uploads_upload_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12424,6 +12588,424 @@ export interface operations {
             };
         };
     };
+    "getApiStaffSchool-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    }[];
+                };
+            };
+        };
+    };
+    "postApiStaffSchool-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    name: string;
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    name: string;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 201 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    };
+                };
+            };
+        };
+    };
+    "patchApiStaffSchool-unitsBySchool_unit_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                school_unit_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+                "application/x-www-form-urlencoded": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+                "multipart/form-data": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 201 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                assignment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    effective_to: string;
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    effective_to: string;
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    effective_to: string;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                assignment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            cancelled_reason: string | null;
+                            cancelled_by: string | null;
+                            cancelled_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     "postApiStaffByStaff_idEmployment-status": {
         parameters: {
             query?: never;
@@ -13189,6 +13771,859 @@ export interface operations {
                 };
             };
         };
+    };
+    "getApiStaffMonthly-activities": {
+        parameters: {
+            query: {
+                month: string;
+                school_unit_id?: string;
+                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        period: {
+                            month: string;
+                            generated: boolean;
+                            generated_at: string | null;
+                            generated_by: string | null;
+                        };
+                        summary: {
+                            month: string;
+                            school_unit_id: number | null;
+                            school_unit_name: string | null;
+                            total_activities: number;
+                            total_applicable: number;
+                            completed: number;
+                            pending: number;
+                            needs_correction: number;
+                            not_applicable: number;
+                            completion_percentage: number | null;
+                        };
+                        items: {
+                            id: number;
+                            staff_member_id: string;
+                            staff_code: string | null;
+                            staff_name: string;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            month: string;
+                            /** @enum {string} */
+                            status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                            confirmation_date: string | null;
+                            confirmed_by: string | null;
+                            processing_notes: string | null;
+                            version: number;
+                            created_at: string;
+                            updated_at: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesSummary": {
+        parameters: {
+            query: {
+                from_month: string;
+                to_month: string;
+                school_unit_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            month: string;
+                            school_unit_id: number | null;
+                            school_unit_name: string | null;
+                            total_activities: number;
+                            total_applicable: number;
+                            completed: number;
+                            pending: number;
+                            needs_correction: number;
+                            not_applicable: number;
+                            completion_percentage: number | null;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffMonthly-activitiesGenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    month: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    month: string;
+                };
+                "multipart/form-data": {
+                    month: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        month: string;
+                        generated_count: number;
+                        already_generated: boolean;
+                    };
+                };
+            };
+        };
+    };
+    "patchApiStaffMonthly-activitiesByActivity_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_id: string | number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+                "multipart/form-data": {
+                    expected_version: number;
+                    /** @enum {string} */
+                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                    confirmation_date?: string;
+                    processing_notes?: string | null;
+                    reason?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        staff_member_id: string;
+                        staff_code: string | null;
+                        staff_name: string;
+                        school_unit_id: number;
+                        school_unit_name: string;
+                        month: string;
+                        /** @enum {string} */
+                        status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                        confirmation_date: string | null;
+                        confirmed_by: string | null;
+                        processing_notes: string | null;
+                        version: number;
+                        created_at: string;
+                        updated_at: string;
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesByActivity_idHistory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                activity_id: string | number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            version: number;
+                            from_status: ("PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE") | null;
+                            /** @enum {string} */
+                            to_status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                            from_confirmation_date: string | null;
+                            to_confirmation_date: string | null;
+                            from_confirmed_by: string | null;
+                            to_confirmed_by: string | null;
+                            from_processing_notes: string | null;
+                            to_processing_notes: string | null;
+                            /** @enum {string} */
+                            action: "GENERATED" | "STATUS_CHANGED" | "NOTES_UPDATED" | "CORRECTION";
+                            reason: string | null;
+                            actor: string;
+                            occurred_at: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "getApiStaffMonthly-activitiesExport": {
+        parameters: {
+            query: {
+                month: string;
+                school_unit_id?: string;
+                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
+                format: "xlsx" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    list_upp_reports: {
+        parameters: {
+            query: {
+                month: string;
+                school_unit_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UppReportListResponse"];
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upload_upp_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    school_unit_id: string;
+                    month: string;
+                    /** Format: binary */
+                    file: string;
+                    notes?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UppReportSummary"];
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_upp_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UppReportDetailResponse"];
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    replace_upp_report_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    expected_updated_at: string;
+                    /** Format: binary */
+                    file: string;
+                    notes?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UppReportSummary"];
+                };
+            };
+            /** @description The request was refused. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    change_upp_report_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["UppReportStatusMultipartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful response. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UppReportSummary"];
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    download_upp_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Original stored workbook bytes. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    download_upp_report_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Original stored workbook bytes. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    download_upp_report_evidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+                evidence_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Original stored evidence bytes. */
+            200: {
+                headers: {
+                    "Content-Disposition"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description The request was refused. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was refused. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    "getApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "postApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    description: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    description: string;
+                };
+                "multipart/form-data": {
+                    description: string;
+                };
+            };
+        };
+        responses: never;
     };
     get_jenjang_configs_api_config_jenjang_get: {
         parameters: {
@@ -19578,6 +21013,79 @@ export interface operations {
             };
         };
     };
+    getApiAttendanceReconciliation: {
+        parameters: {
+            query: {
+                academic_year_id: string;
+                class_id: string;
+                month: string;
+                scope: "combined" | "early_year" | "primary" | "secondary";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monthly attendance reconciliation with source and effective evidence */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
+    postApiAttendanceReconciliationReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceReviewMutation"];
+            };
+        };
+        responses: {
+            /** @description Monthly reconciliation and operator review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
+    postApiAttendanceReconciliationReopen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceReviewReopen"];
+            };
+        };
+        responses: {
+            /** @description Monthly reconciliation and operator review state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
     getAcademicAnalyticsOptions: {
         parameters: {
             query: {
@@ -19926,6 +21434,164 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    "getApiOperatorDashboard-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        students: {
+                            active_count: number;
+                            nisn_inputted_count: number;
+                            nisn_not_inputted_count: number;
+                            pending_verification_count: number;
+                        };
+                        staff: {
+                            active_count: number;
+                            monthly_ptk_completed_count: number;
+                            monthly_ptk_pending_count: number;
+                        };
+                        upp: {
+                            current_period: string;
+                            status: string | null;
+                            has_workbook: boolean;
+                            submitted_at: string | null;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "getApiOperatorBosp-reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        calendar_year: number;
+                        cutoff_date: string;
+                        advance_notice_days: number;
+                        is_in_notice_window: boolean;
+                        days_remaining: number;
+                        is_acknowledged: boolean;
+                        acknowledged_at: string | null;
+                        acknowledged_by: string | null;
+                        notes: string | null;
+                        is_blocking: boolean;
+                    };
+                };
+            };
+        };
+    };
+    "postApiOperatorBosp-reminderAcknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    calendar_year: number;
+                    notes?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    calendar_year: number;
+                    notes?: string | null;
+                };
+                "multipart/form-data": {
+                    calendar_year: number;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        calendar_year: number;
+                        cutoff_date: string;
+                        advance_notice_days: number;
+                        is_in_notice_window: boolean;
+                        days_remaining: number;
+                        is_acknowledged: boolean;
+                        acknowledged_at: string | null;
+                        acknowledged_by: string | null;
+                        notes: string | null;
+                        is_blocking: boolean;
+                    };
+                };
+            };
+        };
+    };
+    "putApiOperatorBosp-reminderSettings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    advance_notice_days: string | number;
+                };
+                "application/x-www-form-urlencoded": {
+                    advance_notice_days: string | number;
+                };
+                "multipart/form-data": {
+                    advance_notice_days: string | number;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        calendar_year: number;
+                        cutoff_date: string;
+                        advance_notice_days: number;
+                        is_in_notice_window: boolean;
+                        days_remaining: number;
+                        is_acknowledged: boolean;
+                        acknowledged_at: string | null;
+                        acknowledged_by: string | null;
+                        notes: string | null;
+                        is_blocking: boolean;
+                    };
                 };
             };
         };
@@ -23709,80 +25375,7 @@ export interface operations {
             };
         };
     };
-    getApiAttendanceReconciliation: {
-        parameters: {
-            query: {
-                academic_year_id: string;
-                class_id: string;
-                month: string;
-                scope: "combined" | "early_year" | "primary" | "secondary";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Monthly attendance reconciliation with source and effective evidence */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
-                };
-            };
-        };
-    };
-    postApiAttendanceReconciliationReview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AttendanceReviewMutation"];
-            };
-        };
-        responses: {
-            /** @description Monthly reconciliation and operator review state */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
-                };
-            };
-        };
-    };
-    postApiAttendanceReconciliationReopen: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AttendanceReviewReopen"];
-            };
-        };
-        responses: {
-            /** @description Monthly reconciliation and operator review state */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AttendanceReconciliationResponse"];
-                };
-            };
-        };
-    };
-    "getApiStaffSchool-units": {
+    upload_file_api_uploads_upload_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -23791,1067 +25384,8 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Response for status 200 */
+            /** @description Successful Response */
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        name: string;
-                        /** @enum {string} */
-                        status: "ACTIVE" | "INACTIVE";
-                        created_at: string;
-                        updated_at: string;
-                        version: number;
-                    }[];
-                };
-            };
-        };
-    };
-    "postApiStaffSchool-units": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name: string;
-                    reason: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    name: string;
-                    reason: string;
-                };
-                "multipart/form-data": {
-                    name: string;
-                    reason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 201 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        name: string;
-                        /** @enum {string} */
-                        status: "ACTIVE" | "INACTIVE";
-                        created_at: string;
-                        updated_at: string;
-                        version: number;
-                    };
-                };
-            };
-        };
-    };
-    "patchApiStaffSchool-unitsBySchool_unit_id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                school_unit_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    name?: string;
-                    /** @enum {string} */
-                    status?: "ACTIVE" | "INACTIVE";
-                    reason: string;
-                    expected_version: number;
-                };
-                "application/x-www-form-urlencoded": {
-                    name?: string;
-                    /** @enum {string} */
-                    status?: "ACTIVE" | "INACTIVE";
-                    reason: string;
-                    expected_version: number;
-                };
-                "multipart/form-data": {
-                    name?: string;
-                    /** @enum {string} */
-                    status?: "ACTIVE" | "INACTIVE";
-                    reason: string;
-                    expected_version: number;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        name: string;
-                        /** @enum {string} */
-                        status: "ACTIVE" | "INACTIVE";
-                        created_at: string;
-                        updated_at: string;
-                        version: number;
-                    };
-                };
-            };
-        };
-    };
-    "postApiStaffByStaff_idSchool-unit-assignments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                staff_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    school_unit_id: number;
-                    effective_from: string;
-                    /** @enum {string} */
-                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                    reason: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    school_unit_id: number;
-                    effective_from: string;
-                    /** @enum {string} */
-                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                    reason: string;
-                };
-                "multipart/form-data": {
-                    school_unit_id: number;
-                    effective_from: string;
-                    /** @enum {string} */
-                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                    reason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 201 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: string;
-                        source_staff_id: string | null;
-                        full_name: string;
-                        employment_status: string;
-                        job_title: string | null;
-                        job_title_raw: string | null;
-                        employment_start_date: string | null;
-                        employment_end_date: string | null;
-                        dapodik_status: string;
-                        updated_at: string;
-                        dapodik_status_raw: string | null;
-                        has_nuptk: boolean;
-                        identifiers: {
-                            identifier_type: string;
-                            normalized_value: string | null;
-                            verification_status: string;
-                        }[];
-                        jenjangs: {
-                            id: number;
-                            name: string;
-                            code: string | null;
-                            level: string | null;
-                            active: boolean;
-                        }[];
-                        education_history: {
-                            id: number;
-                            education_level: string;
-                            institution_name: string;
-                            major: string | null;
-                            graduation_year: number | null;
-                            notes: string | null;
-                            created_at?: string;
-                            updated_at?: string;
-                        }[];
-                        service_years: number | null;
-                        service_months: number | null;
-                        highest_education_level: string | null;
-                        highest_education_institution: string | null;
-                        school_unit_assignments: {
-                            id: number;
-                            school_unit_id: number;
-                            school_unit_name: string;
-                            /** @enum {string} */
-                            school_unit_status: "ACTIVE" | "INACTIVE";
-                            effective_from: string;
-                            effective_to: string | null;
-                            /** @enum {string} */
-                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                            reason: string;
-                            created_by: string;
-                            created_at: string;
-                            closed_reason: string | null;
-                            closed_by: string | null;
-                            closed_at: string | null;
-                            is_current: boolean;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                staff_id: string;
-                assignment_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    effective_to: string;
-                    reason: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    effective_to: string;
-                    reason: string;
-                };
-                "multipart/form-data": {
-                    effective_to: string;
-                    reason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: string;
-                        source_staff_id: string | null;
-                        full_name: string;
-                        employment_status: string;
-                        job_title: string | null;
-                        job_title_raw: string | null;
-                        employment_start_date: string | null;
-                        employment_end_date: string | null;
-                        dapodik_status: string;
-                        updated_at: string;
-                        dapodik_status_raw: string | null;
-                        has_nuptk: boolean;
-                        identifiers: {
-                            identifier_type: string;
-                            normalized_value: string | null;
-                            verification_status: string;
-                        }[];
-                        jenjangs: {
-                            id: number;
-                            name: string;
-                            code: string | null;
-                            level: string | null;
-                            active: boolean;
-                        }[];
-                        education_history: {
-                            id: number;
-                            education_level: string;
-                            institution_name: string;
-                            major: string | null;
-                            graduation_year: number | null;
-                            notes: string | null;
-                            created_at?: string;
-                            updated_at?: string;
-                        }[];
-                        service_years: number | null;
-                        service_months: number | null;
-                        highest_education_level: string | null;
-                        highest_education_institution: string | null;
-                        school_unit_assignments: {
-                            id: number;
-                            school_unit_id: number;
-                            school_unit_name: string;
-                            /** @enum {string} */
-                            school_unit_status: "ACTIVE" | "INACTIVE";
-                            effective_from: string;
-                            effective_to: string | null;
-                            /** @enum {string} */
-                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                            reason: string;
-                            created_by: string;
-                            created_at: string;
-                            closed_reason: string | null;
-                            closed_by: string | null;
-                            closed_at: string | null;
-                            is_current: boolean;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                staff_id: string;
-                assignment_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    reason: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    reason: string;
-                };
-                "multipart/form-data": {
-                    reason: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: string;
-                        source_staff_id: string | null;
-                        full_name: string;
-                        employment_status: string;
-                        job_title: string | null;
-                        job_title_raw: string | null;
-                        employment_start_date: string | null;
-                        employment_end_date: string | null;
-                        dapodik_status: string;
-                        updated_at: string;
-                        dapodik_status_raw: string | null;
-                        has_nuptk: boolean;
-                        identifiers: {
-                            identifier_type: string;
-                            normalized_value: string | null;
-                            verification_status: string;
-                        }[];
-                        jenjangs: {
-                            id: number;
-                            name: string;
-                            code: string | null;
-                            level: string | null;
-                            active: boolean;
-                        }[];
-                        education_history: {
-                            id: number;
-                            education_level: string;
-                            institution_name: string;
-                            major: string | null;
-                            graduation_year: number | null;
-                            notes: string | null;
-                            created_at?: string;
-                            updated_at?: string;
-                        }[];
-                        service_years: number | null;
-                        service_months: number | null;
-                        highest_education_level: string | null;
-                        highest_education_institution: string | null;
-                        school_unit_assignments: {
-                            id: number;
-                            school_unit_id: number;
-                            school_unit_name: string;
-                            /** @enum {string} */
-                            school_unit_status: "ACTIVE" | "INACTIVE";
-                            effective_from: string;
-                            effective_to: string | null;
-                            /** @enum {string} */
-                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
-                            reason: string;
-                            created_by: string;
-                            created_at: string;
-                            closed_reason: string | null;
-                            closed_by: string | null;
-                            closed_at: string | null;
-                            cancelled_reason: string | null;
-                            cancelled_by: string | null;
-                            cancelled_at: string | null;
-                            is_current: boolean;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "getApiStaffMonthly-activities": {
-        parameters: {
-            query: {
-                month: string;
-                school_unit_id?: string;
-                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        period: {
-                            month: string;
-                            generated: boolean;
-                            generated_at: string | null;
-                            generated_by: string | null;
-                        };
-                        summary: {
-                            month: string;
-                            school_unit_id: number | null;
-                            school_unit_name: string | null;
-                            total_activities: number;
-                            total_applicable: number;
-                            completed: number;
-                            pending: number;
-                            needs_correction: number;
-                            not_applicable: number;
-                            completion_percentage: number | null;
-                        };
-                        items: {
-                            id: number;
-                            staff_member_id: string;
-                            staff_code: string | null;
-                            staff_name: string;
-                            school_unit_id: number;
-                            school_unit_name: string;
-                            month: string;
-                            /** @enum {string} */
-                            status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                            confirmation_date: string | null;
-                            confirmed_by: string | null;
-                            processing_notes: string | null;
-                            version: number;
-                            created_at: string;
-                            updated_at: string;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "getApiStaffMonthly-activitiesSummary": {
-        parameters: {
-            query: {
-                from_month: string;
-                to_month: string;
-                school_unit_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: {
-                            month: string;
-                            school_unit_id: number | null;
-                            school_unit_name: string | null;
-                            total_activities: number;
-                            total_applicable: number;
-                            completed: number;
-                            pending: number;
-                            needs_correction: number;
-                            not_applicable: number;
-                            completion_percentage: number | null;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "postApiStaffMonthly-activitiesGenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    month: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    month: string;
-                };
-                "multipart/form-data": {
-                    month: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        month: string;
-                        generated_count: number;
-                        already_generated: boolean;
-                    };
-                };
-            };
-        };
-    };
-    "patchApiStaffMonthly-activitiesByActivity_id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                activity_id: string | number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    expected_version: number;
-                    /** @enum {string} */
-                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                    confirmation_date?: string;
-                    processing_notes?: string | null;
-                    reason?: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    expected_version: number;
-                    /** @enum {string} */
-                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                    confirmation_date?: string;
-                    processing_notes?: string | null;
-                    reason?: string;
-                };
-                "multipart/form-data": {
-                    expected_version: number;
-                    /** @enum {string} */
-                    status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                    confirmation_date?: string;
-                    processing_notes?: string | null;
-                    reason?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        id: number;
-                        staff_member_id: string;
-                        staff_code: string | null;
-                        staff_name: string;
-                        school_unit_id: number;
-                        school_unit_name: string;
-                        month: string;
-                        /** @enum {string} */
-                        status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                        confirmation_date: string | null;
-                        confirmed_by: string | null;
-                        processing_notes: string | null;
-                        version: number;
-                        created_at: string;
-                        updated_at: string;
-                    };
-                };
-            };
-        };
-    };
-    "getApiStaffMonthly-activitiesByActivity_idHistory": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                activity_id: string | number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response for status 200 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        items: {
-                            version: number;
-                            from_status: ("PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE") | null;
-                            /** @enum {string} */
-                            to_status: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                            from_confirmation_date: string | null;
-                            to_confirmation_date: string | null;
-                            from_confirmed_by: string | null;
-                            to_confirmed_by: string | null;
-                            from_processing_notes: string | null;
-                            to_processing_notes: string | null;
-                            /** @enum {string} */
-                            action: "GENERATED" | "STATUS_CHANGED" | "NOTES_UPDATED" | "CORRECTION";
-                            reason: string | null;
-                            actor: string;
-                            occurred_at: string;
-                        }[];
-                    };
-                };
-            };
-        };
-    };
-    "getApiStaffMonthly-activitiesExport": {
-        parameters: {
-            query: {
-                month: string;
-                school_unit_id?: string;
-                status?: "PENDING" | "COMPLETED" | "NEEDS_CORRECTION" | "NOT_APPLICABLE";
-                format: "xlsx" | "pdf";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
-    };
-    list_upp_reports: {
-        parameters: {
-            query: {
-                month: string;
-                school_unit_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UppReportListResponse"];
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    upload_upp_report: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    school_unit_id: string;
-                    month: string;
-                    /** Format: binary */
-                    file: string;
-                    notes?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Successful response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UppReportSummary"];
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    read_upp_report: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UppReportDetailResponse"];
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    replace_upp_report_version: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    expected_updated_at: string;
-                    /** Format: binary */
-                    file: string;
-                    notes?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Successful response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UppReportSummary"];
-                };
-            };
-            /** @description The request was refused. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    change_upp_report_status: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["UppReportStatusMultipartRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful response. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UppReportSummary"];
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    download_upp_report: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Original stored workbook bytes. */
-            200: {
-                headers: {
-                    "Content-Disposition"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    download_upp_report_version: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-                version_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Original stored workbook bytes. */
-            200: {
-                headers: {
-                    "Content-Disposition"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    download_upp_report_evidence: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                report_id: string;
-                evidence_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Original stored evidence bytes. */
-            200: {
-                headers: {
-                    "Content-Disposition"?: string;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            /** @description The request was refused. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request was refused. */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
