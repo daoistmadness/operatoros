@@ -3,13 +3,14 @@ import { Database } from "bun:sqlite";
 import { existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint } from "../src";
+import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
 const s47Sql = readFileSync(new URL("../src/s47-schema.sql", import.meta.url), "utf8");
+const s48Sql = readFileSync(new URL("../src/s48-migration.sql", import.meta.url), "utf8");
 const variantB = await Bun.file(new URL("./fixtures/s46-variant-b.json", import.meta.url)).json() as { targetObjects: string[]; fingerprint: string };
 
 function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
@@ -43,6 +44,7 @@ function source(path: string, variant: "A" | "B" = "A"): Database {
   expect(fingerprint).toBe(variant === "A" ? S46_SOURCE_VARIANTS.S4_6_VARIANT_A : variantB.fingerprint);
   if (variant === "B") expect(fingerprint).toBe(S46_SOURCE_VARIANTS.S4_6_VARIANT_B);
   db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260901_s46',NULL,?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [fingerprint]);
+  validateMigrationSource(db);
   return db;
 }
 
@@ -55,7 +57,7 @@ function academicScope(db: Database): void {
   db.run("INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,1,1,'1A')");
 }
 
-describe("Bun S4.6 to S4.8 migration", () => {
+describe("Bun S4.6 through S4.9 migrations", () => {
   it("migrates Variant B without changing its matching target objects", () => withDatabases((_, path, freshPath) => {
     const db = source(path, "B");
     academicScope(db);
@@ -115,6 +117,7 @@ describe("Bun S4.6 to S4.8 migration", () => {
     db.exec(s47Sql);
     expect(schemaFingerprint(db)).toBe(S47_SCHEMA_FINGERPRINT);
     db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260929_s47','20260901_s46',?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [S47_SCHEMA_FINGERPRINT]);
+    validateMigrationSource(db);
     db.run("INSERT INTO staff_members (id,source_staff_id,full_name,normalized_name,employment_status) VALUES ('synthetic-s48-staff','S-48','Synthetic Employee','synthetic employee','ACTIVE')");
     db.run("INSERT INTO staff_identifiers (staff_member_id,identifier_type,raw_value,normalized_value,verification_status) VALUES ('synthetic-s48-staff','NIP','123456789012345678','123456789012345678','VALIDATED')");
     db.close();
@@ -126,7 +129,76 @@ describe("Bun S4.6 to S4.8 migration", () => {
       expect(migrated.client.query("SELECT normalized_value FROM staff_identifiers WHERE staff_member_id='synthetic-s48-staff' AND identifier_type='NIP'").get()).toEqual({ normalized_value: "123456789012345678" });
       expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20260929_s47" });
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+      validateMigrationSource(migrated.client);
     } finally { migrated.close(); }
+  }));
+
+  it("keeps S4.7 ledger formatting compatibility for equivalent TEXT type spellings", () => withDatabases((_, path) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260929_s47','20260901_s46',?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [S47_SCHEMA_FINGERPRINT]);
+    const ledger = db.query("SELECT version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at FROM operatoros_schema_migrations").get() as Record<string, string>;
+    db.exec("DROP TABLE operatoros_schema_migrations");
+    db.exec("CREATE TABLE operatoros_schema_migrations (version VARCHAR(64) PRIMARY KEY, predecessor VARCHAR(64) NULL, schema_fingerprint VARCHAR(64) NOT NULL, protected_fingerprints VARCHAR(4096) NOT NULL, approved_by VARCHAR(255) NOT NULL, applied_at VARCHAR(64) NOT NULL)");
+    db.run("INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?, ?)", Object.values(ledger));
+    validateMigrationSource(db);
+    db.close();
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+  }));
+
+  it("rejects S4.8 ledgers with extra or missing columns before migration", () => {
+    for (const shape of ["extra", "missing"] as const) withDatabases((_, path) => {
+      const db = new Database(path, { create: true });
+      db.exec("PRAGMA foreign_keys=ON");
+      db.exec(s47Sql);
+      db.exec(s48Sql);
+      db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
+      if (shape === "extra") db.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT");
+      else {
+        const ledger = db.query("SELECT version,predecessor,schema_fingerprint,protected_fingerprints,approved_by FROM operatoros_schema_migrations").get() as Record<string, string>;
+        db.exec("DROP TABLE operatoros_schema_migrations");
+        db.exec("CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, predecessor TEXT, schema_fingerprint TEXT NOT NULL, protected_fingerprints TEXT NOT NULL, approved_by TEXT NOT NULL)");
+        db.run("INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?)", Object.values(ledger));
+      }
+      expect(schemaFingerprint(db)).toBe(S48_SCHEMA_FINGERPRINT);
+      db.close();
+
+      const before = readFileSync(path);
+      const malformed = new Database(path, { readonly: true });
+      expect(() => validateMigrationSource(malformed)).toThrow("migration ledger layout differs");
+      malformed.close();
+      expect(() => migrateExistingDatabase(path)).toThrow("migration ledger layout differs");
+      expect(readFileSync(path)).toEqual(before);
+    });
+  });
+
+  it("upgrades S4.8 rows and history to S4.9 and matches fresh bootstrap", () => withDatabases((_, path, freshPath) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    expect(schemaFingerprint(db)).toBe(S48_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
+    validateMigrationSource(db);
+    db.run("INSERT INTO staff_members (id,source_staff_id,full_name,normalized_name,employment_status) VALUES ('synthetic-s48-staff','S-48','Synthetic Employee','synthetic employee','ACTIVE')");
+    db.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,source,created_by) VALUES ('synthetic-s48-staff','2026-01-01','ACTIVE','MANUAL','synthetic-admin')");
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    expect(migrateExistingDatabase(path)).toBe("NOOP");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT id,source_staff_id,full_name FROM staff_members WHERE id='synthetic-s48-staff'").get()).toEqual({ id: "synthetic-s48-staff", source_staff_id: "S-48", full_name: "Synthetic Employee" });
+      expect(migrated.client.query("SELECT effective_date,employment_status,created_by FROM staff_employment_history WHERE staff_member_id='synthetic-s48-staff'").get()).toEqual({ effective_date: "2026-01-01", employment_status: "ACTIVE", created_by: "synthetic-admin" });
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261002_s48" });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+      expect(migrated.client.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+      validateMigrationSource(migrated.client);
+    } finally { migrated.close(); fresh.close(); }
   }));
 
   it("transforms synthetic attendance, preserves identities, and matches fresh structure", () => withDatabases((_, path, freshPath) => {

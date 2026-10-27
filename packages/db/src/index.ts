@@ -8,7 +8,7 @@ export {
 } from "./connection";
 export type { AppDatabase, DatabaseHandle } from "./connection";
 export { createFreshDatabase } from "./bootstrap";
-export { migrateExistingDatabase } from "./migrate-existing";
+export { migrateExistingDatabase, validateMigrationSource } from "./migrate-existing";
 export {
   assertDatabaseMigrationSafe,
   ensureOperatorOSDirectories,
@@ -24,6 +24,7 @@ export type { OperatorOSPaths, ResolveDataDirOptions } from "./data-dir";
 export {
   CURRENT_SCHEMA_FINGERPRINT,
   CURRENT_SCHEMA_VERSION,
+  S48_SCHEMA_FINGERPRINT,
   SCHEMA_MIGRATIONS,
   compareSchemaVersions,
   PROTECTED_DATABASE_BASENAME,

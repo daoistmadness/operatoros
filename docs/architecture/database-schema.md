@@ -1,21 +1,24 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-27
 ---
 
 # Database schema architecture
 
 OperatorOS supports SQLite only. Drizzle is the application persistence layer;
 PostgreSQL contracts are not maintained. The S4.7 schema is the fresh-bootstrap
-base and S4.8 is the current application head. Existing outdated databases are
+base and S4.9 is the current application head. Existing outdated databases are
 rejected rather than silently migrated.
 
 `20260724_s42` remains historical migration evidence. The TypeScript fresh
 bootstrap installs the approved S4.7 base from `packages/db/src/s47-schema.sql`
-and applies the S4.8 employee extension from
-`packages/db/src/s48-migration.sql`; the ledger records the S4.8 head. An
-explicit TypeScript runner upgrades recognized S4.6 and S4.7 databases to that
-same S4.8 target. The protected operational database remains separately
+and applies the employee and school-unit extensions from
+`packages/db/src/s48-migration.sql` and `packages/db/src/s49-migration.sql`.
+School-unit catalog updates use an integer compare-and-set version, and dated
+staff assignments preserve closed and cancelled history with database guards.
+The ledger records `20261027_s49`. An explicit TypeScript runner upgrades
+recognized S4.6, S4.7, and S4.8 databases to that same S4.9 target.
+The protected operational database remains separately
 governed.
 
 Existing current-schema databases are validated at startup. Older databases

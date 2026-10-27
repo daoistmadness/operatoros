@@ -28,7 +28,7 @@ The current deployment labels are:
 ## Database contract
 
 SQLite must preserve the established business outcomes: fresh bootstrap
-installs the S4.7 base and applies the S4.8 extension; migration-ledger ordering
+installs the S4.7 base and applies the S4.8 and S4.9 extensions; migration-ledger ordering
 is idempotent; constraints and append-only audit behavior hold; duplicate
 attendance/upload handling rolls back atomically; and analytics remain
 deterministic.
@@ -39,7 +39,7 @@ bootstrapped databases use SQLite's default rollback journal, while an existing
 database may still be in WAL mode. Drizzle is the application data layer.
 
 Existing databases are never migrated by ordinary startup. The current
-application schema head is S4.8 (`20261002_s48`); the protected operational
+application schema head is S4.9 (`20261027_s49`); the protected operational
 database remains S4.3 (`20260725_s43`) until a separately authorized migration,
 and it is never a test target.
 

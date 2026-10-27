@@ -1,4 +1,3 @@
-// Accepted S4.8 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, unique, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -784,6 +783,50 @@ export const staff_members = sqliteTable("staff_members", {
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const school_units = sqliteTable("school_units", {
+    "id": integer().primaryKey(),
+    "name": text().notNull(),
+    "status": text().notNull().default("ACTIVE"),
+    "version": integer().notNull().default(1),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("school_units_name_uc").on(sql`lower(trim(${table.name}))`),
+    check("ck_school_units_name", sql`length(trim(${table.name})) > 0`),
+    check("ck_school_units_status", sql`${table.status} IN ('ACTIVE','INACTIVE')`),
+    check("ck_school_units_version", sql`${table.version} >= 1`),
+]);
+export const staff_school_unit_assignment_versions = sqliteTable("staff_school_unit_assignment_versions", {
+    "id": integer().primaryKey(),
+    "staff_member_id": text().notNull().references(() => staff_members.id, { onDelete: "restrict" }),
+    "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
+    "effective_from": text().notNull(),
+    "effective_to": text(),
+    "ptk_applicability": text().notNull(),
+    "reason": text().notNull(),
+    "created_by": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "closed_reason": text(),
+    "closed_by": text(),
+    "closed_at": text(),
+    "cancelled_reason": text(),
+    "cancelled_by": text(),
+    "cancelled_at": text(),
+}, (table) => [
+    index("staff_school_unit_assignment_staff_unit_dates_idx").on(table.staff_member_id, table.school_unit_id, table.effective_from, table.effective_to),
+    check("ck_staff_school_unit_assignment_ptk", sql`${table.ptk_applicability} IN ('APPLICABLE','NOT_APPLICABLE','UNKNOWN')`),
+    check("ck_staff_school_unit_assignment_reason", sql`length(trim(${table.reason})) > 0`),
+    check("ck_staff_school_unit_assignment_closed_reason", sql`${table.closed_reason} IS NULL OR length(trim(${table.closed_reason})) > 0`),
+    check("ck_staff_school_unit_assignment_closed_by", sql`${table.closed_by} IS NULL OR length(trim(${table.closed_by})) > 0`),
+    check("ck_staff_school_unit_assignment_cancelled_reason", sql`${table.cancelled_reason} IS NULL OR length(trim(${table.cancelled_reason})) > 0`),
+    check("ck_staff_school_unit_assignment_cancelled_by", sql`${table.cancelled_by} IS NULL OR length(trim(${table.cancelled_by})) > 0`),
+    check("ck_staff_school_unit_assignment_start_date", sql`${table.effective_from} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.effective_from}, '+0 days') IS NOT NULL AND date(${table.effective_from}, '+0 days') = ${table.effective_from}`),
+    check("ck_staff_school_unit_assignment_end_date", sql`${table.effective_to} IS NULL OR (${table.effective_to} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.effective_to}, '+0 days') IS NOT NULL AND date(${table.effective_to}, '+0 days') = ${table.effective_to})`),
+    check("ck_staff_school_unit_assignment_date_range", sql`${table.effective_to} IS NULL OR ${table.effective_to} >= ${table.effective_from}`),
+    check("ck_staff_school_unit_assignment_close_fields", sql`(${table.closed_reason} IS NULL AND ${table.closed_by} IS NULL AND ${table.closed_at} IS NULL) OR (${table.closed_reason} IS NOT NULL AND length(trim(${table.closed_reason})) > 0 AND ${table.closed_by} IS NOT NULL AND length(trim(${table.closed_by})) > 0 AND ${table.closed_at} IS NOT NULL)`),
+    check("ck_staff_school_unit_assignment_cancel_fields", sql`(${table.cancelled_reason} IS NULL AND ${table.cancelled_by} IS NULL AND ${table.cancelled_at} IS NULL) OR (${table.cancelled_reason} IS NOT NULL AND length(trim(${table.cancelled_reason})) > 0 AND ${table.cancelled_by} IS NOT NULL AND length(trim(${table.cancelled_by})) > 0 AND ${table.cancelled_at} IS NOT NULL)`),
+    check("ck_staff_school_unit_assignment_not_closed_and_cancelled", sql`${table.effective_to} IS NULL OR ${table.cancelled_at} IS NULL`),
+]);
 export const student_academic_mapping_rules = sqliteTable("student_academic_mapping_rules", {
     "id": integer().primaryKey(),
     "mapping_type": text().notNull(),

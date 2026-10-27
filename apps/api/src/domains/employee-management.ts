@@ -5,16 +5,18 @@ import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { inTransaction } from "@operatoros/db";
 import { addWorksheet, appendRows, autoSizeColumns, createWorkbook, safeExportFilename, styleHeader, writeXlsxWorkbook, XLSX_MIME_TYPE } from "@operatoros/excel";
-import { StaffAnalyticsSummary, StaffCreateRequest, StaffHistoryResponse, StaffImportCommitRequest, StaffImportCommitResponse, StaffImportPreviewResponse, StaffPositionMappingResponse, StaffPositionMappingUpdate, StaffProfileResponse, StaffStatusChangeRequest, StaffStatusChangeResponse, StaffUpdateRequest } from "@operatoros/contracts/staff";
+import { SchoolUnitCreateRequest, SchoolUnitListResponse, SchoolUnitResponse, SchoolUnitUpdateRequest, StaffAnalyticsSummary, StaffCreateRequest, StaffHistoryResponse, StaffImportCommitRequest, StaffImportCommitResponse, StaffImportPreviewResponse, StaffPositionMappingResponse, StaffPositionMappingUpdate, StaffProfileResponse, StaffSchoolUnitAssignmentCancelRequest, StaffSchoolUnitAssignmentCloseRequest, StaffSchoolUnitAssignmentCreateRequest, StaffStatusChangeRequest, StaffStatusChangeResponse, StaffUpdateRequest } from "@operatoros/contracts/staff";
 import { commitStaffImport, expirePendingStaffImportData, previewStaffImport, StaffImportError } from "./staff-import";
 import { staffAnalytics } from "./staff-metrics";
 import type { StaffAuditEntity, StaffAuditOperation } from "./core";
 import { calculateTenureMonths } from "./staff-metrics";
+import { schoolLocalDate } from "./attendance-submission-deadline";
+import { appendCurrentSchoolUnitFilter, staffSchoolUnitAssignmentHistory, staffSchoolUnitAssignments } from "./staff-school-units";
 
 type Row = Record<string, any>;
 type Context = any;
 type Actor = (context: AuthContext, ctx: Context, options: { capability: string }) => CurrentUser | null;
-type Audit = (client: AuthContext["database"]["client"], user: CurrentUser, operation: StaffAuditOperation, entityType: StaffAuditEntity, entityReference: string | number, changedFields: string[], metadata?: Record<string, unknown>, capability?: string) => void;
+type Audit = (client: AuthContext["database"]["client"], user: CurrentUser, operation: StaffAuditOperation, entityType: StaffAuditEntity, entityReference: string | number, changedFields: string[], metadata?: Record<string, unknown>, capability?: string, reason?: string | null) => void;
 const SENSITIVE_FIELDS = ["birth_place", "birth_date", "nik", "email", "phone", "address"] as const;
 const STAFF_IMPORT_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const identifierRules: Record<string, RegExp> = { NIP: /^(?:\d{8}|\d{18})$/, NIK: /^\d{16}$/, NUPTK: /^\d{16}$/ };
@@ -27,7 +29,7 @@ function validDate(value: string): boolean {
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
-function today(context: AuthContext): string { return (context.now?.() ?? new Date()).toISOString().slice(0, 10); }
+function today(context: AuthContext): string { return schoolLocalDate(context.now?.() ?? new Date()); }
 function dapodik(value: string | null): string {
   switch (value?.trim().toLocaleUpperCase("id")) {
     case "AKTIF": case "ACTIVE": return "ACTIVE";
@@ -52,7 +54,7 @@ function detail(context: AuthContext, staffId: string): Row | null {
   const educationHistory = rows(context, "SELECT id, education_level, institution_name, major, graduation_year, notes, created_at, updated_at FROM staff_education WHERE staff_member_id=? ORDER BY graduation_year DESC,id DESC", [staffId]);
   const levelOrder = ["S3", "S2", "S1", "D4", "D3", "D2", "D1", "SMA", "SMK", "SMP", "SD"];
   const highest = educationHistory.slice().sort((left, right) => levelOrder.indexOf(String(left.education_level)) - levelOrder.indexOf(String(right.education_level)))[0];
-  const tenure = calculateTenureMonths(member.employment_start_date == null ? null : String(member.employment_start_date), member.employment_end_date == null ? null : String(member.employment_end_date), String(member.employment_status), today(context));
+  const tenure = calculateTenureMonths(member.employment_start_date == null ? null : String(member.employment_start_date), member.employment_end_date == null ? null : String(member.employment_end_date), String(member.employment_status), schoolLocalDate(context.now?.() ?? new Date()));
   return {
     id: member.id, source_staff_id: member.source_staff_id, full_name: member.full_name,
     employment_status: member.employment_status, job_title: member.job_title_normalized ?? member.job_title_raw, job_title_raw: member.job_title_raw,
@@ -63,6 +65,7 @@ function detail(context: AuthContext, staffId: string): Row | null {
     jenjangs: rows(context, "SELECT j.id, j.name, j.code, j.level, j.active FROM staff_jenjang_assignments a JOIN jenjangs j ON j.id=a.jenjang_id WHERE a.staff_member_id=? ORDER BY j.code,j.id", [staffId]).map((item) => ({ ...item, active: Boolean(item.active) })),
     education_history: educationHistory, service_years: tenure === null ? null : Math.floor(tenure / 12), service_months: tenure === null ? null : tenure % 12,
     highest_education_level: highest?.education_level ?? null, highest_education_institution: highest?.institution_name ?? null,
+    school_unit_assignments: staffSchoolUnitAssignments(context.database.client, staffId, schoolLocalDate(context.now?.() ?? new Date())),
   };
 }
 function sensitiveInput(body: Row): boolean { return SENSITIVE_FIELDS.some((field) => Object.hasOwn(body, field)); }
@@ -120,7 +123,7 @@ function saveIdentifiers(context: AuthContext, staffId: string, identity: Record
   const contact = ["email", "phone", "address"].some((field) => Object.hasOwn(identity, field));
   if (contact) context.database.client.run("INSERT INTO staff_contact_details (staff_member_id,address,email,phone) VALUES (?,?,?,?) ON CONFLICT(staff_member_id) DO UPDATE SET address=CASE WHEN ? THEN excluded.address ELSE staff_contact_details.address END,email=CASE WHEN ? THEN excluded.email ELSE staff_contact_details.email END,phone=CASE WHEN ? THEN excluded.phone ELSE staff_contact_details.phone END,updated_at=CURRENT_TIMESTAMP", [staffId, identity.address ?? null, identity.email ?? null, identity.phone ?? null, Number(Object.hasOwn(identity, "address")), Number(Object.hasOwn(identity, "email")), Number(Object.hasOwn(identity, "phone"))]);
 }
-function buildFilters(query: Row, prefix = "s", canSearchEmail = false): { where: string[]; params: SQLQueryBindings[]; visible: Record<string, unknown> } {
+function buildFilters(query: Row, prefix = "s", canSearchEmail = false, schoolUnitAsOfDate = new Date().toISOString().slice(0, 10)): { where: string[]; params: SQLQueryBindings[]; visible: Record<string, unknown> } {
   const where: string[] = [];
   const params: SQLQueryBindings[] = [];
   const status = String(query.status ?? "ACTIVE");
@@ -150,7 +153,8 @@ function buildFilters(query: Row, prefix = "s", canSearchEmail = false): { where
   if (query.has_nuptk === "true" || query.has_nuptk === "false") {
     where.push(`${query.has_nuptk === "true" ? "EXISTS" : "NOT EXISTS"} (SELECT 1 FROM staff_identifiers i WHERE i.staff_member_id=${prefix}.id AND i.identifier_type='NUPTK' AND i.normalized_value IS NOT NULL)`);
   }
-  return { where, params, visible: { status, job_title: jobTitle, position_id: query.position_id ? Number(query.position_id) : null, joined_from: query.joined_from ?? null, joined_to: query.joined_to ?? null, dapodik_status: dapodikStatus, jenjang_id: query.jenjang_id ? Number(query.jenjang_id) : null, has_nuptk: query.has_nuptk ?? null, search_present: Boolean(search) } };
+  if (!appendCurrentSchoolUnitFilter(where, params, query.school_unit_id == null ? undefined : String(query.school_unit_id), schoolUnitAsOfDate)) throw new StaffImportError(422, "School unit filter is invalid.");
+  return { where, params, visible: { status, job_title: jobTitle, position_id: query.position_id ? Number(query.position_id) : null, joined_from: query.joined_from ?? null, joined_to: query.joined_to ?? null, dapodik_status: dapodikStatus, jenjang_id: query.jenjang_id ? Number(query.jenjang_id) : null, school_unit_id: query.school_unit_id ? Number(query.school_unit_id) : null, has_nuptk: query.has_nuptk ?? null, search_present: Boolean(search) } };
 }
 
 export function registerEmployeeManagementRoutes(app: any, context: AuthContext, auth: Actor, audit: Audit): void {
@@ -164,6 +168,122 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
     }, STAFF_IMPORT_CLEANUP_INTERVAL_MS);
   });
   app.onStop(() => { if (cleanupTimer) clearInterval(cleanupTimer); cleanupTimer = undefined; });
+
+  app.get("/api/staff/school-units", ({ set, ...ctx }: Context) => {
+    if (!auth(context, { set, ...ctx }, { capability: "view_staff" })) return { detail: "Insufficient permissions" };
+    return rows(context, "SELECT id,name,status,version,created_at,updated_at FROM school_units ORDER BY status,name,id");
+  }, { response: { 200: SchoolUnitListResponse } });
+
+  app.post("/api/staff/school-units", ({ body, set, ...ctx }: Context) => {
+    const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const name = value(body.name); const reason = value(body.reason);
+    if (!name) { set.status = 422; return { detail: "School unit name is required." }; }
+    if (!reason) { set.status = 422; return { detail: "A reason is required." }; }
+    try {
+      const id = inTransaction(context.database.client, () => {
+        const result = context.database.client.run("INSERT INTO school_units (name) VALUES (?)", [name]);
+        const schoolUnitId = Number(result.lastInsertRowid);
+        audit(context.database.client, user, "SCHOOL_UNIT_CREATE", "SCHOOL_UNIT", schoolUnitId, ["name"], { name, status: "ACTIVE" }, "manage_staff", reason);
+        return schoolUnitId;
+      });
+      set.status = 201;
+      return row(context, "SELECT id,name,status,version,created_at,updated_at FROM school_units WHERE id=?", [id]);
+    } catch { set.status = 409; return { detail: "School unit could not be created because its name already exists." }; }
+  }, { body: SchoolUnitCreateRequest, response: { 201: SchoolUnitResponse } });
+
+  app.patch("/api/staff/school-units/:school_unit_id", ({ params, body, set, ...ctx }: Context) => {
+    const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const id = Number(params.school_unit_id);
+    if (!Number.isSafeInteger(id) || id < 1) { set.status = 422; return { detail: "School unit ID is invalid." }; }
+    const current = row(context, "SELECT id,name,status,version FROM school_units WHERE id=?", [id]);
+    if (!current) { set.status = 404; return { detail: "School unit not found." }; }
+    if (Number(current.version) !== body.expected_version) { set.status = 409; return { detail: "School unit changed since it was opened. Reload the school-unit list and review the current values before saving." }; }
+    const name = body.name === undefined ? String(current.name) : value(body.name);
+    const status = body.status === undefined ? String(current.status) : String(body.status);
+    const reason = value(body.reason);
+    if (!name) { set.status = 422; return { detail: "School unit name is required." }; }
+    if (!reason) { set.status = 422; return { detail: "A reason is required." }; }
+    const changed = [ ...(name === current.name ? [] : ["name"]), ...(status === current.status ? [] : ["status"]) ];
+    try {
+      inTransaction(context.database.client, () => {
+        const updated = context.database.client.run("UPDATE school_units SET name=?,status=?,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=? AND version=?", [name, status, id, body.expected_version]);
+        if (updated.changes !== 1) throw new Error("SCHOOL_UNIT_VERSION_CONFLICT");
+        audit(context.database.client, user, "SCHOOL_UNIT_UPDATE", "SCHOOL_UNIT", id, changed.length ? changed : ["version"], { school_unit_id: id, expected_version: body.expected_version, before: { name: String(current.name), status: String(current.status) }, after: { name, status } }, "manage_staff", reason);
+      });
+      return row(context, "SELECT id,name,status,version,created_at,updated_at FROM school_units WHERE id=?", [id]);
+    } catch (error) {
+      set.status = 409;
+      return { detail: error instanceof Error && error.message === "SCHOOL_UNIT_VERSION_CONFLICT" ? "School unit changed since it was opened. Reload the school-unit list and review the current values before saving." : "School unit could not be updated because its name is already in use." };
+    }
+  }, { params: t.Object({ school_unit_id: t.Integer({ minimum: 1 }) }), body: SchoolUnitUpdateRequest, response: { 200: SchoolUnitResponse } });
+
+  app.post("/api/staff/:staff_id/school-unit-assignments", ({ params, body, set, ...ctx }: Context) => {
+    const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client;
+    if (!row(context, "SELECT id FROM staff_members WHERE id=?", [params.staff_id])) { set.status = 404; return { detail: "Staff member not found." }; }
+    const schoolUnitId = Number(body.school_unit_id);
+    if (!Number.isSafeInteger(schoolUnitId) || schoolUnitId < 1) { set.status = 422; return { detail: "School unit ID is invalid." }; }
+    if (!validDate(String(body.effective_from))) { set.status = 422; return { detail: "Effective from must be a valid ISO date." }; }
+    const reason = value(body.reason);
+    if (!reason) { set.status = 422; return { detail: "A reason is required." }; }
+    const unit = row(context, "SELECT status FROM school_units WHERE id=?", [schoolUnitId]);
+    if (!unit) { set.status = 404; return { detail: "School unit not found." }; }
+    if (unit.status !== "ACTIVE") { set.status = 409; return { detail: "New assignments require an active school unit." }; }
+    try {
+      inTransaction(client, () => {
+        const inserted = client.run("INSERT INTO staff_school_unit_assignment_versions (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by) VALUES (?,?,?,?,?,?)", [params.staff_id, schoolUnitId, body.effective_from, body.ptk_applicability, reason, user.username]);
+        audit(client, user, "STAFF_SCHOOL_UNIT_ASSIGNMENT_CREATE", "STAFF", params.staff_id, ["school_unit_assignment"], { assignment_id: Number(inserted.lastInsertRowid), school_unit_id: schoolUnitId, effective_from: body.effective_from, ptk_applicability: body.ptk_applicability }, "manage_staff", reason);
+      });
+      set.status = 201;
+      return detail(context, params.staff_id);
+    } catch { set.status = 409; return { detail: "The assignment conflicts with an existing period or could not be saved." }; }
+  }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), body: StaffSchoolUnitAssignmentCreateRequest, response: { 201: StaffProfileResponse } });
+
+  app.post("/api/staff/:staff_id/school-unit-assignments/:assignment_id/close", ({ params, body, set, ...ctx }: Context) => {
+    const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client; const assignmentId = Number(params.assignment_id);
+    if (!Number.isSafeInteger(assignmentId) || assignmentId < 1) { set.status = 422; return { detail: "Assignment ID is invalid." }; }
+    const assignment = row(context, "SELECT effective_from,effective_to,cancelled_at,school_unit_id FROM staff_school_unit_assignment_versions WHERE id=? AND staff_member_id=?", [assignmentId, params.staff_id]);
+    if (!assignment) { set.status = 404; return { detail: "School unit assignment not found." }; }
+    if (assignment.effective_to !== null || assignment.cancelled_at !== null) { set.status = 409; return { detail: "School unit assignment has already been closed or cancelled." }; }
+    if (String(assignment.effective_from) > today(context)) { set.status = 409; return { detail: "Future assignments cannot be closed. Cancel the assignment instead." }; }
+    if (!validDate(String(body.effective_to)) || String(body.effective_to) < String(assignment.effective_from)) { set.status = 422; return { detail: "Effective to must be a valid date on or after the assignment start." }; }
+    const reason = value(body.reason);
+    if (!reason) { set.status = 422; return { detail: "A reason is required." }; }
+    try {
+      inTransaction(client, () => {
+        const result = client.run("UPDATE staff_school_unit_assignment_versions SET effective_to=?,closed_reason=?,closed_by=?,closed_at=CURRENT_TIMESTAMP WHERE id=? AND staff_member_id=? AND effective_to IS NULL AND cancelled_at IS NULL", [body.effective_to, reason, user.username, assignmentId, params.staff_id]);
+        if (result.changes !== 1) throw new Error("ASSIGNMENT_ALREADY_CLOSED");
+        audit(client, user, "STAFF_SCHOOL_UNIT_ASSIGNMENT_CLOSE", "STAFF", params.staff_id, ["school_unit_assignment"], { assignment_id: assignmentId, effective_to: body.effective_to }, "manage_staff", reason);
+      });
+      return detail(context, params.staff_id);
+    } catch { set.status = 409; return { detail: "School unit assignment could not be closed." }; }
+  }, { params: t.Object({ staff_id: t.String({ minLength: 1 }), assignment_id: t.Integer({ minimum: 1 }) }), body: StaffSchoolUnitAssignmentCloseRequest, response: { 200: StaffProfileResponse } });
+
+  app.post("/api/staff/:staff_id/school-unit-assignments/:assignment_id/cancel", ({ params, body, set, ...ctx }: Context) => {
+    const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
+    const client = context.database.client; const assignmentId = Number(params.assignment_id);
+    if (!Number.isSafeInteger(assignmentId) || assignmentId < 1) { set.status = 422; return { detail: "Assignment ID is invalid." }; }
+    const assignment = row(context, "SELECT effective_from,effective_to,cancelled_at,school_unit_id FROM staff_school_unit_assignment_versions WHERE id=? AND staff_member_id=?", [assignmentId, params.staff_id]);
+    if (!assignment) { set.status = 404; return { detail: "School unit assignment not found." }; }
+    const currentDate = today(context);
+    if (assignment.effective_to !== null || assignment.cancelled_at !== null) { set.status = 409; return { detail: "School unit assignment has already been closed or cancelled." }; }
+    if (String(assignment.effective_from) <= currentDate) { set.status = 409; return { detail: "Only assignments that have not started can be cancelled." }; }
+    const reason = value(body.reason);
+    if (!reason) { set.status = 422; return { detail: "A cancellation reason is required." }; }
+    try {
+      inTransaction(client, () => {
+        const transactionNow = context.now?.() ?? new Date();
+        const transactionDate = schoolLocalDate(transactionNow);
+        const cancelledAt = transactionNow.toISOString();
+        const result = client.run("UPDATE staff_school_unit_assignment_versions SET cancelled_reason=?,cancelled_by=?,cancelled_at=? WHERE id=? AND staff_member_id=? AND effective_from>? AND effective_to IS NULL AND cancelled_at IS NULL", [reason, user.username, cancelledAt, assignmentId, params.staff_id, transactionDate]);
+        if (result.changes !== 1) throw new Error("ASSIGNMENT_CANCELLATION_CONFLICT");
+        audit(client, user, "STAFF_SCHOOL_UNIT_ASSIGNMENT_CANCEL", "STAFF", params.staff_id, ["school_unit_assignment"], { assignment_id: assignmentId, school_unit_id: Number(assignment.school_unit_id), effective_from: assignment.effective_from }, "manage_staff", reason);
+      });
+      return detail(context, params.staff_id);
+    } catch { set.status = 409; return { detail: "School unit assignment changed before cancellation. Reload the employee profile." }; }
+  }, { params: t.Object({ staff_id: t.String({ minLength: 1 }), assignment_id: t.Integer({ minimum: 1 }) }), body: StaffSchoolUnitAssignmentCancelRequest, response: { 200: StaffProfileResponse } });
+
   const statusBody = StaffStatusChangeRequest;
   app.post("/api/staff", ({ body, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "manage_staff" }); if (!user) return { detail: "Insufficient permissions" };
@@ -274,26 +394,40 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
   app.get("/api/staff/:staff_id/history", ({ params, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "view_staff_audit" }); if (!user) return { detail: "Insufficient permissions" };
     if (!row(context, "SELECT id FROM staff_members WHERE id=?", [params.staff_id])) { set.status = 404; return { detail: "Staff member not found" }; }
-    const auditHistory = rows(context, "SELECT event_id,operation,actor_id,occurred_at,changed_fields,metadata FROM operations_audit_events WHERE entity_type='STAFF' AND entity_reference=? AND operation IN ('STAFF_CREATE','STAFF_PROFILE_UPDATE','STAFF_UPDATE','STAFF_STATUS_CHANGE','STAFF_IMPORT_CREATE','STAFF_IMPORT_UPDATE') ORDER BY occurred_at DESC,event_id DESC", [params.staff_id]).map((event) => {
+    const auditHistory = rows(context, "SELECT event_id,operation,actor_id,occurred_at,reason,changed_fields,metadata FROM operations_audit_events WHERE entity_type='STAFF' AND entity_reference=? AND operation IN ('STAFF_CREATE','STAFF_PROFILE_UPDATE','STAFF_UPDATE','STAFF_STATUS_CHANGE','STAFF_IMPORT_CREATE','STAFF_IMPORT_UPDATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CREATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CLOSE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CANCEL') ORDER BY occurred_at DESC,event_id DESC", [params.staff_id]).map((event) => {
       let metadata: Record<string, unknown> = {};
       try { metadata = JSON.parse(String(event.metadata ?? "{}")) as Record<string, unknown>; } catch { metadata = {}; }
       let fields: string[] = [];
       try { fields = JSON.parse(String(event.changed_fields ?? "[]")) as string[]; } catch { fields = []; }
-      return { id: String(event.event_id), action: String(event.operation), effective_date: typeof metadata.effective_date === "string" ? metadata.effective_date : null, changed_fields: fields, metadata, actor: String(event.actor_id), created_at: String(event.occurred_at) };
+      return { id: String(event.event_id), action: String(event.operation), effective_date: typeof metadata.effective_date === "string" ? metadata.effective_date : typeof metadata.effective_to === "string" ? metadata.effective_to : typeof metadata.effective_from === "string" ? metadata.effective_from : null, reason: event.reason == null ? null : String(event.reason), changed_fields: fields, metadata, actor: String(event.actor_id), created_at: String(event.occurred_at) };
     });
     const employmentHistory = rows(context, "SELECT id,effective_date,employment_status,position_title,source,source_batch_id,created_by,created_at FROM staff_employment_history WHERE staff_member_id=? ORDER BY coalesce(effective_date,'9999-99-99') DESC,id DESC", [params.staff_id]).map((event) => ({
       id: `employment-${event.id}`, action: "EMPLOYMENT_HISTORY", effective_date: event.effective_date == null ? null : String(event.effective_date),
-      changed_fields: ["employment_status", "position_title"], metadata: { employment_status: event.employment_status, position_title: event.position_title, source: event.source, source_batch_id: event.source_batch_id },
+      changed_fields: ["employment_status", "position_title"], reason: null, metadata: { employment_status: event.employment_status, position_title: event.position_title, source: event.source, source_batch_id: event.source_batch_id },
       actor: String(event.created_by), created_at: String(event.created_at),
     }));
-    return [...auditHistory, ...employmentHistory].sort((left, right) => String(right.effective_date ?? right.created_at).localeCompare(String(left.effective_date ?? left.created_at)));
+    const assignmentHistory = staffSchoolUnitAssignmentHistory(context.database.client, params.staff_id).map((assignment) => {
+      const cancelledAt = assignment.cancelled_at == null ? null : String(assignment.cancelled_at);
+      const cancellationTime = cancelledAt && (cancelledAt.includes("T") ? cancelledAt : `${cancelledAt.replace(" ", "T")}Z`);
+      return {
+        id: `school-unit-assignment-${assignment.id}`, action: "STAFF_SCHOOL_UNIT_ASSIGNMENT_PERIOD",
+        effective_date: cancellationTime ? schoolLocalDate(new Date(cancellationTime)) : assignment.effective_to ?? assignment.effective_from,
+        reason: assignment.cancelled_reason ?? assignment.closed_reason ?? assignment.reason,
+        changed_fields: ["school_unit_id", "effective_from", "effective_to", "ptk_applicability", ...(assignment.cancelled_at ? ["cancelled_at"] : [])],
+        metadata: { school_unit_id: assignment.school_unit_id, school_unit_name: assignment.school_unit_name, school_unit_status: assignment.school_unit_status, effective_from: assignment.effective_from, effective_to: assignment.effective_to, ptk_applicability: assignment.ptk_applicability, assignment_reason: assignment.reason, closed_reason: assignment.closed_reason, closed_by: assignment.closed_by, closed_at: assignment.closed_at, cancelled_reason: assignment.cancelled_reason, cancelled_by: assignment.cancelled_by, cancelled_at: assignment.cancelled_at },
+        actor: assignment.cancelled_by ?? assignment.closed_by ?? assignment.created_by,
+        created_at: assignment.cancelled_at ?? assignment.closed_at ?? assignment.created_at,
+      };
+    });
+    return [...auditHistory, ...employmentHistory, ...assignmentHistory].sort((left, right) => String(right.effective_date ?? right.created_at).localeCompare(String(left.effective_date ?? left.created_at)));
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), response: StaffHistoryResponse });
 
   app.get("/api/staff/analytics/summary", ({ query, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "view_staff_analytics" }); if (!user) return { detail: "Insufficient permissions" };
-    const asOfDate = String(query.as_of_date ?? today(context));
-    if (!validDate(asOfDate) || asOfDate > today(context)) { set.status = 422; return { detail: "Reporting date must be a valid date no later than today." }; }
-    return staffAnalytics(context.database.client, asOfDate);
+    const currentDate = today(context);
+    const asOfDate = String(query.as_of_date ?? currentDate);
+    if (!validDate(asOfDate) || asOfDate > currentDate) { set.status = 422; return { detail: "Reporting date must be a valid date no later than today." }; }
+    return staffAnalytics(context.database.client, asOfDate, "", [], currentDate);
   }, { query: t.Object({ as_of_date: t.Optional(t.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}$" })) }), response: { 200: StaffAnalyticsSummary, 422: t.Object({ detail: t.String() }) } });
 
   app.get("/api/staff/positions", ({ query, set, ...ctx }: Context) => {
@@ -336,7 +470,8 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
     const exportUser = includeSensitive ? auth(context, { set, ...ctx }, { capability: "export_sensitive_staff_fields" }) : user;
     if (!exportUser) return { detail: "Insufficient permissions" };
     try {
-      const filters = buildFilters(query, "s", capabilitiesForRole(user.role).includes("view_staff_sensitive"));
+      const unitAsOfDate = schoolLocalDate(context.now?.() ?? new Date());
+      const filters = buildFilters(query, "s", capabilitiesForRole(user.role).includes("view_staff_sensitive"), unitAsOfDate);
       const where = filters.where.length ? `WHERE ${filters.where.join(" AND ")}` : "";
       const total = Number(row(context, `SELECT COUNT(*) AS count FROM staff_members s ${where}`, filters.params)?.count ?? 0);
       if (total > 10000) throw new StaffImportError(422, "This export contains more than 10,000 employees. Add a filter and export a smaller selection.");
@@ -347,16 +482,23 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
         (SELECT email FROM staff_contact_details c WHERE c.staff_member_id=s.id) AS email,
         (SELECT phone FROM staff_contact_details c WHERE c.staff_member_id=s.id) AS phone,
         (SELECT address FROM staff_contact_details c WHERE c.staff_member_id=s.id) AS address,
-        s.birth_place,s.birth_date FROM staff_members s ${where} ORDER BY s.full_name,s.id`, filters.params);
-      const asOfDate = new Date().toISOString().slice(0, 10);
-      const analytics = staffAnalytics(context.database.client, asOfDate, where, filters.params);
+        s.birth_place,s.birth_date,
+        (SELECT group_concat(unit_name, '; ') FROM (
+          SELECT u.name AS unit_name FROM staff_school_unit_assignment_versions a
+          JOIN school_units u ON u.id=a.school_unit_id
+          WHERE a.staff_member_id=s.id AND a.cancelled_at IS NULL AND a.effective_from<=? AND (a.effective_to IS NULL OR a.effective_to>=?)
+          ORDER BY u.name,u.id
+        )) AS school_unit_names
+        FROM staff_members s ${where} ORDER BY s.full_name,s.id`, [unitAsOfDate, unitAsOfDate, ...filters.params]);
+      const asOfDate = schoolLocalDate(context.now?.() ?? new Date());
+      const analytics = staffAnalytics(context.database.client, asOfDate, where, filters.params, asOfDate);
       const workbook = createWorkbook({ exportType: "Employee directory" });
       const employees = addWorksheet(workbook, "Employees");
       const headers = ["Staff ID", "Name", "Status", "Position", "Unit", "NIP", "NUPTK", "DAPODIK", "Start Date", "End Date", "Tenure Months"];
       if (includeSensitive) headers.push("NIK", "Birth Place", "Birth Date", "Email", "Phone", "Address");
       appendRows(employees, [headers, ...members.map((member) => {
         const tenure = calculateTenureMonths(member.employment_start_date, member.employment_end_date, member.employment_status, asOfDate);
-        const basic = [member.source_staff_id, member.full_name, member.employment_status, member.job_title_normalized ?? member.job_title_raw, null, member.nip, member.nuptk, member.dapodik_status_normalized, member.employment_start_date, member.employment_end_date, tenure];
+        const basic = [member.source_staff_id, member.full_name, member.employment_status, member.job_title_normalized ?? member.job_title_raw, member.school_unit_names, member.nip, member.nuptk, member.dapodik_status_normalized, member.employment_start_date, member.employment_end_date, tenure];
         return includeSensitive ? [...basic, member.nik, member.birth_place, member.birth_date, member.email, member.phone, member.address] : basic;
       })]);
       styleHeader(employees); autoSizeColumns(employees);
@@ -371,5 +513,5 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
       const filename = safeExportFilename(`employee-directory-${asOfDate}.xlsx`);
       return new Response(bytes, { headers: { "content-type": XLSX_MIME_TYPE, "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" } });
     } catch (error) { set.status = error instanceof StaffImportError ? error.status : 409; return { detail: error instanceof StaffImportError ? error.message : "Employee export failed." }; }
-  }, { query: t.Object({ status: t.Optional(t.String()), search: t.Optional(t.String()), job_title: t.Optional(t.String()), position_id: t.Optional(t.String()), joined_from: t.Optional(t.String()), joined_to: t.Optional(t.String()), dapodik_status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), has_nuptk: t.Optional(t.String()), include_sensitive: t.Optional(t.String()) }) });
+  }, { query: t.Object({ status: t.Optional(t.String()), search: t.Optional(t.String()), job_title: t.Optional(t.String()), position_id: t.Optional(t.String()), joined_from: t.Optional(t.String()), joined_to: t.Optional(t.String()), dapodik_status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), school_unit_id: t.Optional(t.String()), has_nuptk: t.Optional(t.String()), include_sensitive: t.Optional(t.String()) }) });
 }

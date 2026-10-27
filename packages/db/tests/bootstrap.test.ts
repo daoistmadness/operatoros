@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 
-describe("Bun S4.8 fresh bootstrap", () => {
+describe("Bun S4.9 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -16,6 +16,11 @@ describe("Bun S4.8 fresh bootstrap", () => {
       try {
         expect(db.query("SELECT version FROM operatoros_schema_migrations").get()).toEqual({ version: CURRENT_SCHEMA_VERSION });
         expect((db.query("PRAGMA table_info(staff_job_title_mappings)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("is_teaching_role");
+        expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('school_units','staff_school_unit_assignment_versions') ORDER BY name").all()).toEqual([
+          { name: "school_units" }, { name: "staff_school_unit_assignment_versions" },
+        ]);
+        expect((db.query("PRAGMA table_info(school_units)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("version");
+        expect(db.query("SELECT version FROM school_units").get()).toBeNull();
         db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Teacher', 'Teacher', 'TEACHING', 1)");
         expect(() => db.run("INSERT INTO staff_job_title_mappings (raw_title, normalized_title, position_category, is_teaching_role) VALUES ('Synthetic Invalid', 'Invalid', 'MADE_UP', 1)")).toThrow();
         db.run("INSERT INTO students (id, name) VALUES (1, 'Same Name'), (2, 'Same Name')");
@@ -33,6 +38,56 @@ describe("Bun S4.8 fresh bootstrap", () => {
       expect(() => createFreshDatabase(path)).toThrow("DATABASE_ALREADY_EXISTS");
       const reopened = openDatabase(path, { readonly: true });
       reopened.close();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("enforces append-only school-unit assignment history and valid references", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
+    const path = join(root, "operatoros.sqlite");
+    try {
+      createFreshDatabase(path);
+      const handle = openDatabase(path);
+      const db = handle.client;
+      try {
+        db.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('staff-1','Synthetic Staff','synthetic staff')");
+        const firstUnit = Number(db.run("INSERT INTO school_units (name) VALUES ('Unit One')").lastInsertRowid);
+        const secondUnit = Number(db.run("INSERT INTO school_units (name) VALUES ('Unit Two')").lastInsertRowid);
+        const thirdUnit = Number(db.run("INSERT INTO school_units (name) VALUES ('Unit Three')").lastInsertRowid);
+        const insertAssignment = (staffId: string, unitId: number, from: string, to: string | null = null) => db.run(
+          "INSERT INTO staff_school_unit_assignment_versions (staff_member_id,school_unit_id,effective_from,effective_to,ptk_applicability,reason,created_by) VALUES (?,?,?,?, 'UNKNOWN','Synthetic reason','synthetic-admin')",
+          [staffId, unitId, from, to],
+        );
+
+        insertAssignment("staff-1", firstUnit, "2026-10-01");
+        expect(() => insertAssignment("staff-1", firstUnit, "2026-10-31")).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_OVERLAP");
+        insertAssignment("staff-1", secondUnit, "2026-10-01");
+        expect(() => insertAssignment("missing-staff", firstUnit, "2026-11-01")).toThrow();
+        expect(() => insertAssignment("staff-1", 99999, "2026-11-01")).toThrow();
+        expect(() => insertAssignment("staff-1", firstUnit, "2026-02-30")).toThrow();
+        expect(() => insertAssignment("staff-1", thirdUnit, "2026-99-99")).toThrow();
+        expect(() => insertAssignment("staff-1", thirdUnit, "2026-13-01")).toThrow();
+        expect(() => insertAssignment("staff-1", thirdUnit, "2026-11-01", "2026-99-99")).toThrow();
+        expect(() => insertAssignment("staff-1", firstUnit, "2026-09-01", "2026-08-31")).toThrow();
+        expect(() => insertAssignment("staff-1", thirdUnit, "2026-11-01", "2026-11-30")).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_MUST_START_OPEN");
+
+        const assignmentId = Number(db.query<{ id: number }, [number]>("SELECT id FROM staff_school_unit_assignment_versions WHERE school_unit_id=? ORDER BY id LIMIT 1").get(firstUnit)?.id);
+        db.run("UPDATE staff_school_unit_assignment_versions SET effective_to='2026-10-30',closed_reason='Synthetic close',closed_by='synthetic-admin',closed_at=CURRENT_TIMESTAMP WHERE id=?", [assignmentId]);
+        expect(() => db.run("UPDATE staff_school_unit_assignment_versions SET effective_to='2026-10-29' WHERE id=?", [assignmentId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
+        expect(() => db.run("UPDATE staff_school_unit_assignment_versions SET ptk_applicability='APPLICABLE' WHERE id=?", [assignmentId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
+        expect(() => db.run("DELETE FROM staff_school_unit_assignment_versions WHERE id=?", [assignmentId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
+        insertAssignment("staff-1", firstUnit, "2026-10-31");
+
+        const futureId = Number(insertAssignment("staff-1", thirdUnit, "2026-11-01").lastInsertRowid);
+        db.run("UPDATE staff_school_unit_assignment_versions SET cancelled_reason='Synthetic cancellation',cancelled_by='synthetic-admin',cancelled_at=CURRENT_TIMESTAMP WHERE id=?", [futureId]);
+        expect(() => db.run("UPDATE staff_school_unit_assignment_versions SET cancelled_reason='Rewritten cancellation' WHERE id=?", [futureId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
+        expect(() => db.run("DELETE FROM staff_school_unit_assignment_versions WHERE id=?", [futureId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
+        expect(() => insertAssignment("staff-1", thirdUnit, "2026-11-01")).not.toThrow();
+        expect(db.query("SELECT cancelled_reason,cancelled_by FROM staff_school_unit_assignment_versions WHERE id=?").get(futureId)).toEqual({ cancelled_reason: "Synthetic cancellation", cancelled_by: "synthetic-admin" });
+      } finally {
+        handle.close();
+      }
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -4,11 +4,50 @@ import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CURRENT_SCHEMA_VERSION, createFreshDatabase, openDatabase } from "@operatoros/db";
+import { CURRENT_SCHEMA_VERSION, S48_SCHEMA_FINGERPRINT, createFreshDatabase, migrateExistingDatabase, openDatabase } from "@operatoros/db";
 import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
 const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const cli = join(root, "apps/api/src/backup-cli.ts");
+
+it("backs up and rehearses an approved S4.8 migration without changing its source", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-s48-backup-test-"));
+  const source = join(temporary, "source");
+  const restored = join(temporary, "restored");
+  mkdirSync(source);
+  mkdirSync(restored);
+  const databasePath = join(source, "operatoros.sqlite");
+  const env = { ...process.env, OPERATOROS_DATA_DIR: source, DATABASE_URL: `sqlite:///${databasePath}`, BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"), BACKUP_ENCRYPTION_KEY_ID: "synthetic-test", AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key" };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    const database = new Database(databasePath, { create: true });
+    database.exec(readFileSync(join(root, "packages/db/src/s47-schema.sql"), "utf8"));
+    database.exec(readFileSync(join(root, "packages/db/src/s48-migration.sql"), "utf8"));
+    database.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
+    database.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-s48','Synthetic Staff','synthetic staff')");
+    database.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
+    expect(JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")).schema_version).toBe("20261002_s48");
+    const restore = command("restore-disposable", artifact, restored);
+    expect(restore.exitCode).toBe(0);
+    const restoredPath = join(restored, "operatoros.sqlite");
+    expect(migrateExistingDatabase(restoredPath)).toBe("MIGRATED");
+    const result = openDatabase(restoredPath, { readonly: true });
+    expect(result.client.query("SELECT full_name FROM staff_members WHERE id='synthetic-s48'").get()).toEqual({ full_name: "Synthetic Staff" });
+    result.close();
+    const original = new Database(databasePath, { readonly: true });
+    expect(original.query("SELECT version FROM operatoros_schema_migrations").get()).toEqual({ version: "20261002_s48" });
+    original.close();
+
+    const tampered = new Database(databasePath);
+    tampered.run("CREATE TABLE unapproved_change (id INTEGER)");
+    tampered.close();
+    expect(command("backup").exitCode).not.toBe(0);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
 
 it("backs up and restores only an explicit disposable data root", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-test-"));
@@ -85,7 +124,7 @@ it("backs up and restores only an explicit disposable data root", () => {
 
     writeFileSync(`${databasePath}-wal`, "");
     writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
-    expect(command("migrate-existing", artifact, source).stdout.toString()).toContain("NOOP 20261002_s48");
+    expect(command("migrate-existing", artifact, source).stdout.toString()).toContain(`NOOP ${CURRENT_SCHEMA_VERSION}`);
     expect(existsSync(`${databasePath}-wal`)).toBe(false);
     expect(existsSync(`${databasePath}-shm`)).toBe(false);
 
@@ -102,5 +141,50 @@ it("backs up and restores only an explicit disposable data root", () => {
     const refused = command("migrate-existing", artifact, source);
     expect(refused.exitCode).not.toBe(0);
     expect(refused.stderr.toString()).toContain("BACKUP_SOURCE_MISMATCH");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("rejects an S4.8 source with an altered migration ledger before backup, disposable restore, or migration", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-s48-ledger-test-"));
+  const source = join(temporary, "source");
+  const restored = join(temporary, "restored");
+  mkdirSync(source);
+  mkdirSync(restored);
+  const databasePath = join(source, "operatoros.sqlite");
+  const env = { ...process.env, OPERATOROS_DATA_DIR: source, DATABASE_URL: `sqlite:///${databasePath}`, BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"), BACKUP_ENCRYPTION_KEY_ID: "synthetic-test", AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key" };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    const database = new Database(databasePath, { create: true });
+    database.exec(readFileSync(join(root, "packages/db/src/s47-schema.sql"), "utf8"));
+    database.exec(readFileSync(join(root, "packages/db/src/s48-migration.sql"), "utf8"));
+    database.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
+    database.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
+    const config = parseBackupEncryptionConfig({ activeKey: env.BACKUP_ENCRYPTION_KEY, activeKeyId: env.BACKUP_ENCRYPTION_KEY_ID, authCookieSecret: env.AUTH_COOKIE_SECRET });
+    if (!config) throw new Error("synthetic backup encryption config missing");
+    const plaintextPath = join(temporary, "altered-ledger.sqlite");
+    writeFileSync(plaintextPath, decryptBackup(readFileSync(artifact), config), { mode: 0o600 });
+    const altered = new Database(plaintextPath);
+    let plaintext: Uint8Array;
+    try { altered.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT"); plaintext = altered.serialize(); } finally { altered.close(); }
+    const encrypted = encryptBackup(plaintext!, config);
+    writeFileSync(artifact, encrypted, { mode: 0o600 });
+    const manifestPath = `${artifact}.meta.json`;
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
+    writeFileSync(manifestPath, JSON.stringify({ ...manifest, sha256: backupSha256(encrypted), plaintext_sha256: backupSha256(plaintext!), backup_file_size_bytes: encrypted.length, sqlite_file_size_bytes: plaintext!.length }), { mode: 0o600 });
+
+    const restore = command("restore-disposable", artifact, restored);
+    expect(restore.exitCode).not.toBe(0);
+    expect(restore.stderr.toString()).toContain("migration ledger layout differs");
+    expect(existsSync(join(restored, "operatoros.sqlite"))).toBe(false);
+
+    const sourceWithBadLedger = new Database(databasePath);
+    sourceWithBadLedger.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT");
+    sourceWithBadLedger.close();
+    expect(command("backup").stderr.toString()).toContain("migration ledger layout differs");
+    expect(() => migrateExistingDatabase(databasePath)).toThrow("migration ledger layout differs");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 15000);

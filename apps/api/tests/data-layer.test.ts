@@ -8,7 +8,7 @@ import { join } from "node:path";
 function sha256FileSync(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
-import { createFreshDatabase, inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
+import { createFreshDatabase, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
 
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
@@ -84,7 +84,7 @@ describe("S4.8 data layer", () => {
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
       expect(before.split(",").length).toBe(REQUIRED_TABLES.length - 13);
-      expect(ledgerBefore).toBe("20261002_s48");
+      expect(ledgerBefore).toBe(CURRENT_SCHEMA_VERSION);
       let error: unknown;
       try {
         openDatabase(path);

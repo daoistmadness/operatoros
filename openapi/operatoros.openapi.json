@@ -4583,6 +4583,14 @@
               ],
               "title": "Astyx Session"
             }
+          },
+          {
+            "in": "query",
+            "name": "school_unit_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4706,6 +4714,14 @@
                 }
               ],
               "title": "Astyx Session"
+            }
+          },
+          {
+            "in": "query",
+            "name": "school_unit_id",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -4872,7 +4888,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -4936,7 +4954,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StaffProfileResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -4992,7 +5012,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/StaffSensitiveResponse"
+                }
               }
             },
             "description": "Successful Response"
@@ -5488,55 +5510,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "required": [
-                      "id",
-                      "action",
-                      "effective_date",
-                      "changed_fields",
-                      "metadata",
-                      "actor",
-                      "created_at"
-                    ],
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "action": {
-                        "type": "string"
-                      },
-                      "effective_date": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "null"
-                          }
-                        ]
-                      },
-                      "changed_fields": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "metadata": {
-                        "type": "object",
-                        "patternProperties": {
-                          "^(.*)$": {}
-                        }
-                      },
-                      "actor": {
-                        "type": "string"
-                      },
-                      "created_at": {
-                        "type": "string"
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/StaffHistoryResponse"
                 }
               }
             }
@@ -7017,6 +6991,14 @@
           {
             "name": "include_sensitive",
             "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "school_unit_id",
             "required": false,
             "schema": {
               "type": "string"
@@ -33811,6 +33793,1864 @@
           "attendance"
         ]
       }
+    },
+    "/api/staff/school-units": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "status",
+                      "created_at",
+                      "updated_at",
+                      "version"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "ACTIVE",
+                          "INACTIVE"
+                        ]
+                      },
+                      "created_at": {
+                        "type": "string"
+                      },
+                      "updated_at": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "getApiStaffSchool-units"
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "name",
+                  "reason"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "name",
+                  "reason"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "name",
+                  "reason"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Response for status 201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "status",
+                    "created_at",
+                    "updated_at",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "INACTIVE"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStaffSchool-units"
+      }
+    },
+    "/api/staff/school-units/{school_unit_id}": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "school_unit_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "minProperties": 3,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason",
+                  "expected_version"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "minProperties": 3,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason",
+                  "expected_version"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "minProperties": 3,
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason",
+                  "expected_version"
+                ],
+                "properties": {
+                  "name": {
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "status",
+                    "created_at",
+                    "updated_at",
+                    "version"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "INACTIVE"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStaffSchool-unitsBySchool_unit_id"
+      }
+    },
+    "/api/staff/{staff_id}/school-unit-assignments": {
+      "post": {
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "effective_from",
+                  "ptk_applicability",
+                  "reason"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "effective_from": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "ptk_applicability": {
+                    "type": "string",
+                    "enum": [
+                      "APPLICABLE",
+                      "NOT_APPLICABLE",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "effective_from",
+                  "ptk_applicability",
+                  "reason"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "effective_from": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "ptk_applicability": {
+                    "type": "string",
+                    "enum": [
+                      "APPLICABLE",
+                      "NOT_APPLICABLE",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "effective_from",
+                  "ptk_applicability",
+                  "reason"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "effective_from": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "ptk_applicability": {
+                    "type": "string",
+                    "enum": [
+                      "APPLICABLE",
+                      "NOT_APPLICABLE",
+                      "UNKNOWN"
+                    ]
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Response for status 201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "source_staff_id",
+                    "full_name",
+                    "employment_status",
+                    "job_title",
+                    "job_title_raw",
+                    "employment_start_date",
+                    "employment_end_date",
+                    "dapodik_status",
+                    "updated_at",
+                    "dapodik_status_raw",
+                    "has_nuptk",
+                    "identifiers",
+                    "jenjangs",
+                    "education_history",
+                    "service_years",
+                    "service_months",
+                    "highest_education_level",
+                    "highest_education_institution",
+                    "school_unit_assignments"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "source_staff_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "employment_status": {
+                      "type": "string"
+                    },
+                    "job_title": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "job_title_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_start_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_end_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dapodik_status": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "dapodik_status_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "has_nuptk": {
+                      "type": "boolean"
+                    },
+                    "identifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "identifier_type",
+                          "normalized_value",
+                          "verification_status"
+                        ],
+                        "properties": {
+                          "identifier_type": {
+                            "type": "string"
+                          },
+                          "normalized_value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "verification_status": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "jenjangs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "code",
+                          "level",
+                          "active"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "level": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "education_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "education_level",
+                          "institution_name",
+                          "major",
+                          "graduation_year",
+                          "notes"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "education_level": {
+                            "type": "string"
+                          },
+                          "institution_name": {
+                            "type": "string"
+                          },
+                          "major": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "graduation_year": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "service_years": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "service_months": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_level": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_institution": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "school_unit_assignments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "school_unit_id",
+                          "school_unit_name",
+                          "school_unit_status",
+                          "effective_from",
+                          "effective_to",
+                          "ptk_applicability",
+                          "reason",
+                          "created_by",
+                          "created_at",
+                          "closed_reason",
+                          "closed_by",
+                          "closed_at",
+                          "is_current"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_name": {
+                            "type": "string"
+                          },
+                          "school_unit_status": {
+                            "type": "string",
+                            "enum": [
+                              "ACTIVE",
+                              "INACTIVE"
+                            ]
+                          },
+                          "effective_from": {
+                            "type": "string"
+                          },
+                          "effective_to": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "ptk_applicability": {
+                            "type": "string",
+                            "enum": [
+                              "APPLICABLE",
+                              "NOT_APPLICABLE",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "created_by": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "closed_reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_at": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "is_current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStaffByStaff_idSchool-unit-assignments"
+      }
+    },
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/close": {
+      "post": {
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "effective_to",
+                  "reason"
+                ],
+                "properties": {
+                  "effective_to": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "effective_to",
+                  "reason"
+                ],
+                "properties": {
+                  "effective_to": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "effective_to",
+                  "reason"
+                ],
+                "properties": {
+                  "effective_to": {
+                    "minLength": 10,
+                    "maxLength": 10,
+                    "type": "string"
+                  },
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "source_staff_id",
+                    "full_name",
+                    "employment_status",
+                    "job_title",
+                    "job_title_raw",
+                    "employment_start_date",
+                    "employment_end_date",
+                    "dapodik_status",
+                    "updated_at",
+                    "dapodik_status_raw",
+                    "has_nuptk",
+                    "identifiers",
+                    "jenjangs",
+                    "education_history",
+                    "service_years",
+                    "service_months",
+                    "highest_education_level",
+                    "highest_education_institution",
+                    "school_unit_assignments"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "source_staff_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "employment_status": {
+                      "type": "string"
+                    },
+                    "job_title": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "job_title_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_start_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_end_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dapodik_status": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "dapodik_status_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "has_nuptk": {
+                      "type": "boolean"
+                    },
+                    "identifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "identifier_type",
+                          "normalized_value",
+                          "verification_status"
+                        ],
+                        "properties": {
+                          "identifier_type": {
+                            "type": "string"
+                          },
+                          "normalized_value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "verification_status": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "jenjangs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "code",
+                          "level",
+                          "active"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "level": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "education_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "education_level",
+                          "institution_name",
+                          "major",
+                          "graduation_year",
+                          "notes"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "education_level": {
+                            "type": "string"
+                          },
+                          "institution_name": {
+                            "type": "string"
+                          },
+                          "major": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "graduation_year": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "service_years": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "service_months": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_level": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_institution": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "school_unit_assignments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "school_unit_id",
+                          "school_unit_name",
+                          "school_unit_status",
+                          "effective_from",
+                          "effective_to",
+                          "ptk_applicability",
+                          "reason",
+                          "created_by",
+                          "created_at",
+                          "closed_reason",
+                          "closed_by",
+                          "closed_at",
+                          "is_current"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_name": {
+                            "type": "string"
+                          },
+                          "school_unit_status": {
+                            "type": "string",
+                            "enum": [
+                              "ACTIVE",
+                              "INACTIVE"
+                            ]
+                          },
+                          "effective_from": {
+                            "type": "string"
+                          },
+                          "effective_to": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "ptk_applicability": {
+                            "type": "string",
+                            "enum": [
+                              "APPLICABLE",
+                              "NOT_APPLICABLE",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "created_by": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "closed_reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_at": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "is_current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose"
+      }
+    },
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel": {
+      "post": {
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "minLength": 1,
+                    "maxLength": 1000,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "source_staff_id",
+                    "full_name",
+                    "employment_status",
+                    "job_title",
+                    "job_title_raw",
+                    "employment_start_date",
+                    "employment_end_date",
+                    "dapodik_status",
+                    "updated_at",
+                    "dapodik_status_raw",
+                    "has_nuptk",
+                    "identifiers",
+                    "jenjangs",
+                    "education_history",
+                    "service_years",
+                    "service_months",
+                    "highest_education_level",
+                    "highest_education_institution",
+                    "school_unit_assignments"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "source_staff_id": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "employment_status": {
+                      "type": "string"
+                    },
+                    "job_title": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "job_title_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_start_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "employment_end_date": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "dapodik_status": {
+                      "type": "string"
+                    },
+                    "updated_at": {
+                      "type": "string"
+                    },
+                    "dapodik_status_raw": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "has_nuptk": {
+                      "type": "boolean"
+                    },
+                    "identifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "identifier_type",
+                          "normalized_value",
+                          "verification_status"
+                        ],
+                        "properties": {
+                          "identifier_type": {
+                            "type": "string"
+                          },
+                          "normalized_value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "verification_status": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "jenjangs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "code",
+                          "level",
+                          "active"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "code": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "level": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "active": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "education_history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "education_level",
+                          "institution_name",
+                          "major",
+                          "graduation_year",
+                          "notes"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "number"
+                          },
+                          "education_level": {
+                            "type": "string"
+                          },
+                          "institution_name": {
+                            "type": "string"
+                          },
+                          "major": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "graduation_year": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "notes": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "service_years": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "service_months": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_level": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "highest_education_institution": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "school_unit_assignments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "school_unit_id",
+                          "school_unit_name",
+                          "school_unit_status",
+                          "effective_from",
+                          "effective_to",
+                          "ptk_applicability",
+                          "reason",
+                          "created_by",
+                          "created_at",
+                          "closed_reason",
+                          "closed_by",
+                          "closed_at",
+                          "cancelled_reason",
+                          "cancelled_by",
+                          "cancelled_at",
+                          "is_current"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_id": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "school_unit_name": {
+                            "type": "string"
+                          },
+                          "school_unit_status": {
+                            "type": "string",
+                            "enum": [
+                              "ACTIVE",
+                              "INACTIVE"
+                            ]
+                          },
+                          "effective_from": {
+                            "type": "string"
+                          },
+                          "effective_to": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "ptk_applicability": {
+                            "type": "string",
+                            "enum": [
+                              "APPLICABLE",
+                              "NOT_APPLICABLE",
+                              "UNKNOWN"
+                            ]
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "created_by": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "closed_reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "closed_at": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "cancelled_reason": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "cancelled_by": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "cancelled_at": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "is_current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel"
+      }
     }
   },
   "components": {
@@ -44632,6 +46472,581 @@
             "maxLength": 1000,
             "minLength": 5,
             "type": "string"
+          }
+        }
+      },
+      "StaffProfileResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "source_staff_id",
+          "full_name",
+          "employment_status",
+          "job_title",
+          "job_title_raw",
+          "employment_start_date",
+          "employment_end_date",
+          "dapodik_status",
+          "updated_at",
+          "dapodik_status_raw",
+          "has_nuptk",
+          "identifiers",
+          "jenjangs",
+          "education_history",
+          "service_years",
+          "service_months",
+          "highest_education_level",
+          "highest_education_institution",
+          "school_unit_assignments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source_staff_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "employment_status": {
+            "type": "string"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "job_title_raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employment_start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employment_end_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dapodik_status": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "dapodik_status_raw": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_nuptk": {
+            "type": "boolean"
+          },
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "identifier_type",
+                "normalized_value",
+                "verification_status"
+              ],
+              "properties": {
+                "identifier_type": {
+                  "type": "string"
+                },
+                "normalized_value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "verification_status": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "jenjangs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "code",
+                "level",
+                "active"
+              ],
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "code": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "level": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "education_history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "education_level",
+                "institution_name",
+                "major",
+                "graduation_year",
+                "notes"
+              ],
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "education_level": {
+                  "type": "string"
+                },
+                "institution_name": {
+                  "type": "string"
+                },
+                "major": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "graduation_year": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "notes": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "updated_at": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "service_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "service_months": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "highest_education_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "highest_education_institution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "school_unit_assignments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "school_unit_id",
+                "school_unit_name",
+                "school_unit_status",
+                "effective_from",
+                "effective_to",
+                "ptk_applicability",
+                "reason",
+                "created_by",
+                "created_at",
+                "closed_reason",
+                "closed_by",
+                "closed_at",
+                "is_current"
+              ],
+              "properties": {
+                "id": {
+                  "type": "number"
+                },
+                "school_unit_id": {
+                  "type": "number"
+                },
+                "school_unit_name": {
+                  "type": "string"
+                },
+                "school_unit_status": {
+                  "anyOf": [
+                    {
+                      "const": "ACTIVE",
+                      "type": "string"
+                    },
+                    {
+                      "const": "INACTIVE",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "effective_from": {
+                  "type": "string"
+                },
+                "effective_to": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ptk_applicability": {
+                  "anyOf": [
+                    {
+                      "const": "APPLICABLE",
+                      "type": "string"
+                    },
+                    {
+                      "const": "NOT_APPLICABLE",
+                      "type": "string"
+                    },
+                    {
+                      "const": "UNKNOWN",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "created_by": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string"
+                },
+                "closed_reason": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "closed_by": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "closed_at": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "is_current": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "StaffSensitiveResponse": {
+        "type": "object",
+        "required": [
+          "birth_place",
+          "birth_date",
+          "age_years",
+          "identifiers",
+          "contact"
+        ],
+        "properties": {
+          "birth_place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "birth_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "age_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type",
+                "normalized_value",
+                "verification_status"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "normalized_value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "verification_status": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "email",
+                  "phone",
+                  "address"
+                ],
+                "properties": {
+                  "email": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "phone": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "address": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "StaffHistoryResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "action",
+            "effective_date",
+            "reason",
+            "changed_fields",
+            "metadata",
+            "actor",
+            "created_at"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            },
+            "effective_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "changed_fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "metadata": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {}
+              }
+            },
+            "actor": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string"
+            }
           }
         }
       }

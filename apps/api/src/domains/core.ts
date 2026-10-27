@@ -9,7 +9,9 @@ import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthCo
 import { calculateHeb } from "./heb";
 import { registerEmployeeManagementRoutes } from "./employee-management";
 import { commitStaffImport, previewStaffImport, StaffImportError } from "./staff-import";
-import { calculateTenureMonths } from "./staff-metrics";
+import { calculateAge, calculateTenureMonths } from "./staff-metrics";
+import { schoolLocalDate } from "./attendance-submission-deadline";
+import { appendCurrentSchoolUnitFilter, staffSchoolUnitAssignments } from "./staff-school-units";
 import { setStudentMasterStatus } from "./student-master-status";
 
 type Row = Record<string, any>;
@@ -43,8 +45,8 @@ export function actor(context: AuthContext, ctx: Context, requirement: { role?: 
   return null;
 }
 
-export type StaffAuditOperation = "STAFF_CREATE" | "STAFF_PROFILE_UPDATE" | "STAFF_UPDATE" | "STAFF_STATUS_CHANGE" | "STAFF_JENJANG_REPLACE" | "STAFF_EDUCATION_CREATE" | "STAFF_EDUCATION_UPDATE" | "STAFF_EDUCATION_DELETE" | "STAFF_POSITION_MAPPING_UPDATE" | "STAFF_IMPORT_PREVIEW" | "STAFF_IMPORT_COMMIT" | "STAFF_EXCEL_EXPORT" | "STAFF_CSV_EXPORT" | "STAFF_SENSITIVE_READ";
-export type StaffAuditEntity = "STAFF" | "STAFF_EDUCATION" | "STAFF_JOB_TITLE_MAPPING" | "STAFF_IMPORT_BATCH";
+export type StaffAuditOperation = "STAFF_CREATE" | "STAFF_PROFILE_UPDATE" | "STAFF_UPDATE" | "STAFF_STATUS_CHANGE" | "STAFF_JENJANG_REPLACE" | "STAFF_EDUCATION_CREATE" | "STAFF_EDUCATION_UPDATE" | "STAFF_EDUCATION_DELETE" | "STAFF_POSITION_MAPPING_UPDATE" | "STAFF_IMPORT_PREVIEW" | "STAFF_IMPORT_COMMIT" | "STAFF_EXCEL_EXPORT" | "STAFF_CSV_EXPORT" | "STAFF_SENSITIVE_READ" | "STAFF_SCHOOL_UNIT_ASSIGNMENT_CREATE" | "STAFF_SCHOOL_UNIT_ASSIGNMENT_CLOSE" | "STAFF_SCHOOL_UNIT_ASSIGNMENT_CANCEL" | "SCHOOL_UNIT_CREATE" | "SCHOOL_UNIT_UPDATE";
+export type StaffAuditEntity = "STAFF" | "STAFF_EDUCATION" | "STAFF_JOB_TITLE_MAPPING" | "STAFF_IMPORT_BATCH" | "SCHOOL_UNIT";
 export type StaffActor = typeof actor;
 
 export function staffMutationAudit(
@@ -56,13 +58,14 @@ export function staffMutationAudit(
   changedFields: string[],
   metadata: Record<string, unknown> = {},
   capability = "manage_staff",
+  reason: string | null = null,
 ): void {
   client.run(`INSERT INTO operations_audit_events
     (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation,
-     risk_level, source, success, failure_code, changed_fields, metadata, schema_version)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'MEDIUM', 'API', 1, NULL, ?, ?, '1')`, [
+     risk_level, source, reason, success, failure_code, changed_fields, metadata, schema_version)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'MEDIUM', 'API', ?, 1, NULL, ?, ?, '1')`, [
     randomUUID(), user.username, user.role, capability, entityType, String(entityId), operation,
-    JSON.stringify(changedFields), JSON.stringify(metadata),
+    reason, JSON.stringify(changedFields), JSON.stringify(metadata),
   ]);
 }
 
@@ -95,8 +98,8 @@ function completedYears(value: string | null): number | null {
   return years >= 0 ? years : null;
 }
 
-function serviceDuration(value: Row): { service_years: number | null; service_months: number | null } {
-  const months = calculateTenureMonths(value.employment_start_date ?? null, value.employment_end_date ?? null, String(value.employment_status ?? "UNKNOWN"), new Date().toISOString().slice(0, 10));
+function serviceDuration(value: Row, asOfDate: string): { service_years: number | null; service_months: number | null } {
+  const months = calculateTenureMonths(value.employment_start_date ?? null, value.employment_end_date ?? null, String(value.employment_status ?? "UNKNOWN"), asOfDate);
   return months === null ? { service_years: null, service_months: null } : { service_years: Math.floor(months / 12), service_months: months % 12 };
 }
 
@@ -217,7 +220,7 @@ export function studentDetail(client: AuthContext["database"]["client"], value: 
   return result;
 }
 
-function staffListSummary(client: AuthContext["database"]["client"], value: Row): Row {
+function staffListSummary(client: AuthContext["database"]["client"], value: Row, asOfDate: string): Row {
   const identifiers = rows(client, "SELECT identifier_type, normalized_value FROM staff_identifiers WHERE staff_member_id = ? AND identifier_type IN ('NIP','NUPTK')", [value.id]);
   const jenjangs = rows(client, "SELECT j.id, j.name, j.code, j.level, j.active FROM staff_jenjang_assignments a JOIN jenjangs j ON j.id = a.jenjang_id WHERE a.staff_member_id = ? ORDER BY j.code, j.id", [value.id]);
   const education = rows(client, "SELECT education_level, institution_name FROM staff_education WHERE staff_member_id = ? ORDER BY graduation_year DESC, id DESC", [value.id]);
@@ -229,7 +232,7 @@ function staffListSummary(client: AuthContext["database"]["client"], value: Row)
     employment_end_date: value.employment_end_date, dapodik_status: value.dapodik_status_normalized,
     nip: identifiers.find((item) => item.identifier_type === "NIP")?.normalized_value ?? null,
     has_nuptk: Boolean(identifiers.find((item) => item.identifier_type === "NUPTK")?.normalized_value),
-    jenjangs: jenjangs.map((item) => ({ ...item, active: asBool(item.active) })), ...serviceDuration(value),
+    jenjangs: jenjangs.map((item) => ({ ...item, active: asBool(item.active) })), ...serviceDuration(value, asOfDate),
     highest_education_level: highest?.education_level ?? null, highest_education_institution: highest?.institution_name ?? null,
   };
 }
@@ -469,6 +472,7 @@ function registerStaff(app: any, context: AuthContext): void {
     if (query.joined_from && query.joined_to && query.joined_from > query.joined_to) return error(set, 422, "Joined date range is invalid.");
     if (query.dapodik_status && query.dapodik_status !== "ALL") { where.push("s.dapodik_status_normalized = ?"); params.push(query.dapodik_status); }
     if (query.jenjang_id) { where.push("EXISTS (SELECT 1 FROM staff_jenjang_assignments a WHERE a.staff_member_id=s.id AND a.jenjang_id=?)"); params.push(Number(query.jenjang_id)); }
+    if (!appendCurrentSchoolUnitFilter(where, params, query.school_unit_id, schoolLocalDate(context.now?.() ?? new Date()))) return error(set, 422, "School unit filter is invalid.");
     if (["true", "false"].includes(query.has_nuptk)) where.push(`${query.has_nuptk === "true" ? "EXISTS" : "NOT EXISTS"} (SELECT 1 FROM staff_identifiers i WHERE i.staff_member_id=s.id AND i.identifier_type='NUPTK' AND i.normalized_value IS NOT NULL)`);
     const clause = where.length ? `WHERE ${where.join(" AND ")}` : ""; const client = context.database.client;
     const total = Number((row(client, `SELECT COUNT(*) AS count FROM staff_members s ${clause}`, params) as Row).count);
@@ -476,7 +480,7 @@ function registerStaff(app: any, context: AuthContext): void {
     const sortBy = sortColumns[query.sort_by] ?? sortColumns.name!; const direction = query.sort_direction === "desc" ? "DESC" : "ASC";
     const values = rows(client, `SELECT s.id, s.source_staff_id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw, s.employment_start_date, s.employment_end_date, s.dapodik_status_normalized FROM staff_members s ${clause} ORDER BY ${sortBy} ${direction}, s.id LIMIT ? OFFSET ?`, [...params, pageSize, (page - 1) * pageSize]);
     const counts = rows(client, "SELECT employment_status, COUNT(*) AS count FROM staff_members GROUP BY employment_status"); const countMap = Object.fromEntries(counts.map((item) => [item.employment_status, Number(item.count)]));
-    return { items: values.map((item) => staffListSummary(client, item)), total, page, page_size: pageSize, total_pages: Math.ceil(total / pageSize), counts: { ACTIVE: countMap.ACTIVE ?? 0, FORMER: countMap.FORMER ?? 0, ALL: counts.reduce((sum, item) => sum + Number(item.count), 0) } };
+    return { items: values.map((item) => staffListSummary(client, item, schoolLocalDate(context.now?.() ?? new Date()))), total, page, page_size: pageSize, total_pages: Math.ceil(total / pageSize), counts: { ACTIVE: countMap.ACTIVE ?? 0, FORMER: countMap.FORMER ?? 0, ALL: counts.reduce((sum, item) => sum + Number(item.count), 0) } };
   }, { query: StaffListQuery, response: { 200: StaffListResponse } });
   app.get("/api/staff/export", ({ query, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "export_staff" }); if (!user) return { detail: "Insufficient permissions" };
@@ -486,13 +490,14 @@ function registerStaff(app: any, context: AuthContext): void {
     if (query.job_title?.trim()) { where.push("lower(coalesce(s.job_title_normalized, s.job_title_raw, '')) LIKE ?"); params.push(`%${query.job_title.trim().toLowerCase()}%`); }
     if (query.dapodik_status && query.dapodik_status !== "ALL") { where.push("s.dapodik_status_normalized = ?"); params.push(query.dapodik_status); }
     if (query.jenjang_id) { where.push("EXISTS (SELECT 1 FROM staff_jenjang_assignments a WHERE a.staff_member_id = s.id AND a.jenjang_id = ?)"); params.push(Number(query.jenjang_id)); }
+    if (!appendCurrentSchoolUnitFilter(where, params, query.school_unit_id, schoolLocalDate(context.now?.() ?? new Date()))) return error(set, 422, "School unit filter is invalid.");
     const members = rows(context.database.client, `SELECT s.* FROM staff_members s ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY s.full_name, s.id`, params);
     const header = ["Staff ID", "Name", "Employment Status", "Jenjang", "Job Title", "NIP", "NUPTK available", "Dapodik Status", "Employment Start Date", "Years of Service", "Service Months", "Highest Education"];
     const lines = [header.map(csvCell).join(",")]; const order = ["S3", "S2", "S1", "D4", "D3", "D2", "D1", "SMA", "SMK", "SMP", "SD"];
-    for (const member of members) { const identifiers = rows(context.database.client, "SELECT identifier_type, normalized_value FROM staff_identifiers WHERE staff_member_id = ? AND identifier_type IN ('NIP','NUPTK')", [member.id]); const jenjangs = rows(context.database.client, "SELECT j.name FROM staff_jenjang_assignments a JOIN jenjangs j ON j.id = a.jenjang_id WHERE a.staff_member_id = ? ORDER BY j.code, j.id", [member.id]); const education = rows(context.database.client, "SELECT education_level, institution_name, graduation_year, id FROM staff_education WHERE staff_member_id = ?", [member.id]).sort((a, b) => (order.indexOf(a.education_level) - order.indexOf(b.education_level)) || Number(b.graduation_year ?? 0) - Number(a.graduation_year ?? 0) || Number(b.id) - Number(a.id)); const service = serviceDuration(member); lines.push([member.source_staff_id, member.full_name, member.employment_status, jenjangs.map((item) => item.name).join("; "), member.job_title_normalized ?? member.job_title_raw, identifiers.find((item) => item.identifier_type === "NIP")?.normalized_value, Boolean(identifiers.find((item) => item.identifier_type === "NUPTK")?.normalized_value), member.dapodik_status_normalized, member.employment_start_date, service.service_years, service.service_months, education[0]?.education_level].map(csvCell).join(",")); }
-    staffMutationAudit(context.database.client, user, "STAFF_CSV_EXPORT", "STAFF_IMPORT_BATCH", "CSV_EXPORT", ["export"], { row_count: members.length, filtered: true }, "export_staff");
+    for (const member of members) { const identifiers = rows(context.database.client, "SELECT identifier_type, normalized_value FROM staff_identifiers WHERE staff_member_id = ? AND identifier_type IN ('NIP','NUPTK')", [member.id]); const jenjangs = rows(context.database.client, "SELECT j.name FROM staff_jenjang_assignments a JOIN jenjangs j ON j.id = a.jenjang_id WHERE a.staff_member_id = ? ORDER BY j.code, j.id", [member.id]); const education = rows(context.database.client, "SELECT education_level, institution_name, graduation_year, id FROM staff_education WHERE staff_member_id = ?", [member.id]).sort((a, b) => (order.indexOf(a.education_level) - order.indexOf(b.education_level)) || Number(b.graduation_year ?? 0) - Number(a.graduation_year ?? 0) || Number(b.id) - Number(a.id)); const service = serviceDuration(member, schoolLocalDate(context.now?.() ?? new Date())); lines.push([member.source_staff_id, member.full_name, member.employment_status, jenjangs.map((item) => item.name).join("; "), member.job_title_normalized ?? member.job_title_raw, identifiers.find((item) => item.identifier_type === "NIP")?.normalized_value, Boolean(identifiers.find((item) => item.identifier_type === "NUPTK")?.normalized_value), member.dapodik_status_normalized, member.employment_start_date, service.service_years, service.service_months, education[0]?.education_level].map(csvCell).join(",")); }
+    staffMutationAudit(context.database.client, user, "STAFF_CSV_EXPORT", "STAFF_IMPORT_BATCH", "CSV_EXPORT", ["export"], { row_count: members.length, filters: { school_unit_id: query.school_unit_id ?? null } }, "export_staff");
     return new Response(`\ufeff${lines.join("\n")}\n`, { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=staff-directory.csv" } });
-  }, { query: t.Object({ search: t.Optional(t.String()), status: t.Optional(t.String()), job_title: t.Optional(t.String()), dapodik_status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()) }) });
+  }, { query: t.Object({ search: t.Optional(t.String()), status: t.Optional(t.String()), job_title: t.Optional(t.String()), dapodik_status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), school_unit_id: t.Optional(t.String()) }) });
   app.get("/api/staff/imports/history", ({ set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "view_staff_audit" }); if (!user) return { detail: "Insufficient permissions" };
     return { items: rows(context.database.client, "SELECT id, source_filename, source_sheet, file_sha256, imported_at, actor, total_rows, active_count, former_count, review_count, issue_count, status FROM staff_import_batches ORDER BY imported_at DESC LIMIT 100") };
@@ -509,16 +514,17 @@ function registerStaff(app: any, context: AuthContext): void {
     const client = context.database.client; const value = row(client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]); if (!value) return error(set, 404, "Staff member not found");
     const education = rows(client, "SELECT id, education_level, institution_name, major, graduation_year, notes, created_at, updated_at FROM staff_education WHERE staff_member_id = ? ORDER BY graduation_year DESC, id DESC", [params.staff_id]);
     const levelOrder = ["S3", "S2", "S1", "D4", "D3", "D2", "D1", "SMA", "SMK", "SMP", "SD"]; const highest = education.slice().sort((a, b) => levelOrder.indexOf(a.education_level) - levelOrder.indexOf(b.education_level))[0] ?? null;
-    const tenure = calculateTenureMonths(value.employment_start_date ?? null, value.employment_end_date ?? null, String(value.employment_status), new Date().toISOString().slice(0, 10));
+    const tenure = calculateTenureMonths(value.employment_start_date ?? null, value.employment_end_date ?? null, String(value.employment_status), schoolLocalDate(context.now?.() ?? new Date()));
     return { id: value.id, source_staff_id: value.source_staff_id, full_name: value.full_name, employment_status: value.employment_status, job_title: value.job_title_normalized ?? value.job_title_raw, job_title_raw: value.job_title_raw, employment_start_date: value.employment_start_date, employment_end_date: value.employment_end_date, dapodik_status: value.dapodik_status_normalized, dapodik_status_raw: value.dapodik_status_raw, updated_at: value.updated_at,
       has_nuptk: Boolean(row(client, "SELECT id FROM staff_identifiers WHERE staff_member_id=? AND identifier_type='NUPTK' AND normalized_value IS NOT NULL", [params.staff_id])),
       identifiers: rows(client, "SELECT identifier_type, normalized_value, verification_status FROM staff_identifiers WHERE staff_member_id = ? AND identifier_type='NIP'", [params.staff_id]),
       jenjangs: rows(client, "SELECT j.id, j.name, j.code, j.level, j.active FROM staff_jenjang_assignments a JOIN jenjangs j ON j.id = a.jenjang_id WHERE a.staff_member_id = ? ORDER BY j.code, j.id", [params.staff_id]).map((item) => ({ ...item, active: asBool(item.active) })),
       education_history: education, service_years: tenure === null ? null : Math.floor(tenure / 12), service_months: tenure === null ? null : tenure % 12,
-      highest_education_level: highest?.education_level ?? null, highest_education_institution: highest?.institution_name ?? null };
+      highest_education_level: highest?.education_level ?? null, highest_education_institution: highest?.institution_name ?? null,
+      school_unit_assignments: staffSchoolUnitAssignments(client, params.staff_id, schoolLocalDate(context.now?.() ?? new Date())) };
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), response: { 200: StaffProfileResponse } });
   app.get("/api/staff/:staff_id/sensitive", ({ params, set, ...ctx }: Context) => {
-    const user = actor(context, { set, ...ctx }, { capability: "view_staff_sensitive" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context.database.client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]); if (!value) return error(set, 404, "Staff member not found"); const identifiers = rows(context.database.client, "SELECT identifier_type AS type, normalized_value, verification_status FROM staff_identifiers WHERE staff_member_id = ?", [params.staff_id]); const contact = row(context.database.client, "SELECT email, phone, address FROM staff_contact_details WHERE staff_member_id = ?", [params.staff_id]); staffMutationAudit(context.database.client, user, "STAFF_SENSITIVE_READ", "STAFF", params.staff_id, [], { sensitive_profile_read: true }, "view_staff_sensitive"); return { birth_place: value.birth_place, birth_date: value.birth_date, identifiers, contact };
+    const user = actor(context, { set, ...ctx }, { capability: "view_staff_sensitive" }); if (!user) return { detail: "Insufficient permissions" }; const value = row(context.database.client, "SELECT * FROM staff_members WHERE id = ?", [params.staff_id]); if (!value) return error(set, 404, "Staff member not found"); const identifiers = rows(context.database.client, "SELECT identifier_type AS type, normalized_value, verification_status FROM staff_identifiers WHERE staff_member_id = ?", [params.staff_id]); const contact = row(context.database.client, "SELECT email, phone, address FROM staff_contact_details WHERE staff_member_id = ?", [params.staff_id]); staffMutationAudit(context.database.client, user, "STAFF_SENSITIVE_READ", "STAFF", params.staff_id, [], { sensitive_profile_read: true }, "view_staff_sensitive"); return { birth_place: value.birth_place, birth_date: value.birth_date, age_years: calculateAge(value.birth_date == null ? null : String(value.birth_date), schoolLocalDate(context.now?.() ?? new Date())), identifiers, contact };
   }, { params: t.Object({ staff_id: t.String({ minLength: 1 }) }), response: { 200: StaffSensitiveResponse } });
   app.get("/api/staff/:staff_id/education", ({ params, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "view_staff" }); if (!user) return { detail: "Insufficient permissions" };

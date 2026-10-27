@@ -5,7 +5,7 @@ last_reviewed: 2026-10-26
 
 # Persistent development database
 
-Development uses one persistent local S4.8 SQLite database per Git common
+Development uses one persistent local S4.9 SQLite database per Git common
 directory. Its default location is under `XDG_DATA_HOME` (or
 `~/.local/share`) and it is never located in a runtime session directory.
 The canonical filename is `operatoros.sqlite`.

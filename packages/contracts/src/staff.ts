@@ -41,6 +41,32 @@ export const StaffStatusChangeRequest = Type.Object({
 export const StaffStatusChangeResponse = Type.Object({ staff_id: Type.String(), employment_status: Type.Union([Type.Literal("ACTIVE"), Type.Literal("FORMER")]), employment_end_date: NullableString, effective_date: Type.String() });
 
 export const StaffJenjang = Type.Object({ id: Type.Number(), name: Type.String(), code: NullableString, level: NullableString, active: Type.Boolean() });
+export const SchoolUnitStatus = Type.Union([Type.Literal("ACTIVE"), Type.Literal("INACTIVE")]);
+export const StaffPtkApplicability = Type.Union([Type.Literal("APPLICABLE"), Type.Literal("NOT_APPLICABLE"), Type.Literal("UNKNOWN")]);
+export const SchoolUnitResponse = Type.Object({ id: Type.Integer({ minimum: 1 }), name: Type.String(), status: SchoolUnitStatus, version: Type.Integer({ minimum: 1 }), created_at: Type.String(), updated_at: Type.String() });
+export type SchoolUnitResponseDto = Static<typeof SchoolUnitResponse>;
+export const SchoolUnitListResponse = Type.Array(SchoolUnitResponse);
+export const SchoolUnitCreateRequest = Type.Object({ name: Type.String({ minLength: 1, maxLength: 255 }), reason: Type.String({ minLength: 1, maxLength: 1000 }) }, { additionalProperties: false });
+export type SchoolUnitCreateRequestDto = Static<typeof SchoolUnitCreateRequest>;
+export const SchoolUnitUpdateRequest = Type.Object({ name: Type.Optional(Type.String({ minLength: 1, maxLength: 255 })), status: Type.Optional(SchoolUnitStatus), expected_version: Type.Integer({ minimum: 1 }), reason: Type.String({ minLength: 1, maxLength: 1000 }) }, { minProperties: 3, additionalProperties: false });
+export type SchoolUnitUpdateRequestDto = Static<typeof SchoolUnitUpdateRequest>;
+export const StaffSchoolUnitAssignment = Type.Object({
+  id: Type.Integer({ minimum: 1 }), school_unit_id: Type.Integer({ minimum: 1 }), school_unit_name: Type.String(), school_unit_status: SchoolUnitStatus,
+  effective_from: Type.String(), effective_to: NullableString, ptk_applicability: StaffPtkApplicability,
+  reason: Type.String(), created_by: Type.String(), created_at: Type.String(),
+  closed_reason: NullableString, closed_by: NullableString, closed_at: NullableString,
+  cancelled_reason: NullableString, cancelled_by: NullableString, cancelled_at: NullableString, is_current: Type.Boolean(),
+});
+export type StaffSchoolUnitAssignmentDto = Static<typeof StaffSchoolUnitAssignment>;
+export const StaffSchoolUnitAssignmentCreateRequest = Type.Object({
+  school_unit_id: Type.Integer({ minimum: 1 }), effective_from: Type.String({ minLength: 10, maxLength: 10 }),
+  ptk_applicability: StaffPtkApplicability, reason: Type.String({ minLength: 1, maxLength: 1000 }),
+}, { additionalProperties: false });
+export type StaffSchoolUnitAssignmentCreateRequestDto = Static<typeof StaffSchoolUnitAssignmentCreateRequest>;
+export const StaffSchoolUnitAssignmentCloseRequest = Type.Object({ effective_to: Type.String({ minLength: 10, maxLength: 10 }), reason: Type.String({ minLength: 1, maxLength: 1000 }) }, { additionalProperties: false });
+export type StaffSchoolUnitAssignmentCloseRequestDto = Static<typeof StaffSchoolUnitAssignmentCloseRequest>;
+export const StaffSchoolUnitAssignmentCancelRequest = Type.Object({ reason: Type.String({ minLength: 1, maxLength: 1000 }) }, { additionalProperties: false });
+export type StaffSchoolUnitAssignmentCancelRequestDto = Static<typeof StaffSchoolUnitAssignmentCancelRequest>;
 export const StaffEducationRecord = Type.Object({
   id: Type.Number(), education_level: Type.String(), institution_name: Type.String(), major: NullableString,
   graduation_year: Type.Union([Type.Number(), Type.Null()]), notes: NullableString, created_at: Type.Optional(Type.String()), updated_at: Type.Optional(Type.String()),
@@ -54,12 +80,13 @@ export const StaffProfileResponse = Type.Object({
   jenjangs: Type.Array(StaffJenjang), education_history: Type.Array(StaffEducationRecord),
   service_years: Type.Union([Type.Number(), Type.Null()]), service_months: Type.Union([Type.Number(), Type.Null()]),
   highest_education_level: NullableString, highest_education_institution: NullableString,
+  school_unit_assignments: Type.Array(StaffSchoolUnitAssignment),
 });
 export const StaffListQuery = Type.Object({
   search: Type.Optional(Type.String()), status: Type.Optional(Type.String()), employment_status: Type.Optional(Type.String()),
   page: Type.Optional(Type.String()), page_size: Type.Optional(Type.String()), job_title: Type.Optional(Type.String()),
   position_id: Type.Optional(Type.String()), joined_from: Type.Optional(Type.String()), joined_to: Type.Optional(Type.String()),
-  dapodik_status: Type.Optional(Type.String()), jenjang_id: Type.Optional(Type.String()), has_nuptk: Type.Optional(Type.String()),
+  dapodik_status: Type.Optional(Type.String()), jenjang_id: Type.Optional(Type.String()), school_unit_id: Type.Optional(Type.String()), has_nuptk: Type.Optional(Type.String()),
   sort_by: Type.Optional(Type.String()), sort_direction: Type.Optional(Type.String()),
 });
 export const StaffListResponse = Type.Object({
@@ -73,7 +100,7 @@ export const StaffListResponse = Type.Object({
   counts: Type.Object({ ACTIVE: Type.Number(), FORMER: Type.Number(), ALL: Type.Number() }),
 });
 export const StaffSensitiveResponse = Type.Object({
-  birth_place: NullableString, birth_date: NullableString,
+  birth_place: NullableString, birth_date: NullableString, age_years: Type.Union([Type.Number(), Type.Null()]),
   identifiers: Type.Array(Type.Object({ type: Type.String(), normalized_value: NullableString, verification_status: Type.String() })),
   contact: Type.Union([Type.Object({ email: NullableString, phone: NullableString, address: NullableString }), Type.Null()]),
 });
@@ -106,7 +133,7 @@ export const StaffImportBatchResponse = Type.Object({
 export const StaffImportCommitRequest = Type.Object({ batch_id: Type.String({ minLength: 1 }), row_numbers: Type.Array(Type.Number({ minimum: 2 }), { maxItems: 10000 }) });
 export const StaffImportCommitResponse = Type.Object({ batch_id: Type.String(), status: Type.String(), summary: Type.Object({ inserted: Type.Number(), updated: Type.Number(), unchanged: Type.Number(), rejected: Type.Number(), failed: Type.Number() }), failed_rows: Type.Array(Type.Object({ row_number: Type.Number(), code: Type.String() })) });
 
-export const StaffHistoryResponse = Type.Array(Type.Object({ id: Type.String(), action: Type.String(), effective_date: NullableString, changed_fields: Type.Array(Type.String()), metadata: Type.Record(Type.String(), Type.Unknown()), actor: Type.String(), created_at: Type.String() }));
+export const StaffHistoryResponse = Type.Array(Type.Object({ id: Type.String(), action: Type.String(), effective_date: NullableString, reason: NullableString, changed_fields: Type.Array(Type.String()), metadata: Type.Record(Type.String(), Type.Unknown()), actor: Type.String(), created_at: Type.String() }));
 
 const Metric = Type.Object({ count: Type.Number(), percentage: Type.Union([Type.Number(), Type.Null()]) });
 const Distribution = Type.Array(Type.Object({ label: Type.String(), count: Type.Number(), percentage: Type.Union([Type.Number(), Type.Null()]) }));

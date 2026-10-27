@@ -2,16 +2,25 @@ import { Database } from "bun:sqlite";
 import { chmodSync, closeSync, existsSync, fsyncSync, mkdtempSync, openSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { assertDatabasePath, schemaFingerprint, validateDatabase } from "./connection";
-import { installS47Schema, installS47Triggers, installS48EmployeeSchema } from "./bootstrap";
+import { installS47Schema, installS47Triggers, installS48EmployeeSchema, installS49SchoolUnitSchema } from "./bootstrap";
 import { legacySchemaFingerprint } from "./legacy-fingerprint";
-import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT } from "./manifest";
+import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT } from "./manifest";
 
 const SOURCE_VERSION = "20260901_s46";
 const S47_VERSION = "20260929_s47";
 type SourceVariant = keyof typeof S46_SOURCE_VARIANTS;
 type Ledger = { version: string; schema_fingerprint: string };
+type LedgerColumn = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
 type Named = { name: string };
 type LegacyTotal = { id: number; class_name: string; month: number; year: number; sakit: number; izin: number; alfa: number; note: string | null; entered_at: string | null; updated_at: string | null };
+const MIGRATION_LEDGER_LAYOUT = [
+  { name: "version", affinity: "TEXT", notnull: 0, pk: 1 },
+  { name: "predecessor", affinity: "TEXT", notnull: 0, pk: 0 },
+  { name: "schema_fingerprint", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "protected_fingerprints", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "approved_by", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "applied_at", affinity: "TEXT", notnull: 1, pk: 0 },
+] as const;
 
 function identifier(value: string): string {
   if (!/^[a-z_][a-z0-9_]*$/i.test(value)) throw new Error("UNSUPPORTED_SCHEMA_OBJECT");
@@ -26,11 +35,30 @@ function date(value: unknown): string {
   return text;
 }
 
-function sourceVariant(client: Database): SourceVariant | "S47" | "CURRENT" {
+function sqliteAffinity(type: string): string {
+  const value = type.toUpperCase();
+  if (value.includes("INT")) return "INTEGER";
+  if (/CHAR|CLOB|TEXT/.test(value)) return "TEXT";
+  if (value.includes("BLOB") || !value.trim()) return "BLOB";
+  if (/REAL|FLOA|DOUB/.test(value)) return "REAL";
+  return "NUMERIC";
+}
+
+function validateMigrationLedger(client: Database): void {
+  const columns = client.query("PRAGMA table_info(operatoros_schema_migrations)").all() as LedgerColumn[];
+  if (columns.length !== MIGRATION_LEDGER_LAYOUT.length || columns.some((column, index) => {
+    const expected = MIGRATION_LEDGER_LAYOUT[index]!;
+    return column.name !== expected.name || sqliteAffinity(column.type) !== expected.affinity ||
+      column.notnull !== expected.notnull || column.pk !== expected.pk || column.dflt_value !== null;
+  })) throw new Error("UNSUPPORTED_SCHEMA: migration ledger layout differs from the approved definition");
+}
+
+function sourceVariant(client: Database): SourceVariant | "S47" | "S48" | "CURRENT" {
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check: string };
   if (integrity.integrity_check !== "ok" || client.query("PRAGMA foreign_key_check").all().length) throw new Error("DATABASE_INTEGRITY_FAILED");
   const hasLedger = client.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='operatoros_schema_migrations'").get();
   if (!hasLedger) throw new Error("UNSUPPORTED_SCHEMA: migration ledger missing");
+  validateMigrationLedger(client);
   const rows = client.query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations").all() as Ledger[];
   if (!rows.length || rows.some((row) => !SCHEMA_MIGRATIONS.includes(row.version as (typeof SCHEMA_MIGRATIONS)[number]))) {
     throw new Error("UNSUPPORTED_SCHEMA: unknown migration metadata");
@@ -39,6 +67,13 @@ function sourceVariant(client: Database): SourceVariant | "S47" | "CURRENT" {
   if (current) {
     validateDatabase(client);
     return "CURRENT";
+  }
+  const s48 = rows.find((row) => row.version === "20261002_s48");
+  if (s48) {
+    if (s48.schema_fingerprint !== S48_SCHEMA_FINGERPRINT || schemaFingerprint(client) !== S48_SCHEMA_FINGERPRINT) {
+      throw new Error("DATABASE_MIGRATION_CHECKSUM_MISMATCH");
+    }
+    return "S48";
   }
   const s47 = rows.find((row) => row.version === S47_VERSION);
   if (s47) {
@@ -55,6 +90,10 @@ function sourceVariant(client: Database): SourceVariant | "S47" | "CURRENT" {
   const variant = Object.entries(S46_SOURCE_VARIANTS).find(([, fingerprint]) => fingerprint === source.schema_fingerprint)?.[0] as SourceVariant | undefined;
   if (!variant) throw new Error("UNAPPROVED_SOURCE_SCHEMA");
   return variant;
+}
+
+export function validateMigrationSource(client: Database): void {
+  sourceVariant(client);
 }
 
 function copyData(target: Database): void {
@@ -128,7 +167,7 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
     source.exec("BEGIN EXCLUSIVE");
     const variant = sourceVariant(source);
     if (variant === "CURRENT") { source.exec("ROLLBACK"); return "NOOP"; }
-    temporary = mkdtempSync(join(dirname(path), ".operatoros-s48-"));
+    temporary = mkdtempSync(join(dirname(path), ".operatoros-s49-"));
     chmodSync(temporary, 0o700);
     const snapshot = join(temporary, "source.sqlite");
     const targetPath = join(temporary, "target.sqlite");
@@ -139,14 +178,17 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
       target.run("ATTACH DATABASE ? AS previous", [snapshot]);
       target.transaction(() => {
         installS47Schema(target, false);
+        if (variant === "S48") installS48EmployeeSchema(target);
         copyData(target);
-        installS48EmployeeSchema(target);
+        if (variant !== "S48") installS48EmployeeSchema(target);
+        installS49SchoolUnitSchema(target);
         installS47Triggers(target);
-        if (variant !== "S47") backfill(target);
+        if (variant !== "S47" && variant !== "S48") backfill(target);
         if (schemaFingerprint(target) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("MIGRATION_SCHEMA_MISMATCH");
-        const counts = Object.fromEntries(["students", "student_masters", "student_device_identities", "attendance", "student_enrollments"].map((table) =>
+        const counts = Object.fromEntries(["students", "student_masters", "student_device_identities", "attendance", "student_enrollments", "staff_members", "staff_employment_history"].map((table) =>
           [table, (target.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count]));
-        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S48_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, variant === "S47" ? S47_VERSION : SOURCE_VERSION, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ source_variant: variant, protected_counts: counts }), new Date().toISOString()]);
+        const predecessor = variant === "S47" ? S47_VERSION : variant === "S48" ? "20261002_s48" : SOURCE_VERSION;
+        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S49_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, predecessor, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ source_variant: variant, protected_counts: counts }), new Date().toISOString()]);
         validateDatabase(target);
       }).immediate();
       target.run("DETACH DATABASE previous");

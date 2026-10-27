@@ -8,7 +8,7 @@ last_reviewed: 2026-10-26
 `backend/attendance.db` is the protected operational database and remains
 S4.3 (`20260725_s43`) until a separately authorized operational migration.
 Do not use it in tests, E2E, development startup, or fixtures. The current
-application schema is S4.8 (`20261002_s48`) and ordinary startup validates
+application schema is S4.9 (`20261027_s49`) and ordinary startup validates
 existing databases and never migrates them automatically.
 
 The S4.3 operational event is complete. The isolated S4.4 academic timeline
@@ -26,7 +26,8 @@ verified backup outside the repository, exclusive lock, wrapper preflight, and
 its process-local access context. Do not place local backup locations or live
 checksums in committed documentation.
 
-Normal operation pairs current main with an S4.8 database. The protected
+S4.9 adds school units and dated staff assignments. Normal operation pairs
+current main with an S4.9 database. The protected
 database remains unavailable to the current application until it is separately
 migrated under the controlled procedure. Rollback pairs a restored S4.2
 database with application `c06a6220c2c0c2059521c1a396d1b914635aacff` on
@@ -37,7 +38,9 @@ for the model and [AGENTS.md](../../AGENTS.md) for execution safeguards.
 For an approved existing development database, stop all writers and create a
 verified encrypted backup with `OPERATOROS_DATA_DIR=<absolute-development-data-dir>
 bun apps/api/src/backup-cli.ts backup`. Provide the existing backup encryption
-environment without printing its secrets. Restore the artifact to a new empty
+environment without printing its secrets. The CLI accepts the current schema
+and recognized migration-source fingerprints; it rejects other schemas.
+Restore the artifact to a new empty
 temporary directory with `bun apps/api/src/backup-cli.ts restore-disposable
 <encrypted-backup-file> <absolute-temporary-data-dir>`. Run `bun run
 db:migrate-existing --data-dir <absolute-temporary-data-dir>`, then `bun run
@@ -47,8 +50,8 @@ After rehearsal passes, use `scripts/migrate-dev-db-s47.sh --data-dir
 <absolute-development-data-dir> --backup <encrypted-backup-file>`. That
 wrapper verifies the development service identity and stopped state, holds a
 lock, and invokes the TypeScript migration with a fresh matching encrypted
-backup. The runner accepts recognized S4.6 and S4.7 schemas, rejects unknown
-schemas, and reports `NOOP` for the approved S4.8 target. Verify with `bun run
+backup. The runner accepts recognized S4.6, S4.7, and S4.8 schemas, rejects unknown
+schemas, and reports `NOOP` for the approved S4.9 target. Verify with `bun run
 db:validate --data-dir <absolute-development-data-dir>`. Ordinary startup
 never migrates. The development launcher uses Bun for session and port
 management and never invokes Python during startup.

@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
 import { assertDatabasePath, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
-import { installS47Schema, installS48EmployeeSchema } from "../src/bootstrap";
+import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
 
@@ -53,9 +53,9 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(87);
+    expect(REQUIRED_TABLES.length).toBe(89);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
-    for (const domain of ["staff_members", "dismissal_policies", "teacher_class_assignments"]) {
+    for (const domain of ["staff_members", "school_units", "staff_school_unit_assignment_versions", "dismissal_policies", "teacher_class_assignments"]) {
       expect(REQUIRED_TABLES).toContain(domain);
     }
     expect(declared.length).toBeGreaterThan(0);
@@ -79,6 +79,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     const client = new Database(":memory:");
     installS47Schema(client);
     installS48EmployeeSchema(client);
+    installS49SchoolUnitSchema(client);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', 'test', ?)",
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"]);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, ?, ?, '{}', 'test', ?)",

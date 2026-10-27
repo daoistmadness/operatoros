@@ -6,7 +6,7 @@ import { syncDirectory, syncFile } from "./domains/durable-files";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
-import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase } from "@operatoros/db";
+import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase, validateMigrationSource } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile } from "./security/backup-crypto";
@@ -104,7 +104,8 @@ function restoreDisposable(selected: string, targetDir: string): void {
     created = true;
     const database = openOfflineSnapshot(target.databasePath);
     try {
-      validateDatabase(database);
+      if (schemaVersion === CURRENT_SCHEMA_VERSION) validateDatabase(database);
+      else validateMigrationSource(database);
       if (snapshotSchemaVersion(database) !== schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
     } finally { database.close(); }
     syncFile(target.databasePath);
@@ -229,7 +230,9 @@ function publishBackup(value: ReturnType<typeof config>, trigger: "manual" | "pr
     let plaintext: Uint8Array;
     let schemaVersion: string;
     try {
-      validateDatabase(database);
+      const currentSchema = snapshotSchemaVersion(database);
+      if (currentSchema === CURRENT_SCHEMA_VERSION) validateDatabase(database);
+      else validateMigrationSource(database);
       if ((database.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("BACKUP_QUICK_CHECK_FAILED");
       schemaVersion = snapshotSchemaVersion(database);
       plaintext = database.serialize();

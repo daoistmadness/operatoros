@@ -6119,6 +6119,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/school-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStaffSchool-units"];
+        put?: never;
+        post: operations["postApiStaffSchool-units"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/school-units/{school_unit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStaffSchool-unitsBySchool_unit_id"];
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9181,6 +9261,89 @@ export interface components {
             evidence_version: string;
             reason: string;
         };
+        StaffProfileResponse: {
+            id: string;
+            source_staff_id: string | null;
+            full_name: string;
+            employment_status: string;
+            job_title: string | null;
+            job_title_raw: string | null;
+            employment_start_date: string | null;
+            employment_end_date: string | null;
+            dapodik_status: string;
+            updated_at: string;
+            dapodik_status_raw: string | null;
+            has_nuptk: boolean;
+            identifiers: {
+                identifier_type: string;
+                normalized_value: string | null;
+                verification_status: string;
+            }[];
+            jenjangs: {
+                id: number;
+                name: string;
+                code: string | null;
+                level: string | null;
+                active: boolean;
+            }[];
+            education_history: {
+                id: number;
+                education_level: string;
+                institution_name: string;
+                major: string | null;
+                graduation_year: number | null;
+                notes: string | null;
+                created_at?: string;
+                updated_at?: string;
+            }[];
+            service_years: number | null;
+            service_months: number | null;
+            highest_education_level: string | null;
+            highest_education_institution: string | null;
+            school_unit_assignments: {
+                id: number;
+                school_unit_id: number;
+                school_unit_name: string;
+                school_unit_status: "ACTIVE" | "INACTIVE";
+                effective_from: string;
+                effective_to: string | null;
+                ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                reason: string;
+                created_by: string;
+                created_at: string;
+                closed_reason: string | null;
+                closed_by: string | null;
+                closed_at: string | null;
+                is_current: boolean;
+            }[];
+        };
+        StaffSensitiveResponse: {
+            birth_place: string | null;
+            birth_date: string | null;
+            age_years: number | null;
+            identifiers: {
+                type: string;
+                normalized_value: string | null;
+                verification_status: string;
+            }[];
+            contact: {
+                email: string | null;
+                phone: string | null;
+                address: string | null;
+            } | null;
+        };
+        StaffHistoryResponse: {
+            id: string;
+            action: string;
+            effective_date: string | null;
+            reason: string | null;
+            changed_fields: string[];
+            metadata: {
+                [key: string]: unknown;
+            };
+            actor: string;
+            created_at: string;
+        }[];
     };
     responses: never;
     parameters: never;
@@ -11572,6 +11735,7 @@ export interface operations {
                 jenjang_id?: number | null;
                 page?: number;
                 page_size?: number;
+                school_unit_id?: string;
             };
             header?: never;
             path?: never;
@@ -11609,6 +11773,7 @@ export interface operations {
                 job_title?: string | null;
                 dapodik_status?: string | null;
                 jenjang_id?: number | null;
+                school_unit_id?: string;
             };
             header?: never;
             path?: never;
@@ -11721,7 +11886,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StaffProfileResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11758,7 +11923,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StaffProfileResponse"];
                 };
             };
             /** @description Validation Error */
@@ -11791,7 +11956,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["StaffSensitiveResponse"];
                 };
             };
             /** @description Validation Error */
@@ -12045,17 +12210,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        id: string;
-                        action: string;
-                        effective_date: string | null;
-                        changed_fields: string[];
-                        metadata: {
-                            [key: string]: unknown;
-                        };
-                        actor: string;
-                        created_at: string;
-                    }[];
+                    "application/json": components["schemas"]["StaffHistoryResponse"];
                 };
             };
         };
@@ -12396,6 +12551,7 @@ export interface operations {
                 jenjang_id?: string;
                 has_nuptk?: string;
                 include_sensitive?: string;
+                school_unit_id?: string;
             };
             header?: never;
             path?: never;
@@ -23345,6 +23501,424 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttendanceReconciliationResponse"];
+                };
+            };
+        };
+    };
+    "getApiStaffSchool-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    }[];
+                };
+            };
+        };
+    };
+    "postApiStaffSchool-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    name: string;
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    name: string;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 201 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    };
+                };
+            };
+        };
+    };
+    "patchApiStaffSchool-unitsBySchool_unit_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                school_unit_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+                "application/x-www-form-urlencoded": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+                "multipart/form-data": {
+                    name?: string;
+                    /** @enum {string} */
+                    status?: "ACTIVE" | "INACTIVE";
+                    reason: string;
+                    expected_version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: number;
+                        name: string;
+                        /** @enum {string} */
+                        status: "ACTIVE" | "INACTIVE";
+                        created_at: string;
+                        updated_at: string;
+                        version: number;
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    school_unit_id: number;
+                    effective_from: string;
+                    /** @enum {string} */
+                    ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 201 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idClose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                assignment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    effective_to: string;
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    effective_to: string;
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    effective_to: string;
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    "postApiStaffByStaff_idSchool-unit-assignmentsByAssignment_idCancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                assignment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    reason: string;
+                };
+                "multipart/form-data": {
+                    reason: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Response for status 200 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        source_staff_id: string | null;
+                        full_name: string;
+                        employment_status: string;
+                        job_title: string | null;
+                        job_title_raw: string | null;
+                        employment_start_date: string | null;
+                        employment_end_date: string | null;
+                        dapodik_status: string;
+                        updated_at: string;
+                        dapodik_status_raw: string | null;
+                        has_nuptk: boolean;
+                        identifiers: {
+                            identifier_type: string;
+                            normalized_value: string | null;
+                            verification_status: string;
+                        }[];
+                        jenjangs: {
+                            id: number;
+                            name: string;
+                            code: string | null;
+                            level: string | null;
+                            active: boolean;
+                        }[];
+                        education_history: {
+                            id: number;
+                            education_level: string;
+                            institution_name: string;
+                            major: string | null;
+                            graduation_year: number | null;
+                            notes: string | null;
+                            created_at?: string;
+                            updated_at?: string;
+                        }[];
+                        service_years: number | null;
+                        service_months: number | null;
+                        highest_education_level: string | null;
+                        highest_education_institution: string | null;
+                        school_unit_assignments: {
+                            id: number;
+                            school_unit_id: number;
+                            school_unit_name: string;
+                            /** @enum {string} */
+                            school_unit_status: "ACTIVE" | "INACTIVE";
+                            effective_from: string;
+                            effective_to: string | null;
+                            /** @enum {string} */
+                            ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN";
+                            reason: string;
+                            created_by: string;
+                            created_at: string;
+                            closed_reason: string | null;
+                            closed_by: string | null;
+                            closed_at: string | null;
+                            cancelled_reason: string | null;
+                            cancelled_by: string | null;
+                            cancelled_at: string | null;
+                            is_current: boolean;
+                        }[];
+                    };
                 };
             };
         };

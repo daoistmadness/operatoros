@@ -169,6 +169,8 @@ describe("granular data reset API", () => {
     try {
       value.database.client.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-reset-staff','Synthetic Reset Employee','synthetic reset employee')");
       value.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,source,created_by) VALUES ('synthetic-reset-staff','2026-10-01','ACTIVE','MANUAL','test')");
+      const schoolUnitId = Number(value.database.client.run("INSERT INTO school_units (name) VALUES ('Synthetic Reset Unit')").lastInsertRowid);
+      value.database.client.run("INSERT INTO staff_school_unit_assignment_versions (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by) VALUES ('synthetic-reset-staff',?,'2026-10-01','UNKNOWN','Synthetic reset assignment','test')", [schoolUnitId]);
       const response = await post(value.enabled, "/api/system/data-reset", { scope: "ALL_SCHOOL_DATA", confirmation: "RESET ALL SCHOOL DATA" }, value.admin);
       const result = await response.json() as any;
       expect(response.status, JSON.stringify(result)).toBe(200);
@@ -176,10 +178,12 @@ describe("granular data reset API", () => {
         "Attendance and academic configuration": 2,
         "Academic classes and references": 6,
         "School report setup": 3,
+        "Staff profiles and school units": 3,
       });
-      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings", "staff_employment_history"]) {
+      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings", "staff_employment_history", "staff_members", "staff_school_unit_assignment_versions", "school_units"]) {
         expect(count(value.database.client, table), table).toBe(0);
       }
+      expect(value.database.client.query("SELECT name FROM sqlite_master WHERE type='trigger' AND name='trg_staff_school_unit_assignment_no_delete'").get()).toEqual({ name: "trg_staff_school_unit_assignment_no_delete" });
       expect(count(value.database.client, "users")).toBe(2);
       expect(count(value.database.client, "sessions")).toBe(2);
       expect(count(value.database.client, "backup_scheduler_config")).toBe(1);

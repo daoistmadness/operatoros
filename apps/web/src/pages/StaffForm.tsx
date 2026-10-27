@@ -50,7 +50,11 @@ export default function StaffForm() {
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.staff.lists }),
         client.invalidateQueries({ queryKey: queryKeys.staff.analytics() }),
-        ...(isEdit ? [client.invalidateQueries({ queryKey: queryKeys.staff.detail(id) })] : []),
+        ...(isEdit ? [
+          client.invalidateQueries({ queryKey: queryKeys.staff.detail(id) }),
+          client.invalidateQueries({ queryKey: queryKeys.staff.sensitive(id) }),
+          client.invalidateQueries({ queryKey: queryKeys.staff.history(id) }),
+        ] : []),
       ]);
       navigate(`/staff/${saved.id}`);
     },

@@ -303,8 +303,8 @@ flowchart TD
 - **Authentication Contracts**: Session state is managed strictly via server-side session tables and HttpOnly, `SameSite=Lax` cookies named `astyx_session`. No JSON Web Tokens (JWT), browser `localStorage` credentials, or token-reading client scripts are permitted. First-run setup cookies use `SameSite=Strict`.
 - **Authorization**: Backend roles are limited to `admin` and `staff`. Request authorization is evaluated solely from database-backed sessions and server-derived capabilities. Client-supplied headers or body fields (`request.role`, `reviewed_by`, `uploaded_by`) are untrusted audit metadata, never authorization proofs.
 - **Database Schema Management**:
-  - The current active application schema head is **S4.8** (`20261002_s48`).
-  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql) and the S4.8 migration from [`packages/db/src/s48-migration.sql`](packages/db/src/s48-migration.sql).
+  - The current active application schema head is **S4.9** (`20261027_s49`).
+  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), the S4.8 employee migration, and the S4.9 school-unit migration.
   - Historical baseline and rollback target is **S4.2** (`20260724_s42`).
   - The protected operational database remains **S4.3** (`20260725_s43`) until a separately authorized migration.
   - The API server opens databases with `create: false`, validates integrity and schema version on startup, and never automatically applies migrations.
