@@ -124,7 +124,10 @@ export function getDashboardOperationalOverview(context: AuthContext) {
         COUNT(CASE WHEN a.status = 'PENDING' THEN 1 END) AS pending,
         COUNT(CASE WHEN a.status = 'NEEDS_CORRECTION' THEN 1 END) AS needs_correction
       FROM staff_monthly_activities a WHERE a.period_id=?`, [activityPeriod.id])[0] ?? { applicable: 0, completed: 0, pending: 0, needs_correction: 0 }
-    : { applicable: eligibleStaffBySchoolUnitForMonth(context.database.client, monthStart, monthEnd).length, completed: 0, pending: 0, needs_correction: 0 };
+    : (() => {
+        const applicable = eligibleStaffBySchoolUnitForMonth(context.database.client, monthStart, monthEnd).length;
+        return { applicable, completed: 0, pending: applicable, needs_correction: 0 };
+      })();
 
   const uppStats = rows(context, `SELECT
       COUNT(*) AS expected,
@@ -317,7 +320,8 @@ export function workQueue(context: AuthContext, user: Row): Row[] {
 
   if (user.role === "admin") {
   const today = schoolLocalDate(context.now?.() ?? new Date());
-  const [reportingYear, reportingMonth] = today.slice(0, 7).split("-").map(Number);
+  const reportingYear = Number(today.slice(0, 4));
+  const reportingMonth = Number(today.slice(5, 7));
 
   // --- Module A & B: Student Identity & DAPODIK Integration ---
   // 1. Student Identity Verification Pending (UNVERIFIED)
@@ -428,6 +432,8 @@ export function workQueue(context: AuthContext, user: Row): Row[] {
   }
 
   // --- Module C: Monthly PTK Activity Reviews ---
+  const activityPeriod = rows(context, "SELECT id FROM staff_monthly_activity_periods WHERE reporting_year=? AND reporting_month=?", [reportingYear, reportingMonth])[0];
+  if (activityPeriod) {
   const ptkPending = rows(context, `
     SELECT a.id, a.staff_member_id, a.school_unit_id, a.status, a.processing_notes, a.version, a.updated_at,
            s.full_name AS staff_name,
@@ -436,9 +442,9 @@ export function workQueue(context: AuthContext, user: Row): Row[] {
     JOIN staff_members s ON s.id = a.staff_member_id
     JOIN staff_monthly_activity_periods p ON p.id = a.period_id
     WHERE a.status IN ('PENDING', 'NEEDS_CORRECTION')
-      AND p.reporting_year=? AND p.reporting_month=?
+      AND p.id=?
     ORDER BY p.reporting_year DESC, p.reporting_month DESC, a.updated_at DESC
-  `, [reportingYear, reportingMonth]);
+  `, [activityPeriod.id]);
   for (const value of ptkPending) {
     const periodStr = `${value.reporting_year}-${String(value.reporting_month).padStart(2, "0")}`;
     const isCorrection = value.status === "NEEDS_CORRECTION";
@@ -462,6 +468,33 @@ export function workQueue(context: AuthContext, user: Row): Row[] {
       last_activity_timestamp: value.updated_at,
       metadata: { activity_id: value.id, staff_id: value.staff_member_id, period: periodStr, status: value.status },
     });
+  }
+  } else {
+    const eligible = eligibleStaffBySchoolUnitForMonth(context.database.client, `${today.slice(0, 7)}-01`, new Date(Date.UTC(reportingYear, reportingMonth, 0)).toISOString().slice(0, 10));
+    const periodStr = `${reportingYear}-${String(reportingMonth).padStart(2, "0")}`;
+    if (eligible.length > 0) {
+      const sourceId = `ptk-period-${periodStr}`;
+      items.push({
+        item_type: "STAFF_PTK_REVIEW",
+        source_id: sourceId,
+        deduplication_key: sourceId,
+        student_reference: null,
+        student_display_label: null,
+        class_reference: null,
+        jenjang_reference: null,
+        event_date: `${periodStr}-01`,
+        title: `Buat aktivitas PTK (${periodStr})`,
+        evidence_summary: `${eligible.length} PTK berlaku belum memiliki catatan untuk periode ini.`,
+        workflow_status: "PENDING",
+        priority: "MEDIUM",
+        due_at: null,
+        derived_due_state: "DUE_TODAY",
+        available_actions: ["view_ptk"],
+        source_route: `/staff/monthly-activities?period=${periodStr}`,
+        last_activity_timestamp: null,
+        metadata: { eligible_staff_count: eligible.length, period: periodStr, status: "PENDING", action_type: "GENERATE_PERIOD" },
+      });
+    }
   }
 
   // --- Module D: Monthly UPP Reports ---

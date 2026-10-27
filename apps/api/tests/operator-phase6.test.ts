@@ -16,7 +16,7 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z") {
+async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z", includeMonthlyPtk = true) {
   const dir = mkdtempSync(join(tmpdir(), "operatoros-phase6-test-"));
   const dbPath = join(dir, "test.sqlite");
   createFreshDatabase(dbPath);
@@ -92,22 +92,24 @@ async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z") {
   const [yearPart, monthPart] = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit" }).format(clockNow).split("-");
   const currentYear = Number(yearPart);
   const currentMonth = Number(monthPart);
-  const periodId = Number(
-    db.run(`
+  if (includeMonthlyPtk) {
+    const periodId = Number(
+      db.run(`
       INSERT INTO staff_monthly_activity_periods (reporting_year, reporting_month, generated_at, generated_by_user_id)
       VALUES (${currentYear}, ${currentMonth}, '2026-10-01T00:00:00.000Z', ${adminId})
-    `).lastInsertRowid
-  );
+      `).lastInsertRowid
+    );
 
-  db.run(`
+    db.run(`
     INSERT INTO staff_monthly_activities (staff_member_id, school_unit_id, period_id, status, confirmation_date, confirmed_by_user_id, processing_notes)
     VALUES ('staff-01', ${unitId}, ${periodId}, 'COMPLETED', '2026-10-15', ${adminId}, 'Selesai tepat waktu'),
            ('staff-02', ${unitId}, ${periodId}, 'NEEDS_CORRECTION', NULL, NULL, 'Jadwal jam mengajar kurang'),
            ('staff-03', ${unitId}, ${periodId}, 'NOT_APPLICABLE', NULL, NULL, 'Tidak berlaku'),
            ('staff-04', ${unitId}, ${periodId}, 'PENDING', NULL, NULL, NULL)
-  `);
-  const priorPeriodId = Number(db.run(`INSERT INTO staff_monthly_activity_periods (reporting_year, reporting_month, generated_at, generated_by_user_id) VALUES (${currentYear}, ${currentMonth - 1}, '2026-07-01T00:00:00.000Z', ${adminId})`).lastInsertRowid);
-  db.run("INSERT INTO staff_monthly_activities (staff_member_id, school_unit_id, period_id, status) VALUES ('staff-04', ?, ?, 'PENDING')", [unitId, priorPeriodId]);
+    `);
+    const priorPeriodId = Number(db.run(`INSERT INTO staff_monthly_activity_periods (reporting_year, reporting_month, generated_at, generated_by_user_id) VALUES (${currentYear}, ${currentMonth - 1}, '2026-07-01T00:00:00.000Z', ${adminId})`).lastInsertRowid);
+    db.run("INSERT INTO staff_monthly_activities (staff_member_id, school_unit_id, period_id, status) VALUES ('staff-04', ?, ?, 'PENDING')", [unitId, priorPeriodId]);
+  }
 
   // UPP monthly report
   db.run(`
@@ -141,10 +143,38 @@ async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z") {
   const adminCookie = cookie(await login("admin_test", adminPass));
   const staffCookie = cookie(await login("staff_test", staffPass));
 
-  return { dir, handle, db, app, adminId, staffUserId, adminCookie, staffCookie, currentYear, currentMonth, setNow };
+  return { dir, handle, db, app, adminId, staffUserId, adminCookie, staffCookie, currentYear, currentMonth, unitId, setNow };
 }
 
 describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
+  it("counts eligible PTK as pending and exposes generation work before a month is generated", async () => {
+    const { dir, handle, db, app, adminCookie, unitId, currentYear, currentMonth } = await createTestContext("2026-08-01T12:00:00.000Z", false);
+    try {
+      db.run(`INSERT INTO staff_school_unit_assignment_versions
+        (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by)
+        VALUES ('staff-01',?,'2026-07-01','APPLICABLE','Synthetic applicability','admin_test'),
+               ('staff-02',?,'2026-07-01','APPLICABLE','Synthetic applicability','admin_test')`, [unitId, unitId]);
+      const headers = { Cookie: adminCookie, Origin: "http://local" };
+      const overview = await app.handle(new Request("http://local/api/operator/dashboard-overview", { headers }));
+      expect(overview.status).toBe(200);
+      expect(await overview.json()).toMatchObject({
+        staff: { monthly_ptk_applicable_count: 2, monthly_ptk_completed_count: 0, monthly_ptk_pending_count: 2 },
+      });
+
+      const queue = await app.handle(new Request("http://local/api/operator/work-queue", { headers }));
+      const activities = ((await queue.json()) as Array<{ item_type: string; deduplication_key: string; metadata: Record<string, unknown> }>)
+        .filter((item) => item.item_type === "STAFF_PTK_REVIEW");
+      expect(activities).toHaveLength(1);
+      expect(activities[0]).toMatchObject({
+        deduplication_key: `ptk-period-${currentYear}-${String(currentMonth).padStart(2, "0")}`,
+        metadata: { action_type: "GENERATE_PERIOD", eligible_staff_count: 2, status: "PENDING" },
+      });
+    } finally {
+      handle.close();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("computes operational dashboard overview metrics accurately", async () => {
     const { dir, handle, app, adminCookie } = await createTestContext();
     try {
