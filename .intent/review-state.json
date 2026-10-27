@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "baf21c21341010a2069b40f26808493731c4f87099c125600c003270bf2862ca",
+      "fingerprint": "ce983efdca857ff37ee1d0c4034b3b726678a56a544e849eccffaf9dc6209938",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -13,7 +13,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,15 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "85403222aa708cc131d4fe2a478019625aba3d0b8ca7c8fcbc031c5e92d562c7",
+      "fingerprint": "f3d55769407a790c39d214fd743cbc09449aeb411aa1cf09209a2464c05deda2",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -65,7 +65,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -192,27 +192,27 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "c295783d5dfd95f25b741ea572d16ffb0645e0b64e8bc3f163f1a76cb113b6c8",
+      "fingerprint": "e668eacedc187009cf30f6959c692a73ce6d53e98d85d3e43b0770a0e7f06ab3",
       "snapshot": {
-        "apps/api/src/app.ts": "8b5bdf5d3a9ec05391c64b67dd7ad738a16b59781ced30d13e16dd1e6429408d"
+        "apps/api/src/app.ts": "d04ee5613841bd74bd29af1cf5bdb7af46ada12c323058b22c937dd48bc5dc21"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/api/src/app.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/src/config.ts": {
-      "fingerprint": "7d9befbfff7e1e90e66b400b9d3e5b80eb6647da40f754b8e9f7a41e079b224c",
+      "fingerprint": "2810c20ed2f2dd5c1f8708ab7887ed2c1fbaf19e933d6ceaff282702c4eb8b3b",
       "snapshot": {
-        "apps/api/src/config.ts": "d4dae2ea9a9cb4b354f789e7d4990bdbfb5fa8bbcff18b5c25cb3ccebad9f70f"
+        "apps/api/src/config.ts": "c1075c1a67c66bc517db220127a6b31552f2ab1c5a1149fa70d4e117115fedd2"
       },
-      "head": "328f6150a1725ff056ce740d5e4a1ca648f8f2d8",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Loop 181: map session and lockout environment overrides in loadConfig; no Elysia skill changes needed",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/config.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
+        "Changed: apps/api/src/config.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
@@ -228,15 +228,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "0ae4d18d3cc1c49cd952e7b55a4818666f29209101cead50fed1c647a5403251",
+      "fingerprint": "2d3932f5d1bc62488f912e603f92dde90c80896832b4f3a96e75ed93f821676b",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "1412ef3170bac568d9372c2ee1a088acc8eb955645301cd705a6763c3651fb6d"
+        "apps/api/src/domains/safety.ts": "fcab630eb7c50faefcaa566809176d3fb2b6f53e6ec5029cd661b2e36f1bbd4a"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Changed: apps/api/src/domains/safety.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -371,15 +371,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "c42723bebb7856da4de51a07a16dee7dc6e992877dda31dc19b66cbc19a490da",
+      "fingerprint": "6f1d0d89b4a3fb212be4d26435475aba60bdb513b2fb60698843cdc8089c4ff5",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "09686145ea5c1362e9cea7619eafc898e40545ebac5d085403fbd18cb4ae23a7"
+        "apps/api/src/backup-cli.ts": "091d7bd0c49d9ee15d7554b760348464e341b3b9868209efef3dc2f3f0d82be2"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/src/backup-cli.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "f5d7353e68b9d86c16683366f6836cab28d68bfcf8816c92d2f14a57c0f16504",
+      "fingerprint": "dd1691f36712879e108d38e05e67b9cd16277076037828deca1651ebd753ba47",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "2d072e9f80dbb39d43c9ab56590d755de82f5812430f8c19011dac94df1c92bb"
+        "apps/web/src/generated/openapi/schema.ts": "3bfe136513bbfcb9ab09e9000ebc9ea72b39d670b612db93a881265f5b6e1e84"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/generated/openapi/schema.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +515,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "823a3bf60b4877418ce699e095c4ab954355af5f9581642d88293bd3c0ff471d",
+      "fingerprint": "27a0e1a5778c2334a7a14d24600cb4d948a89c7619c88c66139e254700ee8d7d",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "8d84339e0c5dd7d326e11f029464a734f76b01d2bbdb0072b554967a281eb0b8"
+        "openapi/operatoros.openapi.json": "10a661b1105b8814f296b9d3201bc1651435ebaa15bc041626854929ce0c9667"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: openapi/operatoros.openapi.json at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -788,15 +788,15 @@
       ]
     },
     "source:packages/contracts/src/index.ts": {
-      "fingerprint": "041652ba6b2131e7b28121b9b0787b4e7da696120d7c009e0a3f9ba8f5f6b883",
+      "fingerprint": "ae4b3416f0938f6cccccef0ab9061840c841939aa4899c86437e26c29a7314d6",
       "snapshot": {
-        "packages/contracts/src/index.ts": "1d9e5facd19f8ff43c35646b6045267435ef43df6ddb4b242a0b14af0896ef14"
+        "packages/contracts/src/index.ts": "8880206c72f8d9a9bad1271ff70bca58374e9c65bc02a877d84ea67ebd0bc755"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/contracts/src/index.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: packages/contracts/src/index.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/contracts/tests/backup.test.ts": {
@@ -1060,27 +1060,27 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "eff038d2df1edf580c9cb16df060bcceff3f0d2b74f27d0971b45fd7ec9a308c",
+      "fingerprint": "1542e73a2c0f1ac4777b55651ee3da666d2b5fb927c0ffce5d1b7ca50621dc54",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "a514ed62750cede7da35d162ec48f41e9e55a7b99b60c324f565e102849f7b9d"
+        "apps/web/src/components/SidebarNav.test.tsx": "74491df1d9c52e4c476ff1cf2d45957680371e5bf37289132c9add54ec539757"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
-      "fingerprint": "9ac9f9f27682b58a517aba8a500fb3bdf50b41a8be4bfed5bec96f3ca5539cb9",
+      "fingerprint": "b0038713d269a5ae473954ef75fc9d1ffdb729102e52c0b9e6965beb5069ab8c",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.tsx": "62c197623e23719558bdd4371124a71b0c325a84987980af8c9594434887f2c8"
+        "apps/web/src/components/SidebarNav.tsx": "abe4ef248fd1d57ba69e9359ac73a7d3e77f27839b18bbba9742ff629059d010"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/components/SidebarNav.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/web/src/context/AuthContext.test.tsx": {
@@ -1642,15 +1642,15 @@
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
-      "fingerprint": "8e062c6f754f98a352e45b836b2f65e9cac2097d56272066a3505bebef2119dc",
+      "fingerprint": "f08fd67961908d9b7ff45d19eccf64ef6a6311cf5a6ea1cc4e73f5522353b803",
       "snapshot": {
-        "apps/api/tests/data-layer.test.ts": "c2a81f2a0f7fc1e4bd087c1ad5fe62fff1a8acdad501b2f75e09b0df75ce4c56"
+        "apps/api/tests/data-layer.test.ts": "1ac2ea22d1c9623edbf108a89099f6e101f44c81f7a3965720adc8f011ebf935"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/tests/data-layer.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/api/tests/data-layer.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
@@ -2800,15 +2800,15 @@
       ]
     },
     "source:apps/web/src/routes/routeDefinitions.tsx": {
-      "fingerprint": "431ac78019c26c9171c9ee53288a31d94d18e90b9f4928d75aa8e3f1b9967d12",
+      "fingerprint": "4b6cb4849f54bd4fd7b409a2a36756eb4be74d71ff50c0046f862cbe71feae44",
       "snapshot": {
-        "apps/web/src/routes/routeDefinitions.tsx": "49964450610fa4cbdbd95d2b89763303972d3b3d22b488b904482a9b911fada1"
+        "apps/web/src/routes/routeDefinitions.tsx": "fe5cdd1c2da5d4c8c298af6d145376b2089a498e4ad6b6cdca68ec94fd2278e1"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/routes/routeDefinitions.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/routes/routeDefinitions.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:.audit/documentation-inventory.tsv": {
@@ -2921,15 +2921,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "20f95c90d02bb9723db54671efeab0a309e53c51ba6704e4f3d4e984582a0dc9",
+      "fingerprint": "281c15c4e795f35c2cd868c62a635364b48cf489bef9579cbb36cdc9a3ce595b",
       "snapshot": {
-        "CHANGELOG.md": "700d67ef1389aad412fbb222e7356a32ca5aaeab19a12a89172e1474f3098694"
+        "CHANGELOG.md": "50118df6a712a8514b48615f1898659069ec5ee737c183b3e11d2e6d6ac6f552"
       },
-      "head": "f45cb7288c45d9fe6e4a0d6713a1b2dda122e9b5",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 3 changelog entry; it describes implemented operator workflow and does not require guidance changes.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: CHANGELOG.md at f45cb7288c45d9fe6e4a0d6713a1b2dda122e9b5"
+        "Changed: CHANGELOG.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:COMMANDS.md": {
@@ -3199,15 +3199,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "f9ed2d37cf8f2a972fcdb45fb7c9c54e1100076e73910647f070fcd094055c18",
+      "fingerprint": "fb925f6a142b155cf4a710e57a45f88377a9bc75a1e883365711b58275ed9cb4",
       "snapshot": {
-        "docs/architecture/database-schema.md": "39468546f2f2db039a7fb2979f0053ccc6e44ea98f679b707693c87caa1e23a7"
+        "docs/architecture/database-schema.md": "4b56859ebcd0480961831798d737313e2c928f4352141ad4bc8ac756516fb9ca"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/architecture/database-schema.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -3504,15 +3504,15 @@
       ]
     },
     "source:docs/decisions/sqlite-only-runtime.md": {
-      "fingerprint": "590feda8e854cdcca8aaadc0325446baf1af6e2af33f47d320b3bcb708a193bc",
+      "fingerprint": "c3c04a4af167b6f67dd4e581ea2ed2075d5621385ad3a9d084d6d773cb177646",
       "snapshot": {
-        "docs/decisions/sqlite-only-runtime.md": "5d9d9deaea9331e78ff668d185fde51827eede66d08a5856509f4408431e6f55"
+        "docs/decisions/sqlite-only-runtime.md": "fa4f737c6908233c153f953d600d95352dff585d31e7e0d4487bc95ade8fd46b"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/decisions/sqlite-only-runtime.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/decisions/sqlite-only-runtime.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/decisions/tauri-desktop-architecture.md": {
@@ -3992,27 +3992,27 @@
       ]
     },
     "source:docs/guides/development-database.md": {
-      "fingerprint": "e4812544069c9859a839a233ec49e672fae24212a812b4e55dafb8ff955292d9",
+      "fingerprint": "8801d9b85241c8db650e87519394adc4bbf9fb5b83861a2b15a2d71a4eaa6bcc",
       "snapshot": {
-        "docs/guides/development-database.md": "189e693cdaf935ac14e70377d65e9e30c10c8bf13bdff96a8c911c4bafbd7dae"
+        "docs/guides/development-database.md": "8caa0faa04d37e97abe481f8e21cf9cfa3f159fd59bfd5ddcb451a88fe08b674"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/guides/development-database.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/guides/development-database.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "70d1a6a5f2d7304a86063f618513e9969292a94aae63df638eddaf41edf10bd6",
+      "fingerprint": "d65b728770cba61fcd742d3ded86cf1c6e6f708bc733497869c8dbdecb9e364b",
       "snapshot": {
-        "docs/guides/offline-install.md": "448661414c7e1f4cec8fc0139bb91189026fcc48f69d1c2e0a1211ff141b7c89"
+        "docs/guides/offline-install.md": "51d7762f38772b37fc379ba3ede2c2017522aee2f12a5373c9712cee8d22fed7"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/guides/offline-install.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4602,15 +4602,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "0298bc375056a6e8228e831cc23c0fe9602a7e4e74147678d8e3aed8df7ba7ad",
+      "fingerprint": "dafd6e698b0871c94ae4c947ee31ffe347799f117bf45742fe92d6db585f6030",
       "snapshot": {
-        "docs/reference/runtime-support.md": "eea6785cd36dd8f2d835c3e53c7507f8413143dc1734b0b2572bf6ec14b2ed5e"
+        "docs/reference/runtime-support.md": "68ae560a3fb0d2d72f0c34e449a304bef75dc55b790c64d17399edf76e745ff5"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/reference/runtime-support.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/reference/runtime-support.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4752,27 +4752,27 @@
       ]
     },
     "source:docs/runbooks/data-reset.md": {
-      "fingerprint": "73db0e695fa0d8eff0f9d5e64eee39d4f7f236a98905c82cb22f52dec96fcb7e",
+      "fingerprint": "e45eb400502da99c260f645709a928f340eacfdb3bf8ef91ec9fcf4f43cd7855",
       "snapshot": {
-        "docs/runbooks/data-reset.md": "0384b0e10b9c28210f489cff5d305a4145bf4a790b93b4753f68055840acebb3"
+        "docs/runbooks/data-reset.md": "b1ad08b1c471f2a210cecbb3c7256bce9b8325e3e4c5870d6b4b604454ea2afd"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/runbooks/data-reset.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/runbooks/data-reset.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "f82b9a43d17498d11eff5655b7f380d2f0a3bf49cba5c7d3fca8872c5c36ee2e",
+      "fingerprint": "bcb0885f1d4804bc550ea7d67c31460a813247b306270adc93511f2f4728f86a",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "c8b4b32e9c05c9fad13623b1816ea7c843f563d8f22bf4e8bd61327bb36d607a"
+        "docs/runbooks/database-operations.md": "f4cd55596b732064ac5372178709d638c8832d8ef965d60dbbd18f8f59e86de8"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/runbooks/database-operations.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/runbooks/database-operations.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4818,15 +4818,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "e4181735706b25035c5013394963fcae36e9c7e3e8f28239d9907487e30f44b6",
+      "fingerprint": "775381b263ce8336a7069d39884da457793b4d84a54468051d1c640b2bdd3762",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "4d3010c53e6f33dc90f387d86d924aad5b90d7b39eb2d365cd82e95f6c623ae4"
+        "docs/runbooks/ubuntu-server-deployment.md": "9c28205c465e0de850d600ee4b9ac797df7c753ad0a88aae3bc7aaab468f9547"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5207,15 +5207,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "69f5428b651fb324316b0876f87216d2e11423d9e3b6c2e28962a177a78a1b64",
+      "fingerprint": "55d78b3455cba082d911a93887807ca335a243959f22f54092258d0199687b57",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "05dd75882fc20194e869dd12d74cece674450923657d2b6fde536c1ac537dd33"
+        "apps/api/tests/openapi-contract.test.ts": "7b1acc91b64fa726dbc1402b24c987d03a39e59a1f4dd7132dcccbebdd3a5e88"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/api/tests/openapi-contract.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5255,15 +5255,15 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "125c43b5eb418e1cbc0a75a244493d373ea167524889f4a4f8a7f6fc61b4d1df",
+      "fingerprint": "ffc20b760f90efef0fa8e695c1dd2211307bce3995695f1743fb7984322be3e8",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "fd8056d2370ec5221f0849ac5975cfe44c185c756c6c14e4f06951d478f986ab"
+        "apps/web/src/lib/query/queryKeys.ts": "d0becebca3c9483bd05dd748beabc02d07c5f5c52711f8cf210494be9d3074b8"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5279,63 +5279,63 @@
       ]
     },
     "source:packages/db/README.md": {
-      "fingerprint": "2ce288af28b57290605e533951ac6a55028bf7a9994545f4300b676b2bd09324",
+      "fingerprint": "49f8ef375cfc6181c6c29ad62c9dbec27c906300756c3b930deca8dbd8a72ddd",
       "snapshot": {
-        "packages/db/README.md": "c34035e020b9269027685ab7bae1b1a81b8c88206e777333c144afd08cf58778"
+        "packages/db/README.md": "79f059533055cf1228aa161cdda68c62e226ed2bef99e2c66b212829d0efc736"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/README.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/README.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "4db345c5b416ff7f98b2fc71db0e067e881e7e80908f5ec4399fcd5acacf0e17",
+      "fingerprint": "1866fa9684cd68ecfb85846e5841193bdc08f0f306ea7be0470b6f3a24882617",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "e4b446442410b24839e43cc4eddba9d05ebfb36ce91afbd56ff281449539c533"
+        "packages/db/src/bootstrap.ts": "7df62ab643a3185f2a1708d12358e4bc9a09f25aee925fe4783453bbff15a22c"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/src/bootstrap.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/src/index.ts": {
-      "fingerprint": "d33a6bc09880eab91d3b58cfc79def18e06005fed057ea256cd8407d59b8c1ef",
+      "fingerprint": "118a41b1f868b2654960867c203f5e82c80091c7ec1d560a01a829bebd44df4e",
       "snapshot": {
-        "packages/db/src/index.ts": "b7183f8975b13fbc3b3ce64832676e4939c41fcc06838f8da52c972201fc7689"
+        "packages/db/src/index.ts": "4942d244ca99b63051e07cb304ae93adb09ec5908637c2ec2d7d15ec2b947588"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/src/index.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/src/index.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "047d14357468c486341f6299843814ce8293058d5f56b84dd1db183f7eb7efdd",
+      "fingerprint": "73e2eb08d9201ccbc7c65db1347a30a87a9e116fa02a3b7aa034a6078cdad5f3",
       "snapshot": {
-        "packages/db/src/manifest.ts": "36dde1a7cc0afbbf8ecf72c5fc5474fd1d04148d783799aa3f27ee2d10782ee6"
+        "packages/db/src/manifest.ts": "65f229c3b3ecc52bf446fafb1159c1bec465f06859c33c0368ed7f3311686fd6"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/src/manifest.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "501776a2d513b15cf6303bf623d3b403a3ed38217e0e62478ee667260c9d2d5a",
+      "fingerprint": "32ba18f54a916b9337b952ffa46acdb6fe466afea45ffaa5a3b50240d95b8cbb",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "c46247463aa29d6b5cb2cad4ebbc0836f54b1aa11deff9d95ad14a8023c09772"
+        "packages/db/src/migrate-existing.ts": "08d2f7999c2f7a7ba2a52abd8ab3a2cba2d4e47b550b9558e5d8aa013ec9729a"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/src/migrate-existing.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5351,51 +5351,51 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "92af9808d4a1bd18c906c876f308d3fdc7992fe18caa14e342cf63696aade385",
+      "fingerprint": "7b795e84995c2bd524925ba706d321b882bd1e657130da56915a90e2f7eba97d",
       "snapshot": {
-        "packages/db/src/schema.ts": "51d7a449d4bd7071eb8aa157523c8835eb11d54c5e5103d156b2e3454b84e177"
+        "packages/db/src/schema.ts": "672f63e8be2ff641141f6d2ea9cde5b8bb2e72bdc958a6d940ed50ec6762809f"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/src/schema.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
-      "fingerprint": "f4fbf1707a1f8a58cabceffe4b2ca669c50c9e5dd9d44da299a696d628994b8d",
+      "fingerprint": "8a46d72547ad1e9d1e1169d296129b8d78f0f1f6d01dc7e6f02aba7d2c7e7436",
       "snapshot": {
-        "packages/db/tests/bootstrap.test.ts": "f49fcce913e6e20c645d669c0a50a3e60047054aeb4e1cf3b10ca02dfc0b27f7"
+        "packages/db/tests/bootstrap.test.ts": "7819e24325438c1eede2a09b962da801d8702e476bc2e14af2af5d4e9b8f5152"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/tests/bootstrap.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/tests/bootstrap.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "56d7fbfac24f1be0703ffd952edf4844be7355a47d9119cb94fea247ca0ca4b3",
+      "fingerprint": "18c7ae3a1d044dab6a26feefed48e4a468c5a0e4a8a877d875dfefa336b49b71",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "88a379e44dd5c4495d2a9fd7ac39adb77f4d2ebb7699c765ded77768cfa2e7de"
+        "packages/db/tests/db.test.ts": "a747752112161954be6a22dc4178c4091640e41dbc4fe004fd1f199eafe3a613"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/tests/db.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "16ffbd7560c8281df1b9c6e7d9bd1e52fc03aa5b6452eda7685c37942220669d",
+      "fingerprint": "32d94e07fedc1d0f5e985a322320e76672a1d880ca07f8dcddf8447ffc59443a",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "6fecd71887be0ee3b8cc880f67bf4f734b95d30ad8b2436594478b89e4af3062"
+        "packages/db/tests/migrate-existing.test.ts": "02100e5f65bc0b7c36d224ddef97b2aeb640722a7e135d8379235f2559b82aa7"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/db/tests/migrate-existing.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -5471,15 +5471,15 @@
       ]
     },
     "source:apps/web/src/routes/routeDefinitions.test.tsx": {
-      "fingerprint": "97f17a36a2c3d905780a393d3ee478a7e3b000777cf95eac5707fb141049e20f",
+      "fingerprint": "0b4c39a112d399ee3ea863a54f61e1a8d057e0c0c29dd2e20d376cdebb2d467e",
       "snapshot": {
-        "apps/web/src/routes/routeDefinitions.test.tsx": "c9c23860265fee4f3dd54439b8cec57e37b3711006969b9f8390c15e8c382a38"
+        "apps/web/src/routes/routeDefinitions.test.tsx": "e8dbe6df71a618b73ea05133b993570ab6439af33bf5f4c59bea3684c3a638b1"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/routes/routeDefinitions.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/routes/routeDefinitions.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:e2e/smoke/web/staff-monthly-activities.spec.ts": {
@@ -5516,6 +5516,150 @@
       "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
         "Changed: packages/db/src/s50-migration.sql at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/src/domains/upp-report-files.ts": {
+      "fingerprint": "2cf81761f5899895ef52ea4bb67210495f7c5982cabe9796590b75be6beede87",
+      "snapshot": {
+        "apps/api/src/domains/upp-report-files.ts": "043fbf21833c40d00098f0eb687233ec41db387c1794010f57a873bbf74875d5"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upp-report-files.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/src/domains/upp-reports.ts": {
+      "fingerprint": "e817deef0fd0d885f5ee0023575510557762c70bc2c0b7a5c87878c838240313",
+      "snapshot": {
+        "apps/api/src/domains/upp-reports.ts": "12404e116bad97c3eeca951081db9cb62b5e4cd552c2b023ce3c98e4276bf0be"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upp-reports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/src/security/backup-payload.ts": {
+      "fingerprint": "6ddb8e8265cd57549269f30f5a8bfde8c7efd35ed16f3b7518936cc6eeb19bb5",
+      "snapshot": {
+        "apps/api/src/security/backup-payload.ts": "d85aa12f2b4e9483ec191b1c47d89cf7b53ef9749543d12e1b864b9953f77664"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/src/security/backup-payload.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/tests/backup-payload.test.ts": {
+      "fingerprint": "b4efdc54b286b3ba0dcde87f4722a06561e5c3eabe9b5ac277b523777d9c3801",
+      "snapshot": {
+        "apps/api/tests/backup-payload.test.ts": "8813051fc202624adfc3ed65d0d10506a994c1277c5e1fcfa88b3295d3e0253b"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-payload.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/tests/upp-reports.test.ts": {
+      "fingerprint": "afa8004e6efe44a8beca2e5888b35d2b71b6e7c956995c1e8218ba912a2dc92a",
+      "snapshot": {
+        "apps/api/tests/upp-reports.test.ts": "81a759c023ff39e616eb637b81f7866c90cbb1e1c28204e948d6fd3b36939661"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/tests/upp-reports.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/api/uppReports.ts": {
+      "fingerprint": "b17b9cf760f9f36299c8718abb374e9539a34cb9a3471034d34bdf38c0d13a64",
+      "snapshot": {
+        "apps/web/src/api/uppReports.ts": "78762d7ebd4d41f0b2a94415e504f3a054a44c36876ba701889f9cc40355a9de"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/api/uppReports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/pages/UppReports.test.tsx": {
+      "fingerprint": "425f964b19cd6f19192b504d9fb9054cfced747842e6ce66bce3a4ad0490d3c1",
+      "snapshot": {
+        "apps/web/src/pages/UppReports.test.tsx": "6b6733fc2a98abc983d35c20c689c9e6fc82cb6a35683f1dffbf0b8216925755"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/pages/UppReports.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/pages/UppReports.tsx": {
+      "fingerprint": "be4b5577466a759ba7705b019f6539bfe3103ddbe04f9442e34ac8260067ebd2",
+      "snapshot": {
+        "apps/web/src/pages/UppReports.tsx": "c0eaa418be79d9c2567f557f296a82fd0c4262871229e0bfc76feb67df625c83"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/pages/UppReports.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
+      "fingerprint": "3d653886b71d00bb67f4fa21ea32d267fa58254b59ac23647556d758360fdf9d",
+      "snapshot": {
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "35fd0229318ed942f8136543dc77e1e1e6dcfe195a9cbdd8b9039b8a508b7fc6"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:e2e/smoke/web/upp-reports.spec.ts": {
+      "fingerprint": "b7778271a4fac0c909e578098cacf1f56155f10917dee5e0ea983a6e5ec3c5d3",
+      "snapshot": {
+        "e2e/smoke/web/upp-reports.spec.ts": "09fb107966aa014d4ef40f6e8e511a1c692504e4ae597ba85c89c8f24c133095"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:packages/contracts/src/upp-reports.ts": {
+      "fingerprint": "7619a5e1fa444f4be702465f1bae1edc85b14dd80d41747122ba0bee28d7e4ed",
+      "snapshot": {
+        "packages/contracts/src/upp-reports.ts": "8dc1aaf1dd2d5d30654493516b21b6e36aa0c9910502cd590bd3d6e9e644f787"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: packages/contracts/src/upp-reports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:packages/db/src/s51-migration.sql": {
+      "fingerprint": "5d0118ed8d8ff361a63ede63cf1a3fe1f10660dd2ab92449a9db9a9486814375",
+      "snapshot": {
+        "packages/db/src/s51-migration.sql": "23b91fe93312b25185ca535303269971617f5104ef7228a9b0ee54a6ad93a625"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: packages/db/src/s51-migration.sql at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     }
   }
