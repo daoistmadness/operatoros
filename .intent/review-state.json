@@ -3,17 +3,17 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "544d0cad331b4b05e6b85a344fea9da8a1bee30a4d79be6fabfd7d48930f53ec",
+      "fingerprint": "baf21c21341010a2069b40f26808493731c4f87099c125600c003270bf2862ca",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "6d13f91ee1229986dc8be2ceab5be242c7a66c268a336335b3eb0a1e59b94ea3",
+        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "193649e8dc4572c2c3f7df571d22361405b107a22b950b073a0139b0373f5fdb",
+        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "8eb7382fab8d739fe222b066493aa457eeec992e7da4a0e72730e015558adcbe",
+      "fingerprint": "85403222aa708cc131d4fe2a478019625aba3d0b8ca7c8fcbc031c5e92d562c7",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "6d13f91ee1229986dc8be2ceab5be242c7a66c268a336335b3eb0a1e59b94ea3",
+        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -65,7 +65,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "193649e8dc4572c2c3f7df571d22361405b107a22b950b073a0139b0373f5fdb",
+        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -192,15 +192,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "e9e8b4a962e5410d0b8018d6e4b317063aed1ddfc54832b7734e094c2e515f0d",
+      "fingerprint": "c295783d5dfd95f25b741ea572d16ffb0645e0b64e8bc3f163f1a76cb113b6c8",
       "snapshot": {
-        "apps/api/src/app.ts": "e0f2fbe47158a5deb85e53b894e38594d113289f0631a7903b955f72601315c7"
+        "apps/api/src/app.ts": "8b5bdf5d3a9ec05391c64b67dd7ad738a16b59781ced30d13e16dd1e6429408d"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/src/app.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "1ae59d8e36b2d03a6e13421a6df35e44e49123b60d08c33e39fa30d0175c9f73",
+      "fingerprint": "f5d7353e68b9d86c16683366f6836cab28d68bfcf8816c92d2f14a57c0f16504",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "cd7fdb9c4ec4b4f3fe05f9302fcc94e7bebd981a13418edbea2a5aee0f8efd8d"
+        "apps/web/src/generated/openapi/schema.ts": "2d072e9f80dbb39d43c9ab56590d755de82f5812430f8c19011dac94df1c92bb"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +515,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "e61b3127195dc71cf9dff4a84509f19837ab795a21665a3113eae728ac63929a",
+      "fingerprint": "823a3bf60b4877418ce699e095c4ab954355af5f9581642d88293bd3c0ff471d",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "d04ab47f11b03899b7e391db56bbe8553157c16807b6fe8915abee21eb414758"
+        "openapi/operatoros.openapi.json": "8d84339e0c5dd7d326e11f029464a734f76b01d2bbdb0072b554967a281eb0b8"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: openapi/operatoros.openapi.json at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -587,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "6444659eefeb0436f6443f6abc47cefb71fadb6f1c43617a66a80e1a09d323e4",
+      "fingerprint": "ffe82ca24a7dba1265ef2c023c7cf837900abffaa2c31170bd4259ef9aa4d08a",
       "snapshot": {
-        "README.md": "3a9cd086b7657cea19d1f54763d00f195eaf71b84c9aa624a81a535a979f2e4b"
+        "README.md": "b33820a9689d65064964cd42acb03dba2af3161683b4d5dab23cfe2323a1b24d"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: README.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: README.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1060,27 +1060,27 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "407505fbe35b9730fce60859a46e9c095d4155fc3006c617db7f8203de7f253c",
+      "fingerprint": "eff038d2df1edf580c9cb16df060bcceff3f0d2b74f27d0971b45fd7ec9a308c",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "460239671a5fc76f8bf8853395818d67e3383b7ab7a2bc62fa7a45effb75ab16"
+        "apps/web/src/components/SidebarNav.test.tsx": "a514ed62750cede7da35d162ec48f41e9e55a7b99b60c324f565e102849f7b9d"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
-      "fingerprint": "0068d6ba1bce57766c5b9d8460386f2571aa3b59d5fc7d2278a54e2599d13be7",
+      "fingerprint": "9ac9f9f27682b58a517aba8a500fb3bdf50b41a8be4bfed5bec96f3ca5539cb9",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.tsx": "a2ece2c0ebe06fed054125000b70f87a825c68c33b77e462437d95147e1d2509"
+        "apps/web/src/components/SidebarNav.tsx": "62c197623e23719558bdd4371124a71b0c325a84987980af8c9594434887f2c8"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/components/SidebarNav.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/web/src/context/AuthContext.test.tsx": {
@@ -1642,15 +1642,15 @@
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
-      "fingerprint": "fa507c76bb998e12bc43ddea605a7dab8b83ce7b9d36943dea33697c43d31e7f",
+      "fingerprint": "8e062c6f754f98a352e45b836b2f65e9cac2097d56272066a3505bebef2119dc",
       "snapshot": {
-        "apps/api/tests/data-layer.test.ts": "131a950e460be7b3f364012593277933aa1a74f11bd8dfcfdd4c39a7760a3d4c"
+        "apps/api/tests/data-layer.test.ts": "c2a81f2a0f7fc1e4bd087c1ad5fe62fff1a8acdad501b2f75e09b0df75ce4c56"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/data-layer.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/tests/data-layer.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
@@ -2800,15 +2800,15 @@
       ]
     },
     "source:apps/web/src/routes/routeDefinitions.tsx": {
-      "fingerprint": "169ed244c3f1b9822c5697be3165e262abb93c8210b926de017b7e1be71a858d",
+      "fingerprint": "431ac78019c26c9171c9ee53288a31d94d18e90b9f4928d75aa8e3f1b9967d12",
       "snapshot": {
-        "apps/web/src/routes/routeDefinitions.tsx": "3cb5c676ed4cb019ba8849feeb90146cb8b5b998a7c3a2560c143cf86ec17b8d"
+        "apps/web/src/routes/routeDefinitions.tsx": "49964450610fa4cbdbd95d2b89763303972d3b3d22b488b904482a9b911fada1"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/routes/routeDefinitions.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/routes/routeDefinitions.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:.audit/documentation-inventory.tsv": {
@@ -3199,15 +3199,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "4773760dc1be428ca7d31f9ddfae67304d388890538ac8371e16d9ed5bc51b57",
+      "fingerprint": "f9ed2d37cf8f2a972fcdb45fb7c9c54e1100076e73910647f070fcd094055c18",
       "snapshot": {
-        "docs/architecture/database-schema.md": "5d2b8452068de8427968fb67957b82e0b55d4f58d35f6ab8d2aae064e060a251"
+        "docs/architecture/database-schema.md": "39468546f2f2db039a7fb2979f0053ccc6e44ea98f679b707693c87caa1e23a7"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/architecture/database-schema.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -3504,17 +3504,15 @@
       ]
     },
     "source:docs/decisions/sqlite-only-runtime.md": {
-      "fingerprint": "138c00da13efb1eb45b9bf58ceddb4118270655e09c555e1ed76c6d38aa5cbdf",
+      "fingerprint": "590feda8e854cdcca8aaadc0325446baf1af6e2af33f47d320b3bcb708a193bc",
       "snapshot": {
-        "docs/decisions/sqlite-only-runtime.md": "8d24368422e03135a03c962987c6625c0c14e4b25858dedd92f4d1d7c70c7c12"
+        "docs/decisions/sqlite-only-runtime.md": "5d9d9deaea9331e78ff668d185fde51827eede66d08a5856509f4408431e6f55"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/decisions/sqlite-only-runtime.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/decisions/tauri-desktop-architecture.md": {
@@ -3994,27 +3992,27 @@
       ]
     },
     "source:docs/guides/development-database.md": {
-      "fingerprint": "9e83ea7f30cb7c4765beca8ae2c97f19f5cc1a79f8ad0cc0351fbb2c41aba840",
+      "fingerprint": "e4812544069c9859a839a233ec49e672fae24212a812b4e55dafb8ff955292d9",
       "snapshot": {
-        "docs/guides/development-database.md": "f5b45975d510d36b95535d19486b0768c161b55546f86a47fcc44a410e3e29b5"
+        "docs/guides/development-database.md": "189e693cdaf935ac14e70377d65e9e30c10c8bf13bdff96a8c911c4bafbd7dae"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/guides/development-database.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/guides/development-database.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "d6ffe2b8624fff63145a10188928f693cf553a1990b805dd4b7078219eea6ff3",
+      "fingerprint": "70d1a6a5f2d7304a86063f618513e9969292a94aae63df638eddaf41edf10bd6",
       "snapshot": {
-        "docs/guides/offline-install.md": "0cc72f7cf50a7e365335286a48da8487a48b459b9287a387ce98c17413a08601"
+        "docs/guides/offline-install.md": "448661414c7e1f4cec8fc0139bb91189026fcc48f69d1c2e0a1211ff141b7c89"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/guides/offline-install.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4604,15 +4602,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "69c6818962be02decd6493796df8f7ef748019fa7a2cfea5a87b7a16ae8e5444",
+      "fingerprint": "0298bc375056a6e8228e831cc23c0fe9602a7e4e74147678d8e3aed8df7ba7ad",
       "snapshot": {
-        "docs/reference/runtime-support.md": "ad54c09ecefb2302618c92a9f3f9b0c2af557571298330fc9c30d3f355de7025"
+        "docs/reference/runtime-support.md": "eea6785cd36dd8f2d835c3e53c7507f8413143dc1734b0b2572bf6ec14b2ed5e"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/reference/runtime-support.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/reference/runtime-support.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4754,27 +4752,27 @@
       ]
     },
     "source:docs/runbooks/data-reset.md": {
-      "fingerprint": "417b80f6415fec756f2e735fb7ef2288f0f800fcbb264537214ba308e4388645",
+      "fingerprint": "73db0e695fa0d8eff0f9d5e64eee39d4f7f236a98905c82cb22f52dec96fcb7e",
       "snapshot": {
-        "docs/runbooks/data-reset.md": "a72e69a51540b05ea2c53717951b78e7b329e480318482aa0449747435a85dcd"
+        "docs/runbooks/data-reset.md": "0384b0e10b9c28210f489cff5d305a4145bf4a790b93b4753f68055840acebb3"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/data-reset.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/runbooks/data-reset.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "002dc0bf868427f9eec1237591cfbcc41cdf0ed1424cb0f377673d39aa56f170",
+      "fingerprint": "f82b9a43d17498d11eff5655b7f380d2f0a3bf49cba5c7d3fca8872c5c36ee2e",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "1aaa2a523b8a1311f61252012bbf4386ecb25cbc8904183926cadff777364796"
+        "docs/runbooks/database-operations.md": "c8b4b32e9c05c9fad13623b1816ea7c843f563d8f22bf4e8bd61327bb36d607a"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/database-operations.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/runbooks/database-operations.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4820,15 +4818,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "e56ac471eb92ba8fa589b4dd12df6d48680fd4b22e3bdecd35b5b83a03c2f525",
+      "fingerprint": "e4181735706b25035c5013394963fcae36e9c7e3e8f28239d9907487e30f44b6",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "55e31795a2ef178223b22a3627984b1ee5b8317599f986a81af73d3463a5c7db"
+        "docs/runbooks/ubuntu-server-deployment.md": "4d3010c53e6f33dc90f387d86d924aad5b90d7b39eb2d365cd82e95f6c623ae4"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5101,15 +5099,15 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "0ffa5295d36c09210e83ba08d8fb427cb69e99e85b4cfe9dab695204e7c9d7d0",
+      "fingerprint": "1b2f75f5d3cfb5a9cffab96059c269baad81e0dad6bdc433cf78695d0948eefe",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "4129a8eb2c01a8eacdac864b9eeb89d388924d2094e57ca0ae1496097cc298de"
+        "apps/api/src/domains/core.ts": "231b6dd5dbac5eef596cd1ed95ee7e4723fc9083854006bc691d25030d5dfc7e"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/src/domains/core.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -5161,15 +5159,15 @@
       ]
     },
     "source:apps/api/src/domains/data-reset.ts": {
-      "fingerprint": "a7d55801338ed46b69505b1301074edcf5769494b6f1210a7a5c419720ee7f42",
+      "fingerprint": "403443d686d2dcffe33fb364bf89b76740bb71b4bdfbb87f23f15b3d5f580ed1",
       "snapshot": {
-        "apps/api/src/domains/data-reset.ts": "027e79f37dd675342303f0f7403e5234499d03d2cc3fa42735b2c2a2a43c9fd1"
+        "apps/api/src/domains/data-reset.ts": "f4ed615019a4c2339de0bf550128e1aa85783a3a1f37affb018231256b3cfef1"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/src/domains/data-reset.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/src/domains/data-reset.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/src/domains/employee-management.ts": {
@@ -5209,15 +5207,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "8173fe2a167c83936ebf249f29b8a58e1546609e4c3b10013a462736728d3115",
+      "fingerprint": "69f5428b651fb324316b0876f87216d2e11423d9e3b6c2e28962a177a78a1b64",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "2e15805318d512d7adbab29d62ad9515780478b500f07706400c7ccd8f7b1c4f"
+        "apps/api/tests/openapi-contract.test.ts": "05dd75882fc20194e869dd12d74cece674450923657d2b6fde536c1ac537dd33"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/tests/openapi-contract.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5257,87 +5255,87 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "8e88a1246f37eab5e4cd0a6b4dd35e0981579efdc6936dfc356204750340c04e",
+      "fingerprint": "125c43b5eb418e1cbc0a75a244493d373ea167524889f4a4f8a7f6fc61b4d1df",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "b8dbb1c0d8318e449f4952f8b6375d706709401dbb3c5ba0aa097d169c8690b8"
+        "apps/web/src/lib/query/queryKeys.ts": "fd8056d2370ec5221f0849ac5975cfe44c185c756c6c14e4f06951d478f986ab"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
-      "fingerprint": "4fbffc98285d685036111ccdf95666cd4258282f89a55c4e5ffca84a137558ac",
+      "fingerprint": "bc61d1a5ca9b0f2bbd72498d2ab68161ae48165225bd27d329801bcf79c06503",
       "snapshot": {
-        "packages/contracts/src/staff.ts": "06887fb5b1bd8471f280837a9718ea87223233ab6c9c0b42eb2e923c87a31a6f"
+        "packages/contracts/src/staff.ts": "9a0e0e0dd32735fa6980baedfa2350a0b11c7c9ab3cbdebb0495b85cac7cf835"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/contracts/src/staff.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/contracts/src/staff.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/README.md": {
-      "fingerprint": "618c1fe45b674caf2cfff69a6fb00d339cb6d98d5fcd79c9d11a3021321c4163",
+      "fingerprint": "2ce288af28b57290605e533951ac6a55028bf7a9994545f4300b676b2bd09324",
       "snapshot": {
-        "packages/db/README.md": "a761550c0fc777248a482ea1a561dd053630ec9446a4915c99bfeee823bab15e"
+        "packages/db/README.md": "c34035e020b9269027685ab7bae1b1a81b8c88206e777333c144afd08cf58778"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/README.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/README.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "5073c8ebd1adddbc52e9c5474a60d461e255d73b2e26ccf61220c33c725850e1",
+      "fingerprint": "4db345c5b416ff7f98b2fc71db0e067e881e7e80908f5ec4399fcd5acacf0e17",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "4bc88c20f07c8adbafcdf35f1fcf4c8dcf654b9541a86f4b56860b7b4f056b2d"
+        "packages/db/src/bootstrap.ts": "e4b446442410b24839e43cc4eddba9d05ebfb36ce91afbd56ff281449539c533"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/src/bootstrap.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/src/index.ts": {
-      "fingerprint": "3a3569562e7a64c1e2f5a601d662c457be75b0832da7d164c5b45c08d10fdfcb",
+      "fingerprint": "d33a6bc09880eab91d3b58cfc79def18e06005fed057ea256cd8407d59b8c1ef",
       "snapshot": {
-        "packages/db/src/index.ts": "7ce551a42431b4759be4369d7ebcf271415cc4951c287c6a03d8c59fd7c7d34b"
+        "packages/db/src/index.ts": "b7183f8975b13fbc3b3ce64832676e4939c41fcc06838f8da52c972201fc7689"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/src/index.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/src/index.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "f63b9aac531a763c24baaa7959978c38443edd48c95665501755af70d00e383d",
+      "fingerprint": "047d14357468c486341f6299843814ce8293058d5f56b84dd1db183f7eb7efdd",
       "snapshot": {
-        "packages/db/src/manifest.ts": "bb9dea75b4f7d350bba8b076632f6469b724179baa2807f901da2911a6038f9e"
+        "packages/db/src/manifest.ts": "36dde1a7cc0afbbf8ecf72c5fc5474fd1d04148d783799aa3f27ee2d10782ee6"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/src/manifest.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "996c3d46cf4466666eee78d7867e7b2845796f470c72cb8f181fdfbcf96ce324",
+      "fingerprint": "501776a2d513b15cf6303bf623d3b403a3ed38217e0e62478ee667260c9d2d5a",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "5d5355dac55db91b1f28deee4af9b8104f16860edf1937c51f2d0723fae7f682"
+        "packages/db/src/migrate-existing.ts": "c46247463aa29d6b5cb2cad4ebbc0836f54b1aa11deff9d95ad14a8023c09772"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/src/migrate-existing.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5353,51 +5351,171 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "acbf2ac8f3532add4992b6ccd729e5d166684cc64c1fd4218c8281b17010e3f0",
+      "fingerprint": "92af9808d4a1bd18c906c876f308d3fdc7992fe18caa14e342cf63696aade385",
       "snapshot": {
-        "packages/db/src/schema.ts": "76ce00cad7cf62b4647f4f9155e484fc75f6431fe2c80868c41768fa82fc22ab"
+        "packages/db/src/schema.ts": "51d7a449d4bd7071eb8aa157523c8835eb11d54c5e5103d156b2e3454b84e177"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/src/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
-      "fingerprint": "95a279d9f9d563da44dfe4c7c5ee36cc876dae69afe9368b9daadc47b592f2ee",
+      "fingerprint": "f4fbf1707a1f8a58cabceffe4b2ca669c50c9e5dd9d44da299a696d628994b8d",
       "snapshot": {
-        "packages/db/tests/bootstrap.test.ts": "fff8a51bc9897a98d0fcfa2390a56c44cbb1cdf4c16707456dbfb3057d76ce08"
+        "packages/db/tests/bootstrap.test.ts": "f49fcce913e6e20c645d669c0a50a3e60047054aeb4e1cf3b10ca02dfc0b27f7"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/tests/bootstrap.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/tests/bootstrap.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "17004b3ddfca08b9eae7da8723567a0a3ca18682587b95f7b46f62b90c108e07",
+      "fingerprint": "56d7fbfac24f1be0703ffd952edf4844be7355a47d9119cb94fea247ca0ca4b3",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "9be717e52bbd63f3177cc2a4d04c00024c6b5f3c191720a22523853a69a37f3f"
+        "packages/db/tests/db.test.ts": "88a379e44dd5c4495d2a9fd7ac39adb77f4d2ebb7699c765ded77768cfa2e7de"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/tests/db.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "a468c55c298988f0d5291472e8c196056194b020c3ef86546bdfd3e0c861d4ca",
+      "fingerprint": "16ffbd7560c8281df1b9c6e7d9bd1e52fc03aa5b6452eda7685c37942220669d",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "0e967ca9db0508f4a38f1ffe86adb0558e4b455d3254d0b2015ed7464e161213"
+        "packages/db/tests/migrate-existing.test.ts": "6fecd71887be0ee3b8cc880f67bf4f734b95d30ad8b2436594478b89e4af3062"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: packages/db/tests/migrate-existing.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/src/domains/staff-monthly-activities.ts": {
+      "fingerprint": "3d5913fdbbfaed9d297fc961c198ed5f6b23469c5ff866bbb565c921a689d934",
+      "snapshot": {
+        "apps/api/src/domains/staff-monthly-activities.ts": "710d79221e58204ac41000b41de41b8300972f006911e1aad19dfb9400bbc931"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-monthly-activities.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/tests/staff-monthly-activities.test.ts": {
+      "fingerprint": "79e8452d1604290ad306924495bbd80370c63b7fa242b9f8d1ee273d44d396db",
+      "snapshot": {
+        "apps/api/tests/staff-monthly-activities.test.ts": "e740f141385689ba9737bbc882fa7cd34945809d72f8b743dd25a03b69209801"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/staff-monthly-activities.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/api/staffMonthlyActivities.test.ts": {
+      "fingerprint": "8cecd43478b5e4e37da4102dea70f06b41f6bf64cc585e2e94434f043429e3f6",
+      "snapshot": {
+        "apps/web/src/api/staffMonthlyActivities.test.ts": "165b9d30071ca3fcb0d600957fcc7ace8e9e159f2f3cb75f6458659324eee471"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staffMonthlyActivities.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/api/staffMonthlyActivities.ts": {
+      "fingerprint": "f0a97b88cad19590a3057fd1e189035b5383e0ee2ee6899bd369c524a29509bb",
+      "snapshot": {
+        "apps/web/src/api/staffMonthlyActivities.ts": "2a51d727ddd6db696f536be611a1e4a7b0416987e3728f3dac95912c22632bfb"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staffMonthlyActivities.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/pages/StaffMonthlyActivities.test.tsx": {
+      "fingerprint": "fc52722147b4b91eca4ea22c53fb83336acea747045e9cdca068019c93ec7d3b",
+      "snapshot": {
+        "apps/web/src/pages/StaffMonthlyActivities.test.tsx": "d4b06b923843b877b0e561661d428f9fb6ac27161f4fe9e369c4a14919a4bbc7"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/StaffMonthlyActivities.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/pages/StaffMonthlyActivities.tsx": {
+      "fingerprint": "e47e99391d51616670c29a0c4ef3a783fd5c8e982ef67c9fee0e5cc018d9a17a",
+      "snapshot": {
+        "apps/web/src/pages/StaffMonthlyActivities.tsx": "7825b49f865ef072f7c8e771fea76a9ce57f49d18414731e6bcef0e43621333a"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/StaffMonthlyActivities.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/routes/routeDefinitions.test.tsx": {
+      "fingerprint": "97f17a36a2c3d905780a393d3ee478a7e3b000777cf95eac5707fb141049e20f",
+      "snapshot": {
+        "apps/web/src/routes/routeDefinitions.test.tsx": "c9c23860265fee4f3dd54439b8cec57e37b3711006969b9f8390c15e8c382a38"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/routes/routeDefinitions.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:e2e/smoke/web/staff-monthly-activities.spec.ts": {
+      "fingerprint": "d7b7f6c4484d6257823b71ee0af758e88c7b3262fea0b35cb74c32d3da125b5b",
+      "snapshot": {
+        "e2e/smoke/web/staff-monthly-activities.spec.ts": "07efad06bde64463beba18ee7388edb417e8ddb32a9d2d962b7f3a1ec7516dd7"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:packages/contracts/src/staff-monthly-activity.ts": {
+      "fingerprint": "b1494fc40acee04ef20a1bd51b21ba22a064eacf0eea0f107d00e7c8262e0a57",
+      "snapshot": {
+        "packages/contracts/src/staff-monthly-activity.ts": "72efea7669872575d21e6365242fb94db10a9160d0d91f2fc0bc45e765237f4f"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/contracts/src/staff-monthly-activity.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:packages/db/src/s50-migration.sql": {
+      "fingerprint": "a249c4a4708fcffab666fdfa3d0c0850547364db5d2f4ce483b8dd5709ee916a",
+      "snapshot": {
+        "packages/db/src/s50-migration.sql": "5ad32ea92df3d3fbd593f86a936bad0f6813fa8cd6fc3d94af8dae7685a95466"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/s50-migration.sql at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     }
   }
