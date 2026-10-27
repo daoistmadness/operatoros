@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-27
 ---
 
 # Employee management
@@ -11,6 +11,37 @@ creates an OperatorOS user. It owns employee master data, import history,
 position mappings, status history, aggregate analytics, and exports. It does
 not own payroll, leave, contracts, certification, recruitment, or performance
 records.
+
+## School units and PTK applicability
+
+School units are separate from academic `jenjang`. Administrators can create,
+rename, and deactivate units. Catalog edits use an integer version; stale edits
+return a conflict so an administrator can reload and review current values.
+Staff can have concurrent assignments to different units. Each assignment has
+inclusive effective dates and an explicit PTK
+decision of `APPLICABLE`, `NOT_APPLICABLE`, or `UNKNOWN`. Employment, DAPODIK,
+job title, and workbook imports never infer these decisions.
+
+Record a reason when creating, closing, or cancelling an assignment. Close a
+started open period once, then create its successor to change applicability.
+An open assignment can be cancelled only before its Jakarta effective date;
+future assignments cannot be closed. Cancellation preserves the original
+period and records its reason, actor, time, and audit event. Same-person,
+same-unit periods cannot overlap unless an earlier period was cancelled.
+Closed and cancelled periods cannot be edited or deleted. Audit-authorized
+users can review assignment periods and reasons in profile history.
+Deactivating a unit retains its links and prevents new assignments.
+
+The directory and CSV and XLSX exports filter by assignments effective on the
+current Asia/Jakarta date. Profiles also show upcoming assignments. PTK
+applicability belongs to each assignment's effective period. Monthly PTK
+generation can qualify a person for each applicable unit whose assignment
+overlaps the reporting month; cancelled assignments are excluded. The monthly
+activity workflow is implemented in Phase 3.
+
+Profile age is calculated from birth date behind the existing sensitive-data
+permission. Profile tenure reuses the existing calculation with the same Jakarta
+reference date. Neither value is stored.
 
 ## Source workbook and mapping
 

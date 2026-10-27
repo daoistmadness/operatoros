@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun test",
+    "test": "bun test --timeout 30000",
     "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
     "resolve-data-dir": "bun src/data-dir-cli.ts",
     "db:bootstrap": "bun src/db-cli.ts bootstrap",

@@ -16,7 +16,7 @@ import { authenticatedRoutes } from '../routes/routeDefinitions';
 vi.mock('../lib/api/client', () => ({ getServerStatus: vi.fn().mockResolvedValue({ status: 'ok' }) }));
 
 const users: Record<'admin' | 'staff', AuthUser> = {
-  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections'] },
+  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'view_staff_analytics', 'manage_staff', 'export_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections'] },
   staff: { id: 2, username: 'staff', role: 'staff', capabilities: ['view_student'] },
 };
 
@@ -166,7 +166,7 @@ describe('role-aware sidebar navigation', () => {
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
       ['Management Analytics', 'Population Overview', 'Data Quality', 'Attendance', 'Academic Analytics', 'Student Insights', 'Reports & Reviews'],
       ['Data Import & Export'],
-      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Settings'],
+      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Staff Monthly Activity', 'Monthly UPP Reports', 'Settings'],
     ]);
     for (const group of NAV_GROUPS) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
   });

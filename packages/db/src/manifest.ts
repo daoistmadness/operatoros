@@ -12,10 +12,22 @@ export const SCHEMA_MIGRATIONS = [
   "20260901_s46",
   "20260929_s47",
   "20261002_s48",
+  "20261027_s49",
+  "20261027_s50",
+  "20261027_s51",
+  "20261027_s52",
+  "20261027_s53",
+  "20261027_s54",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
   "171c0e5e92d080a3f81931ec8c7f299c07cb153d038bba3dd890de96a6dd4f8d";
+
+export const S48_SCHEMA_FINGERPRINT =
+  "cdf77fe2cdebf360d57501a9e7ba695d820dcaec8451e832928a04b0679a640c";
+
+export const S49_SCHEMA_FINGERPRINT =
+  "d84583de1ee330c54bb98b2cc920381cda6282f5809cbd5729bb21f1fcedad6e";
 
 export const CURRENT_SCHEMA_VERSION = SCHEMA_MIGRATIONS.at(-1)!;
 
@@ -30,8 +42,20 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   if (leftIndex < 0 || rightIndex < 0) return undefined;
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
+export const S50_SCHEMA_FINGERPRINT =
+  "53c13b4625f61ecf61f6866671e36b327e44739253cf16589b7dc3bc598dc265";
+
+export const S51_SCHEMA_FINGERPRINT =
+  "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
+
+export const S52_SCHEMA_FINGERPRINT =
+  "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
+
+export const S53_SCHEMA_FINGERPRINT =
+  "c7a4cceddff5cdb89e0eb6cbb16d867effe6c68021c3b2b9faf071b1bc1bbc55";
+
 export const CURRENT_SCHEMA_FINGERPRINT =
-  "cdf77fe2cdebf360d57501a9e7ba695d820dcaec8451e832928a04b0679a640c";
+  "4e469c743a4bd65eebe764488c96dcaed2ce913f65ebf9daff18f97e97449c25";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -74,8 +98,39 @@ export const REQUIRED_TRIGGERS = [
   "trg_student_master_change_history_no_update",
   "trg_student_progression_audit_no_delete",
   "trg_student_progression_audit_no_update",
+  "trg_staff_school_unit_assignment_active_unit",
+  "trg_staff_school_unit_assignment_open_on_create",
+  "trg_staff_school_unit_assignment_no_overlap",
+  "trg_staff_school_unit_assignment_no_overlap_update",
+  "trg_staff_school_unit_assignment_close_once",
+  "trg_staff_school_unit_assignment_no_delete",
+  "trg_staff_monthly_activity_period_no_update",
+  "trg_staff_monthly_activity_period_no_delete",
+  "trg_staff_monthly_activity_history_no_update",
+  "trg_staff_monthly_activity_history_no_delete",
+  "trg_staff_monthly_activity_history_sequence",
+  "trg_staff_monthly_activity_no_delete",
+  "trg_staff_monthly_activity_update_history",
+  "trg_staff_monthly_activity_status_transition",
+  "trg_upp_report_status_transition",
+  "trg_upp_report_identity_immutable",
+  "trg_upp_monthly_reports_no_delete",
+  "trg_upp_report_versions_active_once",
+  "trg_upp_report_versions_no_delete",
+  "trg_upp_report_history_no_update",
+  "trg_upp_report_history_no_delete",
+  "trg_upp_report_evidence_no_update",
+  "trg_upp_report_evidence_no_delete",
   "trg_teacher_class_assignment_audit_no_delete",
   "trg_teacher_class_assignment_audit_no_update",
+  "trg_student_identity_verification_history_no_update",
+  "trg_student_identity_verification_history_no_delete",
+  "trg_student_identity_verification_status_transition",
+  "trg_student_dapodik_status_transition",
+  "trg_student_dapodik_history_no_update",
+  "trg_student_dapodik_history_no_delete",
+  "trg_student_iom_documents_no_delete",
+  "trg_student_iom_documents_immutable_fields",
 ] as const;
 
 export const PROTECTED_DATABASE_BASENAME = "attendance.db";

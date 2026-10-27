@@ -27,7 +27,8 @@ with the local API; it does not connect to SQLite directly.
 - The database package owns schema, SQLite lifecycle, and canonical data paths.
 - Existing databases are validated at startup and are never migrated by
   ordinary application startup.
-- Fresh bootstrap uses the S4.7 base and applies the S4.8 employee extension.
+- Fresh bootstrap uses the S4.7 base and applies S4.8 employee, S4.9
+  school-unit, S5.0 monthly PTK, and S5.1 monthly UPP archive extensions.
 - PostgreSQL support requires a new architecture decision and operational
   evidence; old PostgreSQL migration files do not establish support.
 - The API and CLI backup/restore paths retain their documented single-process

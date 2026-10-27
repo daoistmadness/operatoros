@@ -1,8 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { dirname } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { reportFilePath, storeReportFile } from "../src/domains/upp-report-files";
 import { createResetFixture } from "./fixtures/reset";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
@@ -20,9 +22,11 @@ function cookie(response: Response): string {
 }
 
 async function setup(label: string) {
-  const path = `/tmp/operatoros-reset-${label}-${process.pid}-${Date.now()}.db`;
-  const backupDir = `/tmp/operatoros-reset-backups-${label}-${process.pid}-${Date.now()}`;
-  const auditDir = `/tmp/operatoros-reset-audit-${label}-${process.pid}-${Date.now()}`;
+  const dataDir = `/tmp/operatoros-reset-${label}-${process.pid}-${Date.now()}`;
+  const path = `${dataDir}/operatoros.sqlite`;
+  const backupDir = `${dataDir}/backups`;
+  const auditDir = `${dataDir}/logs`;
+  mkdirSync(dataDir, { recursive: true });
   seed(path);
   mkdirSync(backupDir, { recursive: true });
   const database = openDatabase(path);
@@ -36,9 +40,7 @@ async function setup(label: string) {
     path, backupDir, database, disabled, enabled, admin: cookie(adminLogin), staff: cookie(staffLogin),
     cleanup() {
       database.close();
-      for (const suffix of ["", "-wal", "-shm"]) rmSync(`${path}${suffix}`, { force: true });
-      rmSync(backupDir, { recursive: true, force: true });
-      rmSync(auditDir, { recursive: true, force: true });
+      rmSync(dataDir, { recursive: true, force: true });
     },
   };
 }
@@ -141,12 +143,27 @@ describe("granular data reset API", () => {
   it("removes student-dependent data while preserving structure and administrator access", async () => {
     const value = await setup("students");
     try {
+      const master = value.database.client.query("SELECT id FROM student_masters LIMIT 1").get() as { id: string };
+      const iomBytes = Buffer.from("Synthetic IOM attachment for student reset test");
+      const iomFile = storeReportFile(dirname(value.path), iomBytes);
+      const iomPath = reportFilePath(dirname(value.path), iomFile.sha256);
+      value.database.client.run("INSERT INTO student_iom_documents (id,student_master_id,iom_type,description,file_sha256,file_size_bytes,original_filename,uploaded_by) VALUES ('synthetic-reset-iom',?,'TRANSFER_IN','Synthetic reset memo',?,?, 'synthetic-reset.pdf','synthetic-admin')", [master.id, iomFile.sha256, iomFile.sizeBytes]);
+      value.database.client.run("INSERT INTO student_identity_verifications (student_master_id,identifier_type,verification_status,correction_reason) VALUES (?,'NIK','UNVERIFIED',NULL),(?,'KK','NEEDS_CORRECTION','Synthetic correction')", [master.id, master.id]);
+      value.database.client.run("INSERT INTO student_identity_verification_history (student_master_id,identifier_type,to_status,changed_by,correction_reason) VALUES (?,'KK','NEEDS_CORRECTION','synthetic-admin','Synthetic correction')", [master.id]);
+      value.database.client.run("INSERT INTO student_dapodik_registrations (student_master_id,updated_by) VALUES (?,'synthetic-admin')", [master.id]);
+      value.database.client.run("INSERT INTO student_dapodik_history (student_master_id,to_status,changed_by) VALUES (?,'NOT_STARTED','synthetic-admin')", [master.id]);
       const response = await post(value.enabled, "/api/system/data-reset", { scope: "STUDENTS", confirmation: "RESET STUDENTS" }, value.admin);
       const result = await response.json() as any;
       expect(response.status, JSON.stringify(result)).toBe(200);
       expect(count(value.database.client, "students")).toBe(0);
       expect(count(value.database.client, "student_masters")).toBe(0);
       expect(count(value.database.client, "student_enrollments")).toBe(0);
+      expect(count(value.database.client, "student_identity_verifications")).toBe(0);
+      expect(count(value.database.client, "student_identity_verification_history")).toBe(0);
+      expect(count(value.database.client, "student_dapodik_registrations")).toBe(0);
+      expect(count(value.database.client, "student_dapodik_history")).toBe(0);
+      expect(count(value.database.client, "student_iom_documents")).toBe(0);
+      expect(existsSync(iomPath)).toBe(false);
       expect(count(value.database.client, "attendance")).toBe(0);
       expect(count(value.database.client, "student_subject_grades")).toBe(0);
       expect(count(value.database.client, "academic_interventions")).toBe(0);
@@ -156,7 +173,7 @@ describe("granular data reset API", () => {
       expect(result.deleted_counts).toMatchObject({
         "Attendance records": 1,
         "Academic results and interventions": 2,
-        "Student identity and profile data": 3,
+        "Student identity and profile data": 9,
       });
       expect(count(value.database.client, "users")).toBe(2);
       expect((await value.enabled.handle(new Request("http://local/api/auth/me", { headers: { cookie: value.admin, origin: "http://localhost:5173" } }))).status).toBe(200);
@@ -169,6 +186,8 @@ describe("granular data reset API", () => {
     try {
       value.database.client.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic-reset-staff','Synthetic Reset Employee','synthetic reset employee')");
       value.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,source,created_by) VALUES ('synthetic-reset-staff','2026-10-01','ACTIVE','MANUAL','test')");
+      const schoolUnitId = Number(value.database.client.run("INSERT INTO school_units (name) VALUES ('Synthetic Reset Unit')").lastInsertRowid);
+      value.database.client.run("INSERT INTO staff_school_unit_assignment_versions (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by) VALUES ('synthetic-reset-staff',?,'2026-10-01','UNKNOWN','Synthetic reset assignment','test')", [schoolUnitId]);
       const response = await post(value.enabled, "/api/system/data-reset", { scope: "ALL_SCHOOL_DATA", confirmation: "RESET ALL SCHOOL DATA" }, value.admin);
       const result = await response.json() as any;
       expect(response.status, JSON.stringify(result)).toBe(200);
@@ -176,10 +195,12 @@ describe("granular data reset API", () => {
         "Attendance and academic configuration": 2,
         "Academic classes and references": 6,
         "School report setup": 3,
+        "Staff profiles and school units": 3,
       });
-      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings", "staff_employment_history"]) {
+      for (const table of ["students", "student_masters", "student_enrollments", "attendance", "student_subject_grades", "academic_interventions", "academic_years", "academic_programs", "academic_grades", "academic_classes", "subjects", "jenjangs", "attendance_calendar_weekday_rules", "report_templates", "report_branding_configs", "staff_job_title_mappings", "staff_employment_history", "staff_members", "staff_school_unit_assignment_versions", "school_units"]) {
         expect(count(value.database.client, table), table).toBe(0);
       }
+      expect(value.database.client.query("SELECT name FROM sqlite_master WHERE type='trigger' AND name='trg_staff_school_unit_assignment_no_delete'").get()).toEqual({ name: "trg_staff_school_unit_assignment_no_delete" });
       expect(count(value.database.client, "users")).toBe(2);
       expect(count(value.database.client, "sessions")).toBe(2);
       expect(count(value.database.client, "backup_scheduler_config")).toBe(1);

@@ -1,4 +1,5 @@
 import { apiRequest } from '../../../lib/api/client';
+import type { BospReminderStatusResponse, DashboardOperationalOverviewResponse } from '@operatoros/contracts';
 
 export type DeploymentMode = 'single_user_offline' | 'multi_user';
 
@@ -31,7 +32,15 @@ export type OperatorWorkQueueItem = OperatorWorkQueueCommon &
         };
       }
     | {
-        item_type: 'FOLLOWUP_CASE' | 'FOLLOWUP_CANDIDATE' | 'UNMATCHED_DEVICE';
+        item_type:
+          | 'FOLLOWUP_CASE'
+          | 'FOLLOWUP_CANDIDATE'
+          | 'UNMATCHED_DEVICE'
+          | 'STUDENT_VERIFICATION'
+          | 'STUDENT_IDENTITY_CORRECTION'
+          | 'STUDENT_DAPODIK_CORRECTION'
+          | 'STAFF_PTK_REVIEW'
+          | 'UPP_REPORT_PENDING';
         metadata: Record<string, unknown>;
       }
   );
@@ -63,6 +72,45 @@ export async function fetchOperatorWorkQueue(signal?: AbortSignal): Promise<Oper
   return response.data || [];
 }
 
+export async function fetchDashboardOverview(signal?: AbortSignal): Promise<DashboardOperationalOverviewResponse> {
+  const response = await apiRequest<DashboardOperationalOverviewResponse>({
+    path: '/api/operator/dashboard-overview',
+    ...(signal ? { signal } : {}),
+  });
+  return response.data;
+}
+
+export async function fetchBospReminderStatus(signal?: AbortSignal): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder',
+    ...(signal ? { signal } : {}),
+  });
+  return response.data;
+}
+
+export async function acknowledgeBospReminder(payload: {
+  calendar_year: number;
+  notes?: string | null;
+}): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder/acknowledge',
+    method: 'POST',
+    body: payload,
+  });
+  return response.data;
+}
+
+export async function updateBospReminderSettings(payload: {
+  advance_notice_days: number;
+}): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder/settings',
+    method: 'PUT',
+    body: payload,
+  });
+  return response.data;
+}
+
 export async function selfConfirmCorrection(
   requestId: AttendanceCorrectionRequestId,
   payload: SelfConfirmCorrectionPayload,
@@ -70,7 +118,7 @@ export async function selfConfirmCorrection(
   const response = await apiRequest<Record<string, unknown>>({
     path: `/api/attendance-corrections/${requestId}/self-confirm`,
     method: 'POST',
-    data: payload,
+    body: payload,
   });
   return response.data;
 }

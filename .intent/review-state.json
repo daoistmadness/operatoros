@@ -3,17 +3,17 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "ae8fb79ed90a20280c8689c03a2fd2745b81448ecb663821e3cff1c64a7f4c52",
+      "fingerprint": "ce983efdca857ff37ee1d0c4034b3b726678a56a544e849eccffaf9dc6209938",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
+        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
+        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "44132a8a54044fafbb419d8762860f6d870ef7a8737d11f4eac2f4394b3cc9e6",
+      "fingerprint": "f3d55769407a790c39d214fd743cbc09449aeb411aa1cf09209a2464c05deda2",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "aca1c989ac0374fce1ebf49366a6aeb299d246829b6688a9e02706b350ad18c8",
+        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -65,7 +65,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "8698962bda71b95a320f43e0a192490d87723c92ab20e3f1fc59a4677780dc7c",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "67736f04ba82714d901ebbbf7b60385d001572dd",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "PR #325 removes unused development dependencies and updates bun.lock only; it changes no Elysia runtime guidance, examples, task scope, or planning evidence, so the existing skill and planning records remain accurate.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 67736f04ba82714d901ebbbf7b60385d001572dd"
+        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -130,27 +130,27 @@
       ]
     },
     "source:apps/web/src/pages/StudentManagement.test.tsx": {
-      "fingerprint": "1cf018500914354a04f995d91c45c599cde44e4375defa5ffba413fa5c5fbc62",
+      "fingerprint": "8ca76e8dba21201542a18312fe99a9b6cad5ced2dc99115bdbf4086c98492438",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.test.tsx": "a4a847883870b0f64f3a67c066d01d3a59478ea6d65b1531071e08ba4777c4e7"
+        "apps/web/src/pages/StudentManagement.test.tsx": "6e64dcec1c08b21ff9fe1453c66520066ca21e87e67d903dba06e5b1553b19b9"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.test.tsx at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/web/src/pages/StudentManagement.test.tsx at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/web/src/pages/StudentManagement.tsx": {
-      "fingerprint": "9910b0c8fff22008864fdb39e98fa31bda668c179a764102336035f5b652b8e6",
+      "fingerprint": "4d18049b14c58dfe03569a3ba60dbdc5b375417d6f0f1afbc8b92145f6c85f34",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.tsx": "0e9f83837c02262865f5b71eaed1c692491699adb5a2316a9a6ae3a547d2fa04"
+        "apps/web/src/pages/StudentManagement.tsx": "29f70839bebce251e641e48b3a646d34967f5e61e5180562dcdcd4f72cf1eaf3"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.tsx at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/web/src/pages/StudentManagement.tsx at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
@@ -192,27 +192,27 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "e9e8b4a962e5410d0b8018d6e4b317063aed1ddfc54832b7734e094c2e515f0d",
+      "fingerprint": "80f80680a06b3074cd5e582b2dc9ac2d7b880ac37899f40677a29f6b2f610755",
       "snapshot": {
-        "apps/api/src/app.ts": "e0f2fbe47158a5deb85e53b894e38594d113289f0631a7903b955f72601315c7"
+        "apps/api/src/app.ts": "6360aa209017d38c77b65b68cd22b9ef8e4c4b65cc1eb7ed2ed3e1f9994753db"
       },
-      "head": "7ab6b779a05819225070bad8a3d57434c7b23f06",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Restore swap hardening is an API-internal reliability change; existing backend, security, and recovery guidance remains accurate.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 7ab6b779a05819225070bad8a3d57434c7b23f06"
+        "Changed: apps/api/src/app.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/src/config.ts": {
-      "fingerprint": "7d9befbfff7e1e90e66b400b9d3e5b80eb6647da40f754b8e9f7a41e079b224c",
+      "fingerprint": "091f0d82de0c035bf280a169f6c2f858b0b2b5d3c3fea9d7cd5c4a51eb2d2600",
       "snapshot": {
-        "apps/api/src/config.ts": "d4dae2ea9a9cb4b354f789e7d4990bdbfb5fa8bbcff18b5c25cb3ccebad9f70f"
+        "apps/api/src/config.ts": "636af864651e00ff29e92b35e62cf4ef54c04c4b9f7e93ad9b00d31bed8dd9c9"
       },
-      "head": "328f6150a1725ff056ce740d5e4a1ca648f8f2d8",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Loop 181: map session and lockout environment overrides in loadConfig; no Elysia skill changes needed",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/config.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
+        "Changed: apps/api/src/config.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/api/src/domains/restore-transaction.ts": {
@@ -228,15 +228,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "0ae4d18d3cc1c49cd952e7b55a4818666f29209101cead50fed1c647a5403251",
+      "fingerprint": "2d3932f5d1bc62488f912e603f92dde90c80896832b4f3a96e75ed93f821676b",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "1412ef3170bac568d9372c2ee1a088acc8eb955645301cd705a6763c3651fb6d"
+        "apps/api/src/domains/safety.ts": "fcab630eb7c50faefcaa566809176d3fb2b6f53e6ec5029cd661b2e36f1bbd4a"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Changed: apps/api/src/domains/safety.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -371,15 +371,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "a4c2093a3e7a6e3cef562a072944f8d5391a1af7e3173924a17fcac4a8e0a4cf",
+      "fingerprint": "6f1d0d89b4a3fb212be4d26435475aba60bdb513b2fb60698843cdc8089c4ff5",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "e327431b97b9c061620672b65df5014c264c5751e798bf6fb274481bd895abe0"
+        "apps/api/src/backup-cli.ts": "091d7bd0c49d9ee15d7554b760348464e341b3b9868209efef3dc2f3f0d82be2"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "Changed: apps/api/src/backup-cli.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "4808a019b669b077d9698a1cad07a6364a07e5f9eb0c1d8cb3fa2db01ee74573",
+      "fingerprint": "85832ce7df4ee50925509acfcd59cf15b55ed494604cd1e619f73a575b3ae3e0",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "f51d69740929cddce8df1da8fab6792f7819e9df78868f7cb0358791611b1a0c"
+        "apps/web/src/generated/openapi/schema.ts": "a6488ff5b9da05c2d4601dc4b647e21bc424023d5ff18e3b6db0d66364400b01"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,27 +515,27 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "8b99cab20508ba83c9d9808411e1eb1e8333dc0ac1054560e9245cad1390a60c",
+      "fingerprint": "8d23b8c30a98fa8e07250e895b7bece2269e8fc176dcb229ba788171deb55726",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "2213bcc615cb6430f70d81baf299a65231a0891a160c75de4ec566c3bb6b0927"
+        "openapi/operatoros.openapi.json": "978abe01e3875ca22bd78285972794b620556a69be2dc80ca86524d5b1abe919"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: openapi/operatoros.openapi.json at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
-      "fingerprint": "3da705bee49c67ad704a055a804fc1b3dd90f0f713dd9312dd410934c09ae882",
+      "fingerprint": "45b339a543e88bf96a647348d29c42862a3a52347be8192d6e9122e6656d4bf7",
       "snapshot": {
-        "apps/api/tests/backup-cli-migration.test.ts": "541ba798316990280682f4c1580c09d96e2ec67940f498a6e3acbf2c0be3c970"
+        "apps/api/tests/backup-cli-migration.test.ts": "8b2787f286956c42a42f2eb3d2c23eadfdbeb099633ffa8979f70c3ba5450623"
       },
-      "head": "876d63a5dd56c6afbc8f238e9d9d3be350b2d532",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed all backup/restore changes against the Elysia guidance: they use existing route patterns and do not change framework guidance or its source material.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-migration.test.ts at 876d63a5dd56c6afbc8f238e9d9d3be350b2d532"
+        "Changed: apps/api/tests/backup-cli-migration.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
@@ -587,16 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "7ca3c7c10d72fdc1fc8088b25d9d5b2adf392212051869efe59dd7aabd2b0dde",
+      "fingerprint": "ffe82ca24a7dba1265ef2c023c7cf837900abffaa2c31170bd4259ef9aa4d08a",
       "snapshot": {
-        "README.md": "d675b3e880e4014d3717bb6a4fd046dab6b01735f4f808240a88aa0a0ef4cf10"
+        "README.md": "b33820a9689d65064964cd42acb03dba2af3161683b4d5dab23cfe2323a1b24d"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
-      "outcome": "out-of-scope",
-      "reason": "The root README version correction is unrelated to the Elysia backend skill.",
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "README.md",
-        "apps/web/package.json"
+        "Changed: README.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -789,15 +788,15 @@
       ]
     },
     "source:packages/contracts/src/index.ts": {
-      "fingerprint": "041652ba6b2131e7b28121b9b0787b4e7da696120d7c009e0a3f9ba8f5f6b883",
+      "fingerprint": "08fca84c6ade6f88e72c65471d8b6321d71742353ee23f261608e00f02fb5129",
       "snapshot": {
-        "packages/contracts/src/index.ts": "1d9e5facd19f8ff43c35646b6045267435ef43df6ddb4b242a0b14af0896ef14"
+        "packages/contracts/src/index.ts": "ce8946fd7cb4c847d44d9c082a8b108d4022dcc5d4f7448b036cfce8c097574f"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/contracts/src/index.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: packages/contracts/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/contracts/tests/backup.test.ts": {
@@ -1061,27 +1060,27 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "407505fbe35b9730fce60859a46e9c095d4155fc3006c617db7f8203de7f253c",
+      "fingerprint": "1542e73a2c0f1ac4777b55651ee3da666d2b5fb927c0ffce5d1b7ca50621dc54",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "460239671a5fc76f8bf8853395818d67e3383b7ab7a2bc62fa7a45effb75ab16"
+        "apps/web/src/components/SidebarNav.test.tsx": "74491df1d9c52e4c476ff1cf2d45957680371e5bf37289132c9add54ec539757"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
-      "fingerprint": "0068d6ba1bce57766c5b9d8460386f2571aa3b59d5fc7d2278a54e2599d13be7",
+      "fingerprint": "b0038713d269a5ae473954ef75fc9d1ffdb729102e52c0b9e6965beb5069ab8c",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.tsx": "a2ece2c0ebe06fed054125000b70f87a825c68c33b77e462437d95147e1d2509"
+        "apps/web/src/components/SidebarNav.tsx": "abe4ef248fd1d57ba69e9359ac73a7d3e77f27839b18bbba9742ff629059d010"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/components/SidebarNav.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:apps/web/src/context/AuthContext.test.tsx": {
@@ -1171,15 +1170,15 @@
       ]
     },
     "source:apps/web/src/lib/api/client.ts": {
-      "fingerprint": "9e6687daee1a2fad49b4b2563c43d7056d66a09d78778c95b64d264f6b47f03a",
+      "fingerprint": "e0c06f0ef01828d55b61ce21f17167c3c8ad61ebaeac99f3c2b6f4269a00b4f0",
       "snapshot": {
-        "apps/web/src/lib/api/client.ts": "a29f1acde6c116689e9fe3e1e4e3c3014799e1e2b497137f8ba0bd97baea62fb"
+        "apps/web/src/lib/api/client.ts": "c83e24de4fa63fc9e8fb69fe459a1b08c8cfd49ff4881ebf6416f3f484766d99"
       },
-      "head": "e35c7854f089f35125776fc69a16d4625faa0af6",
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
       "outcome": "no-change",
-      "reason": "Reviewed all changed files against the mapped Elysia skill; this change updates frontend authorization cache handling and auth regression coverage without changing reusable Elysia API guidance.",
+      "reason": "These API and browser tests do not change agent skill guidance.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/client.ts at e35c7854f089f35125776fc69a16d4625faa0af6"
+        "Changed: apps/web/src/lib/api/client.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     },
     "source:apps/web/postcss.config.mjs": {
@@ -1221,15 +1220,15 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "bd14ee11d93325ab6d6695e9e39e3804523caab2691686b867bde36e4494660a",
+      "fingerprint": "8a84f158a63dc7604336eb32775c58fd42388c5a76acc0fe98c2ee20b5eb2899",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "8a625790a1d867450e5846b0932b95f5bbe8efeb39232295fa27f3ae5ff1db12"
+        "apps/web/src/pages/Dashboard.tsx": "6386be7a3541cc124331cefd9d5179651f96304b8fc4b56002a728b48d47c072"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/Dashboard.tsx at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -1419,15 +1418,15 @@
       ]
     },
     "source:apps/api/tests/app.test.ts": {
-      "fingerprint": "f0f1af921c81dc64e95b431c673631c5f9acf03058c2b9c89a65871ea60aca11",
+      "fingerprint": "9723b0c42a7ad25943d89e109223e4723844d209acf475531fe0048b6c6e2d49",
       "snapshot": {
-        "apps/api/tests/app.test.ts": "5703247723f63136ab63b3ba800469c2e1ef83fd658e527ed455f90b07e5f39a"
+        "apps/api/tests/app.test.ts": "36a9c18865302d5e96c328c1aa8c84cab7dbefb8e06bef1ca2657189be222333"
       },
-      "head": "328f6150a1725ff056ce740d5e4a1ca648f8f2d8",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Loop 181: map session and lockout environment overrides in loadConfig; no Elysia skill changes needed",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/tests/app.test.ts at 328f6150a1725ff056ce740d5e4a1ca648f8f2d8"
+        "Changed: apps/api/tests/app.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/api/src/domains/early-departure.ts": {
@@ -1643,15 +1642,15 @@
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
-      "fingerprint": "c9828b91bc08b9f549c23b3f4f06ac32ccf2ea6e4b1b4a864fe3209e832dc4c7",
+      "fingerprint": "f08fd67961908d9b7ff45d19eccf64ef6a6311cf5a6ea1cc4e73f5522353b803",
       "snapshot": {
-        "apps/api/tests/data-layer.test.ts": "24b057934cea71aff1757e0f59078e63ee0a4478dbdaa0e0b2cf59025cac128d"
+        "apps/api/tests/data-layer.test.ts": "1ac2ea22d1c9623edbf108a89099f6e101f44c81f7a3965720adc8f011ebf935"
       },
-      "head": "b69f6c7e3f4fb3bb8890e42155384ad255d335bc",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed all nine LOOP 225 files against the registered Elysia guidance. The existing skill covers Elysia route usage but does not guide importer-specific XLS/XLSX parsing or Bun Worker thresholds. The benchmark and architecture document now carry those measured details; no reusable Elysia guidance needs a change.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/api/tests/data-layer.test.ts at b69f6c7e3f4fb3bb8890e42155384ad255d335bc"
+        "Changed: apps/api/tests/data-layer.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
@@ -2177,15 +2176,15 @@
       ]
     },
     "source:apps/web/src/pages/CanonicalStudentProfile.tsx": {
-      "fingerprint": "06cc48691d71a1090e442f419c4cdcc347986834f6d90bc95843bcf1ff218142",
+      "fingerprint": "9cc6d3689b6f0d4ae0ed7eb0eb15d161ec2e65e97b6be48cd43f45182a0f5fd6",
       "snapshot": {
-        "apps/web/src/pages/CanonicalStudentProfile.tsx": "15d129fbac31e794609a09a365af51e980acdf04f2e510a60aaf7cef9ec06a07"
+        "apps/web/src/pages/CanonicalStudentProfile.tsx": "da47efffa1f5fa5526491063de66c873cbb3f9cc606a151e7ed0566d96494422"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/web/src/pages/ClassAttendanceEntry.tsx": {
@@ -2489,39 +2488,39 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.test.tsx": {
-      "fingerprint": "6553b1b120db9bae4c8136f21eab3637924fc556cd2cb20c5733d3d9d6413731",
+      "fingerprint": "e78dc00df4aa559466feafafd0ab914723cdc8f837232bae17bad5ac7e51acee",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.test.tsx": "1155234a2888a898a8775413c4af3d390dc64bd350883f6fef011d6ac9d1b8ad"
+        "apps/web/src/pages/StaffDetail.test.tsx": "c0693e32b562e79f21524de1950a77dd652b1add79cfec9585014893e04632ce"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffDetail.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "92f5098ceae3cfa98ebe6d5d65ccb298f1e506ddc966ecb592b573235b5dde0e",
+      "fingerprint": "876ff6acc3ba9980379c326be8bed3a7f2e4b2b1ea4cd7d5673b4b7a28f78b3a",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "81a7d59d13901dfafca012c10ff66a09ca0ef714aa06dd2b801b9a734ea3f8b1"
+        "apps/web/src/pages/StaffDetail.tsx": "273f435cc95a58fb5dd14ff0da4f0e3c39d6aa815f51fcdd7dabd52868e997c8"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffDetail.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
-      "fingerprint": "43e7f6c207124bf4606e84b73b3c4e84d3377fec328db3257abb04f4dc4898a4",
+      "fingerprint": "c173a37ea60d6893be7b575325a44fabc917d874d397327c718da88381d51baa",
       "snapshot": {
-        "apps/web/src/pages/StaffForm.tsx": "f85b49431c9a8770e8b7bbcf300c3bcf2270ad0e2104a741d28a74b607094066"
+        "apps/web/src/pages/StaffForm.tsx": "3cef2411fea9c755e2c05f3483528640fbc9c3e516ee924cbd690af407c5fa0d"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffForm.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffForm.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffImport.tsx": {
@@ -2537,39 +2536,39 @@
       ]
     },
     "source:apps/web/src/pages/StaffManagement.test.tsx": {
-      "fingerprint": "2097cafb0add45f0ddf234a977144a7ed1a62425d96b63e1022b16dc4d89453d",
+      "fingerprint": "00ccb2d949c08c02dd80017c3b7736a37382238e9575d4cef65053f218297238",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.test.tsx": "b65bcffeb1a76d38e631aae2a2ec7d6fcf05c00e49782726b754d35e217ee5d0"
+        "apps/web/src/pages/StaffManagement.test.tsx": "788118a0cdccedb905f2faf58efa85d57ad019ff6b61ec79f3894c77535f7ff7"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffManagement.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffManagement.tsx": {
-      "fingerprint": "49c3ca6952a389e8a1f78b8c03fc64f0a53c63995cad411d30ed8d971d32a3d2",
+      "fingerprint": "bac0cf88ae658eaa3e46f166b530d4761f43186f79efbefd80e503d194bc9b9b",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.tsx": "586ca13d5495e6e78102268f8d7641a93266a8880431707a88d8136d4b4bac86"
+        "apps/web/src/pages/StaffManagement.tsx": "468a1b7ba5779c393eee4fa7418743ad58661d6f4467268a173f6523cfe729cf"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffManagement.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StaffWorkflows.test.tsx": {
-      "fingerprint": "3398627072655f6721d60f8ce6b5cd327383f0ad3cb775436af70c73f9759875",
+      "fingerprint": "18a5c0a02b9ad7a763742607292418a2838326db40cf7e012dc8134ecf59efbe",
       "snapshot": {
-        "apps/web/src/pages/StaffWorkflows.test.tsx": "a925308b8b7530c569da2f53c3bc5def0cf106bb892e05e13615352ff83f1c9a"
+        "apps/web/src/pages/StaffWorkflows.test.tsx": "798beb2dda501078c6182502aac49d7b830d9ba2d67734cec01241ebdf824a79"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffWorkflows.test.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/StaffWorkflows.test.tsx at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:apps/web/src/pages/StudentIndicatorInsights.test.tsx": {
@@ -2801,15 +2800,15 @@
       ]
     },
     "source:apps/web/src/routes/routeDefinitions.tsx": {
-      "fingerprint": "169ed244c3f1b9822c5697be3165e262abb93c8210b926de017b7e1be71a858d",
+      "fingerprint": "4b6cb4849f54bd4fd7b409a2a36756eb4be74d71ff50c0046f862cbe71feae44",
       "snapshot": {
-        "apps/web/src/routes/routeDefinitions.tsx": "3cb5c676ed4cb019ba8849feeb90146cb8b5b998a7c3a2560c143cf86ec17b8d"
+        "apps/web/src/routes/routeDefinitions.tsx": "fe5cdd1c2da5d4c8c298af6d145376b2089a498e4ad6b6cdca68ec94fd2278e1"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: apps/web/src/routes/routeDefinitions.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/routes/routeDefinitions.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:.audit/documentation-inventory.tsv": {
@@ -2922,15 +2921,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "987312ccb0d7ca753ae6bf47d9b97889bae854b51945c0f3adb76e1db3409c92",
+      "fingerprint": "6f1fef91f3e4853942a91a04bc48c085c5a06f683c5fbcf69ae42a212925f676",
       "snapshot": {
-        "CHANGELOG.md": "a186a34dbdb08aaec71fd0d156efa765706a9cbd6fdfe84cd1112aaff28ce839"
+        "CHANGELOG.md": "eb4273db1fb434e2efd272c63f0978a94ba88ec850e9f505eaff78322a0e0111"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: CHANGELOG.md at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: CHANGELOG.md at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:COMMANDS.md": {
@@ -3200,17 +3199,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "d981a577abaf32d6eed11566dfb20c565e7bb2aaafa90c68b33cd259387f782c",
+      "fingerprint": "fb925f6a142b155cf4a710e57a45f88377a9bc75a1e883365711b58275ed9cb4",
       "snapshot": {
-        "docs/architecture/database-schema.md": "afd1a4df4c0bce8275644099e2098cbced4264f413d392ddacb4c64f10ad41c7"
+        "docs/architecture/database-schema.md": "4b56859ebcd0480961831798d737313e2c928f4352141ad4bc8ac756516fb9ca"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/architecture/database-schema.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -3507,17 +3504,15 @@
       ]
     },
     "source:docs/decisions/sqlite-only-runtime.md": {
-      "fingerprint": "138c00da13efb1eb45b9bf58ceddb4118270655e09c555e1ed76c6d38aa5cbdf",
+      "fingerprint": "c3c04a4af167b6f67dd4e581ea2ed2075d5621385ad3a9d084d6d773cb177646",
       "snapshot": {
-        "docs/decisions/sqlite-only-runtime.md": "8d24368422e03135a03c962987c6625c0c14e4b25858dedd92f4d1d7c70c7c12"
+        "docs/decisions/sqlite-only-runtime.md": "fa4f737c6908233c153f953d600d95352dff585d31e7e0d4487bc95ade8fd46b"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/decisions/sqlite-only-runtime.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/decisions/tauri-desktop-architecture.md": {
@@ -3997,29 +3992,27 @@
       ]
     },
     "source:docs/guides/development-database.md": {
-      "fingerprint": "2ac667347f98ad3cc5a5d8498ec272494754c4faa3a7be34070a4a3401fb6003",
+      "fingerprint": "8801d9b85241c8db650e87519394adc4bbf9fb5b83861a2b15a2d71a4eaa6bcc",
       "snapshot": {
-        "docs/guides/development-database.md": "85eb60d84d5b9f187070845f77e8d18d4787e41a1f3beaf3eeb3d5052efa7b7e"
+        "docs/guides/development-database.md": "8caa0faa04d37e97abe481f8e21cf9cfa3f159fd59bfd5ddcb451a88fe08b674"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/guides/development-database.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "e00a8088ed43e0fd6a503d9831bb2a7cf365f1aa306cb0e55abda63dd1cf80a7",
+      "fingerprint": "d65b728770cba61fcd742d3ded86cf1c6e6f708bc733497869c8dbdecb9e364b",
       "snapshot": {
-        "docs/guides/offline-install.md": "d6ffd2a92d15dcdab51c20204292505e2b04a26c04e9d9964da96d2d7748718b"
+        "docs/guides/offline-install.md": "51d7762f38772b37fc379ba3ede2c2017522aee2f12a5373c9712cee8d22fed7"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/guides/offline-install.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4471,17 +4464,15 @@
       ]
     },
     "source:docs/reference/employee-management.md": {
-      "fingerprint": "d3c82e22932b3a9d886d0d807a2d77e22ab603ed1c23570a70871b1f385a00bd",
+      "fingerprint": "688de72a8b0ec1e90044d58f011d2b1038d0cdd5a6491888e3b1c8e219c3cf12",
       "snapshot": {
-        "docs/reference/employee-management.md": "ae91c1548e733357480066ba3443413b614c7c92019d46f96c46804c7d64f691"
+        "docs/reference/employee-management.md": "2da5dca626402cda85a8fbb6c1532c38529da7d8975498a958a1614939e14a17"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/reference/employee-management.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
       ]
     },
     "source:docs/reference/first-run-admin-threat-model.md": {
@@ -4611,17 +4602,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "349ee4f66bca4c5aa18901affaad6d0fd92fc5f3dfebf17c214c09f355f21257",
+      "fingerprint": "dafd6e698b0871c94ae4c947ee31ffe347799f117bf45742fe92d6db585f6030",
       "snapshot": {
-        "docs/reference/runtime-support.md": "8d2a0328a59db27698e89bff2d203739688c78d4d2aac888790b6f2b0424e187"
+        "docs/reference/runtime-support.md": "68ae560a3fb0d2d72f0c34e449a304bef75dc55b790c64d17399edf76e745ff5"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/reference/runtime-support.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4763,31 +4752,27 @@
       ]
     },
     "source:docs/runbooks/data-reset.md": {
-      "fingerprint": "b24195b0aeafd5721cccc22a5f64314694186c941cfa5661110b61cec31f639e",
+      "fingerprint": "e45eb400502da99c260f645709a928f340eacfdb3bf8ef91ec9fcf4f43cd7855",
       "snapshot": {
-        "docs/runbooks/data-reset.md": "4e4cf1bcfea2be611e9ee708fc5fc02fb0038e6bfb634d84989989c81d64719c"
+        "docs/runbooks/data-reset.md": "b1ad08b1c471f2a210cecbb3c7256bce9b8325e3e4c5870d6b4b604454ea2afd"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/data-reset.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "07dee283fa999586925ed4aa017bc24a68f690117d069f5db2fe0c3bb0197aeb",
+      "fingerprint": "bcb0885f1d4804bc550ea7d67c31460a813247b306270adc93511f2f4728f86a",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "073245c9f0d099c78588bbc45e2ea80bea1f43d5cb4c0172d5b9ab89eb6a013d"
+        "docs/runbooks/database-operations.md": "f4cd55596b732064ac5372178709d638c8832d8ef965d60dbbd18f8f59e86de8"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/runbooks/database-operations.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4833,15 +4818,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "2b9c82ac38d06c8c92381e91b3eeeae2511cef23e1309fb4d069cade0b09199a",
+      "fingerprint": "775381b263ce8336a7069d39884da457793b4d84a54468051d1c640b2bdd3762",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "5fdf9b195fdc30c9b5543a6ec3c824fd9309274ed2ba36c72c7841086d41ced8"
+        "docs/runbooks/ubuntu-server-deployment.md": "9c28205c465e0de850d600ee4b9ac797df7c753ad0a88aae3bc7aaab468f9547"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
       "outcome": "no-change",
-      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5114,15 +5099,15 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "b6608fac1f1822826f732973f1f22229b266b61297d60412a8b8253795d9aae6",
+      "fingerprint": "f0c48469f484e93a03645ab77787658715bfdfe26691a9ead01b12dd7c333a77",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "a9a2e55c4ed6dd27fb812c7bbcd2c08612e32a2905309b5bc3db34c1d14d3505"
+        "apps/api/src/domains/core.ts": "15b9764afb5a9278c78b05c68e087480569dd4c892a95c031d119aa3d17b765d"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/api/src/domains/core.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -5150,27 +5135,753 @@
       ]
     },
     "source:apps/web/src/api/students.ts": {
-      "fingerprint": "98aa852d4ca3c36258154c6146ce2407b582506c32586966b78b645e996e1385",
+      "fingerprint": "3cf5ca891adf2984f807a430c0a5858480aa497d305fb65f8a7551a680797fb0",
       "snapshot": {
-        "apps/web/src/api/students.ts": "20b7dbeca60f0247b794536abeb867762abebf05d7de35e2c89c0a28b1a937ba"
+        "apps/web/src/api/students.ts": "a35d275eaafb29a54a510131fa9f874f412c8cbaef727ddf4873e8631a0c089c"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/api/students.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/web/src/api/students.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
       ]
     },
     "source:packages/contracts/src/students/index.ts": {
-      "fingerprint": "8ca88db04a31c99686528a15e69cb3b76523fe39c4e5c742974309b885832bbd",
+      "fingerprint": "b99d09b95ed7bd617156bdbcc991ce407d0c730e4cdf9bef5b4c86e2febcf519",
       "snapshot": {
-        "packages/contracts/src/students/index.ts": "9329a9ca3fd8ce8f5ba28c2372228e7ab386a4f940adbbbd2961d75e50510fb2"
+        "packages/contracts/src/students/index.ts": "210ca9cf64d1b116b0449b45bbb4458dcb0b6794ef2dd6040db7ab18f02b3ead"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
-        "Changed: packages/contracts/src/students/index.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: packages/contracts/src/students/index.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/src/domains/data-reset.ts": {
+      "fingerprint": "a1472cf46fb4cb987a052543819a389bb295fe57898bb1b2bc07222d44b1543f",
+      "snapshot": {
+        "apps/api/src/domains/data-reset.ts": "8433292db774e01359775cc7884f42790d339eefe30a94b5ff52986e423e31ad"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/data-reset.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/src/domains/employee-management.ts": {
+      "fingerprint": "74510425079a7799d283409ef7878d36d0896bace5c7acf8495b12d7b7feb34c",
+      "snapshot": {
+        "apps/api/src/domains/employee-management.ts": "e4857e1c0ba6137332e86e01d60810bedb1b5aa062792b853aee9acd00db933f"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/employee-management.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/src/domains/staff-metrics.ts": {
+      "fingerprint": "60cd6fe41a376785faa81270877a78666d2e23cc52d5a7d5923eabbe775c1e53",
+      "snapshot": {
+        "apps/api/src/domains/staff-metrics.ts": "a4dcb60923954a1bd1013cf0fe4bc1ef1f475af6ca7d53e8cc5274f2eecbd06a"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-metrics.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/src/domains/staff-school-units.ts": {
+      "fingerprint": "6704155743563491e84f4b47e899f66a2db5408268fcbdfc986b13fb3aaebdf7",
+      "snapshot": {
+        "apps/api/src/domains/staff-school-units.ts": "4e4548c1d1a543bcffc126b3cc0237a6ecac98ecd54acb1293c6eaca1d37ddae"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-school-units.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/tests/openapi-contract.test.ts": {
+      "fingerprint": "4feb53e7ff1d5b2809dbc1ed393f471f6ff9f808ec3cd5d3f539583066e9ff43",
+      "snapshot": {
+        "apps/api/tests/openapi-contract.test.ts": "27bdb08fe3e18ee3312a58bac8b1425d27b9833903c69549f22359e8bb4b33a5"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: apps/api/tests/openapi-contract.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/api/tests/staff-management.test.ts": {
+      "fingerprint": "743167ac0db3f561cd13b3ea74d7deb8018347adb58d6bbf70f369351c8259ce",
+      "snapshot": {
+        "apps/api/tests/staff-management.test.ts": "dd646cb29ef6efd1aa8442779ea063bf38456185bd05d08f23f01646a0ab2e2b"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/staff-management.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/api/tests/system.test.ts": {
+      "fingerprint": "a5f125c14a9cc4f8e519dcf30f42e64d18f40f3a2a8c0322b1f9e97d22b4c59d",
+      "snapshot": {
+        "apps/api/tests/system.test.ts": "ab05cb173400dd7db0c9f44868959d1ba33934afb7c3fa0182b816cb498b6ad3"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/tests/system.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/web/src/api/staff.ts": {
+      "fingerprint": "c6e52a1630150b6c9630fe18910994dcd3d320d402b34903d8f57ae62154ae62",
+      "snapshot": {
+        "apps/web/src/api/staff.ts": "3d49405c34268b1354eeef59ea3b7cffcf6d700c627ab5bd15340f5d52c2cb63"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staff.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:apps/web/src/lib/query/queryKeys.ts": {
+      "fingerprint": "cc8b749e863ff2b108437136c8df194c22b4cc9773a4259aefa89e6fd6947691",
+      "snapshot": {
+        "apps/web/src/lib/query/queryKeys.ts": "bf6247dc57555ec833c47ed1591a250cb86cd63fbb65efa41c0a580dfa34a44d"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: apps/web/src/lib/query/queryKeys.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/contracts/src/staff.ts": {
+      "fingerprint": "bc61d1a5ca9b0f2bbd72498d2ab68161ae48165225bd27d329801bcf79c06503",
+      "snapshot": {
+        "packages/contracts/src/staff.ts": "9a0e0e0dd32735fa6980baedfa2350a0b11c7c9ab3cbdebb0495b85cac7cf835"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/contracts/src/staff.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:packages/db/README.md": {
+      "fingerprint": "49f8ef375cfc6181c6c29ad62c9dbec27c906300756c3b930deca8dbd8a72ddd",
+      "snapshot": {
+        "packages/db/README.md": "79f059533055cf1228aa161cdda68c62e226ed2bef99e2c66b212829d0efc736"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: packages/db/README.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:packages/db/src/bootstrap.ts": {
+      "fingerprint": "ecaff3bf85e20cac348822868b1cbaa3432877de44483bb6328982bd0e0437e9",
+      "snapshot": {
+        "packages/db/src/bootstrap.ts": "cf76ce60844e78e2ad43c1dc09a7198aa0e188371a89d588d2ea318a08d46f98"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/bootstrap.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/index.ts": {
+      "fingerprint": "a343b4d45268c120fde22106534dccdcac6599e77b070a1000b59e1479b0dad0",
+      "snapshot": {
+        "packages/db/src/index.ts": "281844349cc917f0c45fd876b6a2f04ec1254f9ca4155a413a726b9724988898"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/manifest.ts": {
+      "fingerprint": "2685aa1f3b5b8762872d122845490feb677baa53419711512ee0a7a57d6f9a86",
+      "snapshot": {
+        "packages/db/src/manifest.ts": "19bd9c0bf44f5ba2b989e339e2fcddf87413709c3a377a783b7be64fdc573e26"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/manifest.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/migrate-existing.ts": {
+      "fingerprint": "6695fb4a43705d2e2565be8c7d9c8b0637d7bf90503e2c7db3762a4cc105f70f",
+      "snapshot": {
+        "packages/db/src/migrate-existing.ts": "9a11c652f86a4ae9df4c00ed86e7f1d696ca6cee1ab7444aea8aa8c2d53b60e3"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/migrate-existing.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/s49-migration.sql": {
+      "fingerprint": "44ffda862a3397dc426d0b729393bb35198dd3036914ff2caa469f3a4051ca59",
+      "snapshot": {
+        "packages/db/src/s49-migration.sql": "9d04ec6cdc309c87f4cd6b434707579d32e76364c81741f46eb8cef8dc7b3308"
+      },
+      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/s49-migration.sql at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+      ]
+    },
+    "source:packages/db/src/schema.ts": {
+      "fingerprint": "a6ba49704360dea23d915ae399c3f5046a8f0749d22b85b1c63e3c2aafd9f02f",
+      "snapshot": {
+        "packages/db/src/schema.ts": "0c4f7bcf42a7f7a2282b1efb8ab0c712775c3178f6321245394084a9ed6a1ee7"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/tests/bootstrap.test.ts": {
+      "fingerprint": "0d88b6049563c0e1a2220c5d9efcbc813945cc6f438ab3ec163eaf34b840fade",
+      "snapshot": {
+        "packages/db/tests/bootstrap.test.ts": "effb678d8f98f1e5773ba04f143a9a6d278be4f207822747d13fa2c4ac0418fa"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/tests/bootstrap.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/tests/db.test.ts": {
+      "fingerprint": "552790a91df7c22d24260d4c11aadda050d7f453d990bd0d163bc8646bf5d211",
+      "snapshot": {
+        "packages/db/tests/db.test.ts": "65bf0cf25022338d5deabdb565c6fcb7a0dee89e053a9dba1d8e4f0def719f1a"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/tests/db.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/tests/migrate-existing.test.ts": {
+      "fingerprint": "73dea37d856050a381beb945e8640c969c85a8eb672a2b830ef038d60f1005aa",
+      "snapshot": {
+        "packages/db/tests/migrate-existing.test.ts": "e646b3a5842379c0e8c08c2020a9d819ad8279456c378ce244654533f7466992"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/tests/migrate-existing.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/api/src/domains/staff-monthly-activities.ts": {
+      "fingerprint": "3d5913fdbbfaed9d297fc961c198ed5f6b23469c5ff866bbb565c921a689d934",
+      "snapshot": {
+        "apps/api/src/domains/staff-monthly-activities.ts": "710d79221e58204ac41000b41de41b8300972f006911e1aad19dfb9400bbc931"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-monthly-activities.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/tests/staff-monthly-activities.test.ts": {
+      "fingerprint": "79e8452d1604290ad306924495bbd80370c63b7fa242b9f8d1ee273d44d396db",
+      "snapshot": {
+        "apps/api/tests/staff-monthly-activities.test.ts": "e740f141385689ba9737bbc882fa7cd34945809d72f8b743dd25a03b69209801"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/api/tests/staff-monthly-activities.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/api/staffMonthlyActivities.test.ts": {
+      "fingerprint": "8cecd43478b5e4e37da4102dea70f06b41f6bf64cc585e2e94434f043429e3f6",
+      "snapshot": {
+        "apps/web/src/api/staffMonthlyActivities.test.ts": "165b9d30071ca3fcb0d600957fcc7ace8e9e159f2f3cb75f6458659324eee471"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staffMonthlyActivities.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/api/staffMonthlyActivities.ts": {
+      "fingerprint": "f0a97b88cad19590a3057fd1e189035b5383e0ee2ee6899bd369c524a29509bb",
+      "snapshot": {
+        "apps/web/src/api/staffMonthlyActivities.ts": "2a51d727ddd6db696f536be611a1e4a7b0416987e3728f3dac95912c22632bfb"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/api/staffMonthlyActivities.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/pages/StaffMonthlyActivities.test.tsx": {
+      "fingerprint": "fc52722147b4b91eca4ea22c53fb83336acea747045e9cdca068019c93ec7d3b",
+      "snapshot": {
+        "apps/web/src/pages/StaffMonthlyActivities.test.tsx": "d4b06b923843b877b0e561661d428f9fb6ac27161f4fe9e369c4a14919a4bbc7"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/StaffMonthlyActivities.test.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/pages/StaffMonthlyActivities.tsx": {
+      "fingerprint": "e47e99391d51616670c29a0c4ef3a783fd5c8e982ef67c9fee0e5cc018d9a17a",
+      "snapshot": {
+        "apps/web/src/pages/StaffMonthlyActivities.tsx": "7825b49f865ef072f7c8e771fea76a9ce57f49d18414731e6bcef0e43621333a"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: apps/web/src/pages/StaffMonthlyActivities.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/web/src/routes/routeDefinitions.test.tsx": {
+      "fingerprint": "0b4c39a112d399ee3ea863a54f61e1a8d057e0c0c29dd2e20d376cdebb2d467e",
+      "snapshot": {
+        "apps/web/src/routes/routeDefinitions.test.tsx": "e8dbe6df71a618b73ea05133b993570ab6439af33bf5f4c59bea3684c3a638b1"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/routes/routeDefinitions.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:e2e/smoke/web/staff-monthly-activities.spec.ts": {
+      "fingerprint": "d7b7f6c4484d6257823b71ee0af758e88c7b3262fea0b35cb74c32d3da125b5b",
+      "snapshot": {
+        "e2e/smoke/web/staff-monthly-activities.spec.ts": "07efad06bde64463beba18ee7388edb417e8ddb32a9d2d962b7f3a1ec7516dd7"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:packages/contracts/src/staff-monthly-activity.ts": {
+      "fingerprint": "b1494fc40acee04ef20a1bd51b21ba22a064eacf0eea0f107d00e7c8262e0a57",
+      "snapshot": {
+        "packages/contracts/src/staff-monthly-activity.ts": "72efea7669872575d21e6365242fb94db10a9160d0d91f2fc0bc45e765237f4f"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/contracts/src/staff-monthly-activity.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:packages/db/src/s50-migration.sql": {
+      "fingerprint": "a249c4a4708fcffab666fdfa3d0c0850547364db5d2f4ce483b8dd5709ee916a",
+      "snapshot": {
+        "packages/db/src/s50-migration.sql": "5ad32ea92df3d3fbd593f86a936bad0f6813fa8cd6fc3d94af8dae7685a95466"
+      },
+      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "outcome": "no-change",
+      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "evidence": [
+        "Changed: packages/db/src/s50-migration.sql at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/src/domains/operator.ts": {
+      "fingerprint": "178fc497aec3e55e399934c4573438186abc5f7a6395ab93d7a3125f282f4973",
+      "snapshot": {
+        "apps/api/src/domains/operator.ts": "efa24fb469622f0a768b33e01ab83d1df7482a51a88a05718bff1f8b182add18"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: apps/api/src/domains/operator.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/api/tests/core.test.ts": {
+      "fingerprint": "3666ffe789ea8c607c06e15fd8591976a6288877ba62d99cb6556bd4c0facb87",
+      "snapshot": {
+        "apps/api/tests/core.test.ts": "43a44d4ad9c50f454e33c992f2b1c9933b8f79b3ba4cbc0dc04adb972f02cceb"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Test expectation update only: the work-queue endpoint now returns two STUDENT_VERIFICATION items from the golden fixture instead of an empty array. No guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/core.test.ts.",
+        "Changed: apps/api/tests/core.test.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/api/tests/operator-phase6.test.ts": {
+      "fingerprint": "2e13bc01f589aa42767bf6f610606198847650a1a24dd5717f94c3ee298d1352",
+      "snapshot": {
+        "apps/api/tests/operator-phase6.test.ts": "77a820db518b10f4839b7bd06970dd66e532cf9a386afe0ae3dbbd815dc8ca21"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: apps/api/tests/operator-phase6.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
+      "fingerprint": "d01e9f4b4e0d862351e5230995d3d1d4c5af83d404fa13db206aa65c1da6f105",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/api/operator.ts": "22aced1601a1e4f808c3f6c7a3f0360de9d96a57d2c94e9b84436c904009d1e0"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": {
+      "fingerprint": "a6fb9a170b151d6d36b2291b817db0c69cdb23ccc585f3fff33af94ff06353ad",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": "adc544f68a9d216263c25774e7ea0bb65100cfaec558dd57b36e6fa9e8372619"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Extends the existing work-queue page with type filters and actionable navigation using existing UI primitives. Routes, fetching, and business forms remain in web as required; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx.",
+        "Changed: apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts": {
+      "fingerprint": "ea2506f90ff1de350a074ae57955d5e36ccc30486ec163c8b98f9c9d3e44b3c1",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts": "cecfab78f654e51bd45887f7e92ea38064308f56f51ae95375bf3ce81be9cf27"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Adds TanStack Query hooks with query keys that include every filter and targeted invalidations after mutations. It follows the documented query-key and invalidation rules; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts.",
+        "Changed: apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
+      "fingerprint": "759c3e25df820afccc7c782db876d37dbd779de6034dce7a3df8c779381fd77a",
+      "snapshot": {
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "d458069c323f36c9f02ea6f3e97eae103d538f43923e45cb19e050a368fe6f33"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:e2e/smoke/web/upp-reports.spec.ts": {
+      "fingerprint": "03cc9f35a834f9597a9fc11615f1f3071d10816c981bc7aa48825a284d84e305",
+      "snapshot": {
+        "e2e/smoke/web/upp-reports.spec.ts": "af2c0803c890cd8ecd7da88f9959e9efeff4223b3da604c8f3c167fccf93c1a8"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/contracts/src/admin-dashboard.ts": {
+      "fingerprint": "329fb1a8b34a500843dffc22dd59c9a8aad81a7959ab689df2a1b840b16e62a6",
+      "snapshot": {
+        "packages/contracts/src/admin-dashboard.ts": "553be67c1c877feffd191e130630d665fc0ec71fcc9cfa244d46c87237a6dfcf"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/contracts/src/admin-dashboard.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/s53-migration.sql": {
+      "fingerprint": "ee4a95381bff6864266df50ba1ffd25e72bf895d4eeca640aed39dbc523326f2",
+      "snapshot": {
+        "packages/db/src/s53-migration.sql": "accc3312706a7bf24fa1aa9fb73d8686b061dfe9900b160593603a5b91aefca1"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: packages/db/src/s53-migration.sql at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/src/domains/upp-report-files.ts": {
+      "fingerprint": "095b8462c221dee4b3e571250a17cc5d164e76784455f1f2d8b1f14c5d271b38",
+      "snapshot": {
+        "apps/api/src/domains/upp-report-files.ts": "8f3571d5276b23ccfc6518460c2f50217773483962402ba87813fa16e6001d7c"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upp-report-files.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/src/domains/upp-reports.ts": {
+      "fingerprint": "e817deef0fd0d885f5ee0023575510557762c70bc2c0b7a5c87878c838240313",
+      "snapshot": {
+        "apps/api/src/domains/upp-reports.ts": "12404e116bad97c3eeca951081db9cb62b5e4cd552c2b023ce3c98e4276bf0be"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upp-reports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/src/security/backup-payload.ts": {
+      "fingerprint": "6ddb8e8265cd57549269f30f5a8bfde8c7efd35ed16f3b7518936cc6eeb19bb5",
+      "snapshot": {
+        "apps/api/src/security/backup-payload.ts": "d85aa12f2b4e9483ec191b1c47d89cf7b53ef9749543d12e1b864b9953f77664"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/src/security/backup-payload.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/tests/backup-payload.test.ts": {
+      "fingerprint": "b4efdc54b286b3ba0dcde87f4722a06561e5c3eabe9b5ac277b523777d9c3801",
+      "snapshot": {
+        "apps/api/tests/backup-payload.test.ts": "8813051fc202624adfc3ed65d0d10506a994c1277c5e1fcfa88b3295d3e0253b"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/tests/backup-payload.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/tests/upp-reports.test.ts": {
+      "fingerprint": "afa8004e6efe44a8beca2e5888b35d2b71b6e7c956995c1e8218ba912a2dc92a",
+      "snapshot": {
+        "apps/api/tests/upp-reports.test.ts": "81a759c023ff39e616eb637b81f7866c90cbb1e1c28204e948d6fd3b36939661"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/api/tests/upp-reports.test.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/api/uppReports.ts": {
+      "fingerprint": "b17b9cf760f9f36299c8718abb374e9539a34cb9a3471034d34bdf38c0d13a64",
+      "snapshot": {
+        "apps/web/src/api/uppReports.ts": "78762d7ebd4d41f0b2a94415e504f3a054a44c36876ba701889f9cc40355a9de"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/api/uppReports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/pages/UppReports.test.tsx": {
+      "fingerprint": "425f964b19cd6f19192b504d9fb9054cfced747842e6ce66bce3a4ad0490d3c1",
+      "snapshot": {
+        "apps/web/src/pages/UppReports.test.tsx": "6b6733fc2a98abc983d35c20c689c9e6fc82cb6a35683f1dffbf0b8216925755"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/pages/UppReports.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/web/src/pages/UppReports.tsx": {
+      "fingerprint": "be4b5577466a759ba7705b019f6539bfe3103ddbe04f9442e34ac8260067ebd2",
+      "snapshot": {
+        "apps/web/src/pages/UppReports.tsx": "c0eaa418be79d9c2567f557f296a82fd0c4262871229e0bfc76feb67df625c83"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: apps/web/src/pages/UppReports.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:packages/contracts/src/upp-reports.ts": {
+      "fingerprint": "7619a5e1fa444f4be702465f1bae1edc85b14dd80d41747122ba0bee28d7e4ed",
+      "snapshot": {
+        "packages/contracts/src/upp-reports.ts": "8dc1aaf1dd2d5d30654493516b21b6e36aa0c9910502cd590bd3d6e9e644f787"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: packages/contracts/src/upp-reports.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:packages/db/src/s51-migration.sql": {
+      "fingerprint": "5d0118ed8d8ff361a63ede63cf1a3fe1f10660dd2ab92449a9db9a9486814375",
+      "snapshot": {
+        "packages/db/src/s51-migration.sql": "23b91fe93312b25185ca535303269971617f5104ef7228a9b0ee54a6ad93a625"
+      },
+      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "evidence": [
+        "Changed: packages/db/src/s51-migration.sql at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+      ]
+    },
+    "source:apps/api/src/domains/student-admin.ts": {
+      "fingerprint": "deeefe66444e7f20303b335937f760acb3d56f80393d6456cabe82bc79621d73",
+      "snapshot": {
+        "apps/api/src/domains/student-admin.ts": "635f264877337d710dcc7bd44b30719bb1b2383dd06ac12f96ef085d68ec9da6"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-admin.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/src/domains/student-iom-files.ts": {
+      "fingerprint": "83b41014a1ccc8629c12e19cfe8c22f14facbfae78bda2d2a4bcc349c360f602",
+      "snapshot": {
+        "apps/api/src/domains/student-iom-files.ts": "cac2168e1f506a7ec58ed0c277ac0b3f3d9708fa6aa9acab1248ebad59bc084a"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-iom-files.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/api/tests/student-admin.test.ts": {
+      "fingerprint": "7fb98a383155f04d2e0883d66ff9b865589e05875a504774dcc1462c920a4ea2",
+      "snapshot": {
+        "apps/api/tests/student-admin.test.ts": "f4b2aa515f66244291b062671b2f0f4093203d0628014c11b821183226ed79f5"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/api/tests/student-admin.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:apps/web/src/hooks/useStudentQueries.ts": {
+      "fingerprint": "55156c11e7b9d4f91f2a6531e258f462d1bbb34dae1dac030941cb34257c31b0",
+      "snapshot": {
+        "apps/web/src/hooks/useStudentQueries.ts": "a186448044e02e14741afecd9316b0dfa4eeef19251810b83777376233618745"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: apps/web/src/hooks/useStudentQueries.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:packages/db/src/s52-migration.sql": {
+      "fingerprint": "85eb20ec359792245b03f42bb585754dbbde3862bbc2591be0999e415b948d12",
+      "snapshot": {
+        "packages/db/src/s52-migration.sql": "0ba0766a07e50b5ef13b6cf8eff62b250b6e0aa2feabd1051a1afc63dda5675a"
+      },
+      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "outcome": "no-change",
+      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "evidence": [
+        "Changed: packages/db/src/s52-migration.sql at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
+      "fingerprint": "9ce69ca5e96a4b740635d8a7f171c9be7cb52ac40c1c329e19dc9e9706dea506",
+      "snapshot": {
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "4a06c9230ac3636b8d0bee332c69f7c85662de1a1e7d62ca8bf7d42345e5becf"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:packages/db/src/s54-migration.sql": {
+      "fingerprint": "72e63c6e5cdb09f3cdfbb6d04e7699956519be25d6734e4d99c5e45a9e970853",
+      "snapshot": {
+        "packages/db/src/s54-migration.sql": "abae2d567b5bfcad57b2f131e0fc914c9f5bd71e433fbe860261eb7cbfe57fcb"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/s54-migration.sql at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/api/operator.contract.test.ts": {
+      "fingerprint": "27ab9ddd70f10292d26e1fd3f7e3e4217e568a777eba811a91dd20d2074b88b8",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/api/operator.contract.test.ts": "064a21cd44a56d2dfe828f8a1dff0a364849019a61b25b771e612e6f98529de1"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.contract.test.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/web/src/lib/api/followups.contract.test.ts": {
+      "fingerprint": "d7272857a156691d4f01609099d24085133c0cd3b3bce8c3faed7b980c2ce776",
+      "snapshot": {
+        "apps/web/src/lib/api/followups.contract.test.ts": "944760b24a2e550b60e059f8c04431958872f042213342aa2cca6e21dd5bc470"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/followups.contract.test.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/web/src/lib/api/followups.ts": {
+      "fingerprint": "53300282a90d985b948444e22a1c892c7bf945dcdc7b06e992c306e4bebefb4c",
+      "snapshot": {
+        "apps/web/src/lib/api/followups.ts": "077b672e2f10f6d6f078ffd7ef98d9a4e75f9b1945b925432dd432805284c8e7"
+      },
+      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "outcome": "no-change",
+      "reason": "These API and browser tests do not change agent skill guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/followups.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
       ]
     }
   }

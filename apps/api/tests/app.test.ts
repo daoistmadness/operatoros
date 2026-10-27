@@ -152,6 +152,12 @@ describe("configuration isolation", () => {
 });
 
 describe("auth configuration mapping", () => {
+  it("accepts a configurable maximum size for student IOM PDFs", () => {
+    const config = loadConfig({ NODE_ENV: "test", STUDENT_IOM_MAX_FILE_SIZE_BYTES: "1048576" });
+    expect(config.studentIomMaxFileSizeBytes).toBe(1048576);
+    expect(loadConfig({ NODE_ENV: "test" }).studentIomMaxFileSizeBytes).toBe(25 * 1024 * 1024);
+  });
+
   it("maps session and account lockout environment overrides into auth config", () => {
     const config = loadConfig({
       NODE_ENV: "test",

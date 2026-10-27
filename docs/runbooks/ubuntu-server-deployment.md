@@ -136,11 +136,11 @@ curl -fsS http://127.0.0.1:8090/health     # -> {"status":"ok"}
 
 # 4) Validate the database (read-only):
 sudo -u operatoros bun run db:validate --data-dir /var/lib/operatoros/data
-# -> VALID 20261002_s48
+# -> VALID 20261027_s51
 ```
 
 The API validates existing databases at startup and **never migrates them
-automatically**. Application schema head is `20261002_s48`; the protected
+automatically**. Application schema head is `20261027_s51`; the protected
 operational database stays `20260725_s43` until a separately authorized migration
 (`docs/runbooks/database-operations.md`).
 

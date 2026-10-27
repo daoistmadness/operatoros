@@ -1,4 +1,3 @@
-// Accepted S4.8 schema snapshot. Runtime schema is validated by the migration manifest.
 import { sql } from "drizzle-orm";
 import { sqliteTable, sqliteTableCreator, text, integer, real, blob, unique, uniqueIndex, index, check, foreignKey } from "drizzle-orm/sqlite-core";
 
@@ -784,6 +783,106 @@ export const staff_members = sqliteTable("staff_members", {
     "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
     "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+export const school_units = sqliteTable("school_units", {
+    "id": integer().primaryKey(),
+    "name": text().notNull(),
+    "status": text().notNull().default("ACTIVE"),
+    "version": integer().notNull().default(1),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("school_units_name_uc").on(sql`lower(trim(${table.name}))`),
+    check("ck_school_units_name", sql`length(trim(${table.name})) > 0`),
+    check("ck_school_units_status", sql`${table.status} IN ('ACTIVE','INACTIVE')`),
+    check("ck_school_units_version", sql`${table.version} >= 1`),
+]);
+export const staff_school_unit_assignment_versions = sqliteTable("staff_school_unit_assignment_versions", {
+    "id": integer().primaryKey(),
+    "staff_member_id": text().notNull().references(() => staff_members.id, { onDelete: "restrict" }),
+    "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
+    "effective_from": text().notNull(),
+    "effective_to": text(),
+    "ptk_applicability": text().notNull(),
+    "reason": text().notNull(),
+    "created_by": text().notNull(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "closed_reason": text(),
+    "closed_by": text(),
+    "closed_at": text(),
+    "cancelled_reason": text(),
+    "cancelled_by": text(),
+    "cancelled_at": text(),
+}, (table) => [
+    index("staff_school_unit_assignment_staff_unit_dates_idx").on(table.staff_member_id, table.school_unit_id, table.effective_from, table.effective_to),
+    check("ck_staff_school_unit_assignment_ptk", sql`${table.ptk_applicability} IN ('APPLICABLE','NOT_APPLICABLE','UNKNOWN')`),
+    check("ck_staff_school_unit_assignment_reason", sql`length(trim(${table.reason})) > 0`),
+    check("ck_staff_school_unit_assignment_closed_reason", sql`${table.closed_reason} IS NULL OR length(trim(${table.closed_reason})) > 0`),
+    check("ck_staff_school_unit_assignment_closed_by", sql`${table.closed_by} IS NULL OR length(trim(${table.closed_by})) > 0`),
+    check("ck_staff_school_unit_assignment_cancelled_reason", sql`${table.cancelled_reason} IS NULL OR length(trim(${table.cancelled_reason})) > 0`),
+    check("ck_staff_school_unit_assignment_cancelled_by", sql`${table.cancelled_by} IS NULL OR length(trim(${table.cancelled_by})) > 0`),
+    check("ck_staff_school_unit_assignment_start_date", sql`${table.effective_from} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.effective_from}, '+0 days') IS NOT NULL AND date(${table.effective_from}, '+0 days') = ${table.effective_from}`),
+    check("ck_staff_school_unit_assignment_end_date", sql`${table.effective_to} IS NULL OR (${table.effective_to} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.effective_to}, '+0 days') IS NOT NULL AND date(${table.effective_to}, '+0 days') = ${table.effective_to})`),
+    check("ck_staff_school_unit_assignment_date_range", sql`${table.effective_to} IS NULL OR ${table.effective_to} >= ${table.effective_from}`),
+    check("ck_staff_school_unit_assignment_close_fields", sql`(${table.closed_reason} IS NULL AND ${table.closed_by} IS NULL AND ${table.closed_at} IS NULL) OR (${table.closed_reason} IS NOT NULL AND length(trim(${table.closed_reason})) > 0 AND ${table.closed_by} IS NOT NULL AND length(trim(${table.closed_by})) > 0 AND ${table.closed_at} IS NOT NULL)`),
+    check("ck_staff_school_unit_assignment_cancel_fields", sql`(${table.cancelled_reason} IS NULL AND ${table.cancelled_by} IS NULL AND ${table.cancelled_at} IS NULL) OR (${table.cancelled_reason} IS NOT NULL AND length(trim(${table.cancelled_reason})) > 0 AND ${table.cancelled_by} IS NOT NULL AND length(trim(${table.cancelled_by})) > 0 AND ${table.cancelled_at} IS NOT NULL)`),
+    check("ck_staff_school_unit_assignment_not_closed_and_cancelled", sql`${table.effective_to} IS NULL OR ${table.cancelled_at} IS NULL`),
+]);
+export const staff_monthly_activity_periods = sqliteTable("staff_monthly_activity_periods", {
+    "id": integer().primaryKey(),
+    "reporting_year": integer().notNull(),
+    "reporting_month": integer().notNull(),
+    "generated_at": text().notNull(),
+    "generated_by_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_period_identity_uc").on(table.reporting_year, table.reporting_month),
+    check("ck_staff_monthly_activity_period_year", sql`${table.reporting_year} BETWEEN 1 AND 9999`),
+    check("ck_staff_monthly_activity_period_month", sql`${table.reporting_month} BETWEEN 1 AND 12`),
+]);
+export const staff_monthly_activities = sqliteTable("staff_monthly_activities", {
+    "id": integer().primaryKey(),
+    "staff_member_id": text().notNull().references(() => staff_members.id, { onDelete: "restrict" }),
+    "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
+    "period_id": integer().notNull().references(() => staff_monthly_activity_periods.id, { onDelete: "restrict" }),
+    "status": text().notNull().default("PENDING"),
+    "confirmation_date": text(),
+    "confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "processing_notes": text(),
+    "version": integer().notNull().default(1),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_identity_uc").on(table.staff_member_id, table.school_unit_id, table.period_id),
+    index("staff_monthly_activity_period_unit_status_idx").on(table.period_id, table.school_unit_id, table.status),
+    check("ck_staff_monthly_activity_status", sql`${table.status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_confirmation", sql`(${table.status} = 'COMPLETED' AND ${table.confirmation_date} IS NOT NULL AND ${table.confirmed_by_user_id} IS NOT NULL) OR (${table.status} != 'COMPLETED' AND ${table.confirmation_date} IS NULL AND ${table.confirmed_by_user_id} IS NULL)`),
+    check("ck_staff_monthly_activity_confirmation_date", sql`${table.confirmation_date} IS NULL OR (${table.confirmation_date} GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' AND date(${table.confirmation_date}, '+0 days') IS NOT NULL AND date(${table.confirmation_date}, '+0 days') = ${table.confirmation_date})`),
+    check("ck_staff_monthly_activity_notes", sql`${table.processing_notes} IS NULL OR length(trim(${table.processing_notes})) > 0`),
+    check("ck_staff_monthly_activity_version", sql`${table.version} >= 1`),
+]);
+export const staff_monthly_activity_history = sqliteTable("staff_monthly_activity_history", {
+    "id": integer().primaryKey(),
+    "activity_id": integer().notNull().references(() => staff_monthly_activities.id, { onDelete: "restrict" }),
+    "version": integer().notNull(),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "from_confirmation_date": text(),
+    "to_confirmation_date": text(),
+    "from_confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "to_confirmed_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "from_processing_notes": text(),
+    "to_processing_notes": text(),
+    "action": text().notNull(),
+    "reason": text(),
+    "actor_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+    "occurred_at": text().notNull(),
+}, (table) => [
+    uniqueIndex("staff_monthly_activity_history_version_uc").on(table.activity_id, table.version),
+    check("ck_staff_monthly_activity_history_version", sql`${table.version} >= 1`),
+    check("ck_staff_monthly_activity_history_to_status", sql`${table.to_status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_history_from_status", sql`${table.from_status} IS NULL OR ${table.from_status} IN ('PENDING','COMPLETED','NEEDS_CORRECTION','NOT_APPLICABLE')`),
+    check("ck_staff_monthly_activity_history_action", sql`${table.action} IN ('GENERATED','STATUS_CHANGED','NOTES_UPDATED','CORRECTION')`),
+    check("ck_staff_monthly_activity_history_reason", sql`${table.reason} IS NULL OR length(trim(${table.reason})) > 0`),
+]);
 export const student_academic_mapping_rules = sqliteTable("student_academic_mapping_rules", {
     "id": integer().primaryKey(),
     "mapping_type": text().notNull(),
@@ -1008,6 +1107,7 @@ export const student_masters = sqliteTable("student_masters", {
     "nipd": text(),
     "nisn": text(),
     "nik": text(),
+    "kk": text(),
     "gender": text(),
     "birth_place": text(),
     "birth_date": text(),
@@ -1165,3 +1265,179 @@ export const users = sqliteTable("users", {
     "failed_login_attempts": integer().notNull().default(0),
     "locked_until": text(),
 });
+export const upp_monthly_reports = sqliteTable("upp_monthly_reports", {
+    "id": integer().primaryKey(),
+    "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
+    "reporting_year": integer().notNull(),
+    "reporting_month": integer().notNull(),
+    "submission_status": text().notNull().default("UPLOADED"),
+    "submitted_at": text(),
+    "submitted_by_user_id": integer().references(() => users.id, { onDelete: "restrict" }),
+    "submission_notes": text(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("upp_monthly_reports_identity_uc").on(table.school_unit_id, table.reporting_year, table.reporting_month),
+    index("upp_monthly_reports_period_status_idx").on(table.reporting_year, table.reporting_month, table.submission_status),
+    check("ck_upp_monthly_reports_year", sql`${table.reporting_year} BETWEEN 1 AND 9999`),
+    check("ck_upp_monthly_reports_month", sql`${table.reporting_month} BETWEEN 1 AND 12`),
+    check("ck_upp_monthly_reports_status", sql`${table.submission_status} IN ('UPLOADED','READY_FOR_SUBMISSION','SUBMITTED')`),
+    check("ck_upp_monthly_reports_submission", sql`(${table.submission_status} = 'SUBMITTED' AND ${table.submitted_at} IS NOT NULL AND ${table.submitted_by_user_id} IS NOT NULL) OR (${table.submission_status} != 'SUBMITTED' AND ${table.submitted_at} IS NULL AND ${table.submitted_by_user_id} IS NULL)`),
+]);
+export const upp_report_versions = sqliteTable("upp_report_versions", {
+    "id": integer().primaryKey(),
+    "report_id": integer().notNull().references(() => upp_monthly_reports.id, { onDelete: "restrict" }),
+    "version_number": integer().notNull(),
+    "original_filename": text().notNull(),
+    "file_sha256": text().notNull(),
+    "file_size_bytes": integer().notNull(),
+    "is_active": integer().notNull().default(1),
+    "uploaded_by_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+    "uploaded_at": text().notNull(),
+    "notes": text(),
+}, (table) => [
+    uniqueIndex("upp_report_versions_identity_uc").on(table.report_id, table.version_number),
+    uniqueIndex("upp_report_one_active_version_uc").on(table.report_id).where(sql`${table.is_active} = 1`),
+    index("upp_report_versions_report_order_idx").on(table.report_id, table.version_number),
+    check("ck_upp_report_versions_number", sql`${table.version_number} >= 1`),
+    check("ck_upp_report_versions_filename", sql`length(trim(${table.original_filename})) BETWEEN 1 AND 255`),
+    check("ck_upp_report_versions_hash", sql`length(${table.file_sha256}) = 64 AND ${table.file_sha256} NOT GLOB '*[^0-9a-f]*'`),
+    check("ck_upp_report_versions_size", sql`${table.file_size_bytes} > 0`),
+    check("ck_upp_report_versions_active", sql`${table.is_active} IN (0,1)`),
+]);
+export const upp_report_submission_evidence = sqliteTable("upp_report_submission_evidence", {
+    "id": integer().primaryKey(),
+    "report_id": integer().notNull().references(() => upp_monthly_reports.id, { onDelete: "restrict" }),
+    "original_filename": text().notNull(),
+    "file_sha256": text().notNull(),
+    "file_size_bytes": integer().notNull(),
+    "uploaded_by_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+    "uploaded_at": text().notNull(),
+}, (table) => [
+    index("upp_report_submission_evidence_report_idx").on(table.report_id, table.id),
+    check("ck_upp_report_evidence_filename", sql`length(trim(${table.original_filename})) BETWEEN 1 AND 255`),
+    check("ck_upp_report_evidence_hash", sql`length(${table.file_sha256}) = 64 AND ${table.file_sha256} NOT GLOB '*[^0-9a-f]*'`),
+    check("ck_upp_report_evidence_size", sql`${table.file_size_bytes} > 0`),
+]);
+export const upp_report_history = sqliteTable("upp_report_history", {
+    "id": integer().primaryKey(),
+    "report_id": integer().notNull().references(() => upp_monthly_reports.id, { onDelete: "restrict" }),
+    "action": text().notNull(),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "version_id": integer().references(() => upp_report_versions.id, { onDelete: "restrict" }),
+    "evidence_id": integer().references(() => upp_report_submission_evidence.id, { onDelete: "restrict" }),
+    "actor_user_id": integer().notNull().references(() => users.id, { onDelete: "restrict" }),
+    "notes": text(),
+    "occurred_at": text().notNull(),
+}, (table) => [
+    index("upp_report_history_report_order_idx").on(table.report_id, table.id),
+    check("ck_upp_report_history_action", sql`${table.action} IN ('UPLOAD','REPLACEMENT','STATUS_CHANGED')`),
+    check("ck_upp_report_history_from_status", sql`${table.from_status} IS NULL OR ${table.from_status} IN ('UPLOADED','READY_FOR_SUBMISSION','SUBMITTED')`),
+    check("ck_upp_report_history_to_status", sql`${table.to_status} IN ('UPLOADED','READY_FOR_SUBMISSION','SUBMITTED')`),
+]);
+
+export const student_identity_verifications = sqliteTable("student_identity_verifications", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "identifier_type": text().notNull(),
+    "verification_status": text().notNull().default("UNVERIFIED"),
+    "verified_at": text(),
+    "verified_by": text(),
+    "notes": text(),
+    "correction_reason": text(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("student_identity_verifications_student_type_uc").on(table.student_master_id, table.identifier_type),
+    index("student_identity_verifications_status_idx").on(table.identifier_type, table.verification_status),
+    check("ck_student_id_verif_type", sql`${table.identifier_type} IN ('NIK','KK')`),
+    check("ck_student_id_verif_status", sql`${table.verification_status} IN ('UNVERIFIED','IDENTIFIER_ENTERED','VERIFIED','NEEDS_CORRECTION')`),
+]);
+
+export const student_identity_verification_history = sqliteTable("student_identity_verification_history", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "identifier_type": text().notNull(),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "changed_by": text().notNull(),
+    "correction_reason": text(),
+    "notes": text(),
+    "occurred_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    index("student_identity_verif_history_student_idx").on(table.student_master_id, table.id),
+    check("ck_student_id_verif_hist_type", sql`${table.identifier_type} IN ('NIK','KK')`),
+    check("ck_student_id_verif_hist_to", sql`${table.to_status} IN ('UNVERIFIED','IDENTIFIER_ENTERED','VERIFIED','NEEDS_CORRECTION')`),
+]);
+
+export const student_dapodik_registrations = sqliteTable("student_dapodik_registrations", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "status": text().notNull().default("NOT_STARTED"),
+    "external_reference": text(),
+    "updated_by": text().notNull(),
+    "notes": text(),
+    "correction_reason": text(),
+    "synchronized_at": text(),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("student_dapodik_registrations_student_uc").on(table.student_master_id),
+    index("student_dapodik_registrations_status_idx").on(table.status),
+    check("ck_student_dapodik_status", sql`${table.status} IN ('NOT_STARTED','PENDING_EXTERNAL_PROCESSING','ENTERED','SYNCHRONIZED','NEEDS_CORRECTION')`),
+]);
+
+export const student_dapodik_history = sqliteTable("student_dapodik_history", {
+    "id": integer().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "from_status": text(),
+    "to_status": text().notNull(),
+    "changed_by": text().notNull(),
+    "notes": text(),
+    "correction_reason": text(),
+    "occurred_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    index("student_dapodik_history_student_idx").on(table.student_master_id, table.id),
+    check("ck_student_dapodik_hist_to", sql`${table.to_status} IN ('NOT_STARTED','PENDING_EXTERNAL_PROCESSING','ENTERED','SYNCHRONIZED','NEEDS_CORRECTION')`),
+]);
+
+export const student_iom_documents = sqliteTable("student_iom_documents", {
+    "id": text().primaryKey(),
+    "student_master_id": text().notNull().references(() => student_masters.id, { onDelete: "restrict" }),
+    "iom_type": text().notNull(),
+    "description": text().notNull(),
+    "file_sha256": text().notNull(),
+    "file_size_bytes": integer().notNull(),
+    "original_filename": text().notNull(),
+    "uploaded_by": text().notNull(),
+    "uploaded_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_by": text(),
+}, (table) => [
+    index("student_iom_documents_student_idx").on(table.student_master_id, table.uploaded_at),
+    index("student_iom_documents_sha256_idx").on(table.file_sha256),
+    check("ck_student_iom_type", sql`${table.iom_type} IN ('TRANSFER_IN','TRANSFER_OUT')`),
+    check("ck_student_iom_desc", sql`length(trim(${table.description})) > 0`),
+    check("ck_student_iom_hash", sql`length(${table.file_sha256}) = 64 AND ${table.file_sha256} NOT GLOB '*[^0-9a-f]*'`),
+    check("ck_student_iom_size", sql`${table.file_size_bytes} > 0`),
+    check("ck_student_iom_filename", sql`length(trim(${table.original_filename})) BETWEEN 1 AND 255`),
+]);
+
+export const bosp_annual_reminder_settings = sqliteTable("bosp_annual_reminder_settings", {
+    "id": integer().primaryKey(),
+    "advance_notice_days": integer().notNull().default(60),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    check("ck_bosp_settings_single_row", sql`${table.id} = 1`),
+]);
+
+export const bosp_reminder_acknowledgments = sqliteTable("bosp_reminder_acknowledgments", {
+    "calendar_year": integer().primaryKey(),
+    "acknowledged_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "acknowledged_by": text().notNull(),
+    "notes": text(),
+}, (table) => [
+    check("ck_bosp_ack_by", sql`length(trim(${table.acknowledged_by})) > 0`),
+    check("ck_bosp_ack_notes", sql`${table.notes} IS NULL OR length(trim(${table.notes})) > 0`),
+]);

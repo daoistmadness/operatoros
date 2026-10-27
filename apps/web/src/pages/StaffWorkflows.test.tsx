@@ -1,10 +1,11 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { ReactNode } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../lib/query/queryClient";
+import { queryKeys } from "../lib/query/queryKeys";
 
 const state = vi.hoisted(() => ({ capabilities: new Set<string>() }));
 const staffApi = vi.hoisted(() => ({
@@ -18,6 +19,11 @@ vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ can: (capability: s
 import StaffAnalytics from "./StaffAnalytics";
 import StaffForm from "./StaffForm";
 import StaffImport from "./StaffImport";
+
+function SensitiveProfileProbe() {
+  const { data } = useQuery({ queryKey: queryKeys.staff.sensitive("staff-raw"), queryFn: () => staffApi.fetchSensitiveStaff("staff-raw") });
+  return <p>Profile age: {data?.age_years ?? "unknown"}</p>;
+}
 
 const analytics = {
   as_of_date: "2026-10-02",
@@ -90,6 +96,21 @@ describe("employee workflows", () => {
     await act(async () => button?.click());
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(staffApi.updateStaff).toHaveBeenCalledWith("staff-raw", expect.objectContaining({ full_name: "Synthetic Renamed Employee", job_title_raw: "Teacher A", dapodik_status_raw: "AKTIF" }));
+  });
+
+  it("refreshes the sensitive profile after a birth date edit", async () => {
+    state.capabilities = new Set(["manage_staff", "edit_sensitive_staff_fields", "view_staff_sensitive"]);
+    staffApi.fetchStaffDetail.mockResolvedValue({ id: "staff-raw", full_name: "Synthetic Employee", employment_status: "ACTIVE", source_staff_id: null, job_title_raw: null, dapodik_status_raw: null, employment_start_date: null, identifiers: [], updated_at: "2026-10-02 10:00:00" });
+    let saved = false;
+    staffApi.fetchSensitiveStaff.mockImplementation(async () => ({ birth_place: null, birth_date: saved ? "1990-10-27" : null, age_years: saved ? 36 : null, identifiers: [], contact: null }));
+    staffApi.updateStaff.mockImplementation(async () => { saved = true; return { id: "staff-raw" }; });
+    await render(<Routes><Route path="/staff/:id/edit" element={<StaffForm />} /><Route path="/staff/:id" element={<SensitiveProfileProbe />} /></Routes>, "/staff/staff-raw/edit");
+    const birthDate = host.querySelector<HTMLInputElement>("#birth_date")!;
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(birthDate, "1990-10-27"); birthDate.dispatchEvent(new Event("input", { bubbles: true })); });
+    await act(async () => Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("Save employee"))?.click());
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+    expect(staffApi.updateStaff).toHaveBeenCalledWith("staff-raw", expect.objectContaining({ birth_date: "1990-10-27" }));
+    expect(host.textContent).toContain("Profile age: 36");
   });
 
   it("shows server aggregate values and unknown coverage in analytics", async () => {

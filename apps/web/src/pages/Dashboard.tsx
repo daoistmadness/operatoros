@@ -21,7 +21,10 @@ import {
   Filter,
   BarChart4,
   Activity,
-  FileText
+  FileText,
+  BellRing,
+  FileCheck2,
+  FileSpreadsheet
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card } from "@operatoros/ui/components/card";
@@ -41,6 +44,11 @@ import { useDashboardSnapshotQuery } from "../hooks/useAnalyticsQueries";
 import { queryKeys } from "../lib/query/queryKeys";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
+import {
+  useDashboardOverviewQuery,
+  useBospReminderQuery,
+  useAcknowledgeBospReminderMutation,
+} from "../features/operator-work-queue/queries/useOperatorQueries";
 import {
   assignStudentClass,
   normalizeAbsenceTotals,
@@ -80,6 +88,9 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState(String(today.getMonth() + 1));
   const [selectedYear, setSelectedYear] = useState(String(today.getFullYear()));
   const monthNumber = Number(selectedMonth);
+  const overviewQuery = useDashboardOverviewQuery();
+  const bospQuery = useBospReminderQuery();
+  const acknowledgeBosp = useAcknowledgeBospReminderMutation();
   const yearNumber = Number(selectedYear);
   const dashboardQuery = useDashboardSnapshotQuery(monthNumber, yearNumber);
   const snapshot = dashboardQuery.data;
@@ -132,6 +143,105 @@ export default function Dashboard() {
       {dashboardQuery.isFetching && snapshot && <p role="status" className="text-sm font-semibold text-muted-foreground">Updating dashboard data…</p>}
       {dashboardQuery.isError && snapshot && <ErrorState title="Dashboard refresh failed" description="Showing the last successful dashboard result."><Button onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>}
       <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
+
+      {/* Annual BOSP Reminder Banner */}
+      {bospQuery.data?.is_in_notice_window && (
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-indigo-100 p-2.5 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                <BellRing className="size-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-slate-900 dark:text-white">
+                    Pengingat Tahunan Cut-off BOSP {bospQuery.data.calendar_year}
+                  </h4>
+                  {bospQuery.data.is_acknowledged ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                      <Check className="size-3" /> Sudah Dipahami
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                      Perlu Perhatian ({bospQuery.data.days_remaining} hari)
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                  Batas cut-off sinkronisasi DAPODIK untuk BOS/BOSP tahun {bospQuery.data.calendar_year} adalah 31 Agustus (Zona Waktu Asia/Jakarta, {bospQuery.data.days_remaining} hari tersisa).
+                  {bospQuery.data.is_acknowledged && bospQuery.data.acknowledged_by && (
+                    <span className="block mt-0.5 text-[11px] text-slate-500">
+                      Dikonfirmasi oleh {bospQuery.data.acknowledged_by} {bospQuery.data.acknowledged_at ? `pada ${new Date(bospQuery.data.acknowledged_at).toLocaleDateString("id-ID")}` : ""}.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            {!bospQuery.data.is_acknowledged && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={acknowledgeBosp.isPending}
+                onClick={() =>
+                  acknowledgeBosp.mutate({
+                    calendar_year: bospQuery.data.calendar_year,
+                    notes: "Dikonfirmasi dari ringkasan dashboard operasional.",
+                  })
+                }
+                className="shrink-0 border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:text-indigo-300"
+              >
+                {acknowledgeBosp.isPending ? "Menyimpan..." : "Tandai Sudah Dipahami"}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Operational Dashboard Overview (Module E) */}
+      {overviewQuery.isPending && <LoadingState title="Memuat ringkasan operasional" description="Menghitung status siswa, PTK, dan laporan bulan ini." />}
+      {overviewQuery.isError && <ErrorState title="Ringkasan operasional tidak dapat dimuat" description="Data kehadiran tetap tersedia. Coba muat ulang ringkasan operasional."><Button onClick={() => void overviewQuery.refetch()}>Coba lagi</Button></ErrorState>}
+      {overviewQuery.data && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Activity className="size-4 text-emerald-600" /> Ringkasan Operasional Sekolah & DAPODIK
+            </h3>
+            <Link to="/operator/work-queue" className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">
+              Buka Antrean Kerja Operator <ChevronRight className="size-3" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Siswa Terdaftar / Aktif"
+              value={overviewQuery.data.students.active_count}
+              icon={<GraduationCap size={24} className="text-indigo-600" />}
+              trend={`${overviewQuery.data.students.pending_verification_count} perlu verifikasi identitas`}
+              iconBgColor="bg-indigo-50"
+            />
+            <StatCard
+              title="Kelengkapan NISN"
+              value={`${overviewQuery.data.students.nisn_inputted_count} Terisi`}
+              icon={<FileCheck2 size={24} className="text-emerald-600" />}
+              trend={`${overviewQuery.data.students.nisn_not_inputted_count} siswa belum terisi`}
+              iconBgColor="bg-emerald-50"
+            />
+            <StatCard
+              title="Staf / PTK Aktif"
+              value={overviewQuery.data.staff.active_count}
+              icon={<UsersIcon size={24} className="text-sky-600" />}
+              trend={`PTK ${overviewQuery.data.staff.monthly_ptk_completed_count}/${overviewQuery.data.staff.monthly_ptk_applicable_count} selesai; ${overviewQuery.data.staff.monthly_ptk_pending_count} pending, ${overviewQuery.data.staff.monthly_ptk_needs_correction_count} koreksi`}
+              iconBgColor="bg-sky-50"
+            />
+            <StatCard
+              title="Laporan UPP Bulanan"
+              value={`${overviewQuery.data.upp.uploaded_count}/${overviewQuery.data.upp.expected_count} diunggah`}
+              icon={<FileSpreadsheet size={24} className="text-amber-600" />}
+              trend={`${overviewQuery.data.upp.awaiting_submission_count} menunggu pengiriman · ${overviewQuery.data.upp.submitted_count} terkirim · ${overviewQuery.data.upp.current_period}`}
+              iconBgColor="bg-amber-50"
+            />
+          </div>
+        </div>
+      )}
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
         <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>

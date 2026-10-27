@@ -10,6 +10,7 @@ import { inTransaction } from "@operatoros/db";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { actor } from "./core";
 import { createPreResetBackup, type SafetyConfig } from "./safety";
+import { removeUnreferencedReportFiles, type FileMetadata } from "./upp-report-files";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -40,6 +41,8 @@ const STUDENT_PLAN: readonly ResetGroup[] = [
     "academic_roster_import_batches", "student_import_batches", "student_import_sessions",
   ] },
   { domain: "Student identity and profile data", tables: [
+    "student_identity_verification_history", "student_dapodik_history", "student_iom_documents",
+    "student_identity_verifications", "student_dapodik_registrations",
     "enrollment_population_preview_batches", "legacy_link_preview_batches", "legacy_link_resolutions",
     "student_device_identities", "student_addresses", "student_contacts", "student_parent_guardians",
     "student_health_profiles", "student_document_statuses", "student_enrollments", "students", "student_masters",
@@ -49,9 +52,10 @@ const STUDENT_PLAN: readonly ResetGroup[] = [
 const SCHOOL_STRUCTURE_PLAN: readonly ResetGroup[] = [
   { domain: "School structure review data", tables: ["academic_master_import_previews"] },
   { domain: "Class assignments", tables: ["teacher_class_assignment_audit", "teacher_class_assignments"] },
+  { domain: "Monthly PTK activity", tables: ["staff_monthly_activity_history", "staff_monthly_activities", "staff_monthly_activity_periods"] },
   { domain: "Staff import history", tables: ["staff_employment_history", "staff_import_issues", "staff_import_rows", "staff_import_batches"] },
-  { domain: "Staff profiles", tables: [
-    "staff_jenjang_assignments", "staff_identifiers", "staff_contact_details", "staff_education", "staff_members",
+  { domain: "Staff profiles and school units", tables: [
+    "staff_school_unit_assignment_versions", "staff_jenjang_assignments", "staff_identifiers", "staff_contact_details", "staff_education", "staff_members", "school_units",
   ] },
   { domain: "School report setup", tables: ["report_templates", "report_branding_configs", "staff_job_title_mappings"] },
   { domain: "School policies and academic mappings", tables: [
@@ -118,6 +122,13 @@ const DELETE_GUARDS = [
   { table: "student_enrollment_lifecycle_audit", name: "trg_student_enrollment_lifecycle_audit_no_delete" },
   { table: "student_import_applied_actions", name: "trg_student_import_actions_no_delete" },
   { table: "student_master_change_history", name: "trg_student_master_change_history_no_delete" },
+  { table: "student_identity_verification_history", name: "trg_student_identity_verification_history_no_delete" },
+  { table: "student_dapodik_history", name: "trg_student_dapodik_history_no_delete" },
+  { table: "student_iom_documents", name: "trg_student_iom_documents_no_delete" },
+  { table: "staff_school_unit_assignment_versions", name: "trg_staff_school_unit_assignment_no_delete" },
+  { table: "staff_monthly_activity_periods", name: "trg_staff_monthly_activity_period_no_delete" },
+  { table: "staff_monthly_activity_history", name: "trg_staff_monthly_activity_history_no_delete" },
+  { table: "staff_monthly_activities", name: "trg_staff_monthly_activity_no_delete" },
   { table: "student_progression_audit", name: "trg_student_progression_audit_no_delete" },
   { table: "early_departure_excuse_audits", name: "trg_early_departure_excuse_audits_no_delete" },
   { table: "teacher_class_assignment_audit", name: "trg_teacher_class_assignment_audit_no_delete" },
@@ -194,6 +205,9 @@ function resetData(context: AuthContext, scope: DataResetScope, user: CurrentUse
 
   const groups = PLANS[scope];
   const tables = planTables(groups);
+  const iomFiles = tables.has("student_iom_documents")
+    ? client.query("SELECT file_sha256 AS sha256,file_size_bytes AS sizeBytes FROM student_iom_documents").all() as FileMetadata[]
+    : [];
   const guards = DELETE_GUARDS.filter(({ table }) => tables.has(table)).flatMap(({ name, table }) => {
     const trigger = client.query("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ? AND tbl_name = ?").get(name, table) as Row | null;
     return trigger?.sql ? [{ name, sql: String(trigger.sql) }] : [];
@@ -211,8 +225,17 @@ function resetData(context: AuthContext, scope: DataResetScope, user: CurrentUse
       appendResetAudit(client, user, scope, true, counts, null, backupFilename);
       return counts;
     });
+    if (iomFiles.length && backupConfig.reportStorageDir) {
+      try {
+        removeUnreferencedReportFiles(client, backupConfig.reportStorageDir, iomFiles);
+      } catch {
+        recordFailedReset(client, user, scope, "DATA_RESET_ATTACHMENT_CLEANUP_FAILED", backupFilename);
+        throw Object.assign(new Error("Student records were reset, but one or more archived files could not be removed. The encrypted pre-reset backup is available."), { status: 503, code: "DATA_RESET_ATTACHMENT_CLEANUP_FAILED" });
+      }
+    }
     return { scope, deleted_counts: deletedCounts, completed_at: new Date().toISOString(), backup_filename: backupFilename };
-  } catch {
+  } catch (error) {
+    if ((error as { code?: string }).code === "DATA_RESET_ATTACHMENT_CLEANUP_FAILED") throw error;
     recordFailedReset(client, user, scope, "DATA_RESET_ROLLED_BACK", backupFilename);
     throw Object.assign(new Error("The reset failed. All database changes were rolled back."), { status: 500, code: "DATA_RESET_ROLLED_BACK" });
   }

@@ -22,7 +22,6 @@ export type ApiRequestOptions = {
   method?: string;
   params?: QueryParams;
   body?: unknown;
-  data?: unknown;
   headers?: ApiHeaders;
   timeout?: number;
   responseType?: 'json' | 'blob';
