@@ -980,6 +980,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/student-masters/{student_master_id}/identity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/dapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idDapodik-status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idDapodik-status"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documents"];
+        put?: never;
+        post: operations["postApiStudent-mastersByStudent_master_idIom-documents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff": {
         parameters: {
             query?: never;
@@ -12000,6 +12080,200 @@ export interface operations {
                 };
             };
         };
+    };
+    "getApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "postApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    description: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    description: string;
+                };
+                "multipart/form-data": {
+                    description: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
     };
     list_staff_api_staff_get: {
         parameters: {

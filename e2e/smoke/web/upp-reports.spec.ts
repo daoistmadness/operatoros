@@ -61,7 +61,8 @@ test("@upp @critical archives, replaces, downloads, and submits one synthetic wo
   });
   const uploadResponse = page.waitForResponse((response) => response.url().includes("/api/upp-reports") && response.request().method() === "POST" && response.status() === 200);
   await row.getByRole("button", { name: "Upload workbook", exact: true }).click();
-  await uploadResponse;
+  const reportId = Number(((await (await uploadResponse).json()) as { id: number }).id);
+  expect(reportId).toBeGreaterThan(0);
   await expect(row).toContainText("Uploaded");
   await expect(row).not.toContainText("Not uploaded");
 
@@ -76,7 +77,7 @@ test("@upp @critical archives, replaces, downloads, and submits one synthetic wo
     mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     buffer: replacementBytes,
   });
-  const replaceResponse = page.waitForResponse((response) => response.url().includes(`/api/upp-reports/${created.unit.id}/versions`) && response.request().method() === "POST" && response.status() === 200);
+  const replaceResponse = page.waitForResponse((response) => response.url().includes(`/api/upp-reports/${reportId}/versions`) && response.request().method() === "POST" && response.status() === 200);
   await row.getByRole("button", { name: "Replace workbook", exact: true }).click();
   await replaceResponse;
   await expect(row).toContainText("Uploaded");
@@ -90,7 +91,7 @@ test("@upp @critical archives, replaces, downloads, and submits one synthetic wo
   await row.getByRole("button", { name: "Ready for submission", exact: true }).click();
   await expect(row).toContainText("Ready for submission");
   await row.getByLabel("Submission notes").fill("Synthetic external submission confirmation");
-  await row.locator(`#upp-evidence-${created.unit.id}`).setInputFiles({
+  await row.locator(`#upp-evidence-${reportId}`).setInputFiles({
     name: "synthetic-receipt.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.from("synthetic submission evidence"),
