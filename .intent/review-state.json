@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "baf21c21341010a2069b40f26808493731c4f87099c125600c003270bf2862ca",
+      "fingerprint": "ce983efdca857ff37ee1d0c4034b3b726678a56a544e849eccffaf9dc6209938",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -13,7 +13,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,15 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "No Elysia guidance change is needed. This PR adds Phase 6 operator routes, DTOs, and a work-queue service using the existing Elysia 1.4.29 registration, TypeBox, and error-handling patterns already documented in the skill. The only flagged context file, docs/guides/testing.md, was added in an earlier phase before the PR base and does not change Elysia route, validation, plugin, or lifecycle guidance.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/agent-skills/skills/elysiajs/SKILL.md.",
+        "Changed: docs/guides/testing.md at 9fbfe6e8.",
+        "docs/guides/testing.md predates the PR base commit 6bee9333; this PR does not modify it.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "85403222aa708cc131d4fe2a478019625aba3d0b8ca7c8fcbc031c5e92d562c7",
+      "fingerprint": "f3d55769407a790c39d214fd743cbc09449aeb411aa1cf09209a2464c05deda2",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -65,7 +68,7 @@
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "a2319c3a61fedc7e1f2820a0a76803ddac4e8ba46f81906d469a2a7e815de1db",
+        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +99,14 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "No planning-record change is needed. The feature adds an operator dashboard, BOSP reminder, and work queue within the existing admin domain; domain_map.yaml, skill_spec.md, and skill_tree.yaml already describe that domain and its skill coverage. The only flagged context file, docs/guides/testing.md, was added in an earlier phase before the PR base.",
       "evidence": [
-        "Changed: AGENTS.md, docs/guides/testing.md at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for _artifacts.",
+        "Changed: docs/guides/testing.md at 9fbfe6e8.",
+        "docs/guides/testing.md predates the PR base commit 6bee9333; this PR does not modify it.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -192,15 +198,17 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "c295783d5dfd95f25b741ea572d16ffb0645e0b64e8bc3f163f1a76cb113b6c8",
+      "fingerprint": "625e0103766dd12bb0e8c4b29502c27df0dc4c75a626f50abcda33fad2e866b9",
       "snapshot": {
-        "apps/api/src/app.ts": "8b5bdf5d3a9ec05391c64b67dd7ad738a16b59781ced30d13e16dd1e6429408d"
+        "apps/api/src/app.ts": "93495bafbad8352f3abd82b24da61bdea2a0b442eeed2cef9c040ec93552efd2"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "One-line optional-chaining fix for report data-dir resolution when a context database is absent. It preserves explicit route registration in app.ts and does not change documented architecture or conventions.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/src/app.ts.",
+        "Changed: apps/api/src/app.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -491,15 +499,17 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "f5d7353e68b9d86c16683366f6836cab28d68bfcf8816c92d2f14a57c0f16504",
+      "fingerprint": "c7b02ad177556e52b04cf99c5e4cc5de7b332379e57c90fb420b197de3856264",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "2d072e9f80dbb39d43c9ab56590d755de82f5812430f8c19011dac94df1c92bb"
+        "apps/web/src/generated/openapi/schema.ts": "d411a38891e14a6d247ed33bbf0376364d001bc3c0e00d97d6ec1a84bf29179a"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Regenerated OpenAPI schema output produced by the repository api:generate script. Generated artifacts are not guidance sources; no manual edit was made.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/generated/openapi/schema.ts.",
+        "Changed: apps/web/src/generated/openapi/schema.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +525,17 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "823a3bf60b4877418ce699e095c4ab954355af5f9581642d88293bd3c0ff471d",
+      "fingerprint": "8800a0047a00ef6ef1366e1f94782fe0c468f314dda24710fcdbc742c74d70ae",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "8d84339e0c5dd7d326e11f029464a734f76b01d2bbdb0072b554967a281eb0b8"
+        "openapi/operatoros.openapi.json": "c51f85a55f0f09de229b3a0414558a4c4ddafad25358f83cf14399ed0c93286f"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Regenerated OpenAPI document covering the new Phase 6 operations. Generated output from the versioned contract pipeline; no guidance change.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for openapi/operatoros.openapi.json.",
+        "Changed: openapi/operatoros.openapi.json at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -788,15 +800,17 @@
       ]
     },
     "source:packages/contracts/src/index.ts": {
-      "fingerprint": "041652ba6b2131e7b28121b9b0787b4e7da696120d7c009e0a3f9ba8f5f6b883",
+      "fingerprint": "08fca84c6ade6f88e72c65471d8b6321d71742353ee23f261608e00f02fb5129",
       "snapshot": {
-        "packages/contracts/src/index.ts": "1d9e5facd19f8ff43c35646b6045267435ef43df6ddb4b242a0b14af0896ef14"
+        "packages/contracts/src/index.ts": "ce8946fd7cb4c847d44d9c082a8b108d4022dcc5d4f7448b036cfce8c097574f"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Re-exports the new admin-dashboard contract through the package entry point, matching existing export patterns. No guidance change.",
       "evidence": [
-        "Changed: packages/contracts/src/index.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/contracts/src/index.ts.",
+        "Changed: packages/contracts/src/index.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/contracts/tests/backup.test.ts": {
@@ -1220,15 +1234,17 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "bd14ee11d93325ab6d6695e9e39e3804523caab2691686b867bde36e4494660a",
+      "fingerprint": "1478451df874ef56a525c91766d691e5b6e0c34be4531f1500d9c971a211e982",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "8a625790a1d867450e5846b0932b95f5bbe8efeb39232295fa27f3ae5ff1db12"
+        "apps/web/src/pages/Dashboard.tsx": "79834f48fbeb285dc2a3087638b3bb2f5dd0b69817651485d253d5be6cd10de6"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Dashboard page now renders the operational overview and the annual BOSP cut-off reminder from server-computed metrics. It formats server data only, adds no client-side metric recomputation, and follows the web design rules; no guidance change.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/pages/Dashboard.tsx.",
+        "Changed: apps/web/src/pages/Dashboard.tsx at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -2921,15 +2937,17 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "20f95c90d02bb9723db54671efeab0a309e53c51ba6704e4f3d4e984582a0dc9",
+      "fingerprint": "47bfbd1bfa4dc190326f2054f769f3ec38a16adefd78122efb777aa23c765c1e",
       "snapshot": {
-        "CHANGELOG.md": "700d67ef1389aad412fbb222e7356a32ca5aaeab19a12a89172e1474f3098694"
+        "CHANGELOG.md": "4e93239891aa0cc3495b06ebcaeb48e87646d3e3fbed356c49dc646d7be320a6"
       },
-      "head": "f45cb7288c45d9fe6e4a0d6713a1b2dda122e9b5",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 3 changelog entry; it describes implemented operator workflow and does not require guidance changes.",
+      "reason": "Changelog entry only; no guidance impact. It records the user-facing Phase 6 dashboard, BOSP reminder, and work-queue change required by the repository changelog gate.",
       "evidence": [
-        "Changed: CHANGELOG.md at f45cb7288c45d9fe6e4a0d6713a1b2dda122e9b5"
+        "Reviewed the #331 diff at 9fbfe6e8 for CHANGELOG.md.",
+        "Changed: CHANGELOG.md at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:COMMANDS.md": {
@@ -5099,15 +5117,17 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "1b2f75f5d3cfb5a9cffab96059c269baad81e0dad6bdc433cf78695d0948eefe",
+      "fingerprint": "5fb1127514c37e38488f815b25347f79eaf607e78b06eb813129f6191b76862e",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "231b6dd5dbac5eef596cd1ed95ee7e4723fc9083854006bc691d25030d5dfc7e"
+        "apps/api/src/domains/core.ts": "c420f5e32824b972b18958e1d62e0d43f4c62f791b6265998531c3eea410ddc0"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Adds an existingTables() helper and batches three sqlite_master probes in studentDetail() into one query to keep the student overview query-count guard satisfied. It follows the existing SQLite access pattern in the domain module; no new convention is introduced.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/src/domains/core.ts.",
+        "Changed: apps/api/src/domains/core.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -5207,15 +5227,17 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "69f5428b651fb324316b0876f87216d2e11423d9e3b6c2e28962a177a78a1b64",
+      "fingerprint": "4feb53e7ff1d5b2809dbc1ed393f471f6ff9f808ec3cd5d3f539583066e9ff43",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "05dd75882fc20194e869dd12d74cece674450923657d2b6fde536c1ac537dd33"
+        "apps/api/tests/openapi-contract.test.ts": "27bdb08fe3e18ee3312a58bac8b1425d27b9833903c69549f22359e8bb4b33a5"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Contract-count expectations move from 422 to 434/435 operations to cover the new Phase 6 routes. This follows the existing drift-checked OpenAPI convention; no guidance change.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/openapi-contract.test.ts.",
+        "Changed: apps/api/tests/openapi-contract.test.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5255,15 +5277,17 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "125c43b5eb418e1cbc0a75a244493d373ea167524889f4a4f8a7f6fc61b4d1df",
+      "fingerprint": "cc8b749e863ff2b108437136c8df194c22b4cc9773a4259aefa89e6fd6947691",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "fd8056d2370ec5221f0849ac5975cfe44c185c756c6c14e4f06951d478f986ab"
+        "apps/web/src/lib/query/queryKeys.ts": "bf6247dc57555ec833c47ed1591a250cb86cd63fbb65efa41c0a580dfa34a44d"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Adds dashboardOverview and bospReminder keys under the existing operator namespace so every filter-bearing query has a stable key. This is the documented query-key convention; no guidance change.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/lib/query/queryKeys.ts.",
+        "Changed: apps/web/src/lib/query/queryKeys.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5291,15 +5315,17 @@
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "4db345c5b416ff7f98b2fc71db0e067e881e7e80908f5ec4399fcd5acacf0e17",
+      "fingerprint": "e14badf4b24626865827d911dfe849fd6cecda82bbb23678252e99ee78c7ebea",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "e4b446442410b24839e43cc4eddba9d05ebfb36ce91afbd56ff281449539c533"
+        "packages/db/src/bootstrap.ts": "0b193cf2fd0a875183149c8588af35bb3a9e53b2377b55291a40727a4ca159ee"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Adds installS53BospReminderSchema() and wires the S5.3 migration into fresh bootstrap, following the existing S4.8-S5.2 installer pattern. No guidance change.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/src/bootstrap.ts.",
+        "Changed: packages/db/src/bootstrap.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/db/src/index.ts": {
@@ -5315,27 +5341,31 @@
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "047d14357468c486341f6299843814ce8293058d5f56b84dd1db183f7eb7efdd",
+      "fingerprint": "e9ca4a17064b1c864b2cf376b6ceae6cdad87157488382237535dacceded5a6b",
       "snapshot": {
-        "packages/db/src/manifest.ts": "36dde1a7cc0afbbf8ecf72c5fc5474fd1d04148d783799aa3f27ee2d10782ee6"
+        "packages/db/src/manifest.ts": "f0d160de6460e90f5a98c046d75492959982699863e5dd8fe0f087947e325442"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Registers the 20261027_s53 migration, promotes the S5.2 fingerprint to S52_SCHEMA_FINGERPRINT, and sets the new CURRENT_SCHEMA_FINGERPRINT. Schema authority remains packages/db/src/manifest.ts as documented; no guidance change.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/src/manifest.ts.",
+        "Changed: packages/db/src/manifest.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "501776a2d513b15cf6303bf623d3b403a3ed38217e0e62478ee667260c9d2d5a",
+      "fingerprint": "5419d7b487614efc831aa0380f66f24c305d15f6acc935b2001e04cb2655d042",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "c46247463aa29d6b5cb2cad4ebbc0836f54b1aa11deff9d95ad14a8023c09772"
+        "packages/db/src/migrate-existing.ts": "bee41b96d6703494c387d3a34a7b6844989e57747777661352a4ac97001f97af"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Adds S52 predecessor detection and the S5.3 step to the existing-database migration path with checksum validation and schema-fingerprint assertions. It follows the documented migration-authority and validation rules; no guidance change.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/src/migrate-existing.ts.",
+        "Changed: packages/db/src/migrate-existing.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5351,15 +5381,17 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "92af9808d4a1bd18c906c876f308d3fdc7992fe18caa14e342cf63696aade385",
+      "fingerprint": "c18f6ff7ecc7000dbf0da90616da5e1ea6bfab9f7e366d7f791be1c59a98e7dd",
       "snapshot": {
-        "packages/db/src/schema.ts": "51d7a449d4bd7071eb8aa157523c8835eb11d54c5e5103d156b2e3454b84e177"
+        "packages/db/src/schema.ts": "814eb49f8d5032108b3642e5a1beac11145324d618fb2e106398fba110dde192"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Adds Drizzle table definitions for the two S5.3 BOSP reminder tables, matching the SQL migration and existing schema style. No guidance change.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/src/schema.ts.",
+        "Changed: packages/db/src/schema.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
@@ -5375,15 +5407,17 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "56d7fbfac24f1be0703ffd952edf4844be7355a47d9119cb94fea247ca0ca4b3",
+      "fingerprint": "7e1c9474562cb3268e89d1ad61f98ba0677fb5f20ca98215ecf5334a1a759c0e",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "88a379e44dd5c4495d2a9fd7ac39adb77f4d2ebb7699c765ded77768cfa2e7de"
+        "packages/db/tests/db.test.ts": "d8b1ff4b1cdaa1f4fc1d89282f99871602e74da7776915092de7db78788bfe94"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Updates database tests for the S5.3 migration: fresh-bootstrap parity, fingerprint expectations, and existing-database migration coverage with synthetic data. It follows the documented migration test requirements; no guidance change.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/tests/db.test.ts.",
+        "Changed: packages/db/tests/db.test.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
@@ -5516,6 +5550,146 @@
       "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
       "evidence": [
         "Changed: packages/db/src/s50-migration.sql at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+      ]
+    },
+    "source:apps/api/src/domains/operator.ts": {
+      "fingerprint": "3f5e178f34e3b164ad623a60bbb9b54baa24540bc6e555ddea2f503d9d18c72b",
+      "snapshot": {
+        "apps/api/src/domains/operator.ts": "8aa8e3f6b91b5d8bd33d1b21503569ecadd806b4e4b8c8d4db1aed6f62c7987e"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Adds the dashboard overview, BOSP reminder, and work-queue endpoints plus their SQL inside the existing operator domain module. Responses are mapped to explicit DTOs and authorization scopes follow existing operator routes, so the golden-path guidance remains accurate.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/src/domains/operator.ts.",
+        "Changed: apps/api/src/domains/operator.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/api/tests/core.test.ts": {
+      "fingerprint": "3666ffe789ea8c607c06e15fd8591976a6288877ba62d99cb6556bd4c0facb87",
+      "snapshot": {
+        "apps/api/tests/core.test.ts": "43a44d4ad9c50f454e33c992f2b1c9933b8f79b3ba4cbc0dc04adb972f02cceb"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Test expectation update only: the work-queue endpoint now returns two STUDENT_VERIFICATION items from the golden fixture instead of an empty array. No guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/core.test.ts.",
+        "Changed: apps/api/tests/core.test.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/api/tests/operator-phase6.test.ts": {
+      "fingerprint": "942c083c679da834849ff92eff5cfc1b34aa0e369e9676260571497c4191ccf0",
+      "snapshot": {
+        "apps/api/tests/operator-phase6.test.ts": "ccf20104afc26f0f653bc0eb50e599c6a3ef1327d2bb45dc7163cfb48c4c2b89"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "New synthetic-data route tests for dashboard overview, BOSP reminder settings and acknowledgments, and work-queue filtering/authorization. They follow the existing API test structure and add no new guidance.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/operator-phase6.test.ts.",
+        "Changed: apps/api/tests/operator-phase6.test.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
+      "fingerprint": "c4c7f2f6148a2cd7c5ab600f15e408310d28f101e644cf8fba811d1250f70bbb",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/api/operator.ts": "9a1480969c23f696a94db4e32fcdc6e9ae71cad90d3358c3fa8a436b0a8d6c6f"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Adds feature API functions for dashboard overview, BOSP reminder, and work-queue filters through the canonical API client. It follows the existing feature-API convention; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/api/operator.ts.",
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": {
+      "fingerprint": "a6fb9a170b151d6d36b2291b817db0c69cdb23ccc585f3fff33af94ff06353ad",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": "adc544f68a9d216263c25774e7ea0bb65100cfaec558dd57b36e6fa9e8372619"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Extends the existing work-queue page with type filters and actionable navigation using existing UI primitives. Routes, fetching, and business forms remain in web as required; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx.",
+        "Changed: apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts": {
+      "fingerprint": "ea2506f90ff1de350a074ae57955d5e36ccc30486ec163c8b98f9c9d3e44b3c1",
+      "snapshot": {
+        "apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts": "cecfab78f654e51bd45887f7e92ea38064308f56f51ae95375bf3ce81be9cf27"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Adds TanStack Query hooks with query keys that include every filter and targeted invalidations after mutations. It follows the documented query-key and invalidation rules; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts.",
+        "Changed: apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
+      "fingerprint": "3d653886b71d00bb67f4fa21ea32d267fa58254b59ac23647556d758360fdf9d",
+      "snapshot": {
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "35fd0229318ed942f8136543dc77e1e1e6dcfe195a9cbdd8b9039b8a508b7fc6"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "E2E navigation count moves from 7 to 8 to include the new UPP reports sidebar entry. This is a selector-count correction, not a testing-convention change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for e2e/smoke/web/analytics-phase-a.spec.ts.",
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:e2e/smoke/web/upp-reports.spec.ts": {
+      "fingerprint": "7d1c7ceabfa0d367dbc220caf370f0a9f991659e85faaca643e7a283e690b3bc",
+      "snapshot": {
+        "e2e/smoke/web/upp-reports.spec.ts": "fbc3557f9ca29af61c41ba176bf162da09dda55cf23a9a3aa230b6a10f4af99c"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "E2E spec now uses the uploaded UPP report id (not the school-unit id) for version upload and evidence selectors, matching the DOM ids. This is a test-selector correction; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for e2e/smoke/web/upp-reports.spec.ts.",
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:packages/contracts/src/admin-dashboard.ts": {
+      "fingerprint": "6742e465d47d51b2bcfc14f59e140cb34371bd9d73e1bb8a0915f068b420b822",
+      "snapshot": {
+        "packages/contracts/src/admin-dashboard.ts": "eeb8e92c16e4bbf2e56425f7eb96b49418d9b5eac97c742b211a4ae24d9a7eaa"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "New TypeBox DTO schemas for the dashboard overview response, owned by the contracts package with no Elysia, Drizzle, or React imports. This follows the existing cross-boundary DTO convention; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/contracts/src/admin-dashboard.ts.",
+        "Changed: packages/contracts/src/admin-dashboard.ts at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+      ]
+    },
+    "source:packages/db/src/s53-migration.sql": {
+      "fingerprint": "78d7667b724b64ba5abe32c354754bcad074682c64879ad8ce8a89ff10e1fd75",
+      "snapshot": {
+        "packages/db/src/s53-migration.sql": "abae2d567b5bfcad57b2f131e0fc914c9f5bd71e433fbe860261eb7cbfe57fcb"
+      },
+      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "outcome": "no-change",
+      "reason": "Adds the S5.3 BOSP reminder settings and acknowledgment tables with single-row and non-empty-value checks. This is a schema extension within the existing migration sequence; no guidance change.",
+      "evidence": [
+        "Reviewed the #331 diff at 9fbfe6e8 for packages/db/src/s53-migration.sql.",
+        "Changed: packages/db/src/s53-migration.sql at 9fbfe6e8.",
+        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
       ]
     }
   }
