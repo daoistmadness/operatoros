@@ -192,15 +192,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "32986a39054f7f81cf736153b9d45105e087a0152a2bb2b9cb65ae0bd3d7e16c",
+      "fingerprint": "80f80680a06b3074cd5e582b2dc9ac2d7b880ac37899f40677a29f6b2f610755",
       "snapshot": {
-        "apps/api/src/app.ts": "660ead096ce3e55e4ee653f1cf9b72c69c1905c4e95a12cbf90a58160c52e0b7"
+        "apps/api/src/app.ts": "6360aa209017d38c77b65b68cd22b9ef8e4c4b65cc1eb7ed2ed3e1f9994753db"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/src/app.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "83d10b39b6d48511d0c93275bae88abbb17d138e567e7abc8b644ed06dd0333c",
+      "fingerprint": "85832ce7df4ee50925509acfcd59cf15b55ed494604cd1e619f73a575b3ae3e0",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "26e16bd5395224346073f2d4713be01eecb625b4bb95b58e57f4a1af702c9efd"
+        "apps/web/src/generated/openapi/schema.ts": "a6488ff5b9da05c2d4601dc4b647e21bc424023d5ff18e3b6db0d66364400b01"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +515,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "b36b5325af1ec993c1f8617dca2f2a66a003deee383b367d5e60e02935123ffa",
+      "fingerprint": "8d23b8c30a98fa8e07250e895b7bece2269e8fc176dcb229ba788171deb55726",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "bfe96106ab0f71e6299d481b2aa240d796de3d26dac5a4c48cb56c2711ed87ff"
+        "openapi/operatoros.openapi.json": "978abe01e3875ca22bd78285972794b620556a69be2dc80ca86524d5b1abe919"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: openapi/operatoros.openapi.json at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -788,15 +788,15 @@
       ]
     },
     "source:packages/contracts/src/index.ts": {
-      "fingerprint": "ae4b3416f0938f6cccccef0ab9061840c841939aa4899c86437e26c29a7314d6",
+      "fingerprint": "08fca84c6ade6f88e72c65471d8b6321d71742353ee23f261608e00f02fb5129",
       "snapshot": {
-        "packages/contracts/src/index.ts": "8880206c72f8d9a9bad1271ff70bca58374e9c65bc02a877d84ea67ebd0bc755"
+        "packages/contracts/src/index.ts": "ce8946fd7cb4c847d44d9c082a8b108d4022dcc5d4f7448b036cfce8c097574f"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/contracts/src/index.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: packages/contracts/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/contracts/tests/backup.test.ts": {
@@ -1220,15 +1220,15 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "bd14ee11d93325ab6d6695e9e39e3804523caab2691686b867bde36e4494660a",
+      "fingerprint": "8a84f158a63dc7604336eb32775c58fd42388c5a76acc0fe98c2ee20b5eb2899",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "8a625790a1d867450e5846b0932b95f5bbe8efeb39232295fa27f3ae5ff1db12"
+        "apps/web/src/pages/Dashboard.tsx": "6386be7a3541cc124331cefd9d5179651f96304b8fc4b56002a728b48d47c072"
       },
-      "head": "2c1cc37b2a9e6c6b0c206401d03915f68926d3ec",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the Router 8 migration diff against registered Elysia guidance: source and test changes only replace react-router-dom import specifiers; manifests and bun.lock only align React and Router versions. No Elysia runtime, backend, example, skill, or planning guidance changed. Frozen install, skill validation, workspace typechecks, tests, and builds pass; no guidance update is warranted.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 2c1cc37b2a9e6c6b0c206401d03915f68926d3ec"
+        "Changed: apps/web/src/pages/Dashboard.tsx at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -2921,15 +2921,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "1ff2397de6052bc4a5d68a7ea6503f1f4c5210ab9e0c86133c6e469389bbd267",
+      "fingerprint": "6f1fef91f3e4853942a91a04bc48c085c5a06f683c5fbcf69ae42a212925f676",
       "snapshot": {
-        "CHANGELOG.md": "1dbf92fa44e3f2601292f0ee9a3d5a33ed6bb5d01f19f512edfaaff36352753c"
+        "CHANGELOG.md": "eb4273db1fb434e2efd272c63f0978a94ba88ec850e9f505eaff78322a0e0111"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: CHANGELOG.md at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: CHANGELOG.md at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:COMMANDS.md": {
@@ -5207,15 +5207,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "3cbb9fe43646f350f83afe34ea970577d5f4b52869e873c8f6b61f5dccc6a92f",
+      "fingerprint": "4feb53e7ff1d5b2809dbc1ed393f471f6ff9f808ec3cd5d3f539583066e9ff43",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "5c21f2e61e3be8e4f18c1ce58d097ee4c3cae74659e9179e0e8f3f95edd21610"
+        "apps/api/tests/openapi-contract.test.ts": "27bdb08fe3e18ee3312a58bac8b1425d27b9833903c69549f22359e8bb4b33a5"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/tests/openapi-contract.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5255,15 +5255,15 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "ffc20b760f90efef0fa8e695c1dd2211307bce3995695f1743fb7984322be3e8",
+      "fingerprint": "cc8b749e863ff2b108437136c8df194c22b4cc9773a4259aefa89e6fd6947691",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "d0becebca3c9483bd05dd748beabc02d07c5f5c52711f8cf210494be9d3074b8"
+        "apps/web/src/lib/query/queryKeys.ts": "bf6247dc57555ec833c47ed1591a250cb86cd63fbb65efa41c0a580dfa34a44d"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5291,51 +5291,51 @@
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "ff3b78c71555f9fb604215a32778367b94836519d4700c893f95a064e20bc9d7",
+      "fingerprint": "ecaff3bf85e20cac348822868b1cbaa3432877de44483bb6328982bd0e0437e9",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "1b359b64b4d25b0f32dd1e672f9e8c56d0e902620b79f8fd48be6a5650d3789e"
+        "packages/db/src/bootstrap.ts": "cf76ce60844e78e2ad43c1dc09a7198aa0e188371a89d588d2ea318a08d46f98"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/src/bootstrap.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/src/index.ts": {
-      "fingerprint": "1cec902dec593ea74a236479ff85cb9e08151129b260d77fa47beea6300470ad",
+      "fingerprint": "a343b4d45268c120fde22106534dccdcac6599e77b070a1000b59e1479b0dad0",
       "snapshot": {
-        "packages/db/src/index.ts": "97ca3aa123934b4e2e15f1528684990a3de43a101b15605ccb451fac10805567"
+        "packages/db/src/index.ts": "281844349cc917f0c45fd876b6a2f04ec1254f9ca4155a413a726b9724988898"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/src/index.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "6f2f3d3246df609d367c73cd6fc0968e81651db50cfa4cbf439500c9a2815464",
+      "fingerprint": "2685aa1f3b5b8762872d122845490feb677baa53419711512ee0a7a57d6f9a86",
       "snapshot": {
-        "packages/db/src/manifest.ts": "995eb5f92c2c2b72980967d999cc463bcce9a2e48ae568c9456347f292c112de"
+        "packages/db/src/manifest.ts": "19bd9c0bf44f5ba2b989e339e2fcddf87413709c3a377a783b7be64fdc573e26"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/src/manifest.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "e02053bf256e7c1bc7924deb8c9680595ee4c8f1b24740e8a85956e39ba2cde9",
+      "fingerprint": "6695fb4a43705d2e2565be8c7d9c8b0637d7bf90503e2c7db3762a4cc105f70f",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "2618a12dbd31c5aab83390dc2b13c464abeb0d71a2d8c003dfcb7cc249911d05"
+        "packages/db/src/migrate-existing.ts": "9a11c652f86a4ae9df4c00ed86e7f1d696ca6cee1ab7444aea8aa8c2d53b60e3"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/src/migrate-existing.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5351,51 +5351,51 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "b8fc0c8d6fba3e7b0c05974ac3db605140c57d6b241458906c74708f08f55823",
+      "fingerprint": "a6ba49704360dea23d915ae399c3f5046a8f0749d22b85b1c63e3c2aafd9f02f",
       "snapshot": {
-        "packages/db/src/schema.ts": "402d7bd611741f4c8daa92d0cbaf7a84c02e1ed36785fb611594ae3eb87f55b9"
+        "packages/db/src/schema.ts": "0c4f7bcf42a7f7a2282b1efb8ab0c712775c3178f6321245394084a9ed6a1ee7"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/src/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
-      "fingerprint": "cf36f00dbd1d54ba5ddefe559b66b8bec942ac20afc6a49ea7fce3e028813aa8",
+      "fingerprint": "0d88b6049563c0e1a2220c5d9efcbc813945cc6f438ab3ec163eaf34b840fade",
       "snapshot": {
-        "packages/db/tests/bootstrap.test.ts": "4567fd2e75e0fd0f043798962fad7f35f0ebbd88810d7e1740d4d2a2e95a312d"
+        "packages/db/tests/bootstrap.test.ts": "effb678d8f98f1e5773ba04f143a9a6d278be4f207822747d13fa2c4ac0418fa"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/tests/bootstrap.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/tests/bootstrap.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "99143ec77fe9e4e01b174618a9baeac16905280c2929812c2e6f7f8e388b70b3",
+      "fingerprint": "552790a91df7c22d24260d4c11aadda050d7f453d990bd0d163bc8646bf5d211",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "737b970e63d249323a4f2e910eb60fce404d74441a3c4de1684cc46c92ab9906"
+        "packages/db/tests/db.test.ts": "65bf0cf25022338d5deabdb565c6fcb7a0dee89e053a9dba1d8e4f0def719f1a"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/tests/db.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "fd32d19a7bf23edcc80bfeccb1d598e3b7c7a8c13f55608956a3272ed76cbd06",
+      "fingerprint": "73dea37d856050a381beb945e8640c969c85a8eb672a2b830ef038d60f1005aa",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "a561a8f3ead1690b7a3d6df5c3c4b96fbfd2f7e8601589bddd4d543d6da0891d"
+        "packages/db/tests/migrate-existing.test.ts": "e646b3a5842379c0e8c08c2020a9d819ad8279456c378ce244654533f7466992"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/db/tests/migrate-existing.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -5519,17 +5519,15 @@
       ]
     },
     "source:apps/api/src/domains/operator.ts": {
-      "fingerprint": "3f5e178f34e3b164ad623a60bbb9b54baa24540bc6e555ddea2f503d9d18c72b",
+      "fingerprint": "178fc497aec3e55e399934c4573438186abc5f7a6395ab93d7a3125f282f4973",
       "snapshot": {
-        "apps/api/src/domains/operator.ts": "8aa8e3f6b91b5d8bd33d1b21503569ecadd806b4e4b8c8d4db1aed6f62c7987e"
+        "apps/api/src/domains/operator.ts": "efa24fb469622f0a768b33e01ab83d1df7482a51a88a05718bff1f8b182add18"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Adds the dashboard overview, BOSP reminder, and work-queue endpoints plus their SQL inside the existing operator domain module. Responses are mapped to explicit DTOs and authorization scopes follow existing operator routes, so the golden-path guidance remains accurate.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/src/domains/operator.ts.",
-        "Changed: apps/api/src/domains/operator.ts at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: apps/api/src/domains/operator.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/api/tests/core.test.ts": {
@@ -5547,31 +5545,27 @@
       ]
     },
     "source:apps/api/tests/operator-phase6.test.ts": {
-      "fingerprint": "942c083c679da834849ff92eff5cfc1b34aa0e369e9676260571497c4191ccf0",
+      "fingerprint": "2e13bc01f589aa42767bf6f610606198847650a1a24dd5717f94c3ee298d1352",
       "snapshot": {
-        "apps/api/tests/operator-phase6.test.ts": "ccf20104afc26f0f653bc0eb50e599c6a3ef1327d2bb45dc7163cfb48c4c2b89"
+        "apps/api/tests/operator-phase6.test.ts": "77a820db518b10f4839b7bd06970dd66e532cf9a386afe0ae3dbbd815dc8ca21"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "New synthetic-data route tests for dashboard overview, BOSP reminder settings and acknowledgments, and work-queue filtering/authorization. They follow the existing API test structure and add no new guidance.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/operator-phase6.test.ts.",
-        "Changed: apps/api/tests/operator-phase6.test.ts at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: apps/api/tests/operator-phase6.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
-      "fingerprint": "c4c7f2f6148a2cd7c5ab600f15e408310d28f101e644cf8fba811d1250f70bbb",
+      "fingerprint": "16271535b95b738f25ecb68272af325970efc6d09e3c5e0af62d64cde656980b",
       "snapshot": {
-        "apps/web/src/features/operator-work-queue/api/operator.ts": "9a1480969c23f696a94db4e32fcdc6e9ae71cad90d3358c3fa8a436b0a8d6c6f"
+        "apps/web/src/features/operator-work-queue/api/operator.ts": "0b462e5e42bf5f476069a4b098bf6cdfb670dc20c5b372d400bbd581a7439bbe"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Adds feature API functions for dashboard overview, BOSP reminder, and work-queue filters through the canonical API client. It follows the existing feature-API convention; no guidance change.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/api/operator.ts.",
-        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: apps/web/src/features/operator-work-queue/api/operator.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": {
@@ -5615,29 +5609,27 @@
       ]
     },
     "source:e2e/smoke/web/upp-reports.spec.ts": {
-      "fingerprint": "c702b639df89d3dc3e2b7da2242c085fbfecf84c53d7778853aea0c7bf0c0fb1",
+      "fingerprint": "03cc9f35a834f9597a9fc11615f1f3071d10816c981bc7aa48825a284d84e305",
       "snapshot": {
-        "e2e/smoke/web/upp-reports.spec.ts": "ed6ca5479a2a228b04689f82d1863c0999161e2a8f89cd2ed9d7986d3b19b116"
+        "e2e/smoke/web/upp-reports.spec.ts": "af2c0803c890cd8ecd7da88f9959e9efeff4223b3da604c8f3c167fccf93c1a8"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Changed: e2e/smoke/web/upp-reports.spec.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/contracts/src/admin-dashboard.ts": {
-      "fingerprint": "6742e465d47d51b2bcfc14f59e140cb34371bd9d73e1bb8a0915f068b420b822",
+      "fingerprint": "329fb1a8b34a500843dffc22dd59c9a8aad81a7959ab689df2a1b840b16e62a6",
       "snapshot": {
-        "packages/contracts/src/admin-dashboard.ts": "eeb8e92c16e4bbf2e56425f7eb96b49418d9b5eac97c742b211a4ae24d9a7eaa"
+        "packages/contracts/src/admin-dashboard.ts": "553be67c1c877feffd191e130630d665fc0ec71fcc9cfa244d46c87237a6dfcf"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
       "outcome": "no-change",
-      "reason": "New TypeBox DTO schemas for the dashboard overview response, owned by the contracts package with no Elysia, Drizzle, or React imports. This follows the existing cross-boundary DTO convention; no guidance change.",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for packages/contracts/src/admin-dashboard.ts.",
-        "Changed: packages/contracts/src/admin-dashboard.ts at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: packages/contracts/src/admin-dashboard.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     },
     "source:packages/db/src/s53-migration.sql": {
@@ -5830,6 +5822,30 @@
       "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
       "evidence": [
         "Changed: packages/db/src/s52-migration.sql at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+      ]
+    },
+    "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
+      "fingerprint": "4ec3d2b81d82aa99037d4fa221bf0c5e7dc2372f008d602a2f11ab248d1b770d",
+      "snapshot": {
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "e51f7b8e3c6e6b5b0617b2ef634059c2188c8473e724288a52b3cffd501a459f"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+      ]
+    },
+    "source:packages/db/src/s54-migration.sql": {
+      "fingerprint": "72e63c6e5cdb09f3cdfbb6d04e7699956519be25d6734e4d99c5e45a9e970853",
+      "snapshot": {
+        "packages/db/src/s54-migration.sql": "abae2d567b5bfcad57b2f131e0fc914c9f5bd71e433fbe860261eb7cbfe57fcb"
+      },
+      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "outcome": "no-change",
+      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "evidence": [
+        "Changed: packages/db/src/s54-migration.sql at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
       ]
     }
   }
