@@ -12,6 +12,8 @@ async function login(page: Page) {
 }
 
 test("@analytics @critical attendance views share one destination and reuse report filter metadata", async ({ page }) => {
+  // This spec performs a full navigation for every analytics route, so it needs more than the default 30s budget.
+  test.setTimeout(60_000);
   const browserErrors: string[] = [];
   const reportFilterRequests: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));

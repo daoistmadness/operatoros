@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
@@ -14,6 +14,8 @@ const s48Sql = readFileSync(new URL("../src/s48-migration.sql", import.meta.url)
 const s49Sql = readFileSync(new URL("../src/s49-migration.sql", import.meta.url), "utf8");
 const s50Sql = readFileSync(new URL("../src/s50-migration.sql", import.meta.url), "utf8");
 const s51Sql = readFileSync(new URL("../src/s51-migration.sql", import.meta.url), "utf8");
+const s52Sql = readFileSync(new URL("../src/s52-migration.sql", import.meta.url), "utf8");
+const s53Sql = readFileSync(new URL("../src/s53-migration.sql", import.meta.url), "utf8");
 const variantB = await Bun.file(new URL("./fixtures/s46-variant-b.json", import.meta.url)).json() as { targetObjects: string[]; fingerprint: string };
 
 function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
@@ -60,7 +62,7 @@ function academicScope(db: Database): void {
   db.run("INSERT INTO academic_classes (id,academic_year_id,grade_id,class_name) VALUES (1,1,1,'1A')");
 }
 
-describe("Bun S4.6 through S5.1 migrations", () => {
+describe("Bun S4.6 through S5.4 migrations", () => {
   it("migrates Variant B without changing its matching target objects", () => withDatabases((_, path, freshPath) => {
     const db = source(path, "B");
     academicScope(db);
@@ -246,7 +248,7 @@ describe("Bun S4.6 through S5.1 migrations", () => {
   }));
 
 
-  it("upgrades an S5.1 database to S5.2 and preserves its UPP records", () => withDatabases((_, path, freshPath) => {
+  it("upgrades an S5.1 database to S5.4 and preserves its UPP records", () => withDatabases((_, path, freshPath) => {
     const db = new Database(path, { create: true });
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
@@ -270,6 +272,76 @@ describe("Bun S4.6 through S5.1 migrations", () => {
       expect(migrated.client.query("SELECT id,reporting_year FROM upp_monthly_reports WHERE id=1").get()).toEqual({ id: 1, reporting_year: 2026 });
       expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s51" });
       expect(migrated.client.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND (name LIKE 'student_identity_%' OR name LIKE 'student_dapodik_%' OR name = 'student_iom_documents')").get()).toEqual({ count: 5 });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { migrated.close(); fresh.close(); }
+  }));
+
+  it("upgrades S5.2 without changing identity records", () => withDatabases((_, path, freshPath) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    db.exec(s49Sql);
+    db.exec(s50Sql);
+    db.exec(s51Sql);
+    db.exec(s52Sql);
+    expect(schemaFingerprint(db)).toBe(S52_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261027_s52','20261027_s51',?,'{}','SYNTHETIC_FIXTURE','2026-10-27T00:00:00Z')", [S52_SCHEMA_FINGERPRINT]);
+    db.run("INSERT INTO student_masters (id,full_name,normalized_name) VALUES ('synthetic-student-s52','Synthetic Student','synthetic student')");
+    db.run("INSERT INTO student_identity_verifications (student_master_id,identifier_type,verification_status) VALUES ('synthetic-student-s52','NIK','UNVERIFIED')");
+    db.run("INSERT INTO student_identity_verification_history (student_master_id,identifier_type,from_status,to_status,changed_by) VALUES ('synthetic-student-s52','NIK',NULL,'UNVERIFIED','synthetic-admin')");
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT student_master_id,identifier_type,verification_status FROM student_identity_verifications").all()).toEqual([
+        { student_master_id: "synthetic-student-s52", identifier_type: "NIK", verification_status: "UNVERIFIED" },
+      ]);
+      expect(migrated.client.query("SELECT student_master_id,to_status,changed_by FROM student_identity_verification_history").all()).toEqual([
+        { student_master_id: "synthetic-student-s52", to_status: "UNVERIFIED", changed_by: "synthetic-admin" },
+      ]);
+      expect(migrated.client.query("SELECT kk FROM student_masters WHERE id='synthetic-student-s52'").get()).toEqual({ kk: null });
+      migrated.client.run("UPDATE student_masters SET kk='SYNTHETIC-KK-0001' WHERE id='synthetic-student-s52'");
+      expect(migrated.client.query("SELECT kk FROM student_masters WHERE id='synthetic-student-s52'").get()).toEqual({ kk: "SYNTHETIC-KK-0001" });
+      expect(() => migrated.client.run("UPDATE student_identity_verifications SET verification_status='VERIFIED' WHERE student_master_id='synthetic-student-s52'")).toThrow("STUDENT_IDENTITY_VERIFICATION_INVALID_TRANSITION");
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({
+        version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s52",
+      });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { migrated.close(); fresh.close(); }
+  }));
+
+  it("upgrades S5.3 while preserving KK and verification history", () => withDatabases((_, path, freshPath) => {
+    const db = new Database(path, { create: true });
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    db.exec(s49Sql);
+    db.exec(s50Sql);
+    db.exec(s51Sql);
+    db.exec(s52Sql);
+    db.exec(s53Sql);
+    expect(schemaFingerprint(db)).toBe(S53_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261027_s53','20261027_s52',?,'{}','SYNTHETIC_FIXTURE','2026-10-27T00:00:00Z')", [S53_SCHEMA_FINGERPRINT]);
+    db.run("INSERT INTO student_masters (id,full_name,normalized_name,kk) VALUES ('synthetic-student-s53','Synthetic Student','synthetic student','SYNTHETIC-KK-0003')");
+    db.run("INSERT INTO student_identity_verifications (student_master_id,identifier_type,verification_status) VALUES ('synthetic-student-s53','KK','IDENTIFIER_ENTERED')");
+    db.run("INSERT INTO student_identity_verification_history (student_master_id,identifier_type,from_status,to_status,changed_by) VALUES ('synthetic-student-s53','KK','UNVERIFIED','IDENTIFIER_ENTERED','synthetic-admin')");
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT kk FROM student_masters WHERE id='synthetic-student-s53'").get()).toEqual({ kk: "SYNTHETIC-KK-0003" });
+      expect(migrated.client.query("SELECT identifier_type,verification_status FROM student_identity_verifications WHERE student_master_id='synthetic-student-s53'").get()).toEqual({ identifier_type: "KK", verification_status: "IDENTIFIER_ENTERED" });
+      expect(migrated.client.query("SELECT to_status,changed_by FROM student_identity_verification_history WHERE student_master_id='synthetic-student-s53'").get()).toEqual({ to_status: "IDENTIFIER_ENTERED", changed_by: "synthetic-admin" });
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s53" });
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
     } finally { migrated.close(); fresh.close(); }
   }));

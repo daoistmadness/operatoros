@@ -5,6 +5,7 @@ export type NisnStatusFilter = Static<typeof NisnStatusFilterSchema>;
 
 export const IdentityVerificationStatusSchema = Type.Union([
   Type.Literal("UNVERIFIED"),
+  Type.Literal("IDENTIFIER_ENTERED"),
   Type.Literal("VERIFIED"),
   Type.Literal("NEEDS_CORRECTION"),
 ]);

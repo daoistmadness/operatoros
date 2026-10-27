@@ -97,6 +97,8 @@ function ReportRow({ item, month }: { item: UppReportSummaryDto; month: string }
   const errorText = mutationError ? getPageApiError(mutationError, "The report could not be updated.") : null;
   const fileLabelId = `upp-file-${item.school_unit_id}`;
   const notesId = `upp-notes-${item.school_unit_id}`;
+  const submissionNotesId = `upp-submission-notes-${item.school_unit_id}`;
+  const evidenceId = `upp-evidence-${item.school_unit_id}`;
 
   return <>
     <tr className="border-t border-border align-top">
@@ -123,10 +125,10 @@ function ReportRow({ item, month }: { item: UppReportSummaryDto; month: string }
           </>
           {item.submission_status === "UPLOADED" && item.id !== null && <Button type="button" size="sm" variant="outline" onClick={() => changeStatus.mutate("READY_FOR_SUBMISSION")} disabled={changeStatus.isPending}>Ready for submission</Button>}
           {item.submission_status === "READY_FOR_SUBMISSION" && item.id !== null && <>
-            <Label htmlFor={`upp-submission-notes-${item.id}`}>Submission notes</Label>
-            <Textarea id={`upp-submission-notes-${item.id}`} value={submissionNotes} onChange={(event) => setSubmissionNotes(event.target.value)} maxLength={2000} />
-            <Label htmlFor={`upp-evidence-${item.id}`}>Optional submission evidence</Label>
-            <Input id={`upp-evidence-${item.id}`} type="file" onChange={(event) => setEvidence(event.target.files?.[0] ?? null)} />
+            <Label htmlFor={submissionNotesId}>Submission notes</Label>
+            <Textarea id={submissionNotesId} value={submissionNotes} onChange={(event) => setSubmissionNotes(event.target.value)} maxLength={2000} />
+            <Label htmlFor={evidenceId}>Optional submission evidence</Label>
+            <Input id={evidenceId} type="file" onChange={(event) => setEvidence(event.target.files?.[0] ?? null)} />
             <Button type="button" size="sm" onClick={() => changeStatus.mutate("SUBMITTED")} disabled={changeStatus.isPending}>{changeStatus.isPending ? "Saving…" : "Mark submitted"}</Button>
           </>}
           {errorText && <p role="alert" className="text-xs text-rose-700">{errorText}</p>}

@@ -1,8 +1,16 @@
 import { storeReportFile, storedReportFile, type FileMetadata } from "./upp-report-files";
+import { PDFDocument } from "pdf-lib";
 
-export function isPdfDocument(bytes: Uint8Array): boolean {
+export async function isPdfDocument(bytes: Uint8Array): Promise<boolean> {
   if (bytes.length < 5) return false;
-  return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2d; // %PDF-
+  if (bytes[0] !== 0x25 || bytes[1] !== 0x50 || bytes[2] !== 0x44 || bytes[3] !== 0x46 || bytes[4] !== 0x2d) return false;
+  try {
+    const document = await PDFDocument.load(bytes, { ignoreEncryption: true });
+    document.getPageCount();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function sanitizeIomFilename(name: string, fallback = "iom_document.pdf"): string {
@@ -12,9 +20,6 @@ export function sanitizeIomFilename(name: string, fallback = "iom_document.pdf")
 }
 
 export function storeIomPdfFile(dataDir: string, bytes: Uint8Array): FileMetadata {
-  if (!isPdfDocument(bytes)) {
-    throw new Error("IOM_PDF_INVALID_HEADER");
-  }
   return storeReportFile(dataDir, bytes);
 }
 

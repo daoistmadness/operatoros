@@ -107,6 +107,7 @@ describe('route definitions', () => {
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/calendar')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/override-review')?.authorization).toEqual({ type: 'capability', capability: 'view_attendance_corrections' });
     expect(authenticatedRoutes.find(({ path }) => path === '/attendance/machine-import')?.authorization).toEqual({ type: 'capability', capability: 'import_attendance' });
+    expect(authenticatedRoutes.find(({ path }) => path === '/reports/upp')?.authorization).toEqual({ type: 'role', role: 'admin' });
     for (const path of ['/upload', '/upload-center', '/data-portability', '/upload-history']) {
       expect(authenticatedRoutes.find((route) => route.path === path)?.authorization).toEqual({ type: 'role', role: 'admin' });
     }

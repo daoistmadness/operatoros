@@ -10,7 +10,8 @@ const schoolUnitsSql = readFileSync(new URL("./s49-migration.sql", import.meta.u
 const staffMonthlyActivitySql = readFileSync(new URL("./s50-migration.sql", import.meta.url), "utf8");
 const uppReportsSql = readFileSync(new URL("./s51-migration.sql", import.meta.url), "utf8");
 const studentAdminSql = readFileSync(new URL("./s52-migration.sql", import.meta.url), "utf8");
-const bospReminderSql = readFileSync(new URL("./s53-migration.sql", import.meta.url), "utf8");
+const studentVerificationSql = readFileSync(new URL("./s53-migration.sql", import.meta.url), "utf8");
+const bospReminderSql = readFileSync(new URL("./s54-migration.sql", import.meta.url), "utf8");
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
 const schoolUnitTriggerStart = schoolUnitsSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
@@ -48,7 +49,11 @@ export function installS52StudentAdminSchema(client: Database): void {
   client.exec(studentAdminSql);
 }
 
-export function installS53BospReminderSchema(client: Database): void {
+export function installS53StudentVerificationSchema(client: Database): void {
+  client.exec(studentVerificationSql);
+}
+
+export function installS54BospReminderSchema(client: Database): void {
   client.exec(bospReminderSql);
 }
 
@@ -70,7 +75,8 @@ export function createFreshDatabase(path: string): void {
       installS50StaffMonthlyActivitySchema(client!);
       installS51UppReportsSchema(client!);
       installS52StudentAdminSchema(client!);
-      installS53BospReminderSchema(client!);
+      installS53StudentVerificationSchema(client!);
+      installS54BospReminderSchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +

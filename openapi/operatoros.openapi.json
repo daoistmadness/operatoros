@@ -4447,6 +4447,591 @@
         ]
       }
     },
+    "/api/student-masters/{student_master_id}/identity-verifications": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIdentity-verifications"
+      },
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idIdentity-verifications"
+      }
+    },
+    "/api/student-masters/{student_master_id}/dapodik-status": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idDapodik-status"
+      },
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idDapodik-status"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIom-documents"
+      },
+      "post": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStudent-mastersByStudent_master_idIom-documents"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"
+      }
+    },
     "/api/staff": {
       "get": {
         "operationId": "list_staff_api_staff_get",
@@ -10936,588 +11521,6 @@
             "description": "The request was refused."
           }
         }
-      }
-    },
-    "/api/student-masters/{student_master_id}/identity-verifications": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIdentity-verifications"
-      },
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idIdentity-verifications"
-      }
-    },
-    "/api/student-masters/{student_master_id}/dapodik-status": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idDapodik-status"
-      },
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idDapodik-status"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIom-documents"
-      },
-      "post": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "postApiStudent-mastersByStudent_master_idIom-documents"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"
       }
     },
     "/api/config/jenjang": {

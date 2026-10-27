@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 
-describe("Bun S5.1 fresh bootstrap", () => {
+describe("Bun S5.4 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -20,12 +20,17 @@ describe("Bun S5.1 fresh bootstrap", () => {
           { name: "school_units" }, { name: "staff_school_unit_assignment_versions" },
         ]);
         expect((db.query("PRAGMA table_info(school_units)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("version");
+        expect((db.query("PRAGMA table_info(student_masters)").all() as Array<{ name: string }>).map((column) => column.name)).toContain("kk");
         expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('staff_monthly_activity_periods','staff_monthly_activities','staff_monthly_activity_history') ORDER BY name").all()).toEqual([
           { name: "staff_monthly_activities" }, { name: "staff_monthly_activity_history" }, { name: "staff_monthly_activity_periods" },
         ]);
         expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('upp_monthly_reports','upp_report_versions','upp_report_submission_evidence','upp_report_history') ORDER BY name").all()).toEqual([
           { name: "upp_monthly_reports" }, { name: "upp_report_history" }, { name: "upp_report_submission_evidence" }, { name: "upp_report_versions" },
         ]);
+        expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('bosp_annual_reminder_settings','bosp_reminder_acknowledgments') ORDER BY name").all()).toEqual([
+          { name: "bosp_annual_reminder_settings" }, { name: "bosp_reminder_acknowledgments" },
+        ]);
+        expect(db.query("SELECT advance_notice_days FROM bosp_annual_reminder_settings WHERE id=1").get()).toEqual({ advance_notice_days: 60 });
         const unitId = Number(db.run("INSERT INTO school_units (name) VALUES ('Synthetic UPP Unit')").lastInsertRowid);
         const userId = Number(db.run("INSERT INTO users (username,password_hash,role) VALUES ('synthetic-upp-admin','synthetic-hash','admin')").lastInsertRowid);
         const reportId = Number(db.run("INSERT INTO upp_monthly_reports (school_unit_id,reporting_year,reporting_month) VALUES (?,2026,10)", [unitId]).lastInsertRowid);
