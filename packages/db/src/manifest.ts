@@ -16,6 +16,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s50",
   "20261027_s51",
   "20261027_s52",
+  "20261027_s53",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -27,7 +28,19 @@ export const S48_SCHEMA_FINGERPRINT =
 export const S49_SCHEMA_FINGERPRINT =
   "d84583de1ee330c54bb98b2cc920381cda6282f5809cbd5729bb21f1fcedad6e";
 
+export const S50_SCHEMA_FINGERPRINT =
+  "53c13b4625f61ecf61f6866671e36b327e44739253cf16589b7dc3bc598dc265";
+
+export const S51_SCHEMA_FINGERPRINT =
+  "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
+
+export const S52_SCHEMA_FINGERPRINT =
+  "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
+
 export const CURRENT_SCHEMA_VERSION = SCHEMA_MIGRATIONS.at(-1)!;
+
+export const CURRENT_SCHEMA_FINGERPRINT =
+  "1760e005e5e481a27fad8485c572b944f717d3552f647ad61b12dd1b14206a30";
 
 export const S46_SOURCE_VARIANTS = {
   S4_6_VARIANT_A: "5b5ac2055aee5e90ee0f83ca5d309bd3503f8ecb61372cb491113de55cfb0ee4",
@@ -40,14 +53,6 @@ export function compareSchemaVersions(left: string, right: string): -1 | 0 | 1 |
   if (leftIndex < 0 || rightIndex < 0) return undefined;
   return leftIndex === rightIndex ? 0 : leftIndex < rightIndex ? -1 : 1;
 }
-export const S50_SCHEMA_FINGERPRINT =
-  "53c13b4625f61ecf61f6866671e36b327e44739253cf16589b7dc3bc598dc265";
-
-export const S51_SCHEMA_FINGERPRINT =
-  "4c4f32112c4cd0270dcb9cd66bb7e116e7c4ec84f6b5c5eac62b5c1e8534a489";
-
-export const CURRENT_SCHEMA_FINGERPRINT =
-  "e476f008cc75ec36f75dcc5db57d114f76d3986ce480eac41a0c1fbe3af52007";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",

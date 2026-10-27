@@ -170,6 +170,8 @@ export const queryKeys = {
   operator: {
     all: ["operator"] as const,
     workQueue: ["operator", "work-queue"] as const,
+    dashboardOverview: ["operator", "dashboard-overview"] as const,
+    bospReminder: ["operator", "bosp-reminder"] as const,
   },
   operationsAudit: { all: ["operations-audit"] as const },
 };

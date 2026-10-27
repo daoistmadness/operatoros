@@ -88,7 +88,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     authRoutes(app, context);
     coreRoutes(app, context);
     staffMonthlyActivityRoutes(app, context);
-    const reportDataDir = _config.dataPaths?.dataDir ?? (context.database.path !== ":memory:" ? dirname(context.database.path) : undefined);
+    const reportDataDir = _config.dataPaths?.dataDir ?? (context.database?.path && context.database.path !== ":memory:" ? dirname(context.database.path) : undefined);
     uppReportRoutes(app, context, {
       storageDir: reportDataDir,
       maxFileSizeBytes: _config.uppReportMaxFileSizeBytes ?? DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES,

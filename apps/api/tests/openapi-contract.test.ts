@@ -82,8 +82,8 @@ describe("full OpenAPI contract", () => {
         const operation = reference.paths[path]?.get as { parameters?: Array<{ name?: string; in?: string }> };
         expect(operation.parameters).toContainEqual(expect.objectContaining({ name: "school_unit_id", in: "query" }));
       }
-      expect(Object.keys(candidateOperations)).toHaveLength(422);
-      expect(Object.keys(operations(reference))).toHaveLength(422);
+      expect(Object.keys(candidateOperations)).toHaveLength(434);
+      expect(Object.keys(operations(reference))).toHaveLength(435);
       expect(reference.paths["/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel"]?.post).toBeDefined();
       for (const path of [
         "/api/staff/monthly-activities",

@@ -1422,3 +1422,21 @@ export const student_iom_documents = sqliteTable("student_iom_documents", {
     check("ck_student_iom_size", sql`${table.file_size_bytes} > 0`),
     check("ck_student_iom_filename", sql`length(trim(${table.original_filename})) BETWEEN 1 AND 255`),
 ]);
+
+export const bosp_annual_reminder_settings = sqliteTable("bosp_annual_reminder_settings", {
+    "id": integer().primaryKey(),
+    "advance_notice_days": integer().notNull().default(60),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    check("ck_bosp_settings_single_row", sql`${table.id} = 1`),
+]);
+
+export const bosp_reminder_acknowledgments = sqliteTable("bosp_reminder_acknowledgments", {
+    "calendar_year": integer().primaryKey(),
+    "acknowledged_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "acknowledged_by": text().notNull(),
+    "notes": text(),
+}, (table) => [
+    check("ck_bosp_ack_by", sql`length(trim(${table.acknowledged_by})) > 0`),
+    check("ck_bosp_ack_notes", sql`${table.notes} IS NULL OR length(trim(${table.notes})) > 0`),
+]);

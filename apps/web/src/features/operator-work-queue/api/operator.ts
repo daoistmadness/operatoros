@@ -31,7 +31,15 @@ export type OperatorWorkQueueItem = OperatorWorkQueueCommon &
         };
       }
     | {
-        item_type: 'FOLLOWUP_CASE' | 'FOLLOWUP_CANDIDATE' | 'UNMATCHED_DEVICE';
+        item_type:
+          | 'FOLLOWUP_CASE'
+          | 'FOLLOWUP_CANDIDATE'
+          | 'UNMATCHED_DEVICE'
+          | 'STUDENT_VERIFICATION'
+          | 'STUDENT_IDENTITY_CORRECTION'
+          | 'STUDENT_DAPODIK_CORRECTION'
+          | 'STAFF_PTK_REVIEW'
+          | 'UPP_REPORT_PENDING';
         metadata: Record<string, unknown>;
       }
   );
@@ -42,6 +50,39 @@ export type SelfConfirmCorrectionPayload = {
   expected_version: number;
   confirmation: string;
   confirmation_note: string;
+};
+
+export type DashboardOperationalOverviewResponse = {
+  students: {
+    active_count: number;
+    nisn_inputted_count: number;
+    nisn_not_inputted_count: number;
+    pending_verification_count: number;
+  };
+  staff: {
+    active_count: number;
+    monthly_ptk_completed_count: number;
+    monthly_ptk_pending_count: number;
+  };
+  upp: {
+    current_period: string;
+    status: string | null;
+    has_workbook: boolean;
+    submitted_at: string | null;
+  };
+};
+
+export type BospReminderStatusResponse = {
+  calendar_year: number;
+  cutoff_date: string;
+  advance_notice_days: number;
+  is_in_notice_window: boolean;
+  days_remaining: number;
+  is_acknowledged: boolean;
+  acknowledged_at: string | null;
+  acknowledged_by: string | null;
+  notes: string | null;
+  is_blocking: boolean;
 };
 
 export async function fetchDeploymentMode(): Promise<DeploymentModeResponse> {
@@ -61,6 +102,45 @@ export async function fetchOperatorWorkQueue(signal?: AbortSignal): Promise<Oper
     ...(signal ? { signal } : {}),
   });
   return response.data || [];
+}
+
+export async function fetchDashboardOverview(signal?: AbortSignal): Promise<DashboardOperationalOverviewResponse> {
+  const response = await apiRequest<DashboardOperationalOverviewResponse>({
+    path: '/api/operator/dashboard-overview',
+    ...(signal ? { signal } : {}),
+  });
+  return response.data;
+}
+
+export async function fetchBospReminderStatus(signal?: AbortSignal): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder',
+    ...(signal ? { signal } : {}),
+  });
+  return response.data;
+}
+
+export async function acknowledgeBospReminder(payload: {
+  calendar_year: number;
+  notes?: string | null;
+}): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder/acknowledge',
+    method: 'POST',
+    data: payload,
+  });
+  return response.data;
+}
+
+export async function updateBospReminderSettings(payload: {
+  advance_notice_days: number;
+}): Promise<BospReminderStatusResponse> {
+  const response = await apiRequest<BospReminderStatusResponse>({
+    path: '/api/operator/bosp-reminder/settings',
+    method: 'PUT',
+    data: payload,
+  });
+  return response.data;
 }
 
 export async function selfConfirmCorrection(
