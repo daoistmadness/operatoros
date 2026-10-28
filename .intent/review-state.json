@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "a2cef64103eccfb47495cb2760a2ecc1fdf9e44aaaf579c0c0c00ac606e41fde",
+      "fingerprint": "ae0a61b38ee1c32623815956fc90fa610b6114237c740e00967acbe409602a62",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
+        "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
         "bun.lock": "99b2176547f9d28ee9585f4dd508423061ed596a0e9708118e74aa6e122feca9",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "c62c6682b85877a3fe59f2a6aa7eb090cd66bac7",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Permit TanStack Router in AGENTS.md conventions; skill guidance unaffected.",
       "evidence": [
-        "Changed: docs/reference/security-model.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: AGENTS.md"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "cc7a2bb05966e9e0d97e1c49eb09fca5a5258f9b0a558e1a85f5689c573b90ef",
+      "fingerprint": "d543f241043b595c1ddf0dae8482a56833a31ffc2b1f6d60d365191083d75420",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
-        "AGENTS.md": "a34cd74f7987ab490d9d6c382b1fb05435fabf497ac59abf17809b12d36bcd5f",
+        "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "c62c6682b85877a3fe59f2a6aa7eb090cd66bac7",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Permit TanStack Router in AGENTS.md conventions; skill guidance unaffected.",
       "evidence": [
-        "Changed: docs/reference/security-model.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: AGENTS.md"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2920,15 +2920,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2eb1e3b31334a40f169f202bfae4fb8eb748a52521a05083f2faa36ba8a25235",
+      "fingerprint": "06756d4c50df1b61fd392360a6deae075b4784e99470daf577df13131056f237",
       "snapshot": {
-        "CHANGELOG.md": "2199ee8cb05c6d7cae09f57341f93a432f1c57103dfd10827357460bd32de526"
+        "CHANGELOG.md": "c86fa4f4c19668d633f3b9c0f7db9cb57d0e0b9220110a3f4ac771ac3a2c43f1"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "c62c6682b85877a3fe59f2a6aa7eb090cd66bac7",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Permit TanStack Router in AGENTS.md conventions; skill guidance unaffected.",
       "evidence": [
-        "Changed: CHANGELOG.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: CHANGELOG.md"
       ]
     },
     "source:COMMANDS.md": {
