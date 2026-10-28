@@ -1046,15 +1046,15 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "cca48d9c5142c6c99458bec8a6a6b980fb8d031907cff4cde00a8a88710fbbd0",
+      "fingerprint": "c602713812725e3addd3fe011d0aef823b03a0fa6fcf112b8aaa24ddd4f6fe94",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "fe900d5cabf10e2ec1697b5bf4abd5e6cd6492f7bc482ed8351230603036c7a7"
+        "apps/api/tests/auth.test.ts": "3b26e620b99f9b26253dd3cf792e73ca4d8d3ced67f06c1cb138900729969cc1"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
-        "Changed: apps/api/tests/auth.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: apps/api/tests/auth.test.ts at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
@@ -5952,15 +5952,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.tsx": {
-      "fingerprint": "a9850648849d40b57cd95f0461c56ee1dbe9d4782f393503b8954abab300d0b9",
+      "fingerprint": "615be5e65d4e465cf9d12e6903aa27c7fda32720c06306f98055a8aae0cf28b4",
       "snapshot": {
-        "apps/web/src/components/AppShell.tsx": "61e7db2cecb190d57eabd2159e92a1e61d290fcac5a2a235fff780040f9a11f2"
+        "apps/web/src/components/AppShell.tsx": "a4a7c46330c3de3a28faab8e7756a9d9c0dcad0832ad08dea16bea8a7892cf9f"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
-        "Changed: apps/web/src/components/AppShell.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/components/AppShell.tsx at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     },
     "source:apps/web/src/components/NotFoundPage.tsx": {
@@ -6012,15 +6012,15 @@
       ]
     },
     "source:apps/web/src/lib/router/access.ts": {
-      "fingerprint": "6cd7703d07b230e367101e37135eca85f2aaf8d90852aae1af3a66feaabb4c36",
+      "fingerprint": "0c0683f090576192840619143d8df5b21802fdb3abc91cd84848bfcf1d6973bf",
       "snapshot": {
-        "apps/web/src/lib/router/access.ts": "d49afe42cc4d373edcd43eb9c42fdf825b87d047c35bbdd08dda9ec4eb977e12"
+        "apps/web/src/lib/router/access.ts": "f652fe36e03fd7f04f2dcfaf4d3aec92ed2682ead201bfb382ae4269689c6772"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
-        "Changed: apps/web/src/lib/router/access.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/lib/router/access.ts at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     },
     "source:apps/web/src/lib/router/search.test.tsx": {
@@ -6936,15 +6936,15 @@
       ]
     },
     "source:apps/web/src/routes/routeTree.test.tsx": {
-      "fingerprint": "97626d2b2f60d9cc7d84e8dd66b481c6bf05d5ed5b77dcdde117805f486b285b",
+      "fingerprint": "315e03e8b9672779f359ec3c60c7094e5d7ff86a201077e722703ca3683367c4",
       "snapshot": {
-        "apps/web/src/routes/routeTree.test.tsx": "0db9aa6587cd5631e5290dde9e620b1c900d27f93f2cf7d69f864d29ff4d15bf"
+        "apps/web/src/routes/routeTree.test.tsx": "374f01de40dfb1aa3e8cc79477d3a9b645788b11a754c7c99208f41f241436aa"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
-        "Changed: apps/web/src/routes/routeTree.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/routes/routeTree.test.tsx at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     },
     "source:apps/web/src/test/TestRouter.tsx": {
@@ -6972,15 +6972,15 @@
       ]
     },
     "source:e2e/smoke/web/data-management-import-export.spec.ts": {
-      "fingerprint": "e3711c34c9434ee310e6a83f6a46c5003bf74ac8e848fb37fff865087fd1964d",
+      "fingerprint": "47b248872068235b14c25a535524300bbe873d53418e1d4e02790f605875a3b9",
       "snapshot": {
-        "e2e/smoke/web/data-management-import-export.spec.ts": "2dd9c1647c6811ac9e8bd2bcaa583961cbfdb8c88bf49dabc1d7e1e2d57d4eff"
+        "e2e/smoke/web/data-management-import-export.spec.ts": "4dcf1293d9642c3133e4a64f38b51db5dd801eec57c9fd8d155f2a242e89a023"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
-        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     },
     "source:e2e/smoke/web/student-360-overview.spec.ts": {
@@ -7041,6 +7041,18 @@
       "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
       "evidence": [
         "Changed: scripts/tests/test-scope.test.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+      ]
+    },
+    "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
+      "fingerprint": "18d7d68bcaa7835e44a0b4576b2af281fb79edd21dfb38378467ef1d71da62d4",
+      "snapshot": {
+        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "8805b610ea649445b33794a578072d9dc50689146dd57f9db3164008575d487a"
+      },
+      "head": "ab774a224b2cd0c5889d3ef17a7be318fe18d9a9",
+      "outcome": "no-change",
+      "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
+      "evidence": [
+        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
       ]
     }
   }
