@@ -6,7 +6,8 @@ const PRESERVED = new Set(["PROJECT_CONTEXT.md", "f22", "docs/student-data/dapod
 export const FOCUSED_TESTS: Record<string, string[]> = {
   FRONTEND_COMPONENT: ["src/components/common/common-patterns.test.tsx"],
   FRONTEND_FEATURE: ["src/features/readiness/components/SetupOverview.test.tsx", "src/features/operator-work-queue/queries/useOperatorQueries.test.ts", "src/features/jenjang-config/pages/JenjangConfig.test.tsx"],
-  FRONTEND_ROUTE: ["src/routes/routeDefinitions.test.tsx", "src/routes/RouteErrorBoundary.test.tsx"],
+  FRONTEND_ROUTE: ["src/components/auth/RouteGuards.test.tsx", "src/lib/router/search.test.tsx", "src/routes/routeTree.test.tsx"],
+  FRONTEND_TEST_INFRASTRUCTURE: ["src/components/auth/RouteGuards.test.tsx", "src/lib/query/sessionCache.test.ts", "src/routes/routeTree.test.tsx"],
   FRONTEND_API_CLIENT: ["src/lib/api", "src/lib/query"],
   FRONTEND_GENERATED_CONTRACT: ["src/generated/openapi/openapiFoundation.test.ts"],
   BACKEND_UNIT: ["apps/api/tests/core.test.ts"], BACKEND_API: ["apps/api/tests/app.test.ts"],
@@ -29,6 +30,7 @@ export function classifyPath(path: string): string[] {
   if (value === "Makefile" || value.startsWith("scripts/test") || value.startsWith("e2e/") || ["apps/web/playwright.config.ts", "frontend/playwright.config.ts"].includes(value)) return ["E2E_INFRASTRUCTURE"];
   if (value.startsWith("docs/") || /\.(md|txt)$/.test(value)) return ["DOCUMENTATION_ONLY"];
   if (web("src/generated/")) return ["FRONTEND_GENERATED_CONTRACT"];
+  if (web("src/lib/router/")) return ["FRONTEND_ROUTE"];
   if (value.startsWith("apps/api/src/")) {
     if (value.includes("attendance-import")) return ["BACKEND_UPLOAD"];
     if (value.includes("attendance")) return ["BACKEND_ATTENDANCE"];

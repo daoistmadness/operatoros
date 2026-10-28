@@ -39,6 +39,19 @@ describe("test scope decisions", () => {
     for (const path of ["PROJECT_CONTEXT.md", "f22", "docs/student-data/dapodik-roster-import-design.md"]) expect(classifyPath(path)).toEqual([]);
     expect(classifyPath(".\\apps\\web\\src\\routes\\x.tsx")).toEqual(["FRONTEND_ROUTE"]);
   });
+  test("route and auth changes select migration guard, search, and cache tests", () => {
+    expect(buildScope([
+      "apps/web/src/App.tsx",
+      "apps/web/src/lib/query/sessionCache.ts",
+      "apps/web/src/lib/router/access.ts",
+      "apps/web/src/routes/_authenticated.tsx",
+    ]).focused_tests).toEqual([
+      "src/components/auth/RouteGuards.test.tsx",
+      "src/lib/query/sessionCache.test.ts",
+      "src/lib/router/search.test.tsx",
+      "src/routes/routeTree.test.tsx",
+    ]);
+  });
   test("schema and unknown changes escalate; docs select no product suites", () => {
     for (const path of ["packages/db/src/schema.ts", "backend/src/models/student.py", "unknown/x"]) expect(buildScope([path]).backend_full_passes_required).toBe(2);
     const docs = buildScope(["docs/guide.md"]);
