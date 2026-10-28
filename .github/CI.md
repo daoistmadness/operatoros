@@ -2,13 +2,15 @@
 
 ## Workflows
 
-[`ci.yml`](workflows/ci.yml) is the single repository-owned workflow. It runs package checks and the complete browser/API smoke suite in parallel on every PR, merge group, and push to `main`, `master`, or `develop`. No path exclusions apply. All six required check names remain unchanged.
+[`ci.yml`](workflows/ci.yml) is the single repository-owned workflow. On every PR, merge group, and push to `main`, `master`, or `develop`, `preflight` runs before API checks, E2E scope selection, and the complete browser/API smoke suite. The remaining frontend checks run independently. No path exclusions apply. Keep the six existing required check names and add `preflight` as a seventh required check before merging this workflow change.
 
 Pull-request label changes also trigger the workflow so `skip-changelog` takes effect immediately. Any label change reruns the required jobs.
 
-The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs the complete browser/API smoke suite. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
+The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs preflight before the complete browser/API smoke suite. Scheduled release and audit jobs do not depend on preflight. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
 
-The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.4's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates Markdown links, docs structure and index, requires a changed `CHANGELOG.md` with a new bullet under `[Unreleased]` unless `skip-changelog` is applied, and checks current developer commands. It also validates the versioned Agent Skills with TanStack Intent, reviews mapped source changes against the PR base, checks every package file in the tarball, then installs that tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter: every browser scenario, API smoke checks, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
+The `preflight` job validates Markdown links and organization, checks the pull-request changelog, validates agent skills, and runs the Intent maintainer check against the event base. It fetches the pull-request, merge-group, or push base before the maintainer check. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset must require `preflight` so a failed gate cannot be treated as a successful skipped check.
+
+The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.4's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates docs structure and the index, tests documentation checker fixtures, checks current developer commands, and verifies every package file in the agent-skills tarball. It installs the tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter after preflight passes: every browser scenario, API smoke check, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
 
 The previous merged-main E2E run `39458747765` measured `6m22s` inside the regression command, including `4m06s` for the complete smoke suite. The remaining `2m16s` repeated tests and a build already covered by the required `api` job. PR #252 measured `4m02s` for the smoke command after consolidation. See [CI performance](../docs/reference/ci-performance.md) for measured job durations and queue-time limits.
 
@@ -22,6 +24,7 @@ External actions use verified full commit SHAs with release comments: checkout v
 
 ## Caching
 
+- Preflight restores the setup caches and sets `cache-write: false`. It does not save a second copy of the setup caches.
 - The setup action caches mise's download content-addressed store from the checked-in configuration and lockfile. `mise-action` installs with the lockfile in locked mode and rechecks cached downloads against their checksums; it does not restore installed tool trees.
 - Bun downloads use an exact key containing OS, architecture, Bun version, and `bun.lock`; there are no stale restore prefixes.
 - The API job caches `.turbo` by runner, Turbo version, lock/toolchain inputs, and commit. Restore prefixes can reuse older task outputs because Turbo validates its own content hashes. Cache hit and check duration appear in the job summary.
@@ -32,7 +35,7 @@ No cache contains application data, credentials, or database files. PR code uses
 
 ## Running and debugging
 
-Use GitHub Actions **Run workflow** for `CI` to run full validation. Run `bun run security:audit` locally for an isolated lockfile audit. The former E2E and security-audit workflow files are consolidated into CI; older runs can remain visible in GitHub history.
+Run `bun run check:pre-push` before pushing. The hk pre-push hook runs it with the Markdown, skills, Intent maintainer, and changelog checks used by CI. The local changelog check runs in PR mode against the merge base with `origin/main`. Use GitHub Actions **Run workflow** for `CI` to run full validation. Run `bun run security:audit` locally for an isolated lockfile audit. The former E2E and security-audit workflow files are consolidated into CI; older runs can remain visible in GitHub history.
 
 CI summaries report cache hits and Turbo duration. E2E uploads summaries, synthetic database before/after metadata, and JUnit XML for 14 days; failures also upload logs, screenshots, and traces for 7 days. The full release job uploads its E2E evidence on failure. These artifacts do not contain SQLite database files.
 
@@ -44,13 +47,15 @@ Workflow files request only `contents: read`. GitHub's separate default CodeQL s
 
 The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires a PR, up-to-date status checks, zero approving reviews, and no code-owner or last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
 
-The autonomous configuration requires these exact checks from their trusted GitHub integrations:
+The current main ruleset requires these checks from their trusted GitHub integrations. Add `preflight` as a required GitHub Actions check, app ID `15368`, before merging this workflow change. Keep every existing check below unchanged.
 
 - `api` and `frontend` (GitHub Actions, app ID `15368`);
 - `Select E2E scope`, `E2E full regression`, and `E2E regression result` (GitHub Actions, app ID `15368`);
 - `CodeQL` (GitHub Code Scanning, app ID `57789`).
 
-`api` covers frozen installation, the security audit, hk lint/architecture, Turbo workspace typechecks/tests (including security behavior)/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, relative Markdown links, documentation structure/index, current developer guidance, and a new Unreleased changelog bullet per PR (or the `skip-changelog` label). No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
+After that ruleset update, the required set contains the six checks above and `preflight`.
+
+`preflight` covers relative Markdown links, Markdown organization and index, the changelog rule, agent-skill validation, and Intent maintainer review. `api` covers frozen installation, the security audit, hk lint/architecture, Turbo workspace typechecks/tests (including security behavior)/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, documentation checker fixtures, current developer guidance, and the tarball consumer smoke test. No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
 
 Enable repository auto-merge only after effective protection enforces all checks. Allow only squash merges and automatic deletion of merged feature branches; the ruleset protects `main` from deletion. No merge queue is configured; strict up-to-date validation serializes changes against the latest base. Reinspect live repository settings and `/rules/branches/main` before merging; checked-in documentation is not proof of effective protection.
 
