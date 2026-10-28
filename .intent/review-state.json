@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "cb6e1c86c0fcdcbfe54ccd9fd53a16af47873c11fcba098e1d1b3058b92c260a",
+      "fingerprint": "1dd89f069e13deec2cc25e4799e162d1e99ae1aca87569f266948f73a5d9e6aa",
       "snapshot": {
-        ".github/CI.md": "3da225e0dd665a78bfc477300e93e98e89b95e334507796b6287e28fb6646ead",
-        ".github/workflows/ci.yml": "0df438c42b1ca01195f77050787b45c97f63c6336f435b9b6323f5fb8c575783",
+        ".github/CI.md": "78b31cc622f842c89bfacf346373883e570234bdf093cafad487f19b534068fd",
+        ".github/workflows/ci.yml": "12264d197c4fac4ab310fa67bcb4cd349986cb4e78df88c39cb153940b372654",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
@@ -44,20 +44,21 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "803b6103ed471daff2e26d71b85ae71ef597e9de",
+      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
       "outcome": "no-change",
-      "reason": "The follow-up restores the original unauthenticated base fetch. It changes no Elysia behavior, task procedure, or skill recommendation.",
+      "reason": "The workflow and docs now run the same fast-check order as the local pre-push command. Elysia task guidance, supported APIs, and references remain accurate.",
       "evidence": [
+        ".github/CI.md",
         ".github/workflows/ci.yml",
         "packages/agent-skills/skills/elysiajs/SKILL.md",
         "packages/agent-skills/docs/elysiajs.md"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "71cb4883bf4c57ba5fae15900cbb30b8dd0adaf4f4f0c2ede1edc6baab6d17fc",
+      "fingerprint": "57794040452be853cb899c41b6fc26dbbc4fd97f30c7600fab633a508637d630",
       "snapshot": {
-        ".github/CI.md": "3da225e0dd665a78bfc477300e93e98e89b95e334507796b6287e28fb6646ead",
-        ".github/workflows/ci.yml": "0df438c42b1ca01195f77050787b45c97f63c6336f435b9b6323f5fb8c575783",
+        ".github/CI.md": "78b31cc622f842c89bfacf346373883e570234bdf093cafad487f19b534068fd",
+        ".github/workflows/ci.yml": "12264d197c4fac4ab310fa67bcb4cd349986cb4e78df88c39cb153940b372654",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -98,13 +99,14 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "803b6103ed471daff2e26d71b85ae71ef597e9de",
+      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
       "outcome": "no-change",
-      "reason": "The placement decision already records base-aware source review in preflight. Removing an unnecessary token does not change the skill scope or its source map.",
+      "reason": "The existing planning record already assigns these checks to preflight. Their order does not change skill scope, source mapping, or the superseded frontend placement decision.",
       "evidence": [
         "_artifacts/domain_map.yaml",
         "_artifacts/skill_spec.md",
         "_artifacts/skill_tree.yaml",
+        ".github/CI.md",
         ".github/workflows/ci.yml"
       ]
     },
@@ -4437,13 +4439,13 @@
       ]
     },
     "source:docs/reference/ci-performance.md": {
-      "fingerprint": "5c0a3b95f2e508829cb332d50afbb58f6d9c86a80730ac9516519ac4446be0e5",
+      "fingerprint": "3f035fc7ec2407df9077b983d278178e96e200bfd0da0fcaaa6b0f8cc5a60aaa",
       "snapshot": {
-        "docs/reference/ci-performance.md": "cbac5e3f41b623f10ae359d3a14290d5d6fc16e15aa1c9ce582019840987756a"
+        "docs/reference/ci-performance.md": "2ff34febab7eab7ee67ca29060b3c2f0b17900786c8ba9ef339c3011ef3ae8c8"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
       "outcome": "out-of-scope",
-      "reason": "This page records CI ownership and measured performance. It does not provide Elysia development guidance.",
+      "reason": "This update documents the CI step order and remains operational reference material, not Elysia development guidance.",
       "evidence": [
         "docs/reference/ci-performance.md"
       ]

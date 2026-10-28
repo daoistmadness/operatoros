@@ -17,7 +17,7 @@ merge groups, and supported branch pushes. GitHub-managed CodeQL and dependency
 workflows remain separate. All runners in the repository-owned workflow use
 `ubuntu-26.04`; there is no separate compatibility canary or docs job.
 
-- `preflight`: Markdown links and organization, the pull-request changelog, agent-skill validation, and Intent maintainer review. It gates API checks, E2E scope selection, and the full browser/API smoke suite. The main ruleset must require this check before the workflow change merges.
+- `preflight`: Markdown links and organization, agent-skill validation, Intent maintainer review, and the pull-request changelog. It gates API checks, E2E scope selection, and the full browser/API smoke suite. The main ruleset must require this check before the workflow change merges.
 - `api`: frozen install, dependency audit, tooling tests, hk lint/architecture, Turbo package typechecks/tests/build with the TypeScript 7.0.2 CLI, launcher typecheck, the separate Bun 1.4.4 `bun check`, Turbo invalidation proof, disposable runtime health, TypeBox, architecture fixtures, and contract boundaries. It starts after preflight passes.
 - `frontend`: dependency consistency, package-manager regression checks, UI/web boundaries, OpenAPI drift, documentation fixture checks, current developer commands, and the agent-skills package tarball consumer smoke test.
 - `E2E full regression`: complete unfiltered browser/API smoke suite, synthetic reset/enrollment verification, and diagnostic artifacts. It starts after preflight passes, alongside API checks.
