@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "75b2f3561051cab94a20dccb10b99877b6a1ca0e1fd371d03f6cd2fc51c52798",
+      "fingerprint": "1fb0308981f069dda9ead0949971b82053cd26090441a19a7bbf001bb4ef4ac9",
       "snapshot": {
-        ".github/CI.md": "b6474dfe02104a4b84127341a78dc2b257da63fd218b12e23a95def89d4dda16",
-        ".github/workflows/ci.yml": "956ece846db2f0b2d1009da27453c08d747266318964a2515cb58aa854397744",
+        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
@@ -44,9 +44,9 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
+      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
       "outcome": "no-change",
-      "reason": "The zero-before fallback changes only CI comparison-base selection and the CI reference sentence. Elysia APIs and the installed task guidance are unaffected.",
+      "reason": "The CI edit removes the checkout version comment while retaining the full SHA, and the reference names pinned action releases. Neither edit changes Elysia behavior or task guidance.",
       "evidence": [
         ".github/workflows/ci.yml",
         ".github/CI.md",
@@ -55,10 +55,10 @@
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "3d1e6806855d565a9ff93a7ba284b2d65d107fabcef9fb424c5de8c5f5be7d72",
+      "fingerprint": "3810fcf204f457f840434c09ceffa6d9328802924504808b0ad237ac876d243f",
       "snapshot": {
-        ".github/CI.md": "b6474dfe02104a4b84127341a78dc2b257da63fd218b12e23a95def89d4dda16",
-        ".github/workflows/ci.yml": "956ece846db2f0b2d1009da27453c08d747266318964a2515cb58aa854397744",
+        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -99,12 +99,13 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
+      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
       "outcome": "no-change",
-      "reason": "The planning record already assigns the fast checks to preflight. The fallback handles first-push SHA selection and adds no skill tasks or source mappings.",
+      "reason": "The planning record already assigns the checks to preflight. Removing a release annotation and clarifying action versions adds no skill scope or source mapping.",
       "evidence": [
         "_artifacts/skill_spec.md",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        ".github/CI.md"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {

@@ -20,7 +20,7 @@ All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the 
 
 [`actions/setup-bun`](actions/setup-bun/action.yml) installs the tools from [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.4, Node 24.19.0, hk 2.8.1, and Turbo 2.11.4, then runs `bun install --frozen-lockfile` from the repository root. It works from jobs that set another default working directory.
 
-External actions use verified full commit SHAs with release comments: checkout v7.0.1, mise-action v5.1.1, cache v6.1.0, and upload-artifact v6.0.0. Dependabot checks GitHub Actions references weekly.
+External actions use verified full commit SHAs. The workflow pins `actions/checkout` v7.0.1, `jdx/mise-action` v5.1.1, `actions/cache` v6.1.0, and `actions/upload-artifact` v6.0.0. Dependabot checks GitHub Actions references weekly.
 
 ## Caching
 
