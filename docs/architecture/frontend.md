@@ -1,24 +1,32 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # Frontend architecture
 
-The browser application lives in apps/web and uses React, Vite, React Router,
-TanStack Query, and the shared OperatorOS UI package. Package versions are
-recorded in the web manifest and root Bun lockfile.
+The browser application lives in `apps/web` and uses React, Vite, TanStack
+Router, TanStack Query, and the shared OperatorOS UI package. Package versions
+are recorded in the web manifest and root Bun lockfile.
 
 ## Routing
 
-React Router 8.5.0 is used in declarative mode. App.tsx mounts BrowserRouter,
-Routes, and Route from react-router; route definitions and route guards stay in
-the web application. The app does not use React Router Framework Mode, route
-modules, SSR, or a server entry point.
+The Vite plugin generates `src/routeTree.gen.ts` from file routes in
+`src/routes/`. `src/router.ts` configures TanStack Router and the shared search
+parser. `src/App.tsx` provides authentication and setup state through router
+context.
 
-Pages are lazy-loaded through the current route definitions. Authentication
-and role/capability guards control the browser experience; API authorization
-remains the security boundary.
+Authenticated routes use `beforeLoad` guards and render through `AppShell`.
+`AppShell` checks the current path and auth state before it renders protected
+content. Elysia remains authoritative for session, capability, and resource
+authorization. Pages are lazy-loaded from their file routes.
+
+The route-tree test compares normalized generated paths with the authorization
+policy keys. A missing `authorizeRoute` policy denies that route. The generated
+`/$` route remains an authenticated fallback for unmatched URLs.
+
+See [UI and routing](ui-and-routing.md) for search-key behavior and URL policy
+coverage.
 
 ## Data and API
 

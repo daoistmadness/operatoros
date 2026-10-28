@@ -12,7 +12,7 @@ export type RouterContext = {
   setupRequired: boolean;
 };
 
-export const routeAuthorizations: Record<string, RouteAuthorization> = {
+export const routeAuthorizations: Partial<Record<string, RouteAuthorization>> = {
   '/': { type: 'authenticated' },
   '/setup': { type: 'authenticated' },
   '/operator/work-queue': { type: 'capability', capability: 'view_attendance_followups' },
@@ -95,8 +95,8 @@ function authorizationForLocation(pathname: string): RouteAuthorization | undefi
 }
 
 function isAuthorizationSatisfied(auth: AuthContextValue, authorization: RouteAuthorization | undefined): boolean {
-  if (!auth.authenticated) return false;
-  if (!authorization || authorization.type === 'authenticated') return true;
+  if (!auth.authenticated || !authorization) return false;
+  if (authorization.type === 'authenticated') return true;
   return authorization.type === 'role'
     ? auth.user?.role === authorization.role
     : auth.can(authorization.capability);

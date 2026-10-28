@@ -4,7 +4,7 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet
 import { afterEach, describe, expect, it } from 'vitest';
 import { AppLink } from '../../components/AppLink';
 import { MemoryRouter, Route } from '../../test/TestRouter';
-import { parseSearch, stringifySearch, useUrlSearchParams, type SearchParamsSetter } from './search';
+import { parseSearch, stringifySearch, useUrlSearchParams, validateSearch, type SearchParamsSetter } from './search';
 
 let staleSetter: SearchParamsSetter | undefined;
 
@@ -27,6 +27,49 @@ function ReportsIndexPage() {
     return current;
   }, { replace: true })}>{href}</button>;
 }
+
+function SearchBoundaryPage() {
+  const [, setSearchParams] = useUrlSearchParams();
+  const href = useRouterState({ select: (state) => state.location.href });
+  return <><output>{href}</output><button onClick={() => setSearchParams(new URLSearchParams('__proto__=blocked&constructor=blocked&toString=blocked&tag=first&tag=second&unknown=retained'))}>Serialize search</button></>;
+}
+
+describe('router search values', () => {
+  it('filters reserved keys and keeps repeated and unknown values in parse order', () => {
+    const parsed = parseSearch('__proto__=blocked&constructor=blocked&toString=blocked&tag=first&tag=second&unknown=retained');
+    expect(parsed).toEqual({ tag: ['first', 'second'], unknown: 'retained' });
+    expect(Object.getPrototypeOf(parsed)).toBe(Object.prototype);
+    for (const key of ['__proto__', 'constructor', 'toString']) expect(Object.hasOwn(parsed, key)).toBe(false);
+  });
+
+  it('converts supported TypeBox search values and omits reserved or invalid values', () => {
+    const raw: Record<string, unknown> = {
+      constructor: 'blocked',
+      toString: 'blocked',
+      enabled: false,
+      page: 2,
+      tags: ['first', 'second'],
+      invalid: { nested: true },
+      mixed: ['first', 2],
+    };
+    Object.defineProperty(raw, '__proto__', { value: 'blocked', enumerable: true });
+    const validated = validateSearch(raw);
+    expect(validated).toEqual({ enabled: 'false', page: '2', tags: ['first', 'second'] });
+    expect(Object.getPrototypeOf(validated)).toBe(Object.prototype);
+    for (const key of ['__proto__', 'constructor', 'toString']) expect(Object.hasOwn(validated, key)).toBe(false);
+  });
+
+  it('filters reserved keys during serialization and preserves repeated unknown values', () => {
+    const search: Record<string, unknown> = {
+      constructor: 'blocked',
+      toString: 'blocked',
+      tag: ['first', 'second'],
+      unknown: 'retained',
+    };
+    Object.defineProperty(search, '__proto__', { value: 'blocked', enumerable: true });
+    expect(stringifySearch(search)).toBe('?tag=first&tag=second&unknown=retained');
+  });
+});
 
 describe('useUrlSearchParams', () => {
   let container: HTMLDivElement;
@@ -80,5 +123,25 @@ describe('useUrlSearchParams', () => {
     await act(async () => container.querySelector('button')?.click());
 
     expect(container.textContent).toContain('/reports?view=term-review&academic_year_id=7');
+  });
+
+  it('filters reserved keys from URLSearchParams updates without dropping repeats or unknown keys', async () => {
+    const rootRoute = createRootRoute({ component: Outlet });
+    const reportsRoute = createRoute({ getParentRoute: () => rootRoute, path: 'reports', component: Outlet });
+    const reportsIndexRoute = createRoute({ getParentRoute: () => reportsRoute, path: '/', component: SearchBoundaryPage });
+    const router = createRouter({
+      routeTree: rootRoute.addChildren([reportsRoute.addChildren([reportsIndexRoute])]),
+      history: createMemoryHistory({ initialEntries: ['/reports'] }),
+      parseSearch,
+      stringifySearch,
+    });
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => root.render(<RouterProvider router={router} />));
+    await act(async () => container.querySelector('button')?.click());
+
+    expect(container.querySelector('output')?.textContent).toBe('/reports?tag=first&tag=second&unknown=retained');
   });
 });

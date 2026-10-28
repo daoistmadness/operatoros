@@ -46,6 +46,7 @@ Dated session logs and the reusable session template are exempt from the index.
 - [CI performance](reference/ci-performance.md).
 - [Dependency audit exceptions](reference/dependency-audit-exceptions.md).
 - [Employee management](reference/employee-management.md).
+- [Frontend performance baseline](reference/frontend-performance-baseline.md).
 - [First-Run Administrator Threat Model](reference/first-run-admin-threat-model.md).
 - [Migration golden fixtures](reference/golden-fixtures.md) — Deprecated.
 - [Identity and Authentication](reference/identity-authentication.md).

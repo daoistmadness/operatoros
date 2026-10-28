@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Enforce generated route-policy coverage, discard reserved search keys, and add an opt-in local frontend baseline.
 - Retry transient mise tool downloads and cache checksum-verified archives in CI (#338).
 - Run changelog, Markdown, and agent-skill maintainer checks before API and browser E2E jobs, with matching local pre-push checks.
 - Migrate web routes to file-based TanStack Router while preserving authorization and legacy route behavior (#335).
