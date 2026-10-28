@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # CI performance
@@ -17,9 +17,10 @@ merge groups, and supported branch pushes. GitHub-managed CodeQL and dependency
 workflows remain separate. All runners in the repository-owned workflow use
 `ubuntu-26.04`; there is no separate compatibility canary or docs job.
 
-- `api`: frozen install, dependency audit, tooling tests, hk lint/architecture, Turbo package typechecks/tests/build with the TypeScript 7.0.2 CLI, launcher typecheck, the separate Bun 1.4.4 `bun check`, Turbo invalidation proof, disposable runtime health, TypeBox, architecture fixtures, and contract boundaries.
-- `frontend`: dependency consistency, package-manager regression checks, UI/web boundaries, OpenAPI drift, and documentation checks.
-- `E2E full regression`: complete unfiltered browser/API smoke suite, synthetic reset/enrollment verification, and diagnostic artifacts. It starts alongside package checks.
+- `preflight`: Markdown links and organization, agent-skill validation, Intent maintainer review, and the pull-request changelog. It gates API checks, E2E scope selection, and the full browser/API smoke suite. The main ruleset must require this check before the workflow change merges.
+- `api`: frozen install, dependency audit, tooling tests, hk lint/architecture, Turbo package typechecks/tests/build with the TypeScript 7.0.2 CLI, launcher typecheck, the separate Bun 1.4.4 `bun check`, Turbo invalidation proof, disposable runtime health, TypeBox, architecture fixtures, and contract boundaries. It starts after preflight passes.
+- `frontend`: dependency consistency, package-manager regression checks, UI/web boundaries, OpenAPI drift, documentation fixture checks, current developer commands, and the agent-skills package tarball consumer smoke test.
+- `E2E full regression`: complete unfiltered browser/API smoke suite, synthetic reset/enrollment verification, and diagnostic artifacts. It starts after preflight passes, alongside API checks.
 - `Select E2E scope` and `E2E regression result`: preserve stable required-check names; selection always requires the full browser suite, and the aggregate rejects skipped, failed, cancelled, or missing runs.
 
 Package tests and the web production build run through Turbo instead of being
@@ -42,11 +43,24 @@ about 37%. The E2E job including setup took `4m35s` on the PR and `4m41s` on
 These are observed runs, not a guaranteed latency target; runner queues and
 setup affect total PR wait.
 
+## Fast checks and local parity
+
+`preflight` runs before `api`, E2E scope selection, and `E2E full regression`.
+If preflight fails, those three jobs skip. `E2E regression result` still runs
+and fails on the skipped scope and E2E results. The main ruleset must require
+`preflight`; the existing required check names remain unchanged.
+
+Run `bun run check:pre-push` before pushing. The hk pre-push hook runs the same
+Markdown, skills, Intent maintainer, and changelog commands. The local wrapper
+fetches `origin/main` and runs the changelog checker in PR mode against the
+merge base.
+
 ## Cache and resource safeguards
 
 Frozen installation and validation still run after cache restore. Only trusted
 main push, schedule, or manual runs save setup/browser/task caches. Caches must
 never include application databases, records, backups, logs, or credentials.
+Preflight restores setup caches with cache writes disabled.
 
 Turbo defaults to concurrency four. API, DB, and Excel stateful tests remain
 uncached; Playwright remains serial within its owned disposable stack. The

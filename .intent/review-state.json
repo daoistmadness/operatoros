@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "3573851f06a31bb678ca59ac7e3e4b2ceafd95cd525b82c56ed3ef6ddb868a7e",
+      "fingerprint": "1fb0308981f069dda9ead0949971b82053cd26090441a19a7bbf001bb4ef4ac9",
       "snapshot": {
-        ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
-        ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
+        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
@@ -15,7 +15,7 @@
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
+        "package.json": "1e87881b06dccdda5deb5c40f111d033215bae6354d3eec8349abcbf72881cea",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,22 +44,25 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "The CI edit removes the checkout version comment while retaining the full SHA, and the reference names pinned action releases. Neither edit changes Elysia behavior or task guidance.",
       "evidence": [
-        "Changed: bun.lock, docs/architecture/change-safety-golden-path.md at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        ".github/workflows/ci.yml",
+        ".github/CI.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md",
+        "apps/api/package.json"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "93097822a8275fba195756c18219fec650ef2391b3f23173e20db9e73313a278",
+      "fingerprint": "3810fcf204f457f840434c09ceffa6d9328802924504808b0ad237ac876d243f",
       "snapshot": {
-        ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
-        ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
+        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
-        "_artifacts/skill_spec.md": "6d0a6d7dea2102e47fa645abd62345bb996bec5f1b166e09089bd989c0675397",
+        "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
         "bun.lock": "9db1ec0d5f305a22598717ef6efd7352e51bf4667e2c27175a45568941d1160a",
@@ -67,7 +70,7 @@
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
+        "package.json": "1e87881b06dccdda5deb5c40f111d033215bae6354d3eec8349abcbf72881cea",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -96,11 +99,13 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "The planning record already assigns the checks to preflight. Removing a release annotation and clarifying action versions adds no skill scope or source mapping.",
       "evidence": [
-        "Changed: bun.lock, docs/architecture/change-safety-golden-path.md at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "_artifacts/skill_spec.md",
+        ".github/workflows/ci.yml",
+        ".github/CI.md"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1753,15 +1758,16 @@
       ]
     },
     "source:hk.pkl": {
-      "fingerprint": "5a8fa31263b7fd577d14de7056a9d5b4c7d047dc4da15e8ee3353ba2b54efe1d",
+      "fingerprint": "22d3716b2f43c4560b7d9483fa9e84ed6f2066b334a2dd308d851f3eab7ea126",
       "snapshot": {
-        "hk.pkl": "c84fa16f04882135454e21b268e483816147230d701ab4ec29474e81836424c6"
+        "hk.pkl": "e051dd6bc7e86e6ef4a2b8af8f4f0725fe414f3e94ec83b7a6fc4b214f062cc1"
       },
-      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
-      "outcome": "no-change",
-      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
+      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "outcome": "out-of-scope",
+      "reason": "The hk change wires repository pre-push checks and does not affect Elysia guidance or package behavior.",
       "evidence": [
-        "Changed: hk.pkl at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
+        "hk.pkl",
+        "scripts/check-pre-push.sh"
       ]
     },
     "source:apps/web/src/App.tsx": {
@@ -2918,15 +2924,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3f7c23eee86a5b45a8f6031a1f8d88e378cc145b4083f1ec6445c592b5f915f0",
+      "fingerprint": "dc838c7ceec75fa39a08287893fe12e135a2b9809c80244be4938226e15bf3da",
       "snapshot": {
-        "CHANGELOG.md": "e7570b804354a22f0adae1295b7b506635effba1f6f28dcc01aef92597ee778d"
+        "CHANGELOG.md": "6e38dea142886d61f57df30563781d8d635982256b79ca0e4c282df8cf7ac474"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
-      "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "outcome": "out-of-scope",
+      "reason": "The new Unreleased bullet records a CI workflow change and does not alter agent-skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "CHANGELOG.md"
       ]
     },
     "source:COMMANDS.md": {
@@ -4431,17 +4437,15 @@
       ]
     },
     "source:docs/reference/ci-performance.md": {
-      "fingerprint": "6ae77e07d2fa926c3610ff33716ef6cd0e524151652ef9460b1cf0bf8ad62776",
+      "fingerprint": "3f035fc7ec2407df9077b983d278178e96e200bfd0da0fcaaa6b0f8cc5a60aaa",
       "snapshot": {
-        "docs/reference/ci-performance.md": "1a1962d6e65ebcc66201b3ed4c0615276ef8e3dd7be85fcb21712fa1da7f5a72"
+        "docs/reference/ci-performance.md": "2ff34febab7eab7ee67ca29060b3c2f0b17900786c8ba9ef339c3011ef3ae8c8"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "This update documents the CI step order and remains operational reference material, not Elysia development guidance.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "docs/reference/ci-performance.md"
       ]
     },
     "source:docs/reference/dependency-audit-exceptions.md": {
@@ -7032,15 +7036,16 @@
       ]
     },
     "source:scripts/tests/test-scope.test.ts": {
-      "fingerprint": "c02b91dfa5f1968a4b869dddc6b587a165fac757ca04b1b1399530259e70bc57",
+      "fingerprint": "ff9aa78efb87f93d0aff38952edb9e88ccb8a1111ad0e118c62d3f4abb31d0f0",
       "snapshot": {
-        "scripts/tests/test-scope.test.ts": "2c30e0412d06ab007873c1e28814907ccfedd943521bf8144865248028f4eacd"
+        "scripts/tests/test-scope.test.ts": "6ee00f19f2cb53cd5fcd038422eeec3c247956cf4d6fab5b0e29cd10536ca6be"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
-      "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
+      "outcome": "out-of-scope",
+      "reason": "The added test executes the preflight fetch step and checks that a zero-before push fetches the event SHA. It changes no product behavior or Elysia task guidance.",
       "evidence": [
-        "Changed: scripts/tests/test-scope.test.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "scripts/tests/test-scope.test.ts",
+        ".github/workflows/ci.yml"
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
@@ -7053,6 +7058,19 @@
       "reason": "Reviewed the auth transition code, expired-session API test, and browser regressions. They do not modify packages/agent-skills or change existing Elysia guidance, so no skill edits are needed.",
       "evidence": [
         "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at ab774a224b2cd0c5889d3ef17a7be318fe18d9a9"
+      ]
+    },
+    "source:scripts/check-pre-push.sh": {
+      "fingerprint": "36f44e839a432fb62cc58dc919c6b93169796eb36f84f680319c8605c5dda9fd",
+      "snapshot": {
+        "scripts/check-pre-push.sh": "2527aacbca90897507741d6ba447d51338dc6b0b3268af030c08587e59b02bb6"
+      },
+      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "outcome": "out-of-scope",
+      "reason": "This script runs repository-level fast CI checks before a push and does not change an Elysia task.",
+      "evidence": [
+        "scripts/check-pre-push.sh",
+        "package.json"
       ]
     }
   }

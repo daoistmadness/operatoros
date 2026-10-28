@@ -38,9 +38,14 @@ code.
 - Use TanStack Intent `0.5.6` as an exact dev dependency. Dependency discovery
   is static, uses an explicit package allowlist and exclusion, and loads the
   skill only for matching tasks.
-- Keep skill validation, base-aware source review, and tarball inspection in
-  the existing `frontend` job to preserve the workflow count and required check
-  name. Do not install editor hooks as a security control.
+- **Superseded 2026-10-28.** The earlier workflow choice kept skill validation,
+  base-aware source review, and tarball inspection in `frontend` to preserve
+  the workflow count and existing check name. The CI preflight change moves
+  changelog, Markdown, skill validation, and base-aware source review into
+  `preflight` before API and full E2E jobs. `frontend` keeps the tarball and
+  consumer smoke test. Existing check names remain stable; `preflight` becomes
+  an additional required check. The hk pre-push command runs the fast local
+  checks. Do not install editor hooks as a security control.
 - Include the TypeScript entry in workspace lint, boundary checks, and
   typechecking so the public package surface is validated by the existing gates.
 - Treat changed mapped sources as pending review until an evidence-backed
