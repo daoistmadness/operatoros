@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "817efd5190c5c99c6e4c430a9039e5023eec799d7d047112355157b822f1cd54",
+      "fingerprint": "cb6e1c86c0fcdcbfe54ccd9fd53a16af47873c11fcba098e1d1b3058b92c260a",
       "snapshot": {
         ".github/CI.md": "3da225e0dd665a78bfc477300e93e98e89b95e334507796b6287e28fb6646ead",
-        ".github/workflows/ci.yml": "89dedb78982d5e74690e62ed44d053cd606dcb8325a454b27f921653f6e89575",
+        ".github/workflows/ci.yml": "0df438c42b1ca01195f77050787b45c97f63c6336f435b9b6323f5fb8c575783",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
@@ -44,22 +44,20 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "head": "803b6103ed471daff2e26d71b85ae71ef597e9de",
       "outcome": "no-change",
-      "reason": "The Elysia guidance still matches its source docs and APIs. This change only moves CI checks and keeps the package consumer smoke test; it does not change Elysia tasks, recommendations, or references.",
+      "reason": "The follow-up restores the original unauthenticated base fetch. It changes no Elysia behavior, task procedure, or skill recommendation.",
       "evidence": [
+        ".github/workflows/ci.yml",
         "packages/agent-skills/skills/elysiajs/SKILL.md",
-        "packages/agent-skills/docs/elysiajs.md",
-        "_artifacts/domain_map.yaml",
-        "_artifacts/skill_tree.yaml",
-        ".github/workflows/ci.yml"
+        "packages/agent-skills/docs/elysiajs.md"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "1dedc606b3ebc9bcc74e0fb7dd12c73817384fba8552b01d49c6d098a10b8331",
+      "fingerprint": "71cb4883bf4c57ba5fae15900cbb30b8dd0adaf4f4f0c2ede1edc6baab6d17fc",
       "snapshot": {
         ".github/CI.md": "3da225e0dd665a78bfc477300e93e98e89b95e334507796b6287e28fb6646ead",
-        ".github/workflows/ci.yml": "89dedb78982d5e74690e62ed44d053cd606dcb8325a454b27f921653f6e89575",
+        ".github/workflows/ci.yml": "0df438c42b1ca01195f77050787b45c97f63c6336f435b9b6323f5fb8c575783",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -100,12 +98,12 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
-      "outcome": "updated",
-      "reason": "Updated the superseded decision that kept skill validation and source review in frontend. The domain map and skill tree still accurately describe the Elysia skill and its sources.",
+      "head": "803b6103ed471daff2e26d71b85ae71ef597e9de",
+      "outcome": "no-change",
+      "reason": "The placement decision already records base-aware source review in preflight. Removing an unnecessary token does not change the skill scope or its source map.",
       "evidence": [
-        "_artifacts/skill_spec.md",
         "_artifacts/domain_map.yaml",
+        "_artifacts/skill_spec.md",
         "_artifacts/skill_tree.yaml",
         ".github/workflows/ci.yml"
       ]

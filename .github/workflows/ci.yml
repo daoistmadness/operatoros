@@ -44,15 +44,13 @@ jobs:
       - name: Fetch base for skill freshness check
         env:
           INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}
-          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
             echo "A valid base commit is required for skill freshness checks." >&2
             exit 1
           fi
-          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          git -c "http.https://github.com/.extraheader=$header" fetch --no-tags origin "$INTENT_BASE_SHA"
+          git fetch --no-tags origin "$INTENT_BASE_SHA"
       - name: Validate relative Markdown links
         run: bun .github/scripts/check-markdown-links.ts
       - name: Validate Markdown organization and index
