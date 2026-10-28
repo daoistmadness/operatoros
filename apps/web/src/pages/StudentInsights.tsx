@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { Navigate, useSearchParams } from "react-router";
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Button } from "../components/ui/button";
@@ -27,7 +27,6 @@ function validId(value: string | null): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
-
 export default function StudentInsights() {
   const { can } = useAuth();
   const allowed = can("view_student");
@@ -116,23 +115,4 @@ export default function StudentInsights() {
       <TabsContent value="indicators"><StudentIndicatorInsights filters={sharedFilters as StudentInsightsScopeFilters} enabled={view === "indicators"} /></TabsContent>
     </Tabs>}
   </main>;
-}
-
-export function StudentTrendsCompatibilityRedirect() {
-  return <StudentInsightsCompatibilityRedirect view="trends" />;
-}
-
-export function StudentIndicatorsCompatibilityRedirect() {
-  return <StudentInsightsCompatibilityRedirect view="indicators" />;
-}
-
-function StudentInsightsCompatibilityRedirect({ view }: { view: "trends" | "indicators" }) {
-  const [params] = useSearchParams();
-  const query = new URLSearchParams(params);
-  query.set("view", view);
-  return <NavigateWithQuery query={query} />;
-}
-
-function NavigateWithQuery({ query }: { query: URLSearchParams }) {
-  return <Navigate to={`/analytics/student-insights?${query.toString()}`} replace />;
 }

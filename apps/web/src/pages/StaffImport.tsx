@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
 import { ArrowLeft, Upload } from "lucide-react";
 import { commitStaffImport, fetchStaffImportHistory, previewStaffImport, type StaffImportPreview } from "../api/staff";
 import { useAuth } from "../context/AuthContext";

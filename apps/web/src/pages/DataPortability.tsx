@@ -25,7 +25,7 @@ import {
   previewExport,
   previewImport,
 } from '../api/dataPortability';
-import { Link } from 'react-router';
+import { AppLink as Link } from '../components/AppLink';
 
 export default function DataPortability({ initialLoading = true, embedded = false }: { initialLoading?: boolean; embedded?: boolean }) {
   const [activeTab, setActiveTab] = useState<'export' | 'import' | 'templates' | 'history'>('export');

@@ -11,6 +11,7 @@ export default [
       ".runtime/**",
       "e2e-results/**",
       "scripts/tests/architecture-fixtures/**",
+      "**/routeTree.gen.ts",
     ],
   },
   ...workspaceBoundaryConfigs.map(({ files, packageName }) => ({

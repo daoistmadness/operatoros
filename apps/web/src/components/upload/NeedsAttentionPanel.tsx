@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, History, Loader2, Search, ShieldCheck } from "lucide-react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../AppLink';
 import {
   ConflictItem,
   commitConflictRetry,

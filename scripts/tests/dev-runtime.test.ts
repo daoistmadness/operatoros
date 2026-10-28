@@ -326,10 +326,10 @@ test("managed launcher starts effective loopback and Tailnet configs despite hos
   const apiConfigPath = join(f.root, "effective-api.json"), viteConfigPath = join(f.root, "effective-vite.json");
   const apiConfigKeys = ["HOST", "PORT", "FRONTEND_HOST", "BACKEND_HOST", "COOKIE_SECURE", "ALLOWED_ORIGINS", "TRUSTED_PROXY_ADDRESSES", "DATABASE_URL", "DEV_API_PROXY_TARGET", "VITE_API_BASE_URL", "VITE_TAILNET_HOST", "VITE_HMR_HOST", "VITE_HMR_PROTOCOL", "VITE_HMR_CLIENT_PORT", "__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS", "OPERATOROS_DISABLE_ENV_FILES", "NODE_ENV"];
   const frontendConfig = readFileSync(join(repository, "apps/web/vite.config.js"), "utf8");
-  const pluginMarker = "plugins: [tailwindcss(), react()],";
-  expect(frontendConfig).toContain(pluginMarker);
-  const capturePlugin = `plugins: [tailwindcss(), react(), { name: 'capture-effective-test-config', configResolved(config) { writeFileSync(process.env.TEST_VITE_CONFIG, JSON.stringify({ host: config.server.host, port: config.server.port, ws: { host: config.server.ws.host, port: config.server.ws.port, protocol: config.server.ws.protocol, clientPort: config.server.ws.clientPort }, allowedHosts: config.server.allowedHosts, proxy: Object.fromEntries(['/api', '/health', '/ready', '/openapi'].map((route) => [route, config.server.proxy[route].target])), envDir: config.envDir, apiBaseUrl: config.env.VITE_API_BASE_URL ?? null })); } }],`;
-  const viteFixtureConfig = frontendConfig.replace(pluginMarker, capturePlugin).replace(
+  const pluginBlock = /  plugins: \[[\s\S]*?\n  \],/;
+  expect(frontendConfig.match(pluginBlock)?.[0]).toContain("TanStackRouterVite(");
+  const capturePlugin = `{ name: 'capture-effective-test-config', configResolved(config) { writeFileSync(process.env.TEST_VITE_CONFIG, JSON.stringify({ host: config.server.host, port: config.server.port, ws: { host: config.server.ws.host, port: config.server.ws.port, protocol: config.server.ws.protocol, clientPort: config.server.ws.clientPort }, allowedHosts: config.server.allowedHosts, proxy: Object.fromEntries(['/api', '/health', '/ready', '/openapi'].map((route) => [route, config.server.proxy[route].target])), envDir: config.envDir, apiBaseUrl: config.env.VITE_API_BASE_URL ?? null })); } }`;
+  const viteFixtureConfig = frontendConfig.replace(pluginBlock, `  plugins: [tailwindcss(), react(), ${capturePlugin}],`).replace(
     "envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,",
     "envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,\n  cacheDir: process.env.TEST_VITE_CACHE_DIR,",
   );

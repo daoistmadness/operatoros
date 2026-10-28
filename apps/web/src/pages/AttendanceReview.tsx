@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { useQueryClient } from "@tanstack/react-query";
 import { Edit3, History, Loader2, X, AlertTriangle, CheckCircle2 } from "lucide-react";
 

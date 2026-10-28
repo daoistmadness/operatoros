@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { ArrowLeft } from "lucide-react";
 import { createStaff, fetchSensitiveStaff, fetchStaffDetail, updateStaff, type StaffPayload } from "../api/staff";
 import { useAuth } from "../context/AuthContext";
@@ -20,7 +21,7 @@ const optionalFields = ["source_staff_id", "nip", "nuptk", "job_title_raw", "dap
 const sensitiveFields = ["birth_place", "birth_date", "nik", "email", "phone", "address"] as const;
 
 export default function StaffForm() {
-  const { id = "" } = useParams();
+  const { id = "" } = useParams({ strict: false });
   const isEdit = Boolean(id);
   const { can } = useAuth();
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function StaffForm() {
           client.invalidateQueries({ queryKey: queryKeys.staff.history(id) }),
         ] : []),
       ]);
-      navigate(`/staff/${saved.id}`);
+      navigate({ to: '/staff/$id', params: { id: saved.id } });
     },
   });
   if (isEdit && detail.isPending) return <LoadingState title="Loading employee profile" />;
@@ -86,7 +87,7 @@ export default function StaffForm() {
       </CardContent></Card>}
       {isEdit && can("edit_sensitive_staff_fields") && sensitive.isError && <p role="alert" className="text-sm text-rose-700">Sensitive fields could not be loaded. They will be left unchanged.</p>}
       {mutation.error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{getPageApiError(mutation.error, "Employee could not be saved. Review your changes and try again.")}</p>}
-      <div className="flex gap-2"><Button type="submit" disabled={mutation.isPending || isEdit && detail.data == null}>{mutation.isPending ? "Saving…" : "Save employee"}</Button><Button type="button" variant="outline" onClick={() => navigate(isEdit ? `/staff/${id}` : "/staff")} disabled={mutation.isPending}>Cancel</Button></div>
+      <div className="flex gap-2"><Button type="submit" disabled={mutation.isPending || isEdit && detail.data == null}>{mutation.isPending ? "Saving…" : "Save employee"}</Button><Button type="button" variant="outline" onClick={() => isEdit ? navigate({ to: '/staff/$id', params: { id } }) : navigate({ to: '/staff' })} disabled={mutation.isPending}>Cancel</Button></div>
     </form>
   </div>;
 }

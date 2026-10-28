@@ -1,4 +1,5 @@
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import type { StudentIndicatorValue } from "@operatoros/contracts/analytics";
 import { Button } from "../components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";

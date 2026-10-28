@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";

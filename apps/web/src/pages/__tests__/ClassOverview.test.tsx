@@ -1,6 +1,7 @@
 import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { MemoryRouter, Route, Routes } from '../../test/TestRouter';
 import { describe, expect, it, vi } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../../lib/query/queryClient";
@@ -19,19 +20,30 @@ const data = {
 vi.mock("../../context/AuthContext", () => ({ useAuth: () => ({ can: () => true }) }));
 vi.mock("../../hooks/useClassOverviewQuery", () => ({ useClassOverviewQuery: () => ({ isPending: false, error: null, data, refetch: vi.fn() }) }));
 
-function renderPage() {
-  return renderToStaticMarkup(<QueryClientProvider client={createTestQueryClient()}><MemoryRouter initialEntries={["/classes/7"]}><Routes><Route path="/classes/:id" element={<ClassOverview />} /></Routes></MemoryRouter></QueryClientProvider>);
+async function renderPage() {
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(<QueryClientProvider client={createTestQueryClient()}><MemoryRouter initialEntries={["/classes/7"]}><Routes><Route path="/classes/:id" element={<ClassOverview />} /></Routes></MemoryRouter></QueryClientProvider>));
+  await vi.waitFor(() => expect(host.textContent).toContain("7A"));
+  return { host, root };
 }
 
 describe("ClassOverview", () => {
-  it("renders canonical class sections and student drill-through", () => {
-    const html = renderPage();
-    expect(html).toContain("7A");
-    expect(html).toContain("Student One");
-    expect(html).toContain("View Attendance Analytics");
-    expect(html).toContain("View Academic Analytics");
-    expect(html).toContain("View Data Quality");
-    expect(html).toContain("unknown period attribution");
-    expect(html).not.toMatch(/AT_RISK|High Risk|intervention/i);
+  it("renders canonical class sections and student drill-through", async () => {
+    const { host, root } = await renderPage();
+    try {
+      const html = host.innerHTML;
+      expect(html).toContain("7A");
+      expect(html).toContain("Student One");
+      expect(html).toContain("View Attendance Analytics");
+      expect(html).toContain("View Academic Analytics");
+      expect(html).toContain("View Data Quality");
+      expect(html).toContain("unknown period attribution");
+      expect(html).not.toMatch(/AT_RISK|High Risk|intervention/i);
+    } finally {
+      await act(async () => root.unmount());
+      host.remove();
+    }
   });
 });

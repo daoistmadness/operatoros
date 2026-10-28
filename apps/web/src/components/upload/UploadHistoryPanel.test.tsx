@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from '../../test/TestRouter';
 import { describe, expect, it } from "vitest";
 
 import { UploadHistoryPanel } from "./UploadHistoryPanel";

@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
-import { Link, Navigate, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { Navigate } from '@tanstack/react-router';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { LoadingState } from "../components/common/state-message";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,9 +14,9 @@ export default function ReportsReviews() {
   const [search] = useSearchParams();
   const { can } = useAuth();
   const requested = search.get("view") ?? "monthly";
-  if (!["monthly", "annual", "term-review"].includes(requested)) return <Navigate replace to="/reports?view=monthly" />;
+  if (!["monthly", "annual", "term-review"].includes(requested)) return <Navigate replace to="/reports" search={{ view: "monthly" }} />;
   const view = requested as ReportView;
-  if (view === "term-review" && !can("view_student")) return <Navigate replace to="/reports?view=monthly" />;
+  if (view === "term-review" && !can("view_student")) return <Navigate replace to="/reports" search={{ view: "monthly" }} />;
 
   const destination = (nextView: ReportView) => {
     const params = new URLSearchParams(nextView === "term-review" ? search : undefined);

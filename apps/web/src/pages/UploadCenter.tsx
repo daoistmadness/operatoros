@@ -14,7 +14,8 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { commitStudentUpdateRollback, downloadStudentUpdateResult, fetchStudentUpdateHistory, fetchStudentUpdateSession, previewStudentUpdateRollback } from "../api/students";
 import { useAuth } from "../context/AuthContext";

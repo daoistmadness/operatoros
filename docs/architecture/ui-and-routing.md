@@ -1,30 +1,33 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # UI and routing
 
-The browser shell is implemented in apps/web/src/App.tsx. The React Router
-provider wraps the application, and authenticated routes render through the
-authentication and role/capability guards before AppShell renders its navigation
-and page outlet.
+The browser shell is implemented in `apps/web/src/App.tsx`. The Vite SPA uses
+TanStack Router file-based routes under `apps/web/src/routes/`; Vite generates
+`src/routeTree.gen.ts`. `src/router.ts` creates the router, and `src/index.tsx`
+provides auth state through router context. Authenticated routes are children of
+`_authenticated.tsx`, which renders `AppShell` and enforces route authorization
+in `beforeLoad`.
 
-## Router mode
+## Route conventions
 
-The project uses react-router 8.5.0 in declarative mode with BrowserRouter,
-Routes, and Route imported from react-router. Route paths are declared in App.tsx
-and the shared route definitions. BrowserRouter uses the root path.
+Use file-based route modules and `$param` filenames for dynamic segments. Keep
+page components lazy-loaded, and use route `beforeLoad` redirects for aliases.
+The shared authorization map in `src/lib/router/access.ts` also drives sidebar
+visibility. Search validation belongs on the authenticated route tree and uses
+TypeBox; preserve URL query values as strings, including repeated keys.
 
-React Router Framework Mode is not configured. There is no routes.ts manifest,
-framework Vite plugin, route-module convention, SSR server, or hydration entry.
-The application remains a browser-rendered Vite SPA.
+The app remains a browser-rendered Vite SPA. It does not use TanStack Start, SSR,
+or a hydration entry.
 
 ## Authorization and page state
 
-RequireAuth, RequireRole, and RequireCapability keep unauthorized users out of
-the corresponding browser workflows. They support navigation and user feedback;
-the API independently authorizes every protected request.
+Router `beforeLoad` checks keep unauthorized users out of the corresponding
+browser workflows. `AccessDenied` presents authorization feedback; the API
+independently authorizes every protected request.
 
 TanStack Query owns server data and mutation state. Pages call feature APIs
 through the shared client. Analytics formulas and export generation stay in the

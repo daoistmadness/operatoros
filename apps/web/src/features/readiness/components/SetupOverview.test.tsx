@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from '../../../test/TestRouter';
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReadinessResponse } from "../api/readiness";
 import { SetupOverview } from "./SetupOverview";

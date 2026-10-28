@@ -39,9 +39,11 @@ apps/web/
 │   ├── components/   # Shared UI and navigation
 │   ├── lib/          # API client and helpers
 │   ├── pages/        # Route-level screens
-│   ├── App.tsx       # Router composition
-│   ├── routes/       # Route definitions and redirects
-│   ├── main.tsx
+│   ├── App.tsx       # Provider composition
+│   ├── router.ts     # Router instance and URL search parsing
+│   ├── routes/       # TanStack Router file-based routes
+│   ├── routeTree.gen.ts # Generated route tree
+│   ├── index.tsx
 │   ├── index.css     # Tailwind source
 │   └── vite-env.d.ts
 ├── public/
@@ -90,7 +92,10 @@ The production bundle is served from `apps/web/build/`.
 - Authentication uses the backend's HttpOnly session cookie rather than browser-stored bearer tokens.
 
 ## Routes and Pages
-Routes are defined in [`src/routes/routeDefinitions.tsx`](src/routes/routeDefinitions.tsx) and rendered by [`src/App.tsx`](src/App.tsx):
+Routes are file-based under [`src/routes/`](src/routes/). Dynamic segments use
+`$id` filenames, route authorization runs in `beforeLoad`, and search params
+are validated with TypeBox. The generated route tree is `src/routeTree.gen.ts`.
+The shell is composed in [`src/App.tsx`](src/App.tsx):
 - `/` Dashboard
 - `/upload` Data Import & Export workspace
 - `/upload-center` Legacy redirect to Attendance Upload
@@ -105,7 +110,7 @@ Routes are defined in [`src/routes/routeDefinitions.tsx`](src/routes/routeDefini
 - `/reports/rekap-absensi` Rekap absensi report
 - `/reports/tardiness` Tardiness report
 - `/settings` System reset and settings
-- `/students/:id` Student profile
+- `/students/$id` Student profile
 
 The `Settings` page hides destructive reset controls unless the backend explicitly reports that destructive operations are enabled.
 

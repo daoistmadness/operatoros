@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../../../components/AppLink';
 import { AlertTriangle, CheckCircle2, Clock3, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../../../api";

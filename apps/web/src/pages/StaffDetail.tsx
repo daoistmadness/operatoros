@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useParams } from '@tanstack/react-router';
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { cancelStaffSchoolUnitAssignment, closeStaffSchoolUnitAssignment, createStaffEducation, createStaffSchoolUnitAssignment, deleteStaffEducation, fetchJenjangOptions, fetchSchoolUnits, fetchSensitiveStaff, fetchStaffDetail, fetchStaffHistory, replaceStaffJenjangs, updateStaffEducation, updateStaffEmployment, type EducationRecord } from "../api/staff";
 import { useAuth } from "../context/AuthContext";
@@ -37,7 +38,7 @@ function educationPayload(record: Partial<EducationRecord>) {
 }
 
 export default function StaffDetail() {
-  const { id = "" } = useParams();
+  const { id = "" } = useParams({ strict: false });
   const { can } = useAuth();
   const queryClient = useQueryClient();
   const detail = useQuery({ queryKey: queryKeys.staff.detail(id), queryFn: () => fetchStaffDetail(id), enabled: Boolean(id) });

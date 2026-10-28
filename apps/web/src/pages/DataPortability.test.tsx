@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from '../test/TestRouter';
 import DataPortability from "./DataPortability";
 import * as dataPortabilityApi from "../api/dataPortability";
 

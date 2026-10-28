@@ -17,7 +17,7 @@ import type {
   ManualAbsenceMonthlyResponse,
   ManualAbsenceStudentTotalsResponse,
 } from "@operatoros/contracts/reports";
-import { useSearchParams } from "react-router";
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { getPageApiError, isApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
 import { Card } from "../components/ui/card";

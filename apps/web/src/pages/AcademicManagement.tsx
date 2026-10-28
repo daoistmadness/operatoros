@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router";
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { AlertTriangle, BookOpen, CalendarDays, CheckCircle2, Layers3, Plus, RefreshCw, Repeat2, Settings, UserCheck } from "lucide-react";
 import {
   createAcademicYear,

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { Download, Search, UserRound } from "lucide-react";
 import { createSchoolUnit, downloadStaffExcel, fetchJenjangOptions, fetchSchoolUnits, fetchStaff, fetchStaffAnalytics, fetchStaffPositions, updateSchoolUnit } from "../api/staff";
 import { useAuth } from "../context/AuthContext";

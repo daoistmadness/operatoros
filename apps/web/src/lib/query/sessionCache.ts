@@ -2,15 +2,20 @@ import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./queryKeys";
 
 function isProtectedQuery(query: { queryKey: readonly unknown[] }) {
-  return query.queryKey[0] !== queryKeys.auth.all[0];
+  return query.queryKey[0] !== queryKeys.auth.all[0]
+    && query.queryKey[0] !== queryKeys.setup.all[0];
 }
 
 export async function clearProtectedQueries(client: QueryClient): Promise<void> {
   try {
-    await client.cancelQueries();
+    await cancelProtectedQueries(client);
   } finally {
     client.removeQueries({ predicate: isProtectedQuery });
   }
+}
+
+export function cancelProtectedQueries(client: QueryClient): Promise<void> {
+  return client.cancelQueries({ predicate: isProtectedQuery });
 }
 
 export function resetProtectedQueries(client: QueryClient): Promise<void> {

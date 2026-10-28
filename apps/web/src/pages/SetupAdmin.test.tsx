@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from '../test/TestRouter';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../lib/query/queryClient";
 import SetupAdmin from "./SetupAdmin";

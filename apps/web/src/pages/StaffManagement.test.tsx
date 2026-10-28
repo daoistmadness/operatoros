@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router";
+import { useLocation } from '@tanstack/react-router';
+import { MemoryRouter } from '../test/TestRouter';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../lib/query/queryClient";
@@ -26,7 +27,7 @@ vi.mock("../api/staff", () => ({
 
 function LocationProbe() {
   const location = useLocation();
-  return <output aria-label="Current location">{location.pathname}{location.search}</output>;
+  return <output aria-label="Current location">{location.pathname}{location.searchStr}</output>;
 }
 
 const response = (status: "ACTIVE" | "FORMER" | "ALL") => ({

@@ -44,7 +44,7 @@ test("@analytics @critical attendance views share one destination and reuse repo
     { path: "/analytics/academic", title: "Academic Analytics" },
     { path: "/analytics/student-insights?view=trends", title: "Student Insights", view: "Trends" },
     { path: "/analytics/student-insights?view=indicators", title: "Student Insights", view: "Indicators" },
-    { path: "/analytics/trends?window=term", title: "Student Insights", view: "Trends", redirect: true },
+    { path: "/analytics/trends?window=term&tag=one&tag=two", title: "Student Insights", view: "Trends", redirect: true },
     { path: "/analytics/indicators?window=term", title: "Student Insights", view: "Indicators", redirect: true },
     { path: "/reports/tardiness?month=8&year=2026", title: "Tardiness Report", view: "Tardiness", redirect: true },
   ] as const;
@@ -54,6 +54,13 @@ test("@analytics @critical attendance views share one destination and reuse repo
     const path = route.redirect ? "view" in route && route.view === "Tardiness" ? "/analytics/attendance" : "/analytics/student-insights" : route.path.split("?")[0];
     if (route.redirect) await page.waitForURL((url) => url.pathname === path && (path !== "/analytics/attendance" || url.searchParams.get("view") === "tardiness"));
     else expect(new URL(page.url()).pathname).toBe(path);
+    if (route.redirect) {
+      const originalSearch = new URL(route.path, "http://operator.local").searchParams;
+      const redirectedSearch = new URL(page.url()).searchParams;
+      for (const key of new Set(originalSearch.keys())) {
+        expect(redirectedSearch.getAll(key)).toEqual(originalSearch.getAll(key));
+      }
+    }
     await expect(page.getByRole("heading", { name: route.title, exact: true }).first()).toBeVisible();
     if ("view" in route) {
       await expect(page.getByRole("tab", { name: route.view, exact: true })).toHaveAttribute("aria-selected", "true");

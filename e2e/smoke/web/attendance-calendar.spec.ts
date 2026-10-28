@@ -217,3 +217,47 @@ test("@attendance @calendar @critical @release configures expectation and surfac
   expect(readiness.features.find((feature) => feature.key === "MACHINE_IMPORT")).toMatchObject({ state: "READY", blockers: [] });
   expect(browserErrors).toEqual([]);
 });
+
+test("@attendance @calendar @router-hash protects unsaved recurring days during hash-only browser history", async ({ page }) => {
+  await login(page);
+  await page.goto("/attendance/calendar");
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
+  await page.getByRole("link", { name: "Review exceptions" }).click();
+  const anchoredUrl = page.url();
+  const hashlessUrl = new URL(anchoredUrl);
+  hashlessUrl.hash = "";
+  await expect(page).toHaveURL(/#date-exceptions$/);
+
+  const weekday = page.locator("#weekday-2");
+  const savedValue = await weekday.inputValue();
+  const draftValue = savedValue === "EXPECTED" ? "NOT_EXPECTED" : "EXPECTED";
+  await weekday.selectOption(draftValue);
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+
+  let backPrompt = false;
+  page.once("dialog", async (dialog) => {
+    backPrompt = dialog.message().includes("unsaved recurring-day changes");
+    await dialog.dismiss();
+  });
+  await page.goBack({ waitUntil: "commit" });
+  expect(backPrompt).toBe(true);
+  await expect(page).toHaveURL(anchoredUrl);
+  await expect(weekday).toHaveValue(draftValue);
+
+  page.once("dialog", async (dialog) => { await dialog.accept(); });
+  await page.goBack({ waitUntil: "commit" });
+  await expect(page).toHaveURL(hashlessUrl.toString());
+  await expect(weekday).toHaveValue(savedValue);
+
+  await weekday.selectOption(draftValue);
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+  let forwardPrompt = false;
+  page.once("dialog", async (dialog) => {
+    forwardPrompt = dialog.message().includes("unsaved recurring-day changes");
+    await dialog.dismiss();
+  });
+  await page.goForward({ waitUntil: "commit" });
+  expect(forwardPrompt).toBe(true);
+  await expect(page).not.toHaveURL(/#date-exceptions$/);
+  await expect(weekday).toHaveValue(draftValue);
+});

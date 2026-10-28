@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { AppLink as Link } from '../components/AppLink';
+import { useBlocker, useRouter } from '@tanstack/react-router';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Button } from "../components/ui/button";
@@ -7,16 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { FieldLabel } from "../components/ui/field";
 import { NativeSelect } from "../components/ui/native-select";
 import { useAuth } from "../context/AuthContext";
-import { fetchAcademicYears } from "../api/grades";
 import { applyAttendanceCalendarPeriod, deleteAttendanceCalendarException, previewAttendanceCalendarPeriod, saveAttendanceCalendarException, saveAttendanceCalendarWeekdays, saveAttendanceSubmissionDeadline, type AttendanceCalendarRuleValue } from "../api/attendanceCalendar";
 import { getPageApiError } from "../lib/api/errors";
 import type { AttendanceCalendarOverview, AttendanceCalendarPeriodPreviewResponse, AttendanceCalendarWeekdaysRequest } from "@operatoros/contracts/attendance";
 import { useAttendanceCalendarQuery } from "../hooks/useAttendanceCalendarQuery";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAnalyticsFiltersQuery } from "../hooks/useAnalyticsQueries";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invalidateAttendanceCalendarQueries } from "../lib/query/attendanceInvalidation";
 import { queryKeys } from "../lib/query/queryKeys";
 import { invalidateReadiness } from "../features/readiness";
-import { registerAttendanceCalendarNavigationGuard } from "../lib/attendanceCalendarNavigationGuard";
 
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const weekdayOrder = [1, 2, 3, 4, 5, 6, 0];
@@ -25,7 +26,6 @@ type Reason = typeof reasons[number];
 type Form = { id?: number; expectation: AttendanceCalendarRuleValue; reason: Reason };
 type WeekdayRule = AttendanceCalendarWeekdaysRequest["weekdays"][number];
 type WeekdayDraft = { scope: string; weekdays: WeekdayRule[] };
-type HistoryEntry = { href: string; index: number | null; state: unknown };
 
 const emptyExceptionForm: Form = { expectation: "NOT_EXPECTED", reason: "HOLIDAY" };
 
@@ -45,11 +45,6 @@ function dateInYear(value: string | null, startDate: string, endDate: string): v
   return validDate(value) && value >= startDate && value <= endDate;
 }
 
-function historyIndex(state: unknown): number | null {
-  if (!state || typeof state !== "object" || !("idx" in state)) return null;
-  return typeof state.idx === "number" ? state.idx : null;
-}
-
 function reasonLabel(value: string): string { return value.split("_").map((part) => part[0] + part.slice(1).toLowerCase()).join(" "); }
 function sameWeekdays(left: WeekdayRule[] | undefined, right: WeekdayRule[] | undefined): boolean {
   return Boolean(left && right && left.length === right.length && left.every((value, index) => value.weekday === right[index]?.weekday && value.expectation === right[index]?.expectation));
@@ -58,20 +53,21 @@ function sameWeekdays(left: WeekdayRule[] | undefined, right: WeekdayRule[] | un
 function CalendarRulesSummary({ scope, jenjangName, rules, exceptionCount }: { scope: string; jenjangName: string; rules: WeekdayRule[]; exceptionCount: number }) {
   const namesFor = (expectation: AttendanceCalendarRuleValue | null) => rules.filter((value) => value.expectation === expectation).map((value) => weekdays[value.weekday]).join(", ") || "None";
   const notConfigured = rules.filter((value) => value.expectation === null).map((value) => weekdays[value.weekday]).join(", ") || "None";
-  return <Card><CardHeader><CardTitle>Calendar Rules Summary</CardTitle><p className="text-sm text-muted-foreground">Saved rules for {scope} · {jenjangName}</p></CardHeader><CardContent className="space-y-2 text-sm"><p><strong>Expected:</strong> {namesFor("EXPECTED")}</p><p><strong>Not expected:</strong> {namesFor("NOT_EXPECTED")}</p><p><strong>Not configured:</strong> {notConfigured} · unresolved dates remain unknown.</p><p>{exceptionCount ? `${exceptionCount} date-specific exception${exceptionCount === 1 ? "" : "s"}` : "No date-specific exceptions"}; date exceptions take precedence over recurring weekdays. <a className="font-bold text-brand hover:underline" href="#date-exceptions">Review exceptions</a></p><a className="inline-block font-bold text-brand hover:underline" href="#recurring-weekdays">Edit recurring days</a></CardContent></Card>;
+  return <Card><CardHeader><CardTitle>Calendar Rules Summary</CardTitle><p className="text-sm text-muted-foreground">Saved rules for {scope} · {jenjangName}</p></CardHeader><CardContent className="space-y-2 text-sm"><p><strong>Expected:</strong> {namesFor("EXPECTED")}</p><p><strong>Not expected:</strong> {namesFor("NOT_EXPECTED")}</p><p><strong>Not configured:</strong> {notConfigured} · unresolved dates remain unknown.</p><p>{exceptionCount ? `${exceptionCount} date-specific exception${exceptionCount === 1 ? "" : "s"}` : "No date-specific exceptions"}; date exceptions take precedence over recurring weekdays. <Link className="font-bold text-brand hover:underline" to="#date-exceptions">Review exceptions</Link></p><Link className="inline-block font-bold text-brand hover:underline" to="#recurring-weekdays">Edit recurring days</Link></CardContent></Card>;
 }
 
 export default function AttendanceCalendar() {
+  const router = useRouter();
   const { user, can } = useAuth();
   const allowed = can("view_attendance");
   const canEdit = user?.role === "admin";
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const years = useQuery({ queryKey: queryKeys.academicMasters.years, queryFn: fetchAcademicYears, enabled: allowed });
+  const years = useAnalyticsFiltersQuery({}, allowed);
+  const academicYears = years.data?.academic_years ?? [];
   const requestedYearId = positiveId(searchParams.get("academic_year_id"));
-  const selectedYear = years.data?.find((item) => item.id === requestedYearId)
-    ?? years.data?.find((item) => item.is_default)
-    ?? years.data?.[0]
+  const selectedYear = academicYears.find((item) => item.id === requestedYearId)
+    ?? academicYears.find((item) => item.is_default)
+    ?? academicYears[0]
     ?? null;
   const academicYearId = selectedYear?.id ?? null;
   const [weekdayDraft, setWeekdayDraft] = useState<WeekdayDraft | null>(null);
@@ -89,7 +85,6 @@ export default function AttendanceCalendar() {
   const dateParam = searchParams.get("date");
   const calendarDate = year && dateInYear(dateParam, year.startDate, year.endDate) ? dateParam : "";
   const client = useQueryClient();
-  const historyEntry = useRef<HistoryEntry | null>(null);
   const invalidateCalendar = async (yearId: number, includeReadiness: boolean) => {
     await invalidateAttendanceCalendarQueries(client, yearId);
     if (includeReadiness) await invalidateReadiness(client);
@@ -113,9 +108,6 @@ export default function AttendanceCalendar() {
   const weekdayDraftByNumber = new Map(draftWeekdays?.map((value) => [value.weekday, value.expectation]) ?? []);
   const hasUnsavedWeekdays = Boolean(persistedWeekdays && draftWeekdays && !sameWeekdays(persistedWeekdays, draftWeekdays));
 
-  useLayoutEffect(() => {
-    historyEntry.current = { href: window.location.href, index: historyIndex(window.history.state), state: window.history.state };
-  }, [location.hash, location.key, location.pathname, location.search]);
 
   useEffect(() => {
     if (!selectedYear) return;
@@ -140,42 +132,46 @@ export default function AttendanceCalendar() {
     if (changed) setSearchParams(next, { replace: true });
   }, [calendarMatchesYear, dateParam, searchParams, selectedJenjang, selectedYear, setSearchParams, year]);
 
+  const blocker = useBlocker({
+    shouldBlockFn: ({ action, current, next }) => (hasUnsavedWeekdays || saveWeekdays.isPending)
+      && (current.pathname !== next.pathname || (action !== 'PUSH' && action !== 'REPLACE' && JSON.stringify(current.search) !== JSON.stringify(next.search))),
+    enableBeforeUnload: hasUnsavedWeekdays || saveWeekdays.isPending,
+    withResolver: true,
+  });
   useEffect(() => {
     if (!hasUnsavedWeekdays && !saveWeekdays.isPending) return undefined;
-    const leaveMessage = "You have unsaved recurring-day changes. Leave without saving?";
-    const onBeforeUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
-    const onLinkClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const target = event.target;
-      const anchor = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
-      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
-      const destination = new URL(anchor.href, window.location.href);
-      if (destination.origin !== window.location.origin || (destination.pathname === window.location.pathname && destination.search === window.location.search)) return;
-      const mayLeave = !saveWeekdays.isPending && window.confirm(leaveMessage);
-      if (mayLeave) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    };
-    const onPopState = (event: PopStateEvent) => {
-      const current = historyEntry.current;
-      if (!current || current.href === window.location.href) return false;
-      const targetIndex = historyIndex(event.state);
-      const mayLeave = !saveWeekdays.isPending && window.confirm(leaveMessage);
+    // useBlocker omits hashes from its callback locations, so inspect raw history for fragment traversals.
+    return router.history.block({ blockerFn: ({ action, currentLocation, nextLocation }) => {
+      const hashTraversal = action !== 'PUSH' && action !== 'REPLACE'
+        && currentLocation.pathname === nextLocation.pathname
+        && currentLocation.search === nextLocation.search
+        && currentLocation.hash !== nextLocation.hash;
+      if (!hashTraversal) return false;
+      const mayLeave = !saveWeekdays.isPending && window.confirm("You have unsaved recurring-day changes. Leave without saving?");
       if (mayLeave) {
         setWeekdayDraft(null);
         saveWeekdays.reset();
-        return false;
       }
-      const delta = current.index !== null && targetIndex !== null ? current.index - targetIndex : null;
-      if (delta !== null) window.setTimeout(() => window.history.go(delta), 0);
-      else window.history.pushState(current.state, "", current.href);
-      return true;
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    document.addEventListener("click", onLinkClick, true);
-    const unregisterNavigationGuard = registerAttendanceCalendarNavigationGuard(onPopState);
-    return () => { window.removeEventListener("beforeunload", onBeforeUnload); document.removeEventListener("click", onLinkClick, true); unregisterNavigationGuard(); };
-  }, [hasUnsavedWeekdays, saveWeekdays.isPending, saveWeekdays.reset]);
+      return !mayLeave;
+    }});
+  }, [hasUnsavedWeekdays, router, saveWeekdays.isPending, saveWeekdays.reset]);
+  const handledBlocker = useRef(false);
+  useEffect(() => {
+    if (blocker.status !== "blocked") {
+      handledBlocker.current = false;
+      return;
+    }
+    if (handledBlocker.current) return;
+    handledBlocker.current = true;
+    const mayLeave = !saveWeekdays.isPending && window.confirm("You have unsaved recurring-day changes. Leave without saving?");
+    if (!mayLeave) {
+      blocker.reset();
+      return;
+    }
+    setWeekdayDraft(null);
+    saveWeekdays.reset();
+    blocker.proceed();
+  }, [blocker, saveWeekdays.isPending, saveWeekdays.reset]);
 
   if (!allowed) return <PermissionRestrictedState title="Access restricted" description="Your account cannot view attendance expectation rules." />;
   if (years.isPending || calendar.isPending) return <LoadingState title="Loading attendance calendar" description="Preparing the configured expectation authority." />;
@@ -202,7 +198,7 @@ export default function AttendanceCalendar() {
   const submitPeriod = (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); applyPeriod.reset(); previewPeriod.mutate({ ...period, academic_year_id: year.academicYearId, jenjang_id: current.id }); };
   return <div className="space-y-7 pb-16">
     <PageHeader eyebrow="Attendance Administration" title="Attendance Calendar" description="Configure when attendance is expected for each jenjang. An unconfigured date remains unknown; this does not establish a submission deadline." actions={<div className="flex flex-wrap gap-2"><Link className="rounded-md border border-border px-3 py-2 text-sm font-bold hover:bg-surface-muted" to="/attendance/daily">Open Daily Attendance</Link>{can("import_attendance") && <Link className="rounded-md border border-border px-3 py-2 text-sm font-bold hover:bg-surface-muted" to="/upload">Open Attendance Upload</Link>}</div>} />
-    <Card><CardHeader><CardTitle>Calendar scope</CardTitle><p className="text-sm text-muted-foreground">Rules use the school date exactly as entered. Date exceptions override the recurring weekday rule.</p></CardHeader><CardContent><div className="grid gap-4 sm:grid-cols-2"><div><FieldLabel htmlFor="calendar-year">Academic year</FieldLabel><NativeSelect id="calendar-year" value={year.academicYearId} onChange={(event) => { if (!confirmScopeChange()) return; const nextYear = years.data?.find((item) => item.id === Number(event.target.value)); if (!nextYear) return; setForm(emptyExceptionForm); saveException.reset(); deleteException.reset(); saveDeadline.reset(); setSearchParams((existing) => { const next = new URLSearchParams(existing); next.set("academic_year_id", String(nextYear.id)); if (!dateInYear(next.get("date"), nextYear.start_date, nextYear.end_date)) next.delete("date"); return next; }); }}><option value="">Select year</option>{years.data?.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect><p className="mt-1 text-xs text-muted-foreground">{year.startDate} to {year.endDate}</p></div><div><FieldLabel htmlFor="calendar-jenjang">Jenjang</FieldLabel><NativeSelect id="calendar-jenjang" value={current.id} onChange={(event) => { if (!confirmScopeChange()) return; setForm(emptyExceptionForm); saveException.reset(); deleteException.reset(); saveDeadline.reset(); updateCalendarParam("jenjang_id", event.target.value); }}>{calendar.data.jenjangs.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div></div></CardContent></Card>
+    <Card><CardHeader><CardTitle>Calendar scope</CardTitle><p className="text-sm text-muted-foreground">Rules use the school date exactly as entered. Date exceptions override the recurring weekday rule.</p></CardHeader><CardContent><div className="grid gap-4 sm:grid-cols-2"><div><FieldLabel htmlFor="calendar-year">Academic year</FieldLabel><NativeSelect id="calendar-year" value={year.academicYearId} onChange={(event) => { if (!confirmScopeChange()) return; const nextYear = academicYears.find((item) => item.id === Number(event.target.value)); if (!nextYear) return; setForm(emptyExceptionForm); saveException.reset(); deleteException.reset(); saveDeadline.reset(); setSearchParams((existing) => { const next = new URLSearchParams(existing); next.set("academic_year_id", String(nextYear.id)); return next; }); }}><option value="">Select year</option>{academicYears.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect><p className="mt-1 text-xs text-muted-foreground">{year.startDate} to {year.endDate}</p></div><div><FieldLabel htmlFor="calendar-jenjang">Jenjang</FieldLabel><NativeSelect id="calendar-jenjang" value={current.id} onChange={(event) => { if (!confirmScopeChange()) return; setForm(emptyExceptionForm); saveException.reset(); deleteException.reset(); saveDeadline.reset(); updateCalendarParam("jenjang_id", event.target.value); }}>{calendar.data.jenjangs.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div></div></CardContent></Card>
     <CalendarRulesSummary scope={year.academicYearLabel} jenjangName={current.name} rules={current.weekdays} exceptionCount={current.exceptions.length} />
     <Card><CardHeader><CardTitle id="recurring-weekdays">Recurring weekdays · {current.name}</CardTitle><p className="text-sm text-muted-foreground">Changes are not active until saved. Recurring rules define the normal weekly attendance expectation. Unconfigured weekdays resolve to Unknown until a recurring rule or date exception applies.</p></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{weekdayOrder.map((weekday) => {
       const expectation = weekdayDraftByNumber.get(weekday) ?? null;

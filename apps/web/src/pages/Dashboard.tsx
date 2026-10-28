@@ -1,5 +1,5 @@
 import { lazy, useEffect, useMemo, useRef, useState, type SVGProps } from "react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
 import { useQueryClient } from "@tanstack/react-query";
 import { DeferredChart } from "../components/DeferredChart";
 import {

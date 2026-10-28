@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router";
+import { useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from "@tanstack/react-query";
 import { bootstrapSetupAuthorization } from "../api/setup";
 import { Alert } from "../components/ui/alert";
@@ -58,10 +58,10 @@ export default function SetupAdmin() {
       }
       setPassword(""); setConfirmation(""); setSetupToken("");
       window.sessionStorage.setItem("astryx:login-notice", "Administrator created. Sign in with your new account.");
-      navigate("/login", { replace: true });
+      navigate({ to: "/login", replace: true });
     } catch (error) {
       const code = errorCode(error);
-      if (code === "SETUP_ALREADY_COMPLETED") { await client.invalidateQueries({ queryKey: queryKeys.setup.all }); navigate("/login", { replace: true }); return; }
+      if (code === "SETUP_ALREADY_COMPLETED") { await client.invalidateQueries({ queryKey: queryKeys.setup.all }); navigate({ to: "/login", replace: true }); return; }
       if (code === "SETUP_TOKEN_REQUIRED" || code === "SETUP_TOKEN_INVALID") { setValidationError("The setup token is missing or incorrect. Check the configured token and try again."); return; }
       setValidationError(code === "PASSWORD_POLICY_FAILED" ? "Password must be at least 12 characters long." : "Administrator could not be created. Check your details and try again.");
     }
