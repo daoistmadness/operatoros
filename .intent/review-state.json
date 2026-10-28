@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "1fb0308981f069dda9ead0949971b82053cd26090441a19a7bbf001bb4ef4ac9",
+      "fingerprint": "2a5d3324f3cdf88e47d21584863f40df03a5cbbc369d0daf215a2e2ba2784a65",
       "snapshot": {
         ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
-        "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
-        "bun.lock": "9db1ec0d5f305a22598717ef6efd7352e51bf4667e2c27175a45568941d1160a",
+        "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
+        "bun.lock": "832860a3d428494421105836f33ccd19e86c6e6e7a1cd833a64bb4296d064732",
         "docs/architecture/change-safety-golden-path.md": "a4dcb77bc432b558055ded5585b44ecbcca6ffb54bb8321d3aaf8957257fda53",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "1e87881b06dccdda5deb5c40f111d033215bae6354d3eec8349abcbf72881cea",
+        "package.json": "69207e38c6c35f1f4dc2ab6742c35a621a5c9b50a94d6deea0ea0c19680c6816",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,18 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "The CI edit removes the checkout version comment while retaining the full SHA, and the reference names pinned action releases. Neither edit changes Elysia behavior or task guidance.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        ".github/workflows/ci.yml",
-        ".github/CI.md",
-        "packages/agent-skills/skills/elysiajs/SKILL.md",
-        "apps/api/package.json"
+        "Changed: apps/api/package.json, bun.lock, package.json at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "3810fcf204f457f840434c09ceffa6d9328802924504808b0ad237ac876d243f",
+      "fingerprint": "c94d249b9b3f68bbedc13c28534e210e47bac219e2a10743b6bd9df95f582984",
       "snapshot": {
         ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
@@ -64,13 +61,13 @@
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
-        "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
-        "bun.lock": "9db1ec0d5f305a22598717ef6efd7352e51bf4667e2c27175a45568941d1160a",
+        "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
+        "bun.lock": "832860a3d428494421105836f33ccd19e86c6e6e7a1cd833a64bb4296d064732",
         "docs/architecture/change-safety-golden-path.md": "a4dcb77bc432b558055ded5585b44ecbcca6ffb54bb8321d3aaf8957257fda53",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "1e87881b06dccdda5deb5c40f111d033215bae6354d3eec8349abcbf72881cea",
+        "package.json": "69207e38c6c35f1f4dc2ab6742c35a621a5c9b50a94d6deea0ea0c19680c6816",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -99,13 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "c457efb890cb5ac721f9ae8cec52e7f3e19790e7",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "The planning record already assigns the checks to preflight. Removing a release annotation and clarifying action versions adds no skill scope or source mapping.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "_artifacts/skill_spec.md",
-        ".github/workflows/ci.yml",
-        ".github/CI.md"
+        "Changed: apps/api/package.json, bun.lock, package.json at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1223,15 +1218,15 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "ee28edd9c438dd50f6274670165c254427ba60c171990a0cff00a3edeedfae1b",
+      "fingerprint": "932246c38a2f43c1ddbf88e60714c245b64577101ee3bc5baf0e0ce8f7541427",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "d6454cd6bb6550b4f3326b3e34b676804cb8caa518beb85a61344f98db07458e"
+        "apps/web/src/pages/Dashboard.tsx": "dd0e6bf3dbe99902ebeaefe95ef2f51d8e8a749db77e912479fd0e75ec3153d6"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/Dashboard.tsx at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -1706,15 +1701,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "3bbf362f6e8d0741c6e6bf8e590dd7db15c2fe4bc6f8cfbb96368ed7ed620df7",
+      "fingerprint": "03967580b3f7b8841a27fb6d8f8fa0bec01ff3a59899057d7c76efb80e0ab573",
       "snapshot": {
-        "docs/README.md": "d45f7bf70c96c176ee04e310b5483336ee6dda58fba0d3cfa5d3299f9da7f08e"
+        "docs/README.md": "97736eaa17172489204e54be1f64bef70c58f1deb178116f21fc46d1230bb636"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "Changed: docs/README.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/README.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2898,15 +2893,15 @@
       ]
     },
     "source:.github/scripts/check-markdown-organization.ts": {
-      "fingerprint": "0752bfde32e88946709bdd92765f1392f5abb89cee63b1fd3459aad321e4706c",
+      "fingerprint": "808f8c2cdc04efd4fb8493e76038332d716c18fd2c0fe142dbd9846faed5ddf6",
       "snapshot": {
-        ".github/scripts/check-markdown-organization.ts": "ebd16f7aca325885cd813fb31308c303d9d14926a2e99b7e5e5178a269106552"
+        ".github/scripts/check-markdown-organization.ts": "50f6ebd35840a152fb4f493f35466a9f167f90664949b647a3e4b99966bad648"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "Changed: .github/scripts/check-markdown-organization.ts at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: .github/scripts/check-markdown-organization.ts at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:ATTENDANCE_IMPORT_PREVIEW_DESIGN.md": {
@@ -2924,15 +2919,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "dc838c7ceec75fa39a08287893fe12e135a2b9809c80244be4938226e15bf3da",
+      "fingerprint": "ebb75dabea904efd3eb0de706a12300274f8c69cf892f6bc5b2affd05940e493",
       "snapshot": {
-        "CHANGELOG.md": "6e38dea142886d61f57df30563781d8d635982256b79ca0e4c282df8cf7ac474"
+        "CHANGELOG.md": "7d4b8f804b98565a14d7ee6b3f53626d37f161e0b0794ffdf02f50225c9039e9"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
-      "outcome": "out-of-scope",
-      "reason": "The new Unreleased bullet records a CI workflow change and does not alter agent-skill guidance.",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "CHANGELOG.md"
+        "Changed: CHANGELOG.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:COMMANDS.md": {
@@ -3436,16 +3431,15 @@
       ]
     },
     "source:docs/decisions/documentation-system.md": {
-      "fingerprint": "f2aecc1b89ee60d35ca4a6d7792bf70eb67814963fbe4b5b73925e23b00e34d5",
+      "fingerprint": "0b0f439ad462d27b8440bb1e7c7e9a5205f0404a6f01748a18640d385273d85a",
       "snapshot": {
-        "docs/decisions/documentation-system.md": "9b31ba7bcde612f5d6886a3b6eb89049aac13147a72208f173cbe05e999d5b42"
+        "docs/decisions/documentation-system.md": "da0fde94f3273a8e0d9d4715c3b867e8e86919275fd1be17bd82e272e21f86ae"
       },
-      "head": "f94501faaf26c27da7c56cc6bf80c5b918dbeb24",
-      "outcome": "out-of-scope",
-      "reason": "This decision documents repository documentation and changelog policy, outside the registered Elysia backend task.",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "docs/decisions/documentation-system.md",
-        "AGENTS.md"
+        "Changed: docs/decisions/documentation-system.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:docs/decisions/git-history-data-remediation.md": {
@@ -5037,15 +5031,15 @@
       ]
     },
     "source:scripts/tests/docs-checkers.test.ts": {
-      "fingerprint": "d692e59710bd1b6f853b019df43113b2bc401384446ab016f620b0c489a21f96",
+      "fingerprint": "bde8e7bf3e5a726d3f4af702377e3b5d4378bb63b64269a17c9f0adf151f8f2f",
       "snapshot": {
-        "scripts/tests/docs-checkers.test.ts": "0122726f0062ab3773cca6124d584170eb64b179ce0ff887d7bbb9004def4dda"
+        "scripts/tests/docs-checkers.test.ts": "cde0be61df90bd0fdb60d9ee6f392b02729fcaf49a5202b097eff785e2e7250c"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
       "evidence": [
-        "Changed: scripts/tests/docs-checkers.test.ts at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: scripts/tests/docs-checkers.test.ts at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     },
     "source:.audit/docs-restructure-decisions.tsv": {
@@ -7071,6 +7065,66 @@
       "evidence": [
         "scripts/check-pre-push.sh",
         "package.json"
+      ]
+    },
+    "source:.audit/dependency-optimization.tsv": {
+      "fingerprint": "1ed855e01822a6eace82448907bbc9fffdb944bd425dda74fece4f4d580d9075",
+      "snapshot": {
+        ".audit/dependency-optimization.tsv": "e86b40ebd364414a19b6a23556d55a32cf7f1ba22be1a567ff662e78b2763885"
+      },
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "evidence": [
+        "Changed: .audit/dependency-optimization.tsv at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+      ]
+    },
+    "source:apps/web/src/components/ui/__tests__/label.test.tsx": {
+      "fingerprint": "2bbcb0abf12c8d157fcf5723d870b9dcdabad001696d7263602e01bf57ca5bbe",
+      "snapshot": {
+        "apps/web/src/components/ui/__tests__/label.test.tsx": "55e0b58c7282f55da41538f2f9eaa8124d45eb62d3f1d667e74d76ec20ca6ae1"
+      },
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "evidence": [
+        "Changed: apps/web/src/components/ui/__tests__/label.test.tsx at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+      ]
+    },
+    "source:apps/web/src/components/ui/label.tsx": {
+      "fingerprint": "8c03f5ff4cc01a6ee199bf5f6096fd7e2cd6c45aadd0ecbc702c6460ab701443",
+      "snapshot": {
+        "apps/web/src/components/ui/label.tsx": "118987ac101b17a778d3f2cb279064c5393c0239c6cb6b3ad605c268d1cd7619"
+      },
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "evidence": [
+        "Changed: apps/web/src/components/ui/label.tsx at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+      ]
+    },
+    "source:apps/web/src/index.css": {
+      "fingerprint": "ee8feef365ec1f5eeb41fa39b930b3778b402483aa7918b9cd55ada1688e1309",
+      "snapshot": {
+        "apps/web/src/index.css": "07c3a0f8c00eae830c831c07e66b59e4448c9fea63d6f46c860795371532b270"
+      },
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "evidence": [
+        "Changed: apps/web/src/index.css at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+      ]
+    },
+    "source:docs/audits/dependency-optimization.md": {
+      "fingerprint": "34e622058008d716aee50eed2a4d03d76bf5c1e03aa5fe5ecce3c934dafd6cc0",
+      "snapshot": {
+        "docs/audits/dependency-optimization.md": "a76e41685c942b9943e0fd04751674f640dea132998798069fe16959cd5e5b8b"
+      },
+      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "outcome": "no-change",
+      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "evidence": [
+        "Changed: docs/audits/dependency-optimization.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
       ]
     }
   }
