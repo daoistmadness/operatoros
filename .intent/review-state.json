@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "ce983efdca857ff37ee1d0c4034b3b726678a56a544e849eccffaf9dc6209938",
+      "fingerprint": "a2cef64103eccfb47495cb2760a2ecc1fdf9e44aaaf579c0c0c00ac606e41fde",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -14,7 +14,7 @@
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
-        "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
+        "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
@@ -44,15 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/reference/security-model.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "f3d55769407a790c39d214fd743cbc09449aeb411aa1cf09209a2464c05deda2",
+      "fingerprint": "cc7a2bb05966e9e0d97e1c49eb09fca5a5258f9b0a558e1a85f5689c573b90ef",
       "snapshot": {
         ".github/CI.md": "49f385df61312302351069cd7a64eb6fecbc778c884de27980b2503258ff5efe",
         ".github/workflows/ci.yml": "08553d7fc2610ee0eb99d4dd4114878cfaceb44ebf385f3d9f8304eb1ce4b46e",
@@ -66,7 +66,7 @@
         "docs/architecture/change-safety-golden-path.md": "0f3d65641115a9cf126813ae22e8e08478bf0d0af6dc3e959fcf87643b162ab9",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
-        "docs/reference/security-model.md": "1b8989ba57568c1c69ef9c062d6a80c0903b029f78913e43b1ce1a9c01c38c0e",
+        "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "f145296a37021c93f0b8f3ec182ec7b176c56060e302f285099c3b7a6aed7626",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: docs/guides/testing.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/reference/security-model.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -192,15 +192,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "80f80680a06b3074cd5e582b2dc9ac2d7b880ac37899f40677a29f6b2f610755",
+      "fingerprint": "ebf82a2beb550649d68e6dcff550383a01261aad2642576bf8171a7547858845",
       "snapshot": {
-        "apps/api/src/app.ts": "6360aa209017d38c77b65b68cd22b9ef8e4c4b65cc1eb7ed2ed3e1f9994753db"
+        "apps/api/src/app.ts": "ff252755d0def7ce193240c0cdf0b22d4c05415d057a0a9b6c0a26e07fa76592"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/api/src/app.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -407,15 +407,15 @@
       ]
     },
     "source:apps/api/src/auth/service.ts": {
-      "fingerprint": "91813262cdb7d7238323351eef9be5229009f0c55b221801cddc3f71c6143152",
+      "fingerprint": "477c4c2f5add4be4a12ffed3761574574825efbc3a5659ee00a85467b961d3b2",
       "snapshot": {
-        "apps/api/src/auth/service.ts": "a3e1fb8e383e403360722198cd1ee63247b50be7779a8d6217ad03243d40849f"
+        "apps/api/src/auth/service.ts": "004cfd63d05ff6fda59f5deafed1090e8313b6aadf8b725a9911f01eee8b878b"
       },
-      "head": "be0c74caf1700e335ce39b31e099c05bcc3521db",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Reviewed apps/api/src/auth/service.ts and apps/api/tests/auth.test.ts: these implement and test the documented concurrent-login lockout fix. docs/security/identity-authentication.md records the changed authentication behavior. None of these changes alter agent skills or agent operating guidance, so no skill guidance update is needed.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: apps/api/src/auth/service.ts at be0c74caf1700e335ce39b31e099c05bcc3521db"
+        "Changed: apps/api/src/auth/service.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
@@ -491,15 +491,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "85832ce7df4ee50925509acfcd59cf15b55ed494604cd1e619f73a575b3ae3e0",
+      "fingerprint": "fded21db6eb7d5f7aa88415820bc170234789a594607aacd291a7d4c5bc0f638",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "a6488ff5b9da05c2d4601dc4b647e21bc424023d5ff18e3b6db0d66364400b01"
+        "apps/web/src/generated/openapi/schema.ts": "c2edcf5a878246ad5ad005369ad3dfe66b0ce4c993aebee0de5ff416e3092970"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -515,15 +515,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "8d23b8c30a98fa8e07250e895b7bece2269e8fc176dcb229ba788171deb55726",
+      "fingerprint": "6422579b622b63771f603f1dc0661352c20e808d709af3cf0e6d3c986045818d",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "978abe01e3875ca22bd78285972794b620556a69be2dc80ca86524d5b1abe919"
+        "openapi/operatoros.openapi.json": "3830d602789f60b6f388f113f03fc5c791e4ded024a12434332f3b22ecde11e6"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: openapi/operatoros.openapi.json at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -716,15 +716,15 @@
       ]
     },
     "source:apps/api/src/server.ts": {
-      "fingerprint": "56dac118b335ed28b44c75b1ec90a2f1103cdb89b91923b5732da8f7ee9fe666",
+      "fingerprint": "b543b88f3c0203a581f19f90941ddab448193cd71a07046e9e9c848768757068",
       "snapshot": {
-        "apps/api/src/server.ts": "3fee0f92b0e247eb09d4fd73f47c5d44bd26ba368ed45a71bcc1f01959eed7e5"
+        "apps/api/src/server.ts": "623349898d7cc61a9a43fce8ae17c083d10390aa2ccf58966d12495f6390d434"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: apps/api/src/server.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "Changed: apps/api/src/server.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
@@ -1047,16 +1047,15 @@
       ]
     },
     "source:apps/api/tests/auth.test.ts": {
-      "fingerprint": "4432061392971a8369237ceadffca48e476d1311e8609fca4439999098eccc94",
+      "fingerprint": "cca48d9c5142c6c99458bec8a6a6b980fb8d031907cff4cde00a8a88710fbbd0",
       "snapshot": {
-        "apps/api/tests/auth.test.ts": "f8650556d0b688b1b7e2d0d56d41341a69fa044e321b06eae4229153cdadf931"
+        "apps/api/tests/auth.test.ts": "fe900d5cabf10e2ec1697b5bf4abd5e6cd6492f7bc482ed8351230603036c7a7"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Reviewed apps/api/tests/auth.test.ts; it does not change registered Agent Skills or generated skill documentation.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Reviewed candidate path apps/api/tests/auth.test.ts.",
-        "No Agent Skills guidance or generated skill documentation is changed."
+        "Changed: apps/api/tests/auth.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
@@ -1418,15 +1417,15 @@
       ]
     },
     "source:apps/api/tests/app.test.ts": {
-      "fingerprint": "9723b0c42a7ad25943d89e109223e4723844d209acf475531fe0048b6c6e2d49",
+      "fingerprint": "5acd690e868d4e967c1bb0764eee2da93af176088a4a75d6046f35dec358d89b",
       "snapshot": {
-        "apps/api/tests/app.test.ts": "36a9c18865302d5e96c328c1aa8c84cab7dbefb8e06bef1ca2657189be222333"
+        "apps/api/tests/app.test.ts": "1e9ba06f94c66e6ea3652e27f641e1c84595d0711f0af6d6d4c28ad97f82d8fd"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: apps/api/tests/app.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/tests/app.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:apps/api/src/domains/early-departure.ts": {
@@ -2921,15 +2920,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6f1fef91f3e4853942a91a04bc48c085c5a06f683c5fbcf69ae42a212925f676",
+      "fingerprint": "2eb1e3b31334a40f169f202bfae4fb8eb748a52521a05083f2faa36ba8a25235",
       "snapshot": {
-        "CHANGELOG.md": "eb4273db1fb434e2efd272c63f0978a94ba88ec850e9f505eaff78322a0e0111"
+        "CHANGELOG.md": "2199ee8cb05c6d7cae09f57341f93a432f1c57103dfd10827357460bd32de526"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
       "evidence": [
-        "Changed: CHANGELOG.md at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: CHANGELOG.md at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     },
     "source:COMMANDS.md": {
@@ -5882,6 +5881,54 @@
       "reason": "These API and browser tests do not change agent skill guidance.",
       "evidence": [
         "Changed: apps/web/src/lib/api/followups.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+      ]
+    },
+    "source:apps/api/src/auth/routes.ts": {
+      "fingerprint": "b8e6f3298226a0ef4444cefe6193e95e0954a4b165d554243ffcc05ae0b2636a",
+      "snapshot": {
+        "apps/api/src/auth/routes.ts": "2733969ccb42cec650a2832ae795837542b4551be94ca351c1a091c53cf34edb"
+      },
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "outcome": "no-change",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "evidence": [
+        "Changed: apps/api/src/auth/routes.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+      ]
+    },
+    "source:apps/api/src/domains/data-portability.ts": {
+      "fingerprint": "cd7fd310799004ec9253d1d89d91e0d87889091eb0d7657890eb735bcbb1b037",
+      "snapshot": {
+        "apps/api/src/domains/data-portability.ts": "5706130a316d6128909197b3ac430afab1d6d70af79aa794885446a0faaa410c"
+      },
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "outcome": "no-change",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "evidence": [
+        "Changed: apps/api/src/domains/data-portability.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+      ]
+    },
+    "source:apps/api/tests/data-portability.test.ts": {
+      "fingerprint": "646effce290610868bd6ed0bff86b1b05129451cd7678874ae4357e9a184340a",
+      "snapshot": {
+        "apps/api/tests/data-portability.test.ts": "a81d8e16dd51702267d2ca08f0751c6fb43b58470d4aeefd78d3bd6fbe458474"
+      },
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "outcome": "no-change",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "evidence": [
+        "Changed: apps/api/tests/data-portability.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+      ]
+    },
+    "source:apps/api/tests/readiness.test.ts": {
+      "fingerprint": "ce5ccebfefb76043aac7334cf7c85f585d6b68298e3e9c5f34461e6dc632b7d4",
+      "snapshot": {
+        "apps/api/tests/readiness.test.ts": "4d44211ee9146853fa43c9d97e9c6edf81367324d8bccb8a2acdec6dccc3a04f"
+      },
+      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "outcome": "no-change",
+      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "evidence": [
+        "Changed: apps/api/tests/readiness.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
       ]
     }
   }

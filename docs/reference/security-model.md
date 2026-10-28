@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # Security model
@@ -36,7 +36,10 @@ HttpOnly and SameSite Strict. `COOKIE_SECURE=true` is required for HTTPS.
 ## Encrypted backups
 
 New application backups use an application-level envelope. The live SQLite
-database remains unencrypted.
+database is stored in plaintext. Full-disk encryption and OS-level account
+isolation are strict deployment requirements. Do not deploy or operate
+OperatorOS without both. Backup encryption protects backup artifacts only and
+does not protect the live database.
 
 | Field | Value |
 | --- | --- |

@@ -1,4 +1,5 @@
 import { createApp } from "./app";
+import { assertAuthCookieSecret } from "./auth/service";
 import { loadConfig } from "./config";
 import { assertDatabaseMigrationSafe, ensureOperatorOSDirectories, openDatabase, type OperatorOSPaths } from "@operatoros/db";
 import { acquireBackupOperationLock } from "./domains/backup-operation-lock";
@@ -13,6 +14,7 @@ export interface RunningServer {
 
 export async function startServer(overrides: Partial<import("./config").BackendConfig> = {}): Promise<RunningServer> {
   const config = { ...loadConfig(), ...overrides };
+  if (config.environment !== "test") assertAuthCookieSecret(config.auth?.authCookieSecret);
   const dataPaths = config.dataPaths;
   const canonicalDatabase = dataPaths && config.databasePath === dataPaths.databasePath;
   let operationLock: Awaited<ReturnType<typeof acquireBackupOperationLock>> | undefined;

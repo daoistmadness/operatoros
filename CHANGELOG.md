@@ -16,5 +16,6 @@ Notable user-facing changes are recorded here.
 - Show an operational dashboard, an annual BOSP cut-off reminder, and a cross-module operator work queue with type filters and actionable navigation (#331).
 
 ### Fixed
+- Require a strong authentication secret at startup, bound archive extraction, reject stale imports atomically, and batch sensitive roster exports (#333).
 
 ### Removed

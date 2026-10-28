@@ -9,10 +9,16 @@ const jsonHeaders = { "content-type": "application/json" };
 
 describe("createApp", () => {
   it("constructs without binding a listener", () => {
-    const app = createApp();
+    const app = createApp({ environment: "test" });
     expect(app).toBeDefined();
     const srv = (app as unknown as { server?: { listening?: boolean } }).server;
     expect(srv?.listening ?? false).toBe(false);
+  });
+
+  it("requires a strong cookie secret before real app or server startup", async () => {
+    expect(() => createApp({ environment: "production" })).toThrow("AUTH_COOKIE_SECRET");
+    const config = loadConfig({ NODE_ENV: "production", AUTH_COOKIE_SECRET: "" });
+    await expect(startServer(config)).rejects.toThrow("AUTH_COOKIE_SECRET");
   });
 });
 
@@ -28,7 +34,7 @@ describe("foundation routes", () => {
   it("readiness states foundation-only readiness", async () => {
     const res = await app.handle(new Request("http://local/ready"));
     expect(res.status).toBe(200);
-    expect(((await res.json()) as { persistence: string }).persistence).toBe("not-configured");
+    expect(await res.json()).toEqual({ ready: false, persistence: "not-configured" });
   });
 
   it("404 is sanitized", async () => {

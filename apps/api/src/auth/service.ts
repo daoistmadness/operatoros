@@ -14,6 +14,13 @@ import { isAccountUnlocked, parseSqliteDate } from "./sqlite-date";
 export const SESSION_COOKIE_NAME = "astyx_session";
 export const SETUP_COOKIE_NAME = "operatoros_setup_authorization";
 export const GENERIC_LOGIN_ERROR = "Invalid username or password";
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super(GENERIC_LOGIN_ERROR);
+    this.name = "InvalidCredentialsError";
+  }
+}
 const DUMMY_PASSWORD_HASH = Bun.password.hashSync("astryx-dummy-password-not-an-account", "argon2id");
 
 export interface AuthConfig {
@@ -89,9 +96,14 @@ export function defaultAuthConfig(overrides: Partial<AuthConfig> = {}): AuthConf
   };
 }
 
+export function assertAuthCookieSecret(secret: string | undefined): asserts secret is string {
+  if (!secret || secret.trim().length < 32) throw new Error("AUTH_COOKIE_SECRET must be configured with at least 32 characters");
+}
+
 function requireSecret(config: AuthConfig): string {
-  if (config.authCookieSecret.trim().length < 32) throw new Error("AUTH_COOKIE_SECRET must be configured with at least 32 characters");
-  return config.authCookieSecret;
+  const secret = config.authCookieSecret;
+  assertAuthCookieSecret(secret);
+  return secret;
 }
 
 function nowSqlite(): string {
@@ -164,11 +176,7 @@ function currentUser(client: Database, id: number): UserRow | null {
 }
 
 async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  try {
-    return await Bun.password.verify(password, passwordHash);
-  } catch {
-    return false;
-  }
+  return Bun.password.verify(password, passwordHash);
 }
 
 export async function authenticate(
@@ -181,15 +189,15 @@ export async function authenticate(
   if (!user) {
     await verifyPassword(input.password, DUMMY_PASSWORD_HASH);
     audit(context, "login_failed", { username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "invalid_credentials" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
   if (!user.is_active) {
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "inactive_account" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
   if (!isAccountUnlocked(user.locked_until)) {
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "account_locked" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
   if (!(await verifyPassword(input.password, user.password_hash))) {
     const now = nowSqlite();
@@ -215,7 +223,7 @@ export async function authenticate(
           ? "account_locked"
           : "invalid_credentials";
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
 
   const now = nowSqlite();
@@ -236,6 +244,7 @@ export async function authenticate(
       "INSERT INTO sessions (user_id, token_hash, created_at, last_used_at, expires_at, absolute_expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [user.id, tokenHash, now, now, idleExpires < absoluteExpires ? idleExpires : absoluteExpires, absoluteExpires, input.userAgent?.slice(0, 1024) || null, input.ipAddress?.slice(0, 45) || null],
     );
+    audit(context, "login_success", { userId: user.id, username: user.username, sessionIdHash: tokenHash, userAgent: input.userAgent, ipAddress: input.ipAddress });
     return true;
   });
   if (!authenticated) {
@@ -247,9 +256,8 @@ export async function authenticate(
       ipAddress: input.ipAddress,
       reason: !persisted ? "invalid_credentials" : !persisted.is_active ? "inactive_account" : "account_locked",
     });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
-  audit(context, "login_success", { userId: user.id, username: user.username, sessionIdHash: tokenHash, userAgent: input.userAgent, ipAddress: input.ipAddress });
   return { user: userResponse({ id: user.id, username: user.username, role: user.role }), token, tokenHash };
 }
 

@@ -24,7 +24,9 @@ async function setup(label: string) {
   const path = `/tmp/operatoros-readiness-${label}-${process.pid}-${Date.now()}.db`;
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-readiness-audit-${process.pid}` } });
+  const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-readiness-audit-${process.pid}` } });
+  const appReady = await app.handle(new Request("http://local/ready"));
+  expect(await appReady.json()).toEqual({ ready: true, persistence: "sqlite" });
   const login = async (username: string, password: string) => cookie(await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username, password }) })));
   return {
     app,
