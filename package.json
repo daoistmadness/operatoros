@@ -46,6 +46,7 @@
     "security:audit": "bun audit",
     "test:security": "bun --filter @operatoros/api test tests/security.test.ts tests/auth.test.ts tests/safety.test.ts",
     "test:analytics": "bun test apps/api/tests/analytics-phase16.test.ts packages/contracts/tests/contracts.test.ts && bun --filter @operatoros/web test src/lib/query/queryKeys.test.ts",
+    "check:pre-push": "bash scripts/check-pre-push.sh",
     "skills:list": "intent list",
     "skills:load": "intent load",
     "skills:validate": "intent validate packages/agent-skills/skills --check",
