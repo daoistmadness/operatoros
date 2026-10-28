@@ -18,14 +18,14 @@ All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the 
 
 ## Toolchain and dependency setup
 
-[`actions/setup-bun`](actions/setup-bun/action.yml) installs the tools from [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.4, Node 24.19.0, hk 2.8.1, and Turbo 2.11.4, then runs `bun install --frozen-lockfile` from the repository root. It works from jobs that set another default working directory.
+[`actions/setup-bun`](actions/setup-bun/action.yml) uses mise 2026.10.19 to install the tools in [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock). It verifies Bun 1.4.4, Node 24.19.0, hk 2.8.1, and Turbo 2.11.4 before it runs `bun install --frozen-lockfile` from the repository root. The action works in jobs with a different default working directory.
 
 External actions use verified full commit SHAs. The workflow pins `actions/checkout` v7.0.1, `jdx/mise-action` v5.1.1, `actions/cache` v6.1.0, and `actions/upload-artifact` v6.0.0. Dependabot checks GitHub Actions references weekly.
 
 ## Caching
 
 - Preflight restores the setup caches and sets `cache-write: false`. It does not save a second copy of the setup caches.
-- The setup action caches mise's download content-addressed store from the checked-in configuration and lockfile. `mise-action` installs with the lockfile in locked mode and rechecks cached downloads against their checksums; it does not restore installed tool trees.
+- The setup action caches mise's content-addressed download store with a key from the checked-in configuration and lockfile. Mise retries transient download failures six times and checks cached downloads against their lockfile checksums. Setup fails if the download store is empty. The action does not restore installed tool trees.
 - Bun downloads use an exact key containing OS, architecture, Bun version, and `bun.lock`; there are no stale restore prefixes.
 - The API job caches `.turbo` by runner, Turbo version, lock/toolchain inputs, and commit. Restore prefixes can reuse older task outputs because Turbo validates its own content hashes. Cache hit and check duration appear in the job summary.
 - Playwright is pinned to 1.61.1 because the previous 1.55.1 package had no Ubuntu 26.04 browser mapping. Chromium uses an exact cache key from Ubuntu version, architecture, the web manifest, and `bun.lock`. `playwright install --with-deps chromium` still runs so the runner installs required system libraries even on a browser-cache hit.
