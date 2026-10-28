@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import JSZip from "jszip";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -60,6 +61,39 @@ describe("CSV data portability candidates", () => {
     } finally {
       database.close();
       rmSync(path, { force: true });
+    }
+  }, 30000);
+
+  it("keeps sensitive roster export fields correct with bulk related-record queries", async () => {
+    const path = `/tmp/operatoros-portability-sensitive-${process.pid}-${Date.now()}.db`;
+    const auditDir = `/tmp/operatoros-portability-sensitive-audit-${process.pid}-${Date.now()}`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
+    try {
+      const id = "sensitive-export-candidate";
+      database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status, gender, nik, nisn, nipd) VALUES (?, 'Sensitive Candidate', 'sensitive candidate', 'active', 'L', 'SYN-NIK', 'SYN-NISN', 'SYN-NIPD')", [id]);
+      database.client.run("INSERT INTO student_addresses (student_master_id, address) VALUES (?, 'Synthetic Street')", [id]);
+      database.client.run("INSERT INTO student_contacts (student_master_id, student_phone) VALUES (?, '08000000000')", [id]);
+      database.client.run("INSERT INTO student_device_identities (student_master_id, device_identifier, device_source, effective_from, is_active) VALUES (?, 'RF-SYNTHETIC-001', 'test', '2026-01-01', 1)", [id]);
+      database.client.run("INSERT INTO student_parent_guardians (student_master_id, guardian_type, name, phone) VALUES (?, 'father', 'Synthetic Guardian', '08111111111')", [id]);
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      const response = await app.handle(new Request("http://local/api/data-portability/exports", {
+        method: "POST", headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ dataset: "student_roster", selected_ids: [id], include_sensitive_fields: true }),
+      }));
+      expect(response.status).toBe(200);
+      const csv = await response.text();
+      expect(csv).toContain("RF-SYNTHETIC-001");
+      expect(csv).toContain("Synthetic Street");
+      expect(csv).toContain("08000000000");
+      expect(csv).toContain("Synthetic Guardian");
+      expect(csv).toContain("08111111111");
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(auditDir, { recursive: true, force: true });
     }
   }, 30000);
 
@@ -196,4 +230,91 @@ describe("CSV data portability candidates", () => {
       rmSync(auditDir, { recursive: true, force: true });
     }
   }, 30000);
+
+  it("classifies changes to every committed roster field and rejects stale or unaudited commits", async () => {
+    const path = `/tmp/operatoros-portability-parity-${process.pid}-${Date.now()}.db`;
+    const auditDir = `/tmp/operatoros-portability-parity-audit-${process.pid}-${Date.now()}`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      for (const id of ["gender-review", "birth-review", "religion-review", "stale-review", "atomic-review"]) {
+        database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status, gender, birth_place, religion) VALUES (?, ?, ?, 'active', 'L', 'Old Place', 'Islam')", [id, `${id} student`, `${id} student`]);
+      }
+      const preview = async (csv: string) => {
+        const form = new FormData();
+        form.append("dataset", "student_roster");
+        form.append("file", new File([csv], "roster.csv", { type: "text/csv" }));
+        const response = await app.handle(new Request("http://local/api/data-portability/imports/preview", { method: "POST", headers: auth, body: form }));
+        expect(response.status).toBe(200);
+        return await response.json() as { batch_id: string; summary: Record<string, number>; classified_rows: Array<{ student_id: string; status: string }> };
+      };
+      const commit = (batchId: string) => app.handle(new Request("http://local/api/data-portability/imports/commit", {
+        method: "POST", headers: { ...auth, "content-type": "application/json" },
+        body: JSON.stringify({ batch_id: batchId, confirmation: "CONFIRM_IMPORT" }),
+      }));
+
+      const fieldPreview = await preview([
+        "student_id,full_name,student_status,gender,birth_place,religion",
+        "gender-review,gender-review student,active,P,Old Place,Islam",
+        "birth-review,birth-review student,active,L,New Place,Islam",
+        "religion-review,religion-review student,active,L,Old Place,Christianity",
+      ].join("\n"));
+      expect(fieldPreview.summary).toMatchObject({ UPDATE: 3, NEW: 0 });
+      expect(fieldPreview.classified_rows.map((value) => value.status)).toEqual(["UPDATE", "UPDATE", "UPDATE"]);
+
+      const stalePreview = await preview([
+        "student_id,full_name,student_status,gender,birth_place,religion",
+        "stale-review,stale-review updated,active,L,Old Place,Islam",
+      ].join("\n"));
+      database.client.run("UPDATE student_masters SET religion = 'Concurrent edit' WHERE id = 'stale-review'");
+      const staleCommit = await commit(stalePreview.batch_id);
+      expect(staleCommit.status).toBe(409);
+      expect(database.client.query<{ religion: string }, []>("SELECT religion FROM student_masters WHERE id = 'stale-review'").get()?.religion).toBe("Concurrent edit");
+
+      const atomicPreview = await preview([
+        "student_id,full_name,student_status,gender,birth_place,religion",
+        "atomic-review,atomic-review updated,active,L,Old Place,Islam",
+      ].join("\n"));
+      database.client.run("CREATE TRIGGER fail_import_audit BEFORE INSERT ON operations_audit_events WHEN NEW.operation = 'IMPORT_COMMIT' BEGIN SELECT RAISE(ABORT, 'blocked audit'); END");
+      const failedCommit = await commit(atomicPreview.batch_id);
+      expect(failedCommit.status).toBe(500);
+      expect(database.client.query<{ full_name: string }, []>("SELECT full_name FROM student_masters WHERE id = 'atomic-review'").get()?.full_name).toBe("atomic-review student");
+      expect(database.client.query("SELECT id FROM operations_audit_events WHERE operation = 'IMPORT_COMMIT'").all()).toHaveLength(0);
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(auditDir, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  it("limits decompressed ZIP members before retaining oversized contents", async () => {
+    const path = `/tmp/operatoros-portability-zip-limit-${process.pid}-${Date.now()}.db`;
+    const auditDir = `/tmp/operatoros-portability-zip-limit-audit-${process.pid}-${Date.now()}`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
+    try {
+      const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+      const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+      const archive = new JSZip();
+      archive.file("manifest.json", JSON.stringify({ operatoros_format: "operatoros_csv_v1", dataset: "student_roster" }));
+      archive.file("students.csv", Buffer.alloc(25 * 1024 * 1024 + 1, 65), { compression: "DEFLATE" });
+      const bytes = await archive.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+      expect(bytes.byteLength).toBeLessThan(25 * 1024 * 1024);
+      const form = new FormData();
+      form.append("dataset", "student_roster");
+      form.append("file", new File([bytes], "oversized.zip", { type: "application/zip" }));
+      const response = await app.handle(new Request("http://local/api/data-portability/imports/preview", { method: "POST", headers: auth, body: form }));
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ detail: expect.stringContaining("maximum size limit") });
+    } finally {
+      database.close();
+      rmSync(path, { force: true });
+      rmSync(auditDir, { recursive: true, force: true });
+    }
+  }, 30000);
+
 });

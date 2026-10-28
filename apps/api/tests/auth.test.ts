@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
@@ -73,6 +73,25 @@ describe("authentication parity", () => {
         body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1", role: "staff" }),
       }));
       expect(rejected.status).toBe(403);
+    } finally {
+      cleanup(value);
+    }
+  }, 30000);
+
+  it("rolls back a session and hides local audit failures", async () => {
+    const value = setup("audit-write-failure");
+    try {
+      rmSync(value.auditDir, { recursive: true, force: true });
+      writeFileSync(value.auditDir, "not a directory");
+      const response = await value.app.handle(new Request("http://local/api/auth/login", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }),
+      }));
+      expect(response.status).toBe(503);
+      const body = await response.text();
+      expect(body).toContain("Authentication service is temporarily unavailable.");
+      expect(body).not.toContain(value.auditDir);
+      expect(value.database.client.query<{ count: number }, []>("SELECT COUNT(*) AS count FROM sessions").get()?.count).toBe(0);
     } finally {
       cleanup(value);
     }

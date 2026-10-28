@@ -3,6 +3,8 @@ import { LoginRequestSchema } from "@operatoros/contracts/auth";
 import { capabilitiesForRole } from "./capabilities";
 import {
   authenticate,
+  GENERIC_LOGIN_ERROR,
+  InvalidCredentialsError,
   cookieHeader,
   deleteCookieHeader,
   issueSetupAuthorization,
@@ -40,17 +42,19 @@ export function authRoutes(app: any, context: AuthContext): any {
         set.headers["retry-after"] = String(limit.retryAfterSeconds);
         return detail(set, 429, "Too many login attempts. Try again later.");
       }
+      let result: Awaited<ReturnType<typeof authenticate>>;
       try {
-        const result = await authenticate(context, { ...body, ...requestInfo });
-        context.loginRateLimiter?.resetAccount(body.username);
-        set.headers["set-cookie"] = cookieHeader(SESSION_COOKIE_NAME, result.token, {
-          maxAge: context.config.sessionAbsoluteTimeoutHours * 3600,
-          path: "/", secure: context.config.cookieSecure, sameSite: "Lax",
-        });
-        return { id: result.user.id, username: result.user.username, role: result.user.role, capabilities: capabilitiesForRole(result.user.role) };
+        result = await authenticate(context, { ...body, ...requestInfo });
       } catch (error) {
-        return detail(set, 401, error instanceof Error ? error.message : "Invalid username or password");
+        if (error instanceof InvalidCredentialsError) return detail(set, 401, GENERIC_LOGIN_ERROR);
+        return detail(set, 503, "Authentication service is temporarily unavailable.");
       }
+      context.loginRateLimiter?.resetAccount(body.username);
+      set.headers["set-cookie"] = cookieHeader(SESSION_COOKIE_NAME, result.token, {
+        maxAge: context.config.sessionAbsoluteTimeoutHours * 3600,
+        path: "/", secure: context.config.cookieSecure, sameSite: "Lax",
+      });
+      return { id: result.user.id, username: result.user.username, role: result.user.role, capabilities: capabilitiesForRole(result.user.role) };
     }, {
       body: LoginRequestSchema,
     })

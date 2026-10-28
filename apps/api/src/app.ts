@@ -4,7 +4,7 @@ import { openapi } from "@elysiajs/openapi";
 import { DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES, DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES, type BackendConfig } from "./config";
 import { openDatabase } from "@operatoros/db";
 import { authRoutes } from "./auth/routes";
-import { defaultAuthConfig } from "./auth/service";
+import { assertAuthCookieSecret, defaultAuthConfig } from "./auth/service";
 import { LoginRateLimiter } from "./auth/rate-limit";
 import { installHttpSecurity } from "./security/http";
 import { coreRoutes } from "./domains/core";
@@ -62,9 +62,11 @@ function errorBody(code: string, message: string) {
 }
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
+  if ((_config.environment ?? process.env.NODE_ENV) !== "test") assertAuthCookieSecret(_config.auth?.authCookieSecret);
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const securityConfig = defaultAuthConfig(_config.auth);
   const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
+  let applicationRoutesRegistered = false;
   const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -81,7 +83,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     })
     .get("/", () => ({ status: "ok", message: "School Attendance Analytics API" }))
     .get("/health", () => ({ status: "ok" }))
-    .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
+    .get("/ready", () => ({ ready: applicationRoutesRegistered, persistence: database ? "sqlite" : "not-configured" }));
   installHttpSecurity(app, { allowedOrigins: securityConfig.allowedOrigins });
 
   if (context) {
@@ -162,6 +164,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       documentation: context ? openApiDocumentation() : undefined,
     }));
   }
+  applicationRoutesRegistered = context !== null;
   return app;
 }
 
