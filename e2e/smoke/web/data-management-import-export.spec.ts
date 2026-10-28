@@ -13,6 +13,27 @@ async function login(page: Page) {
   await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
 }
 
+async function currentUser(page: Page) {
+  const response = await page.evaluate(async () => fetch("/api/auth/me").then((result) => result.json()));
+  return response as { id: number; username: string; role: "admin" | "staff"; capabilities: string[] };
+}
+
+async function revalidateAs(page: Page, user: { id: number; username: string; role: "admin" | "staff"; capabilities: string[] }) {
+  let nextUser: typeof user | null = user;
+  await page.route("**/api/auth/me", async (route) => {
+    if (!nextUser) {
+      await route.continue();
+      return;
+    }
+    const responseUser = nextUser;
+    nextUser = null;
+    await route.fulfill({ json: responseUser });
+  });
+  const revalidated = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/auth/me" && response.status() === 200);
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await revalidated;
+}
+
 test("@data-management @legacy-routes @critical @release consolidates import and export routes and preserves browser history", async ({ page }) => {
   const criticalErrors: string[] = [];
   page.on("pageerror", (error) => criticalErrors.push(error.message));
@@ -147,4 +168,36 @@ test("@data-management @permissions @critical @release guards protected deep lin
   await page.getByRole("link", { name: "Dashboard", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("heading", { name: "System Analytics" })).toHaveCount(0);
+});
+
+test("@auth-transition @permissions removes an admin page after a role downgrade", async ({ page }) => {
+  await login(page);
+  await page.goto("/data-portability");
+  await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Export Data" })).toBeVisible();
+
+  const admin = await currentUser(page);
+  await revalidateAs(page, { ...admin, role: "staff", capabilities: [] });
+
+  await expect(page.getByRole("heading", { name: "Access denied" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Data Import & Export" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Export Data" })).toHaveCount(0);
+});
+
+test("@auth-transition @permissions removes an attendance page after capability revocation", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByRole("textbox", { name: "Username required", exact: true }).fill("operatoros_e2e_staff");
+  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
+  await page.goto("/attendance/calendar");
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
+
+  const staff = await currentUser(page);
+  expect(staff.role).toBe("staff");
+  expect(staff.capabilities).toContain("view_attendance");
+  await revalidateAs(page, { ...staff, capabilities: staff.capabilities.filter((capability) => capability !== "view_attendance") });
+
+  await expect(page.getByRole("heading", { name: "Access denied" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toHaveCount(0);
 });

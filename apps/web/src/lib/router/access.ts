@@ -79,6 +79,33 @@ export function routeAuthorizationForPath(path: string): RouteAuthorization | un
   return routeAuthorizations[path];
 }
 
+function matchesPathPattern(pattern: string, pathname: string): boolean {
+  const patternSegments = pattern.split('/').filter(Boolean);
+  const pathSegments = pathname.split('/').filter(Boolean);
+  return patternSegments.length === pathSegments.length
+    && patternSegments.every((segment, index) => segment.startsWith(':') || segment === pathSegments[index]);
+}
+
+function authorizationForLocation(pathname: string): RouteAuthorization | undefined {
+  const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
+  const exact = routeAuthorizations[normalizedPath];
+  if (exact) return exact;
+  const dynamic = Object.entries(routeAuthorizations).find(([pattern]) => pattern.includes(':') && matchesPathPattern(pattern, normalizedPath));
+  return dynamic?.[1] ?? routeAuthorizations['*'];
+}
+
+function isAuthorizationSatisfied(auth: AuthContextValue, authorization: RouteAuthorization | undefined): boolean {
+  if (!auth.authenticated) return false;
+  if (!authorization || authorization.type === 'authenticated') return true;
+  return authorization.type === 'role'
+    ? auth.user?.role === authorization.role
+    : auth.can(authorization.capability);
+}
+
+export function isRouteAuthorized(pathname: string, auth: AuthContextValue): boolean {
+  return isAuthorizationSatisfied(auth, authorizationForLocation(pathname));
+}
+
 type RouteAccessOptions = {
   context: RouterContext;
   location: { pathname: string };
@@ -91,11 +118,8 @@ export function authorizeRoute(path: string) {
       throw redirect({ to: '/login', state: { from: location.pathname } });
     }
 
-    const authorization = routeAuthorizations[path];
-    if (!authorization || authorization.type === 'authenticated') return undefined;
-    const allowed = authorization.type === 'role'
-      ? context.auth.user?.role === authorization.role
-      : context.auth.can(authorization.capability);
-    return allowed ? undefined : { accessDenied: true };
+    return isAuthorizationSatisfied(context.auth, routeAuthorizations[path])
+      ? undefined
+      : { accessDenied: true };
   };
 }

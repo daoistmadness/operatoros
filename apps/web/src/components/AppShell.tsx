@@ -1,9 +1,11 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
-import { Outlet, useLocation, useRouterState } from '@tanstack/react-router';
+import { Outlet, useLocation } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
 import SidebarNav from './SidebarNav';
 import { AccessDenied } from './auth/RouteGuards';
 import { RouteLoadingFallback } from '../routes/RouteLoadingFallback';
+import { useAuth } from '../context/AuthContext';
+import { isRouteAuthorized } from '../lib/router/access';
 
 export function AppShell() {
   const [navigationOpen, setNavigationOpen] = useState(false);
@@ -11,9 +13,8 @@ export function AppShell() {
   const openerRef = useRef<HTMLButtonElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
-  const accessDenied = useRouterState({
-    select: (state) => state.matches.some((match) => (match.context as { accessDenied?: boolean }).accessDenied),
-  });
+  const auth = useAuth();
+  const accessDenied = !isRouteAuthorized(pathname, auth);
 
   useEffect(() => {
     setNavigationOpen(false);

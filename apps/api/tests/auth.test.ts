@@ -269,6 +269,8 @@ describe("authentication parity", () => {
       }));
       const secondCookie = cookieValue(secondLogin.headers.get("set-cookie"));
       value.database.client.run("UPDATE sessions SET expires_at = datetime('now', '-8 hours'), last_used_at = datetime('now', '-8 hours')");
+      const afterExpiryProtected = await value.app.handle(new Request("http://local/api/data-portability/datasets", { headers: { cookie: `astyx_session=${secondCookie}`, origin: "http://localhost:5173" } }));
+      expect(afterExpiryProtected.status).toBe(401);
       const afterExpiry = await value.app.handle(new Request("http://local/api/auth/me", { headers: { cookie: `astyx_session=${secondCookie}`, origin: "http://localhost:5173" } }));
       expect(afterExpiry.status).toBe(401);
       expect(value.database.client.query<{ revoked_at: string | null }, []>("SELECT revoked_at FROM sessions ORDER BY id DESC LIMIT 1").get()?.revoked_at).not.toBeNull();

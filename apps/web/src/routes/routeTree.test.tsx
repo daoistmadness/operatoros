@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { AuthLoading, AccessDenied } from '../components/auth/RouteGuards';
 import NotFoundPage from '../components/NotFoundPage';
 import type { AuthContextValue } from '../context/AuthContext';
-import { routeAuthorizations } from '../lib/router/access';
+import { isRouteAuthorized, routeAuthorizations } from '../lib/router/access';
 import { parseSearch, stringifySearch } from '../lib/router/search';
 import { RouteLoadingFallback } from './RouteLoadingFallback';
 import { routeTree } from '../routeTree.gen';
@@ -43,6 +43,14 @@ describe('file-based route migration', () => {
     expect(Object.keys(router.routesByPath)).toContain('/staff/$id');
     expect(Object.keys(router.routesByPath)).toContain('/attendance/students/$id');
     expect(Object.keys(router.routesByPath)).toContain('/$');
+  });
+
+  it('applies the active authorization policy to dynamic and normalized paths', () => {
+    expect(isRouteAuthorized('/staff/27', auth('staff', ['view_staff']))).toBe(true);
+    expect(isRouteAuthorized('/staff/27/edit', auth('staff', ['view_staff']))).toBe(false);
+    expect(isRouteAuthorized('/staff/27/edit', auth('staff', ['manage_staff']))).toBe(true);
+    expect(isRouteAuthorized('/attendance/calendar/', auth('staff'))).toBe(false);
+    expect(isRouteAuthorized('/unknown/path', auth(null))).toBe(false);
   });
 
   it('revalidates active role and capability guards after auth context changes', async () => {
