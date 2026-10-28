@@ -47,6 +47,10 @@ dirty Attendance Calendar navigation attempt. The dirty navigation prompt is
 dismissed; the test asserts that the edited value remains and that no business
 write occurred.
 
+The fixture is seeded by `e2e/helpers/seed-test-database.ts`: it includes three
+named E2E students, one link target, and 72 synthetic report learners. The table
+journey filters for `E2E`; it does not measure a large unfiltered table.
+
 `apps/web/vite.config.js` sets Vite preview responses to
 `Cache-Control: no-store`.
 Repeated SPA navigation reuses route code in the active page runtime; it is not
