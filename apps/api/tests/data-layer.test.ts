@@ -2,25 +2,27 @@ import { describe, expect, it } from "bun:test";
 import { Database } from "bun:sqlite";
 import { copyFileSync, readFileSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 function sha256FileSync(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
-import { createFreshDatabase, inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
+import { createFreshDatabase, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, REQUIRED_TABLES, validateDatabase } from "@operatoros/db";
 
 
 const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 
 function disposableDatabasePath(label: string): string {
-  return `/tmp/operatoros-${label}-${process.pid}-${Date.now()}.db`;
+  return join(tmpdir(), `operatoros-${label}-${process.pid}-${Date.now()}.db`);
 }
 
 function bootstrapDatabase(path: string): void {
   createFreshDatabase(path);
 }
 
-describe("S4.8 data layer", () => {
-  it("opens and validates a fresh disposable S4.8 database", () => {
+describe("S5.1 data layer", () => {
+  it("opens and validates a fresh disposable S5.1 database", () => {
     const path = disposableDatabasePath("fresh");
     bootstrapDatabase(path);
     try {
@@ -32,7 +34,7 @@ describe("S4.8 data layer", () => {
     }
   }, 30000);
 
-  it("creates every table declared by the S4.8 schema snapshot", () => {
+  it("creates every table declared by the S5.1 schema snapshot", () => {
     const path = disposableDatabasePath("fresh-parity");
     bootstrapDatabase(path);
     try {
@@ -82,7 +84,7 @@ describe("S4.8 data layer", () => {
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
       expect(before.split(",").length).toBe(REQUIRED_TABLES.length - 13);
-      expect(ledgerBefore).toBe("20261002_s48");
+      expect(ledgerBefore).toBe(CURRENT_SCHEMA_VERSION);
       let error: unknown;
       try {
         openDatabase(path);

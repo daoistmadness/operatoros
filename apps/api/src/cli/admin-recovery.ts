@@ -10,9 +10,9 @@ import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { isAbsolute, basename, resolve, join } from "node:path";
-import * as readline from "node:readline";
 import { PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
 import { loadConfig } from "../config";
+import { promptHiddenValues } from "./prompt-hidden";
 
 const USAGE = `Usage: bun run admin-recovery --user <username>
   Prompts securely for new password via TTY (not argv)
@@ -44,55 +44,6 @@ function parseArgs(): { username: string | null; help: boolean } {
   return { username, help };
 }
 
-async function promptPassword(prompt: string): Promise<string> {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-    // Hide input
-    const stdin = process.stdin as NodeJS.ReadStream & { isTTY?: boolean };
-    if (stdin.isTTY) {
-      // @ts-ignore
-      process.stdout.write(prompt);
-      stdin.setRawMode?.(true);
-    }
-    let password = "";
-    const onData = (char: Buffer) => {
-      const str = char.toString("utf8");
-      if (str === "\n" || str === "\r" || str === "\u0004") {
-        stdin.removeListener("data", onData);
-        if (stdin.isTTY) stdin.setRawMode?.(false);
-        rl.close();
-        process.stdout.write("\n");
-        resolve(password);
-      } else if (str === "\u0003") {
-        // Ctrl+C
-        process.stdout.write("\n");
-        process.exit(130);
-      } else if (str === "\x7f" || str === "\b") {
-        // Backspace
-        if (password.length > 0) {
-          password = password.slice(0, -1);
-          process.stdout.write("\b \b");
-        }
-      } else {
-        password += str;
-        process.stdout.write("*");
-      }
-    };
-    if (stdin.isTTY) {
-      stdin.on("data", onData);
-    } else {
-      // Non-TTY fallback (e.g., piped)
-      rl.question(prompt, (answer) => {
-        rl.close();
-        resolve(answer);
-      });
-    }
-  });
-}
-
 async function main(): Promise<void> {
   const { username, help } = parseArgs();
   if (help) {
@@ -118,8 +69,7 @@ async function main(): Promise<void> {
   }
 
   // Prompt for password securely (not via argv)
-  const password = await promptPassword(`New password for '${trimmedUsername}': `);
-  const confirmation = await promptPassword(`Confirm new password: `);
+  const [password = "", confirmation = ""] = await promptHiddenValues([`New password for '${trimmedUsername}': `, "Confirm new password: "]);
   if (password !== confirmation) fail("Password confirmation does not match.", 2);
   if (password.length < 12) fail("Password must be at least 12 characters long.", 2);
   if (password.length > 1024) fail("Password too long (max 1024).", 2);
@@ -187,7 +137,7 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
+await main().catch((err) => {
   // Never print password
   const msg = err instanceof Error ? err.message : String(err);
   if (msg.toLowerCase().includes("password")) {

@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router";
 import type { ClassOverviewResponse } from "@operatoros/contracts/classes";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";

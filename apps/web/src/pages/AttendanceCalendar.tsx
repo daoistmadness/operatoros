@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Button } from "../components/ui/button";

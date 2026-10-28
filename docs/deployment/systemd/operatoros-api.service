@@ -1,0 +1,72 @@
+# OperatorOS API — Ubuntu systemd unit (review candidate, Phase 3 P3-01)
+#
+# PURPOSE
+#   Supervise the local OperatorOS API on a native Ubuntu host or VM.
+#   Runtime contract: SQLITE_ONLY_SUPPORTED / LOCAL_BROWSER_RUNTIME.
+#   This is a template: review, then integrate into the repository and copy
+#   to /etc/systemd/system/operatoros-api.service on the target host.
+#
+# INSTALL (details in docs/runbooks/ubuntu-server-deployment.md)
+#   1. Create the service account and the environment file (root:operatoros, 0640).
+#   2. Copy this file to /etc/systemd/system/operatoros-api.service
+#   3. systemctl daemon-reload && systemctl enable --now operatoros-api
+#
+# SUBSTITUTION POINTS (only these two, if your layout differs)
+#   - /opt/operatoros ......... checkout location (read-only at runtime)
+#   - /usr/local/bin/bun ...... pinned native Bun 1.4.4 (symlink to the mise install)
+
+[Unit]
+Description=OperatorOS API (local SQLite attendance and analytics)
+Documentation=file:/opt/operatoros/docs/runbooks/ubuntu-server-deployment.md
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=operatoros
+Group=operatoros
+WorkingDirectory=/opt/operatoros
+EnvironmentFile=/etc/operatoros/api.env
+Environment=OPERATOROS_DATA_DIR=/var/lib/operatoros/data
+Environment=HOME=/var/lib/operatoros
+Environment=BUN_INSTALL_CACHE_DIR=/var/lib/operatoros/bun-cache
+ExecStart=/usr/local/bin/bun --filter @operatoros/api start
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+
+# State and filesystem
+StateDirectory=operatoros
+StateDirectoryMode=0700
+UMask=0077
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+NoNewPrivileges=yes
+# MemoryDenyWriteExecute is intentionally NOT set: Bun's JavaScriptCore
+# runtime requires writable-executable memory mappings for its JIT.
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=operatoros-api
+
+[Install]
+WantedBy=multi-user.target

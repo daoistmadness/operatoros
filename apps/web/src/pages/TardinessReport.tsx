@@ -32,7 +32,7 @@ import { resolveLateTimeDisplay } from '../lib/duration';
 import { HebBadgeRow } from '../components/HebBadgeRow';
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 
 const FILTER_MODES = [
   { value: 'month', label: 'Month' },

@@ -8,10 +8,19 @@ import { resolveOperatorOSPaths } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
 import { DEFAULT_LOGIN_RATE_LIMIT, type LoginRateLimitConfig, normalizeLoginAccount } from "./rate-limit";
 import { isAllowedOrigin } from "../security/http";
+import { isFirstAdminSetupRequired } from "./admin-state";
+import { isAccountUnlocked, parseSqliteDate } from "./sqlite-date";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
 export const SETUP_COOKIE_NAME = "operatoros_setup_authorization";
 export const GENERIC_LOGIN_ERROR = "Invalid username or password";
+
+export class InvalidCredentialsError extends Error {
+  constructor() {
+    super(GENERIC_LOGIN_ERROR);
+    this.name = "InvalidCredentialsError";
+  }
+}
 const DUMMY_PASSWORD_HASH = Bun.password.hashSync("astryx-dummy-password-not-an-account", "argon2id");
 
 export interface AuthConfig {
@@ -87,9 +96,14 @@ export function defaultAuthConfig(overrides: Partial<AuthConfig> = {}): AuthConf
   };
 }
 
+export function assertAuthCookieSecret(secret: string | undefined): asserts secret is string {
+  if (!secret || secret.trim().length < 32) throw new Error("AUTH_COOKIE_SECRET must be configured with at least 32 characters");
+}
+
 function requireSecret(config: AuthConfig): string {
-  if (config.authCookieSecret.trim().length < 32) throw new Error("AUTH_COOKIE_SECRET must be configured with at least 32 characters");
-  return config.authCookieSecret;
+  const secret = config.authCookieSecret;
+  assertAuthCookieSecret(secret);
+  return secret;
 }
 
 function nowSqlite(): string {
@@ -98,13 +112,6 @@ function nowSqlite(): string {
 
 function futureSqlite(milliseconds: number): string {
   return new Date(Date.now() + milliseconds).toISOString().replace("T", " ").replace("Z", "");
-}
-
-function parseSqliteDate(value: string | null): number | null {
-  if (!value) return null;
-  const normalized = value.includes("T") ? value : `${value.replace(" ", "T")}Z`;
-  const time = Date.parse(normalized);
-  return Number.isNaN(time) ? null : time;
 }
 
 function digest(token: string, config: AuthConfig): string {
@@ -169,11 +176,7 @@ function currentUser(client: Database, id: number): UserRow | null {
 }
 
 async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  try {
-    return await Bun.password.verify(password, passwordHash);
-  } catch {
-    return false;
-  }
+  return Bun.password.verify(password, passwordHash);
 }
 
 export async function authenticate(
@@ -186,27 +189,41 @@ export async function authenticate(
   if (!user) {
     await verifyPassword(input.password, DUMMY_PASSWORD_HASH);
     audit(context, "login_failed", { username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "invalid_credentials" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
   if (!user.is_active) {
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "inactive_account" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
-  const lockedUntil = parseSqliteDate(user.locked_until);
-  if (lockedUntil !== null && lockedUntil > Date.now()) {
+  if (!isAccountUnlocked(user.locked_until)) {
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "account_locked" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    throw new InvalidCredentialsError();
   }
   if (!(await verifyPassword(input.password, user.password_hash))) {
-    const attempts = user.failed_login_attempts + 1;
-    const lock = attempts >= context.config.maxFailedLoginAttempts;
-    inTransaction(client, () => {
-      client.run("UPDATE users SET failed_login_attempts = ?, locked_until = ? WHERE id = ?", [
-        attempts, lock ? futureSqlite(context.config.accountLockMinutes * 60_000) : null, user.id,
-      ]);
-    });
-    audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "invalid_credentials" });
-    throw new Error(GENERIC_LOGIN_ERROR);
+    const now = nowSqlite();
+    const updated = inTransaction(client, () => client.query<Pick<UserRow, "failed_login_attempts" | "locked_until" | "is_active">, [number, string, number, string]>(
+      `UPDATE users
+       SET failed_login_attempts = failed_login_attempts + 1,
+           locked_until = CASE WHEN failed_login_attempts + 1 >= ? THEN ? ELSE NULL END
+       WHERE id = ? AND is_active = 1
+         AND (locked_until IS NULL OR julianday(locked_until) IS NULL OR julianday(locked_until) <= julianday(?))
+       RETURNING failed_login_attempts, locked_until, is_active`,
+    ).get(
+      context.config.maxFailedLoginAttempts,
+      futureSqlite(context.config.accountLockMinutes * 60_000),
+      user.id,
+      now,
+    ));
+    const persisted = updated ?? currentUser(client, user.id);
+    const reason = !persisted
+      ? "invalid_credentials"
+      : !persisted.is_active
+        ? "inactive_account"
+        : !isAccountUnlocked(persisted.locked_until)
+          ? "account_locked"
+          : "invalid_credentials";
+    audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason });
+    throw new InvalidCredentialsError();
   }
 
   const now = nowSqlite();
@@ -214,17 +231,33 @@ export async function authenticate(
   const idleExpires = futureSqlite(context.config.sessionIdleTimeoutHours * 3_600_000);
   const token = randomBytes(32).toString("base64url");
   const tokenHash = digest(token, context.config);
-  inTransaction(client, () => {
-    client.run(
-      "UPDATE users SET failed_login_attempts = 0, locked_until = NULL, last_login_at = ?, updated_at = ? WHERE id = ?",
-      [now, now, user.id],
-    );
+  const authenticated = inTransaction(client, () => {
+    const updated = client.query<{ id: number }, [string, string, number, string]>(
+      `UPDATE users
+       SET failed_login_attempts = 0, locked_until = NULL, last_login_at = ?, updated_at = ?
+       WHERE id = ? AND is_active = 1
+         AND (locked_until IS NULL OR julianday(locked_until) IS NULL OR julianday(locked_until) <= julianday(?))
+       RETURNING id`,
+    ).get(now, now, user.id, now);
+    if (!updated) return false;
     client.run(
       "INSERT INTO sessions (user_id, token_hash, created_at, last_used_at, expires_at, absolute_expires_at, user_agent, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [user.id, tokenHash, now, now, idleExpires < absoluteExpires ? idleExpires : absoluteExpires, absoluteExpires, input.userAgent?.slice(0, 1024) || null, input.ipAddress?.slice(0, 45) || null],
     );
+    audit(context, "login_success", { userId: user.id, username: user.username, sessionIdHash: tokenHash, userAgent: input.userAgent, ipAddress: input.ipAddress });
+    return true;
   });
-  audit(context, "login_success", { userId: user.id, username: user.username, sessionIdHash: tokenHash, userAgent: input.userAgent, ipAddress: input.ipAddress });
+  if (!authenticated) {
+    const persisted = currentUser(client, user.id);
+    audit(context, "login_failed", {
+      userId: user.id,
+      username: user.username,
+      userAgent: input.userAgent,
+      ipAddress: input.ipAddress,
+      reason: !persisted ? "invalid_credentials" : !persisted.is_active ? "inactive_account" : "account_locked",
+    });
+    throw new InvalidCredentialsError();
+  }
   return { user: userResponse({ id: user.id, username: user.username, role: user.role }), token, tokenHash };
 }
 
@@ -295,10 +328,7 @@ function setupToken(configuration: AuthConfig): string {
 }
 
 export function setupStatus(context: AuthContext): { setup_required: boolean; setup_token_required: boolean } {
-  const client = context.database.client;
-  const hasUser = Boolean(client.query("SELECT id FROM users LIMIT 1").get());
-  const state = client.query<{ completed: number }, []>("SELECT completed FROM first_admin_setup_state WHERE id = 1").get() ?? null;
-  const required = !hasUser && !Boolean(state?.completed);
+  const required = isFirstAdminSetupRequired(context.database.client);
   return { setup_required: required, setup_token_required: required && Boolean(context.config.setupToken) && !context.config.managedDevSetup };
 }
 

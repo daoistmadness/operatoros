@@ -4,6 +4,9 @@ import { DEFAULT_LOGIN_RATE_LIMIT } from "./auth/rate-limit";
 import { parseAllowedOrigins, parseTrustedProxyAddresses } from "./security/http";
 import { parseBackupEncryptionConfig, type BackupEncryptionConfig } from "./security/backup-crypto";
 
+export const DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+export const DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
 export interface BackendConfig {
   hostname: string;
   port: number;
@@ -15,6 +18,12 @@ export interface BackendConfig {
   backupDir?: string;
   dataPaths?: OperatorOSPaths;
   backupEncryption?: BackupEncryptionConfig | null;
+  uppReportMaxFileSizeBytes?: number;
+  studentIomMaxFileSizeBytes?: number;
+  /** Optional capacity-probe override for deterministic tests (see domains/safety). */
+  diskSpaceProbe?: import("./domains/safety").DiskSpaceProbe | null;
+  /** Optional restore-swap filesystem override for deterministic failure tests (see domains/restore-transaction). */
+  restoreFileSystem?: import("./domains/restore-transaction").RestoreFileSystem | null;
   clock?: () => Date;
 }
 
@@ -44,6 +53,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     throw new Error(`BACKUP_DIR must equal the canonical backup path: ${dataPaths.backupDir}`);
   }
   const authCookieSecret = env.AUTH_COOKIE_SECRET;
+  const sessionIdleTimeoutHours = positiveInteger(env, "SESSION_IDLE_TIMEOUT_HOURS", 6);
+  const sessionAbsoluteTimeoutHours = positiveInteger(env, "SESSION_ABSOLUTE_TIMEOUT_HOURS", 24);
+  if (sessionIdleTimeoutHours > sessionAbsoluteTimeoutHours) {
+    throw new Error("SESSION_IDLE_TIMEOUT_HOURS cannot exceed SESSION_ABSOLUTE_TIMEOUT_HOURS.");
+  }
+  const maxFailedLoginAttempts = positiveInteger(env, "MAX_FAILED_LOGIN_ATTEMPTS", 5);
+  const accountLockMinutes = positiveInteger(env, "ACCOUNT_LOCK_MINUTES", 30);
   const rateLimit = {
     windowMs: positiveInteger(env, "LOGIN_RATE_LIMIT_WINDOW_SECONDS", DEFAULT_LOGIN_RATE_LIMIT.windowMs / 1000) * 1000,
     perIp: positiveInteger(env, "LOGIN_RATE_LIMIT_PER_IP", DEFAULT_LOGIN_RATE_LIMIT.perIp),
@@ -60,9 +76,15 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     backupDir: dataPaths.backupDir,
     dataPaths,
     backupEncryption: parseBackupEncryptionConfig({ activeKey: env.BACKUP_ENCRYPTION_KEY, activeKeyId: env.BACKUP_ENCRYPTION_KEY_ID, previousKeys: env.BACKUP_ENCRYPTION_PREVIOUS_KEYS, authCookieSecret, allowLegacyPlaintext: env.ALLOW_LEGACY_PLAINTEXT_BACKUPS === "true" }),
+    uppReportMaxFileSizeBytes: positiveInteger(env, "UPP_REPORT_MAX_FILE_SIZE_BYTES", DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES),
+    studentIomMaxFileSizeBytes: positiveInteger(env, "STUDENT_IOM_MAX_FILE_SIZE_BYTES", DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES),
     auth: {
       authCookieSecret,
       cookieSecure: env.COOKIE_SECURE === "true",
+      sessionIdleTimeoutHours,
+      sessionAbsoluteTimeoutHours,
+      maxFailedLoginAttempts,
+      accountLockMinutes,
       setupToken: env.ASTRYX_SETUP_TOKEN,
       managedDevSetup: env.OPERATOROS_MANAGED_DEV_SETUP === "true",
       allowedOrigins: parseAllowedOrigins(env.ALLOWED_ORIGINS, ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]),

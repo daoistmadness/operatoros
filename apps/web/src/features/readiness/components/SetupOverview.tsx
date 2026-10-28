@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircle2, Circle, Lock, RefreshCw, Settings2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import type { ReadinessResponse, ReadinessStep } from "../api/readiness";
 import { Badge } from "../../../components/ui/badge";
 import { Button, buttonVariants } from "../../../components/ui/button";

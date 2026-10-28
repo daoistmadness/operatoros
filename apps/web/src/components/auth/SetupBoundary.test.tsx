@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { createTestQueryClient } from "../../lib/query/queryClient";
 import { queryKeys } from "../../lib/query/queryKeys";
@@ -28,6 +28,19 @@ describe("setup bootstrap boundary", () => {
     const html = render({ setup_required: true, setup_token_required: false });
     expect(html).toContain("Create administrator");
     expect(html).not.toContain("Normal authentication");
+  });
+
+  it("requests the setup token on the first-run screen when the server requires it", () => {
+    const html = render({ setup_required: true, setup_token_required: true });
+    expect(html).toContain("Create administrator");
+    expect(html).toContain("Setup token");
+    expect(html).toContain("ASTRYX_SETUP_TOKEN");
+  });
+
+  it("hides the setup token field when the server does not require it", () => {
+    const html = render({ setup_required: true, setup_token_required: false });
+    expect(html).toContain("Create administrator");
+    expect(html).not.toContain("Setup token");
   });
 
   it("continues normal authentication after setup closes", () => {

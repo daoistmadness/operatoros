@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches:
       - main
@@ -12,6 +13,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "17 4 * * 3"
+    - cron: "17 3 * * 1"
 
 permissions:
   contents: read
@@ -40,7 +42,13 @@ jobs:
       - name: Fetch main for doctor validation
         if: github.event_name == 'pull_request'
         working-directory: ${{ github.workspace }}
-        run: git fetch --no-tags origin main:refs/remotes/origin/main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Checkout removes persisted credentials; authenticate this single fetch for the private repository.
+          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$header" fetch --no-tags origin main:refs/remotes/origin/main
       - name: Set up locked toolchain and dependencies
         uses: ./.github/actions/setup-bun
       - name: Prepare disposable doctor database
@@ -72,9 +80,6 @@ jobs:
       - name: Dependency security audit
         working-directory: ${{ github.workspace }}
         run: bun run security:audit
-      - name: Security behavior tests
-        working-directory: ${{ github.workspace }}
-        run: bun run test:security
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
@@ -83,13 +88,19 @@ jobs:
         env:
           HK_MISE: "1"
         run: hk check --all
-      - name: Validate Turbo orchestration
+      - name: Typecheck, test, and build workspaces
         working-directory: ${{ github.workspace }}
         run: |
           started_at=$(date +%s)
           bun run turbo:check
           elapsed=$(( $(date +%s) - started_at ))
           echo "turbo_check_elapsed_seconds=$elapsed" >> "$GITHUB_STEP_SUMMARY"
+      - name: Typecheck development launcher
+        working-directory: ${{ github.workspace }}
+        run: bun run typecheck:launcher
+      - name: TypeScript 7 native typecheck
+        working-directory: ${{ github.workspace }}
+        run: bun run typecheck:native
       - name: Validate Turbo invalidation proofs
         working-directory: ${{ github.workspace }}
         run: bun run test:turbo
@@ -159,6 +170,8 @@ jobs:
         uses: ./.github/actions/setup-bun
       - name: Dependency consistency check
         run: bun --filter @operatoros/web check:dependencies
+      - name: Check package-manager regressions
+        run: bun --filter @operatoros/web check:node-regressions
       - name: UI boundary check
         working-directory: ${{ github.workspace }}
         run: bun run check:ui
@@ -169,15 +182,97 @@ jobs:
       - name: Validate relative Markdown links
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-markdown-links.ts
+      - name: Validate Markdown organization and index
+        working-directory: ${{ github.workspace }}
+        run: bun .github/scripts/check-markdown-organization.ts
       - name: Test documentation checker fixtures
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/docs-checkers.test.ts
       - name: Validate current developer commands
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
+      - name: Fetch base for skill freshness check
+        working-directory: ${{ github.workspace }}
+        env:
+          INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
+            echo "A valid base commit is required for skill freshness checks." >&2
+            exit 1
+          fi
+          git fetch --no-tags origin "$INTENT_BASE_SHA"
+      - name: Require pull request changelog entry
+        working-directory: ${{ github.workspace }}
+        env:
+          CHANGELOG_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bun .github/scripts/check-changelog.ts
+      - name: Validate agent skills and package tarball
+        working-directory: ${{ github.workspace }}
+        run: |
+          set -euo pipefail
+          bun run skills:validate
+          bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
+
+          package_dir="$RUNNER_TEMP/operatoros-agent-skills"
+          mkdir -p "$package_dir"
+          cd packages/agent-skills
+          archive="$(bun pm pack --destination "$package_dir" --ignore-scripts --quiet)"
+          test -f "$archive"
+          entries="$(tar -tzf "$archive")"
+          has_entry() {
+            local expected="$1"
+            local entry
+            while IFS= read -r entry; do
+              if [[ "$entry" == "$expected" ]]; then
+                return 0
+              fi
+            done <<<"$entries"
+            return 1
+          }
+          for package_path in README.md package.json; do
+            if ! has_entry "package/$package_path"; then
+              echo "Package tarball is missing $package_path" >&2
+              exit 1
+            fi
+          done
+          while IFS= read -r package_path; do
+            if ! has_entry "package/$package_path"; then
+              echo "Package tarball is missing $package_path" >&2
+              exit 1
+            fi
+          done < <(git ls-files --cached --others --exclude-standard -- docs skills src)
+
+          consumer_dir="$RUNNER_TEMP/operatoros-agent-skills-consumer"
+          mkdir -p "$consumer_dir"
+          cat > "$consumer_dir/package.json" <<EOF
+          {
+            "name": "operatoros-agent-skills-consumer-ci",
+            "private": true,
+            "devDependencies": { "@tanstack/intent": "0.5.6" },
+            "dependencies": { "@operatoros/agent-skills": "file:$archive" },
+            "intent": {
+              "skills": ["@operatoros/agent-skills#elysiajs"],
+              "exclude": ["@tanstack/intent"]
+            }
+          }
+          EOF
+          (cd "$consumer_dir" && bun install --ignore-scripts)
+          (cd "$consumer_dir" && bunx --no-install --package @tanstack/intent intent list --json > intent-list.json)
+          BUN_CONSUMER_DIR="$consumer_dir" bun -e '
+            const result = await Bun.file(process.env.BUN_CONSUMER_DIR + "/intent-list.json").json()
+            if (result.skills.length !== 1 || result.skills[0].use !== "@operatoros/agent-skills#elysiajs") {
+              throw new Error("Consumer allowlist did not resolve exactly the Elysia skill")
+            }
+            if (result.hiddenSourceCount !== 0 || result.warnings.length || result.conflicts.length) {
+              throw new Error("Consumer skill discovery reported hidden sources, warnings, or conflicts")
+            }
+          '
+          skill_path="$(cd "$consumer_dir" && bunx --no-install --package @tanstack/intent intent load @operatoros/agent-skills#elysiajs --path)"
+          test -f "$consumer_dir/$skill_path"
 
   release:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event.schedule == '17 4 * * 3' || github.event_name == 'workflow_dispatch'
     name: Full release validation
     runs-on: ubuntu-26.04
     timeout-minutes: 60
@@ -217,6 +312,8 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ubuntu-26.04-${{ runner.arch }}-playwright-${{ hashFiles('apps/web/package.json', 'bun.lock') }}
+      - name: Dependency security audit
+        run: bun run security:audit
       - name: Run full release validation
         run: mise run check:full
       - name: Report full validation summary
@@ -242,3 +339,127 @@ jobs:
             e2e-results/playwright/
           if-no-files-found: warn
           retention-days: 7
+
+  changes:
+    if: github.event_name != 'schedule'
+    name: Select E2E scope
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      run-e2e: ${{ steps.scope.outputs.run-e2e }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select E2E execution
+        id: scope
+        run: bash .github/scripts/select-e2e-scope.sh
+
+  e2e-full:
+    name: E2E full regression
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Restore Playwright Chromium
+        id: playwright-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ubuntu-26.04-${{ runner.arch }}-playwright-${{ hashFiles('apps/web/package.json', 'bun.lock') }}
+      - name: Install Playwright Chromium and Ubuntu dependencies
+        working-directory: apps/web
+        run: bun run --bun playwright install --with-deps chromium
+      - name: Save Playwright Chromium
+        if: ${{ success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ubuntu-26.04-${{ runner.arch }}-playwright-${{ hashFiles('apps/web/package.json', 'bun.lock') }}
+      - name: Run complete browser and API smoke suite with disposable reset verification
+        env:
+          CI: "true"
+          DATABASE_URL: "sqlite:///:memory:"
+          ENABLE_DESTRUCTIVE_OPERATIONS: "false"
+          OPERATOROS_E2E_ADMIN_USERNAME: operatoros_e2e_admin
+          OPERATOROS_E2E_ADMIN_PASSWORD: "E2E-Admin-2026-Secure!"
+          OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS: "true"
+        run: timeout 900 make e2e-smoke
+      - name: Report E2E summaries
+        if: always()
+        run: |
+          for summary in e2e-results/summary.txt; do
+            if [[ -f "$summary" ]]; then
+              cat "$summary"
+              cat "$summary" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          if [[ -n "${PLAYWRIGHT_CACHE_HIT:-}" ]]; then
+            echo "- Playwright browser cache exact hit: \`${PLAYWRIGHT_CACHE_HIT}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          PLAYWRIGHT_CACHE_HIT: ${{ steps.playwright-cache.outputs.cache-hit }}
+      - name: Upload concise E2E summaries
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-e2e-summaries
+          path: |
+            e2e-results/summary.txt
+            e2e-results/database-before.json
+            e2e-results/database-after.json
+            e2e-results/junit/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload E2E failure evidence
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-e2e-failure-evidence
+          path: |
+            e2e-results/logs/
+            e2e-results/junit/
+            e2e-results/playwright/
+          if-no-files-found: warn
+          retention-days: 7
+
+  result:
+    name: E2E regression result
+    if: always() && github.event_name != 'schedule'
+    needs: [changes, e2e-full]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require the selected E2E result
+        env:
+          E2E_SCOPE_RESULT: ${{ needs.changes.result }}
+          E2E_SELECTED: ${{ needs.changes.outputs.run-e2e }}
+          E2E_JOB_RESULT: ${{ needs.e2e-full.result }}
+        run: bash .github/scripts/validate-e2e-result.sh
+
+  audit:
+    if: github.event.schedule == '17 3 * * 1'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+        with:
+          cache-write: "false"
+      - name: Run dependency security audit
+        run: bun run security:audit

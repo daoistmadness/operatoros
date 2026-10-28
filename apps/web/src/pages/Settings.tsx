@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, CheckCircle2, Settings as SettingsIcon, ShieldAlert, Trash2 } from "lucide-react";
 import type { DataResetPreviewResponse, DataResetResult, DataResetScope } from "@operatoros/contracts/system";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { previewDataReset, commitDataReset } from "../api/system";
 import { invalidateDataResetQueries } from "../lib/query/dataResetInvalidation";
 import { cn } from "../lib/cn";

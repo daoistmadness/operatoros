@@ -8,7 +8,7 @@
     "scripts/check-architecture.ts",
     "scripts/check-typebox-resolution.ts"
   ],
-  "globalPassThroughEnv": [],
+  "globalPassThroughEnv": ["TMPDIR"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

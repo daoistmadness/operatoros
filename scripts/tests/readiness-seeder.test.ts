@@ -42,3 +42,19 @@ test("duplicate readiness provisioning rolls back rather than replacing the admi
   const { root, database } = fixture(); seedReadinessDatabase(database, root, "synthetic-admin", "Synthetic-password!");
   const before = logicalDatabaseContents(database, root); expect(() => seedReadinessDatabase(database, root, "synthetic-admin", "different")).toThrow(); expect(logicalDatabaseContents(database, root)).toEqual(before);
 });
+
+test.each([join(import.meta.dir, "../.."), join(import.meta.dir, "../../apps/web"), tmpdir()])("readiness config loads through the release Node CLI from %s", (directory) => {
+  const repository = join(import.meta.dir, "../..");
+  const node = process.env.OPERATOROS_PLAYWRIGHT_NODE ?? Bun.which("node");
+  if (!node) throw new Error("Playwright requires the native Linux Node runtime.");
+  const env = { ...process.env, OPERATOROS_E2E_CONFIG_VALIDATE: "1" };
+  delete env.OPERATOROS_E2E_FRONTEND_URL;
+  delete env.OPERATOROS_E2E_PORTS_FILE;
+  const result = Bun.spawnSync([
+    node, join(repository, "apps/web/node_modules/@playwright/test/cli.js"), "test",
+    "--config", join(repository, "e2e/readiness/playwright.config.ts"),
+    "--list", "--grep", "@setup-readiness", "--reporter=line",
+  ], { cwd: directory, env, stdout: "pipe", stderr: "pipe" });
+  expect(result.exitCode).toBe(0);
+  expect(result.stdout.toString()).toContain("Total: 3 tests in 1 file");
+});

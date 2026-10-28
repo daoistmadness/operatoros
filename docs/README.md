@@ -1,49 +1,100 @@
 # Documentation index
 
-## Getting started
+Source code and configuration define current behavior. This index links to every
+maintained documentation page; drafts and historical references are labeled.
+Dated session logs and the reusable session template are exempt from the index.
 
-- [Repository README](../README.md) — current setup and project overview.
-- [Development notes](development/README.md) — current local workflow.
+## Structure
 
-## Development workflow
-
-- [Contributing](../CONTRIBUTING.md) — current Git, validation, and PR rules.
-- [Test strategy](testing/TEST_STRATEGY.md) — current fast, PR, and release tiers.
+- Architecture describes system ownership and boundaries.
+- Guides give task-oriented setup, development, and review steps.
+- Reference pages define contracts and lookup facts.
+- Decisions record accepted choices and proposals.
+- Runbooks describe operational procedures.
+- Session logs are non-authoritative handoff records.
+- Package-owned and generated docs remain beside their source.
+- The protected Dapodik design remains at its required path.
 
 ## Architecture
 
-- [Database schema architecture](architecture/DATABASE_SCHEMA_ARCHITECTURE.md) — current S4.2 baseline and S4.8 application model.
-- [Frontend architecture](architecture/FRONTEND_ARCHITECTURE.md) — TypeScript, lazy routes, boundaries, and OpenAPI workflow.
-- [Phase 14 monorepo architecture](architecture/phase-14-monorepo.md) — workspace ownership and modernization boundaries.
-- [Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md) — ownership, contracts, query invalidation, state semantics, and feature validation conventions.
-- [Platform portability](architecture/PLATFORM_PORTABILITY.md) — current SQLite-only local runtime contract.
-- [SQLite-only desktop ADR](architecture/decisions/SQLITE_ONLY_DESKTOP_RUNTIME.md) — accepted database and deployment decision.
-- [Ingestion dependency strategy](architecture/INGESTION_DEPENDENCY_STRATEGY.md) — current pandas/openpyxl decision and benchmark criteria.
+- [Analytics architecture](architecture/analytics.md).
+- [Backup Scheduler Architecture](architecture/backup-scheduling.md).
+- [OperatorOS Change Safety & Feature Golden Path](architecture/change-safety-golden-path.md).
+- [Database schema architecture](architecture/database-schema.md).
+- [OperatorOS Excel architecture](architecture/excel.md).
+- [First-Run Administrator Architecture](architecture/first-run-admin.md).
+- [Frontend data architecture](architecture/frontend-data.md).
+- [Frontend architecture](architecture/frontend.md).
+- [Workspace boundaries](architecture/module-boundaries.md).
+- [Architecture overview](architecture/overview.md).
+- [UI and routing](architecture/ui-and-routing.md).
+- [OperatorOS CSS and Component Architecture](architecture/ui-styling.md).
 
-## Analytics validation
+## Guides
 
-- [Risk Threshold Validation](analytics/RISK_THRESHOLD_VALIDATION.md) — current indicator provenance, missing-data rules, and the gate for operator-led real-case validation.
-- [Real-Case Review Protocol](analytics/REAL_CASE_REVIEW_PROTOCOL.md) — privacy-safe label-first review and anonymized evidence handoff.
+- [Persistent development database](guides/development-database.md).
+- [Development](guides/development.md).
+- [Offline install and start](guides/offline-install.md) — Draft.
+- [OperatorOS Real-Case Review Protocol](guides/real-case-review.md).
+- [Tailscale HTTPS development](guides/tailscale-https-development.md).
+- [Test strategy](guides/testing.md).
 
-## Operations
+## Reference
 
-- [Database operations](operations/DATABASE_OPERATIONS.md) — current protected-database, backup, migration, and rollback safeguards.
-- [Granular school data reset](operations/DATA_RESET.md) — reset gate, encrypted backup behavior, scopes, and deletion dependencies.
+- [Student Progression and Academic-Year Rollover](reference/academic-year-rollover.md).
+- [Backup format and ownership](reference/backup-format.md).
+- [CI performance](reference/ci-performance.md).
+- [Dependency audit exceptions](reference/dependency-audit-exceptions.md).
+- [Employee management](reference/employee-management.md).
+- [First-Run Administrator Threat Model](reference/first-run-admin-threat-model.md).
+- [Migration golden fixtures](reference/golden-fixtures.md) — Deprecated.
+- [Identity and Authentication](reference/identity-authentication.md).
+- [Legacy S4.3 migration source](reference/legacy-s43-migration-source.md) — Deprecated.
+- [OperatorOS metric and filter contract](reference/metrics.md).
+- [OperatorOS Product Terminology Glossary](reference/product-terminology.md).
+- [Production origin and cookie profile](reference/production-profile.md) — Draft.
+- [Risk Threshold Validation](reference/risk-threshold-validation.md).
+- [Platform portability](reference/runtime-support.md).
+- [Security model](reference/security-model.md).
 
-## Product references
+### Student Data
 
-- [Employee management](product/EMPLOYEE_MANAGEMENT.md) — employee directory, workbook preview/commit, history, analytics, permissions, and Excel export.
+- [Academic Mapping Contract](reference/student-data/academic-mapping-contract.md) — Draft.
+- [Academic Master Contract](reference/student-data/academic-master-contract.md) — Draft.
+- [Academic Roster Import Contract](reference/student-data/academic-roster-import-contract.md) — Draft.
+- [Monthly Student Data Report Contract (S1 Frozen Draft)](reference/student-data/monthly-report-contract.md) — Draft.
+- [Student Master Import Contract (S1 Frozen Draft)](reference/student-data/student-import-contract.md) — Draft.
+- [Student master data](reference/student-master-data.md).
+- [User Administration](reference/user-administration.md).
 
-- **Attendance** (`/analytics/attendance`) contains Overview, Report, Recap, and Tardiness views selected with `?view=overview|report|recap|tardiness`. The old `/reports/attendance`, `/reports/rekap-absensi`, and `/reports/tardiness` paths redirect to their matching view. Monthly Recap Input remains at `/attendance/monthly-recap`.
-- **Population Overview** (`/analytics/recapitulation`) gives school management descriptive, server-computed summaries of canonical student and staff data (gender, religion, jenjang, class/rombel, age bands, enrollment status; staff employment status, job title, education, jenjang assignment). Missing values surface as explicit "Unknown" categories. Excel exports require `export_student_data` / `export_staff` and mirror the active filters.
-- **Data Quality** (`/analytics/data-quality`) turns missing and unmapped canonical master data into management information: field completeness with explicit applicability, class/rombel breakdowns, paginated issue drilldowns, and a derived Resolution workspace. Findings remain read-only and source-derived; editable findings link to the existing student or staff editor only when the actor has its write capability. No issue rows, automatic fixes, or fake “mark resolved” state are stored. Students require `view_student`, staff `view_staff`; exports require `export_student_data` / `export_staff`.
-- The Class Attendance Entry page (`/attendance/class-entry`) offers **Export Excel Bulanan** (capability `export_assigned_class_attendance`): staff export attendance for their assigned classes only, admins for any class. The API applies attendance overrides as the effective status and builds the workbook server-side with a per-student recap and daily detail for the chosen month.
-- Attendance Calendar (`/attendance/calendar`) supports a server-side period preview and explicit apply for inclusive date ranges. It creates only missing date exceptions, treats same-state entries as no-ops, preserves conflicting exceptions, includes weekends, and does not add bulk deletion.
-- Attendance Correction Review (`/attendance/override-review`) is a bounded, read-only projection of current canonical attendance overrides. It shows original and effective status, recorded correction metadata, authorized scope, and controlled links to the existing attendance, Student 360, and Class 360 workflows. It does not store issue rows, infer staff judgment, or replace the canonical correction editor.
-- Machine Import (`/attendance/machine-import`) previews supported attendance-machine `.xlsx` workbooks and offers an explicit apply for resolved Students with a valid `Scan Masuk`, an effective enrollment and class, an `EXPECTED` calendar date, and a configured jenjang cutoff. The server re-parses and recomputes the preview digest before applying. It uses `Scan Masuk` for presence and derives punctuality from the configured cutoff. Invalid secondary fields produce quality warnings without discarding a valid arrival. Compatible duplicate rows merge to the earliest arrival and latest departure. A missing scan never becomes Alfa; `NOT_EXPECTED` and unknown calendar dates do not create attendance. Operators can apply an evidence-only import when no row is eligible for canonical writes. On apply, existing import-batch rows retain each source worksheet row number, sheet name, source cell values, normalized field states, classification, quality, and planned canonical operation. The original `.xlsx` binary is not retained. Blocked rows include server-owned resolution guidance and controlled links to canonical attendance, correction, student, enrollment, or calendar workflows when available.
-- Student profiles (`/students/:id`) offer an **Export attendance history** action (capability `export_student_data`, linked identity required): the API builds an Excel workbook server-side with a monthly recap and the selected month's daily breakdown, applying attendance overrides as the effective status.
-- Student profiles (`/students/:id`) are the integrated per-student operational view: current identity and enrollment compose the canonical Attendance Analytics, Academic Analytics, Student Insights, and Data Quality authorities. Student Insights has Trends and Indicators views. Missing metrics remain unavailable rather than being converted to zero; grade trend remains unavailable until a trustworthy time axis exists. The overview is read-only and contains no automated classification or follow-up decision.
+## Decisions
 
-- [Product terminology glossary](product-audit/PRODUCT_TERMINOLOGY_GLOSSARY.md) — canonical product terms.
-- [Student progression and rollover audit](product-audit/STUDENT_PROGRESSION_ROLLOVER.md) — progression rules referenced by the migration tooling.
-- Completed milestone audits, releases, and reports remain available in Git history.
+- [Attendance consolidation boundary](decisions/attendance-consolidation-boundary.md).
+- [ADR: Bun-native frontend and tooling environment](decisions/bun-toolchain.md).
+- [Documentation system](decisions/documentation-system.md).
+- [Git history data remediation](decisions/git-history-data-remediation.md) — Deprecated.
+- [Ingestion dependency strategy](decisions/ingestion-dependency-strategy.md).
+- [Persistent development database](decisions/persistent-development-database.md).
+- [Report artifact preservation](decisions/report-artifact-preservation.md) — Draft.
+- [SQLite-only local runtime](decisions/sqlite-only-runtime.md).
+- [ADR: Tauri v2 Desktop Architecture](decisions/tauri-desktop-architecture.md) — Deprecated.
+
+## Runbooks
+
+- [Backup and Restore Security](runbooks/backup-restore.md).
+- [Granular school data reset](runbooks/data-reset.md).
+- [Database operations](runbooks/database-operations.md).
+- [Audit log rotation and retention](runbooks/log-rotation.md) — Draft.
+- [Elysia Runtime Operations](runbooks/runtime-operations.md).
+- [Secret rotation runbook](runbooks/secret-rotation.md).
+- [Ubuntu server deployment and supervision (OperatorOS API)](runbooks/ubuntu-server-deployment.md) — Draft.
+
+## Session logs
+
+- [Session logs](session/README.md).
+
+## Protected reference
+
+- [Dapodik roster import design](student-data/dapodik-roster-import-design.md) — protected source content, preserved at its required path.
+
+The documentation index is checked in CI. Update it whenever a maintained page is added, moved, merged, or removed.

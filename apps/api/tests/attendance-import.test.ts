@@ -1,14 +1,16 @@
 import { describe, expect, it } from "bun:test";
+import { randomBytes } from "node:crypto";
 import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { calculateLateMinutes } from "../src/domains/attendance-rules";
 import { parseDuration, parseExcelDate, parseExcelTime } from "@operatoros/excel";
-import { readAttendanceWorkbook } from "../src/import/excel-reader";
+import { parseAttendanceWorkbook, readAttendanceWorkbook } from "../src/import/excel-reader";
 import { createAttendanceImportFixture } from "./fixtures/attendance-imports";
 
-const repoRoot = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Lembur", "Pengecualian", "week"];
 
@@ -35,10 +37,10 @@ function authCookie(response: Response): string {
 }
 
 async function setup(label: string) {
-  const path = `/tmp/operatoros-phase6-${label}-${process.pid}-${Date.now()}.db`;
+  const path = join(tmpdir(), `operatoros-phase6-${label}-${process.pid}-${Date.now()}.db`);
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase6-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: join(tmpdir(), `operatoros-phase6-audit-${process.pid}`) } });
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   return { path, database, app, cookie: authCookie(login), origin: "http://localhost:5173" };
 }
@@ -70,22 +72,63 @@ describe("Excel attendance import", () => {
     expect(calculateLateMinutes("07:40", "00:00", "SMP", { SMP: "07:15" })).toEqual([25, "calculated"]);
   });
 
-  it("matches the Phase 0 workbook rows and keeps preview non-mutating", async () => {
+  it("matches generated synthetic workbook rows and keeps preview non-mutating", async () => {
     const value = await setup("preview");
     try {
-      const bytes = new Uint8Array(await Bun.file(`${repoRoot}/docs/migration/ts-backend/golden/attendance-import/normal-preview.xlsx`).arrayBuffer());
+      const bytes = await workbook([
+        [9002, "Beta", "16/06/2026", "08:15", "16:00", "01:00", "", "", "25"],
+        [9001, "Andi", "15/06/2026", "07:05", "16:00", "00:00", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "18/06/2026", "07:05", "16:00", "00:00", "", "", "25"],
+        [9003, "Citra", "19/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "20/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9999, "Unknown One", "21/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9998, "Unknown Two", "22/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9997, "Unknown Three", "23/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "24/06/2026", "00:00", "16:00", "", "", "", "25"],
+        [9003, "Citra", "25/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "31/02/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+        [9003, "Citra", "17/06/2026", "07:30", "16:00", "00:15", "", "", "25"],
+      ]);
       const before = Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any)?.count);
       const response = await preview(value.app, value.cookie, bytes, "normal-preview.xlsx");
       expect(response.status).toBe(200);
       const body = await response.json() as any;
       expect(body.summary).toEqual({ total_rows: 15, logical_rows: 11, new_rows: 6, update_rows: 2, unchanged_rows: 0, conflicts: 3, invalid_rows: 1, new_students: 0 });
       expect(body.rows.map((item: any) => item.classification)).toEqual(["DIFFERENCE", "DIFFERENCE", "NEW", "NEW", "NEW", "NEW", "CONFLICT", "CONFLICT", "CONFLICT", "NEW", "NEW", "INVALID"]);
-      // The configured SMP cutoff (07:15) is the authority: a 07:05 arrival is
-      // on-time even though the workbook asserts a Terlambat duration.
+      // The configured SMP cutoff (07:15) is the authority for synthetic rows.
       expect(body.rows[3].proposed_record).toMatchObject({ status: "on-time", late_duration: 0, late_source: "calculated" });
       expect(body.rows[9].proposed_record).toMatchObject({ check_in: "00:00:00", late_duration: 0, late_source: "calculated" });
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as any)?.count)).toBe(before);
       expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_rows").get() as any)?.count)).toBe(12);
+    } finally { cleanup(value); }
+  }, 30000);
+
+  it("stages rows in order and rolls back the preview when a later batch fails", async () => {
+    const value = await setup("staging-batches");
+    try {
+      const identities = [[9001, "Andi"], [9002, "Beta"], [9003, "Citra"], [9101, "Diana"]] as const;
+      const sourceRows = (year: number, month: number) => Array.from({ length: 100 }, (_, index) => {
+        const [id, name] = identities[index % identities.length]!;
+        return [id, name, new Date(Date.UTC(year, month, index + 1)), "07:30", "16:00", "", "", "", "27"];
+      });
+      const invalidRows = (year: number, month: number) => Array.from({ length: 100 }, (_, index) => [null, `No ID ${index}`, new Date(Date.UTC(year, month, index + 1)), "07:30", "16:00", "", "", "", "27"]);
+      const successful = await preview(value.app, value.cookie, await workbook([...sourceRows(2026, 6), ...invalidRows(2026, 6)]), "staging-batches.xlsx");
+      expect(successful.status).toBe(200);
+      const body = await successful.json() as any;
+      expect(body.summary).toMatchObject({ total_rows: 200, logical_rows: 100, new_rows: 100, update_rows: 0, conflicts: 0, invalid_rows: 100 });
+      expect(body.rows.map((item: any) => item.source_row)).toEqual(Array.from({ length: 200 }, (_, index) => index + 2));
+      expect(body.rows.slice(0, 100).map((item: any) => item.student_identifier)).toEqual(Array.from({ length: 100 }, (_, index) => String(identities[index % identities.length]![0])));
+      expect(body.rows.slice(0, 100).every((item: any) => item.classification === "NEW")).toBe(true);
+      expect(body.rows.slice(100).every((item: any) => item.classification === "INVALID")).toBe(true);
+
+      value.database.client.exec("CREATE TRIGGER fail_import_staging_chunk BEFORE INSERT ON attendance_import_rows WHEN NEW.source_row = 192 BEGIN SELECT RAISE(ABORT, 'synthetic staging failure'); END");
+      const failed = await preview(value.app, value.cookie, await workbook([...sourceRows(2027, 0), ...invalidRows(2027, 0)]), "staging-failure.xlsx");
+      expect(failed.status).toBe(400);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_batches").get() as any)?.count)).toBe(1);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_rows").get() as any)?.count)).toBe(200);
     } finally { cleanup(value); }
   }, 30000);
 
@@ -220,6 +263,29 @@ describe("Excel attendance import", () => {
     const result = await readAttendanceWorkbook(bytes.buffer as ArrayBuffer, "typed.xlsx");
     expect(result.rows[0]).toMatchObject({ date: "2026-06-15", checkIn: "07:30", checkOut: "16:00", overtimeSeconds: null });
   });
+
+  it("preserves large XLS and XLSX parsing results through concurrent worker requests", async () => {
+    const evidenceHeaders = [...headers, "Evidence"];
+    const rows = Array.from({ length: 500 }, (_, index) => [10000 + index, `Student ${index}`, "01/07/2026", "07:30", "16:00", "00:00", "", "", "Wednesday", randomBytes(128).toString("hex")]);
+    const xlsx = await workbook(rows, evidenceHeaders);
+    const xls = legacyWorkbook(rows, evidenceHeaders);
+    expect(xlsx.byteLength).toBeGreaterThanOrEqual(64 * 1024);
+    expect(xls.byteLength).toBeGreaterThanOrEqual(64 * 1024);
+    await expect(readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.csv")).rejects.toThrow("ATTENDANCE_SOURCE_MUST_BE_EXCEL");
+    const [directXlsx, directXls, workerXlsx, workerXls] = await Promise.all([
+      parseAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx"),
+      parseAttendanceWorkbook(xls.slice().buffer as ArrayBuffer, "large.xls"),
+      readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx"),
+      readAttendanceWorkbook(xls.slice().buffer as ArrayBuffer, "large.xls"),
+    ]);
+    expect(workerXlsx).toEqual(directXlsx);
+    expect(workerXls).toEqual(directXls);
+    expect(workerXlsx.rows).toHaveLength(500);
+    expect(workerXls.rows).toHaveLength(500);
+    expect(workerXlsx.invalidRows).toHaveLength(0);
+    expect(workerXls.invalidRows).toHaveLength(0);
+    expect(await readAttendanceWorkbook(xlsx.slice().buffer as ArrayBuffer, "large.xlsx")).toEqual(directXlsx);
+  }, 30000);
 
   it("reads legacy BIFF .xls through the same preview and commit pipeline", async () => {
     const value = await setup("xls");

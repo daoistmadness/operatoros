@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { createStaff, fetchSensitiveStaff, fetchStaffDetail, updateStaff, type StaffPayload } from "../api/staff";
 import { useAuth } from "../context/AuthContext";
@@ -50,7 +50,11 @@ export default function StaffForm() {
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.staff.lists }),
         client.invalidateQueries({ queryKey: queryKeys.staff.analytics() }),
-        ...(isEdit ? [client.invalidateQueries({ queryKey: queryKeys.staff.detail(id) })] : []),
+        ...(isEdit ? [
+          client.invalidateQueries({ queryKey: queryKeys.staff.detail(id) }),
+          client.invalidateQueries({ queryKey: queryKeys.staff.sensitive(id) }),
+          client.invalidateQueries({ queryKey: queryKeys.staff.history(id) }),
+        ] : []),
       ]);
       navigate(`/staff/${saved.id}`);
     },

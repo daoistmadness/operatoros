@@ -25,7 +25,7 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.bun/install/cache
-        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.4-${{ hashFiles('bun.lock') }}
     - name: Verify toolchain and install workspace dependencies
       shell: bash
       working-directory: ${{ github.workspace }}
@@ -33,8 +33,8 @@ runs:
         set -euo pipefail
         mise --version
         test "$(mise --version | awk '{print $1}')" = "2026.10.3"
-        test "$(bun --version)" = "1.4.2"
-        test "$(hk --version)" = "hk 1.56.1"
+        test "$(bun --version)" = "1.4.4"
+        test "$(hk --version)" = "hk 2.8.1"
         test "$(node --version)" = "v24.19.0"
         mise ls --current
         bun install --frozen-lockfile
@@ -50,7 +50,7 @@ runs:
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.bun/install/cache
-        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.2-${{ hashFiles('bun.lock') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-bun-1.4.4-${{ hashFiles('bun.lock') }}
     - name: Report setup cache hits
       if: always()
       shell: bash

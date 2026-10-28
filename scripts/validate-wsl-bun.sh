@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Sourceable, repository-scoped validation for the WSL Bun toolchain.
+# Sourceable, repository-scoped validation for native Linux Bun.
 # This file intentionally does not install or download any runtime.
 
 OPERATOROS_BUN_PATH=""
@@ -66,6 +66,30 @@ operatoros_wsl_bun_is_safe() {
   return 0
 }
 
+operatoros_wsl_bun_is_native() {
+  local description architecture
+  if ! command -v file >/dev/null 2>&1; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="the file utility is required to verify the native Bun executable"
+    OPERATOROS_WSL_TOOLCHAIN_STATE="FILE_UTILITY_MISSING"
+    return 1
+  fi
+  description="$(file -b -- "$OPERATOROS_BUN_REALPATH" 2>/dev/null || true)"
+  architecture="$(uname -m 2>/dev/null || true)"
+  if [[ "$description" != ELF* ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="the selected Bun executable is not a native Linux ELF binary"
+    OPERATOROS_WSL_TOOLCHAIN_STATE="NOT_NATIVE_LINUX"
+    return 1
+  fi
+  case "$architecture:$description" in
+    x86_64:*x86-64*|aarch64:*aarch64*|arm64:*aarch64*) return 0 ;;
+    *)
+      OPERATOROS_WSL_TOOLCHAIN_REASON="Bun's ELF architecture does not match Linux architecture ${architecture:-unknown}"
+      OPERATOROS_WSL_TOOLCHAIN_STATE="ARCHITECTURE_MISMATCH"
+      return 1
+      ;;
+  esac
+}
+
 operatoros_wsl_read_package_engine() {
   local package_json="${1:?package.json is required}"
   local field="${2:?engine field is required}"
@@ -78,27 +102,26 @@ operatoros_wsl_validate_bun() {
   OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="not-run"
   OPERATOROS_WSL_TOOLCHAIN_STATE="UNKNOWN"
   if [[ "$(uname -s 2>/dev/null || true)" != Linux ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="the launcher is not running under a Linux WSL kernel"
+    OPERATOROS_WSL_TOOLCHAIN_REASON="the launcher requires a native Linux kernel"
     return 1
   fi
 
   OPERATOROS_WSL_TOOLCHAIN_REASON=""
   operatoros_wsl_resolve_bun_paths
   operatoros_wsl_bun_is_safe || return 1
+  operatoros_wsl_bun_is_native || return 1
 
   OPERATOROS_WSL_TOOLCHAIN_VERSION_CHECKS="executed"
   local bun_version
-  bun_version="$("$OPERATOROS_BUN_PATH" --version 2>/dev/null || true)"
-  if [[ ! "$bun_version" =~ ^([0-9]+)\.([0-9]+) ]]; then
+  bun_version="$("$OPERATOROS_BUN_REALPATH" --version 2>/dev/null || true)"
+  if [[ ! "$bun_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     OPERATOROS_WSL_TOOLCHAIN_REASON="Bun did not return a usable semantic version"
     OPERATOROS_WSL_TOOLCHAIN_STATE="SAFE_WRONG_VERSION"
     return 1
   fi
 
-  local major="${BASH_REMATCH[1]}"
-  local minor="${BASH_REMATCH[2]}"
-  if (( major != 1 || minor != 4 )); then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="Bun version must be 1.4.x; detected ${bun_version}"
+  if [[ "$bun_version" != 1.4.4 ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="Bun version must be exactly 1.4.4; detected ${bun_version}"
     OPERATOROS_WSL_TOOLCHAIN_STATE="SAFE_WRONG_VERSION"
     return 1
   fi
@@ -128,11 +151,11 @@ operatoros_wsl_toolchain_failure() {
   bun: $bun_display
     resolved: $bun_resolved
 
-OperatorOS requires the Linux Bun contract declared by the root package.json inside WSL.
+OperatorOS requires native Linux Bun 1.4.4 from the repository-pinned toolchain.
 State: ${OPERATOROS_WSL_TOOLCHAIN_STATE}
 Reason: ${OPERATOROS_WSL_TOOLCHAIN_REASON:-toolchain validation failed}
 
-Do not use bun.exe from /mnt/c for OperatorOS development."
+Do not use a Windows Bun executable or a Bun version outside the repository pin."
 }
 
 operatoros_wsl_prepare_bun() {
@@ -151,7 +174,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   project_root="${2:-.}"
   if [[ "${1:-}" == "--probe" ]]; then
     if operatoros_wsl_validate_bun "$project_root"; then
-      printf 'WSL Bun probe: PASS\n'
+      printf 'Native Linux Bun probe: PASS\n'
       printf '  bun: %s\n' "$OPERATOROS_BUN_PATH"
       printf '  bun resolved: %s\n' "$OPERATOROS_BUN_REALPATH"
       printf '  bun version: %s\n' "$OPERATOROS_BUN_VERSION"

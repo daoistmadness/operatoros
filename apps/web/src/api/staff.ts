@@ -1,4 +1,4 @@
-import type { StaffAnalyticsSummaryDto } from "@operatoros/contracts/staff";
+import type { SchoolUnitResponseDto, StaffAnalyticsSummaryDto, StaffSchoolUnitAssignmentDto } from "@operatoros/contracts/staff";
 import { apiRequest } from "../lib/api/client";
 
 export type JenjangOption = { id: number; name: string; code: string | null; level: string | null; active: boolean };
@@ -14,15 +14,16 @@ export type StaffDetail = StaffSummary & {
   job_title_raw: string | null; dapodik_status_raw: string | null;
   updated_at: string; identifiers: Array<{ identifier_type: string; normalized_value: string; verification_status: string }>;
   education_history: EducationRecord[]; highest_education_level?: string | null; highest_education_institution?: string | null;
+  school_unit_assignments: StaffSchoolUnitAssignmentDto[];
 };
 export type StaffSensitive = {
-  birth_place: string | null; birth_date: string | null;
+  birth_place: string | null; birth_date: string | null; age_years: number | null;
   identifiers: Array<{ type: string; normalized_value: string | null; verification_status: string }>;
   contact: { email: string | null; phone: string | null; address: string | null } | null;
 };
 export type StaffListResponse = { items: StaffSummary[]; total: number; page: number; page_size: number; total_pages: number; counts: { ACTIVE: number; FORMER: number; ALL: number } };
 export type StaffListParams = {
-  search?: string; status?: string; job_title?: string; dapodik_status?: string; jenjang_id?: number;
+  search?: string; status?: string; job_title?: string; dapodik_status?: string; jenjang_id?: number; school_unit_id?: number;
   position_id?: number; joined_from?: string; joined_to?: string;
   has_nuptk?: boolean; page?: number; page_size?: number; sort_by?: string; sort_direction?: "asc" | "desc";
 };
@@ -39,7 +40,7 @@ export type StaffImportPreview = {
   rows: Array<{ row_number: number; state: string; full_name: string; employee_code_masked: string | null; issues: ImportIssue[] }>;
 };
 export type StaffPosition = { id: number; raw_title: string; normalized_title: string; position_category: string | null; is_teaching_role: boolean | null; status: "PENDING" | "APPROVED"; employee_count: number };
-export type StaffHistory = Array<{ id: string; action: string; effective_date: string | null; changed_fields: string[]; metadata: Record<string, unknown>; actor: string; created_at: string }>;
+export type StaffHistory = Array<{ id: string; action: string; effective_date: string | null; reason: string | null; changed_fields: string[]; metadata: Record<string, unknown>; actor: string; created_at: string }>;
 export type StaffImportBatch = { id: string; source_filename: string; source_sheet: string; file_sha256: string; imported_at: string; actor: string; total_rows: number; active_count: number; former_count: number; review_count: number; issue_count: number; status: string };
 
 export async function fetchStaff(params: StaffListParams = {}): Promise<StaffListResponse> {
@@ -48,6 +49,12 @@ export async function fetchStaff(params: StaffListParams = {}): Promise<StaffLis
 export async function fetchStaffDetail(id: string): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}` })).data; }
 export async function fetchSensitiveStaff(id: string): Promise<StaffSensitive> { return (await apiRequest<StaffSensitive>({ path: `/api/staff/${id}/sensitive` })).data; }
 export async function fetchStaffHistory(id: string): Promise<StaffHistory> { return (await apiRequest<StaffHistory>({ path: `/api/staff/${id}/history` })).data; }
+export async function fetchSchoolUnits(): Promise<SchoolUnitResponseDto[]> { return (await apiRequest<SchoolUnitResponseDto[]>({ path: "/api/staff/school-units" })).data; }
+export async function createSchoolUnit(body: { name: string; reason: string }): Promise<SchoolUnitResponseDto> { return (await apiRequest<SchoolUnitResponseDto>({ path: "/api/staff/school-units", method: "POST", body })).data; }
+export async function updateSchoolUnit(id: number, body: { name?: string; status?: "ACTIVE" | "INACTIVE"; expected_version: number; reason: string }): Promise<SchoolUnitResponseDto> { return (await apiRequest<SchoolUnitResponseDto>({ path: `/api/staff/school-units/${id}`, method: "PATCH", body })).data; }
+export async function createStaffSchoolUnitAssignment(id: string, body: { school_unit_id: number; effective_from: string; ptk_applicability: "APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN"; reason: string }): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}/school-unit-assignments`, method: "POST", body })).data; }
+export async function closeStaffSchoolUnitAssignment(id: string, assignmentId: number, body: { effective_to: string; reason: string }): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}/school-unit-assignments/${assignmentId}/close`, method: "POST", body })).data; }
+export async function cancelStaffSchoolUnitAssignment(id: string, assignmentId: number, body: { reason: string }): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}/school-unit-assignments/${assignmentId}/cancel`, method: "POST", body })).data; }
 export async function fetchStaffAnalytics(as_of_date?: string): Promise<StaffAnalyticsSummaryDto> { return (await apiRequest<StaffAnalyticsSummaryDto>({ path: "/api/staff/analytics/summary", params: { as_of_date } })).data; }
 export async function fetchStaffPositions(status?: "PENDING" | "APPROVED" | "ALL"): Promise<StaffPosition[]> { return (await apiRequest<StaffPosition[]>({ path: "/api/staff/positions", params: { status } })).data; }
 export async function updateStaffPosition(id: number, body: { normalized_title: string; position_category: string | null; is_teaching_role: boolean | null; status: "PENDING" | "APPROVED" }): Promise<StaffPosition> { return (await apiRequest<StaffPosition>({ path: `/api/staff/positions/${id}`, method: "PATCH", body })).data; }

@@ -1,6 +1,6 @@
 import React, { Component, useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
 import GradeMatrix, { type GradeMatrixEnrollment } from "../components/grades/GradeMatrix";
 import AssessmentComponentsPanel from "../components/grades/AssessmentComponentsPanel";

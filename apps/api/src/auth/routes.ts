@@ -3,6 +3,8 @@ import { LoginRequestSchema } from "@operatoros/contracts/auth";
 import { capabilitiesForRole } from "./capabilities";
 import {
   authenticate,
+  GENERIC_LOGIN_ERROR,
+  InvalidCredentialsError,
   cookieHeader,
   deleteCookieHeader,
   issueSetupAuthorization,
@@ -40,17 +42,19 @@ export function authRoutes(app: any, context: AuthContext): any {
         set.headers["retry-after"] = String(limit.retryAfterSeconds);
         return detail(set, 429, "Too many login attempts. Try again later.");
       }
+      let result: Awaited<ReturnType<typeof authenticate>>;
       try {
-        const result = await authenticate(context, { ...body, ...requestInfo });
-        context.loginRateLimiter?.resetAccount(body.username);
-        set.headers["set-cookie"] = cookieHeader(SESSION_COOKIE_NAME, result.token, {
-          maxAge: context.config.sessionAbsoluteTimeoutHours * 3600,
-          path: "/", secure: context.config.cookieSecure, sameSite: "Lax",
-        });
-        return { id: result.user.id, username: result.user.username, role: result.user.role, capabilities: capabilitiesForRole(result.user.role) };
+        result = await authenticate(context, { ...body, ...requestInfo });
       } catch (error) {
-        return detail(set, 401, error instanceof Error ? error.message : "Invalid username or password");
+        if (error instanceof InvalidCredentialsError) return detail(set, 401, GENERIC_LOGIN_ERROR);
+        return detail(set, 503, "Authentication service is temporarily unavailable.");
       }
+      context.loginRateLimiter?.resetAccount(body.username);
+      set.headers["set-cookie"] = cookieHeader(SESSION_COOKIE_NAME, result.token, {
+        maxAge: context.config.sessionAbsoluteTimeoutHours * 3600,
+        path: "/", secure: context.config.cookieSecure, sameSite: "Lax",
+      });
+      return { id: result.user.id, username: result.user.username, role: result.user.role, capabilities: capabilitiesForRole(result.user.role) };
     }, {
       body: LoginRequestSchema,
     })
@@ -85,7 +89,17 @@ export function authRoutes(app: any, context: AuthContext): any {
     .post("/api/setup/admin", async ({ body, request, set, server }: any) => {
       set.headers["cache-control"] = "no-store";
       try {
-        const setupAuthorization = validateSetupAuthorization(context, readCookie(request, SETUP_COOKIE_NAME));
+        const cookieAuthorization = readCookie(request, SETUP_COOKIE_NAME);
+        let setupAuthorization: string | null;
+        if (cookieAuthorization) {
+          setupAuthorization = validateSetupAuthorization(context, cookieAuthorization);
+        } else if (context.config.setupToken && !context.config.managedDevSetup) {
+          // Production token path: the operator presents ASTRYX_SETUP_TOKEN in the
+          // request body and provisionFirstAdmin compares it in constant time.
+          setupAuthorization = typeof body.setup_token === "string" ? body.setup_token : null;
+        } else {
+          throw { code: "SETUP_AUTHORIZATION_REQUIRED", message: "Initial setup authorization is required.", status: 403 } satisfies ProvisioningErrorShape;
+        }
         const result = await provisionFirstAdmin(context, {
           username: body.username, password: body.password, confirmation: body.password_confirmation,
           setupToken: setupAuthorization, ...requestContext(request, server, context.config.trustedProxyAddresses ?? []),
@@ -101,6 +115,7 @@ export function authRoutes(app: any, context: AuthContext): any {
         username: t.String({ minLength: 1, maxLength: 255 }),
         password: t.String({ minLength: 1, maxLength: 1024 }),
         password_confirmation: t.String({ minLength: 1, maxLength: 1024 }),
+        setup_token: t.Optional(t.String({ minLength: 1, maxLength: 1024 })),
       }),
     });
 }

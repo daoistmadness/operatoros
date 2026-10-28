@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
     "benchmark": "bun benchmark.ts"
   },
   "dependencies": {
@@ -13,7 +13,6 @@
     "exceljs": "4.4.0"
   },
   "devDependencies": {
-    "@types/bun": "1.4.0",
     "bun-types": "1.4.0",
     "typescript": "5.9.3"
   },

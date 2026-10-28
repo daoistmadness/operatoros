@@ -11,7 +11,7 @@ FRONTEND_DIR="${OPERATOROS_FRONTEND_DIR:-$PROJECT_ROOT/apps/web}"
 RUNTIME_DIR="${OPERATOROS_RUNTIME_DIR:-$PROJECT_ROOT/.runtime/operatoros-dev}"
 RUNTIME_HELPER="$PROJECT_ROOT/scripts/operatoros-dev-runtime.ts"
 DEVELOPMENT_DATABASE_HELPER="$PROJECT_ROOT/packages/db/src/dev-db-cli.ts"
-WSL_BUN_HELPER="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
+BUN_VALIDATOR="$PROJECT_ROOT/scripts/validate-wsl-bun.sh"
 DEV_STATE_DIR=""
 DEV_DATABASE=""
 DEV_SECRET_FILE=""
@@ -58,6 +58,10 @@ GIT_UPSTREAM=""
 GIT_STATUS=""
 REGISTRY_DIR=""
 FIXED_PORT_REQUESTED=0
+TAILNET_ORIGIN_INPUT=""
+TAILNET_ORIGIN=""
+TAILNET_HOST=""
+TAILNET_HTTPS_PORT=8443
 if (( BACKEND_PORT_CONFIGURED == 1 || FRONTEND_PORT_CONFIGURED == 1 )); then
   FIXED_PORT_REQUESTED=1
 fi
@@ -71,6 +75,7 @@ Usage: ./start-dev.sh [options]
   --no-clean-stale    Never clean; fail if a selected port is occupied
   --auto-port         Select frontend 5173-5199 and backend 8000-8099
   --fixed-port        Require the requested fixed ports on a secondary worktree
+  --tailnet-origin URL  Use one exact HTTPS *.ts.net origin through Tailscale Serve
   --mode browser      Fixed-port browser mode (default)
   --verbose           Show detailed ownership and checkout evidence
   --debug             Alias for --verbose
@@ -92,6 +97,30 @@ fail_preflight() {
   exit 2
 }
 
+validate_bind_overrides() {
+  local name value
+  for name in FRONTEND_HOST BACKEND_HOST HOST; do
+    value="${!name:-}"
+    [[ -z "$value" || "$value" == 127.0.0.1 ]] \
+      || fail_preflight "UNSAFE_DEVELOPMENT_BIND_HOST" "$name must be 127.0.0.1 for managed development." \
+        "Unset $name or set it to 127.0.0.1. Development listeners are loopback-only."
+  done
+  [[ -z "${BUN_OPTIONS:-}" ]] \
+    || fail_preflight "UNSAFE_BUN_OPTIONS" "BUN_OPTIONS is not supported by the managed development launcher." \
+      "Unset BUN_OPTIONS; it can override Bun CLI safety flags and load arbitrary environment files or preloads."
+  [[ -z "${ASTRYX_VITE_EXECUTABLE:-}" ]] \
+    || fail_preflight "UNSAFE_VITE_EXECUTABLE_OVERRIDE" "Managed development uses the repository-installed Vite executable." \
+      "Unset ASTRYX_VITE_EXECUTABLE so the validated Vite configuration cannot be bypassed."
+  if [[ -n "${OPERATOROS_FRONTEND_DIR:-}" ]]; then
+    local requested_frontend expected_frontend
+    requested_frontend="$(cd -- "$OPERATOROS_FRONTEND_DIR" 2>/dev/null && pwd -P || true)"
+    expected_frontend="$(cd -- "$PROJECT_ROOT/apps/web" 2>/dev/null && pwd -P || true)"
+    [[ -n "$requested_frontend" && "$requested_frontend" == "$expected_frontend" ]] \
+      || fail_preflight "UNSAFE_FRONTEND_DIRECTORY_OVERRIDE" "Managed development must load Vite from this checkout's apps/web directory." \
+        "Unset OPERATOROS_FRONTEND_DIR or point it to $PROJECT_ROOT/apps/web."
+  fi
+}
+
 resolve_worktree_identity() {
   if ! PRIMARY_CHECKOUT_PATH="$(bun "$RUNTIME_HELPER" primary-path 2>/dev/null)"; then
     fail_preflight "PRIMARY_CHECKOUT_CONFIGURATION_INVALID" "The canonical primary checkout path could not be resolved."
@@ -109,8 +138,8 @@ ensure_primary_freshness() {
       "The primary checkout must be on main; current branch: ${GIT_BRANCH:-detached}." \
       "No branch switch was attempted."
   fi
-  if ! git -C "$PROJECT_ROOT" fetch --prune origin >/dev/null 2>&1; then
-    fail_preflight "PRIMARY_CHECKOUT_REFRESH_FAILED" "git fetch --prune origin failed. No services were started."
+  if ! git -C "$PROJECT_ROOT" fetch --no-tags origin refs/heads/main:refs/remotes/origin/main >/dev/null 2>&1; then
+    fail_preflight "PRIMARY_CHECKOUT_REFRESH_FAILED" "Fetching only origin/main failed. No services were started."
   fi
 
   local origin_sha head_sha local_only remote_only changes
@@ -141,11 +170,9 @@ ensure_primary_freshness() {
         "$changes" \
         "Commit or stash these paths, then run the launcher again. No fast-forward was attempted."
     fi
-    if ! git -C "$PROJECT_ROOT" merge --ff-only refs/remotes/origin/main >/dev/null 2>&1; then
-      fail_preflight "PRIMARY_CHECKOUT_FAST_FORWARD_FAILED" "The clean primary checkout could not fast-forward safely. No services were started."
-    fi
-    FRESHNESS="FAST_FORWARDED ($head_sha -> $origin_sha)"
-    return 0
+    fail_preflight "PRIMARY_CHECKOUT_BEHIND_ORIGIN" \
+      "The primary checkout is behind origin/main by $remote_only commits." \
+      "Fast-forward it explicitly with git pull --ff-only, then run the launcher again. No branch mutation was attempted."
   fi
 
   fail_preflight "PRIMARY_CHECKOUT_DIVERGED" \
@@ -242,13 +269,18 @@ prepare_local_environment() {
     fi
     export AUTH_COOKIE_SECRET="$(<"$DEV_SECRET_FILE")"
   fi
-  export COOKIE_SECURE="${COOKIE_SECURE:-false}"
+  if [[ -n "$TAILNET_ORIGIN" ]]; then
+    export COOKIE_SECURE=true ALLOWED_ORIGINS="$TAILNET_ORIGIN"
+  else
+    export COOKIE_SECURE=false ALLOWED_ORIGINS="http://127.0.0.1:$FRONTEND_PORT,http://localhost:$FRONTEND_PORT"
+  fi
+  export TRUSTED_PROXY_ADDRESSES=""
 }
 
 run_preflight() {
   printf 'Checking environment...\n'
   [[ -z "${OPERATOROS_BACKEND:-}" ]] || fail_preflight "Obsolete backend selector" "Start the Elysia backend without OPERATOROS_BACKEND."
-  require_command bash Launcher "Install Bash using the Linux/WSL distribution."
+  require_command bash Launcher "Install Bash on Linux."
   require_command flock Launcher "Install util-linux for collision-safe allocation."
   require_command curl "Readiness check" "Install curl."
   require_command setsid "Process management" "Install util-linux."
@@ -256,16 +288,21 @@ run_preflight() {
   [[ -f "$PROJECT_ROOT/package.json" && -f "$PROJECT_ROOT/bun.lock" ]] || fail_preflight "Workspace manifest is incomplete" "Expected root package.json and bun.lock."
   [[ -f "$API_DIR/package.json" && -d "$API_DIR/node_modules" ]] || fail_preflight "Elysia backend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
   [[ -f "$FRONTEND_DIR/package.json" && -d "$FRONTEND_DIR/node_modules" ]] || fail_preflight "Frontend dependencies are incomplete" "Run: bun install --frozen-lockfile from the repository root."
-  [[ -s "$WSL_BUN_HELPER" ]] || fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "Missing toolchain validator: $WSL_BUN_HELPER"
-  # shellcheck disable=SC1090
-  source "$WSL_BUN_HELPER"
-  if ! operatoros_wsl_prepare_bun "$PROJECT_ROOT"; then
-    fail_preflight "BUN_RUNTIME_INVALID_FOR_WSL" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
-  fi
-  JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
-  printf '  [ok] Linux Bun %s\n' "$OPERATOROS_BUN_VERSION"
-  [[ -x "${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
+  [[ -x "$FRONTEND_DIR/node_modules/.bin/vite" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
   printf '  [ok] Backend and frontend dependencies\n'
+}
+
+verify_tailnet_serve() {
+  [[ -n "$TAILNET_ORIGIN" ]] || return 0
+  require_command tailscale "Tailscale HTTPS mode" "Install and connect Tailscale, then inspect it with tailscale status."
+  local result=0
+  local output
+  output="$(bun "$RUNTIME_HELPER" verify-tailnet-serve --host "$TAILNET_HOST" --https-port "$TAILNET_HTTPS_PORT" --frontend-port "$FRONTEND_PORT" 2>&1)" || result=$?
+  if (( result != 0 )); then
+    fail_preflight "TAILSCALE_SERVE_CONFIGURATION_INVALID" "$output" \
+      "Resolve the route or exposure state with the Tailscale administrator; the launcher does not change it." \
+      "Inspect both commands: tailscale serve status --json; tailscale funnel status --json"
+  fi
 }
 
 safe_cleanup_or_block() {
@@ -365,10 +402,57 @@ allocate_ports() {
   export FRONTEND_PORT BACKEND_PORT
   export OPERATOROS_FRONTEND_URL="http://$FRONTEND_HOST:$FRONTEND_PORT"
   export OPERATOROS_BACKEND_URL="http://$BACKEND_HOST:$BACKEND_PORT"
+  local expected_origins expected_cookie_secure expected_proxy
+  if [[ -n "$TAILNET_ORIGIN" ]]; then
+    expected_origins="$TAILNET_ORIGIN"
+    expected_cookie_secure=true
+    if [[ -n "${VITE_TAILNET_HOST:-}" && "$VITE_TAILNET_HOST" != "$TAILNET_HOST" ]]; then
+      fail_preflight "TAILNET_HOST_CONFIGURATION_MISMATCH" "VITE_TAILNET_HOST must match the validated Tailnet origin host: $TAILNET_HOST."
+    fi
+    if [[ -n "${VITE_HMR_HOST:-}" && "$VITE_HMR_HOST" != "$TAILNET_HOST" ]]; then
+      fail_preflight "TAILNET_HMR_CONFIGURATION_MISMATCH" "VITE_HMR_HOST must match the validated Tailnet host: $TAILNET_HOST."
+    fi
+    if [[ -n "${VITE_HMR_PROTOCOL:-}" && "$VITE_HMR_PROTOCOL" != wss ]]; then
+      fail_preflight "TAILNET_HMR_CONFIGURATION_MISMATCH" "VITE_HMR_PROTOCOL must be wss for the validated HTTPS origin."
+    fi
+    if [[ -n "${VITE_HMR_CLIENT_PORT:-}" && "$VITE_HMR_CLIENT_PORT" != "$TAILNET_HTTPS_PORT" ]]; then
+      fail_preflight "TAILNET_HMR_CONFIGURATION_MISMATCH" "VITE_HMR_CLIENT_PORT must match the validated HTTPS port: $TAILNET_HTTPS_PORT."
+    fi
+  else
+    expected_origins="http://127.0.0.1:$FRONTEND_PORT,http://localhost:$FRONTEND_PORT"
+    expected_cookie_secure=false
+  fi
+  expected_proxy="http://127.0.0.1:$BACKEND_PORT"
+  if [[ -n "${ALLOWED_ORIGINS:-}" && "$ALLOWED_ORIGINS" != "$expected_origins" ]]; then
+    fail_preflight "DEVELOPMENT_ORIGIN_CONFIGURATION_MISMATCH" "ALLOWED_ORIGINS must be exactly: $expected_origins" \
+      "Wildcard and foreign Origins are not accepted by the managed launcher."
+  fi
+  if [[ -n "${COOKIE_SECURE+x}" && "$COOKIE_SECURE" != "$expected_cookie_secure" ]]; then
+    fail_preflight "DEVELOPMENT_COOKIE_CONFIGURATION_MISMATCH" "COOKIE_SECURE must be $expected_cookie_secure for the selected development mode."
+  fi
+  if [[ -n "${VITE_API_BASE_URL:-}" ]]; then
+    fail_preflight "DEVELOPMENT_API_BASE_URL_NOT_ALLOWED" "Leave VITE_API_BASE_URL unset; managed development uses same-origin API requests."
+  fi
+  if [[ -n "${DEV_API_PROXY_TARGET:-}" && "$DEV_API_PROXY_TARGET" != "$expected_proxy" ]]; then
+    fail_preflight "DEVELOPMENT_API_PROXY_TARGET_MISMATCH" "DEV_API_PROXY_TARGET must match the selected loopback backend: $expected_proxy."
+  fi
+
   # Browser development loads Vite, so API traffic stays same-origin and uses
   # the synchronized proxy target below.
-  export VITE_API_BASE_URL="${VITE_API_BASE_URL:-}"
-  export DEV_API_PROXY_TARGET="$OPERATOROS_BACKEND_URL"
+  export VITE_API_BASE_URL=""
+  export DEV_API_PROXY_TARGET="$expected_proxy"
+  export FRONTEND_HOST=127.0.0.1 BACKEND_HOST=127.0.0.1
+  export OPERATOROS_DISABLE_ENV_FILES=true NODE_ENV=development
+  export __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=""
+  if [[ -n "$TAILNET_ORIGIN" ]]; then
+    export VITE_TAILNET_HOST="$TAILNET_HOST"
+    export VITE_HMR_HOST="$TAILNET_HOST"
+    export VITE_HMR_PROTOCOL=wss
+    export VITE_HMR_CLIENT_PORT="$TAILNET_HTTPS_PORT"
+  else
+    export VITE_TAILNET_HOST=""
+    export VITE_HMR_HOST=127.0.0.1 VITE_HMR_PROTOCOL=ws VITE_HMR_CLIENT_PORT="$FRONTEND_PORT"
+  fi
 }
 
 group_is_running() {
@@ -407,7 +491,7 @@ cleanup() {
       (( VERBOSE == 1 )) || cleanup_pid_args+=(--human)
       [[ -n "$FRONTEND_PID" ]] && cleanup_pid_args+=(--frontend-pid "$FRONTEND_PID")
       [[ -n "$BACKEND_PID" ]] && cleanup_pid_args+=(--backend-pid "$BACKEND_PID")
-      cleanup_result="$(setsid bun "$RUNTIME_HELPER" stop-owned-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${cleanup_pid_args[@]}")" || cleanup_status=$?
+      cleanup_result="$(setsid "$BUN_EXECUTABLE" --no-env-file "$RUNTIME_HELPER" stop-owned-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --timeout "$SHUTDOWN_TIMEOUT_SECONDS" "${cleanup_pid_args[@]}")" || cleanup_status=$?
       printf '%s\n' "$cleanup_result"
       if (( cleanup_status == 0 )); then
         [[ -n "$FRONTEND_PID" ]] && printf '  [ok] Frontend stopped\n'
@@ -420,8 +504,8 @@ cleanup() {
   fi
   if [[ -n "$SESSION_ID" && "$SESSION_INITIALIZED" == 1 && "$FINALIZATION_STARTED" == 0 && -f "$SESSION_DIR/session.json" ]]; then
     FINALIZATION_STARTED=1
-    setsid bun "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status stopped || true
-    setsid bun "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
+    setsid "$BUN_EXECUTABLE" --no-env-file "$RUNTIME_HELPER" mark --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --status stopped || true
+    setsid "$BUN_EXECUTABLE" --no-env-file "$RUNTIME_HELPER" finalize-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" || true
   fi
   if (( LOCK_HELD == 1 )); then flock -u 9 || true; LOCK_HELD=0; fi
 }
@@ -485,6 +569,10 @@ while (( $# )); do
     --no-clean-stale) CLEAN_STALE=0; shift ;;
     --auto-port) AUTO_PORT=1; shift ;;
     --fixed-port) FIXED_PORT_REQUESTED=1; shift ;;
+    --tailnet-origin)
+      [[ $# -ge 2 && -n "$2" ]] || { usage >&2; printf '\n--tailnet-origin requires an HTTPS origin.\n' >&2; exit 2; }
+      [[ -z "$TAILNET_ORIGIN_INPUT" ]] || { usage >&2; printf '\n--tailnet-origin may be supplied only once.\n' >&2; exit 2; }
+      TAILNET_ORIGIN_INPUT="$2"; shift 2 ;;
     --verbose|--debug) VERBOSE=1; shift ;;
     --mode) MODE="${2:-}"; shift 2; [[ "$MODE" == browser ]] || { usage >&2; exit 2; };;
     --help|-h) usage; exit 0 ;;
@@ -492,7 +580,33 @@ while (( $# )); do
   esac
 done
 
-# Checkout identity at the very beginning, before environment or port checks
+validate_bind_overrides
+
+# Select the repository-pinned native Linux runtime before invoking any Bun helper.
+[[ -s "$BUN_VALIDATOR" ]] || fail_preflight "BUN_RUNTIME_INVALID" "Missing toolchain validator: $BUN_VALIDATOR"
+# shellcheck disable=SC1090
+source "$BUN_VALIDATOR"
+if ! operatoros_wsl_prepare_bun "$PROJECT_ROOT"; then
+  fail_preflight "BUN_RUNTIME_INVALID" "$OPERATOROS_WSL_TOOLCHAIN_ERROR"
+fi
+JS_RUNTIME_VERSION="$OPERATOROS_BUN_VERSION"
+printf 'Runtime     Linux Bun %s\n' "$JS_RUNTIME_VERSION"
+BUN_EXECUTABLE="$(command -v bun)"
+bun() { command "$BUN_EXECUTABLE" --no-env-file "$@"; }
+
+if [[ -n "$TAILNET_ORIGIN_INPUT" ]]; then
+  TAILNET_CONFIG="$(bun "$RUNTIME_HELPER" parse-tailnet-origin --origin "$TAILNET_ORIGIN_INPUT" 2>/dev/null)" \
+    || fail_preflight "TAILNET_ORIGIN_INVALID" "Expected an exact HTTPS origin on this node's *.ts.net hostname, with an optional port and no path, credentials, query, or fragment."
+  IFS=$'\t' read -r TAILNET_ORIGIN TAILNET_HOST TAILNET_HTTPS_PORT <<< "$TAILNET_CONFIG"
+  [[ -n "$TAILNET_ORIGIN" && -n "$TAILNET_HOST" && "$TAILNET_HTTPS_PORT" =~ ^[0-9]+$ ]] \
+    || fail_preflight "TAILNET_ORIGIN_INVALID" "The configured HTTPS origin could not be normalized."
+  require_command tailscale "Tailscale HTTPS mode" "Install and connect Tailscale, then inspect it with tailscale status."
+  BACKEND_HOST=127.0.0.1
+  FRONTEND_HOST=127.0.0.1
+  printf 'Mode        Tailscale HTTPS (%s)\n' "$TAILNET_ORIGIN"
+fi
+
+# Checkout identity is resolved only after the native Bun runtime is verified.
 resolve_worktree_identity
 print_checkout_identity
 ensure_primary_freshness
@@ -510,6 +624,7 @@ report_configuration_drift
 printf 'Data root   %s\nDatabase    %s\n' "$OPERATOROS_DATA_DIR" "$EXPECTED_PERSISTENT_DB"
 
 allocate_ports
+verify_tailnet_serve
 SESSION_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-$RANDOM"
 SESSION_TOKEN="operatoros-session-$SESSION_ID"
 SESSION_DIR="$RUNTIME_DIR/sessions/$SESSION_ID"
@@ -522,7 +637,8 @@ bun "$RUNTIME_HELPER" init-session --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROO
 SESSION_INITIALIZED=1
 
 if (( CHECK_ONLY == 1 )) || [[ "${ASTRYX_DEV_PREPARE_ONLY:-0}" == 1 ]]; then
-  printf '\nOperatorOS development environment is ready on frontend %s and backend %s. No services were started.\n' "$FRONTEND_PORT" "$BACKEND_PORT"
+  printf '\nDevelopment configuration validated; no services were started.\nFrontend  %s\nBackend   %s\n' "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL"
+  if [[ -n "$TAILNET_ORIGIN" ]]; then printf 'Tailnet   %s (Serve/Funnel config validated; reachability not probed)\n' "$TAILNET_ORIGIN"; fi
   exit 0
 fi
 BACKEND_LOG="$RUNTIME_DIR/backend.log"
@@ -536,7 +652,7 @@ LAUNCHER_STATE=STARTING_BACKEND
   export HOST="$BACKEND_HOST"
   export PORT="$BACKEND_PORT"
   cd "$API_DIR"
-  exec setsid bun run "$API_DIR/src/server.ts"
+    exec setsid "$BUN_EXECUTABLE" --no-env-file run "$API_DIR/src/server.ts"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
@@ -553,23 +669,28 @@ else
   exit "$readiness_rc"
 fi
 
-VITE_EXECUTABLE="${ASTRYX_VITE_EXECUTABLE:-$FRONTEND_DIR/node_modules/.bin/vite}"
+VITE_EXECUTABLE="$FRONTEND_DIR/node_modules/.bin/vite"
 [[ -x "$VITE_EXECUTABLE" ]] || fail_preflight "Frontend dependency installation is incomplete" "Vite is missing. Run: bun install --frozen-lockfile from the repository root."
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 LAUNCHER_STATE=STARTING_FRONTEND
 (
   cd "$FRONTEND_DIR"
-  if [[ -n "${ASTRYX_VITE_EXECUTABLE:-}" ]]; then
-    exec setsid "$VITE_EXECUTABLE" --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
-  else
-    exec setsid bun run --bun vite --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
-  fi
+  export HOST="$FRONTEND_HOST"
+  export PORT="$FRONTEND_PORT"
+  exec setsid "$BUN_EXECUTABLE" --no-env-file run --bun vite --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort
 ) >"$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"
 bun "$RUNTIME_HELPER" register --runtime "$RUNTIME_DIR" --repo "$PROJECT_ROOT" --session "$SESSION_ID" --role frontend --token "$SESSION_TOKEN" --pid "$FRONTEND_PID" --port "$FRONTEND_PORT" || true
 
 if wait_until_ready Frontend "$OPERATOROS_FRONTEND_URL" "$FRONTEND_PID" "$FRONTEND_LOG"; then
+  :
+else
+  readiness_rc=$?
+  (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"
+  exit "$readiness_rc"
+fi
+if wait_until_ready "API proxy" "$OPERATOROS_FRONTEND_URL/health" "$FRONTEND_PID" "$FRONTEND_LOG"; then
   :
 else
   readiness_rc=$?
@@ -585,7 +706,13 @@ if [[ -z "$GIT_BRANCH" ]]; then
   GIT_BRANCH="$(git -C "$PROJECT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo detached)"
 fi
 
-printf '\nOperatorOS Persistent Local Development Mode\nStatus    Ready\nWorktree role  %s\nWorktree path  %s\nRepository  %s\nGit commit  %s\nBranch      %s\nFreshness   %s\nFrontend  %s\nBackend   %s (%s)\nSession   %s\nDatabase  %s\nSchema    %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$WORKTREE_ROLE" "$PROJECT_ROOT" "$PROJECT_ROOT" "$GIT_COMMIT" "$GIT_BRANCH" "$FRESHNESS" "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
+printf '\nOperatorOS Development Stack\nStatus          Ready\nMode            %s\nWorktree role   %s\nWorktree path   %s\nGit commit      %s\nBranch          %s\nFreshness       %s\nLocal frontend  %s\nLocal backend   %s (%s)\nAPI proxy       %s/health ready\nCookie mode     %s\nOrigin          %s\n' "$([[ -n "$TAILNET_ORIGIN" ]] && printf 'TAILNET HTTPS' || printf 'LOCAL')" "$WORKTREE_ROLE" "$PROJECT_ROOT" "$GIT_COMMIT" "$GIT_BRANCH" "$FRESHNESS" "$OPERATOROS_FRONTEND_URL" "$OPERATOROS_BACKEND_URL" "$BACKEND_RUNTIME" "$OPERATOROS_FRONTEND_URL" "$([[ "$COOKIE_SECURE" == true ]] && printf 'Secure' || printf 'local HTTP')" "$ALLOWED_ORIGINS"
+if [[ -n "$TAILNET_ORIGIN" ]]; then
+  printf 'Tailnet URL     %s (Serve/Funnel config validated; reachability not probed)\nHMR             WSS configured; remote upgrade not verified\n' "$TAILNET_ORIGIN"
+else
+  printf 'HMR             Local WebSocket\n'
+fi
+printf 'Session         %s\nDatabase        %s\nSchema          %s\nDevelopment data is retained across normal restarts. Runtime session files are removed when OperatorOS stops.\nDo not use this environment for operational student records.\n\n' "$SESSION_ID" "$DEV_DATABASE" "$CURRENT_SCHEMA_VERSION"
 LAUNCHER_STATE=RUNNING
 while group_is_running "$BACKEND_PID" && group_is_running "$FRONTEND_PID"; do
   (( SHUTDOWN_REQUESTED == 1 )) && exit "$REQUESTED_EXIT_CODE"

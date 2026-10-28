@@ -11,6 +11,8 @@ import {
   Search,
   ShieldCheck,
   UserCheck,
+  FileCheck2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import CorrectionSelfConfirmModal from '../../../components/CorrectionSelfConfirmModal';
 import { useDeploymentMode } from '../../../context/DeploymentModeContext';
@@ -24,6 +26,31 @@ type SelectedCorrection = {
   proposed_status: string;
   explanation: string;
 };
+
+function formatItemTypeLabel(type: string): string {
+  switch (type) {
+    case 'STUDENT_VERIFICATION':
+      return 'Verifikasi Identitas';
+    case 'STUDENT_IDENTITY_CORRECTION':
+      return 'Koreksi Dokumen Siswa';
+    case 'STUDENT_DAPODIK_CORRECTION':
+      return 'Koreksi DAPODIK Siswa';
+    case 'STAFF_PTK_REVIEW':
+      return 'Aktivitas PTK';
+    case 'UPP_REPORT_PENDING':
+      return 'Laporan UPP';
+    case 'FOLLOWUP_CASE':
+      return 'Kasus Follow-Up';
+    case 'FOLLOWUP_CANDIDATE':
+      return 'Kandidat Pengecualian';
+    case 'CORRECTION_REQUEST':
+      return 'Koreksi Kehadiran';
+    case 'UNMATCHED_DEVICE':
+      return 'Perangkat RFID';
+    default:
+      return type.replace(/_/g, ' ');
+  }
+}
 
 export default function OperatorWorkQueue() {
   const { isSingleUserMode } = useDeploymentMode();
@@ -115,7 +142,7 @@ export default function OperatorWorkQueue() {
         <div className="flex items-start justify-between gap-2">
           <div>
             <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              {item.item_type.replace('_', ' ')}
+              {formatItemTypeLabel(item.item_type)}
             </span>
             <h4 className="font-semibold text-slate-900 dark:text-white">{item.title}</h4>
             <p className="mt-0.5 text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -138,8 +165,8 @@ export default function OperatorWorkQueue() {
             <button
               onClick={() =>
                 setSelectedCorrection({
-                  id: item.metadata.id,
-                  version: item.metadata.version,
+                  id: (item.metadata as any).id,
+                  version: (item.metadata as any).version,
                   proposed_status: item.title.replace('Koreksi: Status ', ''),
                   explanation: item.evidence_summary,
                 })
@@ -177,7 +204,7 @@ export default function OperatorWorkQueue() {
             )}
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Pusat konsolidasi pengecualian kehadiran, koreksi mandiri, dan tindak lanjut harian.
+            Pusat konsolidasi verifikasi kependudukan, perbaikan DAPODIK, review PTK, laporan UPP, dan tindak lanjut harian.
           </p>
         </div>
 
@@ -199,7 +226,7 @@ export default function OperatorWorkQueue() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari berdasarkan nama siswa, judul, atau ringkasan..."
+            placeholder="Cari berdasarkan nama siswa/staf, judul, atau ringkasan..."
             className="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm focus:border-emerald-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
         </div>
@@ -214,6 +241,11 @@ export default function OperatorWorkQueue() {
             className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           >
             <option value="ALL">Semua Tipe Pekerjaan</option>
+            <option value="STUDENT_VERIFICATION">Verifikasi Identitas Siswa</option>
+            <option value="STUDENT_IDENTITY_CORRECTION">Koreksi Dokumen Siswa</option>
+            <option value="STUDENT_DAPODIK_CORRECTION">Koreksi DAPODIK Siswa</option>
+            <option value="STAFF_PTK_REVIEW">Review Aktivitas PTK</option>
+            <option value="UPP_REPORT_PENDING">Laporan UPP</option>
             <option value="FOLLOWUP_CASE">Kasus Follow-Up</option>
             <option value="FOLLOWUP_CANDIDATE">Kandidat Pengecualian</option>
             <option value="CORRECTION_REQUEST">Permintaan Koreksi</option>

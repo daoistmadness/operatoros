@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
+import { dirname } from "node:path";
 import { openapi } from "@elysiajs/openapi";
-import type { BackendConfig } from "./config";
+import { DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES, DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES, type BackendConfig } from "./config";
 import { openDatabase } from "@operatoros/db";
 import { authRoutes } from "./auth/routes";
-import { defaultAuthConfig } from "./auth/service";
+import { assertAuthCookieSecret, defaultAuthConfig } from "./auth/service";
 import { LoginRateLimiter } from "./auth/rate-limit";
 import { installHttpSecurity } from "./security/http";
 import { coreRoutes } from "./domains/core";
@@ -49,6 +50,9 @@ import { classOverviewRoutes } from "./domains/class-overview";
 import { dailyAttendanceRoutes } from "./domains/daily-attendance";
 import { attendanceCalendarRoutes } from "./domains/attendance-calendar";
 import { machineAttendancePreviewRoutes } from "./domains/machine-attendance-preview";
+import { staffMonthlyActivityRoutes } from "./domains/staff-monthly-activities";
+import { uppReportRoutes } from "./domains/upp-reports";
+import { registerStudentAdmin } from "./domains/student-admin";
 import { openApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
@@ -58,9 +62,11 @@ function errorBody(code: string, message: string) {
 }
 
 export function createApp(_config: Partial<BackendConfig> = {}) {
+  if ((_config.environment ?? process.env.NODE_ENV) !== "test") assertAuthCookieSecret(_config.auth?.authCookieSecret);
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const securityConfig = defaultAuthConfig(_config.auth);
   const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
+  let applicationRoutesRegistered = false;
   const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
@@ -77,12 +83,24 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     })
     .get("/", () => ({ status: "ok", message: "School Attendance Analytics API" }))
     .get("/health", () => ({ status: "ok" }))
-    .get("/ready", () => ({ ready: true, persistence: database ? "sqlite" : "not-configured" }));
+    .get("/ready", () => ({ ready: applicationRoutesRegistered, persistence: database ? "sqlite" : "not-configured" }));
   installHttpSecurity(app, { allowedOrigins: securityConfig.allowedOrigins });
 
   if (context) {
     authRoutes(app, context);
     coreRoutes(app, context);
+    staffMonthlyActivityRoutes(app, context);
+    const databasePath = typeof context.database?.path === "string" ? context.database.path : undefined;
+    const reportDataDir = _config.dataPaths?.dataDir ?? (databasePath && databasePath !== ":memory:" ? dirname(databasePath) : undefined);
+    uppReportRoutes(app, context, {
+      storageDir: reportDataDir,
+      maxFileSizeBytes: _config.uppReportMaxFileSizeBytes ?? DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES,
+    });
+    registerStudentAdmin(app, context, {
+      ..._config,
+      studentIomMaxFileSizeBytes: _config.studentIomMaxFileSizeBytes ?? DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES,
+      dataPaths: _config.dataPaths ?? (reportDataDir ? { dataDir: reportDataDir } as any : undefined),
+    } as any);
     configRoutes(app, context);
     readinessRoutes(app, context);
     attendanceRoutes(app, context);
@@ -127,6 +145,9 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,
       backupEncryption: _config.backupEncryption ?? null,
+      reportStorageDir: reportDataDir,
+      diskSpaceProbe: _config.diskSpaceProbe ?? null,
+      restoreFileSystem: _config.restoreFileSystem ?? null,
     };
     safetyRoutes(app, context, safetyConfig);
     dataResetRoutes(app, context, {
@@ -143,6 +164,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
       documentation: context ? openApiDocumentation() : undefined,
     }));
   }
+  applicationRoutesRegistered = context !== null;
   return app;
 }
 

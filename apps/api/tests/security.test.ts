@@ -1,12 +1,42 @@
 import { describe, expect, it } from "bun:test";
+import { randomBytes } from "node:crypto";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { createApp } from "../src/app";
+import { loadConfig } from "../src/config";
 import { LoginRateLimiter } from "../src/auth/rate-limit";
 import { clientIp } from "../src/auth/service";
 import { normalizeOrigin, parseAllowedOrigins, parseTrustedProxyAddresses } from "../src/security/http";
-import { decryptBackup, encryptBackup, isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { backupSha256, decryptBackup, decryptBackupFileSync, encryptBackup, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackup, isEncryptedBackupFile, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
 const keyText = Buffer.alloc(32, 7).toString("base64");
 const otherKeyText = Buffer.alloc(32, 8).toString("base64");
+
+describe("managed development process configuration", () => {
+  it("produces loopback local and exact Tailnet API settings for the actual server config", () => {
+    const dataRoot = mkdtempSync(join(tmpdir(), "operatoros-managed-config-"));
+    const base = { OPERATOROS_DATA_DIR: dataRoot, OPERATOROS_REPOSITORY_ROOT: resolve(process.cwd(), "../.."), HOST: "127.0.0.1", TRUSTED_PROXY_ADDRESSES: "" };
+    try {
+      const local = loadConfig({ ...base, PORT: "8098", COOKIE_SECURE: "false", ALLOWED_ORIGINS: "http://127.0.0.1:5198,http://localhost:5198" });
+      expect(local.hostname).toBe("127.0.0.1");
+      expect(local.port).toBe(8098);
+      expect(local.auth?.cookieSecure).toBe(false);
+      expect(local.auth?.allowedOrigins).toEqual(["http://127.0.0.1:5198", "http://localhost:5198"]);
+      expect(local.auth?.trustedProxyAddresses).toEqual([]);
+
+      const tailnetOrigin = "https://node.tailnet.ts.net:8444";
+      const tailnet = loadConfig({ ...base, PORT: "8099", COOKIE_SECURE: "true", ALLOWED_ORIGINS: tailnetOrigin });
+      expect(tailnet.hostname).toBe("127.0.0.1");
+      expect(tailnet.port).toBe(8099);
+      expect(tailnet.auth?.cookieSecure).toBe(true);
+      expect(tailnet.auth?.allowedOrigins).toEqual([tailnetOrigin]);
+      expect(tailnet.auth?.trustedProxyAddresses).toEqual([]);
+    } finally {
+      rmSync(dataRoot, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("login rate limiting", () => {
   it("limits IP, account, and global dimensions with an injectable clock", () => {
@@ -67,6 +97,21 @@ describe("proxy trust and Origin protection", () => {
     expect(options.status).toBe(204);
   });
 
+  it("requires the exact Tailnet Origin for cookie-authenticated POST, PUT, PATCH, and DELETE", async () => {
+    const origin = "https://node.tailnet.ts.net:8444";
+    const app = createApp({ auth: { allowedOrigins: [origin] } }) as any;
+    const handler = () => ({ ok: true });
+    app.post("/tailnet-mutate", handler);
+    app.put("/tailnet-mutate", handler);
+    app.patch("/tailnet-mutate", handler);
+    app.delete("/tailnet-mutate", handler);
+    for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+      const headers = { cookie: "astyx_session=synthetic", origin };
+      expect((await app.handle(new Request("https://local/tailnet-mutate", { method, headers }))).status).toBe(200);
+      expect((await app.handle(new Request("https://local/tailnet-mutate", { method, headers: { ...headers, origin: "https://other.tailnet.ts.net:8444" } }))).status).toBe(403);
+    }
+  });
+
   it("normalizes exact origins without substring matching", () => {
     expect(normalizeOrigin("https://example.test/")).toBe("https://example.test");
     expect(parseAllowedOrigins("https://example.test, https://example.test/", [])).toEqual(["https://example.test"]);
@@ -118,5 +163,60 @@ describe("authenticated backup envelope", () => {
     expect(rotated?.allowLegacyPlaintext).toBe(false);
     expect(parseBackupEncryptionConfig({ activeKey: keyText, activeKeyId: "primary", allowLegacyPlaintext: true })?.allowLegacyPlaintext).toBe(true);
     expect(() => parseBackupEncryptionConfig({ activeKey: keyText, activeKeyId: "primary", previousKeys: "[]" })).toThrow();
+  });
+
+  it("streams encrypted files in both directions without changing the v1 envelope", () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-crypto-file-"));
+    const plaintext = randomBytes(128 * 1024 + 7);
+    const source = join(directory, "snapshot.sqlite");
+    const streamed = join(directory, "streamed.sqlite3");
+    const restored = join(directory, "restored.sqlite");
+    const compatible = join(directory, "compatible.sqlite3");
+    const compatibleRestore = join(directory, "compatible.sqlite");
+    try {
+      writeFileSync(source, plaintext, { mode: 0o600 });
+      const encryptedInfo = encryptBackupFileSync(source, streamed, config);
+      expect(encryptedInfo.plaintextSize).toBe(plaintext.length);
+      expect(encryptedInfo.plaintextSha256).toBe(backupSha256(plaintext));
+      expect(encryptedInfo.encryptedSha256).toBe(hashBackupFileSync(streamed));
+      expect(isEncryptedBackupFile(streamed)).toBe(true);
+      const envelope = JSON.parse(readFileSync(streamed, "utf8")) as { version: number; algorithm: string; keyId: string; tag: string };
+      expect(envelope).toMatchObject({ version: 1, algorithm: "aes-256-gcm", keyId: "primary" });
+      expect(Buffer.from(envelope.tag, "base64")).toHaveLength(16);
+      expect(decryptBackup(readFileSync(streamed), config)).toEqual(plaintext);
+
+      const decryptedInfo = decryptBackupFileSync(streamed, restored, config);
+      expect(readFileSync(restored)).toEqual(plaintext);
+      expect(decryptedInfo).toMatchObject({
+        encryptedSize: encryptedInfo.encryptedSize,
+        encryptedSha256: encryptedInfo.encryptedSha256,
+        plaintextSize: plaintext.length,
+        plaintextSha256: backupSha256(plaintext),
+      });
+
+      writeFileSync(compatible, encryptBackup(plaintext, config), { mode: 0o600 });
+      expect(decryptBackupFileSync(compatible, compatibleRestore, config).plaintextSha256).toBe(backupSha256(plaintext));
+      expect(readFileSync(compatibleRestore)).toEqual(plaintext);
+    } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+
+  it("removes partial plaintext when streamed envelope authentication or framing fails", () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-backup-crypto-failure-"));
+    const encryptedPath = join(directory, "backup.sqlite3");
+    const plaintextPath = join(directory, "candidate.sqlite");
+    const original = encryptBackup(randomBytes(70 * 1024 + 1), config);
+    try {
+      const tampered = JSON.parse(original.toString()) as { ciphertext: string };
+      const ciphertext = Buffer.from(tampered.ciphertext, "base64");
+      ciphertext[0] = ciphertext[0]! ^ 1;
+      tampered.ciphertext = ciphertext.toString("base64");
+      writeFileSync(encryptedPath, JSON.stringify(tampered), { mode: 0o600 });
+      expect(() => decryptBackupFileSync(encryptedPath, plaintextPath, config)).toThrow("could not be authenticated");
+      expect(() => readFileSync(plaintextPath)).toThrow();
+
+      writeFileSync(encryptedPath, original.subarray(0, original.length - 1), { mode: 0o600 });
+      expect(() => decryptBackupFileSync(encryptedPath, plaintextPath, config)).toThrow();
+      expect(() => readFileSync(plaintextPath)).toThrow();
+    } finally { rmSync(directory, { recursive: true, force: true }); }
   });
 });

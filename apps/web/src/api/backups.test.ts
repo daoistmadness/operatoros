@@ -3,6 +3,7 @@ import { apiRequest } from "../lib/api/client";
 import {
   backupApiPath,
   createBackup,
+  downloadBackupUrl,
   getBackupScheduler,
   getBackupStatus,
   listBackupHistory,
@@ -11,14 +12,16 @@ import {
   preflightRestore,
   restoreBackup,
   updateBackupScheduler,
-  type RestoreRequest,
+  type RestoreSubmission,
 } from "./backups";
 
 vi.mock("../lib/api/client", () => ({ apiRequest: vi.fn() }));
 
 const filename = "backup_2026-07-13T00-00-00Z.sqlite3";
-const restoreBody: RestoreRequest = {
+const restoreBody: RestoreSubmission = {
   current_password: "not-persisted",
+  candidate_admin_username: "backup-admin",
+  candidate_admin_password: "synthetic-backup-password",
   confirmation_filename: filename,
   confirmation_phrase: "RESTORE_DATABASE",
   acknowledge_complete_replacement: true,
@@ -43,6 +46,10 @@ describe("backup API", () => {
     expect(apiRequest).toHaveBeenNthCalledWith(1, { path: "/api/admin/backups" });
     expect(apiRequest).toHaveBeenNthCalledWith(2, { path: "/api/admin/backups", method: "POST" });
   });
+  it("types the create response with current artifact metadata", async () => {
+    vi.mocked(apiRequest).mockResolvedValueOnce({ data: { filename, sha256: "a".repeat(64) }, status: 200, headers: {} });
+    await expect(createBackup()).resolves.toMatchObject({ filename, sha256: "a".repeat(64) });
+  });
   it("preflights the selected backend filename", async () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
     await preflightRestore(filename);
@@ -66,9 +73,11 @@ describe("backup API", () => {
     await getBackupScheduler();
     await listBackupHistory();
     await listRecoveryHistory();
+    await listRecoveryHistory("next-page");
     expect(apiRequest).toHaveBeenNthCalledWith(1, { path: "/api/admin/backups/scheduler" });
     expect(apiRequest).toHaveBeenNthCalledWith(2, { path: "/api/admin/backups/history" });
-    expect(apiRequest).toHaveBeenNthCalledWith(3, { path: "/api/admin/backups/recovery-history" });
+    expect(apiRequest).toHaveBeenNthCalledWith(3, { path: "/api/admin/backups/recovery-history", params: { cursor: undefined } });
+    expect(apiRequest).toHaveBeenNthCalledWith(4, { path: "/api/admin/backups/recovery-history", params: { cursor: "next-page" } });
   });
   it("updates scheduler settings", async () => {
     const body = { enabled: true, schedule_type: "interval" as const, interval_minutes: 60, hour_utc: 1, minute_utc: 0, weekday_utc: 0, keep_daily: 7, keep_weekly: 4, keep_monthly: 12 };
@@ -78,5 +87,9 @@ describe("backup API", () => {
   });
   it("never creates a double API prefix", () => {
     expect(backupApiPath("/status")).not.toContain("/api/api/");
+  });
+  it("keeps the default artifact URL and opts into the complete recovery bundle", () => {
+    expect(downloadBackupUrl(filename)).toBe(`/api/admin/backups/${filename}/download`);
+    expect(downloadBackupUrl("backup name.sqlite3", true)).toBe("/api/admin/backups/backup%20name.sqlite3/download?bundle=true");
   });
 });

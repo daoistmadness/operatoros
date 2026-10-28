@@ -1,6 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AttendanceAnalytics from "./AttendanceAnalytics";
@@ -56,7 +56,12 @@ describe("AttendanceAnalytics", () => {
   it("renders server-computed attendance sections and filters", async () => {
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
     await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
-    await vi.waitFor(() => expect(container.textContent).toContain("Attendance Analytics"), { timeout: 3000 });
+    await vi.waitFor(() => {
+      expect(container.textContent).toContain("62.50%");
+      expect(container.textContent).toContain("By Class");
+      expect(container.textContent).toContain("By Jenjang");
+      expect(container.textContent).toContain("A Student");
+    }, { timeout: 3000 });
     expect(container.textContent).toContain("Attendance Analytics");
     expect(container.textContent).toContain("62.50%");
     expect(container.textContent).toContain("By Class");
@@ -65,5 +70,35 @@ describe("AttendanceAnalytics", () => {
     expect(container.querySelector("#attendance-year")).not.toBeNull();
     expect(container.querySelector('[data-testid="attendance-chart"]')).not.toBeNull();
     expect(attendanceApi.fetchAttendanceOverview).toHaveBeenCalledWith({ academic_year_id: 1, date_from: "2026-07-01", date_to: "2027-06-30", jenjang_id: null, class_id: null });
+  });
+
+  it("shows the overview while other report panels are still loading", async () => {
+    vi.mocked(attendanceApi.fetchAttendanceClasses).mockImplementation(() => new Promise<never>(() => {}));
+    vi.mocked(attendanceApi.fetchAttendanceJenjang).mockImplementation(() => new Promise<never>(() => {}));
+    vi.mocked(attendanceApi.fetchAttendanceDaily).mockImplementation(() => new Promise<never>(() => {}));
+    vi.mocked(attendanceApi.fetchAttendanceStudents).mockImplementation(() => new Promise<never>(() => {}));
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.querySelector('[aria-label="Attendance summary"]')).not.toBeNull(), { timeout: 3000 });
+    expect(container.textContent).toContain("62.50%");
+    expect(container.textContent).toContain("Memuat laporan kelas");
+    expect(container.textContent).toContain("Memuat laporan jenjang");
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+  });
+
+  it("keeps a failed report isolated and retries it independently", async () => {
+    vi.mocked(attendanceApi.fetchAttendanceClasses)
+      .mockRejectedValueOnce(new Error("synthetic class report failure"))
+      .mockResolvedValueOnce({ scope, rows: [{ ...row, classId: 1, className: "1A", students: 2 }], generatedAt: overview.generatedAt } as never);
+    container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
+    await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+    await vi.waitFor(() => expect(container.textContent).toContain("Gagal memuat laporan kelas"), { timeout: 3000 });
+    expect(container.querySelector('[aria-label="Attendance summary"]')).not.toBeNull();
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    const retry = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Coba Lagi");
+    expect(retry).toBeDefined();
+    await act(async () => { retry?.click(); });
+    await vi.waitFor(() => expect(container.textContent).toContain("By Class"), { timeout: 3000 });
+    expect(attendanceApi.fetchAttendanceClasses).toHaveBeenCalledTimes(2);
   });
 });

@@ -6,8 +6,16 @@ import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION } from "./manifest";
 
 const schemaSql = readFileSync(new URL("./s47-schema.sql", import.meta.url), "utf8");
 const employeeSql = readFileSync(new URL("./s48-migration.sql", import.meta.url), "utf8");
+const schoolUnitsSql = readFileSync(new URL("./s49-migration.sql", import.meta.url), "utf8");
+const staffMonthlyActivitySql = readFileSync(new URL("./s50-migration.sql", import.meta.url), "utf8");
+const uppReportsSql = readFileSync(new URL("./s51-migration.sql", import.meta.url), "utf8");
+const studentAdminSql = readFileSync(new URL("./s52-migration.sql", import.meta.url), "utf8");
+const studentVerificationSql = readFileSync(new URL("./s53-migration.sql", import.meta.url), "utf8");
+const bospReminderSql = readFileSync(new URL("./s54-migration.sql", import.meta.url), "utf8");
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
+const schoolUnitTriggerStart = schoolUnitsSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
+if (schoolUnitTriggerStart < 0) throw new Error("SCHOOL_UNIT_TRIGGERS_MISSING");
 
 export function installS47Schema(client: Database, triggers = true): void {
   client.exec(triggers ? schemaSql : schemaSql.slice(0, triggerStart));
@@ -19,6 +27,34 @@ export function installS47Triggers(client: Database): void {
 
 export function installS48EmployeeSchema(client: Database): void {
   client.exec(employeeSql);
+}
+
+export function installS49SchoolUnitSchema(client: Database, triggers = true): void {
+  client.exec(triggers ? schoolUnitsSql : schoolUnitsSql.slice(0, schoolUnitTriggerStart));
+}
+
+export function installS49SchoolUnitTriggers(client: Database): void {
+  client.exec(schoolUnitsSql.slice(schoolUnitTriggerStart));
+}
+
+export function installS50StaffMonthlyActivitySchema(client: Database): void {
+  client.exec(staffMonthlyActivitySql);
+}
+
+export function installS51UppReportsSchema(client: Database): void {
+  client.exec(uppReportsSql);
+}
+
+export function installS52StudentAdminSchema(client: Database): void {
+  client.exec(studentAdminSql);
+}
+
+export function installS53StudentVerificationSchema(client: Database): void {
+  client.exec(studentVerificationSql);
+}
+
+export function installS54BospReminderSchema(client: Database): void {
+  client.exec(bospReminderSql);
 }
 
 export function createFreshDatabase(path: string): void {
@@ -35,6 +71,12 @@ export function createFreshDatabase(path: string): void {
     client.transaction(() => {
       installS47Schema(client!);
       installS48EmployeeSchema(client!);
+      installS49SchoolUnitSchema(client!);
+      installS50StaffMonthlyActivitySchema(client!);
+      installS51UppReportsSchema(client!);
+      installS52StudentAdminSchema(client!);
+      installS53StudentVerificationSchema(client!);
+      installS54BospReminderSchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +

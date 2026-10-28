@@ -3,14 +3,16 @@ import type {
   LegacyLinkCandidate,
   LegacyLinkStatus,
   ManagedStudent,
+  NisnStatusFilter,
   StudentListResponse,
   StudentOverviewResponse,
 } from "@operatoros/contracts/students";
 
-export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, StudentListResponse } from "@operatoros/contracts/students";
+export type { LegacyLinkCandidate, LegacyLinkStatus, ManagedStudent, NisnStatusFilter, StudentListResponse } from "@operatoros/contracts/students";
 export type { StudentOverviewResponse } from "@operatoros/contracts/students";
 
 export type StudentFilters = {
+  nisn_status?: NisnStatusFilter;
   search?: string;
   academic_year_id?: number;
   jenjang_id?: number;
@@ -20,6 +22,9 @@ export type StudentFilters = {
   status?: string;
   device_linked?: boolean;
   enrollment_status?: string;
+  nik_verification_status?: string;
+  kk_verification_status?: string;
+  dapodik_status?: string;
   page?: number;
   page_size?: number;
 };
@@ -37,6 +42,38 @@ export type StudentProfile = {
   health?: Record<string, string | null> | null;
   document_status?: Record<string, boolean> | null;
   attendance_identity?: LegacyLinkStatus;
+  identity_verifications?: Array<{
+    id: number;
+    identifier_type: "NIK" | "KK";
+    verification_status: "UNVERIFIED" | "VERIFIED" | "NEEDS_CORRECTION";
+    verified_at?: string | null;
+    verified_by?: string | null;
+    notes?: string | null;
+    correction_reason?: string | null;
+    updated_at: string;
+  }>;
+  dapodik_registration?: {
+    id: number;
+    status: string;
+    external_reference?: string | null;
+    updated_by: string;
+    notes?: string | null;
+    correction_reason?: string | null;
+    synchronized_at?: string | null;
+    updated_at: string;
+  } | null;
+  iom_documents?: Array<{
+    id: string;
+    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+    description: string;
+    file_sha256: string;
+    file_size_bytes: number;
+    original_filename: string;
+    uploaded_by: string;
+    uploaded_at: string;
+    updated_at: string;
+    updated_by?: string | null;
+  }>;
 };
 
 export async function fetchStudents(filters: StudentFilters): Promise<StudentListResponse> {
@@ -165,3 +202,47 @@ export async function updateStudentDocuments(id: string, body: unknown) { return
 export async function addStudentGuardian(id: string, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians`, method: "POST", body })).data; }
 export async function updateStudentGuardian(id: string, guardianId: number, body: unknown) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians/${guardianId}`, method: "PATCH", body })).data; }
 export async function deleteStudentGuardian(id: string, guardianId: number) { return (await apiRequest({ path: `/api/student-masters/${id}/guardians/${guardianId}`, method: "DELETE" })).data; }
+
+export async function fetchIdentityVerifications(id: string) {
+  return (await apiRequest({ path: `/api/student-masters/${id}/identity-verifications` })).data as any;
+}
+
+export async function updateIdentityVerification(id: string, body: unknown) {
+  return (await apiRequest({ path: `/api/student-masters/${id}/identity-verifications`, method: "PATCH", body })).data as any;
+}
+
+export async function fetchDapodikStatus(id: string) {
+  return (await apiRequest({ path: `/api/student-masters/${id}/dapodik-status` })).data as any;
+}
+
+export async function updateDapodikStatus(id: string, body: unknown) {
+  return (await apiRequest({ path: `/api/student-masters/${id}/dapodik-status`, method: "PATCH", body })).data as any;
+}
+
+export async function fetchIomDocuments(id: string) {
+  return (await apiRequest({ path: `/api/student-masters/${id}/iom-documents` })).data as any[];
+}
+
+export async function uploadIomDocument(id: string, formData: FormData) {
+  return (await apiRequest({
+    path: `/api/student-masters/${id}/iom-documents`,
+    method: "POST",
+    body: formData,
+  })).data as any;
+}
+
+export async function updateIomDocument(id: string, docId: string, body: { description: string }) {
+  return (await apiRequest({
+    path: `/api/student-masters/${id}/iom-documents/${docId}`,
+    method: "PATCH",
+    body,
+  })).data as any;
+}
+
+export async function downloadIomDocumentBlob(id: string, docId: string): Promise<Blob> {
+  return (await apiRequest<Blob>({
+    path: `/api/student-masters/${id}/iom-documents/${docId}/download`,
+    responseType: "blob",
+    expectedBlobTypes: ["application/pdf"],
+  })).data;
+}

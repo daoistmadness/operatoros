@@ -273,7 +273,10 @@ describe("core CRUD parity slices", () => {
       expect(legacyOperations.status).toBe(200);
       expect((await legacyOperations.json() as { pages: number }).pages).toBe(1);
       const workQueue = await app.handle(new Request("http://local/api/operator/work-queue", { headers: auth }));
-      expect(workQueue.status).toBe(200); expect(await workQueue.json()).toEqual([]);
+      expect(workQueue.status).toBe(200);
+      const workQueueItems = await workQueue.json() as Array<{ item_type: string }>;
+      expect(workQueueItems).toHaveLength(2);
+      expect(workQueueItems.map((item) => item.item_type)).toEqual(["STUDENT_VERIFICATION", "STUDENT_VERIFICATION"]);
       const assignments = await app.handle(new Request("http://local/api/teacher-class-assignments", { headers: auth }));
       expect(assignments.status).toBe(200); expect(await assignments.json()).toEqual([]);
       const exportPreview = await app.handle(new Request("http://local/api/student-exports/preview", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ scope: "ALL_PERMITTED_STUDENTS", field_profile: "STANDARD_OPERATIONAL" }) }));

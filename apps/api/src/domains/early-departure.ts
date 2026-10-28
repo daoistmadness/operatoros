@@ -151,7 +151,7 @@ export function earlyDepartureRoutes(app: any, context: AuthContext): void {
 
   app.post("/api/attendance/:attendance_id/departure-excuses/:excuse_id/revoke", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "revoke_early_departure_excuse" }); if (!user) return { detail: "Insufficient permissions" };
-    const value = row(context, "SELECT e.*, a.date, s.class_name FROM early_departure_excuses e JOIN attendance a ON a.id = e.attendance_id LEFT JOIN students s ON s.id = a.student_id WHERE e.id = ?", [ctx.params.excuse_id]);
+    const value = row(context, "SELECT e.*, a.date, s.class_name FROM early_departure_excuses e JOIN attendance a ON a.id = e.attendance_id LEFT JOIN students s ON s.id = a.student_id WHERE e.id = ? AND e.attendance_id = ?", [ctx.params.excuse_id, ctx.params.attendance_id]);
     if (!value || value.state !== "ACTIVE") return fail(ctx.set, 400, { code: "EARLY_DEPARTURE_EXCUSE_NOT_ACTIVE", message: "Operation rejected: EARLY_DEPARTURE_EXCUSE_NOT_ACTIVE" });
     const admin = isAdmin(user);
     if (!admin && !hasClassAccess(context, user.id, value.class_name ?? "", value.date)) return fail(ctx.set, 403, { code: "EARLY_DEPARTURE_CLASS_SCOPE_FORBIDDEN", message: "Cannot revoke excuse for unassigned class" });
@@ -165,7 +165,9 @@ export function earlyDepartureRoutes(app: any, context: AuthContext): void {
 
   app.get("/api/attendance/:attendance_id/departure-history", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_early_departure" }); if (!user) return { detail: "Insufficient permissions" };
-    if (!row(context, "SELECT id FROM attendance WHERE id = ?", [ctx.params.attendance_id])) return fail(ctx.set, 404, "Attendance record not found");
+    const attendance = row(context, "SELECT a.*, s.class_name FROM attendance a LEFT JOIN students s ON s.id = a.student_id WHERE a.id = ?", [ctx.params.attendance_id]);
+    if (!attendance) return fail(ctx.set, 404, "Attendance record not found");
+    if (!canManageAll(user) && !hasClassAccess(context, user.id, attendance.class_name ?? "", attendance.date)) return fail(ctx.set, 403, { code: "EARLY_DEPARTURE_CLASS_SCOPE_FORBIDDEN", message: "Access to unassigned class early departure is forbidden" });
     const excuses = rows(context, "SELECT * FROM early_departure_excuses WHERE attendance_id = ? ORDER BY recorded_at DESC", [ctx.params.attendance_id]);
     const ids = excuses.map((value) => value.id);
     return {

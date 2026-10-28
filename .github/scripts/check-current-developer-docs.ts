@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const REQUIRED_TASKS = ["doctor", "dev", "check:affected", "check:full", "test:fast", "db:fresh"];
-const CURRENT_DOCS = ["AGENTS.md", "README.md", "COMMANDS.md", "CONTRIBUTING.md", "docs/README.md", "docs/development/README.md", "docs/testing/TEST_STRATEGY.md"];
+const CURRENT_DOCS = ["AGENTS.md", "README.md", "COMMANDS.md", "CONTRIBUTING.md", "docs/README.md", "docs/guides/development.md", "docs/guides/testing.md"];
 const truthy = (value: unknown): boolean => value != null && value !== false && value !== 0 && value !== "" &&
   (typeof value !== "object" || Object.keys(value).length > 0);
 

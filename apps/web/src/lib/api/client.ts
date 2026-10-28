@@ -22,7 +22,6 @@ export type ApiRequestOptions = {
   method?: string;
   params?: QueryParams;
   body?: unknown;
-  data?: unknown;
   headers?: ApiHeaders;
   timeout?: number;
   responseType?: 'json' | 'blob';
@@ -67,6 +66,12 @@ export const API_BASE_URL = getApiBaseUrl();
 export { ApiError } from "./errors";
 
 export const AUTH_UNAUTHORIZED_EVENT = 'astryx:auth-unauthorized';
+export const AUTH_FORBIDDEN_EVENT = 'astryx:auth-forbidden';
+let authSessionEpoch = 0;
+
+export function advanceAuthSessionEpoch(): void {
+  authSessionEpoch += 1;
+}
 
 function buildUrl(path: string, params: QueryParams = {}): URL {
   const base = API_BASE_URL;
@@ -201,6 +206,7 @@ export async function apiRequest({
   expectedBlobTypes = [],
   signal,
 }: ApiRequestOptions): Promise<ApiResponse<unknown>> {
+  const requestSessionEpoch = authSessionEpoch;
   const controller = new AbortController();
   let timedOut = false;
   const abortFromCaller = () => controller.abort(signal?.reason);
@@ -244,9 +250,11 @@ export async function apiRequest({
 
     if (!response.ok) {
       const errorData = await parseErrorResponse(response, responseType);
-      if (response.status === 401) {
+      if (response.status === 401 && requestSessionEpoch === authSessionEpoch) {
+        advanceAuthSessionEpoch();
         window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
       }
+      if (response.status === 403) window.dispatchEvent(new Event(AUTH_FORBIDDEN_EVENT));
       throw new ApiError(getErrorMessage(response.status, errorData), {
         status: response.status,
         data: errorData,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { commitStudentUpdate, createStudent, fetchLegacyLinkStatus, fetchStudents, linkLegacyStudent, previewRoster, previewStudentUpdate, replaceDeviceIdentity, updateStudent } from "./students";
+import { commitStudentUpdate, createStudent, exportStudentsCsv, fetchLegacyLinkStatus, fetchStudents, linkLegacyStudent, previewRoster, previewStudentUpdate, replaceDeviceIdentity, updateStudent } from "./students";
 import { queryKeys } from "../lib/query/queryKeys";
 
 describe("student management API domain", () => {
@@ -10,6 +10,7 @@ describe("student management API domain", () => {
 
   it("uses stable hierarchical query keys", () => {
     expect(queryKeys.students.list({ page: 2 })).toEqual(["students", "list", { page: 2 }]);
+    expect(queryKeys.students.list({ nisn_status: "inputted" })).not.toEqual(queryKeys.students.list({ nisn_status: "not_inputted" }));
     expect(queryKeys.students.detail("uuid-1")).toEqual(["students", "detail", "uuid-1"]);
     expect(queryKeys.students.deviceIdentities("uuid-1")).toEqual(["students", "devices", "uuid-1"]);
     expect(queryKeys.students.enrollments("uuid-1")).toEqual(["students", "enrollments", "uuid-1"]);
@@ -17,9 +18,13 @@ describe("student management API domain", () => {
   });
 
   it("uses canonical student routes and server filters", async () => {
-    await fetchStudents({ search: "synthetic", page: 2, device_linked: false });
+    await fetchStudents({ search: "synthetic", page: 2, device_linked: false, nisn_status: "inputted" });
     expect(fetch).toHaveBeenCalledWith(expect.objectContaining({ pathname: "/api/student-masters/management/list", search: expect.stringContaining("page=2") }), expect.objectContaining({ method: "GET", credentials: "include" }));
     expect(String((fetch as any).mock.calls[0][0])).toContain("device_linked=false");
+    expect(String((fetch as any).mock.calls[0][0])).toContain("nisn_status=inputted");
+    vi.mocked(fetch).mockResolvedValueOnce(new Response("csv", { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8" } }));
+    await exportStudentsCsv({ nisn_status: "not_inputted" });
+    expect(String((fetch as any).mock.calls[1][0])).toContain("nisn_status=not_inputted");
   });
 
   it("creates and patches only through canonical master endpoints", async () => {

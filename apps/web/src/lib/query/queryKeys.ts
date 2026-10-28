@@ -30,6 +30,12 @@ export const queryKeys = {
     history: ["backups", "history"] as const,
     recoveryHistory: ["backups", "recovery-history"] as const,
   },
+  uppReports: {
+    all: ["upp-reports"] as const,
+    lists: ["upp-reports", "list"] as const,
+    list: (month: string) => ["upp-reports", "list", { month }] as const,
+    detail: (reportId: number) => ["upp-reports", "detail", reportId] as const,
+  },
   reports: {
     all: ["reports"] as const,
     filters: (academicYearId?: number | null, scope?: ReportScope) => ["reports", "filters", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,
@@ -122,7 +128,18 @@ export const queryKeys = {
     details: ["staff", "detail"] as const,
     detail: (id: string) => ["staff", "detail", id] as const,
     sensitive: (id: string) => ["staff", "sensitive", id] as const,
+    histories: ["staff", "history"] as const,
     history: (id: string) => ["staff", "history", id] as const,
+    schoolUnits: ["staff", "school-units"] as const,
+    monthlyActivities: {
+      all: ["staff", "monthly-activities"] as const,
+      lists: ["staff", "monthly-activities", "list"] as const,
+      list: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["staff", "monthly-activities", "list", canonicalizeQueryFilters(filters)] as const,
+      listForMonth: (month: string) => ["staff", "monthly-activities", "list", { month }] as const,
+      summaries: ["staff", "monthly-activities", "summary"] as const,
+      summary: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["staff", "monthly-activities", "summary", canonicalizeQueryFilters(filters)] as const,
+      history: (activityId: number) => ["staff", "monthly-activities", "history", activityId] as const,
+    },
     analytics: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["staff", "analytics", canonicalizeQueryFilters(filters)] as const,
     positions: (status: string) => ["staff", "positions", status] as const,
     importHistory: ["staff", "imports", "history"] as const,
@@ -153,6 +170,8 @@ export const queryKeys = {
   operator: {
     all: ["operator"] as const,
     workQueue: ["operator", "work-queue"] as const,
+    dashboardOverview: ["operator", "dashboard-overview"] as const,
+    bospReminder: ["operator", "bosp-reminder"] as const,
   },
   operationsAudit: { all: ["operations-audit"] as const },
 };

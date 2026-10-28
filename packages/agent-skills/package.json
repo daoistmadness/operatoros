@@ -1,0 +1,26 @@
+{
+  "name": "@operatoros/agent-skills",
+  "version": "0.1.0",
+  "description": "Task-scoped Agent Skills for OperatorOS",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/daoistmadness/operatoros.git",
+    "directory": "packages/agent-skills"
+  },
+  "type": "module",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --strict --skipLibCheck src/index.ts"
+  },
+  "files": [
+    "README.md",
+    "docs",
+    "skills",
+    "src"
+  ],
+  "keywords": [
+    "agent-skills",
+    "operatoros",
+    "tanstack-intent"
+  ]
+}

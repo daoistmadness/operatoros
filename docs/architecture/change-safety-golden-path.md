@@ -1,3 +1,8 @@
+---
+status: current
+last_reviewed: 2026-10-26
+---
+
 # OperatorOS Change Safety & Feature Golden Path
 
 Status: mandatory engineering guidance for new and substantially changed work

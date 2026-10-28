@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Link } from "react-router-dom";
+import { createColumnHelper, flexRender, rowPaginationFeature, columnVisibilityFeature, tableFeatures, useTable } from "@tanstack/react-table";
+import { Link } from "react-router";
 import { Download, Plus, Search, Upload } from "lucide-react";
-import type { ManagedStudent, StudentFilters } from "../api/students";
+import type { ManagedStudent, NisnStatusFilter, StudentFilters } from "../api/students";
 import { fetchAcademicClasses, fetchAcademicGrades, fetchAcademicPrograms, fetchJenjangs } from "../api/enrollment";
 import { fetchAcademicYears } from "../api/grades";
 import { useCreateStudent, useStudentQuality, useStudents, useStudentTemplateExport, useStudentsCsvExport } from "../hooks/useStudentQueries";
@@ -22,7 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { useAuth } from "../context/AuthContext";
 import { queryKeys } from "../lib/query/queryKeys";
 
-const column = createColumnHelper<ManagedStudent>();
+const features = tableFeatures({ rowPaginationFeature, columnVisibilityFeature });
+const column = createColumnHelper<typeof features, ManagedStudent>();
 const today = () => new Date().toISOString().slice(0, 10);
 
 function saveBlob(blob: Blob, filename: string) {
@@ -114,6 +115,10 @@ export default function StudentManagement() {
   const { can } = useAuth();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [nisnStatus, setNisnStatus] = useState<NisnStatusFilter | "">("");
+  const [nikStatus, setNikStatus] = useState("");
+  const [kkStatus, setKkStatus] = useState("");
+  const [dapodikStatus, setDapodikStatus] = useState("");
   const [device, setDevice] = useState("");
   const [jenjangId, setJenjangId] = useState("");
   const [programId, setProgramId] = useState("");
@@ -122,7 +127,7 @@ export default function StudentManagement() {
   const [classId, setClassId] = useState("");
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
-  const filters: StudentFilters = { search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
+  const filters: StudentFilters = { nisn_status: nisnStatus || undefined, nik_verification_status: nikStatus || undefined, kk_verification_status: kkStatus || undefined, dapodik_status: dapodikStatus || undefined, search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
   const students = useStudents(filters);
   const quality = useStudentQuality();
   const exporter = useStudentTemplateExport();
@@ -135,7 +140,7 @@ export default function StudentManagement() {
   const visiblePrograms = (programs.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)));
   const visibleGrades = (grades.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)) && (!programId || item.program_id === Number(programId)));
   const visibleClasses = (classes.data || []).filter((item) => item.active && (!academicYearId || item.academic_year_id === Number(academicYearId)) && (!gradeId || item.grade_id === Number(gradeId)));
-  const columns = useMemo(() => [
+  const columns = useMemo(() => column.columns([
     column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-black text-brand hover:underline" to={`/students/${row.original.id}`}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
     column.accessor("nipd_masked", { header: "NIPD", cell: (info) => info.getValue() || "—" }),
     column.accessor("nisn_masked", { header: "NISN", cell: (info) => info.getValue() || "—" }),
@@ -146,10 +151,13 @@ export default function StudentManagement() {
     column.accessor("device_identifier_masked", { header: "Device ID", cell: (info) => info.getValue() || <Badge variant="warning">Unlinked</Badge> }),
     column.accessor("profile_completeness", { header: "Profile", cell: (info) => `${info.getValue()}%` }),
     column.accessor("student_status", { header: "Status", cell: (info) => <Badge variant={info.getValue() === "active" ? "success" : "secondary"}>{info.getValue().replaceAll("_", " ")}</Badge> }),
+    column.accessor("nik_verification_status", { header: "NIK Verif", cell: (info) => { const v = info.getValue() || "UNVERIFIED"; return <Badge variant={v === "VERIFIED" ? "success" : v === "NEEDS_CORRECTION" ? "danger" : "secondary"}>{v.replaceAll("_", " ")}</Badge>; } }),
+    column.accessor("kk_verification_status", { header: "KK Verif", cell: (info) => { const v = info.getValue() || "UNVERIFIED"; return <Badge variant={v === "VERIFIED" ? "success" : v === "NEEDS_CORRECTION" ? "danger" : "secondary"}>{v.replaceAll("_", " ")}</Badge>; } }),
+    column.accessor("dapodik_status", { header: "DAPODIK", cell: (info) => { const v = info.getValue() || "NOT_STARTED"; return <Badge variant={v === "SYNCHRONIZED" ? "success" : v === "NEEDS_CORRECTION" ? "danger" : v === "ENTERED" ? "information" : "secondary"}>{v.replaceAll("_", " ")}</Badge>; } }),
     column.accessor("quality_flags", { header: "Data quality", cell: (info) => info.getValue().length ? <Badge variant="warning">{info.getValue().length} item(s)</Badge> : <Badge variant="success">Complete</Badge> }),
     column.display({ id: "actions", header: "Actions", cell: ({ row }) => <Button variant="outline" size="sm" onClick={() => { window.location.href = `/students/${row.original.id}`; }}>Open profile</Button> }),
-  ], []);
-  const table = useReactTable({ data: students.data?.items || [], columns, getCoreRowModel: getCoreRowModel(), manualPagination: true, pageCount: students.data?.total_pages || 0 });
+  ]), []);
+  const table = useTable({ features, data: students.data?.items || [], columns, manualPagination: true, pageCount: students.data?.total_pages || 0 });
   const exportTemplate = async () => { const blob = await exporter.mutateAsync(); saveBlob(blob, "operatoros-student-update.xlsx"); };
   const exportCsv = async () => { const blob = await csvExporter.mutateAsync(filters); saveBlob(blob, "operatoros-students.csv"); };
 
@@ -158,9 +166,13 @@ export default function StudentManagement() {
     <Tabs defaultValue="all">
       <TabsList className="max-w-full overflow-x-auto"><TabsTrigger value="all">All Students</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="history">Import / Update History</TabsTrigger></TabsList>
       <TabsContent value="all" className="space-y-4">
-        <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
+        <Card><CardContent className="grid items-end gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4">
           <div className="relative"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Label className="sr-only" htmlFor="student-search">Search students</Label><Input id="student-search" className="pl-9" placeholder="Search name, NIPD, NISN, or Device ID" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div>
           <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
+          <div><Label htmlFor="student-nisn-status-filter">NISN input status</Label><NativeSelect id="student-nisn-status-filter" aria-label="NISN input status" value={nisnStatus} onChange={(event) => { setNisnStatus(event.target.value === "inputted" || event.target.value === "not_inputted" ? event.target.value : ""); setPage(1); }}><option value="">All</option><option value="inputted">Inputted</option><option value="not_inputted">Not Inputted</option></NativeSelect></div>
+          <div><Label htmlFor="student-nik-filter">NIK Verification</Label><NativeSelect id="student-nik-filter" aria-label="NIK verification status" value={nikStatus} onChange={(event) => { setNikStatus(event.target.value); setPage(1); }}><option value="">All NIK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
+          <div><Label htmlFor="student-kk-filter">KK Verification</Label><NativeSelect id="student-kk-filter" aria-label="KK verification status" value={kkStatus} onChange={(event) => { setKkStatus(event.target.value); setPage(1); }}><option value="">All KK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
+          <div><Label htmlFor="student-dapodik-filter">DAPODIK status</Label><NativeSelect id="student-dapodik-filter" aria-label="DAPODIK status" value={dapodikStatus} onChange={(event) => { setDapodikStatus(event.target.value); setPage(1); }}><option value="">All DAPODIK</option><option value="SYNCHRONIZED">Synchronized</option><option value="ENTERED">Entered</option><option value="PENDING_EXTERNAL_PROCESSING">Pending Processing</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="NOT_STARTED">Not Started</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setDevice(event.target.value); setPage(1); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-year-filter">Academic year</Label><NativeSelect id="student-year-filter" value={academicYearId} onChange={(event) => { setAcademicYearId(event.target.value); setClassId(""); setPage(1); }}><option value="">All academic years</option>{(years.data || []).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></div>
           <div><Label className="sr-only" htmlFor="student-jenjang-filter">Jenjang</Label><NativeSelect id="student-jenjang-filter" value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setProgramId(""); setGradeId(""); setPage(1); }}><option value="">All Jenjang</option>{(jenjangs.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>

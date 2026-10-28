@@ -1,52 +1,18 @@
-# Memory
+# Durable project context
 
-This file records durable project decisions and stable context for future agent runs.
+Use this file as a navigation aid. Execution rules belong to
+[AGENTS.md](AGENTS.md), commands to [COMMANDS.md](COMMANDS.md), and the current
+operational procedures to the documents below. Historical phase inventories,
+test counts, and retired implementations remain in Git history.
 
-## Stable Decisions
-- The repository is a full-stack OperatorOS school attendance and grade analytics platform, not a generic dashboard starter.
-- The primary backend is Elysia + TypeScript + Drizzle, and the frontend is React 19 with Vite. FastAPI + SQLAlchemy remains the rollback and reference backend.
-- `backend-ts/src/app.ts` is the authoritative normal router registration point; `backend/src/main.py` remains the FastAPI reference router.
-- `backend/src/core/database.py` creates tables on startup and applies compatibility fixes for older local databases.
-- Raw SQL files in `backend/migrations/` are the repo's visible migration history.
-- The frontend uses Vite for development. In dev mode, `VITE_API_BASE_URL` is empty and the Vite dev proxy forwards `/api/*` from `http://127.0.0.1:5173` to `http://127.0.0.1:8000`.
-- All API paths are canonical `/api/<domain>/...`. No double-prefix paths (`/api/api/`) exist anywhere in the codebase.
-- `frontend/nginx.conf` serves the production build and proxies `/api/` to the backend service.
-- `scripts/verify-browser.sh` is the repo-owned Agent Browser smoke test and writes artifacts under `.artifacts/browser/`. Default target URL is `http://127.0.0.1:5173`.
-- The backend has database-backed users and sessions, Argon2id password hashing, one-time first-administrator provisioning, HttpOnly cookie authentication, role dependencies, session expiry/revocation, and admin-only authorization for protected operations. Fresh installations have no default credentials.
-- Management Analytics KKM thresholds and term date ranges are database-backed under `/api/academic-config`; the analytics JSON/PDF/Excel paths resolve configured values first and preserve legacy fallback behavior when no config exists.
-- Academic interventions are stored in `academic_interventions` and exposed under `/api/academic-interventions`; Management Analytics Below-KKM JSON/PDF/Excel rows include active intervention status, priority, owner, and follow-up metadata.
-- Management Analytics exports utilize in-memory serialization (`io.BytesIO` streams) for zero disk footprint concurrency safety. The PDF layout is landscape vector-rendered with ReportLab; the Excel layout is an advanced editable Pandas + XlsxWriter workbook with native linked charts and deterministic column mapping.
-- The Executive Insights engine dynamically runs rule checks to generate actionable management findings, rendering them in the JSON payload, frontend Analisis & Rekomendasi Manajemen panel, PDF page 1, and Excel `Insights` worksheet.
-- Phase 18 historical trend analytics are exposed at `/api/analytics/historical-trends` and rendered in Management Analytics under `Historical Trends`. Trend payloads include attendance, lateness, grade, Below-KKM, intervention, KKM metadata, term metadata, data quality diagnostics, and deterministic forecast series.
-- Phase 18 forecasting is transparent and conservative only: allowed methods are moving average, weighted moving average, and simple linear trend. Forecast rows must expose method, history point count, confidence, data sufficiency, and warning text; fewer than 2 history points returns no forecast. Do not add opaque AI/ML forecasting.
-- Phase 18 Management Analytics exports include trend/forecast PDF pages and editable Excel sheets `Trend_Attendance_Data`, `Trend_Lateness_Data`, `Trend_Grades_Data`, `Trend_Interventions_Data`, `Forecast_Data`, and `Trend_Insights` with native charts linked from `Charts`.
-- Phase 19 intervention impact analytics are exposed at `/api/analytics/intervention-impact` and rendered in Management Analytics under `Intervention Impact`. Baseline score is `academic_interventions.current_average`; latest score is the current Grade Ledger average for the same student/year/subject/assessment context; score delta is latest minus baseline.
-- Phase 19 risk scoring is deterministic and explainable only. Risk factors include still below effective KKM, non-positive score delta, overdue follow-up, high/urgent priority, repeated context, open longer than 30 days, and missing latest score. Do not add opaque AI/ML risk scoring.
-- Phase 19 exports include an Intervention Impact PDF page and editable Excel sheets `Intervention_Impact_Data`, `Intervention_Impact_Summary`, `Risk_Students_Data`, and `Owner_Workload_Data` with native charts linked from `Charts`.
-- Phase 20 report builder templates are exposed at `/api/report-builder/...`. Report templates and branding configs seed idempotently on startup, the builder uses `threshold_source` and the Phase 18/19 analytics payloads as its data source, and user-created templates are preserved across restarts.
-- `POST /system/clear-data` is guarded by `ENABLE_DESTRUCTIVE_OPERATIONS=false` by default and requires the `CLEAR_ALL_ATTENDANCE_DATA` confirmation token.
-- Phase 9 scheduled backups use a single-process in-application scheduler with persistent `backup_scheduler_config` and `backup_execution_history` tables, filesystem snapshot compatibility, automatic verified execution, and UTC daily/weekly/monthly retention. No external queue, cloud storage, or distributed scheduler is used.
-- Phase 8 frontend query architecture is complete for the approved authentication, Backup Management, and Executive Reports pilots. TanStack Query owns the shared provider/client, query keys, retry/cache policy, and mutation invalidation. TanStack Table remains selective, and Grade Matrix remains explicitly excluded.
-- Phase 9 core platform work is complete. The experimental Tauri desktop shell and its Phase 9.6/11 packaging were removed on 2026-08-20; the clean-Windows acceptance gate is retired with them.
-- Phase 10 incremental design-system modernization is complete. Login, navigation, Settings, Backup Management, restore dialog, Executive Reports, Dashboard/Attendance Summary, and target semantic tables use the owned primitive/shared-pattern system; 200%-equivalent reflow, rendered contrast, and disposable monthly/annual PDF/XLSX acceptance passed.
-- The backend can construct a PostgreSQL SQLAlchemy URL from `POSTGRES_*` fields; Compose supplies `db` as the service host.
-- Backend behavioral tests now live under `backend/tests/` and are run with `pytest`.
-- The experimental Tauri desktop shell (`frontend/src-tauri/`), `desktop-spike/` packaging, Windows launcher scripts, and desktop sidecar contract tests were removed on 2026-08-20. The supported runtime is `LOCAL_BROWSER_RUNTIME`: local Elysia backend, React frontend in a browser, SQLite database. FastAPI remains the documented rollback and reference backend.
-- **Verified Test Suites (July 2026)**: The backend test suite contains 296 tests verified using `pytest`. The frontend test suite contains 110 tests verified using `Vitest`. Both suites pass cleanly on the standard development stack.
-- E2E conventions are durable: `make e2e-validate` validates infrastructure, `timeout 300 make e2e-smoke` is the local blocking gate, and `make e2e-full` is GitHub Actions-only unless explicitly owner-approved. The application stack and Playwright collection use the repository-pinned native Linux Node.js 24/npm 11 runtime.
-- E2E runs use dynamic launcher state and a fresh synthetic SQLite database under `.runtime/operatoros-e2e/`; they never use `backend/attendance.db` or `backend/.local-dev/`, never kill unknown port owners, and must preserve production checksum and the seeded enrollment fingerprint.
-- Documentation convention: keep durable E2E workflow details in `e2e/README.md`; keep root and agent guidance concise and link to that authority instead of duplicating runbooks or creating phase-status reports.
+## Current authorities
 
-## Operational Notes
-- Keep SQLite database files and generated Excel outputs out of version control unless a task explicitly requires them.
-- Keep `frontend/node_modules/`, `frontend/build/`, and other generated assets unedited.
-- `./start-dev.sh` is the preferred local launcher. It starts uvicorn and the Vite dev server concurrently. Press Ctrl+C to stop both.
-- `./scripts/start-backend.sh` and `./scripts/start-frontend.sh` can be used to start services individually.
-- `docker compose down -v` is destructive because it removes the PostgreSQL volume.
-
-## Links
-- See [AGENTS.md](AGENTS.md) for current operating rules.
-- See [COMMANDS.md](COMMANDS.md) for verified commands.
-- See [ERRORS.md](ERRORS.md) for fragile areas and recurring issues.
-- See [CONVENTIONS.md](CONVENTIONS.md) for observed code conventions.
-- Historical milestone notes (Phase 8-10 foundation, Phase 10 design-system modernization) remain available in Git history.
+- Runtime: local Bun/Elysia API in `apps/api/`, React browser frontend in `apps/web/`, and SQLite/Drizzle in `packages/db/`. [Platform portability](docs/reference/runtime-support.md) defines the supported deployment boundary.
+- Persistence: `packages/db/src/manifest.ts` owns schema order/head; `packages/db/src/data-dir.ts` owns data-root resolution. Startup validates existing data without migration. [Database operations](docs/runbooks/database-operations.md) owns approved migration and rollback procedures.
+- Architecture: [monorepo ownership](docs/architecture/module-boundaries.md), [frontend architecture](docs/architecture/frontend.md), and the [feature golden path](docs/architecture/change-safety-golden-path.md) define boundaries. Canonical API routes register in `apps/api/src/app.ts`.
+- Backend skills: use `elysiajs` as required by AGENTS. Check the installed Elysia major before applying examples; the locally installed skill targets v2 while the current API uses v1.
+- Existing management forecasts and intervention risk scoring must remain deterministic, explainable, and explicit about confidence, history, and insufficient data; do not introduce opaque AI/ML. Preserve domain behavior in `apps/api/src/domains/reports.ts` and `report-builder.ts`.
+- Analytics and exports: [metric definitions](docs/reference/metrics.md) are server-owned. Cross-boundary TypeBox schemas belong to contracts; Excel infrastructure belongs to `@operatoros/excel`.
+- Identity and recovery: [authentication](docs/reference/identity-authentication.md), [backup/restore](docs/runbooks/backup-restore.md), and [data reset](docs/runbooks/data-reset.md) own security-sensitive procedures. Never use real school data to validate changes.
+- Development: `mise run dev` delegates to `./start-dev.sh`. [Development guidance](docs/guides/development.md) explains checkout identity, session ownership, shared development data, and safe alternate ports.
+- Verification: [test strategy](docs/guides/testing.md), [E2E guidance](e2e/README.md), and [CI operations](.github/CI.md) define local tiers and protected PR gates.

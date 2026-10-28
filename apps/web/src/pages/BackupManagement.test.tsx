@@ -1,11 +1,12 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
   BackupList,
   BackupStatusPanel,
+  Comparison,
   RecoveryHistoryPanel,
   RESTORE_STEPS,
   RESTORE_WARNING,
@@ -14,7 +15,7 @@ import {
   formatAge,
   formatBytes,
 } from "./BackupManagement";
-import type { BackupEntry, BackupStatus } from "../api/backups";
+import type { BackupEntry, BackupStatus, RestorePreflight } from "../api/backups";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
 vi.mock("../api/backups", () => ({
@@ -28,7 +29,7 @@ vi.mock("../api/backups", () => ({
   preflightRestore: vi.fn(),
   restoreBackup: vi.fn(),
   deleteBackup: vi.fn(),
-  downloadBackupUrl: vi.fn((value) => `/api/admin/backups/${value}/download`),
+  downloadBackupUrl: vi.fn((value, bundle) => `/api/admin/backups/${value}/download${bundle ? "?bundle=true" : ""}`),
 }));
 
 const status: BackupStatus = {
@@ -41,8 +42,12 @@ const status: BackupStatus = {
   latest_backup_type: "manual",
   latest_backup_size_bytes: 2048,
   latest_backup_checksum_status: "verified",
-  latest_backup_integrity_status: "ok",
+  latest_backup_integrity_status: "not_checked",
+  latest_backup_outcome: "SUCCESS",
   latest_backup_schema_version: "s42",
+  latest_backup_encrypted: true,
+  latest_backup_key_id: "synthetic-test-key",
+  backup_encryption_configured: true,
   backup_age_seconds: 3600,
   next_scheduled_backup_at: null,
   backup_count: 1,
@@ -51,18 +56,32 @@ const status: BackupStatus = {
   backup_directory_available: true,
   free_space_bytes: 1048576,
   minimum_required_space_bytes: 2048,
+  free_disk_space_bytes: 1048576,
   low_space: false,
   backup_in_progress: false,
   restore_in_progress: false,
+  generated_at_utc: "2026-07-13T00:00:00Z",
+  latest_backup_timestamp: "2026-07-13T00:00:00Z",
+  database_basename: "synthetic.db",
+  sqlite_journal_mode: "wal",
   destructive_operations_enabled: true,
+  authentication_available: true,
+  restore_support_mode: "single_process_only",
+  restore_requires_admin: true,
+  restore_requires_reauthentication: true,
+  restore_multi_worker_safe: false,
 };
 const backup: BackupEntry = {
   filename: "backup_2026-07-13T00-00-00Z.sqlite3",
   created_at: "2026-07-13T00:00:00Z",
   trigger: "manual",
   size: 2048,
-  checksum: "abcdef1234567890",
+  checksum: "a".repeat(64),
   schema_version: "s42",
+  encrypted: true,
+  format_version: 1,
+  algorithm: "aes-256-gcm",
+  key_id: "synthetic-test-key",
   age_seconds: 3600,
   checksum_status: "verified",
   integrity_status: "ok",
@@ -96,6 +115,7 @@ describe("guided backup and recovery", () => {
     expect(output).toContain("Healthy");
     expect(output).toContain("Checksum");
     expect(output).toContain("verified");
+    expect(output).toContain("Not checked during status");
   });
   it("renders safe backup metadata and safety labels", () => {
     const output = html(<BackupList backups={[{ ...backup, trigger: "pre_restore_auto" }]} onRestore={vi.fn()} onDelete={vi.fn()} />);
@@ -104,6 +124,19 @@ describe("guided backup and recovery", () => {
     expect(output).toContain("Checksum verified");
     expect(output).toContain("Integrity ok");
     expect(output).toContain("Restore eligible after preflight");
+    expect(output).toContain(`href="/api/admin/backups/${backup.filename}/download?bundle=true"`);
+    expect(output).toContain("Download recovery bundle");
+  });
+  it("shows unknown restore impact and missing counts without claiming zero", () => {
+    const preflight = {
+      source: { age_seconds: 3600, sha256: "source", schema_version: "schema" },
+      active: { active_sha256: "active", active_schema_version: "schema", active_students: 0, active_attendance: 0, active_enrollments: 0, source_students: 0, source_attendance: null, source_enrollments: 0, student_delta: 0, attendance_delta: null, enrollment_delta: 0, same_database_content: false, source_is_older: null, possible_data_loss: null },
+      impact_classification: "LOW_IMPACT",
+    } as RestorePreflight;
+    const output = html(<Comparison preflight={preflight} />);
+    expect(output).toContain("Source older than current database: Unknown");
+    expect(output).toContain("Possible data loss: Unknown");
+    expect(output).toContain("<strong>Attendance</strong><span class=\"break-all\">0</span><span class=\"break-all\">Unknown</span><span>Unknown</span>");
   });
   it("keeps CSV out of the recovery warning", () => {
     expect(RESTORE_WARNING).toContain("CSV exports are data exchange files");
@@ -125,12 +158,16 @@ describe("guided backup and recovery", () => {
       confirmationFilename: backup.filename,
       confirmationPhrase: "RESTORE_DATABASE",
       password: "current-password",
+      candidateAdminUsername: "",
+      candidateAdminPassword: "",
       acknowledgements: { replace: true, sessions: true, restart: true, safety: true },
       eligible: true,
       busy: false,
     };
     expect(canExecuteRestore(common)).toBe(true);
     expect(canExecuteRestore({ ...common, password: "" })).toBe(false);
+    expect(canExecuteRestore({ ...common, candidateAdminUsername: "backup-admin" })).toBe(false);
+    expect(canExecuteRestore({ ...common, candidateAdminUsername: "backup-admin", candidateAdminPassword: "backup-password" })).toBe(true);
     expect(canExecuteRestore({ ...common, confirmationFilename: "wrong" })).toBe(false);
     expect(canExecuteRestore({ ...common, confirmationPhrase: "RESTORE" })).toBe(false);
     expect(canExecuteRestore({ ...common, busy: true })).toBe(false);
@@ -139,10 +176,15 @@ describe("guided backup and recovery", () => {
     const output = html(<RecoveryHistoryPanel rows={[
       { timestamp: "2026-07-25T00:00:00Z", filename: backup.filename, event: "RESTORE_COMPLETED", actor_display: "admin", result: "COMPLETED", safe_reason_code: null, operation_reference_id: "op-old", safety_backup_filename: null },
       { timestamp: "2026-07-26T00:00:00Z", filename: backup.filename, event: "RESTORE_FAILED", actor_display: "admin", result: "FAILED", safe_reason_code: "CHECKSUM", operation_reference_id: "op-new", safety_backup_filename: backup.filename },
-    ]} />);
+    ]} hasMore={false} loadingMore={false} onLoadMore={() => {}} />);
     expect(output.indexOf("op-new")).toBeLessThan(output.indexOf("op-old"));
+    expect(output).toContain("Showing up to 200 events per page from the active audit file.");
     expect(output).not.toContain("/home/");
     expect(output).not.toContain("password");
+  });
+  it("offers accessible paging for older recovery events", () => {
+    const output = html(<RecoveryHistoryPanel rows={[]} hasMore loadingMore={false} onLoadMore={() => {}} />);
+    expect(output).toContain("Load older events");
   });
   it("formats sizes and ages without health threshold calculation", () => {
     expect(formatBytes(2048)).toBe("2.0 KB");

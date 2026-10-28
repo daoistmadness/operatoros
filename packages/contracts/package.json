@@ -4,13 +4,12 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit"
   },
   "dependencies": {
     "@sinclair/typebox": "catalog:"
   },
   "devDependencies": {
-    "@types/bun": "1.4.0",
     "bun-types": "1.4.0",
     "typescript": "5.9.3"
   },
@@ -28,6 +27,8 @@
     "./system": "./src/system/index.ts",
     "./config": "./src/config/index.ts",
     "./staff": "./src/staff.ts",
-    "./excel": "./src/excel.ts"
+    "./excel": "./src/excel.ts",
+    "./backup": "./src/backup/index.ts",
+    "./upp-reports": "./src/upp-reports.ts"
   }
 }

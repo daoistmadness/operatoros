@@ -1,7 +1,7 @@
 import { Type, type Static } from "@sinclair/typebox";
 
 // Only schemas and types that cross an app or package boundary belong here.
-// See docs/architecture/phase-14-monorepo.md.
+// See docs/architecture/module-boundaries.md.
 
 export const LoginRequestSchema = Type.Object({
   username: Type.String({ minLength: 1, maxLength: 255 }),

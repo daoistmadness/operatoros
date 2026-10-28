@@ -2,8 +2,9 @@
   "name": "@operatoros/web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "engines": {
-    "bun": ">=1.4.2 <2"
+    "bun": ">=1.4.4 <2"
   },
   "dependencies": {
     "@operatoros/contracts": "workspace:*",
@@ -15,35 +16,33 @@
     "@radix-ui/react-select": "2.3.3",
     "@radix-ui/react-tabs": "1.1.17",
     "@radix-ui/react-tooltip": "1.2.12",
-    "@tanstack/react-query": "5.101.2",
-    "@tanstack/react-table": "8.21.3",
+    "@tanstack/react-query": "5.104.2",
+    "@tanstack/react-table": "9.3.1",
     "chart.js": "4.5.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "framer-motion": "11.18.2",
     "lucide-react": "0.471.2",
-    "react": "19.2.4",
+    "react": "19.2.7",
     "react-chartjs-2": "5.3.1",
-    "react-dom": "19.2.4",
-    "react-router-dom": "7.18.2",
+    "react-dom": "19.2.7",
+    "react-router": "8.5.0",
     "tailwind-merge": "2.6.1"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
-    "@tailwindcss/cli": "4.2.2",
-    "@tailwindcss/postcss": "4.2.2",
+    "@tailwindcss/vite": "4.2.2",
     "@types/node": "26.4.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "4.7.0",
-    "autoprefixer": "10.4.27",
-    "happy-dom": "20.10.6",
+    "@vitejs/plugin-react": "6.1.2",
+    "happy-dom": "21.0.4",
     "openapi-typescript": "7.13.0",
     "postcss": "8.5.23",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
-    "vite": "6.4.3",
-    "vitest": "4.1.11"
+    "vite": "8.3.4",
+    "vitest": "4.1.12"
   },
   "scripts": {
     "api:check": "bun ../../scripts/openapi-contracts.mjs check",
@@ -52,7 +51,7 @@
     "boundaries:test": "bun test ../../scripts/frontend-boundaries.test.mjs",
     "dev": "bun run --bun vite",
     "build": "bun run --bun vite build",
-    "typecheck": "bun run --bun tsc --noEmit",
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
     "test:e2e": "bun run --bun playwright test",
     "e2e:release": "bun run --bun playwright test --config playwright.config.ts --grep @release",
     "preview": "bun run --bun vite preview",
@@ -61,10 +60,6 @@
     "check:node-regressions": "bun ../../scripts/check-node-regressions.mjs",
     "check:audit": "bun audit"
   },
-  "trustedDependencies": [
-    "@parcel/watcher",
-    "esbuild"
-  ],
   "browserslist": {
     "production": [
       ">0.2%",

@@ -1,0 +1,1017 @@
+import { expect, it } from "bun:test";
+import { spawnSync as spawnCommand } from "node:child_process";
+import { randomBytes, randomUUID } from "node:crypto";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, dirname, join } from "node:path";
+import { Database } from "bun:sqlite";
+import { CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, createFreshDatabase, openDatabase } from "@operatoros/db";
+import { loadConfig } from "../src/config";
+import { restore as restoreCli } from "../src/backup-cli";
+import type { RestoreFileSystem } from "../src/domains/restore-transaction";
+import { backupSha256, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { createAccountFixture } from "./fixtures/accounts";
+
+const root = new URL("../../../", import.meta.url).pathname.replace(/\/$/, "");
+const cli = join(root, "apps/api/src/backup-cli.ts");
+const adminRecoveryCli = join(root, "apps/api/src/cli/admin-recovery.ts");
+const artifactPattern = /^backup_.*\.sqlite3$/;
+
+it("creates a pre-restore safety snapshot with an audit line and preserves the original database on failure", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-restore-safety-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const migrations = new Database(databasePath);
+    const previousMigration = SCHEMA_MIGRATIONS[SCHEMA_MIGRATIONS.length - 2]!;
+    migrations.query("INSERT OR IGNORE INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', ?, ?)").run(previousMigration, "synthetic-history", "synthetic-test", "2099-01-01T00:00:00Z");
+    migrations.query("UPDATE operatoros_schema_migrations SET applied_at = ? WHERE version = ?").run("2000-01-01T00:00:00Z", CURRENT_SCHEMA_VERSION);
+    migrations.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const artifact = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
+    const label = basename(artifact);
+    expect((JSON.parse(readFileSync(`${artifact}.meta.json`, "utf8")) as { schema_version: string }).schema_version).toBe(CURRENT_SCHEMA_VERSION);
+
+    const marked = openDatabase(databasePath);
+    marked.client.run("INSERT INTO students (id, name) VALUES (424242, 'Withdrawn Student')");
+    marked.close();
+
+    const restore = command("restore", label);
+    expect(restore.exitCode).toBe(0);
+    expect(restore.stdout.toString()).toContain("Pre-restore safety snapshot: ");
+    expect(restore.stdout.toString()).toContain(`SQLite restore completed: ${databasePath}`);
+
+    const restored = openDatabase(databasePath, { readonly: true });
+    expect(restored.client.query("SELECT COUNT(*) AS count FROM students WHERE id = 424242").get()).toEqual({ count: 0 });
+    restored.close();
+
+    const artifacts = readdirSync(backupDir).filter((name) => artifactPattern.test(name)).sort();
+    expect(artifacts).toHaveLength(2);
+    const safety = artifacts.find((name) => name !== label);
+    if (!safety) throw new Error("pre-restore safety snapshot missing");
+    expect(existsSync(join(backupDir, safety))).toBe(true);
+    expect(existsSync(join(backupDir, `${safety}.meta.json`))).toBe(true);
+    const safetyMeta = JSON.parse(readFileSync(join(backupDir, `${safety}.meta.json`), "utf8")) as { trigger?: string; schema_version?: string };
+    expect(safetyMeta.trigger).toBe("pre_restore_auto");
+    expect(safetyMeta.schema_version).toBe(CURRENT_SCHEMA_VERSION);
+
+    const safetyCheckDir = join(temporary, "safety-check");
+    mkdirSync(safetyCheckDir);
+    const safetyRestore = command("restore-disposable", safety, safetyCheckDir);
+    expect(safetyRestore.exitCode).toBe(0);
+    const safetyHandle = openDatabase(join(safetyCheckDir, "operatoros.sqlite"), { readonly: true });
+    expect(safetyHandle.client.query("SELECT COUNT(*) AS count FROM students WHERE id = 424242").get()).toEqual({ count: 1 });
+    safetyHandle.close();
+
+    const completed = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>).filter((entry) => entry.event === "restore_completed");
+    expect(completed).toHaveLength(1);
+    expect(completed[0]!.tool).toBe("backup-cli");
+    expect(completed[0]!.filename).toBe(label);
+    expect(completed[0]!.safety_backup_filename).toBe(safety);
+
+    const cliRecovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(cliRecovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed"]);
+    expect(cliRecovery[2]!.outcome).toBe("COMPLETED");
+    expect(cliRecovery[2]!.target_filename).toBe(label);
+    expect(cliRecovery[2]!.pre_restore_snapshot_filename).toBe(safety);
+    expect(cliRecovery[2]!.reason).toBeNull();
+    expect(cliRecovery[0]!.authenticated_username).toBeNull();
+    expect(cliRecovery[1]!.authenticated_username).toBeNull();
+    expect(cliRecovery[2]!.authenticated_username).toBeNull();
+    expect(typeof (cliRecovery[2]!.request_context as { operation_id?: unknown }).operation_id).toBe("string");
+    expect(completed[0]!.operation_id).toBe((cliRecovery[2]!.request_context as { operation_id: string }).operation_id);
+    expect(new Set(cliRecovery.map((entry) => (entry.request_context as { operation_id: string }).operation_id)).size).toBe(1);
+
+    const preserved = readFileSync(databasePath);
+    writeFileSync(`${databasePath}-wal`, "nonempty synthetic WAL");
+    writeFileSync(`${databasePath}-shm`, "synthetic shared memory");
+    const refused = command("restore", label);
+    expect(refused.exitCode).not.toBe(0);
+    expect(refused.stderr.toString()).toContain("DATABASE_SIDECAR_PRESENT");
+    expect(readFileSync(databasePath).equals(preserved)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(2);
+    rmSync(`${databasePath}-wal`);
+    rmSync(`${databasePath}-shm`);
+
+    writeFileSync(join(backupDir, "backup_2000-01-01T00-00-00Z.sqlite3"), "not an encrypted backup");
+    const invalid = command("restore", "backup_2000-01-01T00-00-00Z.sqlite3");
+    expect(invalid.exitCode).not.toBe(0);
+    expect(invalid.stderr.toString()).toContain("Legacy plaintext backups require explicit operator opt-in.");
+    expect(readFileSync(databasePath).equals(preserved)).toBe(true);
+    const outsidePath = join(temporary, "outside", "backup_2000-01-01T00-00-00Z.sqlite3");
+    const outside = command("restore", outsidePath);
+    expect(outside.exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(preserved)).toBe(true);
+
+    const failures = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>).filter((entry) => entry.event === "restore_failed");
+    expect(failures).toHaveLength(3);
+    expect(failures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
+    expect(failures[0]!.tool).toBe("backup-cli");
+    expect(failures[0]!.filename).toBe(label);
+    expect(failures[1]).toMatchObject({ reason: "RESTORE_LEGACY_OPT_IN_REQUIRED", tool: "backup-cli", filename: "backup_2000-01-01T00-00-00Z.sqlite3" });
+    expect(failures[2]).toMatchObject({ reason: "Error", tool: "backup-cli", filename: "unknown" });
+    expect(JSON.stringify(failures[2])).not.toContain(outsidePath);
+
+    const cliRecoveryLines = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(cliRecoveryLines.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_completed", "restore_requested", "restore_denied", "restore_requested", "restore_denied", "restore_requested", "restore_denied"]);
+    expect(JSON.stringify(cliRecoveryLines)).not.toContain(outsidePath);
+    const cliFailures = cliRecoveryLines.filter((entry) => entry.event === "restore_denied");
+    expect(cliFailures).toHaveLength(3);
+    expect(cliFailures[0]!.outcome).toBe("DENIED");
+    expect(cliFailures[0]!.target_filename).toBe(label);
+    expect(cliFailures[0]!.reason).toBe("DATABASE_SIDECAR_PRESENT");
+    expect(cliFailures[1]!.outcome).toBe("DENIED");
+    expect(cliFailures[1]!.target_filename).toBe("backup_2000-01-01T00-00-00Z.sqlite3");
+    expect(cliFailures[1]!.reason).toBe("RESTORE_LEGACY_OPT_IN_REQUIRED");
+    expect(failures[1]!.operation_id).toBe((cliFailures[1]!.request_context as { operation_id: string }).operation_id);
+    expect(cliFailures[2]!.target_filename).toBe("unknown");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 30000);
+
+it("cleans interrupted plaintext restore candidates under the CLI lock and preserves them during pending rollback", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-restore-orphan-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  const interruptedDirectory = join(source, `.operatoros-restore-cli-${randomBytes(3).toString("hex")}`);
+  const candidate = join(interruptedDirectory, `${randomUUID()}.candidate`);
+  const apiRestoreDirectory = join(source, `.operatoros-restore-api-${randomBytes(3).toString("hex")}`);
+  const apiRestoreSnapshot = join(apiRestoreDirectory, "snapshot.sqlite");
+  const apiBackupDirectory = join(backupDir, `.operatoros-backup-${randomBytes(3).toString("hex")}`);
+  const apiBackupSnapshot = join(apiBackupDirectory, "snapshot.sqlite");
+  const apiCandidate = join(source, `${basename(databasePath)}.${randomUUID()}.candidate`);
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const activeBefore = readFileSync(databasePath);
+    mkdirSync(interruptedDirectory, { mode: 0o700 });
+    writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
+    writeFileSync(`${candidate}-wal`, "synthetic SQLite sidecar", { mode: 0o600 });
+    mkdirSync(apiRestoreDirectory, { mode: 0o700 });
+    mkdirSync(apiBackupDirectory, { recursive: true, mode: 0o700 });
+    writeFileSync(apiRestoreSnapshot, "synthetic API restore snapshot", { mode: 0o600 });
+    writeFileSync(apiBackupSnapshot, "synthetic API backup snapshot", { mode: 0o600 });
+    writeFileSync(apiCandidate, "synthetic API restore candidate", { mode: 0o600 });
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    expect(existsSync(interruptedDirectory)).toBe(false);
+    expect(existsSync(apiRestoreSnapshot)).toBe(false);
+    expect(existsSync(apiBackupSnapshot)).toBe(false);
+    expect(existsSync(apiCandidate)).toBe(false);
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+
+    mkdirSync(interruptedDirectory, { mode: 0o700 });
+    writeFileSync(candidate, "synthetic plaintext candidate", { mode: 0o600 });
+    mkdirSync(apiRestoreDirectory, { mode: 0o700 });
+    writeFileSync(apiRestoreSnapshot, "synthetic API restore snapshot", { mode: 0o600 });
+    mkdirSync(apiBackupDirectory, { recursive: true, mode: 0o700 });
+    writeFileSync(apiBackupSnapshot, "synthetic API backup snapshot", { mode: 0o600 });
+    writeFileSync(apiCandidate, "synthetic API restore candidate", { mode: 0o600 });
+    const unrelated = join(interruptedDirectory, "operator-note.txt");
+    writeFileSync(unrelated, "preserve this file", { mode: 0o600 });
+    const pendingRollback = join(source, `${basename(databasePath)}.synthetic.rollback`);
+    writeFileSync(pendingRollback, "synthetic rollback marker", { mode: 0o600 });
+    const refused = command("restore", filename);
+    expect(refused.exitCode).not.toBe(0);
+    expect(refused.stderr.toString()).toContain("RESTORE_RECOVERY_PENDING");
+    expect(readFileSync(candidate, "utf8")).toBe("synthetic plaintext candidate");
+    expect(readFileSync(apiRestoreSnapshot, "utf8")).toBe("synthetic API restore snapshot");
+    expect(existsSync(apiBackupSnapshot)).toBe(false);
+    expect(readFileSync(apiCandidate, "utf8")).toBe("synthetic API restore candidate");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+
+    rmSync(pendingRollback);
+    expect(command("backup").exitCode).toBe(0);
+    expect(existsSync(candidate)).toBe(false);
+    expect(existsSync(apiRestoreSnapshot)).toBe(false);
+    expect(existsSync(apiCandidate)).toBe(false);
+    expect(readFileSync(unrelated, "utf8")).toBe("preserve this file");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("refuses to publish a CLI backup from a synthetic database with foreign-key violations", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-source-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const damaged = new Database(databasePath);
+    damaged.run("PRAGMA foreign_keys = OFF");
+    damaged.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'synthetic-orphan-session', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+    damaged.close();
+
+    const result = command("backup");
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain("DATABASE_INTEGRITY_FAILED");
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(0);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.at(-1)).toMatchObject({ event: "backup_failed", trigger: "manual" });
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("serializes concurrent CLI backups so every successful command keeps a distinct verified artifact", async () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-concurrent-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    createFreshDatabase(databasePath);
+    const database = new Database(databasePath);
+    database.query("INSERT INTO students (id, name) VALUES (?, ?)").run(424242, "Synthetic Student ".repeat(800000));
+    database.close();
+
+    const processes = Array.from({ length: 6 }, () => Bun.spawn([process.execPath, cli, "backup"], {
+      cwd: root,
+      env,
+      stdout: "pipe",
+      stderr: "pipe",
+    }));
+    const results = await Promise.all(processes.map(async (process) => {
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+      return { exitCode, stdout, stderr };
+    }));
+
+    const successfulNames = results.flatMap(({ exitCode, stdout }) => exitCode === 0
+      ? stdout.split("\n").filter((line) => line.startsWith("Encrypted backup completed:")).map((line) => line.slice(line.lastIndexOf("/") + 1))
+      : []);
+    const artifacts = readdirSync(backupDir).filter((name) => artifactPattern.test(name));
+    expect(successfulNames.length).toBeGreaterThan(0);
+    expect(new Set(successfulNames).size).toBe(successfulNames.length);
+    expect(artifacts).toHaveLength(successfulNames.length);
+    for (const filename of artifacts) {
+      const metadata = JSON.parse(readFileSync(join(backupDir, `${filename}.meta.json`), "utf8")) as { sha256: string };
+      expect(metadata.sha256).toBe(backupSha256(readFileSync(join(backupDir, filename))));
+    }
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 60000);
+
+it("fails closed when the CLI lock path is a symlink", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-lock-symlink-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const lockTarget = join(temporary, "lock-target");
+  const lockPath = join(temporary, ".operatoros-backup-cli.lock");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    createFreshDatabase(databasePath);
+    writeFileSync(lockTarget, "synthetic lock target", { mode: 0o644 });
+    chmodSync(lockTarget, 0o644);
+    symlinkSync(lockTarget, lockPath);
+
+    const result = Bun.spawnSync([process.execPath, cli, "backup"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr.toString()).toContain("BACKUP_CLI_LOCK_INVALID");
+    expect(statSync(lockTarget).mode & 0o777).toBe(0o644);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(0);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.at(-1)).toMatchObject({ event: "backup_failed", failure_code: "BACKUP_CLI_LOCK_INVALID", trigger: "manual" });
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("refuses a concurrent CLI restore before changing the active database and audits the denial", async () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-restore-lock-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const lockPath = join(temporary, ".operatoros-backup-cli.lock");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  let lockHolder: ReturnType<typeof Bun.spawn> | undefined;
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = Bun.spawnSync([process.execPath, cli, "backup"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const marker = openDatabase(databasePath);
+    marker.client.run("INSERT INTO students (id, name) VALUES (424243, 'Active marker')");
+    marker.close();
+    const activeBefore = readFileSync(databasePath);
+
+    writeFileSync(lockPath, "", { mode: 0o600 });
+    lockHolder = Bun.spawn(["flock", "--no-fork", "--exclusive", lockPath, "sleep", "5"], { stdout: "ignore", stderr: "ignore" });
+    await Bun.sleep(100);
+    expect(Bun.spawnSync(["flock", "--nonblock", "--conflict-exit-code", "75", lockPath, "true"]).exitCode).toBe(75);
+
+    const refused = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin", "--operatoros-backup-cli-lock-token", "spoofed"], {
+      cwd: root,
+      env: { ...env, OPERATOROS_BACKUP_CLI_LOCKED: "1", OPERATOROS_BACKUP_CLI_LOCK_TOKEN: "spoofed" },
+      input: "golden-admin-pass-1\n",
+    });
+    expect(refused.status).toBe(1);
+    expect(refused.stderr?.toString()).toContain("Another backup or restore operation is already active for this data root.");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied"]);
+    expect(recovery[1]).toMatchObject({ outcome: "DENIED", target_filename: filename, reason: "RESTORE_CLI_OPERATION_BUSY" });
+  } finally {
+    lockHolder?.kill();
+    if (lockHolder) await lockHolder.exited;
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}, 15000);
+
+it("rejects authenticated SQLite candidates with integrity, foreign-key, or schema failures before replacing the active database", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-invalid-schema-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const key = randomBytes(32).toString("base64");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: key,
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const active = openDatabase(databasePath);
+    active.client.run("INSERT INTO students (id, name) VALUES (424243, 'Active marker')");
+    active.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const artifactPath = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
+    const filename = basename(artifactPath);
+    const encryption = parseBackupEncryptionConfig({ activeKey: key, activeKeyId: "synthetic-test", authCookieSecret: env.AUTH_COOKIE_SECRET });
+    if (!encryption) throw new Error("synthetic backup encryption config missing");
+
+    const incompatiblePath = join(temporary, "incompatible.sqlite");
+    const incompatible = new Database(incompatiblePath);
+    incompatible.run("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)");
+    const plaintext = incompatible.serialize();
+    incompatible.close();
+    const manifestPath = `${artifactPath}.meta.json`;
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
+    const original = readFileSync(databasePath);
+    const rejectCandidate = (candidate: Uint8Array) => {
+      const encrypted = encryptBackup(candidate, encryption);
+      Object.assign(manifest, {
+        backup_file_size_bytes: encrypted.length,
+        sqlite_file_size_bytes: candidate.length,
+        sha256: backupSha256(encrypted),
+        plaintext_sha256: backupSha256(candidate),
+      });
+      writeFileSync(artifactPath, encrypted);
+      writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+      expect(command("restore", filename).exitCode).not.toBe(0);
+      expect(readFileSync(databasePath).equals(original)).toBe(true);
+    };
+
+    rejectCandidate(plaintext);
+
+    const foreignKeyPath = join(temporary, "foreign-key.sqlite");
+    createFreshDatabase(foreignKeyPath);
+    const foreignKeyDatabase = new Database(foreignKeyPath);
+    try {
+      foreignKeyDatabase.run("PRAGMA foreign_keys = OFF");
+      foreignKeyDatabase.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop102-invalid-candidate', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+      rejectCandidate(foreignKeyDatabase.serialize());
+    } finally { foreignKeyDatabase.close(); }
+
+    rejectCandidate(Buffer.from("authenticated but not a SQLite database"));
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("rejects an admin-less candidate with closed setup before making the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("DELETE FROM sessions");
+    candidate.client.run("DELETE FROM users WHERE role = 'admin'");
+    candidate.client.run("INSERT INTO first_admin_setup_state (id, completed) VALUES (1, 1) ON CONFLICT(id) DO UPDATE SET completed = 1");
+    candidate.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    writeFileSync(databasePath, original);
+    const activeBefore = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env))).toThrow("RESTORE_ADMINISTRATOR_REQUIRED");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("restores an empty CLI candidate while first-admin setup is still open", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-first-run-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("DELETE FROM sessions");
+    candidate.client.run("DELETE FROM users");
+    candidate.client.run("INSERT INTO first_admin_setup_state (id, completed) VALUES (1, 0) ON CONFLICT(id) DO UPDATE SET completed = 0");
+    candidate.close();
+
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    writeFileSync(databasePath, original);
+    restoreCli(filename, loadConfig(env));
+
+    const restored = openDatabase(databasePath, { readonly: true });
+    expect(restored.client.query("SELECT id FROM users LIMIT 1").get()).toBeNull();
+    expect(restored.client.query("SELECT completed FROM first_admin_setup_state WHERE id = 1").get()).toEqual({ completed: 0 });
+    restored.close();
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("requires a verified backup administrator credential before making the CLI safety snapshot", async () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-credentials-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const original = readFileSync(databasePath);
+    const candidate = openDatabase(databasePath);
+    candidate.client.run("UPDATE users SET password_hash = ? WHERE username = 'golden-admin'", [Bun.password.hashSync("synthetic-backup-admin-password", "argon2id")]);
+    const admin = candidate.client.query("SELECT id FROM users WHERE username = 'golden-admin'").get() as { id: number };
+    candidate.client.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (?, 'synthetic-restored-session', datetime('now', '+1 hour'), datetime('now', '+1 day'))", [admin.id]);
+    candidate.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const selectedArtifact = readFileSync(join(backupDir, filename));
+    writeFileSync(databasePath, original);
+    const activeBefore = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env))).toThrow("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+    expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+
+    const restored = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], { cwd: root, env, input: "synthetic-backup-admin-password\n" });
+    expect(restored.status).toBe(0);
+    expect(restored.stdout?.toString()).toContain("SQLite restore completed:");
+    const verified = openDatabase(databasePath, { readonly: true });
+    const hash = String((verified.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("synthetic-backup-admin-password", hash)).toBe(true);
+    const restoredSession = verified.client.query("SELECT revoked_at FROM sessions WHERE token_hash = 'synthetic-restored-session'").get() as { revoked_at: string | null };
+    expect(restoredSession.revoked_at).not.toBeNull();
+    verified.close();
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_denied", "restore_requested", "restore_started", "restore_completed"]);
+    expect(recovery.map((entry) => entry.authenticated_username)).toEqual([null, null, null, "golden-admin", "golden-admin"]);
+    expect(readFileSync(join(backupDir, filename)).equals(selectedArtifact)).toBe(true);
+    const audit = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8");
+    expect(audit).not.toContain("synthetic-backup-admin-password");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("passes the selected backup administrator to the CLI from the restore script", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-restore-script-"));
+  const bin = join(temporary, "bin");
+  const argsPath = join(temporary, "args");
+  mkdirSync(bin);
+  const bunStub = join(bin, "bun");
+  writeFileSync(bunStub, '#!/bin/sh\nprintf "%s\\n" "$@" > "$RESTORE_SCRIPT_ARGS"\n', { mode: 0o700 });
+  chmodSync(bunStub, 0o700);
+  const filename = "backup_2026-10-21T17-00-00Z.sqlite3";
+  const run = (username: string) => spawnCommand("/bin/bash", [join(root, "scripts/restore.sh"), filename], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RESTORE_SCRIPT_ARGS: argsPath },
+    input: `y\n${username}\n`,
+  });
+  try {
+    const initialSetup = run("");
+    expect(initialSetup.status).toBe(0);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", filename]);
+    const withAdministrator = run("golden-admin");
+    expect(withAdministrator.status).toBe(0);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", filename, "--admin-user", "golden-admin"]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("orders same-second restore menu entries by numeric backup sequence", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-restore-menu-order-"));
+  const bin = join(temporary, "bin");
+  const backupDir = join(temporary, "backups");
+  const argsPath = join(temporary, "args");
+  mkdirSync(bin);
+  mkdirSync(backupDir);
+  const newest = "backup_2026-10-21T17-00-00Z_10.sqlite3";
+  const names = [
+    "backup_2026-10-21T17-00-00Z.sqlite3",
+    "backup_2026-10-21T17-00-00Z_1.sqlite3",
+    "backup_2026-10-21T17-00-00Z_9.sqlite3",
+    newest,
+  ];
+  for (const name of names) writeFileSync(join(backupDir, name), "synthetic artifact");
+  const bunStub = join(bin, "bun");
+  writeFileSync(bunStub, '#!/bin/sh\ncase "$1" in\n  */data-dir-cli.ts) printf "%s\\n" "$RESTORE_SCRIPT_BACKUP_DIR" ;;\n  *) printf "%s\\n" "$@" > "$RESTORE_SCRIPT_ARGS" ;;\nesac\n', { mode: 0o700 });
+  const result = spawnCommand("/bin/bash", [join(root, "scripts/restore.sh")], {
+    cwd: root,
+    env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, RESTORE_SCRIPT_BACKUP_DIR: backupDir, RESTORE_SCRIPT_ARGS: argsPath },
+    input: "1\ny\n\n",
+  });
+  try {
+    expect(result.status).toBe(0);
+    expect(result.stdout.toString()).toContain(`1) ${newest}`);
+    expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", newest]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("applies newest-ten retention to CLI backups while protecting a selected restore source", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-retention-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    let selected = "";
+    for (let index = 0; index < 10; index++) {
+      const result = command("backup");
+      expect(result.exitCode).toBe(0);
+      if (index === 0) selected = basename(result.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    }
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(10);
+
+    const restore = command("restore", selected);
+    expect(restore.exitCode).toBe(0);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(11);
+    expect(existsSync(join(backupDir, selected))).toBe(true);
+
+    expect(command("backup").exitCode).toBe(0);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(10);
+    expect(existsSync(join(backupDir, selected))).toBe(false);
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(operations.filter((entry) => entry.event === "backup_succeeded")).toHaveLength(12);
+    expect(operations.some((entry) => entry.event === "backup_evicted" && entry.filename === selected)).toBe(true);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 60000);
+
+it("installs an administrator-backed backup when no active database exists", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-initial-admin-restore-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    rmSync(databasePath);
+
+    const restored = spawnCommand(process.execPath, [cli, "restore", filename, "--admin-user", "golden-admin"], {
+      cwd: root,
+      env,
+      input: "golden-admin-pass-1\n",
+    });
+    expect(restored.status).toBe(0);
+    expect(restored.stdout?.toString()).toContain(`SQLite restore completed: ${databasePath}`);
+    const database = openDatabase(databasePath, { readonly: true });
+    expect(database.client.query("SELECT username FROM users WHERE role = 'admin' AND is_active = 1").get()).toEqual({ username: "golden-admin" });
+    database.close();
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("refuses a locked administrator backup before creating the CLI safety snapshot", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-locked-admin-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const database = openDatabase(databasePath);
+    database.client.run("UPDATE users SET locked_until = ? WHERE username = 'golden-admin'", [new Date(Date.now() + 60_000).toISOString().replace("T", " ").replace("Z", "")]);
+    database.close();
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const active = readFileSync(databasePath);
+
+    expect(() => restoreCli(filename, loadConfig(env), undefined, { username: "golden-admin", password: "golden-admin-pass-1" })).toThrow("RESTORE_ADMINISTRATOR_REQUIRED");
+    expect(readFileSync(databasePath).equals(active)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("supports credential recovery on an isolated candidate before re-encrypted restore", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-"));
+  const candidateRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-candidate-"));
+  const aliasRoot = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-admin-recovery-alias-"));
+  const databasePath = join(temporary, "operatoros.sqlite");
+  const backupDir = join(temporary, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: temporary,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (environment: NodeJS.ProcessEnv, ...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
+  try {
+    createAccountFixture(databasePath, "golden-active");
+    const backup = command(env, "backup");
+    expect(backup.exitCode).toBe(0);
+    const sourceFilename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+
+    const nestedTarget = join(temporary, "disposable-container", "target");
+    mkdirSync(nestedTarget, { recursive: true });
+    const targetAlias = join(aliasRoot, "source-container");
+    symlinkSync(dirname(nestedTarget), targetAlias);
+    const symlinkedRestore = command(env, "restore-disposable", sourceFilename, join(targetAlias, "target"));
+    expect(symlinkedRestore.exitCode).not.toBe(0);
+    expect(symlinkedRestore.stderr.toString()).toContain("DISPOSABLE_RESTORE_TARGET_INVALID");
+    expect(existsSync(join(nestedTarget, "operatoros.sqlite"))).toBe(false);
+
+    const disposable = command(env, "restore-disposable", sourceFilename, candidateRoot);
+    expect(disposable.exitCode).toBe(0);
+
+    const candidateDatabasePath = join(candidateRoot, "operatoros.sqlite");
+    const candidateEnv = { ...env, OPERATOROS_DATA_DIR: candidateRoot, DATABASE_URL: `sqlite:///${candidateDatabasePath}` };
+    const recovery = spawnCommand(process.execPath, [adminRecoveryCli, "--user", "golden-admin"], {
+      cwd: root,
+      env: candidateEnv,
+      input: "recovered-synthetic-admin-password\nrecovered-synthetic-admin-password\n",
+    });
+    expect(recovery.status).toBe(0);
+    expect(recovery.stdout?.toString()).toContain("Admin recovery completed");
+    const recoveredCandidate = openDatabase(candidateDatabasePath, { readonly: true });
+    const recoveredHash = String((recoveredCandidate.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("recovered-synthetic-admin-password", recoveredHash)).toBe(true);
+    recoveredCandidate.close();
+
+    const reencrypted = command(candidateEnv, "backup");
+    expect(reencrypted.exitCode).toBe(0);
+    const candidateFilename = basename(reencrypted.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    mkdirSync(backupDir, { recursive: true });
+    copyFileSync(join(candidateRoot, "backups", candidateFilename), join(backupDir, candidateFilename));
+    copyFileSync(join(candidateRoot, "backups", `${candidateFilename}.meta.json`), join(backupDir, `${candidateFilename}.meta.json`));
+
+    restoreCli(candidateFilename, loadConfig(env), undefined, { username: "golden-admin", password: "recovered-synthetic-admin-password" });
+    const restored = openDatabase(databasePath, { readonly: true });
+    const passwordHash = String((restored.client.query("SELECT password_hash FROM users WHERE username = 'golden-admin'").get() as { password_hash: string }).password_hash);
+    expect(Bun.password.verifySync("recovered-synthetic-admin-password", passwordHash)).toBe(true);
+    restored.close();
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+    rmSync(candidateRoot, { recursive: true, force: true });
+    rmSync(aliasRoot, { recursive: true, force: true });
+  }
+}, 15000);
+
+it("rejects manifest identity, size, checksum, and envelope-authentication mismatches before changing the active database", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-manifest-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const artifactPath = backup.stdout.toString().trim().replace("Encrypted backup completed: ", "");
+    const filename = basename(artifactPath);
+    const changed = openDatabase(databasePath);
+    changed.client.run("INSERT INTO students (id, name) VALUES (424244, 'Active marker')");
+    changed.close();
+    const original = readFileSync(databasePath);
+    const manifestPath = `${artifactPath}.meta.json`;
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Record<string, unknown>;
+
+    manifest.filename = "backup_2000-01-01T00-00-00Z.sqlite3";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.filename = filename;
+    manifest.key_id = "unrelated-key";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.filename = filename;
+    manifest.key_id = "synthetic-test";
+    const schemaVersion = manifest.schema_version;
+    manifest.schema_version = "synthetic-mismatched-schema";
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+
+    manifest.schema_version = schemaVersion;
+    for (const [field, invalid] of [["created_at", "invalid timestamp"], ["trigger", "unknown"]] as const) {
+      const valid = manifest[field];
+      manifest[field] = invalid;
+      writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+      expect(command("restore", filename).exitCode).not.toBe(0);
+      expect(readFileSync(databasePath).equals(original)).toBe(true);
+      expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+      manifest[field] = valid;
+    }
+
+    const encryptedSize = statSync(artifactPath).size;
+    const sqliteSize = manifest.sqlite_file_size_bytes;
+    manifest.backup_file_size_bytes = encryptedSize + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.backup_file_size_bytes = encryptedSize;
+    manifest.sqlite_file_size_bytes = Number(sqliteSize) + 1;
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    manifest.sqlite_file_size_bytes = sqliteSize;
+    manifest.sha256 = "0".repeat(64);
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    const encrypted = JSON.parse(readFileSync(artifactPath, "utf8")) as { tag: string };
+    encrypted.tag = `${encrypted.tag[0] === "A" ? "B" : "A"}${encrypted.tag.slice(1)}`;
+    const unauthenticated = Buffer.from(JSON.stringify(encrypted));
+    manifest.sha256 = backupSha256(unauthenticated);
+    writeFileSync(artifactPath, unauthenticated);
+    writeFileSync(manifestPath, `${JSON.stringify(manifest)}\n`);
+    expect(command("restore", filename).exitCode).not.toBe(0);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("rolls back interrupted and post-swap-invalid replacements, then allows a safe retry", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-rollback-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const backup = command("backup");
+    expect(backup.exitCode).toBe(0);
+    const filename = basename(backup.stdout.toString().trim().replace("Encrypted backup completed: ", ""));
+    const active = openDatabase(databasePath);
+    active.client.run("INSERT INTO students (id, name) VALUES (424245, 'Original marker')");
+    active.close();
+    const original = readFileSync(databasePath);
+    const value = loadConfig(env);
+    let fault: "interrupted" | "foreign-key" | "recovery-required" | null = "interrupted";
+    let failCandidateParking = false;
+    const fileSystem: RestoreFileSystem = {
+      rename: (from, to) => {
+        if (to === databasePath && from.endsWith(".candidate")) {
+          const selected = fault;
+          fault = null;
+          if (selected === "interrupted") throw new Error("SYNTHETIC_RESTORE_INTERRUPTION");
+          if (selected === "foreign-key" || selected === "recovery-required") {
+            failCandidateParking = selected === "recovery-required";
+            const candidate = new Database(from, { readwrite: true, create: false });
+            try {
+              candidate.run("PRAGMA foreign_keys = OFF");
+              candidate.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop102-invalid-candidate', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
+            } finally { candidate.close(); }
+          }
+        }
+        if (failCandidateParking && from === databasePath && to.endsWith(".rejected")) {
+          failCandidateParking = false;
+          throw new Error("SYNTHETIC_RECOVERY_PARK_INTERRUPTION");
+        }
+        renameSync(from, to);
+      },
+      remove: (path) => rmSync(path, { force: true }),
+      exists: (path) => { try { statSync(path); return true; } catch { return false; } },
+      syncFile: () => {},
+      syncDirectory: () => {},
+    };
+
+    expect(() => restoreCli(filename, value, fileSystem)).toThrow("RESTORE_ROLLED_BACK");
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+    expect(readdirSync(source).some((name) => name.endsWith(".rollback"))).toBe(false);
+
+    fault = "foreign-key";
+    expect(() => restoreCli(filename, value, fileSystem)).toThrow("RESTORE_ROLLED_BACK");
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    fault = "recovery-required";
+    expect(() => restoreCli(filename, value, fileSystem)).toThrow("RESTORE_RECOVERY_REQUIRED");
+    const strandedRollback = readdirSync(source).find((name) => name.startsWith("operatoros.sqlite.") && name.endsWith(".rollback"));
+    if (!strandedRollback) throw new Error("rollback database missing after synthetic recovery failure");
+    expect(readFileSync(join(source, strandedRollback)).equals(original)).toBe(true);
+    expect(() => restoreCli(filename, value)).toThrow("RESTORE_RECOVERY_PENDING");
+    renameSync(join(source, strandedRollback), databasePath);
+    expect(readFileSync(databasePath).equals(original)).toBe(true);
+
+    restoreCli(filename, value);
+    const restored = openDatabase(databasePath, { readonly: true });
+    expect(restored.client.query("SELECT COUNT(*) AS count FROM students WHERE id = 424245").get()).toEqual({ count: 0 });
+    restored.close();
+
+    const operations = readFileSync(join(backupDir, "backup_operations_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    const failed = operations.filter((entry) => entry.event === "restore_failed");
+    expect(failed.map((entry) => entry.rollback_outcome)).toEqual(["rolled_back", "rolled_back", "recovery_required", undefined]);
+    expect(failed[3]!.reason).toBe("RESTORE_RECOVERY_PENDING");
+    expect(operations.filter((entry) => entry.event === "restore_completed")).toHaveLength(1);
+    const recovery = readFileSync(join(backupDir, "backup_restore_audit.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(recovery.map((entry) => entry.event)).toEqual(["restore_requested", "restore_started", "restore_rolled_back", "restore_requested", "restore_started", "restore_rolled_back", "restore_requested", "restore_started", "restore_failed", "restore_requested", "restore_denied", "restore_requested", "restore_started", "restore_completed"]);
+    expect(recovery[9]!.outcome).toBe("REQUESTED");
+    expect(recovery[10]!.reason).toBe("RESTORE_RECOVERY_PENDING");
+    expect(recovery[10]!.outcome).toBe("DENIED");
+    expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(5);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});
+
+it("refuses a named-pipe backup artifact before reading it", () => {
+  if (process.platform !== "linux") return;
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-special-file-"));
+  const source = join(temporary, "source");
+  const backupDir = join(source, "backups");
+  const target = join(temporary, "target");
+  mkdirSync(backupDir, { recursive: true });
+  mkdirSync(target);
+  const filename = "backup_2026-10-22T00-00-00Z.sqlite3";
+  const artifact = join(backupDir, filename);
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    DATABASE_URL: `sqlite:///${join(source, "operatoros.sqlite")}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+  };
+  try {
+    expect(spawnCommand("mkfifo", [artifact]).status).toBe(0);
+    writeFileSync(`${artifact}.meta.json`, "{}", { mode: 0o600 });
+    const result = spawnCommand("timeout", ["--signal=TERM", "--kill-after=1s", "2s", process.execPath, cli, "restore-disposable", filename, target], { cwd: root, env });
+    expect(result.status).toBe(1);
+    expect(result.stderr?.toString()).toContain("Backup must be an encrypted artifact in the canonical backup directory.");
+    expect(readdirSync(target)).toEqual([]);
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("restores a valid legacy plaintext backup only with explicit opt-in", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-legacy-"));
+  const source = join(temporary, "source");
+  mkdirSync(source);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const legacySourcePath = join(temporary, "legacy-source.sqlite");
+  const env = {
+    ...process.env,
+    OPERATOROS_DATA_DIR: source,
+    OPERATOROS_REPOSITORY_ROOT: root,
+    DATABASE_URL: `sqlite:///${databasePath}`,
+    BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+    BACKUP_ENCRYPTION_KEY_ID: "synthetic-test",
+    AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key",
+    ALLOW_LEGACY_PLAINTEXT_BACKUPS: "true",
+  };
+  try {
+    createFreshDatabase(legacySourcePath);
+    const before = openDatabase(legacySourcePath);
+    before.client.run("INSERT INTO students (id, name) VALUES (424246, 'Legacy marker')");
+    before.close();
+    mkdirSync(backupDir, { recursive: true });
+    const filename = "backup_2026-01-01T00-00-00Z.sqlite3";
+    writeFileSync(join(backupDir, filename), readFileSync(legacySourcePath), { flag: "wx", mode: 0o600 });
+
+    restoreCli(filename, loadConfig(env));
+    const restored = openDatabase(databasePath, { readonly: true });
+    expect(restored.client.query("SELECT COUNT(*) AS count FROM students WHERE id = 424246").get()).toEqual({ count: 1 });
+    restored.close();
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+});

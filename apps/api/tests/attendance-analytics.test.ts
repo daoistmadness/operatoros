@@ -124,6 +124,62 @@ describe("attendance analytics expansion", () => {
     }
   }, 30000);
 
+  it("keeps student totals and export rows exact after transfer, override, and zero-denominator data", async () => {
+    const value = await setup("student-query");
+    try {
+      const alpha = value.database.client.query("SELECT id FROM student_enrollments WHERE student_id = 9501 AND academic_year_id = 1").get() as { id: number };
+      const class7b = value.database.client.query("SELECT id FROM academic_classes WHERE class_name = '7B'").get() as { id: number };
+      value.database.client.run("UPDATE student_enrollments SET academic_class_id = ?, class_name = '7B' WHERE id = ?", [class7b.id, alpha.id]);
+      value.database.client.run("INSERT INTO student_enrollment_class_history (enrollment_id,class_name,effective_from,changed_by,source) VALUES (?,'7B','2026-08-04','golden-admin','manual_transfer')", [alpha.id]);
+
+      value.database.client.run("INSERT INTO student_masters (id,full_name,normalized_name,student_status) VALUES ('00000000-0000-4000-8000-000000000004','Delta Student','delta student','active')");
+      value.database.client.run("INSERT INTO students (id,name,jenjang,class_name) VALUES (9504,'Delta Student','SMP','7A')");
+      value.database.client.run("INSERT INTO student_enrollments (student_id,student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (9504,'00000000-0000-4000-8000-000000000004',1,2,1,'7A',1,'2026-07-01','ACTIVE')");
+      value.database.client.run("INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (9504,'2026-08-03',NULL,NULL,0,'test',0,'incomplete'),(9504,'2026-08-04',NULL,NULL,0,'test',0,'incomplete')");
+
+      const students = async (filters: Record<string, string> = {}, cookie = value.admin.cookie) => {
+        const query = new URLSearchParams(RANGE.slice(1));
+        for (const [key, filter] of Object.entries(filters)) query.set(key, filter);
+        const response = await value.app.handle(new Request(`http://local/api/analytics/attendance/students?${query}`, { headers: cookie ? { cookie } : {} }));
+        return { response, body: await response.json() as any };
+      };
+      const all = await students({ page_size: "25" });
+      const columns = (item: any) => ({ studentId: item.studentId, studentName: item.studentName, className: item.className, counts: item.counts, attendanceRate: item.attendanceRate, tardinessRate: item.tardinessRate, unexcusedAbsenceRate: item.unexcusedAbsenceRate });
+      expect(all.body.total).toBe(4);
+      expect(all.body.scope.totalApplicableRecords).toBe(10);
+      expect(all.body.rows.map(columns)).toEqual([
+        { studentId: 9501, studentName: "Alpha Student", className: "7B", counts: { present: 2, late: 0, incomplete: 0, absent: 1, sakit: 0, izin: 0, alfa: 0, unrecorded: 0 }, attendanceRate: 100, tardinessRate: 0, unexcusedAbsenceRate: 0 },
+        { studentId: 9502, studentName: "Beta Student", className: "7A", counts: { present: 0, late: 0, incomplete: 1, absent: 0, sakit: 1, izin: 1, alfa: 0, unrecorded: 0 }, attendanceRate: 0, tardinessRate: null, unexcusedAbsenceRate: 0 },
+        { studentId: 9504, studentName: "Delta Student", className: "7A", counts: { present: 0, late: 0, incomplete: 2, absent: 0, sakit: 0, izin: 0, alfa: 0, unrecorded: 0 }, attendanceRate: null, tardinessRate: null, unexcusedAbsenceRate: null },
+        { studentId: 9503, studentName: "Gamma Student", className: "7B", counts: { present: 1, late: 0, incomplete: 0, absent: 0, sakit: 0, izin: 0, alfa: 1, unrecorded: 0 }, attendanceRate: 50, tardinessRate: 0, unexcusedAbsenceRate: 50 },
+      ]);
+
+      const page = await students({ page: "2", page_size: "2" });
+      expect(page.body.rows).toEqual(all.body.rows.slice(2));
+      const outOfRange = await students({ page: "99", page_size: "2" });
+      expect(outOfRange.body).toMatchObject({ total: 4, page: 99, rows: [], scope: { totalApplicableRecords: 10 } });
+      expect((await students({ search: "beta", class_id: "1" })).body).toMatchObject({ total: 1, scope: { totalApplicableRecords: 3 } });
+      expect((await students({ class_id: "1" })).body).toMatchObject({ total: 2, scope: { totalApplicableRecords: 5 } });
+      expect((await students({ sort: "alfa", order: "desc" })).body.rows[0]).toMatchObject({ studentName: "Gamma Student", counts: { alfa: 1 } });
+      expect((await students({ date_from: "2026-09-01", date_to: "2026-09-30" })).body).toMatchObject({ total: 0, rows: [], scope: { totalApplicableRecords: 0 } });
+      expect((await students({}, "")).response.status).toBe(401);
+      expect((await students({}, value.staff.cookie)).response.status).toBe(200);
+
+      const exportResponse = await value.app.handle(new Request(`http://local/api/analytics/attendance/export-excel${RANGE}`, { headers: { cookie: value.admin.cookie } }));
+      const workbook = await loadXlsxWorkbook(new Uint8Array(await exportResponse.arrayBuffer()));
+      const byStudent = workbook.getWorksheet("By Student")!;
+      const exportRows = Array.from({ length: 4 }, (_, index) => Array.from({ length: 12 }, (_, column) => byStudent.getRow(index + 2).getCell(column + 1).value));
+      expect(exportRows).toEqual([
+        ["Alpha Student", "7B", 2, 0, 0, 1, 0, 0, 0, 100, 0, 0],
+        ["Beta Student", "7A", 0, 0, 1, 0, 1, 1, 0, 0, null, 0],
+        ["Delta Student", "7A", 0, 0, 2, 0, 0, 0, 0, null, null, null],
+        ["Gamma Student", "7B", 1, 0, 0, 0, 0, 0, 1, 50, 0, 50],
+      ]);
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
   it("rejects invalid ranges, anonymous users, and insufficient capability for export", async () => {
     const value = await setup("auth");
     try {

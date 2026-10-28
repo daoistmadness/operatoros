@@ -21,6 +21,7 @@ export function createAttendanceReadFixture(path: string, kind: "crud" | "analyt
         db.exec(`
           INSERT INTO students (id,name,jenjang,class_name) VALUES (9001,'Attendance Student','SMP','7A');
           INSERT INTO student_enrollments (student_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (9001,1,1,1,'7A',1,'2026-07-01','ACTIVE');
+          INSERT INTO teacher_class_assignments (user_id,academic_year_id,academic_class_id,class_role,active,assigned_by,effective_from) VALUES (2,1,1,'HOMEROOM_TEACHER',1,'golden-admin','2026-07-01');
           INSERT INTO attendance (student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES
             (9001,'2026-08-01','07:40:00','16:00:00',25,'calculated',0,'late'),
             (9001,'2026-08-02','07:30:00',NULL,0,'none',0,'incomplete');

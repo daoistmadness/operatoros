@@ -5,6 +5,7 @@ import {
   previewRoster, previewStudentUpdate, reassignDeviceIdentity, replaceDeviceIdentity, retireDeviceIdentity, StudentFilters, transferEnrollment,
   updateStudent,
   fetchLegacyLinkStatus, linkLegacyStudent,
+  updateIdentityVerification, updateDapodikStatus, uploadIomDocument, updateIomDocument,
 } from "../api/students";
 import { queryKeys } from "../lib/query/queryKeys";
 import { invalidateReadiness } from "../features/readiness";
@@ -57,4 +58,37 @@ export function useDeleteStudentGuardian(id: string) { const invalidate = useStu
 export function useLinkLegacyStudent(id: string) {
   const invalidate = useStudentDomainInvalidation(id);
   return useMutation({ mutationFn: (payload: { legacy_student_id: number; reason: string; confirmation: "LINK_LEGACY_STUDENT" }) => linkLegacyStudent(id, payload), onSuccess: invalidate });
+}
+
+export function useUpdateIdentityVerification(studentId: string) {
+  const invalidate = useStudentDomainInvalidation(studentId);
+  return useMutation({
+    mutationFn: (payload: unknown) => updateIdentityVerification(studentId, payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateDapodikStatus(studentId: string) {
+  const invalidate = useStudentDomainInvalidation(studentId);
+  return useMutation({
+    mutationFn: (payload: unknown) => updateDapodikStatus(studentId, payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUploadIomDocument(studentId: string) {
+  const invalidate = useStudentDomainInvalidation(studentId);
+  return useMutation({
+    mutationFn: (formData: FormData) => uploadIomDocument(studentId, formData),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateIomDocument(studentId: string) {
+  const invalidate = useStudentDomainInvalidation(studentId);
+  return useMutation({
+    mutationFn: ({ docId, payload }: { docId: string; payload: { description: string } }) =>
+      updateIomDocument(studentId, docId, payload),
+    onSuccess: invalidate,
+  });
 }

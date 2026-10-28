@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -13,7 +14,7 @@ import {
   ShieldAlert,
   Trash2,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   type BackupEntry,
   type BackupExecutionHistory,
@@ -21,7 +22,7 @@ import {
   type BackupStatus,
   type RecoveryHistoryEntry,
   type RestorePreflight,
-  type RestoreRequest,
+  type RestoreSubmission,
   type RestoreResult,
   downloadBackupUrl,
 } from "../api/backups";
@@ -52,6 +53,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
 import { FieldLabel, FormField } from "../components/ui/field";
+import { queryKeys } from "../lib/query/queryKeys";
 import {
   DataTable,
   DataTableBody,
@@ -125,6 +127,8 @@ export const canExecuteRestore = ({
   confirmationFilename,
   confirmationPhrase,
   password,
+  candidateAdminUsername,
+  candidateAdminPassword,
   acknowledgements,
   eligible,
   busy,
@@ -133,6 +137,8 @@ export const canExecuteRestore = ({
   confirmationFilename: string;
   confirmationPhrase: string;
   password: string;
+  candidateAdminUsername: string;
+  candidateAdminPassword: string;
   acknowledgements: Acknowledgements;
   eligible: boolean;
   busy: boolean;
@@ -140,6 +146,7 @@ export const canExecuteRestore = ({
   eligible &&
   !busy &&
   password.length > 0 &&
+  Boolean(candidateAdminUsername.trim()) === Boolean(candidateAdminPassword) &&
   confirmationFilename === filename &&
   confirmationPhrase === RESTORE_PHRASE &&
   allAcknowledged(acknowledgements);
@@ -174,6 +181,7 @@ export function BackupStatusPanel({ status }: { status: BackupStatus }) {
     ["Health", HEALTH_LABELS[status.health_state]],
     ["Last successful", status.last_successful_backup_at || "Not available"],
     ["Backup age", formatAge(status.backup_age_seconds)],
+    ["Latest attempt", status.latest_backup_outcome || "Unknown"],
     ["Last failed", status.last_failed_backup_at || "None recorded"],
     ["Failure", status.last_failure_code || status.last_failure_message || "None"],
     ["Backups retained", `${status.backup_count} of ${status.retention_limit}`],
@@ -182,7 +190,7 @@ export function BackupStatusPanel({ status }: { status: BackupStatus }) {
     ["Free space", formatBytes(status.free_space_bytes)],
     ["Required space", formatBytes(status.minimum_required_space_bytes)],
     ["Checksum", status.latest_backup_checksum_status || "Not available"],
-    ["Integrity", status.latest_backup_integrity_status || "Not available"],
+    ["Integrity", status.latest_backup_integrity_status === "not_checked" ? "Not checked during status" : "Not available"],
     ["Schema", status.latest_backup_schema_version || "Not available"],
     ["Backup running", status.backup_in_progress ? "Yes" : "No"],
     ["Restore running", status.restore_in_progress ? "Yes" : "No"],
@@ -264,8 +272,8 @@ export function BackupList({
                   </DataTableCell>
                   <DataTableCell>
                     <div className="flex flex-wrap gap-2">
-                      <a href={downloadBackupUrl(backup.filename)} download className={buttonVariants({ variant: "outline", size: "sm" })}>
-                        <Download className="h-4 w-4" /> Download
+                      <a href={downloadBackupUrl(backup.filename, true)} download className={buttonVariants({ variant: "outline", size: "sm" })}>
+                        <Download className="h-4 w-4" /> Download recovery bundle
                       </a>
                       <Button variant="danger" size="sm" onClick={() => onRestore(backup)} disabled={backup.restore_eligible === false}>
                         <RotateCcw className="h-4 w-4" /> Guided Restore
@@ -285,7 +293,7 @@ export function BackupList({
   );
 }
 
-function Comparison({ preflight }: { preflight: RestorePreflight }) {
+export function Comparison({ preflight }: { preflight: RestorePreflight }) {
   const rows = [
     ["Checksum", preflight.active.active_sha256.slice(0, 12), preflight.source.sha256.slice(0, 12), "—"],
     ["Schema", preflight.active.active_schema_version, preflight.source.schema_version, "—"],
@@ -300,12 +308,12 @@ function Comparison({ preflight }: { preflight: RestorePreflight }) {
       </div>
       {rows.map(([label, active, source, delta]) => (
         <div key={String(label)} className="grid grid-cols-4 gap-2 border-b border-slate-200 p-3 text-sm">
-          <strong>{label}</strong><span className="break-all">{active ?? "—"}</span><span className="break-all">{source ?? "—"}</span><span>{delta}</span>
+          <strong>{label}</strong><span className="break-all">{active ?? "Unknown"}</span><span className="break-all">{source ?? "Unknown"}</span><span>{delta ?? "Unknown"}</span>
         </div>
       ))}
-      <Alert variant={preflight.active.possible_data_loss ? "danger" : "information"} className="mt-5">
+      <Alert variant={preflight.active.possible_data_loss === false ? "information" : "warning"} className="mt-5">
         <strong>{preflight.impact_classification}</strong>
-        <p className="mt-1">Source age: {formatAge(preflight.source.age_seconds)}. Possible data loss: {preflight.active.possible_data_loss ? "Yes" : "No"}.</p>
+        <p className="mt-1">Backup age: {formatAge(preflight.source.age_seconds)}. Source older than current database: {preflight.active.source_is_older === null ? "Unknown" : preflight.active.source_is_older ? "Yes" : "No"}. Possible data loss: {preflight.active.possible_data_loss === null ? "Unknown" : preflight.active.possible_data_loss ? "Yes" : "No"}.</p>
       </Alert>
     </div>
   );
@@ -347,6 +355,8 @@ export function RestoreWizard({
   const [preflight, setPreflight] = useState<RestorePreflight | null>(null);
   const [acknowledgements, setAcknowledgements] = useState(EMPTY_ACKNOWLEDGEMENTS);
   const [password, setPassword] = useState("");
+  const [candidateAdminUsername, setCandidateAdminUsername] = useState("");
+  const [candidateAdminPassword, setCandidateAdminPassword] = useState("");
   const [confirmationFilename, setConfirmationFilename] = useState("");
   const [confirmationPhrase, setConfirmationPhrase] = useState("");
   const [result, setResult] = useState<RestoreResult | null>(null);
@@ -358,6 +368,8 @@ export function RestoreWizard({
     confirmationFilename,
     confirmationPhrase,
     password,
+    candidateAdminUsername,
+    candidateAdminPassword,
     acknowledgements,
     eligible,
     busy,
@@ -377,8 +389,12 @@ export function RestoreWizard({
     if (!preflight || !executeEnabled) return;
     setStep(6);
     setError(null);
-    const body: RestoreRequest = {
+    const body: RestoreSubmission = {
       current_password: password,
+      ...(candidateAdminUsername.trim() && candidateAdminPassword ? {
+        candidate_admin_username: candidateAdminUsername,
+        candidate_admin_password: candidateAdminPassword,
+      } : {}),
       confirmation_filename: confirmationFilename,
       confirmation_phrase: confirmationPhrase,
       acknowledge_complete_replacement: acknowledgements.replace,
@@ -394,18 +410,13 @@ export function RestoreWizard({
       onCompleted(next);
       setStep(7);
     } catch (reason) {
-      const data = (reason as Error & { data?: { detail?: RestoreResult } }).data?.detail;
-      if (data?.status) {
-        setResult(data);
-        onCompleted(data);
-        setStep(7);
-      } else {
-        setError(safeError(reason));
-        setStep(5);
-      }
+      setError(safeError(reason));
+      setStep(5);
     } finally {
       body.current_password = "";
+      body.candidate_admin_password = "";
       setPassword("");
+      setCandidateAdminPassword("");
     }
   };
 
@@ -457,7 +468,7 @@ export function RestoreWizard({
                     ["Checksum", preflight.source.checksum_matches_manifest ? "Verified" : "Failed"],
                     ["Integrity", preflight.source.integrity_check],
                     ["Quick check", preflight.source.quick_check],
-                    ["Foreign keys", preflight.source.foreign_key_violation_count === 0 ? "Valid" : `${preflight.source.foreign_key_violation_count} violations`],
+                    ["Foreign keys", preflight.source.foreign_key_violation_count === null ? "Not verified" : preflight.source.foreign_key_violation_count === 0 ? "Valid" : `${preflight.source.foreign_key_violation_count} violations`],
                     ["Schema", preflight.source.schema_version || "Unknown"],
                     ["Identity", preflight.source.identity_compatible ? "Compatible" : "Incompatible"],
                     ["Eligibility", preflight.source.restore_eligible ? "Eligible" : "Blocked"],
@@ -483,6 +494,15 @@ export function RestoreWizard({
                 <FieldLabel>Current password</FieldLabel>
                 <Input id="restore-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />
               </FormField>
+              <p className="text-sm text-slate-600">If the selected backup uses a different administrator account or password, provide one active administrator credential from that backup. It is checked before the safety snapshot and database replacement. Leave both fields empty when the current account password still works in the backup. An open first-admin setup needs no backup credential.</p>
+              <FormField id="restore-candidate-admin-username">
+                <FieldLabel>Administrator username in backup (optional)</FieldLabel>
+                <Input id="restore-candidate-admin-username" autoComplete="off" value={candidateAdminUsername} onChange={(event) => setCandidateAdminUsername(event.target.value)} />
+              </FormField>
+              <FormField id="restore-candidate-admin-password">
+                <FieldLabel>Administrator password in backup (optional)</FieldLabel>
+                <Input id="restore-candidate-admin-password" type="password" autoComplete="off" value={candidateAdminPassword} onChange={(event) => setCandidateAdminPassword(event.target.value)} />
+              </FormField>
               <FormField id="restore-filename">
                 <FieldLabel>Exact backup filename</FieldLabel>
                 <Input id="restore-filename" className="font-mono" autoComplete="off" value={confirmationFilename} onChange={(event) => setConfirmationFilename(event.target.value)} placeholder={backup.filename} />
@@ -504,19 +524,18 @@ export function RestoreWizard({
           )}
           {step === 7 && result && (
             <div role="status" aria-live="polite">
-              <Alert variant={result.status === "COMPLETED" ? "success" : result.status === "ROLLED_BACK" ? "warning" : "danger"}>
+              <Alert variant="success">
                 <strong>{result.status}</strong><p className="mt-1">{result.safe_message}</p>
               </Alert>
               <dl className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div><dt className="text-xs font-bold uppercase text-slate-500">Operation</dt><dd className="font-mono">{result.operation_id}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Safety backup</dt><dd className="break-all">{result.safety_backup_filename || "Not available"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Integrity</dt><dd>{result.post_restore_integrity || "Not confirmed"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Sessions revoked</dt><dd>{result.sessions_revoked ? "Yes" : "Not confirmed"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Rollback</dt><dd>{result.rollback_attempted ? result.rollback_succeeded ? "Succeeded and verified" : "Not confirmed" : "Not required"}</dd></div>
-                <div><dt className="text-xs font-bold uppercase text-slate-500">Restart</dt><dd>{result.restart_required ? "Required" : "Not required"}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Safety backup</dt><dd className="break-all">{result.safety_backup_filename}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Integrity</dt><dd>{result.post_restore_integrity}</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Sessions revoked</dt><dd>Yes</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Rollback</dt><dd>Not required</dd></div>
+                <div><dt className="text-xs font-bold uppercase text-slate-500">Restart</dt><dd>Required</dd></div>
               </dl>
-              {result.status === "FAILED" && <Alert variant="danger" className="mt-5"><strong>Active data safety is not confirmed.</strong><p>{result.safe_next_action}</p><p className="mt-2 font-mono">Support reference: {result.support_reference}</p></Alert>}
-              {result.restart_required && <Alert variant="information" className="mt-5">Close and reopen OperatorOS, then sign in again. Browser refresh is not a backend restart.</Alert>}
+              <Alert variant="information" className="mt-5">Close and reopen OperatorOS, then sign in again. Browser refresh is not a backend restart.</Alert>
             </div>
           )}
         </div>
@@ -535,14 +554,16 @@ export function RestoreWizard({
   );
 }
 
-export function RecoveryHistoryPanel({ rows }: { rows: RecoveryHistoryEntry[] }) {
+export function RecoveryHistoryPanel({ rows, hasMore, loadingMore, onLoadMore }: { rows: RecoveryHistoryEntry[]; hasMore: boolean; loadingMore: boolean; onLoadMore: () => void }) {
   const sorted = [...rows].sort((left, right) => String(right.timestamp).localeCompare(String(left.timestamp)));
   return (
     <section className={card} aria-labelledby="recovery-history-title">
       <h2 id="recovery-history-title" className="flex items-center gap-2 text-lg font-black"><History className="h-5 w-5" /> Recovery History</h2>
+      <p className="mt-2 text-sm text-slate-600">Showing up to 200 events per page from the active audit file. The append-only audit and rotated archives remain unchanged.</p>
       {!sorted.length ? <EmptyState className="mt-5" title="No recovery events recorded." /> : (
         <DataTableContainer className="mt-5"><DataTable><DataTableHeader><DataTableRow><DataTableHead>Timestamp</DataTableHead><DataTableHead>Event</DataTableHead><DataTableHead>Backup</DataTableHead><DataTableHead>Actor</DataTableHead><DataTableHead>Result</DataTableHead><DataTableHead>Reference</DataTableHead></DataTableRow></DataTableHeader><DataTableBody>{sorted.map((row, index) => <DataTableRow key={`${row.timestamp}-${row.operation_reference_id}-${index}`}><DataTableCell>{row.timestamp || "Unknown"}</DataTableCell><DataTableCell>{row.event || "Unknown"}</DataTableCell><DataTableCell className="max-w-xs break-all font-mono text-xs">{row.filename || "—"}{row.safety_backup_filename ? <span className="block text-blue-700">Safety: {row.safety_backup_filename}</span> : null}</DataTableCell><DataTableCell>{row.actor_display}</DataTableCell><DataTableCell>{row.result || row.safe_reason_code || "Unknown"}</DataTableCell><DataTableCell className="font-mono text-xs">{row.operation_reference_id || "—"}</DataTableCell></DataTableRow>)}</DataTableBody></DataTable></DataTableContainer>
       )}
+      {hasMore && <Button className="mt-4" variant="outline" disabled={loadingMore} onClick={onLoadMore}>{loadingMore ? "Loading older events…" : "Load older events"}</Button>}
     </section>
   );
 }
@@ -558,6 +579,7 @@ export function BackupHistoryPanel({ rows }: { rows: BackupExecutionHistory[] })
 }
 
 export default function BackupManagement() {
+  const queryClient = useQueryClient();
   const statusQuery = useBackupStatus();
   const backupsQuery = useBackupList();
   const schedulerQuery = useBackupScheduler();
@@ -573,20 +595,20 @@ export default function BackupManagement() {
   const status = statusQuery.data;
   const busy = createMutation.isPending || deleteMutation.isPending;
   const error = statusQuery.error || backupsQuery.error || schedulerQuery.error || backupHistoryQuery.error || recoveryHistoryQuery.error || createMutation.error || deleteMutation.error;
-  const retry = () => void Promise.all([statusQuery.refetch(), backupsQuery.refetch(), schedulerQuery.refetch(), backupHistoryQuery.refetch(), recoveryHistoryQuery.refetch()]);
+  const retry = () => void Promise.all([statusQuery.refetch(), backupsQuery.refetch(), schedulerQuery.refetch(), backupHistoryQuery.refetch(), queryClient.resetQueries({ queryKey: queryKeys.backups.recoveryHistory })]);
 
   return (
     <div className="space-y-7 pb-12">
       <PageHeader title="Backup & Recovery" description="Verified SQLite disaster recovery for this OperatorOS installation." actions={<><Link to="/settings" className={buttonVariants({ variant: "outline" })}><ArrowLeft /> Settings</Link><Button size="lg" onClick={() => void createMutation.mutateAsync().then(setCreatedBackup)} disabled={busy || status?.restore_in_progress}>{createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />} {createMutation.isPending ? "Creating verified backup…" : "Create verified backup"}</Button></>} />
       <Alert variant="warning"><AlertTriangle className="mr-2 inline h-5 w-5" /><strong>Complete recovery uses SQLite backups.</strong> CSV remains a separate data-exchange workflow and cannot restore OperatorOS.</Alert>
       {error && <ErrorState title="Backup & Recovery could not be loaded" description={safeError(error)}><Button variant="outline" className="mt-4" onClick={retry}><RefreshCw className="h-4 w-4" /> Retry</Button></ErrorState>}
-      {result && <Alert variant={result.status === "COMPLETED" ? "success" : result.status === "ROLLED_BACK" ? "warning" : "danger"}><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>{result.status}</strong> {result.safe_message}</Alert>}
+      {result && <Alert variant="success"><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>{result.status}</strong> {result.safe_message}</Alert>}
       {createdBackup && <Alert variant="success"><CheckCircle2 className="mr-2 inline h-5 w-5" /><strong>Backup verified:</strong> {createdBackup.filename} · {createdBackup.created_at} · {formatBytes(createdBackup.size)} · checksum {createdBackup.checksum_status || "verified"} · integrity {createdBackup.integrity_status || "ok"} · schema {createdBackup.schema_version}</Alert>}
       {statusQuery.isLoading || backupsQuery.isLoading ? <LoadingState title="Loading backup and recovery status" /> : status ? <>
         <BackupStatusPanel status={status} />
         {schedulerQuery.data && <SchedulerPanel config={schedulerQuery.data} saving={schedulerMutation.isPending} onSave={(value) => void schedulerMutation.mutateAsync(value)} />}
         <BackupList backups={backupsQuery.data || []} onRestore={(backup) => { setSelected(backup); setResult(null); }} onDelete={setDeleteSelected} />
-        <RecoveryHistoryPanel rows={recoveryHistoryQuery.data || []} />
+        <RecoveryHistoryPanel rows={recoveryHistoryQuery.data?.pages.flatMap((page) => page.entries) ?? []} hasMore={Boolean(recoveryHistoryQuery.hasNextPage)} loadingMore={recoveryHistoryQuery.isFetchingNextPage} onLoadMore={() => void recoveryHistoryQuery.fetchNextPage()} />
         <BackupHistoryPanel rows={backupHistoryQuery.data || []} />
       </> : !error && <EmptyState title="Backup status is unavailable." />}
       {selected && status && <RestoreWizard backup={selected} destructiveEnabled={status.destructive_operations_enabled} onClose={() => setSelected(null)} onCompleted={setResult} />}

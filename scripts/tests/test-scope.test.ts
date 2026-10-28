@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, scopeSummary } from "../test-scope";
@@ -70,11 +70,113 @@ describe("test scope decisions", () => {
       "reason=docs/guide.md -> DOCUMENTATION_ONLY",
     ].join("\n"));
   });
-  test("release gates, double-run policy, and protected-path isolation remain", () => {
+  test("release gates and double-run policy remain", () => {
     const runner = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
     const release = runner.split("  release)")[1]!;
     for (const required of ["fresh-db-parity", "backend_full", "bun run test", "bun run build", "e2e-validate", "e2e-smoke", "e2e-clean", "passes=2", "schema_sensitive", "RELEASE_DOUBLE_BACKEND"]) expect(release).toContain(required);
-    expect(runner).toContain("unset PROTECTED_DB_PATH"); expect(runner).not.toContain("protected_db_snapshot.py");
+    expect(runner).toContain("test-tier-environment.sh"); expect(runner).not.toContain("protected_db_snapshot.py");
+  });
+  test("test tiers use a nonblocking per-worktree flock", () => {
+    const runner = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
+    expect(runner).toContain('exec {tier_lock_fd}<"$repo/.git"');
+    expect(runner).toContain('flock -n -x "$tier_lock_fd"');
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-lock-")); roots.push(root);
+    mkdirSync(join(root, ".git"));
+    const result = Bun.spawnSync(["bash", "-c", [
+      'exec {lock_fd}<"$1/.git"',
+      'flock -n -x "$lock_fd"',
+      'flock -n -x "$1/.git" -c true',
+    ].join("; "), "test", root], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
+    expect(result.exitCode).toBe(1);
+  });
+  test("a second test tier acquires the worktree lock after the first exits", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-lock-release-")); roots.push(root);
+    mkdirSync(join(root, ".git"));
+    const first = Bun.spawnSync(["bash", "-c", 'exec {lock_fd}<"$1/.git"; flock -n -x "$lock_fd"', "test", root], {
+      env: cleanEnv, stdout: "pipe", stderr: "pipe",
+    });
+    expect(first.exitCode).toBe(0);
+    const second = Bun.spawnSync(["bash", "-c", 'exec {lock_fd}<"$1/.git"; flock -n -x "$lock_fd"', "test", root], {
+      env: cleanEnv, stdout: "pipe", stderr: "pipe",
+    });
+    expect(second.exitCode).toBe(0);
+  });
+  test("test-tier isolation removes inherited data paths and redirects fallback data", () => {
+    const helper = join(repository, "scripts/test-tier-environment.sh");
+    const result = Bun.spawnSync(["bash", "-c", [
+      'source "$1"',
+      'operatoros_test_tier_isolate_environment "$2"',
+      'for name in DATABASE_URL DATABASE_PATH OPERATOROS_DATA_DIR OPERATOROS_DEV_DATA_DIR PROTECTED_DB_PATH BACKUP_DIR; do [[ -v "$name" ]] && printf "leaked=%s\\n" "$name"; done',
+      'printf "xdg=%s\\n" "$XDG_DATA_HOME"',
+    ].join("; "), "test", helper, "/tmp/operatoros-test-tier-synthetic/xdg"], {
+      env: {
+        ...cleanEnv,
+        XDG_DATA_HOME: "/tmp/operatoros-test-tier-ambient/xdg",
+        DATABASE_URL: "sqlite:////synthetic-canary/should-not-be-opened.sqlite",
+        DATABASE_PATH: "/synthetic-canary/should-not-be-opened.sqlite",
+        OPERATOROS_DATA_DIR: "/synthetic-canary/data",
+        OPERATOROS_DEV_DATA_DIR: "/synthetic-canary/legacy-data",
+        PROTECTED_DB_PATH: "/synthetic-canary/protected.sqlite",
+        BACKUP_DIR: "/synthetic-canary/backups",
+      }, stdout: "pipe", stderr: "pipe",
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr.toString()).toBe("");
+    expect(result.stdout.toString()).toBe("xdg=/tmp/operatoros-test-tier-synthetic/xdg\n");
+  });
+  test("test-tier rejects unknown tiers before creating test resources", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-runner-")); roots.push(root);
+    const temporary = join(root, "tmp"); mkdirSync(temporary);
+    const result = Bun.spawnSync(["bash", join(repository, "scripts/test-tier.sh"), "invalid-tier"], {
+      cwd: repository,
+      env: { ...cleanEnv, TMPDIR: temporary, DATABASE_URL: "sqlite:////synthetic-canary/should-not-be-opened.sqlite", OPERATOROS_DATA_DIR: "/synthetic-canary/data" },
+      stdout: "pipe", stderr: "pipe", timeout: 10_000,
+    });
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr.toString()).toContain("unknown tier: invalid-tier");
+    expect(readdirSync(temporary)).toEqual([]);
+  });
+  test("test-tier cleanup preserves the failure code and cannot escape its temporary parent", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-cleanup-")); roots.push(root);
+    const parent = join(root, "tmp"); mkdirSync(parent);
+    const testRoot = mkdtempSync(join(parent, "operatoros-test-tier."));
+    writeFileSync(join(testRoot, "scope.json"), "synthetic\n");
+    writeFileSync(join(parent, "preserve-canary"), "synthetic sibling\n");
+    const helper = join(repository, "scripts/test-tier-environment.sh");
+    const cleanup = Bun.spawnSync(["bash", "-c", [
+      'source "$1"',
+      'operatoros_test_tier_cleanup "$2" "$3" 23',
+    ].join("; "), "test", helper, testRoot, parent], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
+    expect(cleanup.exitCode).toBe(23);
+    expect(existsSync(testRoot)).toBe(false);
+    expect(readFileSync(join(parent, "preserve-canary"), "utf8")).toBe("synthetic sibling\n");
+
+    const outside = join(root, "outside"); mkdirSync(outside);
+    writeFileSync(join(outside, "preserve-canary"), "outside synthetic\n");
+    const rejected = Bun.spawnSync(["bash", "-c", [
+      'source "$1"',
+      'operatoros_test_tier_cleanup "$2" "$3" 23',
+    ].join("; "), "test", helper, `${parent}/operatoros-test-tier.fake/../../outside`, parent], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
+    expect(rejected.exitCode).toBe(1);
+    expect(rejected.stderr.toString()).toContain("Refusing unexpected test-tier cleanup path.");
+    expect(readFileSync(join(outside, "preserve-canary"), "utf8")).toBe("outside synthetic\n");
+  });
+  test("test-tier cleanup rejects directory symlinks without deleting their target", () => {
+    const root = mkdtempSync(join(tmpdir(), "operatoros-test-tier-symlink-")); roots.push(root);
+    const parent = join(root, "tmp"); mkdirSync(parent);
+    const external = mkdtempSync(join(tmpdir(), "operatoros-test-tier-external.")); roots.push(external);
+    writeFileSync(join(external, "preserve-canary"), "external synthetic\n");
+    const link = join(parent, "operatoros-test-tier.symlink"); symlinkSync(external, link, "dir");
+    const helper = join(repository, "scripts/test-tier-environment.sh");
+    const rejected = Bun.spawnSync(["bash", "-c", [
+      'source "$1"',
+      'operatoros_test_tier_cleanup "$2" "$3" 23',
+    ].join("; "), "test", helper, link, parent], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });
+    expect(rejected.exitCode).toBe(1);
+    expect(rejected.stderr.toString()).toContain("Refusing unexpected test-tier cleanup path.");
+    expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    expect(existsSync(external)).toBe(true);
+    expect(readFileSync(join(external, "preserve-canary"), "utf8")).toBe("external synthetic\n");
   });
   test("release scenario manifest matches browser tags without fixed sleeps", () => {
     const manifest = JSON.parse(readFileSync(join(repository, "e2e/release-scenarios.json"), "utf8")) as { groups: string[] };
@@ -137,13 +239,19 @@ describe("E2E workflow scope selection", () => {
     ["apps/web/src/change.tsx", true],
     ["packages/contracts/src/change.ts", true],
     ["bun.lock", true],
-    [".github/workflows/e2e-full.yml", true],
+    [".github/workflows/ci.yml", true],
     [".github/actions/setup-bun/action.yml", true],
     ["unclassified.input", true],
     ["docs/example.json", true],
-    ["docs/guide.md", false],
-    [".github/dependabot.yml", false],
-    ["hk.pkl", false],
+    ["docs/guide.md", true],
+    [".github/dependabot.yml", true],
+    ["hk.pkl", true],
+    ["scripts/test-scope.ts", true],
+    ["scripts/test-tier.sh", true],
+    ["scripts/test-tier-environment.sh", true],
+    ["scripts/tests/test-scope.test.ts", true],
+    [".github/scripts/select-e2e-scope.sh", true],
+    [".github/scripts/validate-e2e-result.sh", true],
   ])("%s selects E2E=%s", (path, expected) => {
     const repo = fixture();
     const base = git(repo, "rev-parse", "HEAD");
@@ -163,6 +271,52 @@ describe("E2E workflow scope selection", () => {
     const selected = runSelector(repo, base);
     expect(selected.result.exitCode).toBe(0);
     expect(selected.output).toContain("run-e2e=true");
+  });
+
+  test("E2E aggregate rejects skipped, failed, cancelled, and missing runs", () => {
+    const aggregate = join(repository, ".github/scripts/validate-e2e-result.sh");
+    const run = (scope: string, selected: string, e2e: string) => Bun.spawnSync(["bash", aggregate], {
+      env: { ...cleanEnv, E2E_SCOPE_RESULT: scope, E2E_SELECTED: selected, E2E_JOB_RESULT: e2e },
+      stdout: "pipe", stderr: "pipe",
+    });
+    expect(run("success", "true", "success").exitCode).toBe(0);
+    for (const result of [
+      run("failure", "true", "success"),
+      run("success", "true", "failure"),
+      run("success", "true", "cancelled"),
+      run("success", "true", ""),
+      run("success", "false", "skipped"),
+      run("success", "true", "skipped"),
+      run("success", "false", "success"),
+      run("success", "unknown", "skipped"),
+    ]) expect(result.exitCode).toBe(1);
+  });
+
+  test("mandatory E2E runs for main pushes and cannot skip by path selection", () => {
+    const workflow = Bun.YAML.parse(readFileSync(join(repository, ".github/workflows/ci.yml"), "utf8")) as {
+      on: { push: { branches: string[] }; pull_request: { branches: string[] }; merge_group: unknown };
+      jobs: Record<string, { name?: string; if?: string; needs?: string[]; steps?: { run?: string }[] }>;
+    };
+    expect(workflow.on.push.branches).toContain("main");
+    expect(workflow.on.pull_request).toBeDefined();
+    expect(workflow.on.merge_group).toBeDefined();
+    expect(workflow.jobs["e2e-full"]?.name).toBe("E2E full regression");
+    expect(workflow.jobs["e2e-full"]?.if).toBe("github.event_name != 'schedule'");
+    expect(workflow.jobs["e2e-full"]?.needs).toBeUndefined();
+    expect(workflow.jobs["e2e-full"]?.steps?.some((step) => step.run === "timeout 900 make e2e-smoke")).toBe(true);
+    expect(workflow.jobs.api?.steps?.some((step) => step.run?.includes("bun run turbo:check"))).toBe(true);
+    expect(workflow.jobs.api?.steps?.some((step) => step.run === "bun run test:security")).toBe(false);
+    expect(workflow.jobs.audit?.if).toBe("github.event.schedule == '17 3 * * 1'");
+    expect(workflow.jobs.result?.if).toBe("always() && github.event_name != 'schedule'");
+    expect(workflow.jobs.result?.needs).toEqual(["changes", "e2e-full"]);
+  });
+
+  test("workflow concurrency cancels only superseded pull-request runs", () => {
+    for (const workflow of ["ci.yml"]) {
+      const source = readFileSync(join(repository, ".github/workflows", workflow), "utf8");
+      expect(source).toContain("group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}");
+      expect(source).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
+    }
   });
 
   test.each([

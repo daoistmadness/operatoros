@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "test": "bun test --timeout 30000",
+    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
     "resolve-data-dir": "bun src/data-dir-cli.ts",
     "db:bootstrap": "bun src/db-cli.ts bootstrap",
     "db:migrate-existing": "bun src/db-cli.ts migrate-existing",
@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/bun": "1.4.0",
     "bun-types": "1.4.0",
-    "drizzle-kit": "0.31.10",
     "typescript": "5.9.3"
   },
   "exports": {

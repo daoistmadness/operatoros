@@ -14,6 +14,7 @@ Object.assign(globalThis, {
   Document: browser.Document,
   HTMLElement: browser.HTMLElement,
   Node: browser.Node,
+  MutationObserver: browser.MutationObserver,
   Event: browser.Event,
   KeyboardEvent: browser.KeyboardEvent,
   requestAnimationFrame: browser.requestAnimationFrame.bind(browser),

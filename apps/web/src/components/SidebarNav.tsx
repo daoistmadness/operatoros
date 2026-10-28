@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { AuthUser } from '../api/auth';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
 import {
   Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Edit3, FileClock, FileText, GraduationCap, LayoutDashboard,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
+import { isApiError } from '../lib/api/errors';
 import { getServerStatus } from '../lib/api/endpoints';
 import { useAuth } from '../context/AuthContext';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
@@ -94,6 +95,8 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
       { name: 'HEB Overrides', path: '/config/heb', icon: CalendarDays },
       { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck },
       { name: 'Employee Directory', path: '/staff', icon: UsersIcon },
+      { name: 'Staff Monthly Activity', path: '/staff/monthly-activities', icon: CalendarCheck },
+      { name: 'Monthly UPP Reports', path: '/reports/upp', icon: FileText },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
     ],
   },
@@ -151,12 +154,20 @@ type SidebarNavProps = {
 
 type ServerStatus = 'checking' | 'online' | 'offline';
 
+function logoutFailureMessage(error: unknown): string {
+  if (isApiError(error) && (error.kind === 'network' || error.kind === 'timeout')) {
+    return 'Sign out could not be confirmed. Check the connection and try again. Your session may still be active.';
+  }
+  return 'Sign out could not be confirmed. Your session may still be active. Try again.';
+}
+
 function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleCollapsed }: SidebarNavProps) {
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
   const { user, can, logout } = useAuth();
   const { isSingleUserMode } = useDeploymentMode();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const groups = useMemo(() => visibleNavigationGroups(user, can, isSingleUserMode), [user, can, isSingleUserMode]);
   const activeGroupId = groups.find((group) => group.items.some((item) => navigationItemIsActive(item, location.pathname)))?.id;
   const [expanded, setExpanded] = useState(() => new Set(NAV_GROUPS.map((group) => group.id)));
@@ -186,8 +197,15 @@ function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleColla
 
   const handleLogout = async () => {
     if (loggingOut) return;
+    setLogoutError('');
     setLoggingOut(true);
-    try { await logout(); } finally { setLoggingOut(false); }
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(logoutFailureMessage(error));
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -235,6 +253,7 @@ function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleColla
         <div className={cn('rounded-xl border border-slate-200 bg-slate-50 p-3', collapsed && 'text-center')}>
           <p className={cn('truncate text-sm font-black text-slate-800', collapsed && 'sr-only')}>{user?.username}</p>
           {!collapsed && <Badge className="mt-1" variant="default">{user?.role}</Badge>}
+          {logoutError && <p role="alert" className={cn('mt-2 rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-left text-xs font-semibold text-rose-700', collapsed && 'sr-only')}>{logoutError}</p>}
           <Button aria-label={loggingOut ? 'Signing out' : 'Logout'} variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut} className={cn('mt-2 text-xs hover:border-rose-200 hover:text-rose-600', collapsed ? 'w-11 px-0' : 'w-full')}><LogOut aria-hidden="true" size={14} /><span className={collapsed ? 'sr-only' : undefined}>{loggingOut ? 'Signing out…' : 'Logout'}</span></Button>
         </div>
         <div className={cn('mt-2 flex min-h-10 items-center rounded-xl border border-slate-100 bg-slate-50 px-3', collapsed ? 'justify-center' : 'justify-between')} title={collapsed ? `Server ${serverStatus}` : undefined}>

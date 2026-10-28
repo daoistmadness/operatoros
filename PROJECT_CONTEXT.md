@@ -30,9 +30,10 @@ architecture and operations documents for detailed procedures.
   CONFLICT, and coverage; they do not equate declared with observed or
   fabricate lateness.
 - `packages/db` owns Bun/TypeScript fresh bootstrap, explicit existing-database
-  migration, schema validation, and SQLite lifecycle. The current target is
-  S4.7; migration accepts only the approved S4.6 Variant A and Variant B
-  physical fingerprints. Normal startup validates and never migrates.
+  migration, schema validation, and SQLite lifecycle. At this 2026-10-01
+  snapshot, S4.7 was the current target; migration accepted only the approved
+  S4.6 Variant A and Variant B physical fingerprints. Normal startup validates
+  and never migrates.
 - The persistent development database is distinct from the protected
   operational database. The latter remains S4.3 and needs a separately
   authorized controlled migration. Follow the database operations runbook for
@@ -63,7 +64,7 @@ architecture and operations documents for detailed procedures.
 
 Bun is the runtime, package manager, and workspace resolver. The root
 `bun.lock` is the lockfile authority. Mise manages tool versions. HK manages
-Git lifecycle checks. Turbo manages tasks and cache. Mise pins Bun `1.4.2`,
+Git lifecycle checks. Turbo manages tasks and cache. Mise pins Bun `1.4.4`,
 hk `1.56.1`, and Python `3.12.3`.
 
 ## Main user groups and domains
@@ -147,8 +148,9 @@ assigned-class export routes). Authorization denials are audited to
   never use it.
 - Ordinary startup validates an existing database and never creates or
   migrates it. Use `bun run db:bootstrap --data-dir <empty-directory>` for a
-  fresh S4.7 database. Use `bun run db:migrate-existing --data-dir
-  <directory>` only for an explicitly approved existing source schema. The
+  fresh S4.8 (`20261002_s48`) database. Use
+  `bun run db:migrate-existing --data-dir <directory>` only for an explicitly
+  approved existing source schema. The
   persistent development database migration uses the locked wrapper in
   [DATABASE_OPERATIONS.md](docs/operations/DATABASE_OPERATIONS.md).
 - The persistent development database lives under the canonical data root and

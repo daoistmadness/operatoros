@@ -9,6 +9,8 @@ export interface FirstAdminInput {
   username: string;
   password: string;
   password_confirmation: string;
+  /** Sent only when the server requires it (`setup_token_required`). */
+  setup_token?: string;
 }
 
 export interface ProvisionedAdmin {

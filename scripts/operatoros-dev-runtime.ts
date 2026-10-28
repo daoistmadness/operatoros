@@ -17,8 +17,115 @@ const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 const contained = (path: string, root: string) => { const value = relative(root, path); return value === "" || (value !== ".." && !value.startsWith("../") && !isAbsolute(value)); };
 const now = () => new Date().toISOString();
 const canonical = (path: string) => existsSync(path) ? realpathSync(path) : resolve(path);
-const gitEnv = { ...process.env };
-for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete gitEnv[key];
+
+export function parseTailnetOrigin(raw: string): { origin: string; hostname: string; port: number } {
+  const match = /^https:\/\/((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+ts\.net)(?::([0-9]+))?$/i.exec(raw);
+  if (!match || match[0] !== raw) throw new Error("TAILNET_ORIGIN_INVALID");
+  const hostname = match[1]!.toLowerCase();
+  const port = match[2] ? Number(match[2]) : 8443;
+  if (hostname.length > 253 || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error("TAILNET_ORIGIN_INVALID");
+  try {
+    const parsed = new URL(`https://${hostname}:${port}`);
+    if (parsed.hostname !== hostname || (port === 443 ? parsed.port !== "" : Number(parsed.port) !== port)) throw new Error();
+  } catch { throw new Error("TAILNET_ORIGIN_INVALID"); }
+  return { origin: port === 443 ? `https://${hostname}` : `https://${hostname}:${port}`, hostname, port };
+}
+
+function property(value: unknown, key: string): unknown {
+  return typeof value === "object" && value !== null ? Reflect.get(value, key) : undefined;
+}
+
+function isJsonObject(value: unknown): value is object {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasOwn(value: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
+function funnelEnabledFor(config: unknown, endpoint: string, depth = 0): boolean {
+  if (!isJsonObject(config) || depth > 4) throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+  const fields = ["TCP", "Web", "Services", "AllowFunnel", "Foreground"];
+  if (!fields.some((field) => hasOwn(config, field))) throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+  for (const field of fields) {
+    if (hasOwn(config, field) && !isJsonObject(property(config, field))) {
+      throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+    }
+  }
+
+  // Tailscale omits an empty AllowFunnel map; callers validate the full route snapshot first.
+  if (hasOwn(config, "AllowFunnel")) {
+    const allowFunnel = property(config, "AllowFunnel");
+    if (!isJsonObject(allowFunnel)) throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+    const selected = property(allowFunnel, endpoint);
+    if (hasOwn(allowFunnel, endpoint) && typeof selected !== "boolean") {
+      throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+    }
+    if (selected === true) return true;
+  }
+
+  if (hasOwn(config, "Foreground")) {
+    const foreground = property(config, "Foreground");
+    if (!isJsonObject(foreground)) throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+    for (const session of Reflect.ownKeys(foreground)) {
+      if (typeof session !== "string") throw new Error("TAILSCALE_FUNNEL_STATUS_INCOMPLETE");
+      if (funnelEnabledFor(property(foreground, session), endpoint, depth + 1)) return true;
+    }
+  }
+  return false;
+}
+
+function verifyHttpsRoute(status: unknown, hostname: string, httpsPort: number, frontendPort: number, source: "SERVE" | "FUNNEL"): void {
+  const endpointKey = `${hostname}:${httpsPort}`;
+  const tcp = property(status, "TCP");
+  const web = property(status, "Web");
+  const portConfig = property(tcp, String(httpsPort));
+  const endpoint = property(web, endpointKey);
+  if (!isJsonObject(status) || !isJsonObject(tcp) || !isJsonObject(web) || !isJsonObject(portConfig)
+    || property(portConfig, "HTTPS") !== true || !isJsonObject(endpoint)) {
+    throw new Error(`TAILSCALE_${source}_STATUS_INCOMPLETE`);
+  }
+  const handlers = property(endpoint, "Handlers");
+  const rootHandler = property(handlers, "/");
+  const target = property(rootHandler, "Proxy");
+  const expected = `http://127.0.0.1:${frontendPort}`;
+  if (target !== expected) throw new Error(`TAILSCALE_SERVE_TARGET_MISMATCH: expected ${expected}`);
+}
+
+function verifyTailnetServe(hostname: string, httpsPort: number, frontendPort: number): void {
+  const status = command(["tailscale", "status", "--json"]);
+  if (!status) throw new Error("TAILSCALE_UNAVAILABLE: tailscale status --json failed");
+  let statusData: unknown;
+  try { statusData = JSON.parse(status); } catch { throw new Error("TAILSCALE_STATUS_INVALID"); }
+  const self = property(statusData, "Self");
+  const localHostname = property(self, "DNSName");
+  if (property(self, "Online") !== true || typeof localHostname !== "string") throw new Error("TAILSCALE_NODE_OFFLINE");
+  if (localHostname.replace(/\.$/, "").toLowerCase() !== hostname) throw new Error("TAILNET_HOST_NOT_THIS_NODE");
+
+  const serveStatus = command(["tailscale", "serve", "status", "--json"]);
+  if (!serveStatus) throw new Error("TAILSCALE_SERVE_STATUS_FAILED");
+  let serveData: unknown;
+  try { serveData = JSON.parse(serveStatus); } catch { throw new Error("TAILSCALE_SERVE_STATUS_INVALID"); }
+  verifyHttpsRoute(serveData, hostname, httpsPort, frontendPort, "SERVE");
+
+  const funnelStatus = command(["tailscale", "funnel", "status", "--json"]);
+  if (!funnelStatus) throw new Error("TAILSCALE_FUNNEL_STATUS_FAILED");
+  let funnelData: unknown;
+  try { funnelData = JSON.parse(funnelStatus); } catch { throw new Error("TAILSCALE_FUNNEL_STATUS_INVALID"); }
+  verifyHttpsRoute(funnelData, hostname, httpsPort, frontendPort, "FUNNEL");
+  if (funnelEnabledFor(serveData, `${hostname}:${httpsPort}`)
+    || funnelEnabledFor(funnelData, `${hostname}:${httpsPort}`)) {
+    throw new Error(`TAILNET_FUNNEL_NOT_ALLOWED: ${hostname}:${httpsPort}`);
+  }
+}
+
+let gitEnv: typeof process.env | undefined;
+function sanitizedGitEnv() {
+  if (gitEnv) return gitEnv;
+  const environment = { ...process.env };
+  for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete environment[key];
+  return gitEnv = environment;
+}
 
 function command(parts: string[], env = process.env): string | undefined {
   try {
@@ -26,7 +133,7 @@ function command(parts: string[], env = process.env): string | undefined {
     return result.exitCode === 0 ? result.stdout.toString().trim() : undefined;
   } catch { return undefined; }
 }
-function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args], gitEnv); }
+function git(repo: string, ...args: string[]): string | undefined { return command(["git", "-C", repo, ...args], sanitizedGitEnv()); }
 function commonDir(repo: string): string {
   const value = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir");
   if (!value) throw new Error("SESSION_REGISTRY_UNAVAILABLE");
@@ -252,6 +359,15 @@ function finalize(runtime: string, repo: string, session: string): void {
 }
 
 async function main(): Promise<void> {
+  if (action === "parse-tailnet-origin") {
+    const parsed = parseTailnetOrigin(required("origin"));
+    console.log(`${parsed.origin}\t${parsed.hostname}\t${parsed.port}`);
+    return;
+  }
+  if (action === "verify-tailnet-serve") {
+    verifyTailnetServe(required("host"), number("https-port"), number("frontend-port"));
+    return;
+  }
   if (action === "primary-path") return void console.log(primaryPath());
   if (action === "worktree-role") { const repo = required("repo"); return void console.log((existsSync(repo) ? realpathSync(repo) : resolve(repo)) === primaryPath() ? "PRIMARY" : "SECONDARY"); }
   if (action === "random-secret") return void console.log(randomBytes(48).toString("base64url"));
