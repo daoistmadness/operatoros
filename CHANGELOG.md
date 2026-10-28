@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Retry transient mise tool downloads and cache checksum-verified archives in CI.
 - Run changelog, Markdown, and agent-skill maintainer checks before API and browser E2E jobs, with matching local pre-push checks.
 - Migrate web routes to file-based TanStack Router while preserving authorization and legacy route behavior (#335).
 - Permitted TanStack Router for web routing in AGENTS.md (#334).

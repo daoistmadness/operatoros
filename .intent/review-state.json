@@ -2919,15 +2919,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ebb75dabea904efd3eb0de706a12300274f8c69cf892f6bc5b2affd05940e493",
+      "fingerprint": "c448402e6c769e2578cfe593bdc8acfc7526dad745b6b4d8fa661d7d36e87b8e",
       "snapshot": {
-        "CHANGELOG.md": "7d4b8f804b98565a14d7ee6b3f53626d37f161e0b0794ffdf02f50225c9039e9"
+        "CHANGELOG.md": "84e94645286d0abf988efaadf904589529e72ced455ccb3401966570e8a5e604"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "aeb928e9e87f3a0e8b40bd293b443d0c6717bc0a",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "This CI toolchain changelog entry does not change agent skills, source guidance, or planning artifacts.",
       "evidence": [
-        "Changed: CHANGELOG.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: CHANGELOG.md at aeb928e9e87f3a0e8b40bd293b443d0c6717bc0a"
       ]
     },
     "source:COMMANDS.md": {
