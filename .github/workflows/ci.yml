@@ -207,13 +207,16 @@ jobs:
         env:
           CHANGELOG_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: bun .github/scripts/check-changelog.ts
-      - name: Validate agent skills and package tarball
+      - name: Validate agent skills
+        working-directory: ${{ github.workspace }}
+        run: bun run skills:validate
+      - name: Check agent skill maintainer review
+        working-directory: ${{ github.workspace }}
+        run: bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
+      - name: Verify agent skills package tarball and consumer
         working-directory: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          bun run skills:validate
-          bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
-
           package_dir="$RUNNER_TEMP/operatoros-agent-skills"
           mkdir -p "$package_dir"
           cd packages/agent-skills
