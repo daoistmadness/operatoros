@@ -836,15 +836,15 @@
       ]
     },
     "source:e2e/smoke/web/phase11-verification.spec.ts": {
-      "fingerprint": "52b09d336dadf7c2e62eadde959b4f29790276d58059d924303df55fefa756b4",
+      "fingerprint": "fb643d1109da909c89122256d9625ae4d6ee60d16197b67db180f0917899777f",
       "snapshot": {
-        "e2e/smoke/web/phase11-verification.spec.ts": "93b2ec4c7fcca0c3759aabe66b8dffa7c7630e334af2d02d1f9090e38d264c45"
+        "e2e/smoke/web/phase11-verification.spec.ts": "190d41f3c6e4061e4fe41dbd3323dd0dba2c0dbf8afc120b89092f2b35a08f81"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "872c8e1e3dd0edc08f7852a76279fca4f449ffec",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "The only changed path is an E2E assertion that waits for GradeMatrix's existing save completion state; it does not change agent-skill guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/phase11-verification.spec.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: e2e/smoke/web/phase11-verification.spec.ts at 872c8e1e3dd0edc08f7852a76279fca4f449ffec"
       ]
     },
     "source:apps/api/src/security/backup-crypto.ts": {
