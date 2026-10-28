@@ -44,10 +44,14 @@ jobs:
       - name: Fetch base for skill freshness check
         env:
           INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}
+          INTENT_FALLBACK_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          if [[ "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
+            INTENT_BASE_SHA="$INTENT_FALLBACK_SHA"
+          fi
           if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
-            echo "A valid base commit is required for skill freshness checks." >&2
+            echo "A valid base or fallback commit is required for skill freshness checks." >&2
             exit 1
           fi
           git fetch --no-tags origin "$INTENT_BASE_SHA"

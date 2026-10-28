@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, scopeSummary } from "../test-scope";
@@ -329,6 +329,42 @@ describe("E2E workflow scope selection", () => {
     expect(workflow.jobs.audit?.if).toBe("github.event.schedule == '17 3 * * 1'");
     expect(workflow.jobs.result?.if).toBe("always() && github.event_name != 'schedule'");
     expect(workflow.jobs.result?.needs).toEqual(["changes", "e2e-full"]);
+  });
+  test("preflight falls back to the event SHA when a push has a zero before SHA", () => {
+    const workflow = Bun.YAML.parse(readFileSync(join(repository, ".github/workflows/ci.yml"), "utf8")) as {
+      jobs: Record<string, { steps?: { name?: string; env?: Record<string, string>; run?: string }[] }>;
+    };
+    const step = workflow.jobs.preflight?.steps?.find(({ name }) => name === "Fetch base for skill freshness check");
+    const root = mkdtempSync(join(tmpdir(), "operatoros-preflight-base-")); roots.push(root);
+    const bin = join(root, "bin"); mkdirSync(bin);
+    const fetchSha = join(root, "fetch-sha");
+    const fakeGit = join(bin, "git");
+    writeFileSync(fakeGit, [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      'if [[ "$1" == "fetch" ]]; then',
+      '  printf "%s\\n" "$4" > "$CAPTURE_FETCH_SHA"',
+      "  exit 0",
+      "fi",
+      "exit 64",
+    ].join("\n"));
+    chmodSync(fakeGit, 0o755);
+    const fallbackSha = "a".repeat(40);
+    const result = Bun.spawnSync(["bash", "-c", step?.run ?? "exit 1"], {
+      env: {
+        ...cleanEnv,
+        PATH: `${bin}:${cleanEnv.PATH ?? ""}`,
+        INTENT_BASE_SHA: "0".repeat(40),
+        INTENT_FALLBACK_SHA: fallbackSha,
+        CAPTURE_FETCH_SHA: fetchSha,
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    expect(result.exitCode).toBe(0);
+    expect(readFileSync(fetchSha, "utf8").trim()).toBe(fallbackSha);
+    expect(step?.env?.INTENT_BASE_SHA).toBe("${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}");
+    expect(step?.env?.INTENT_FALLBACK_SHA).toBe("${{ github.sha }}");
   });
 
   test("workflow concurrency cancels only superseded pull-request runs", () => {

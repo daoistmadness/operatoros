@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "1dd89f069e13deec2cc25e4799e162d1e99ae1aca87569f266948f73a5d9e6aa",
+      "fingerprint": "75b2f3561051cab94a20dccb10b99877b6a1ca0e1fd371d03f6cd2fc51c52798",
       "snapshot": {
-        ".github/CI.md": "78b31cc622f842c89bfacf346373883e570234bdf093cafad487f19b534068fd",
-        ".github/workflows/ci.yml": "12264d197c4fac4ab310fa67bcb4cd349986cb4e78df88c39cb153940b372654",
+        ".github/CI.md": "b6474dfe02104a4b84127341a78dc2b257da63fd218b12e23a95def89d4dda16",
+        ".github/workflows/ci.yml": "956ece846db2f0b2d1009da27453c08d747266318964a2515cb58aa854397744",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "a697927dff83115812364b86e4925766dcf9af57d00e43045c8ec3b40561b1f8",
@@ -44,21 +44,21 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
+      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
       "outcome": "no-change",
-      "reason": "The workflow and docs now run the same fast-check order as the local pre-push command. Elysia task guidance, supported APIs, and references remain accurate.",
+      "reason": "The zero-before fallback changes only CI comparison-base selection and the CI reference sentence. Elysia APIs and the installed task guidance are unaffected.",
       "evidence": [
-        ".github/CI.md",
         ".github/workflows/ci.yml",
+        ".github/CI.md",
         "packages/agent-skills/skills/elysiajs/SKILL.md",
-        "packages/agent-skills/docs/elysiajs.md"
+        "apps/api/package.json"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "57794040452be853cb899c41b6fc26dbbc4fd97f30c7600fab633a508637d630",
+      "fingerprint": "3d1e6806855d565a9ff93a7ba284b2d65d107fabcef9fb424c5de8c5f5be7d72",
       "snapshot": {
-        ".github/CI.md": "78b31cc622f842c89bfacf346373883e570234bdf093cafad487f19b534068fd",
-        ".github/workflows/ci.yml": "12264d197c4fac4ab310fa67bcb4cd349986cb4e78df88c39cb153940b372654",
+        ".github/CI.md": "b6474dfe02104a4b84127341a78dc2b257da63fd218b12e23a95def89d4dda16",
+        ".github/workflows/ci.yml": "956ece846db2f0b2d1009da27453c08d747266318964a2515cb58aa854397744",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -99,14 +99,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "b8f0f83b4a0d184752ddd2aff4e13f1ed8b66d83",
+      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
       "outcome": "no-change",
-      "reason": "The existing planning record already assigns these checks to preflight. Their order does not change skill scope, source mapping, or the superseded frontend placement decision.",
+      "reason": "The planning record already assigns the fast checks to preflight. The fallback handles first-push SHA selection and adds no skill tasks or source mappings.",
       "evidence": [
-        "_artifacts/domain_map.yaml",
         "_artifacts/skill_spec.md",
-        "_artifacts/skill_tree.yaml",
-        ".github/CI.md",
         ".github/workflows/ci.yml"
       ]
     },
@@ -7038,13 +7035,13 @@
       ]
     },
     "source:scripts/tests/test-scope.test.ts": {
-      "fingerprint": "562398f1b798f77053e10c5a0d9809c8f1a32a68227b368888174c81cd7ed00d",
+      "fingerprint": "ff9aa78efb87f93d0aff38952edb9e88ccb8a1111ad0e118c62d3f4abb31d0f0",
       "snapshot": {
-        "scripts/tests/test-scope.test.ts": "1e02d69afb1f4baeba272a91db741be6b9d141e14bd33e45ea7795fda63ead25"
+        "scripts/tests/test-scope.test.ts": "6ee00f19f2cb53cd5fcd038422eeec3c247956cf4d6fab5b0e29cd10536ca6be"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
       "outcome": "out-of-scope",
-      "reason": "The added assertions cover the GitHub Actions job graph and do not change or document an Elysia task.",
+      "reason": "The added test executes the preflight fetch step and checks that a zero-before push fetches the event SHA. It changes no product behavior or Elysia task guidance.",
       "evidence": [
         "scripts/tests/test-scope.test.ts",
         ".github/workflows/ci.yml"
