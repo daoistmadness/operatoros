@@ -5,7 +5,7 @@ const ROOT_MARKDOWN = new Set([
   "AGENTS.md", "CHANGELOG.md", "COMMANDS.md", "CONTRIBUTING.md", "CONVENTIONS.md",
   "ERRORS.md", "MEMORY.md", "PROJECT_CONTEXT.md", "README.md",
 ]);
-const DOC_SECTIONS = new Set(["architecture", "decisions", "guides", "reference", "runbooks", "session"]);
+const DOC_SECTIONS = new Set(["architecture", "audits", "decisions", "guides", "reference", "runbooks", "session"]);
 const PROTECTED_DOC = "docs/student-data/dapodik-roster-import-design.md";
 const SESSION_LOG = /^docs\/session\/\d{4}-\d{2}-\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
 const SESSION_TEMPLATE = "docs/session/_template.md";

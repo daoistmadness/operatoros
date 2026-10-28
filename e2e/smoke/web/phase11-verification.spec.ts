@@ -77,6 +77,7 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
   await score.fill("88");
   await page.getByRole("button", { name: "Save Ledger Matrix" }).click();
   await expect(page.getByText(/grade line\(s\) saved/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save Ledger Matrix" })).toBeVisible();
   await page.goto("/students");
   const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
   await page.goto(await studentLink.getAttribute("href") as string);

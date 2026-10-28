@@ -89,6 +89,10 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Secret rotation runbook](runbooks/secret-rotation.md).
 - [Ubuntu server deployment and supervision (OperatorOS API)](runbooks/ubuntu-server-deployment.md) — Draft.
 
+## Audits
+
+- [Dependency optimization audit](audits/dependency-optimization.md).
+
 ## Session logs
 
 - [Session logs](session/README.md).
