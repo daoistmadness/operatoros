@@ -33,6 +33,12 @@ test("documentation checkers pass an aligned controlled repository", () => {
   expect(check(f.root, "docs")).toEqual({ code: 0, stdout: "Current developer documentation check: PASS\n", stderr: "" });
   expect(check(f.root, "organization")).toEqual({ code: 0, stdout: "Markdown organization looks valid.\n", stderr: "" });
 });
+test("organization checker accepts an indexed audit page", () => {
+  const f = fixture();
+  f.write("docs/README.md", "# Docs\n\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n[Audit](audits/dependency-optimization.md)\n");
+  f.write("docs/audits/dependency-optimization.md", "---\nstatus: current\nlast_reviewed: 2026-10-28\n---\n\n# Dependency optimization audit\n");
+  expect(check(f.root, "organization")).toEqual({ code: 0, stdout: "Markdown organization looks valid.\n", stderr: "" });
+});
 test("links preserve exclusions, URL/query/fragment handling, image rules, and diagnostic ordering", () => {
   const f = fixture(); f.write("README.md", "[valid](docs/README.md#section?x=1) [query](docs/README.md?x=1#section) [remote](https://example.invalid) [mail](mailto:test@example.invalid) [anchor](#section) [missing](missing.md) ![image](missing.png) ![](empty-alt.png)");
   f.write("PROJECT_CONTEXT.md", "[ignored](missing-context.md)"); f.write("docs/reference/old.md", "[missing historical](missing-historical.md)");

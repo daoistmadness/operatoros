@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # Documentation system
@@ -8,9 +8,10 @@ last_reviewed: 2026-10-26
 ## Decision
 
 Keep maintained project documentation under docs and organize it by reader
-task: architecture, guides, reference, decisions, runbooks, and session logs.
-The documentation index at docs/README.md links to every maintained Markdown
-page. Page names use kebab-case, and each page covers one topic.
+task: architecture, audits, guides, reference, decisions, runbooks, and session
+logs. Audits record evidence-based reviews and measurements. The documentation
+index at docs/README.md links to every maintained Markdown page. Page names use
+kebab-case, and each page covers one topic.
 
 Maintained documentation pages use front matter with status (current, draft, or
 deprecated) and last_reviewed. The protected Dapodik design remains at its

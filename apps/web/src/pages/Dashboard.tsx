@@ -26,7 +26,6 @@ import {
   FileCheck2,
   FileSpreadsheet
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { Card } from "@operatoros/ui/components/card";
 import { cn } from "../lib/cn";
 import { Button, buttonVariants } from "../components/ui/button";
@@ -77,7 +76,6 @@ function formatMonthYearLabel(month: string, year: string): string {
   return `${MONTH_OPTIONS.find((item) => item.value === Number(month))?.label || "Bulan"} ${year}`;
 }
 
-const snappySpring = { type: "spring", stiffness: 400, damping: 30 };
 
 export default function Dashboard() {
   const { user, can } = useAuth();
@@ -250,11 +248,8 @@ export default function Dashboard() {
 
       {/* 2. Alert Banner */}
       {mappingWarning && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }} 
-          animate={{ opacity: 1, y: 0 }}
-          transition={snappySpring}
-          className="bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between shadow-sm gap-4 relative overflow-hidden"
+        <div
+          className="dashboard-warning-enter bg-amber-50 border border-amber-200 text-amber-900 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between shadow-sm gap-4 relative overflow-hidden"
         >
           <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400"></div>
           <div className="flex items-start gap-4 z-10">
@@ -274,7 +269,7 @@ export default function Dashboard() {
           >
             Fix Mapping
           </Button> : <p className="text-sm font-bold text-amber-800">An administrator can update student enrollment.</p>}
-        </motion.div>
+        </div>
       )}
 
       {/* 3. Executive Summary Strip */}
@@ -342,10 +337,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
         {/* Left Card: Rekap Absensi Summary */}
-        <motion.div 
-          whileHover={{ y: -4 }} 
-          transition={snappySpring}
-          className="rounded-2xl border border-border bg-surface p-6 shadow-sm lg:col-span-3 flex flex-col justify-between group"
+        <div
+          className="rounded-2xl border border-border bg-surface p-6 shadow-sm lg:col-span-3 flex flex-col justify-between group motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1"
         >
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -378,13 +371,11 @@ export default function Dashboard() {
               View Detailed Report <ChevronRight size={16} />
             </Link>
           </div>
-        </motion.div>
+        </div>
 
         {/* Right Card: Absence Review Status */}
-        <motion.div 
-          whileHover={{ y: -4 }} 
-          transition={snappySpring}
-          className="rounded-2xl border border-slate-800 p-6 shadow-sm lg:col-span-2 flex flex-col justify-between bg-slate-900 text-white relative overflow-hidden"
+        <div
+          className="rounded-2xl border border-slate-800 p-6 shadow-sm lg:col-span-2 flex flex-col justify-between bg-slate-900 text-white relative overflow-hidden motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1"
         >
           <div className="absolute top-0 right-0 p-32 bg-brand/20 blur-3xl rounded-[9999px] transform translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
           
@@ -417,7 +408,7 @@ export default function Dashboard() {
               Complete Review
             </Link> : <p className="text-sm font-semibold text-slate-300">An administrator manages monthly attendance recaps.</p>}
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* 6. Analytics Charts Section */}

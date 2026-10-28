@@ -21,3 +21,4 @@ Notable user-facing changes are recorded here.
 - Require a strong authentication secret at startup, bound archive extraction, reject stale imports atomically, and batch sensitive roster exports (#333).
 
 ### Removed
+- Remove redundant dependencies and replace simple Dashboard motion with CSS, reducing emitted production JavaScript by 110 kB raw.

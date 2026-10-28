@@ -23,7 +23,7 @@
     "test:contracts": "bun --filter @operatoros/contracts test",
     "test:api": "bun --filter @operatoros/api test",
     "test:db": "bun --filter @operatoros/db test",
-    "typecheck:launcher": "node_modules/@typescript/native/bin/tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --types bun --typeRoots packages/db/node_modules/@types --strict --skipLibCheck scripts/operatoros-dev-runtime.ts",
+    "typecheck:launcher": "node_modules/@typescript/native/bin/tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --types bun-types --typeRoots packages/db/node_modules --strict --skipLibCheck scripts/operatoros-dev-runtime.ts",
     "db:bootstrap": "bun --filter @operatoros/db db:bootstrap",
     "db:migrate-existing": "bun --filter @operatoros/db db:migrate-existing",
     "db:validate": "bun --filter @operatoros/db db:validate",
