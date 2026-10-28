@@ -1,4 +1,6 @@
-import { Link, useParams, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useParams } from '@tanstack/react-router';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import type { ClassOverviewResponse } from "@operatoros/contracts/classes";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
@@ -42,7 +44,7 @@ function QualitySection({ value, link }: { value: AvailableQuality; link: string
 export default function ClassOverview() {
   const { can } = useAuth();
   const allowed = can("view_student");
-  const { id } = useParams();
+  const { id } = useParams({ strict: false });
   const [searchParams, setSearchParams] = useSearchParams();
   const term = (searchParams.get("term") as Term | null) ?? null;
   const dateFrom = searchParams.get("attendance_date_from") ?? "";

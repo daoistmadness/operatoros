@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { AuthUser } from '../api/auth';
-import { Link, useLocation } from 'react-router';
+import { AppLink as Link } from './AppLink';
+import { useLocation } from '@tanstack/react-router';
 import {
   Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
   Edit3, FileClock, FileText, GraduationCap, LayoutDashboard,
@@ -16,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { authenticatedRoutes, type RouteAuthorization } from '../routes/routeDefinitions';
+import { routeAuthorizations, type RouteAuthorization } from '../lib/router/access';
 
 export type NavigationItem = {
   name: string;
@@ -103,9 +104,9 @@ const RAW_NAV_GROUPS: NavigationGroupInput[] = [
 ];
 
 function navigationItem(input: NavigationItemInput): NavigationItem {
-  const route = authenticatedRoutes.find(({ path }) => path === input.path);
-  if (!route) throw new Error(`Navigation item has no authenticated route: ${input.path}`);
-  return { ...input, authorization: route.authorization };
+  const authorization = routeAuthorizations[input.path];
+  if (!authorization) throw new Error(`Navigation item has no authenticated route: ${input.path}`);
+  return { ...input, authorization };
 }
 
 export const NAV_GROUPS: NavigationGroup[] = RAW_NAV_GROUPS.map((group) => ({

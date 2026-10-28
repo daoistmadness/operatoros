@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
 import path from 'node:path';
 
 const rawFrontendPort = process.env.FRONTEND_PORT ?? 5173;
@@ -67,7 +68,14 @@ const apiProxy = Object.fromEntries(['/api', '/health', '/ready', '/openapi'].ma
 export default defineConfig({
   envDir: process.env.OPERATOROS_DISABLE_ENV_FILES === 'true' ? false : undefined,
   resolve: { alias: { '@': path.resolve(process.cwd(), 'src') } },
-  plugins: [tailwindcss(), react()],
+  plugins: [
+    TanStackRouterVite({
+      routeFileIgnorePattern: '\\.test\\.|RouteLoadingFallback|lazyRoute|routeGroups|routeDefinitions|AttendanceCompatibilityRedirect|ReportCompatibilityRedirect|RouteErrorBoundary',
+      generatedRouteTree: './src/routeTree.gen.ts',
+    }),
+    tailwindcss(),
+    react(),
+  ],
   server: {
     host: frontendHost,
     port: frontendPort,

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import type { AttendanceReconciliationQuery, AttendanceReconciliationResponse } from "@operatoros/contracts/analytics";
 import { useReportFilters } from "../hooks/useReportQueries";
 import type { ReportScope } from "../api/reports";

@@ -14,7 +14,7 @@ import {
   ShieldAlert,
   Trash2,
 } from "lucide-react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
 import {
   type BackupEntry,
   type BackupExecutionHistory,

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { Download } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from '@tanstack/react-router';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState, SetupRequiredState } from "../components/common/state-message";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -83,7 +84,7 @@ export default function AttendanceAnalytics() {
   if (!allowed) return <PermissionRestrictedState title="Akses Terbatas" description="Anda tidak memiliki izin untuk melihat analitik kehadiran." />;
   if (filterQuery.isPending || optionsQuery.isPending) return <LoadingState title="Memuat analitik kehadiran" description="Menyiapkan pilihan periode dan data." />;
   if (filterQuery.error || optionsQuery.error) return <ErrorState title="Gagal Memuat Analitik Kehadiran" description="Pilihan analitik tidak dapat dimuat." action={<Button onClick={() => { void filterQuery.refetch(); void optionsQuery.refetch(); }}>Coba Lagi</Button>} />;
-  if (yearOptions.length === 0) return <SetupRequiredState title="Konfigurasi Akademik Diperlukan" description="Tambahkan tahun akademik sebelum membuka analitik kehadiran." action={<Button onClick={() => navigate("/academic-management")}>Buka Pengaturan Akademik</Button>} />;
+  if (yearOptions.length === 0) return <SetupRequiredState title="Konfigurasi Akademik Diperlukan" description="Tambahkan tahun akademik sebelum membuka analitik kehadiran." action={<Button onClick={() => navigate({ to: "/academic-management" })}>Buka Pengaturan Akademik</Button>} />;
   if (!filters) return <ErrorState title="Rentang tanggal tidak valid" description="Pilih tanggal mulai yang tidak melewati tanggal akhir." />;
   const summary = overview.data;
   const statusRows = summary ? Object.entries(STATUS_LABELS).map(([key, label]) => ({ key, label, value: summary.counts[key as keyof typeof summary.counts] })) : [];

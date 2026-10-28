@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { Download } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from '@tanstack/react-router';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState, SetupRequiredState } from "../components/common/state-message";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -52,7 +53,7 @@ export default function AcademicAnalytics() {
   if (!allowed) return <PermissionRestrictedState title="Access restricted" description="You do not have permission to view academic analytics." />;
   if (filterQuery.isPending || options.isPending) return <LoadingState title="Loading academic analytics" description="Preparing academic filters and data." />;
   if (filterQuery.error || options.error) return <ErrorState title="Academic analytics unavailable" description="The academic filter options could not be loaded." action={<Button onClick={() => { void filterQuery.refetch(); void options.refetch(); }}>Try again</Button>} />;
-  if (years.length === 0) return <SetupRequiredState title="Academic setup required" description="Add an academic year before opening academic analytics." action={<Button onClick={() => navigate("/academic-management")}>Open academic setup</Button>} />;
+  if (years.length === 0) return <SetupRequiredState title="Academic setup required" description="Add an academic year before opening academic analytics." action={<Button onClick={() => navigate({ to: "/academic-management" })}>Open academic setup</Button>} />;
   if (!filters) return <LoadingState title="Loading academic analytics" />;
   if (overview.isPending || students.isPending) return <LoadingState title="Calculating academic analytics" description="The server is computing canonical aggregates." />;
   if (overview.error || students.error) return <ErrorState title="Academic analytics unavailable" description="The server could not calculate this scope." action={<Button onClick={() => { void overview.refetch(); void students.refetch(); }}>Try again</Button>} />;

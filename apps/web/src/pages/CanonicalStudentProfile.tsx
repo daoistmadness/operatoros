@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useParams } from '@tanstack/react-router';
 import { ArrowLeft, Edit, Link2, MoveRight, FileText, CheckCircle2, AlertCircle, Clock, Download, Upload, Plus } from "lucide-react";
 import { useAddStudentGuardian, useCreateEnrollment, useDeleteStudentGuardian, useEndEnrollment, useLegacyLinkStatus, useLinkLegacyStudent, useReassignDevice, useReplaceDevice, useRetireDevice, useStudent, useStudentEnrollments, useStudentHistory, useStudentOverview, useTransferEnrollment, useUpdateStudent, useUpdateStudentDocuments, useUpdateStudentGuardian, useUpdateStudentHealth, useUpdateIdentityVerification, useUpdateDapodikStatus, useUploadIomDocument, useUpdateIomDocument } from "../hooks/useStudentQueries";
 import { PageHeader } from "../components/common/page-header";
@@ -478,7 +479,7 @@ function IomEditDialog({ studentId, document, open, onOpenChange }: { studentId:
 }
 
 export default function CanonicalStudentProfile() {
-  const { id = "" } = useParams(); const student = useStudent(id); const overview = useStudentOverview(id); const legacyLink = useLegacyLinkStatus(id); const history = useStudentHistory(id); const enrollmentHistory = useStudentEnrollments(id);
+  const { id = "" } = useParams({ strict: false }); const student = useStudent(id); const overview = useStudentOverview(id); const legacyLink = useLegacyLinkStatus(id); const history = useStudentHistory(id); const enrollmentHistory = useStudentEnrollments(id);
   const { can } = useAuth();
   const [editOpen, setEditOpen] = useState(false); const [deviceOpen, setDeviceOpen] = useState(false); const [enrollmentOpen, setEnrollmentOpen] = useState(false); const [retireOpen, setRetireOpen] = useState(false); const [endOpen, setEndOpen] = useState(false); const [legacyLinkOpen, setLegacyLinkOpen] = useState(false); const [attendanceExporting, setAttendanceExporting] = useState(false); const [attendanceExportError, setAttendanceExportError] = useState<string | null>(null);
   const [verifyNikOpen, setVerifyNikOpen] = useState(false);

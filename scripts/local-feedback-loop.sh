@@ -47,6 +47,9 @@ is_documentation_path() {
 
 is_lint_path() {
   case "$1" in
+    */routeTree.gen.ts) return 1 ;;
+  esac
+  case "$1" in
     apps/*|packages/*)
       case "$1" in
         *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.mts|*.cts) return 0 ;;

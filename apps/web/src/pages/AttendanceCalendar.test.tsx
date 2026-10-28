@@ -1,15 +1,16 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router";
+import { useLocation } from '@tanstack/react-router';
+import { MemoryRouter } from '../test/TestRouter';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AttendanceCalendar from "./AttendanceCalendar";
-import * as gradesApi from "../api/grades";
 import * as calendarApi from "../api/attendanceCalendar";
+import * as analyticsHooks from "../hooks/useAnalyticsQueries";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
-vi.mock("../api/grades", () => ({ fetchAcademicYears: vi.fn() }));
+vi.mock("../hooks/useAnalyticsQueries", () => ({ useAnalyticsFiltersQuery: vi.fn() }));
 vi.mock("../api/attendanceCalendar", () => ({ fetchAttendanceCalendar: vi.fn(), saveAttendanceCalendarWeekdays: vi.fn(), saveAttendanceCalendarException: vi.fn(), deleteAttendanceCalendarException: vi.fn(), saveAttendanceSubmissionDeadline: vi.fn(), previewAttendanceCalendarPeriod: vi.fn(), applyAttendanceCalendarPeriod: vi.fn() }));
 
 const auth: AuthContextValue = { user: { id: 1, username: "Admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
@@ -24,7 +25,7 @@ const secondaryOverview = {
 
 function LocationText() {
   const location = useLocation();
-  return <output id="location-text">{location.pathname}{location.search}</output>;
+  return <output id="location-text">{location.pathname}{location.searchStr}</output>;
 }
 
 let container: HTMLDivElement;
@@ -33,7 +34,7 @@ let root: Root;
 describe("AttendanceCalendar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(gradesApi.fetchAcademicYears).mockResolvedValue([{ id: 1, label: "2026/2027", is_default: true }] as never);
+    vi.mocked(analyticsHooks.useAnalyticsFiltersQuery).mockReturnValue({ data: { academic_years: [{ id: 1, label: "2026/2027", is_default: true }], jenjangs: [], class_names: [], subjects: [] }, isPending: false, error: null, refetch: vi.fn() } as never);
     vi.mocked(calendarApi.fetchAttendanceCalendar).mockResolvedValue(overview as never);
     vi.mocked(calendarApi.saveAttendanceCalendarWeekdays).mockResolvedValue({ academicYearId: 1, jenjangId: 1, weekdays: overview.jenjangs[0].weekdays } as never);
     vi.mocked(calendarApi.saveAttendanceCalendarException).mockResolvedValue(undefined);
@@ -107,10 +108,10 @@ describe("AttendanceCalendar", () => {
   });
 
   it("honors valid URL scope and date context", async () => {
-    vi.mocked(gradesApi.fetchAcademicYears).mockResolvedValue([
+    vi.mocked(analyticsHooks.useAnalyticsFiltersQuery).mockReturnValue({ data: { academic_years: [
       { id: 1, label: "2026/2027", is_default: true },
       { id: 2, label: "2027/2028", is_default: false },
-    ] as never);
+    ], jenjangs: [], class_names: [], subjects: [] }, isPending: false, error: null, refetch: vi.fn() } as never);
     vi.mocked(calendarApi.fetchAttendanceCalendar).mockImplementation(async (id) => (id === 2 ? secondaryOverview : overview) as never);
     container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
     await act(async () => { root.render(<MemoryRouter initialEntries={["/attendance/calendar?academic_year_id=2&jenjang_id=2&date=2027-08-04"]}><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={auth}><AttendanceCalendar /><LocationText /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });

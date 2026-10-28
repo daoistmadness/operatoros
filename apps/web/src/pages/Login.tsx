@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router";
+import { useLocation } from '@tanstack/react-router';
+import { useNavigateToHref } from '../components/AppLink';
 import { Eye, EyeOff, Loader2, LockKeyhole, LogIn, UserRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Alert } from "../components/ui/alert";
@@ -12,7 +13,7 @@ import { Input } from "../components/ui/input";
 
 export default function Login() {
   const { authenticated, loading, login } = useAuth();
-  const navigate = useNavigate();
+  const navigateToHref = useNavigateToHref();
   const location = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,11 +21,14 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({});
-  const destination = (location.state as { from?: string } | null)?.from || "/";
-  const notice = (location.state as { message?: string } | null)?.message || window.sessionStorage.getItem("astryx:login-notice");
+  const destination = location.state.from || "/";
+  const notice = location.state.message || window.sessionStorage.getItem("astryx:login-notice");
   useEffect(() => { window.sessionStorage.removeItem("astryx:login-notice"); }, []);
+  useEffect(() => {
+    if (!loading && authenticated && location.pathname === '/login') navigateToHref(destination, { replace: true });
+  }, [authenticated, destination, loading, location.pathname, navigateToHref]);
 
-  if (!loading && authenticated) return <Navigate to={destination} replace />;
+  if (!loading && authenticated) return null;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -41,7 +45,7 @@ export default function Login() {
     setPassword("");
     try {
       await login(username.trim(), submittedPassword);
-      navigate(destination, { replace: true });
+      navigateToHref(destination, { replace: true });
     } catch (_error) {
       setError("Invalid username or password");
     } finally {

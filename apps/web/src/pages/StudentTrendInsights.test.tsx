@@ -1,6 +1,7 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router";
+import { useLocation } from '@tanstack/react-router';
+import { MemoryRouter } from '../test/TestRouter';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import StudentTrendInsights from "./StudentTrendInsights";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
@@ -28,7 +29,7 @@ const mocked = (value: unknown) => value as { mockReturnValue: (result: unknown)
 
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{location.search}</output>;
+  return <output data-testid="location">{location.searchStr}</output>;
 }
 
 const renderTrends = async (initialEntries: string[]) => {

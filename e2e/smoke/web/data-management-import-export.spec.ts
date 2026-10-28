@@ -121,15 +121,30 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   expect(criticalErrors).toEqual([]);
 });
 
-test("@data-management @permissions @critical @release keeps the import and export workspace admin guarded", async ({ page }) => {
-  await page.goto("/login");
+test("@data-management @permissions @critical @release guards protected deep links by role and capability after session expiry", async ({ page }) => {
+  await page.goto("/data-portability?section=export");
+  await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("textbox", { name: "Username required", exact: true }).fill("operatoros_e2e_staff");
   await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
   const loginResponse = page.waitForResponse((response) => response.url().includes("/api/auth/login") && response.status() === 200);
   await page.getByRole("button", { name: "Sign in" }).click();
   await loginResponse;
 
-  await page.goto("/data-portability");
+  await expect(page).toHaveURL(/\/data-portability$/);
   await expect(page.getByRole("heading", { name: "Access denied" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Data Import & Export" })).toHaveCount(0);
+
+  await page.goto("/attendance/calendar");
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
+  await page.goto("/attendance/machine-import");
+  await expect(page.getByRole("heading", { name: "Access denied" })).toBeVisible();
+
+  const expiredSessionStatus = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/logout", { method: "POST" });
+    return response.status;
+  });
+  expect(expiredSessionStatus).toBe(204);
+  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "System Analytics" })).toHaveCount(0);
 });

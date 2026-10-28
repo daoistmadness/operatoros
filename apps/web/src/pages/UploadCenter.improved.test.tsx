@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter } from '../test/TestRouter';
 import { createTestQueryClient } from "../lib/query/queryClient";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";

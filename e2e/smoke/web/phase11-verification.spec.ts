@@ -26,6 +26,19 @@ async function assertDownload(page: Page, trigger: () => Promise<void>, extensio
 
 test.beforeEach(async ({ page }) => {
   const failures: string[] = [];
+  const requestsStartedBeforeLogout = new WeakSet<object>();
+  let logoutRequestStarted = false;
+  page.on("request", (request) => {
+    if (!request.url().includes("/api/")) return;
+    const pathname = new URL(request.url()).pathname;
+    if (pathname === "/api/auth/logout") {
+      logoutRequestStarted = true;
+    } else if (!logoutRequestStarted) {
+      requestsStartedBeforeLogout.add(request);
+    } else if (!["/api/auth/logout", "/api/auth/me", "/api/setup/status", "/api/system/health"].includes(pathname)) {
+      failures.push(`protected request after logout: ${pathname}`);
+    }
+  });
   page.on("console", (message) => {
     if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) failures.push(`console: ${message.text()}`);
   });
@@ -33,13 +46,14 @@ test.beforeEach(async ({ page }) => {
   page.on("response", (response) => {
     if (!response.url().includes("/api/") || response.status() < 400) return;
     const pathname = new URL(response.url()).pathname;
+    if (logoutRequestStarted && response.status() === 401 && requestsStartedBeforeLogout.has(response.request())) return;
     if (pathname !== "/api/auth/me" || response.status() !== 401) failures.push(`api ${response.status()}: ${pathname}`);
   });
-  (page as any).__phase11Failures = failures;
+  (page as any).__phase11Failures = { failures };
 });
 
 test.afterEach(async ({ page }) => {
-  expect((page as any).__phase11Failures).toEqual([]);
+  expect((page as any).__phase11Failures.failures).toEqual([]);
 });
 
 test("@phase11 @auth logout clears the browser session after refresh", async ({ page }) => {
@@ -91,7 +105,7 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
   await page.getByRole("button", { name: "Preview workbook" }).click();
   await expect(page.getByRole("alert")).toContainText(".xlsx");
   // The expected 400 above is the canonical rejection itself; keep the spec's API-error guard strict otherwise.
-  const failures = (page as any).__phase11Failures as string[];
+  const failures = (page as any).__phase11Failures.failures as string[];
   const rejected = failures.findIndex((message) => message === "api 400: /api/attendance/machine-import/preview");
   expect(rejected).toBeGreaterThanOrEqual(0);
   failures.splice(rejected, 1);

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../../../components/AppLink';
 import type { MachineImportPreviewResponse } from "@operatoros/contracts/attendance";
 import { PageHeader } from "../../../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../../../components/common/state-message";

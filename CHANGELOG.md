@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Migrate web routes to file-based TanStack Router while preserving authorization and legacy route behavior.
 - Permitted TanStack Router for web routing in AGENTS.md (#334).
 - Reorganized and indexed the project documentation (#324)
 

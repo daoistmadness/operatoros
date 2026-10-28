@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter } from '../test/TestRouter';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthUser } from '../api/auth';
@@ -11,7 +11,7 @@ import SidebarNav, {
   navigationItemIsActive,
   visibleNavigationGroups,
 } from './SidebarNav';
-import { authenticatedRoutes } from '../routes/routeDefinitions';
+import { routeAuthorizations } from '../lib/router/access';
 
 vi.mock('../lib/api/client', () => ({ getServerStatus: vi.fn().mockResolvedValue({ status: 'ok' }) }));
 
@@ -152,7 +152,7 @@ describe('role-aware sidebar navigation', () => {
 
   it('keeps navigation authorization identical to the canonical route contract', () => {
     for (const item of NAV_GROUPS.flatMap((group) => group.items)) {
-      expect(authenticatedRoutes.find((route) => route.path === item.path)?.authorization).toBe(item.authorization);
+      expect(routeAuthorizations[item.path]).toBe(item.authorization);
     }
   });
 
@@ -172,7 +172,7 @@ describe('role-aware sidebar navigation', () => {
   });
 
   it('keeps every configured sidebar destination in the authenticated route table', () => {
-    const routePaths = new Set(authenticatedRoutes.map((route) => route.path));
+    const routePaths = new Set(Object.keys(routeAuthorizations));
     for (const item of NAV_GROUPS.flatMap((group) => group.items)) expect(routePaths.has(item.path)).toBe(true);
   });
 

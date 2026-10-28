@@ -591,9 +591,11 @@ Do not introduce `OperatorOSFramework`, `GenericRuleEngine`, `MutationBus`,
 state-machine framework, or a plugin architecture. Existing services, typed
 registries, TypeBox, TanStack Query, and current tests are enough.
 
-Also do not introduce tRPC, Zod, Better Auth, TanStack Router, TanStack Start,
-TanStack Form, Dagger, a frontend rewrite, persisted analytics rollups, cloud
-sync, Hucre migration, command palette, or `nuqs` as part of this program.
+Also do not introduce tRPC, Zod, Better Auth, TanStack Start, TanStack Form,
+Dagger, a frontend rewrite, persisted analytics rollups, cloud sync, Hucre
+migration, command palette, or `nuqs` as part of this program. The React Router
+to TanStack Router migration is authorized; preserve existing route behavior
+and use TypeBox for search validation.
 
 ## 24. Documentation and implementation workflow
 

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCurrentUser, login, logout, type AuthUser } from "../api/auth";
-import { clearProtectedQueries, clearSessionQueries } from "../lib/query/sessionCache";
+import { cancelProtectedQueries, clearProtectedQueries, clearSessionQueries } from "../lib/query/sessionCache";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export function useCurrentUser() {
@@ -22,6 +22,7 @@ export function useLogoutMutation() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: logout,
+    onMutate: () => cancelProtectedQueries(client),
     onSuccess: async () => {
       await clearSessionQueries(client);
     },

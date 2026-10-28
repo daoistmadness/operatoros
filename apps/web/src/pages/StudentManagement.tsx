@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, flexRender, rowPaginationFeature, columnVisibilityFeature, tableFeatures, useTable } from "@tanstack/react-table";
-import { Link } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
 import { Download, Plus, Search, Upload } from "lucide-react";
 import type { ManagedStudent, NisnStatusFilter, StudentFilters } from "../api/students";
 import { fetchAcademicClasses, fetchAcademicGrades, fetchAcademicPrograms, fetchJenjangs } from "../api/enrollment";

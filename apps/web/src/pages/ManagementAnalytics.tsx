@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { ArrowRight, RotateCcw } from "lucide-react";
-import { Link } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
 import type { ManagementOverviewResponse } from "@operatoros/contracts/analytics";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";

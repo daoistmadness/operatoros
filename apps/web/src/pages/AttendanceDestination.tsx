@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BarChart3, ClipboardList, Clock3, FileText } from "lucide-react";
-import { Link, useSearchParams } from "react-router";
+import { AppLink as Link } from '../components/AppLink';
+import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
 import { RouteLoadingFallback } from "../routes/RouteLoadingFallback";
@@ -30,7 +31,7 @@ export default function AttendanceDestination() {
         params.set("view", id);
         return <Link
           key={id}
-          to={{ pathname: "/analytics/attendance", search: `?${params.toString()}` }}
+          to={`/analytics/attendance?${params.toString()}`}
           role="tab"
           aria-selected={selected.id === id}
           aria-controls="attendance-view-panel"

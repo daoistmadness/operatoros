@@ -1,5 +1,5 @@
 import type { StudentOverviewResponse } from "@operatoros/contracts/students";
-import { Link } from "react-router";
+import { AppLink as Link } from '../AppLink';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button, buttonVariants } from "../ui/button";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";

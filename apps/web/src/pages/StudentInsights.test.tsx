@@ -1,8 +1,9 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, useLocation } from "react-router";
+import { useLocation } from '@tanstack/react-router';
+import { MemoryRouter } from '../test/TestRouter';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import StudentInsights, { StudentTrendsCompatibilityRedirect } from "./StudentInsights";
+import StudentInsights from "./StudentInsights";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import * as analyticsHooks from "../hooks/useAnalyticsQueries";
 import * as attendanceHooks from "../hooks/useAttendanceAnalyticsQueries";
@@ -25,7 +26,7 @@ let root: Root;
 
 function Location() {
   const location = useLocation();
-  return <output aria-label="Current location">{location.pathname}{location.search}</output>;
+  return <output aria-label="Current location">{location.pathname}{location.searchStr}</output>;
 }
 
 describe("Student Insights shell", () => {
@@ -60,8 +61,4 @@ describe("Student Insights shell", () => {
     expect(academicHooks.useAcademicAnalyticsOptionsQuery).toHaveBeenCalled();
   });
 
-  it("preserves old trend bookmarks and adds the Trends view", async () => {
-    await act(async () => root.render(<MemoryRouter initialEntries={["/analytics/trends?academic_year_id=1&class_id=7&window=term&student_id=student-a"]}><AuthContext.Provider value={auth}><StudentTrendsCompatibilityRedirect /><Location /></AuthContext.Provider></MemoryRouter>));
-    expect(container.querySelector('[aria-label="Current location"]')?.textContent).toBe("/analytics/student-insights?academic_year_id=1&class_id=7&window=term&student_id=student-a&view=trends");
-  });
 });

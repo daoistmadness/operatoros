@@ -16,7 +16,10 @@ test("@student-360 @analytics @release student profile composes the operational 
   await page.goto("/students");
   const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
   await expect(studentLink).toBeVisible();
-  await page.goto(await studentLink.getAttribute("href") as string);
+  const profileHref = await studentLink.getAttribute("href") as string;
+  await page.goto(profileHref);
+  await expect(page.getByRole("heading", { name: "E2E Ada" })).toBeVisible();
+  await page.reload();
   await expect(page.getByRole("heading", { name: "E2E Ada" })).toBeVisible();
   await expect(page.getByText("Current student context")).toBeVisible();
   await expect(page.getByText("Attendance", { exact: true }).first()).toBeVisible();

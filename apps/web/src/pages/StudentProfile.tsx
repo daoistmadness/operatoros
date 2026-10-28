@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams, useRouter } from '@tanstack/react-router';
 import {
   ArrowLeft,
   CalendarDays,
@@ -243,8 +243,8 @@ function getStudentProfileError(error: unknown, fallback: string): string {
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function StudentProfile() {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id } = useParams({ strict: false });
+  const router = useRouter();
 
   const [summary, setSummary] = useState<StudentAttendanceSummary | null>(null);
   const [history, setHistory] = useState<StudentMonthlyHistory | null>(null);
@@ -394,7 +394,7 @@ export default function StudentProfile() {
   if (error) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="px-0">
+        <Button variant="ghost" onClick={() => router.history.back()} className="px-0">
           <ArrowLeft size={16} /> Back
         </Button>
         <PageHeader title="Student profile unavailable" description="The selected student profile could not be loaded." />
@@ -408,7 +408,7 @@ export default function StudentProfile() {
 
       {/* ── Back button ────────────────────────────────────────────────── */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => router.history.back()}
         className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 text-sm font-semibold transition-colors"
       >
         <ArrowLeft size={16} /> Back

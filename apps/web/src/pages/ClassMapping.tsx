@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from '@tanstack/react-router';
 import {
   Search,
   ChevronLeft,
@@ -426,7 +426,7 @@ function ClassMapping() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/attendance/students/${student.id}`);
+                              navigate({ to: '/attendance/students/$id', params: { id: String(student.id) } });
                             }}
                             className="hover:text-brand hover:underline transition-colors text-left"
                           >
