@@ -2919,15 +2919,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c448402e6c769e2578cfe593bdc8acfc7526dad745b6b4d8fa661d7d36e87b8e",
+      "fingerprint": "82e834067bcb689b0f428cbe942cdbc9405b9f4ef074663169ba63290388b6ee",
       "snapshot": {
-        "CHANGELOG.md": "84e94645286d0abf988efaadf904589529e72ced455ccb3401966570e8a5e604"
+        "CHANGELOG.md": "ee88ef17850ca00131b95ddc88a0d4da4d40c0d4091978347bb48f6d7e0ae570"
       },
-      "head": "aeb928e9e87f3a0e8b40bd293b443d0c6717bc0a",
+      "head": "5c09e59b4ed734b6809d55269a91e0ff95d2d4ff",
       "outcome": "no-change",
-      "reason": "This CI toolchain changelog entry does not change agent skills, source guidance, or planning artifacts.",
+      "reason": "Adding the assigned PR number to the CI changelog entry does not affect agent skills, source guidance, or planning artifacts.",
       "evidence": [
-        "Changed: CHANGELOG.md at aeb928e9e87f3a0e8b40bd293b443d0c6717bc0a"
+        "Changed: CHANGELOG.md at 5c09e59b4ed734b6809d55269a91e0ff95d2d4ff"
       ]
     },
     "source:COMMANDS.md": {
