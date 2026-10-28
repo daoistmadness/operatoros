@@ -13,13 +13,15 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/mise/downloads-cas
-        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-${{ hashFiles('mise.toml', 'mise.lock') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-2026.10.19-${{ hashFiles('mise.toml', 'mise.lock') }}
     - name: Install mise toolchain
       uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
       with:
-        version: 2026.10.3
+        version: 2026.10.19
         working_directory: ${{ github.workspace }}
         cache: false
+      env:
+        MISE_HTTP_RETRIES: "6"
     - name: Restore Bun package downloads
       id: bun-cache
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -32,10 +34,12 @@ runs:
       run: |
         set -euo pipefail
         mise --version
-        test "$(mise --version | awk '{print $1}')" = "2026.10.3"
+        test "$(mise --version | awk '{print $1}')" = "2026.10.19"
         test "$(bun --version)" = "1.4.4"
         test "$(hk --version)" = "hk 2.8.1"
         test "$(node --version)" = "v24.19.0"
+        mise_download_cache="$(mise cache path)/downloads-cas"
+        test -n "$(find "$mise_download_cache" -type f -print -quit)"
         mise ls --current
         bun install --frozen-lockfile
         test "$(bun run turbo:version)" = "2.11.4"
@@ -44,7 +48,7 @@ runs:
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/mise/downloads-cas
-        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-${{ hashFiles('mise.toml', 'mise.lock') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-2026.10.19-${{ hashFiles('mise.toml', 'mise.lock') }}
     - name: Save Bun package downloads
       if: ${{ inputs['cache-write'] == 'true' && success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

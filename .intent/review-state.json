@@ -3,9 +3,9 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "2a5d3324f3cdf88e47d21584863f40df03a5cbbc369d0daf215a2e2ba2784a65",
+      "fingerprint": "6ea4858688d8035bbd00aa333cdc38120b584f5c5f1f5a131fe2a837fa0d53dd",
       "snapshot": {
-        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -44,17 +44,17 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "86866803a419dfcb2ddcc6a06c188ea4f776c672",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "This PR changes only the shared CI setup action and CI operations documentation. The Elysia guidance, planning artifacts, and source guidance remain accurate; the maintainer scan reported no problems for these items.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: .github/CI.md at 86866803a419dfcb2ddcc6a06c188ea4f776c672"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "c94d249b9b3f68bbedc13c28534e210e47bac219e2a10743b6bd9df95f582984",
+      "fingerprint": "ab277802ab7c5d7c115521d446701b57e47042da54a1757363cac8ff8207c906",
       "snapshot": {
-        ".github/CI.md": "6428392a89787de2fbd3805c58bb951875ae5edeae2732c7e3a90f148474ae5b",
+        ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "86866803a419dfcb2ddcc6a06c188ea4f776c672",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "This PR changes only the shared CI setup action and CI operations documentation. The Elysia guidance, planning artifacts, and source guidance remain accurate; the maintainer scan reported no problems for these items.",
       "evidence": [
-        "Changed: apps/api/package.json, bun.lock, package.json at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: .github/CI.md at 86866803a419dfcb2ddcc6a06c188ea4f776c672"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1290,15 +1290,15 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "f78ad1b2f50f6390a187295d1ed6533816d528b13e5c72eec1cc563b49cf3497",
+      "fingerprint": "2d005405b71d4687eb43b8a3169f99689749d7bb3ef14fef7ef1b83e1fefdcca",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "f8fb06a211866d8c5befffc9a9290adbd972fe17c573ad23493db2584f63d758"
+        ".github/actions/setup-bun/action.yml": "bc7f7e9c8ebd7adfe52d6f82f9ed54d3393f9d8a2f78883cd51840949024a23f"
       },
-      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "head": "86866803a419dfcb2ddcc6a06c188ea4f776c672",
       "outcome": "no-change",
-      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
+      "reason": "This PR changes only the shared CI setup action and CI operations documentation. The Elysia guidance, planning artifacts, and source guidance remain accurate; the maintainer scan reported no problems for these items.",
       "evidence": [
-        "Changed: .github/actions/setup-bun/action.yml at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
+        "Changed: .github/actions/setup-bun/action.yml at 86866803a419dfcb2ddcc6a06c188ea4f776c672"
       ]
     },
     "source:Containerfile.podman": {
@@ -2919,15 +2919,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ebb75dabea904efd3eb0de706a12300274f8c69cf892f6bc5b2affd05940e493",
+      "fingerprint": "82e834067bcb689b0f428cbe942cdbc9405b9f4ef074663169ba63290388b6ee",
       "snapshot": {
-        "CHANGELOG.md": "7d4b8f804b98565a14d7ee6b3f53626d37f161e0b0794ffdf02f50225c9039e9"
+        "CHANGELOG.md": "ee88ef17850ca00131b95ddc88a0d4da4d40c0d4091978347bb48f6d7e0ae570"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "5c09e59b4ed734b6809d55269a91e0ff95d2d4ff",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "Adding the assigned PR number to the CI changelog entry does not affect agent skills, source guidance, or planning artifacts.",
       "evidence": [
-        "Changed: CHANGELOG.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: CHANGELOG.md at 5c09e59b4ed734b6809d55269a91e0ff95d2d4ff"
       ]
     },
     "source:COMMANDS.md": {
