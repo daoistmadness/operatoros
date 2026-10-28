@@ -298,6 +298,7 @@ describe("E2E workflow scope selection", () => {
       run("success", "true", "failure"),
       run("success", "true", "cancelled"),
       run("success", "true", ""),
+      run("skipped", "", "skipped"),
       run("success", "false", "skipped"),
       run("success", "true", "skipped"),
       run("success", "false", "success"),
@@ -313,9 +314,15 @@ describe("E2E workflow scope selection", () => {
     expect(workflow.on.push.branches).toContain("main");
     expect(workflow.on.pull_request).toBeDefined();
     expect(workflow.on.merge_group).toBeDefined();
+    expect(workflow.jobs.preflight?.name).toBe("preflight");
+    expect(workflow.jobs.preflight?.if).toBe("github.event_name != 'schedule'");
+    expect(workflow.jobs.preflight?.steps?.some((step) => step.run === "bun run skills:validate")).toBe(true);
+    expect(workflow.jobs.preflight?.steps?.some((step) => step.run === "bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary")).toBe(true);
+    expect(workflow.jobs.api?.needs).toEqual(["preflight"]);
+    expect(workflow.jobs.changes?.needs).toEqual(["preflight"]);
     expect(workflow.jobs["e2e-full"]?.name).toBe("E2E full regression");
     expect(workflow.jobs["e2e-full"]?.if).toBe("github.event_name != 'schedule'");
-    expect(workflow.jobs["e2e-full"]?.needs).toBeUndefined();
+    expect(workflow.jobs["e2e-full"]?.needs).toEqual(["preflight"]);
     expect(workflow.jobs["e2e-full"]?.steps?.some((step) => step.run === "timeout 900 make e2e-smoke")).toBe(true);
     expect(workflow.jobs.api?.steps?.some((step) => step.run?.includes("bun run turbo:check"))).toBe(true);
     expect(workflow.jobs.api?.steps?.some((step) => step.run === "bun run test:security")).toBe(false);

@@ -27,8 +27,48 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  preflight:
+    name: preflight
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+        with:
+          cache-write: "false"
+      - name: Fetch base for skill freshness check
+        env:
+          INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
+            echo "A valid base commit is required for skill freshness checks." >&2
+            exit 1
+          fi
+          header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=$header" fetch --no-tags origin "$INTENT_BASE_SHA"
+      - name: Validate relative Markdown links
+        run: bun .github/scripts/check-markdown-links.ts
+      - name: Validate Markdown organization and index
+        run: bun .github/scripts/check-markdown-organization.ts
+      - name: Require pull request changelog entry
+        env:
+          CHANGELOG_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bun .github/scripts/check-changelog.ts
+      - name: Validate agent skills
+        run: bun run skills:validate
+      - name: Check agent skill maintainer review
+        run: bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
+
   api:
     if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+    needs: [preflight]
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     defaults:
@@ -179,40 +219,12 @@ jobs:
         run: bun --filter @operatoros/web boundaries:test
       - name: OpenAPI contract drift check
         run: bun --filter @operatoros/web api:check
-      - name: Validate relative Markdown links
-        working-directory: ${{ github.workspace }}
-        run: bun .github/scripts/check-markdown-links.ts
-      - name: Validate Markdown organization and index
-        working-directory: ${{ github.workspace }}
-        run: bun .github/scripts/check-markdown-organization.ts
       - name: Test documentation checker fixtures
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/docs-checkers.test.ts
       - name: Validate current developer commands
         working-directory: ${{ github.workspace }}
         run: bun .github/scripts/check-current-developer-docs.ts
-      - name: Fetch base for skill freshness check
-        working-directory: ${{ github.workspace }}
-        env:
-          INTENT_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
-        run: |
-          set -euo pipefail
-          if [[ -z "$INTENT_BASE_SHA" || "$INTENT_BASE_SHA" =~ ^0+$ ]]; then
-            echo "A valid base commit is required for skill freshness checks." >&2
-            exit 1
-          fi
-          git fetch --no-tags origin "$INTENT_BASE_SHA"
-      - name: Require pull request changelog entry
-        working-directory: ${{ github.workspace }}
-        env:
-          CHANGELOG_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: bun .github/scripts/check-changelog.ts
-      - name: Validate agent skills
-        working-directory: ${{ github.workspace }}
-        run: bun run skills:validate
-      - name: Check agent skill maintainer review
-        working-directory: ${{ github.workspace }}
-        run: bunx --no-install --package @tanstack/intent intent maintainer check --base FETCH_HEAD --github-summary
       - name: Verify agent skills package tarball and consumer
         working-directory: ${{ github.workspace }}
         run: |
@@ -346,6 +358,7 @@ jobs:
   changes:
     if: github.event_name != 'schedule'
     name: Select E2E scope
+    needs: [preflight]
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     outputs:
@@ -362,6 +375,7 @@ jobs:
   e2e-full:
     name: E2E full regression
     if: github.event_name != 'schedule'
+    needs: [preflight]
     runs-on: ubuntu-26.04
     timeout-minutes: 25
     steps:
