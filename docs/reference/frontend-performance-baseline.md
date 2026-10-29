@@ -1,13 +1,15 @@
 ---
 status: current
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-29
 ---
 
 # Frontend performance baseline
 
-This page records a local measurement of the current React 19, Vite, and
-TanStack Router application. It is a reproducible baseline, with no speedup
-claim or performance target.
+This page records the PR-01 local performance baseline for the React 19, Vite,
+and TanStack Router application, plus a PR-02 follow-up comparison of focus
+revalidation API requests. The original timing baseline remains a baseline;
+the follow-up claims a request-count reduction only, not an end-to-end latency
+or field-performance improvement.
 
 ## Verified URL behavior
 
@@ -69,6 +71,31 @@ The local p75 values below use the nearest-rank method over five runs. Each row
 includes its run count and observed range. Byte counts sum same-origin script
 resource `encodedBodySize` and `transferSize`; browser timing and heap values
 are local lab readings.
+
+### PR-02 query focus request comparison
+
+The opt-in `@query-focus` E2E case was run five times on the PR-01 base and
+five times with PR-02. Both runs used the same E2E runner, synthetic SQLite
+fixture, Chromium 149, 1365 × 900 viewport, one worker, and unthrottled local
+loopback traffic. Each sample logged in, waited for the dashboard to settle,
+then dispatched paired window-focus and visibility-change events. It held the
+`/api/auth/me` response for 250 ms and counted API requests through network
+idle after releasing it. The baseline samples came from `cc536b80`; the
+optimized samples were collected from the PR-02 working tree on 2026-10-29.
+
+| Metric | PR-01 base p75 | PR-02 p75 | Samples, n = 5 |
+| --- | ---: | ---: | --- |
+| Total API requests during focus revalidation | 24 | 1 | 24, 24, 24, 24, 24 → 1, 1, 1, 1, 1 |
+| `/api/auth/me` requests | 2 | 1 | 2, 2, 2, 2, 2 → 1, 1, 1, 1, 1 |
+| Protected requests before session check succeeds | 22 | 0 | 22, 22, 22, 22, 22 → 0, 0, 0, 0, 0 |
+
+The measured focus window issued 23 fewer requests per sample, a 95.8% request
+count reduction for this journey. PR-02's regression gate also asserts exactly
+one session check for paired events and zero protected requests before it
+succeeds. This is a request-count result from a deterministic local journey;
+the 250 ms hold is a test synchronization window, not a latency measurement.
+Raw samples and environment details are in
+[frontend-query-focus-comparison.json](frontend-query-focus-comparison.json).
 
 ## Results
 
@@ -154,6 +181,7 @@ successful logs and database snapshots remain only in the ignored local
 sample file contains performance metadata, resource paths, synthetic API paths,
 and browser timing entries; it contains no application records or credentials.
 
-Rollback consists of reverting the PR-01 source, test, documentation, sample,
-and changelog files. The change adds no schema, API, persistent application
-data, or runtime setting.
+The PR-01 baseline artifacts remain historical reference. PR-02 rollback is
+reverting its query policies, session lifecycle, cache headers, focused tests,
+and changelog entry together. PR-02 adds no database schema, persisted
+application data, or runtime setting.

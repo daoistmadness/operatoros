@@ -1,4 +1,5 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
 import SidebarNav from './SidebarNav';
@@ -12,14 +13,66 @@ export function AppShell() {
   const [navigationCollapsed, setNavigationCollapsed] = useState(false);
   const openerRef = useRef<HTMLButtonElement>(null);
   const mainRef = useRef<HTMLElement>(null);
+  const sessionStatusRef = useRef<HTMLDivElement>(null);
+  const sessionDialogRef = useRef<HTMLElement>(null);
+  const sessionOverlayRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   const auth = useAuth();
+  const sessionVerification = auth.sessionVerification ?? 'idle';
+  const verifyingSession = sessionVerification !== 'idle';
+  const previousSessionVerification = useRef(sessionVerification);
+  const focusReturnRef = useRef<HTMLElement | null>(null);
   const accessDenied = !isRouteAuthorized(pathname, auth);
 
   useEffect(() => {
     setNavigationOpen(false);
     mainRef.current?.focus({ preventScroll: true });
   }, [pathname]);
+
+  useLayoutEffect(() => {
+    const previous = previousSessionVerification.current;
+    if (sessionVerification === 'idle') {
+      if (previous !== 'idle') {
+        if (focusReturnRef.current?.isConnected) focusReturnRef.current.focus({ preventScroll: true });
+        focusReturnRef.current = null;
+      }
+    } else {
+      if (previous === 'idle' && document.activeElement instanceof HTMLElement) {
+        focusReturnRef.current = document.activeElement;
+      }
+      const verificationElement = sessionVerification === 'checking' ? sessionStatusRef.current : sessionDialogRef.current;
+      const retryButton = verificationElement?.querySelector<HTMLButtonElement>('button');
+      (retryButton ?? verificationElement)?.focus({ preventScroll: true });
+    }
+    previousSessionVerification.current = sessionVerification;
+  }, [sessionVerification]);
+
+  useLayoutEffect(() => {
+    if (!verifyingSession) return undefined;
+    const previousState = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
+    const isolateOutsideOverlay = () => {
+      for (const child of Array.from(document.body.children)) {
+        if (!(child instanceof HTMLElement) || child === sessionOverlayRef.current) continue;
+        if (!previousState.has(child)) {
+          previousState.set(child, { inert: child.inert, ariaHidden: child.getAttribute('aria-hidden') });
+        }
+        child.inert = true;
+        child.setAttribute('aria-hidden', 'true');
+      }
+    };
+    isolateOutsideOverlay();
+    const observer = new MutationObserver(isolateOutsideOverlay);
+    observer.observe(document.body, { childList: true });
+    return () => {
+      observer.disconnect();
+      for (const [element, previous] of previousState) {
+        if (!element.isConnected) continue;
+        element.inert = previous.inert;
+        if (previous.ariaHidden === null) element.removeAttribute('aria-hidden');
+        else element.setAttribute('aria-hidden', previous.ariaHidden);
+      }
+    };
+  }, [verifyingSession]);
 
   useEffect(() => {
     if (!navigationOpen) return undefined;
@@ -53,36 +106,68 @@ export function AppShell() {
   }, [navigationOpen]);
 
   return (
-    <div className="app-shell min-h-screen bg-slate-50 xl:flex">
-      <a href="#main-content" className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
-      <button
-        ref={openerRef}
-        type="button"
-        aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
-        aria-expanded={navigationOpen}
-        aria-controls="navigation-drawer"
-        onClick={() => setNavigationOpen((open) => !open)}
-        className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm xl:hidden"
-      >
-        {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-      </button>
-      {navigationOpen && (
+    <>
+      <div className="app-shell min-h-screen bg-slate-50 xl:flex" inert={verifyingSession || undefined} aria-hidden={verifyingSession || undefined}>
+        <a href="#main-content" className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
         <button
+          ref={openerRef}
           type="button"
-          aria-label="Close navigation overlay"
-          aria-hidden="true"
-          tabIndex={-1}
-          onClick={() => setNavigationOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] xl:hidden"
-        />
+          aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+          aria-expanded={navigationOpen}
+          aria-controls="navigation-drawer"
+          onClick={() => setNavigationOpen((open) => !open)}
+          className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm xl:hidden"
+        >
+          {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+        </button>
+        {navigationOpen && (
+          <button
+            type="button"
+            aria-label="Close navigation overlay"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setNavigationOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] xl:hidden"
+          />
+        )}
+        <SidebarNav open={navigationOpen} collapsed={navigationCollapsed} onToggleCollapsed={() => setNavigationCollapsed((value) => !value)} onNavigate={() => setNavigationOpen(false)} />
+        <main ref={mainRef} id="main-content" tabIndex={-1} aria-hidden={navigationOpen ? 'true' : undefined} className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8 ${navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'}`}>
+          <div className="mx-auto max-w-7xl">
+            {accessDenied ? <AccessDenied /> : <SuspendedOutlet />}
+          </div>
+        </main>
+      </div>
+      {verifyingSession && createPortal(
+        <div ref={sessionOverlayRef} data-testid="session-verification-overlay" className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center bg-slate-950/90 p-6 text-center text-white">
+          {sessionVerification === 'checking' ? (
+            <div ref={sessionStatusRef} tabIndex={-1} role="status" aria-live="polite" className="max-w-md outline-none">
+              <h1 className="text-xl font-bold">Checking your session</h1>
+              <p className="mt-2 text-sm text-slate-200">Your workspace will return after access is verified.</p>
+            </div>
+          ) : (
+            <section
+              ref={sessionDialogRef}
+              tabIndex={-1}
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="session-verification-title"
+              onKeyDown={(event) => {
+                if (event.key === 'Tab') {
+                  event.preventDefault();
+                  sessionDialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+                }
+              }}
+              className="max-w-md outline-none"
+            >
+              <h1 id="session-verification-title" className="text-xl font-bold">Session check unavailable</h1>
+              <p className="mt-2 text-sm text-slate-200">Your workspace is hidden until your access can be verified.</p>
+              <button type="button" onClick={() => void auth.retrySessionVerification?.()} className="mt-5 rounded-lg bg-white px-4 py-2 font-semibold text-slate-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Retry session check</button>
+            </section>
+          )}
+        </div>,
+        document.body,
       )}
-      <SidebarNav open={navigationOpen} collapsed={navigationCollapsed} onToggleCollapsed={() => setNavigationCollapsed((value) => !value)} onNavigate={() => setNavigationOpen(false)} />
-      <main ref={mainRef} id="main-content" tabIndex={-1} aria-hidden={navigationOpen ? 'true' : undefined} className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8 ${navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'}`}>
-        <div className="mx-auto max-w-7xl">
-          {accessDenied ? <AccessDenied /> : <SuspendedOutlet />}
-        </div>
-      </main>
-    </div>
+    </>
   );
 }
 

@@ -12,9 +12,9 @@ import {
 
 import { cn } from '../lib/cn';
 import { isApiError } from '../lib/api/errors';
-import { getServerStatus } from '../lib/api/endpoints';
 import { useAuth } from '../context/AuthContext';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
+import { useServerStatusQuery } from '../hooks/useServerStatusQuery';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { routeAuthorizations, type RouteAuthorization } from '../lib/router/access';
@@ -164,8 +164,8 @@ function logoutFailureMessage(error: unknown): string {
 
 function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleCollapsed }: SidebarNavProps) {
   const location = useLocation();
-  const [serverStatus, setServerStatus] = useState<ServerStatus>('checking');
   const { user, can, logout } = useAuth();
+  const serverStatusQuery = useServerStatusQuery();
   const { isSingleUserMode } = useDeploymentMode();
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState('');
@@ -180,15 +180,11 @@ function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleColla
       : new Set([...Array.from(current), activeGroupId]));
   }, [activeGroupId]);
 
-  useEffect(() => {
-    const checkStatus = async () => {
-      try { await getServerStatus(); setServerStatus('online'); }
-      catch { setServerStatus('offline'); }
-    };
-    void checkStatus();
-    const interval = window.setInterval(checkStatus, 10000);
-    return () => window.clearInterval(interval);
-  }, []);
+  const serverStatus: ServerStatus = serverStatusQuery.isLoading
+    ? 'checking'
+    : serverStatusQuery.isError
+      ? 'offline'
+      : 'online';
 
   const toggleGroup = (id: string) => setExpanded((current) => {
     const next = new Set(current);

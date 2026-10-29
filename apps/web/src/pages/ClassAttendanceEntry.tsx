@@ -23,6 +23,7 @@ import {
   type AssignedClassSummary,
   type AttendanceEntryPayload,
 } from "../api/teacherClassAssignments";
+import { queryKeys } from "../lib/query/queryKeys";
 import type { AttendanceStatus as ApiAttendanceStatus, ClassAttendanceResponse } from "@operatoros/contracts/attendance";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -155,8 +156,8 @@ export default function ClassAttendanceEntry() {
 
   // Assigned classes query
   const { data: assignedClasses = [], isLoading: loadingClasses } = useQuery<AssignedClassSummary[]>({
-    queryKey: ["assignedClasses"],
-    queryFn: fetchAssignedClasses,
+    queryKey: queryKeys.attendance.assignedClasses,
+    queryFn: ({ signal }) => fetchAssignedClasses(signal),
   });
 
   // Auto-select first class when loaded
@@ -174,8 +175,8 @@ export default function ClassAttendanceEntry() {
     error: rosterError,
     refetch: refetchRoster,
   } = useQuery<ClassAttendanceResponse>({
-    queryKey: ["classAttendanceRoster", classIdNum, selectedDate],
-    queryFn: () => fetchClassAttendanceForDate(classIdNum!, selectedDate),
+    queryKey: queryKeys.attendance.classRoster(classIdNum ?? 0, selectedDate),
+    queryFn: ({ signal }) => fetchClassAttendanceForDate(classIdNum!, selectedDate, signal),
     enabled: !!classIdNum && !!selectedDate,
   });
 

@@ -31,6 +31,9 @@ function denied(message: string, status = 403): Response {
 
 export function installHttpSecurity(app: any, options: { allowedOrigins: string[] }): void {
   app.onRequest(({ request, set }: any) => {
+    if (new URL(request.url).pathname.startsWith("/api/")) {
+      set.headers["cache-control"] = "private, no-store";
+    }
     const origin = request.headers.get("origin");
     const allowed = origin !== null && isAllowedOrigin(origin, options.allowedOrigins);
     if (origin !== null && !allowed) return denied("Request origin is not allowed.");

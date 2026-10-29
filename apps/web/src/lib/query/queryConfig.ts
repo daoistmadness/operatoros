@@ -1,7 +1,15 @@
 import type { QueryClientConfig } from "@tanstack/react-query";
 import { shouldRetryQuery } from "../api/errors";
 
-export const APP_STALE_TIME = 5 * 60 * 1000;
+export const queryFreshness = {
+  auth: 0,
+  operational: 30 * 1000,
+  records: 2 * 60 * 1000,
+  analytics: 5 * 60 * 1000,
+  reference: 10 * 60 * 1000,
+} as const;
+
+export const APP_STALE_TIME = queryFreshness.analytics;
 export const APP_GC_TIME = 30 * 60 * 1000;
 
 export const shouldRetry = shouldRetryQuery;

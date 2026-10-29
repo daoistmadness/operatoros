@@ -18,7 +18,25 @@ describe("cookie-session client boundary", () => {
     const init = fetchMock.mock.calls[0]?.[1];
     if (!init) throw new Error("Expected fetch request options.");
     expect(init.credentials).toBe("include");
+    expect(init.cache).toBe("no-store");
     expect(new Headers(init.headers).get("Authorization")).toBeNull();
+  });
+
+  it("aborts fetch when its caller signal is cancelled", async () => {
+    const controller = new AbortController();
+    let fetchSignal: AbortSignal | undefined;
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) => {
+      fetchSignal = init?.signal as AbortSignal;
+      return new Promise((_resolve, reject) => {
+        fetchSignal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      });
+    });
+
+    const pending = apiRequest({ path: "/api/students", signal: controller.signal });
+    controller.abort();
+
+    await expect(pending).rejects.toMatchObject({ kind: "cancelled" });
+    expect(fetchSignal?.aborted).toBe(true);
   });
 
   it("signals 401 as session loss and 403 as a separate permission change hint", async () => {

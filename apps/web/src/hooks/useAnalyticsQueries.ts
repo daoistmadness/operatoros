@@ -20,6 +20,7 @@ import { fetchEffectiveTerms } from "../api/academicConfig";
 import { fetchStudentTrendInsights, type StudentTrendFilters } from "../api/studentTrends";
 import { fetchStudentIndicatorInsights, type StudentIndicatorFilters } from "../api/studentIndicators";
 import { fetchAcademicPrograms } from "../api/academicMasters";
+import { queryFreshness } from "../lib/query/queryConfig";
 
 const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: number | null }) => ({
   academic_year_id: filters.academic_year_id ?? null,
@@ -29,7 +30,8 @@ const filtersKey = (filters: { academic_year_id?: number | null; jenjang_id?: nu
 export function useDashboardSnapshotQuery(month: number, year: number, enabled = true) {
   return useQuery({
     queryKey: queryKeys.dashboard.snapshot(month, year),
-    queryFn: () => getDashboardSnapshot(new Date(year, month - 1, 1)),
+    queryFn: ({ signal }) => getDashboardSnapshot(new Date(year, month - 1, 1), signal),
+    staleTime: queryFreshness.analytics,
     enabled,
   });
 }

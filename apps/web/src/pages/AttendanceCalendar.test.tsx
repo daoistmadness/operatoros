@@ -119,7 +119,7 @@ describe("AttendanceCalendar", () => {
     expect((container.querySelector("#calendar-year") as HTMLSelectElement).value).toBe("2");
     expect((container.querySelector("#calendar-jenjang") as HTMLSelectElement).value).toBe("2");
     expect((container.querySelector("#exception-date") as HTMLInputElement).value).toBe("2027-08-04");
-    expect(calendarApi.fetchAttendanceCalendar).toHaveBeenCalledWith(2);
+    expect(calendarApi.fetchAttendanceCalendar).toHaveBeenCalledWith(2, expect.any(AbortSignal));
     expect(container.querySelector("#location-text")?.textContent).toContain("academic_year_id=2");
   });
 

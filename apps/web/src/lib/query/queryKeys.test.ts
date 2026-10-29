@@ -73,4 +73,27 @@ describe("query-key conventions", () => {
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(9, 2026));
     expect(queryKeys.dashboard.snapshot(8, 2026)).not.toEqual(queryKeys.dashboard.snapshot(8, 2025));
   });
+
+  it("keeps all machine-import student search dimensions in the key", () => {
+    const base = queryKeys.machineImport.studentSearch("Alya", 4, 2);
+    expect(base).not.toEqual(queryKeys.machineImport.studentSearch("Bima", 4, 2));
+    expect(base).not.toEqual(queryKeys.machineImport.studentSearch("Alya", 5, 2));
+    expect(base).not.toEqual(queryKeys.machineImport.studentSearch("Alya", 4, 3));
+  });
+
+  it("keeps teacher assignment filters in the key", () => {
+    const base = queryKeys.teacherClassAssignments.assignments({ yearId: "4", classId: "7", activeOnly: true });
+    expect(base).not.toEqual(queryKeys.teacherClassAssignments.assignments({ yearId: "5", classId: "7", activeOnly: true }));
+    expect(base).not.toEqual(queryKeys.teacherClassAssignments.assignments({ yearId: "4", classId: "8", activeOnly: true }));
+    expect(base).not.toEqual(queryKeys.teacherClassAssignments.assignments({ yearId: "4", classId: "7", activeOnly: false }));
+  });
+
+  it("keeps audit filters, page, and page size in the key", () => {
+    const base = { page: 1, actor: "", operation: "", entityType: "", riskLevel: "", highRiskOnly: false, rollbackOnly: false, pageSize: 25 };
+    expect(queryKeys.operationsAudit.list(base)).not.toEqual(queryKeys.operationsAudit.list({ ...base, page: 2 }));
+    expect(queryKeys.operationsAudit.list(base)).not.toEqual(queryKeys.operationsAudit.list({ ...base, riskLevel: "HIGH" }));
+    expect(queryKeys.operationsAudit.list(base)).not.toEqual(queryKeys.operationsAudit.list({ ...base, highRiskOnly: true }));
+    expect(queryKeys.operationsAudit.list(base)).not.toEqual(queryKeys.operationsAudit.list({ ...base, rollbackOnly: true }));
+    expect(queryKeys.operationsAudit.list(base)).not.toEqual(queryKeys.operationsAudit.list({ ...base, pageSize: 50 }));
+  });
 });

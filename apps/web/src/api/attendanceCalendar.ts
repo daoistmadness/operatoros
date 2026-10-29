@@ -3,8 +3,8 @@ import { apiRequest } from "../lib/api/client";
 
 export type AttendanceCalendarRuleValue = "EXPECTED" | "NOT_EXPECTED";
 
-export async function fetchAttendanceCalendar(academicYearId: number): Promise<AttendanceCalendarOverview> {
-  const response = await apiRequest<AttendanceCalendarOverview>({ path: "/api/attendance/calendar", params: { academic_year_id: academicYearId } });
+export async function fetchAttendanceCalendar(academicYearId: number, signal?: AbortSignal): Promise<AttendanceCalendarOverview> {
+  const response = await apiRequest<AttendanceCalendarOverview>({ path: "/api/attendance/calendar", params: { academic_year_id: academicYearId }, signal });
   return response.data;
 }
 

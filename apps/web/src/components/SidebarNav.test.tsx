@@ -13,7 +13,9 @@ import SidebarNav, {
 } from './SidebarNav';
 import { routeAuthorizations } from '../lib/router/access';
 
-vi.mock('../lib/api/client', () => ({ getServerStatus: vi.fn().mockResolvedValue({ status: 'ok' }) }));
+vi.mock('../hooks/useServerStatusQuery', () => ({
+  useServerStatusQuery: () => ({ isLoading: false, isError: false }),
+}));
 
 const users: Record<'admin' | 'staff', AuthUser> = {
   admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'view_staff_analytics', 'manage_staff', 'export_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections'] },

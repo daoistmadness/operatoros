@@ -27,6 +27,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { NativeSelect } from "../components/ui/native-select";
 import { FormField, FieldLabel } from "../components/ui/field";
+import { queryKeys } from "../lib/query/queryKeys";
 
 interface UserOption {
   id: number;
@@ -75,20 +76,20 @@ export default function TeacherClassAssignments() {
 
   // Queries
   const { data: assignments = [], isLoading, error, refetch } = useQuery<TeacherClassAssignment[]>({
-    queryKey: ["teacherClassAssignments", filterYearId, filterClassId, filterActiveOnly],
-    queryFn: () =>
+    queryKey: queryKeys.teacherClassAssignments.assignments({ yearId: filterYearId, classId: filterClassId, activeOnly: filterActiveOnly }),
+    queryFn: ({ signal }) =>
       fetchTeacherClassAssignments({
         academic_year_id: filterYearId ? Number(filterYearId) : undefined,
         academic_class_id: filterClassId ? Number(filterClassId) : undefined,
         is_active: filterActiveOnly ? true : undefined,
-      }),
+      }, signal),
   });
 
   const { data: users = [] } = useQuery<UserOption[]>({
-    queryKey: ["usersOptions"],
-    queryFn: async () => {
+    queryKey: queryKeys.teacherClassAssignments.users,
+    queryFn: async ({ signal }) => {
       try {
-        const res = await apiRequest({ path: "/api/users" });
+        const res = await apiRequest({ path: "/api/users", signal });
         if (Array.isArray(res.data)) return res.data as UserOption[];
         if (res.data && typeof res.data === "object" && "items" in res.data && Array.isArray(res.data.items)) {
           return res.data.items as UserOption[];
@@ -101,10 +102,10 @@ export default function TeacherClassAssignments() {
   });
 
   const { data: academicYears = [] } = useQuery<AcademicYearOption[]>({
-    queryKey: ["academicYearsOptions"],
-    queryFn: async () => {
+    queryKey: queryKeys.teacherClassAssignments.academicYears,
+    queryFn: async ({ signal }) => {
       try {
-        const res = await apiRequest({ path: "/api/grades/academic-years" });
+        const res = await apiRequest({ path: "/api/grades/academic-years", signal });
         return Array.isArray(res.data) ? res.data : [];
       } catch {
         return [];
@@ -113,10 +114,10 @@ export default function TeacherClassAssignments() {
   });
 
   const { data: academicClasses = [] } = useQuery<AcademicClassOption[]>({
-    queryKey: ["academicClassesOptions"],
-    queryFn: async () => {
+    queryKey: queryKeys.teacherClassAssignments.academicClasses,
+    queryFn: async ({ signal }) => {
       try {
-        const res = await apiRequest({ path: "/api/grades/classes" });
+        const res = await apiRequest({ path: "/api/grades/classes", signal });
         return Array.isArray(res.data) ? res.data : [];
       } catch {
         return [];
@@ -125,10 +126,10 @@ export default function TeacherClassAssignments() {
   });
 
   const { data: subjects = [] } = useQuery<SubjectOption[]>({
-    queryKey: ["subjectsOptions"],
-    queryFn: async () => {
+    queryKey: queryKeys.teacherClassAssignments.subjects,
+    queryFn: async ({ signal }) => {
       try {
-        const res = await apiRequest({ path: "/api/grades/subjects" });
+        const res = await apiRequest({ path: "/api/grades/subjects", signal });
         return Array.isArray(res.data) ? res.data : [];
       } catch {
         return [];
@@ -140,7 +141,7 @@ export default function TeacherClassAssignments() {
   const createMutation = useMutation({
     mutationFn: (payload: TeacherClassAssignmentCreatePayload) => createTeacherClassAssignment(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacherClassAssignments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherClassAssignments.all });
       setIsCreateOpen(false);
       resetForm();
     },
@@ -153,14 +154,14 @@ export default function TeacherClassAssignments() {
   const deactivateMutation = useMutation({
     mutationFn: (id: number) => deactivateTeacherClassAssignment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacherClassAssignments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherClassAssignments.all });
     },
   });
 
   const reactivateMutation = useMutation({
     mutationFn: (id: number) => reactivateTeacherClassAssignment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teacherClassAssignments"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teacherClassAssignments.all });
     },
   });
 

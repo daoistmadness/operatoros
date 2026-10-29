@@ -76,20 +76,20 @@ export type StudentProfile = {
   }>;
 };
 
-export async function fetchStudents(filters: StudentFilters): Promise<StudentListResponse> {
-  return (await apiRequest<StudentListResponse>({ path: "/api/student-masters/management/list", params: filters })).data;
+export async function fetchStudents(filters: StudentFilters, signal?: AbortSignal): Promise<StudentListResponse> {
+  return (await apiRequest<StudentListResponse>({ path: "/api/student-masters/management/list", params: filters, signal })).data;
 }
 
-export async function fetchStudent(id: string): Promise<StudentProfile> {
-  return (await apiRequest<StudentProfile>({ path: `/api/student-masters/${id}/profile` })).data;
+export async function fetchStudent(id: string, signal?: AbortSignal): Promise<StudentProfile> {
+  return (await apiRequest<StudentProfile>({ path: `/api/student-masters/${id}/profile`, signal })).data;
 }
 
-export async function fetchStudentOverview(id: string): Promise<StudentOverviewResponse> {
-  return (await apiRequest<StudentOverviewResponse>({ path: `/api/student-masters/${id}/overview` })).data;
+export async function fetchStudentOverview(id: string, signal?: AbortSignal): Promise<StudentOverviewResponse> {
+  return (await apiRequest<StudentOverviewResponse>({ path: `/api/student-masters/${id}/overview`, signal })).data;
 }
 
-export async function fetchLegacyLinkStatus(id: string): Promise<LegacyLinkStatus> {
-  return (await apiRequest<LegacyLinkStatus>({ path: `/api/student-masters/${id}/legacy-link` })).data;
+export async function fetchLegacyLinkStatus(id: string, signal?: AbortSignal): Promise<LegacyLinkStatus> {
+  return (await apiRequest<LegacyLinkStatus>({ path: `/api/student-masters/${id}/legacy-link`, signal })).data;
 }
 
 export async function linkLegacyStudent(id: string, payload: { legacy_student_id: number; reason: string; confirmation: "LINK_LEGACY_STUDENT" }) {
@@ -104,16 +104,16 @@ export async function updateStudent(id: string, payload: unknown): Promise<Stude
   return (await apiRequest<StudentProfile>({ path: `/api/student-masters/${id}/profile`, method: "PATCH", body: payload })).data;
 }
 
-export async function fetchStudentQuality(): Promise<Record<string, number>> {
-  return (await apiRequest<Record<string, number>>({ path: "/api/student-masters/management/quality" })).data;
+export async function fetchStudentQuality(signal?: AbortSignal): Promise<Record<string, number>> {
+  return (await apiRequest<Record<string, number>>({ path: "/api/student-masters/management/quality", signal })).data;
 }
 
-export async function fetchStudentHistory(id: string): Promise<Array<Record<string, unknown>>> {
-  return (await apiRequest<Array<Record<string, unknown>>>({ path: `/api/student-masters/${id}/history` })).data;
+export async function fetchStudentHistory(id: string, signal?: AbortSignal): Promise<Array<Record<string, unknown>>> {
+  return (await apiRequest<Array<Record<string, unknown>>>({ path: `/api/student-masters/${id}/history`, signal })).data;
 }
 
-export async function fetchStudentEnrollments(id: string): Promise<Array<Record<string, unknown>>> {
-  return (await apiRequest<Array<Record<string, unknown>>>({ path: `/api/student-enrollments/student/${id}` })).data;
+export async function fetchStudentEnrollments(id: string, signal?: AbortSignal): Promise<Array<Record<string, unknown>>> {
+  return (await apiRequest<Array<Record<string, unknown>>>({ path: `/api/student-enrollments/student/${id}`, signal })).data;
 }
 
 export async function replaceDeviceIdentity(id: string, payload: unknown) {
@@ -124,8 +124,8 @@ export async function linkDeviceIdentity(payload: { device_identifier: string; s
   return (await apiRequest({ path: "/api/attendance/machine-import/device-identities/link", method: "POST", body: payload })).data;
 }
 
-export async function searchMachineImportStudents(filters: { search: string; academicYearId: number; jenjangId: number }): Promise<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }> {
-  return (await apiRequest<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }>({ path: "/api/attendance/machine-import/student-search", params: { search: filters.search || undefined, academic_year_id: filters.academicYearId, jenjang_id: filters.jenjangId } })).data;
+export async function searchMachineImportStudents(filters: { search: string; academicYearId: number; jenjangId: number }, signal?: AbortSignal): Promise<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }> {
+  return (await apiRequest<{ items: Array<{ id: string; full_name: string; current_jenjang: string | null; current_class: string | null }> }>({ path: "/api/attendance/machine-import/student-search", params: { search: filters.search || undefined, academic_year_id: filters.academicYearId, jenjang_id: filters.jenjangId }, signal })).data;
 }
 
 export async function reassignDeviceIdentity(id: string, payload: unknown) {

@@ -62,7 +62,7 @@ export async function fetchTeacherClassAssignments(params?: {
   academic_year_id?: number;
   academic_class_id?: number;
   is_active?: boolean;
-}): Promise<TeacherClassAssignment[]> {
+}, signal?: AbortSignal): Promise<TeacherClassAssignment[]> {
   const query = new URLSearchParams();
   if (params?.user_id) query.append("user_id", String(params.user_id));
   if (params?.academic_year_id) query.append("academic_year_id", String(params.academic_year_id));
@@ -73,6 +73,7 @@ export async function fetchTeacherClassAssignments(params?: {
   const response = await apiRequest<TeacherClassAssignment[]>({
     path: `/api/teacher-class-assignments${queryString}`,
     method: "GET",
+    signal,
   });
   return response.data;
 }
@@ -118,21 +119,24 @@ export async function reactivateTeacherClassAssignment(id: number): Promise<Teac
   return response.data;
 }
 
-export async function fetchAssignedClasses(): Promise<AssignedClassSummary[]> {
+export async function fetchAssignedClasses(signal?: AbortSignal): Promise<AssignedClassSummary[]> {
   const response = await apiRequest<{ classes: AssignedClassSummary[] }>({
     path: "/api/attendance/classes/assigned",
     method: "GET",
+    signal,
   });
   return response.data.classes;
 }
 
 export async function fetchClassAttendanceForDate(
   classId: number,
-  dateVal: string
+  dateVal: string,
+  signal?: AbortSignal,
 ): Promise<ClassAttendanceResponse> {
   const response = await apiRequest<ClassAttendanceResponse>({
     path: `/api/attendance/classes/${classId}/dates/${dateVal}`,
     method: "GET",
+    signal,
   });
   return response.data;
 }

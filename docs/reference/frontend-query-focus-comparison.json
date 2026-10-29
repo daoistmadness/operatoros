@@ -1,0 +1,83 @@
+{
+  "scenario": "paired-focus-and-visibility-session-revalidation",
+  "capturedAt": "2026-10-29",
+  "methodology": {
+    "runCount": 5,
+    "baselineRevision": "cc536b80c6f919dbf23ce5decb7f8be0c90224e3",
+    "fixture": "E2E runner synthetic SQLite fixture",
+    "browser": "Chromium 149.0.7827.55",
+    "viewport": {
+      "width": 1365,
+      "height": 900
+    },
+    "workers": 1,
+    "network": "Unthrottled local loopback",
+    "authResponseHoldMs": 250,
+    "measurement": "Same-origin API request count from paired focus and visibility events until network idle after releasing the held auth response."
+  },
+  "baseline": {
+    "revision": "cc536b80c6f919dbf23ce5decb7f8be0c90224e3",
+    "focusApiRequests": {
+      "runCount": 5,
+      "p75NearestRank": 24,
+      "range": [
+        24,
+        24
+      ],
+      "samples": [24, 24, 24, 24, 24]
+    },
+    "authRevalidationRequests": {
+      "runCount": 5,
+      "p75NearestRank": 2,
+      "range": [
+        2,
+        2
+      ],
+      "samples": [2, 2, 2, 2, 2]
+    },
+    "protectedBeforeAuthSuccess": {
+      "runCount": 5,
+      "p75NearestRank": 22,
+      "range": [
+        22,
+        22
+      ],
+      "samples": [22, 22, 22, 22, 22]
+    }
+  },
+  "optimized": {
+    "capturedAt": "2026-10-29",
+    "focusApiRequests": {
+      "runCount": 5,
+      "p75NearestRank": 1,
+      "range": [
+        1,
+        1
+      ],
+      "samples": [1, 1, 1, 1, 1]
+    },
+    "authRevalidationRequests": {
+      "runCount": 5,
+      "p75NearestRank": 1,
+      "range": [
+        1,
+        1
+      ],
+      "samples": [1, 1, 1, 1, 1]
+    },
+    "protectedBeforeAuthSuccess": {
+      "runCount": 5,
+      "p75NearestRank": 0,
+      "range": [
+        0,
+        0
+      ],
+      "samples": [0, 0, 0, 0, 0]
+    }
+  },
+  "comparison": {
+    "apiRequestsReducedPerRun": 23,
+    "apiRequestCountReductionPercent": 95.8,
+    "scope": "Local request count only; not a latency, field-performance, or broad application speedup claim."
+  }
+}
