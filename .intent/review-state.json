@@ -8083,17 +8083,15 @@
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
-      "fingerprint": "9ce9894637eea7fc21b681a9b59cf7378abb80ca39f3d2ab17d51bba5e1b9363",
+      "fingerprint": "fcd6494474b5252723110fb08c5b44ca4d2bb93a662f5e2b2486146983ab8ed3",
       "snapshot": {
-        "e2e/smoke/web/management-analytics-overview.spec.ts": "99492c70e39ed0b5e8f231e437387598a0654a21dc09d3c355fbcb187a291e6c"
+        "e2e/smoke/web/management-analytics-overview.spec.ts": "cd3ab6f85c1ab0db8c711b4de6c33f7175141afbb285b11e1b7c15f79b9ace3e"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "6615ea8c1291ffe43e7c2b4ad4ee2ee5046f55f8",
+      "outcome": "no-change",
+      "reason": "This E2E spec now waits for the chart’s responsive containment condition after resizing; it changes no backend guidance or Elysia behavior. The focused Chromium smoke, including disposable reset checks, passed.",
       "evidence": [
-        "Reviewed e2e/smoke/web/management-analytics-overview.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at 6615ea8c1291ffe43e7c2b4ad4ee2ee5046f55f8"
       ]
     },
     "source:e2e/smoke/web/navigation-command-search.spec.ts": {
