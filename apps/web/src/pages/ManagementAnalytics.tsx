@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from "chart.js";
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { AppLink as Link } from '../components/AppLink';
 import type { ManagementOverviewResponse } from "@operatoros/contracts/analytics";
-import { AttendanceStatusChart } from "../components/charts/AttendanceStatusChart";
+import { DeferredChart } from "../components/DeferredChart";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState, PermissionRestrictedState } from "../components/common/state-message";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -21,6 +21,10 @@ import {
 } from "../lib/charts/attendanceStatusChart";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+
+const AttendanceStatusChart = lazy(() =>
+  import("../components/charts/AttendanceStatusChart").then(({ AttendanceStatusChart: Chart }) => ({ default: Chart })),
+);
 
 type AvailableAcademic = Extract<ManagementOverviewResponse["academic"], { status: "available" }>;
 
@@ -40,7 +44,7 @@ function Stat({ label, value }: { label: string; value: string | number }) { ret
 
 function AttendanceSection({ value, scope }: { value: AvailableAttendance; scope: ManagementOverviewResponse["scope"] }) {
   const rows = toAttendanceStatusChartData(value);
-  return <Card><CardHeader><CardTitle>Attendance</CardTitle><p className="text-sm text-muted-foreground">Recorded status ratios for the selected academic year and date range. Unrecorded expected days are excluded.</p></CardHeader><CardContent className="space-y-5"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Stat label="Recorded Presence Rate" value={percent(value.attendanceRate)} /><Stat label="Present" value={value.present} /><Stat label="Late" value={value.late} /><Stat label="Alfa" value={value.alfa} /></div><div className="grid gap-6 lg:grid-cols-2"><AttendanceStatusChart data={rows} /><table className="w-full text-sm"><caption className="sr-only">Attendance status distribution</caption><thead><tr className="border-b border-border text-left"><th scope="col" className="py-2">Status</th><th scope="col" className="py-2 text-right">Records</th></tr></thead><tbody>{rows.map((row) => <tr key={row.key} className="border-b border-border"><th scope="row" className="py-2 text-left font-semibold">{row.label}</th><td className="py-2 text-right tabular-nums">{row.value}</td></tr>)}</tbody></table></div><p className="text-sm text-muted-foreground">{value.totalRecords} records · {value.overriddenRecords} override-corrected records.</p><SectionLink href={sectionLink("/analytics/attendance", scope)}>View Attendance Analytics</SectionLink></CardContent></Card>;
+  return <Card><CardHeader><CardTitle>Attendance</CardTitle><p className="text-sm text-muted-foreground">Recorded status ratios for the selected academic year and date range. Unrecorded expected days are excluded.</p></CardHeader><CardContent className="space-y-5"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Stat label="Recorded Presence Rate" value={percent(value.attendanceRate)} /><Stat label="Present" value={value.present} /><Stat label="Late" value={value.late} /><Stat label="Alfa" value={value.alfa} /></div><div className="grid gap-6 lg:grid-cols-2"><DeferredChart className="min-h-64"><AttendanceStatusChart data={rows} /></DeferredChart><table className="w-full text-sm"><caption className="sr-only">Attendance status distribution</caption><thead><tr className="border-b border-border text-left"><th scope="col" className="py-2">Status</th><th scope="col" className="py-2 text-right">Records</th></tr></thead><tbody>{rows.map((row) => <tr key={row.key} className="border-b border-border"><th scope="row" className="py-2 text-left font-semibold">{row.label}</th><td className="py-2 text-right tabular-nums">{row.value}</td></tr>)}</tbody></table></div><p className="text-sm text-muted-foreground">{value.totalRecords} records · {value.overriddenRecords} override-corrected records.</p><SectionLink href={sectionLink("/analytics/attendance", scope)}>View Attendance Analytics</SectionLink></CardContent></Card>;
 }
 
 function AcademicSection({ value, scope }: { value: AvailableAcademic; scope: ManagementOverviewResponse["scope"] }) {

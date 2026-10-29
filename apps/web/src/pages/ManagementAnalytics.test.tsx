@@ -40,16 +40,18 @@ async function renderPage(currentAuth = auth) {
 describe("ManagementAnalytics overview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("IntersectionObserver", undefined);
     vi.mocked(analyticsApi.fetchAnalyticsFilters).mockResolvedValue(filters);
     vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue(overview as never);
     vi.mocked(academicApi.fetchAcademicAnalyticsOptions).mockResolvedValue({ academicYears: [], jenjangs: [], classes: [{ id: 7, name: "1A", jenjangId: 1 }], subjects: [], assessmentTypes: [] } as never);
     vi.mocked(attendanceApi.fetchAttendanceAnalyticsOptions).mockResolvedValue({ academicYears: [], jenjangs: [], classes: [] } as never);
   });
-  afterEach(async () => { if (root) await act(async () => root.unmount()); container?.remove(); });
+  afterEach(async () => { if (root) await act(async () => root.unmount()); container?.remove(); vi.unstubAllGlobals(); });
 
   it("renders server values and canonical drill-through links", async () => {
     const view = await renderPage();
     await vi.waitFor(() => expect(view.textContent).toContain("Management Overview"));
+    await vi.waitFor(() => expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]')).toBeTruthy());
     expect(view.textContent).toContain("24");
     expect(view.textContent).toContain("92.5%");
     expect(view.textContent).toContain("84.5");

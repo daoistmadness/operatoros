@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Defer the Management Overview attendance chart until it approaches the viewport and enforce production page-chunk budgets.
 - Add a versioned browser preference for the desktop sidebar, standardize shared state colors, and keep the mobile navigation drawer full width.
 - Modernize the Management Overview attendance distribution with Unovis while retaining the exact-value table and Chart.js for other charts.
 - Use TanStack Table for attendance follow-up lists and virtualize large result sets.

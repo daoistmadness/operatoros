@@ -95,7 +95,16 @@ to use Chart.js, including student-specific, report, and print/export charts;
 keep Chart.js until Unovis parity is demonstrated for each required feature.
 Unovis charts do not calculate metrics or persist chart data.
 Shared loading, empty, error, and restricted states use semantic color tokens.
-Loading animation runs only when the user has not requested reduced motion.
+Loading animation and transitions are reduced by the global
+`prefers-reduced-motion` rule in `apps/web/src/index.css`. Use CSS for simple
+effects; do not add an animation library without a measured need. Virtualized
+table rows should not receive per-row animation.
+
+Large charts use `DeferredChart` when deferring their code is useful. The
+wrapper reserves layout space and loads the chart module only as it approaches
+the viewport. Keep accessible labels, tabular values, and the page's data
+available outside that boundary. The Management Overview attendance table
+remains present while its Unovis chart is deferred.
 
 See [UI and routing](ui-and-routing.md) for the current router and shell
 structure, and [frontend data flow](frontend-data.md) for query ownership.

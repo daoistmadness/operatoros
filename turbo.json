@@ -6,7 +6,9 @@
     "mise.lock",
     "eslint.config.mjs",
     "scripts/check-architecture.ts",
-    "scripts/check-typebox-resolution.ts"
+    "scripts/check-typebox-resolution.ts",
+    "scripts/frontend-bundle-report.mjs",
+    "scripts/frontend-bundle-report.test.mjs"
   ],
   "globalPassThroughEnv": ["TMPDIR"],
   "tasks": {

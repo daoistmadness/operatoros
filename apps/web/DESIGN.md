@@ -244,6 +244,7 @@ Use `Badge` for compact state, `Alert` for consequential inline feedback, and `L
 
 - Reuse shared primitives and semantic tokens before adding page-local utility strings.
 - Use semantic color tokens for shared loading, empty, error, and restricted states. Respect reduced motion for loading animation.
+- Use CSS for simple motion and honor the global `prefers-reduced-motion` rule. Avoid per-row animation in virtualized tables.
 - Preserve visible keyboard focus, descriptive accessible names, correct button types, and meaningful disabled/loading states.
 - Test long Indonesian labels, large datasets, empty/error/loading states, keyboard navigation, narrow screens, and report printing.
 - Keep tables within scroll containers and keep page-level overflow at zero.

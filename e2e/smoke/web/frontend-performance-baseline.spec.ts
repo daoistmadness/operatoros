@@ -159,7 +159,7 @@ function apiPath(url: string): string | null {
 
 async function visitLink(page: Page, label: string, heading: string): Promise<number> {
   const startedAt = Date.now();
-  await page.getByRole("link", { name: label, exact: true }).click();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: label, exact: true }).click();
   await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
   return Date.now() - startedAt;
 }

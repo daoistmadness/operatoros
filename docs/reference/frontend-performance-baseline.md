@@ -6,10 +6,9 @@ last_reviewed: 2026-10-29
 # Frontend performance baseline
 
 This page records the PR-01 local performance baseline for the React 19, Vite,
-and TanStack Router application, plus a PR-02 follow-up comparison of focus
-revalidation API requests. The original timing baseline remains a baseline;
-the follow-up claims a request-count reduction only, not an end-to-end latency
-or field-performance improvement.
+and TanStack Router application, plus PR-02 and PR-08 follow-up comparisons.
+Each result identifies its measured scope; the local samples are not field
+percentiles.
 
 ## Verified URL behavior
 
@@ -94,6 +93,73 @@ The added Unovis code is confined to the already lazy-loaded Management
 Analytics route. It increases that route's compressed JavaScript payload; this
 phase makes no runtime speedup claim. Chart.js remains in the build for the
 other charts that still need it.
+
+### PR-08 deferred chart and route chunk comparison
+
+The before build is PR-08's base commit (`bd906b8`) and the after build is this
+phase, both on the same four-processor Linux host with Bun 1.4.4 and Vite 8.3.4.
+Both used `bun --filter @operatoros/web build`. The before sizes were measured
+from emitted `*.js` files before enabling Vite's build manifest; the after
+report uses the manifest's `src/pages/ManagementAnalytics.tsx` entry. Raw
+counts are file byte lengths. Gzip values independently compress each file at
+level 9. The static closure includes transitive static imports and excludes
+dynamic imports. These are build-size estimates, not browser transfer sizes.
+
+| Measure | PR-08 base | PR-08 | Change |
+| --- | ---: | ---: | ---: |
+| Management Analytics entry, raw | 180,351 bytes | 14,289 bytes | −166,062 bytes (−92.1%) |
+| Management Analytics entry, gzip | 58,441 bytes | 3,883 bytes | −54,558 bytes (−93.4%) |
+| Management Analytics static closure, raw | 902,695 bytes | 737,366 bytes | −165,329 bytes (−18.3%) |
+| Management Analytics static closure, gzip sum | 291,707 bytes | 237,602 bytes | −54,105 bytes (−18.5%) |
+| All emitted JavaScript, raw | 2,117,646 bytes | 2,118,427 bytes | +781 bytes (+0.04%) |
+| All emitted JavaScript, gzip sum | 621,740 bytes | 622,575 bytes | +835 bytes (+0.13%) |
+
+The 166,620-byte raw (55,167-byte gzip) attendance chart module remains in the
+production build as a dynamic chunk. It is requested only when its container
+approaches the viewport; the attendance table and exact server values remain
+available independently. The existing Management Analytics E2E journey checks
+that the chart chunk has not loaded before scrolling to the table/chart area,
+then verifies the chart, legend, tooltip, and responsive layout.
+
+The production analyzer enforces a direct-entry budget of 160,000 raw bytes and
+40,000 gzip bytes for each of 48 `src/pages/*.tsx` route entries. The largest
+current page entry is Upload Center at 142,131 raw and 32,615 gzip bytes. These
+budgets apply to page entry chunks, not their shared static closures or lazy
+feature chunks. `bun --filter @operatoros/web build` runs the budget check;
+`bun --filter @operatoros/web analyze:bundle` prints the full manifest report.
+
+This change splits code rather than deleting it: total emitted JavaScript grew
+by 781 raw bytes and 835 bytes in the independent gzip sum. The result is a
+smaller initial Management Analytics entry, not a smaller total application
+bundle or a measured route-latency improvement. No Framer Motion usage or
+dependency was found. Reduced motion is already enforced globally in the web
+stylesheet; an E2E assertion now checks the computed animation and transition
+durations while the Management Overview test runs with reduced motion enabled.
+
+The five-run browser baseline was also repeated with the existing opt-in
+Playwright journey, Chromium 149.0.7827.55, one worker, and a 1365 × 900
+viewport. The host had four processors and load averages of 2.35, 2.79, and
+2.17 before the run. This journey covers login, the dashboard, Academic
+Analytics, filtering/sorting, and the dirty-navigation guard; it does not visit
+Management Analytics, so these readings are regression context rather than a
+before/after measure of the deferred chart.
+
+| Metric | Current local p75 | Range, n = 5 |
+| --- | ---: | ---: |
+| Login form ready | 611 ms | 580–624 ms |
+| Dashboard document ready | 813 ms | 682–826 ms |
+| First / repeat Academic Analytics SPA visit | 689 / 329 ms | 661–731 / 313–333 ms |
+| Initial JavaScript transfer | 265,617 bytes | 265,617–265,617 bytes |
+| First Academic Analytics route transfer | 72,428 bytes | 72,428–72,428 bytes |
+| Dashboard LCP lab sample | 820 ms | 692–852 ms |
+
+Each sample recorded one expected pre-login `401` and 28 browser transport
+cancellations (`net::ERR_ABORTED`) during document navigation. Those counts
+are retained as failures/cancellations, not interpreted as speedups. The E2E
+runner reported 8/8 backend tests and 4/4 browser tests passing, including the
+baseline journey, management chart behavior, reduced-motion assertion, and
+synthetic reset checks. It used local unthrottled traffic and does not represent
+a field percentile or INP measurement.
 
 ### PR-02 query focus request comparison
 
@@ -235,4 +301,6 @@ and browser timing entries; it contains no application records or credentials.
 The PR-01 baseline artifacts remain historical reference. PR-02 rollback is
 reverting its query policies, session lifecycle, cache headers, focused tests,
 and changelog entry together. PR-02 adds no database schema, persisted
-application data, or runtime setting.
+application data, or runtime setting. PR-08 rollback reverts the chart's
+deferred import and the bundle report/build-budget files together; it changes
+no API contract, browser-persisted data, or server authorization.

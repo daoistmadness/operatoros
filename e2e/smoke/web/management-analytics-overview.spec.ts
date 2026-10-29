@@ -14,6 +14,27 @@ async function login(page: Page) {
 test("@management @analytics @release management overview preserves scope through detail pages", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await login(page);
+  const reducedMotionDurations = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.animationDuration = "1s";
+    probe.style.transitionDuration = "1s";
+    document.body.append(probe);
+    const styles = getComputedStyle(probe);
+    const durations = [styles.animationDuration, styles.transitionDuration].map((value) => {
+      const duration = value.split(",")[0]?.trim() ?? "0s";
+      const milliseconds = Number.parseFloat(duration);
+      return duration.endsWith("ms") ? milliseconds : milliseconds * 1000;
+    });
+    probe.remove();
+    return durations;
+  });
+  expect(reducedMotionDurations.every((duration) => duration <= 0.01)).toBe(true);
+  const chartChunkRequests: string[] = [];
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (/\/assets\/AttendanceStatusChart-[^/]+\.js$/.test(path)) chartChunkRequests.push(path);
+  });
+  await page.setViewportSize({ width: 1280, height: 200 });
   const initialOverview = page.waitForResponse((response) => response.url().includes("/api/analytics/management-overview") && response.status() === 200);
   await page.goto("/analytics");
   await initialOverview;
@@ -24,8 +45,13 @@ test("@management @analytics @release management overview preserves scope throug
   await expect(page.getByRole("heading", { name: "Academic" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Data Quality" })).toBeVisible();
 
+  const attendanceTable = page.getByRole("table", { name: "Attendance status distribution" });
+  await expect(attendanceTable).toBeVisible();
+  expect(chartChunkRequests).toHaveLength(0);
+  await attendanceTable.scrollIntoViewIfNeeded();
   const attendanceChart = page.getByRole("img", { name: /^Attendance status distribution:/ });
   await expect(attendanceChart).toBeVisible();
+  expect(chartChunkRequests).toHaveLength(1);
   await expect(attendanceChart.locator("svg")).toBeVisible();
   await expect(page.getByRole("list", { name: "Attendance status colors" })).toBeVisible();
   const chartLabels = await attendanceChart.locator("svg text").allTextContents();
@@ -34,7 +60,6 @@ test("@management @analytics @release management overview preserves scope throug
   }
   const chartLabel = await attendanceChart.getAttribute("aria-label");
   if (!chartLabel) throw new Error("Expected an accessible attendance chart summary.");
-  const attendanceTable = page.getByRole("table", { name: "Attendance status distribution" });
   for (const row of await attendanceTable.locator("tbody tr").all()) {
     const status = (await row.locator("th").textContent())?.trim();
     const count = (await row.locator("td").textContent())?.trim();

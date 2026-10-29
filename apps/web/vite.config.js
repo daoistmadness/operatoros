@@ -99,6 +99,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'build',
+    manifest: true,
   },
   test: {
     globals: true,
