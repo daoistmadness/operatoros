@@ -135,14 +135,15 @@ test('@error-recovery @release mobile navigation manages focus, dismissal, histo
   await opener.click();
   const drawer = page.getByRole('dialog', { name: 'Application navigation' });
   await expect(drawer).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeVisible();
+  await expect(drawer.getByRole('button', { name: 'Close navigation' })).toBeVisible();
   await expect(page.locator('#main-content')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
-  await expect(drawer.getByRole('button', { name: 'Overview' })).toBeFocused();
+  const closeButton = drawer.getByRole('button', { name: 'Close navigation' });
+  await expect(closeButton).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(page.getByRole('button', { name: 'Close navigation' })).toBeFocused();
+  await expect(drawer.getByRole('button', { name: 'Logout' })).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(drawer.getByRole('button', { name: 'Overview' })).toBeFocused();
+  await expect(closeButton).toBeFocused();
 
   await page.keyboard.press('Escape');
   await expect(drawer).toBeHidden();
@@ -158,7 +159,7 @@ test('@error-recovery @release mobile navigation manages focus, dismissal, histo
   await expect(page).toHaveURL(/\/$/);
   await opener.click();
   await expect(drawer.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
-  await page.getByRole('button', { name: 'Close navigation' }).click();
+  await drawer.getByRole('button', { name: 'Close navigation' }).click();
   await expect(opener).toBeFocused();
   const skipLink = page.getByRole('link', { name: 'Skip to main content' });
   await skipLink.focus();

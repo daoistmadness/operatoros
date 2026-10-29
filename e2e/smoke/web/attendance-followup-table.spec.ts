@@ -80,6 +80,22 @@ test("@attendance @table-benchmark @release virtualizes large follow-up tables w
   await expect(candidateTable).toHaveAttribute("aria-rowcount", String(fixtureSize + 1));
   await expect(candidateTable.locator('tbody tr[data-row-id="synthetic:0"]')).toHaveAttribute("aria-rowindex", "2");
   const viewport = page.locator("[data-table-viewport]");
+  const scrollToLastRowMs: number[] = [];
+  const firstRow = candidateTable.locator('tbody tr[data-row-id="synthetic:0"]');
+  const lastRow = candidateTable.locator('tbody tr[data-row-id="synthetic:1999"]');
+  for (let run = 0; run < 5; run += 1) {
+    await viewport.evaluate((element) => { element.scrollTop = 0; });
+    await expect(firstRow).toBeVisible();
+    const startedAt = await page.evaluate(() => performance.now());
+    await viewport.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+    await expect(lastRow).toBeVisible();
+    scrollToLastRowMs.push(await page.evaluate((start) => performance.now() - start, startedAt));
+  }
+  const sortedScrollSamples = [...scrollToLastRowMs].sort((left, right) => left - right);
+  const scrollToLastRowP75Ms = sortedScrollSamples[Math.ceil(sortedScrollSamples.length * 0.75) - 1];
+  console.info(JSON.stringify({ benchmark: "attendance-follow-up-table-scroll", fixtureRows: fixtureSize, scrollToLastRowMs, p75Ms: scrollToLastRowP75Ms }));
+  await viewport.evaluate((element) => { element.scrollTop = 0; });
+  await expect(firstRow).toBeVisible();
   const lastMountedRow = candidateTable.locator('tbody tr[data-index]').last();
   const lastMountedIndex = Number(await lastMountedRow.getAttribute("data-index"));
   await lastMountedRow.getByRole("button").focus();
@@ -87,8 +103,8 @@ test("@attendance @table-benchmark @release virtualizes large follow-up tables w
   await expect.poll(() => page.evaluate(() => document.activeElement?.closest<HTMLTableRowElement>("tr[data-index]")?.dataset.index)).toBe(String(lastMountedIndex + 1));
 
   await viewport.evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await expect(candidateTable.locator('tbody tr[data-row-id="synthetic:1999"]')).toBeVisible();
-  await expect(candidateTable.locator('tbody tr[data-row-id="synthetic:1999"]')).toHaveAttribute("aria-rowindex", String(fixtureSize + 1));
+  await expect(lastRow).toBeVisible();
+  await expect(lastRow).toHaveAttribute("aria-rowindex", String(fixtureSize + 1));
   const firstMountedRow = candidateTable.locator('tbody tr[data-index]').first();
   const firstMountedIndex = Number(await firstMountedRow.getAttribute("data-index"));
   await firstMountedRow.getByRole("button").focus();

@@ -25,6 +25,13 @@ choose_port() {
 
 backend_port="$(choose_port 8090 8199)"
 frontend_port="$(choose_port 5180 5299)"
+web_config="vite.config.js"
+if [[ "${OPERATOROS_E2E_REDACT:-false}" == "true" ]]; then
+  web_config="vite.redact.config.js"
+elif [[ "${OPERATOROS_E2E_REDACT:-false}" != "false" ]]; then
+  printf '%s\n' "OPERATOROS_E2E_REDACT must be true or false." >&2
+  exit 2
+fi
 backend_log="$logs/elysia-backend.log"
 frontend_log="$logs/elysia-frontend.log"
 : >"$backend_log"
@@ -80,9 +87,13 @@ wait_until_ready "http://127.0.0.1:$backend_port/health" "$backend_pid" "$backen
 
 (
   cd "$repo_root/apps/web"
-  export PATH="$bun_bin:/usr/bin:/bin" DEV_API_PROXY_TARGET="http://127.0.0.1:$backend_port" BACKEND_PORT="$backend_port" FRONTEND_PORT="$frontend_port"
-  bun run --bun vite build
-  exec setsid bun run --bun vite preview --host 127.0.0.1 --port "$frontend_port" --strictPort
+  export PATH="$bun_bin:/usr/bin:/bin" NODE_ENV=production DEV_API_PROXY_TARGET="http://127.0.0.1:$backend_port" BACKEND_PORT="$backend_port" FRONTEND_PORT="$frontend_port"
+  if [[ "$web_config" == "vite.redact.config.js" ]]; then
+    bun run build:redact
+  else
+    bun run build
+  fi
+  exec setsid bun run --bun vite preview --config "$web_config" --host 127.0.0.1 --port "$frontend_port" --strictPort
 ) >"$frontend_log" 2>&1 &
 frontend_pid=$!
 wait_until_ready "http://127.0.0.1:$frontend_port" "$frontend_pid" "$frontend_log"

@@ -56,6 +56,7 @@ describe('role-aware sidebar navigation', () => {
     open = true,
     collapsed = false,
     isSingleUserMode = false,
+    onClose = vi.fn(),
     onToggleCollapsed = vi.fn(),
     logout = vi.fn<() => Promise<void>>(),
   }: {
@@ -64,6 +65,7 @@ describe('role-aware sidebar navigation', () => {
     open?: boolean;
     collapsed?: boolean;
     isSingleUserMode?: boolean;
+    onClose?: () => void;
     onToggleCollapsed?: () => void;
     logout?: () => Promise<void>;
   } = {}) {
@@ -75,6 +77,7 @@ describe('role-aware sidebar navigation', () => {
               groups={visibleNavigationGroups({ auth: authFor(user), isSingleUserMode })}
               open={open}
               collapsed={collapsed}
+              onClose={onClose}
               onNavigate={vi.fn()}
               onOpenCommandSearch={vi.fn()}
               onToggleCollapsed={onToggleCollapsed}
@@ -168,6 +171,16 @@ describe('role-aware sidebar navigation', () => {
     const analyticsGroup = Array.from(sidebar?.querySelectorAll('nav button') ?? []).find((button) => button.textContent?.includes('Analytics & Reports'));
     expect(analyticsGroup?.hasAttribute('disabled')).toBe(false);
     expect(container.querySelector('a[href="/analytics/attendance"]')?.textContent).toContain('Attendance');
+  });
+
+  it('provides a close control inside the open navigation dialog', async () => {
+    const onClose = vi.fn();
+    await renderSidebar({ open: true, onClose });
+
+    const closeButton = container.querySelector<HTMLButtonElement>('aside[role="dialog"] button[aria-label="Close navigation"]');
+    expect(closeButton).not.toBeNull();
+    await act(async () => closeButton?.click());
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it('operates disclosure groups by keyboard-compatible native buttons and preserves the active group', async () => {

@@ -17,6 +17,14 @@ if [[ "${1:-}" == "--validate" ]]; then
   done
   exit 0
 fi
+case "${OPERATOROS_E2E_REDACT:-false}" in
+  true|false) ;;
+  *) printf '%s\n' "OPERATOROS_E2E_REDACT must be true or false." >&2; exit 2 ;;
+esac
+case "${OPERATOROS_E2E_BROWSER:-}" in
+  ""|chromium|firefox|webkit) ;;
+  *) printf '%s\n' "OPERATOROS_E2E_BROWSER must be chromium, firefox, or webkit." >&2; exit 2 ;;
+esac
 
 started_at=$SECONDS
 results="$repo_root/e2e-results"
@@ -109,6 +117,11 @@ bun "$repo_root/e2e/helpers/db-gate-cleanup.ts" \
 
 web_status=0
 playwright_args=(--config "$repo_root/apps/web/playwright.config.ts")
+if [[ -n "${OPERATOROS_E2E_BROWSER:-}" ]]; then
+  case "$OPERATOROS_E2E_BROWSER" in
+    chromium|firefox|webkit) playwright_args+=(--browser "$OPERATOROS_E2E_BROWSER") ;;
+  esac
+fi
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi

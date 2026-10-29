@@ -2,7 +2,7 @@ import { useEffect, useState, type MouseEvent } from 'react';
 import { AppLink as Link } from './AppLink';
 import { useLocation } from '@tanstack/react-router';
 import {
-  ChevronDown, ChevronLeft, ChevronRight, LogOut, Search, Server,
+  ChevronDown, ChevronLeft, ChevronRight, LogOut, Search, Server, X,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
@@ -17,6 +17,7 @@ type SidebarNavProps = {
   groups: readonly NavigationGroup[];
   open?: boolean;
   collapsed?: boolean;
+  onClose: () => void;
   onNavigate?: () => void;
   onOpenCommandSearch: (event: MouseEvent<HTMLButtonElement>) => void;
   onToggleCollapsed?: () => void;
@@ -31,7 +32,7 @@ function logoutFailureMessage(error: unknown): string {
   return 'Sign out could not be confirmed. Your session may still be active. Try again.';
 }
 
-function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpenCommandSearch, onToggleCollapsed }: SidebarNavProps) {
+function SidebarNav({ groups, open = false, collapsed = false, onClose, onNavigate, onOpenCommandSearch, onToggleCollapsed }: SidebarNavProps) {
   const isCollapsed = collapsed && !open;
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -90,6 +91,7 @@ function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpe
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-xl font-bold text-white shadow-lg shadow-brand/20">O</div>
           <span className={cn('truncate text-xl font-bold tracking-tight text-sidebar-foreground', isCollapsed && 'sr-only')}>OperatorOS</span>
         </div>
+        {open && <button type="button" onClick={onClose} aria-label="Close navigation" className="absolute right-3 top-5 inline-flex size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:hidden"><X aria-hidden="true" className="size-5" /></button>}
         {!isCollapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Collapse sidebar" className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronLeft aria-hidden="true" className="size-4" /></button>}
         {isCollapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Expand sidebar" className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronRight aria-hidden="true" className="size-4" /></button>}
       </div>

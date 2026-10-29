@@ -1,0 +1,618 @@
+{
+  "schemaVersion": 1,
+  "claim": "Local production-mode comparison. Measurements show mixed results and do not establish an overall speedup or field percentile.",
+  "methodology": {
+    "samplesPerRevision": 5,
+    "aggregation": "Nearest-rank p75; ranges and individual samples are retained.",
+    "journey": "Same opt-in Playwright baseline flow: login, dashboard document entry, first/repeat Academic Analytics SPA visits, filtering/sorting, chart hover, and dirty-navigation guard.",
+    "syntheticFixture": "E2E seed-test-database helper was unchanged between the two revisions.",
+    "preview": "Cache-Control: no-store; new browser context per sample; unthrottled local loopback.",
+    "host": "Same Linux x64 four-processor host. The harness did not capture load averages for these paired reruns; they were captured 82 seconds apart.",
+    "eventTiming": "Raw Event Timing maxima at a 16 ms threshold; these are not INP.",
+    "longTasks": "Observed only by the current harness; the PR-01 harness did not collect Long Task entries."
+  },
+  "compatibleCoreVersions": {
+    "react": "19.2.7",
+    "reactDom": "19.2.7",
+    "tanstackQuery": "5.104.2",
+    "tanstackRouter": "^1.170.46",
+    "vite": "8.3.4"
+  },
+  "baseline": {
+    "sourceRevision": "cc536b80c6f919dbf23ce5decb7f8be0c90224e3",
+    "runtime": "react@19.2.7",
+    "buildMode": "production; temporary E2E frontend-only NODE_ENV correction",
+    "capturedAt": "2026-10-29T15:10:17.951Z",
+    "e2eResult": {
+      "backendPassed": 8,
+      "backendFailed": 0,
+      "webPassed": 3,
+      "webFailed": 0
+    },
+    "environment": {
+      "platform": "linux",
+      "architecture": "x64",
+      "nodeVersion": "v24.19.0",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "hostLoadAverage": null,
+      "processorCountRecordedByHarness": null
+    },
+    "summary": {
+      "loginFormReadyMs": {
+        "runCount": 5,
+        "p75NearestRank": 548,
+        "range": [
+          506,
+          557
+        ]
+      },
+      "dashboardDocumentReadyMs": {
+        "runCount": 5,
+        "p75NearestRank": 619,
+        "range": [
+          574,
+          633
+        ]
+      },
+      "firstAcademicSpaNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 531,
+        "range": [
+          516,
+          999
+        ]
+      },
+      "repeatAcademicSpaNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 195,
+        "range": [
+          181,
+          210
+        ]
+      },
+      "tableFilterMs": {
+        "runCount": 5,
+        "p75NearestRank": 117,
+        "range": [
+          97,
+          123
+        ]
+      },
+      "tableSortMs": {
+        "runCount": 5,
+        "p75NearestRank": 84,
+        "range": [
+          55,
+          102
+        ]
+      },
+      "chartHoverMs": {
+        "runCount": 5,
+        "p75NearestRank": 49,
+        "range": [
+          41,
+          55
+        ]
+      },
+      "dirtyNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 104,
+        "range": [
+          73,
+          111
+        ]
+      },
+      "initialTransferBytes": {
+        "runCount": 5,
+        "p75NearestRank": 187666,
+        "range": [
+          187666,
+          187666
+        ]
+      },
+      "firstAcademicRouteTransferBytes": {
+        "runCount": 5,
+        "p75NearestRank": 71511,
+        "range": [
+          71511,
+          71511
+        ]
+      },
+      "heapUsedBytes": {
+        "runCount": 5,
+        "p75NearestRank": 10000000,
+        "range": [
+          10000000,
+          10000000
+        ]
+      },
+      "lcpMs": {
+        "runCount": 5,
+        "p75NearestRank": 604,
+        "range": [
+          584,
+          620
+        ]
+      },
+      "cls": {
+        "runCount": 5,
+        "p75NearestRank": 0.017955696635985095,
+        "range": [
+          0.017955696635985095,
+          0.017955696635985095
+        ]
+      },
+      "maxEventTimingDurationMs": {
+        "runCount": 5,
+        "p75NearestRank": 80,
+        "range": [
+          72,
+          80
+        ]
+      },
+      "longTaskCount": null,
+      "maxLongTaskDurationMs": null,
+      "totalLongTaskDurationMs": null
+    },
+    "samples": [
+      {
+        "run": 1,
+        "loginFormReadyMs": 557,
+        "dashboardDocumentReadyMs": 633,
+        "firstAcademicSpaNavigationMs": 999,
+        "repeatAcademicSpaNavigationMs": 185,
+        "tableFilterMs": 111,
+        "tableSortMs": 77,
+        "chartHoverMs": 41,
+        "dirtyNavigationMs": 104,
+        "initialTransferBytes": 187666,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 596,
+        "cls": 0.017955696635985095,
+        "maxEventTimingDurationMs": 72,
+        "longTaskCount": null,
+        "maxLongTaskDurationMs": null,
+        "totalLongTaskDurationMs": null
+      },
+      {
+        "run": 2,
+        "loginFormReadyMs": 514,
+        "dashboardDocumentReadyMs": 615,
+        "firstAcademicSpaNavigationMs": 531,
+        "repeatAcademicSpaNavigationMs": 191,
+        "tableFilterMs": 123,
+        "tableSortMs": 102,
+        "chartHoverMs": 42,
+        "dirtyNavigationMs": 95,
+        "initialTransferBytes": 187666,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 584,
+        "cls": 0.017955696635985095,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": null,
+        "maxLongTaskDurationMs": null,
+        "totalLongTaskDurationMs": null
+      },
+      {
+        "run": 3,
+        "loginFormReadyMs": 514,
+        "dashboardDocumentReadyMs": 611,
+        "firstAcademicSpaNavigationMs": 530,
+        "repeatAcademicSpaNavigationMs": 195,
+        "tableFilterMs": 117,
+        "tableSortMs": 77,
+        "chartHoverMs": 55,
+        "dirtyNavigationMs": 77,
+        "initialTransferBytes": 187666,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 604,
+        "cls": 0.017955696635985095,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": null,
+        "maxLongTaskDurationMs": null,
+        "totalLongTaskDurationMs": null
+      },
+      {
+        "run": 4,
+        "loginFormReadyMs": 548,
+        "dashboardDocumentReadyMs": 619,
+        "firstAcademicSpaNavigationMs": 522,
+        "repeatAcademicSpaNavigationMs": 210,
+        "tableFilterMs": 97,
+        "tableSortMs": 55,
+        "chartHoverMs": 49,
+        "dirtyNavigationMs": 73,
+        "initialTransferBytes": 187666,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 620,
+        "cls": 0.017955696635985095,
+        "maxEventTimingDurationMs": 72,
+        "longTaskCount": null,
+        "maxLongTaskDurationMs": null,
+        "totalLongTaskDurationMs": null
+      },
+      {
+        "run": 5,
+        "loginFormReadyMs": 506,
+        "dashboardDocumentReadyMs": 574,
+        "firstAcademicSpaNavigationMs": 516,
+        "repeatAcademicSpaNavigationMs": 181,
+        "tableFilterMs": 104,
+        "tableSortMs": 84,
+        "chartHoverMs": 47,
+        "dirtyNavigationMs": 111,
+        "initialTransferBytes": 187666,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 584,
+        "cls": 0.017955696635985095,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": null,
+        "maxLongTaskDurationMs": null,
+        "totalLongTaskDurationMs": null
+      }
+    ]
+  },
+  "finalReact": {
+    "sourceRevision": "292449a57cf6a10ff3c9d76d15e0b4cdc39dc94a plus uncommitted PR-09 validation changes",
+    "runtime": "react@19.2.7",
+    "buildMode": "production via normal React build and route budget check",
+    "capturedAt": "2026-10-29T15:11:40.030Z",
+    "e2eResult": {
+      "backendPassed": 8,
+      "backendFailed": 0,
+      "webPassed": 3,
+      "webFailed": 0
+    },
+    "environment": {
+      "platform": "linux",
+      "architecture": "x64",
+      "nodeVersion": "v24.19.0",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "hostLoadAverage": null,
+      "processorCountRecordedByHarness": null
+    },
+    "summary": {
+      "loginFormReadyMs": {
+        "runCount": 5,
+        "p75NearestRank": 536,
+        "range": [
+          509,
+          559
+        ]
+      },
+      "dashboardDocumentReadyMs": {
+        "runCount": 5,
+        "p75NearestRank": 422,
+        "range": [
+          370,
+          448
+        ]
+      },
+      "firstAcademicSpaNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 548,
+        "range": [
+          516,
+          589
+        ]
+      },
+      "repeatAcademicSpaNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 178,
+        "range": [
+          155,
+          201
+        ]
+      },
+      "tableFilterMs": {
+        "runCount": 5,
+        "p75NearestRank": 112,
+        "range": [
+          92,
+          113
+        ]
+      },
+      "tableSortMs": {
+        "runCount": 5,
+        "p75NearestRank": 81,
+        "range": [
+          62,
+          105
+        ]
+      },
+      "chartHoverMs": {
+        "runCount": 5,
+        "p75NearestRank": 45,
+        "range": [
+          36,
+          52
+        ]
+      },
+      "dirtyNavigationMs": {
+        "runCount": 5,
+        "p75NearestRank": 101,
+        "range": [
+          72,
+          108
+        ]
+      },
+      "initialTransferBytes": {
+        "runCount": 5,
+        "p75NearestRank": 193786,
+        "range": [
+          193786,
+          193786
+        ]
+      },
+      "firstAcademicRouteTransferBytes": {
+        "runCount": 5,
+        "p75NearestRank": 71511,
+        "range": [
+          71511,
+          71511
+        ]
+      },
+      "heapUsedBytes": {
+        "runCount": 5,
+        "p75NearestRank": 13400000,
+        "range": [
+          10000000,
+          15200000
+        ]
+      },
+      "lcpMs": {
+        "runCount": 5,
+        "p75NearestRank": 416,
+        "range": [
+          372,
+          452
+        ]
+      },
+      "cls": {
+        "runCount": 5,
+        "p75NearestRank": 0.00000832044685066663,
+        "range": [
+          0.00000832044685066663,
+          0.00000832044685066663
+        ]
+      },
+      "maxEventTimingDurationMs": {
+        "runCount": 5,
+        "p75NearestRank": 80,
+        "range": [
+          80,
+          80
+        ]
+      },
+      "longTaskCount": {
+        "runCount": 5,
+        "p75NearestRank": 2,
+        "range": [
+          2,
+          3
+        ]
+      },
+      "maxLongTaskDurationMs": {
+        "runCount": 5,
+        "p75NearestRank": 71,
+        "range": [
+          61,
+          73
+        ]
+      },
+      "totalLongTaskDurationMs": {
+        "runCount": 5,
+        "p75NearestRank": 136,
+        "range": [
+          121,
+          173
+        ]
+      }
+    },
+    "samples": [
+      {
+        "run": 1,
+        "loginFormReadyMs": 559,
+        "dashboardDocumentReadyMs": 448,
+        "firstAcademicSpaNavigationMs": 589,
+        "repeatAcademicSpaNavigationMs": 201,
+        "tableFilterMs": 113,
+        "tableSortMs": 77,
+        "chartHoverMs": 45,
+        "dirtyNavigationMs": 108,
+        "initialTransferBytes": 193786,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 10000000,
+        "lcpMs": 452,
+        "cls": 0.00000832044685066663,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": 2,
+        "maxLongTaskDurationMs": 73,
+        "totalLongTaskDurationMs": 136
+      },
+      {
+        "run": 2,
+        "loginFormReadyMs": 536,
+        "dashboardDocumentReadyMs": 422,
+        "firstAcademicSpaNavigationMs": 535,
+        "repeatAcademicSpaNavigationMs": 178,
+        "tableFilterMs": 109,
+        "tableSortMs": 62,
+        "chartHoverMs": 36,
+        "dirtyNavigationMs": 101,
+        "initialTransferBytes": 193786,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 13400000,
+        "lcpMs": 416,
+        "cls": 0.00000832044685066663,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": 3,
+        "maxLongTaskDurationMs": 62,
+        "totalLongTaskDurationMs": 173
+      },
+      {
+        "run": 3,
+        "loginFormReadyMs": 509,
+        "dashboardDocumentReadyMs": 370,
+        "firstAcademicSpaNavigationMs": 537,
+        "repeatAcademicSpaNavigationMs": 155,
+        "tableFilterMs": 110,
+        "tableSortMs": 63,
+        "chartHoverMs": 42,
+        "dirtyNavigationMs": 96,
+        "initialTransferBytes": 193786,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 12700000,
+        "lcpMs": 372,
+        "cls": 0.00000832044685066663,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": 2,
+        "maxLongTaskDurationMs": 66,
+        "totalLongTaskDurationMs": 128
+      },
+      {
+        "run": 4,
+        "loginFormReadyMs": 520,
+        "dashboardDocumentReadyMs": 386,
+        "firstAcademicSpaNavigationMs": 516,
+        "repeatAcademicSpaNavigationMs": 178,
+        "tableFilterMs": 112,
+        "tableSortMs": 105,
+        "chartHoverMs": 37,
+        "dirtyNavigationMs": 72,
+        "initialTransferBytes": 193786,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 15200000,
+        "lcpMs": 408,
+        "cls": 0.00000832044685066663,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": 2,
+        "maxLongTaskDurationMs": 61,
+        "totalLongTaskDurationMs": 121
+      },
+      {
+        "run": 5,
+        "loginFormReadyMs": 525,
+        "dashboardDocumentReadyMs": 384,
+        "firstAcademicSpaNavigationMs": 548,
+        "repeatAcademicSpaNavigationMs": 160,
+        "tableFilterMs": 92,
+        "tableSortMs": 81,
+        "chartHoverMs": 52,
+        "dirtyNavigationMs": 84,
+        "initialTransferBytes": 193786,
+        "firstAcademicRouteTransferBytes": 71511,
+        "heapUsedBytes": 13400000,
+        "lcpMs": 384,
+        "cls": 0.00000832044685066663,
+        "maxEventTimingDurationMs": 80,
+        "longTaskCount": 2,
+        "maxLongTaskDurationMs": 71,
+        "totalLongTaskDurationMs": 133
+      }
+    ]
+  },
+  "comparison": {
+    "loginFormReadyMs": {
+      "baselineP75": 548,
+      "finalP75": 536,
+      "delta": -12,
+      "deltaPercent": -2.19
+    },
+    "dashboardDocumentReadyMs": {
+      "baselineP75": 619,
+      "finalP75": 422,
+      "delta": -197,
+      "deltaPercent": -31.83
+    },
+    "firstAcademicSpaNavigationMs": {
+      "baselineP75": 531,
+      "finalP75": 548,
+      "delta": 17,
+      "deltaPercent": 3.2
+    },
+    "repeatAcademicSpaNavigationMs": {
+      "baselineP75": 195,
+      "finalP75": 178,
+      "delta": -17,
+      "deltaPercent": -8.72
+    },
+    "tableFilterMs": {
+      "baselineP75": 117,
+      "finalP75": 112,
+      "delta": -5,
+      "deltaPercent": -4.27
+    },
+    "tableSortMs": {
+      "baselineP75": 84,
+      "finalP75": 81,
+      "delta": -3,
+      "deltaPercent": -3.57
+    },
+    "chartHoverMs": {
+      "baselineP75": 49,
+      "finalP75": 45,
+      "delta": -4,
+      "deltaPercent": -8.16
+    },
+    "dirtyNavigationMs": {
+      "baselineP75": 104,
+      "finalP75": 101,
+      "delta": -3,
+      "deltaPercent": -2.88
+    },
+    "initialTransferBytes": {
+      "baselineP75": 187666,
+      "finalP75": 193786,
+      "delta": 6120,
+      "deltaPercent": 3.26
+    },
+    "firstAcademicRouteTransferBytes": {
+      "baselineP75": 71511,
+      "finalP75": 71511,
+      "delta": 0,
+      "deltaPercent": 0
+    },
+    "heapUsedBytes": {
+      "baselineP75": 10000000,
+      "finalP75": 13400000,
+      "delta": 3400000,
+      "deltaPercent": 34
+    },
+    "lcpMs": {
+      "baselineP75": 604,
+      "finalP75": 416,
+      "delta": -188,
+      "deltaPercent": -31.13
+    },
+    "cls": {
+      "baselineP75": 0.017955696635985095,
+      "finalP75": 0.00000832044685066663,
+      "delta": -0.017947376189134428,
+      "deltaPercent": -99.95
+    },
+    "maxEventTimingDurationMs": {
+      "baselineP75": 80,
+      "finalP75": 80,
+      "delta": 0,
+      "deltaPercent": 0
+    }
+  }
+}

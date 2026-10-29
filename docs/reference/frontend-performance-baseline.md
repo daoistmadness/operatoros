@@ -66,6 +66,13 @@ from the authenticated dashboard document through 50 ms after its heading is
 visible; layout shifts with recent input are excluded. Event Timing records
 cover the later measured interactions in that document.
 
+The E2E runner previously let the API's `NODE_ENV=test` value reach the Vite
+frontend build. Those PR-01 through PR-08 browser samples are retained as
+historical local measurements, but they are not directly comparable to PR-09.
+The runner now builds and previews the frontend with `NODE_ENV=production`;
+React builds also run the normal route-chunk budget check. PR-09 measurements
+use that corrected production build mode.
+
 The local p75 values below use the nearest-rank method over five runs. Each row
 includes its run count and observed range. Byte counts sum same-origin script
 resource `encodedBodySize` and `transferSize`; browser timing and heap values

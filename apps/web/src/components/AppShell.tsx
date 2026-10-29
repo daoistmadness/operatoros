@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
@@ -34,6 +34,10 @@ function AppShellContent() {
   const sessionStatusRef = useRef<HTMLDivElement>(null);
   const sessionDialogRef = useRef<HTMLElement>(null);
   const sessionOverlayRef = useRef<HTMLDivElement>(null);
+  const closeNavigation = useCallback(() => {
+    setNavigationOpen(false);
+    window.requestAnimationFrame(() => openerRef.current?.focus());
+  }, []);
   const { pathname } = useLocation();
   const auth = useAuth();
   const { preferences, setSidebarCollapsed } = useUiPreferences();
@@ -143,14 +147,14 @@ function AppShellContent() {
     document.body.style.overflow = 'hidden';
     if (mainRef.current) mainRef.current.inert = true;
     const drawer = document.getElementById('navigation-drawer');
-    const focusable = () => [openerRef.current, ...Array.from(drawer?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])]
-      .filter((element): element is HTMLElement => element !== null && element.getClientRects().length > 0);
+    const focusable = () => Array.from(drawer?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])
+      .filter((element) => element.getClientRects().length > 0);
     window.requestAnimationFrame(() => {
       const items = focusable();
-      (items[1] ?? items[0])?.focus();
+      items[0]?.focus();
     });
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); setNavigationOpen(false); window.requestAnimationFrame(() => openerRef.current?.focus()); return; }
+      if (event.key === 'Escape') { event.preventDefault(); closeNavigation(); return; }
       if (event.key !== 'Tab') return;
       const items = focusable();
       if (!items.length) return;
@@ -166,20 +170,21 @@ function AppShellContent() {
       if (mainRef.current) mainRef.current.inert = false;
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [navigationOpen]);
+  }, [closeNavigation, navigationOpen]);
 
   return (
     <>
       <div className="app-shell min-h-screen bg-background xl:flex" inert={verifyingSession || undefined} aria-hidden={verifyingSession || undefined}>
-        <a href="#main-content" className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
+        <a href="#main-content" inert={navigationOpen || undefined} tabIndex={navigationOpen ? -1 : undefined} className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
         <button
           ref={openerRef}
           type="button"
-          aria-label={navigationOpen ? 'Close navigation' : 'Open navigation'}
+          aria-label="Open navigation"
           aria-expanded={navigationOpen}
           aria-controls="navigation-drawer"
+          inert={navigationOpen || undefined}
           onClick={() => setNavigationOpen((open) => !open)}
-          className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-foreground shadow-sm xl:hidden"
+          className="fixed left-4 top-4 z-[30] inline-flex size-11 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-foreground shadow-sm xl:hidden"
         >
           {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
@@ -189,7 +194,7 @@ function AppShellContent() {
             aria-label="Close navigation overlay"
             aria-hidden="true"
             tabIndex={-1}
-            onClick={() => setNavigationOpen(false)}
+            onClick={closeNavigation}
             className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] xl:hidden"
           />
         )}
@@ -197,6 +202,7 @@ function AppShellContent() {
           groups={groups}
           open={navigationOpen}
           collapsed={navigationCollapsed}
+          onClose={closeNavigation}
           onToggleCollapsed={() => setSidebarCollapsed(!navigationCollapsed)}
           onNavigate={() => setNavigationOpen(false)}
           onOpenCommandSearch={(event) => {

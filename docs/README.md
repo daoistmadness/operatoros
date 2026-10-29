@@ -47,6 +47,9 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Dependency audit exceptions](reference/dependency-audit-exceptions.md).
 - [Employee management](reference/employee-management.md).
 - [Frontend performance baseline](reference/frontend-performance-baseline.md).
+- [Frontend release validation](reference/frontend-release-validation.md).
+- [Frontend release validation samples](reference/frontend-release-validation-samples.json).
+- [TanStack Redact comparison samples](reference/tanstack-redact-comparison-samples.json).
 - [First-Run Administrator Threat Model](reference/first-run-admin-threat-model.md).
 - [Migration golden fixtures](reference/golden-fixtures.md) — Deprecated.
 - [Identity and Authentication](reference/identity-authentication.md).
@@ -76,6 +79,7 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Git history data remediation](decisions/git-history-data-remediation.md) — Deprecated.
 - [Ingestion dependency strategy](decisions/ingestion-dependency-strategy.md).
 - [Persistent development database](decisions/persistent-development-database.md).
+- [TanStack Redact research](decisions/tanstack-redact-research.md).
 - [Report artifact preservation](decisions/report-artifact-preservation.md) — Draft.
 - [SQLite-only local runtime](decisions/sqlite-only-runtime.md).
 - [ADR: Tauri v2 Desktop Architecture](decisions/tauri-desktop-architecture.md) — Deprecated.

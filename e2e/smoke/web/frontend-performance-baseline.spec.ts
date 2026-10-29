@@ -41,12 +41,16 @@ function installPerformanceObservers() {
     layoutShifts: LayoutShiftSample[];
     eventTimingSupported: boolean;
     eventTiming: { name: string; startTimeMs: number; durationMs: number }[];
+    longTaskSupported: boolean;
+    longTasks: number[];
   } = {
     lcpMs: null,
     layoutShiftSupported: false,
     layoutShifts: [],
     eventTimingSupported: false,
     eventTiming: [],
+    longTaskSupported: false,
+    longTasks: [],
   };
   Reflect.set(window, "__operatorosPerformanceMetrics", metrics);
   if (typeof PerformanceObserver === "undefined") return;
@@ -77,6 +81,12 @@ function installPerformanceObservers() {
         if (typeof name === "string") metrics.eventTiming.push({ name, startTimeMs: entry.startTime, durationMs: entry.duration });
       }
     }).observe(eventTimingOptions);
+  }
+  if (supported.includes("longtask")) {
+    metrics.longTaskSupported = true;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) metrics.longTasks.push(entry.duration);
+    }).observe({ type: "longtask" });
   }
 }
 
@@ -117,9 +127,11 @@ async function labMetrics(page: Page) {
     if (typeof state !== "object" || state === null) throw new Error("Performance observers did not initialize");
     const rawShifts = Reflect.get(state, "layoutShifts");
     const rawEvents = Reflect.get(state, "eventTiming");
+    const rawLongTasks = Reflect.get(state, "longTasks");
     const lcp = Reflect.get(state, "lcpMs");
     const layoutShiftSupported = Reflect.get(state, "layoutShiftSupported") === true;
     const eventTimingSupported = Reflect.get(state, "eventTimingSupported") === true;
+    const longTaskSupported = Reflect.get(state, "longTaskSupported") === true;
     const shifts = Array.isArray(rawShifts) ? rawShifts.flatMap((entry) => {
       if (typeof entry !== "object" || entry === null) return [];
       const startTimeMs = Reflect.get(entry, "startTimeMs");
@@ -135,12 +147,17 @@ async function labMetrics(page: Page) {
         ? [{ name, startTimeMs, durationMs }]
         : [];
     }) : [];
+    const longTasks = Array.isArray(rawLongTasks) ? rawLongTasks.filter((duration): duration is number => typeof duration === "number") : [];
     return {
       lcpMs: typeof lcp === "number" ? lcp : null,
       layoutShiftSupported,
       layoutShifts: shifts,
       eventTimingSupported,
       eventTiming: events,
+      longTaskSupported,
+      longTaskCount: longTasks.length,
+      maxLongTaskDurationMs: longTasks.length ? Math.max(...longTasks) : null,
+      totalLongTaskDurationMs: longTasks.reduce((sum, duration) => sum + duration, 0),
       domNodeCount: document.getElementsByTagName("*").length,
       heapUsedBytes: (() => {
         const memory = Reflect.get(performance, "memory");
@@ -164,7 +181,7 @@ async function visitLink(page: Page, label: string, heading: string): Promise<nu
   return Date.now() - startedAt;
 }
 
-test("@frontend-baseline opt-in local baseline covers representative React workflows", async ({ browser }, testInfo) => {
+test("@frontend-baseline opt-in local baseline covers representative frontend workflows", async ({ browser }, testInfo) => {
   test.skip(process.env.OPERATOROS_E2E_FRONTEND_BASELINE !== "true", "Set OPERATOROS_E2E_FRONTEND_BASELINE=true to run the local baseline");
   expect(calculateCls([
     { startTimeMs: 0, value: 0.1 },
@@ -321,6 +338,10 @@ test("@frontend-baseline opt-in local baseline covers representative React workf
         eventTimingThresholdMs: 16,
         eventTimingEntries: vitals.eventTiming,
         maxEventTimingDurationMs: vitals.eventTiming.length ? eventTimingMaxMs : null,
+        longTaskSupported: vitals.longTaskSupported,
+        longTaskCount: vitals.longTaskCount,
+        maxLongTaskDurationMs: vitals.maxLongTaskDurationMs,
+        totalLongTaskDurationMs: vitals.totalLongTaskDurationMs,
       },
     });
     await context.close();
@@ -336,6 +357,7 @@ test("@frontend-baseline opt-in local baseline covers representative React workf
     },
     metadata: {
       capturedAt: new Date().toISOString(),
+      runtime: process.env.OPERATOROS_E2E_REDACT === "true" ? "@tanstack/redact@0.2.3" : "react@19.2.7",
       platform: process.platform,
       architecture: process.arch,
       nodeVersion: process.version,
@@ -373,6 +395,9 @@ test("@frontend-baseline opt-in local baseline covers representative React workf
       lcpMs: summarizeLocalP75(samples.flatMap((sample) => sample.labVitals.lcpMs === null ? [] : [sample.labVitals.lcpMs])),
       cls: summarizeLocalP75(samples.flatMap((sample) => sample.labVitals.cls === null ? [] : [sample.labVitals.cls])),
       maxEventTimingDurationMs: summarizeLocalP75(samples.flatMap((sample) => sample.labVitals.maxEventTimingDurationMs === null ? [] : [sample.labVitals.maxEventTimingDurationMs])),
+      longTaskCount: summarizeLocalP75(samples.map((sample) => sample.labVitals.longTaskCount)),
+      maxLongTaskDurationMs: summarizeLocalP75(samples.flatMap((sample) => sample.labVitals.maxLongTaskDurationMs === null ? [] : [sample.labVitals.maxLongTaskDurationMs])),
+      totalLongTaskDurationMs: summarizeLocalP75(samples.map((sample) => sample.labVitals.totalLongTaskDurationMs)),
     },
     samples,
   };
