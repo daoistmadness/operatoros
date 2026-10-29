@@ -1,4 +1,4 @@
-import { API_BLOB_TYPES, apiRequest, type ApiResponse, type QueryParams } from './client';
+import { API_BLOB_TYPES, ApiError, apiRequest, type ApiResponse, type QueryParams } from './client';
 import type { HebOverrideWriteRequest } from "@operatoros/contracts/config";
 import type { ManualAbsenceReportResponse } from "@operatoros/contracts/reports";
 
@@ -241,8 +241,8 @@ export async function downloadTardinessManagementExcel(params: ReportQuery): Pro
   return response.data;
 }
 
-export async function getServerStatus(): Promise<'online'> {
-  await apiRequest({ path: '/api/system/health' });
+export async function getServerStatus(signal?: AbortSignal): Promise<'online'> {
+  await apiRequest({ path: '/api/system/health', signal });
   return 'online';
 }
 
@@ -256,20 +256,21 @@ export async function getJenjangs(): Promise<string[]> {
   return ensureArray<string>(response.data);
 }
 
-export async function getDashboardSnapshot(currentDate: Date): Promise<DashboardSnapshot> {
+export async function getDashboardSnapshot(currentDate: Date, signal?: AbortSignal): Promise<DashboardSnapshot> {
   const month = currentDate.getMonth() + 1;
   const year = currentDate.getFullYear();
 
   const requests = await Promise.allSettled([
-    apiRequest<DashboardMonthlyRow[]>({ path: '/api/analytics/monthly' }),
-    apiRequest<DashboardClassRow[]>({ path: '/api/analytics/class-leaderboard' }),
-    apiRequest<DashboardOffender[]>({ path: '/api/analytics/frequent-offenders' }),
-    apiRequest<DashboardPendingStudent[]>({ path: '/api/analytics/pending-categorization' }),
-    apiRequest<DashboardSummary>({ path: '/api/analytics/summary' }),
-    apiRequest<string[]>({ path: '/api/students/classes' }),
-    apiRequest<DashboardIncompleteSummary>({ path: '/api/analytics/incomplete-summary' }),
-    apiRequest<AbsenceTotalRow[]>({ path: '/api/config/absence-reasons/summary', params: { month, year } }),
+    apiRequest<DashboardMonthlyRow[]>({ path: '/api/analytics/monthly', signal }),
+    apiRequest<DashboardClassRow[]>({ path: '/api/analytics/class-leaderboard', signal }),
+    apiRequest<DashboardOffender[]>({ path: '/api/analytics/frequent-offenders', signal }),
+    apiRequest<DashboardPendingStudent[]>({ path: '/api/analytics/pending-categorization', signal }),
+    apiRequest<DashboardSummary>({ path: '/api/analytics/summary', signal }),
+    apiRequest<string[]>({ path: '/api/students/classes', signal }),
+    apiRequest<DashboardIncompleteSummary>({ path: '/api/analytics/incomplete-summary', signal }),
+    apiRequest<AbsenceTotalRow[]>({ path: '/api/config/absence-reasons/summary', params: { month, year }, signal }),
   ]);
+  if (signal?.aborted) throw new ApiError("Request cancelled.", { kind: "cancelled", retryable: false });
 
   const [monthly, classes, freq, pend, summ, cls, incSumm, absenceSumm] = requests;
   const pendingRows = pend.status === 'fulfilled' && Array.isArray(pend.value.data) ? pend.value.data : [];

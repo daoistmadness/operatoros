@@ -63,7 +63,7 @@ export default function StaffDetail() {
     setSelectedJenjangs(detail.data.jenjangs.map((item) => item.id));
     setEmploymentStatus(detail.data.employment_status === "FORMER" ? "FORMER" : "ACTIVE");
   }, [detail.data]);
-  const refresh = async () => Promise.all([queryClient.invalidateQueries({ queryKey: queryKeys.staff.detail(id) }), queryClient.invalidateQueries({ queryKey: queryKeys.staff.lists }), queryClient.invalidateQueries({ queryKey: queryKeys.staff.history(id) }), queryClient.invalidateQueries({ queryKey: ["staff", "analytics"] })]);
+  const refresh = async () => Promise.all([queryClient.invalidateQueries({ queryKey: queryKeys.staff.detail(id) }), queryClient.invalidateQueries({ queryKey: queryKeys.staff.lists }), queryClient.invalidateQueries({ queryKey: queryKeys.staff.history(id) }), queryClient.invalidateQueries({ queryKey: queryKeys.staff.analyticsAll })]);
   const jenjangMutation = useMutation({ mutationFn: () => replaceStaffJenjangs(id, selectedJenjangs), onSuccess: refresh });
   const assignmentMutation = useMutation({
     mutationFn: () => createStaffSchoolUnitAssignment(id, { school_unit_id: Number(assignmentUnitId), effective_from: assignmentStartDate, ptk_applicability: assignmentPtk, reason: assignmentReason }),

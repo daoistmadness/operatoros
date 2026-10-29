@@ -18,6 +18,6 @@ export async function logout(): Promise<void> {
   advanceAuthSessionEpoch();
 }
 
-export async function getCurrentUser(): Promise<AuthUser> {
-  return (await apiRequest<AuthUser>({ path: "/api/auth/me" })).data;
+export async function getCurrentUser(signal?: AbortSignal): Promise<AuthUser> {
+  return (await apiRequest<AuthUser>({ path: "/api/auth/me", signal })).data;
 }

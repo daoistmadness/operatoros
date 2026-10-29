@@ -225,6 +225,7 @@ export async function apiRequest({
     method,
     headers: requestHeaders,
     credentials: 'include',
+    cache: 'no-store',
     signal: controller.signal,
   };
 

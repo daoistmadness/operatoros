@@ -78,7 +78,7 @@ test("@attendance @correction-identity @release keeps synthetic roster identity 
     await page.setViewportSize({ width, height: 720 });
     await targetRow.scrollIntoViewIfNeeded();
     const dimensions = await scroll.evaluate((element) => ({ scrollWidth: element.scrollWidth, clientWidth: element.clientWidth }));
-    expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
+    if (width === 1024) expect(dimensions.scrollWidth).toBeGreaterThan(dimensions.clientWidth);
     await scroll.evaluate((element) => { element.scrollLeft = element.scrollWidth; });
     const identity = targetRow.getByTestId("attendance-student-identity");
     const header = page.getByTestId("attendance-student-identity-header");

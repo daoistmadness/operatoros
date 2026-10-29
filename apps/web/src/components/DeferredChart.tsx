@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 
-export function DeferredChart({ children }: { children: ReactNode }) {
+export function DeferredChart({ children, className }: { children: ReactNode; className?: string }) {
   const container = useRef<HTMLDivElement>(null);
   const [nearViewport, setNearViewport] = useState(() => typeof IntersectionObserver === "undefined");
 
@@ -19,7 +19,7 @@ export function DeferredChart({ children }: { children: ReactNode }) {
   }, [nearViewport]);
 
   return (
-    <div ref={container} className="h-[300px] w-full">
+    <div ref={container} className={`w-full min-w-0 ${className ?? "h-[300px]"}`}>
       {nearViewport && (
         <Suspense
           fallback={

@@ -10,6 +10,7 @@ describe("student management API domain", () => {
 
   it("uses stable hierarchical query keys", () => {
     expect(queryKeys.students.list({ page: 2 })).toEqual(["students", "list", { page: 2 }]);
+    expect(queryKeys.students.list({ page: 2, search: "Ada" })).toEqual(queryKeys.students.list({ search: "Ada", page: 2 }));
     expect(queryKeys.students.list({ nisn_status: "inputted" })).not.toEqual(queryKeys.students.list({ nisn_status: "not_inputted" }));
     expect(queryKeys.students.detail("uuid-1")).toEqual(["students", "detail", "uuid-1"]);
     expect(queryKeys.students.deviceIdentities("uuid-1")).toEqual(["students", "devices", "uuid-1"]);
@@ -18,8 +19,10 @@ describe("student management API domain", () => {
   });
 
   it("uses canonical student routes and server filters", async () => {
-    await fetchStudents({ search: "synthetic", page: 2, device_linked: false, nisn_status: "inputted" });
+    const controller = new AbortController();
+    await fetchStudents({ search: "synthetic", page: 2, device_linked: false, nisn_status: "inputted" }, controller.signal);
     expect(fetch).toHaveBeenCalledWith(expect.objectContaining({ pathname: "/api/student-masters/management/list", search: expect.stringContaining("page=2") }), expect.objectContaining({ method: "GET", credentials: "include" }));
+    expect((fetch as any).mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
     expect(String((fetch as any).mock.calls[0][0])).toContain("device_linked=false");
     expect(String((fetch as any).mock.calls[0][0])).toContain("nisn_status=inputted");
     vi.mocked(fetch).mockResolvedValueOnce(new Response("csv", { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8" } }));

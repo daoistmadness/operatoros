@@ -12,7 +12,7 @@ export type RouterContext = {
   setupRequired: boolean;
 };
 
-export const routeAuthorizations: Record<string, RouteAuthorization> = {
+export const routeAuthorizations: Partial<Record<string, RouteAuthorization>> = {
   '/': { type: 'authenticated' },
   '/setup': { type: 'authenticated' },
   '/operator/work-queue': { type: 'capability', capability: 'view_attendance_followups' },
@@ -86,17 +86,21 @@ function matchesPathPattern(pattern: string, pathname: string): boolean {
     && patternSegments.every((segment, index) => segment.startsWith(':') || segment === pathSegments[index]);
 }
 
-function authorizationForLocation(pathname: string): RouteAuthorization | undefined {
+export function routePolicyPathForLocation(pathname: string): string | undefined {
   const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
-  const exact = routeAuthorizations[normalizedPath];
-  if (exact) return exact;
-  const dynamic = Object.entries(routeAuthorizations).find(([pattern]) => pattern.includes(':') && matchesPathPattern(pattern, normalizedPath));
-  return dynamic?.[1] ?? routeAuthorizations['*'];
+  if (routeAuthorizations[normalizedPath]) return normalizedPath;
+  return Object.keys(routeAuthorizations).find((pattern) =>
+    pattern.includes(':') && matchesPathPattern(pattern, normalizedPath));
+}
+
+function authorizationForLocation(pathname: string): RouteAuthorization | undefined {
+  const policyPath = routePolicyPathForLocation(pathname);
+  return policyPath ? routeAuthorizations[policyPath] : routeAuthorizations['*'];
 }
 
 function isAuthorizationSatisfied(auth: AuthContextValue, authorization: RouteAuthorization | undefined): boolean {
-  if (!auth.authenticated) return false;
-  if (!authorization || authorization.type === 'authenticated') return true;
+  if (!auth.authenticated || !authorization) return false;
+  if (authorization.type === 'authenticated') return true;
   return authorization.type === 'role'
     ? auth.user?.role === authorization.role
     : auth.can(authorization.capability);

@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { fetchAssignedClasses, type AssignedClassSummary } from "../api/teacherClassAssignments";
 import { useAttendanceCorrectionReviewQuery } from "../hooks/useAttendanceCorrectionReviewQuery";
 import { useAnalyticsFiltersQuery } from "../hooks/useAnalyticsQueries";
+import { queryKeys } from "../lib/query/queryKeys";
 
 type Status = "on-time" | "late" | "absent" | "incomplete" | "sakit" | "izin" | "alfa";
 const statuses: Status[] = ["on-time", "late", "absent", "incomplete", "sakit", "izin", "alfa"];
@@ -112,8 +113,8 @@ export default function AttendanceCorrectionReview() {
 
 function useAttendanceCorrectionReviewClasses(academicYearId: number | null, enabled: boolean) {
   return useQuery({
-    queryKey: ["attendance", "correction-review", "classes", academicYearId],
-    queryFn: fetchAssignedClasses,
+    queryKey: queryKeys.attendance.correctionReviewClasses(academicYearId),
+    queryFn: ({ signal }) => fetchAssignedClasses(signal),
     enabled: enabled && academicYearId !== null,
     select: (values: AssignedClassSummary[]) => values.filter((value) => value.academic_year_id === academicYearId),
   });

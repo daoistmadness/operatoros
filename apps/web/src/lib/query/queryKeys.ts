@@ -1,4 +1,5 @@
 import type { ReportQuery, ReportScope, ReportType } from "../../api/reports";
+import type { StudentFilters } from "../../api/students";
 import type { AttendanceReconciliationQuery } from "@operatoros/contracts/analytics";
 
 type QueryPrimitive = string | number | boolean | null;
@@ -21,6 +22,7 @@ export function canonicalizeQueryFilters(
 export const queryKeys = {
   setup: { all: ["setup"] as const, status: ["setup", "status"] as const },
   auth: { all: ["auth"] as const, me: ["auth", "me"] as const },
+  system: { all: ["system"] as const, health: ["system", "health"] as const },
   readiness: { all: ["readiness"] as const, status: (userId: number | null) => ["readiness", "status", { userId }] as const },
   backups: {
     all: ["backups"] as const,
@@ -96,14 +98,16 @@ export const queryKeys = {
     all: ["attendance"] as const,
     assignedClasses: ["assignedClasses"] as const,
     classRosters: ["classAttendanceRoster"] as const,
+    classRoster: (classId: number | null, date: string) => ["classAttendanceRoster", classId, date] as const,
     calendar: (academicYearId: number | null) => ["attendance", "calendar", { academicYearId }] as const,
     correctionReview: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["attendance", "correction-review", canonicalizeQueryFilters(filters)] as const,
+    correctionReviewClasses: (academicYearId: number | null) => ["attendance", "correction-review", "classes", academicYearId] as const,
     reconciliation: (query: AttendanceReconciliationQuery) => ["attendance", "reconciliation", canonicalizeQueryFilters(query)] as const,
   },
   students: {
     all: ["students"] as const,
     lists: ["students", "list"] as const,
-    list: (filters: Record<string, unknown>) => ["students", "list", filters] as const,
+    list: (filters: StudentFilters) => ["students", "list", canonicalizeQueryFilters({ ...filters })] as const,
     details: ["students", "detail"] as const,
     detail: (id: string) => ["students", "detail", id] as const,
     overview: (id: string) => ["students", "overview", id] as const,
@@ -131,6 +135,7 @@ export const queryKeys = {
     histories: ["staff", "history"] as const,
     history: (id: string) => ["staff", "history", id] as const,
     schoolUnits: ["staff", "school-units"] as const,
+    positionsAll: ["staff", "positions"] as const,
     monthlyActivities: {
       all: ["staff", "monthly-activities"] as const,
       lists: ["staff", "monthly-activities", "list"] as const,
@@ -140,12 +145,21 @@ export const queryKeys = {
       summary: (filters: Readonly<Record<string, QueryPrimitive | undefined>>) => ["staff", "monthly-activities", "summary", canonicalizeQueryFilters(filters)] as const,
       history: (activityId: number) => ["staff", "monthly-activities", "history", activityId] as const,
     },
+    analyticsAll: ["staff", "analytics"] as const,
     analytics: (filters: Readonly<Record<string, QueryPrimitive | undefined>> = {}) => ["staff", "analytics", canonicalizeQueryFilters(filters)] as const,
     positions: (status: string) => ["staff", "positions", status] as const,
     importHistory: ["staff", "imports", "history"] as const,
     import: (id: string) => ["staff", "imports", id] as const,
   },
-  teacherClassAssignments: { all: ["teacherClassAssignments"] as const },
+  teacherClassAssignments: {
+    all: ["teacherClassAssignments"] as const,
+    assignments: (filters: { yearId: string; classId: string; activeOnly: boolean }) =>
+      ["teacherClassAssignments", filters.yearId, filters.classId, filters.activeOnly] as const,
+    users: ["usersOptions"] as const,
+    academicYears: ["academicYearsOptions"] as const,
+    academicClasses: ["academicClassesOptions"] as const,
+    subjects: ["subjectsOptions"] as const,
+  },
   uploads: {
     all: ["uploads"] as const,
     history: {
@@ -173,5 +187,22 @@ export const queryKeys = {
     dashboardOverview: ["operator", "dashboard-overview"] as const,
     bospReminder: ["operator", "bosp-reminder"] as const,
   },
-  operationsAudit: { all: ["operations-audit"] as const },
+  machineImport: {
+    all: ["machine-import"] as const,
+    studentSearch: (search: string, academicYearId: number | null, jenjangId: number | null) =>
+      ["machine-import", "student-search", search, academicYearId, jenjangId] as const,
+  },
+  operationsAudit: {
+    all: ["operations-audit"] as const,
+    list: (filters: {
+      page: number;
+      actor: string;
+      operation: string;
+      entityType: string;
+      riskLevel: string;
+      highRiskOnly: boolean;
+      rollbackOnly: boolean;
+      pageSize: number;
+    }) => ["operations-audit", filters.page, filters.actor, filters.operation, filters.entityType, filters.riskLevel, filters.highRiskOnly, filters.rollbackOnly, filters.pageSize] as const,
+  },
 };

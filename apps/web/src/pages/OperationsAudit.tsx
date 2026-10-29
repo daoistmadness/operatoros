@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Filter, RefreshCw, ShieldAlert, ShieldCheck } from "lucide-react";
 import { apiRequest } from "../lib/api/client";
+import { queryKeys } from "../lib/query/queryKeys";
 
 interface AuditItem {
   event_id: string;
@@ -55,10 +56,11 @@ export default function OperationsAudit() {
   });
 
   const { data, isLoading, isError, error, refetch } = useQuery<AuditResponse>({
-    queryKey: ["operations-audit", page, actor, operation, entityType, riskLevel, highRiskOnly, rollbackOnly],
-    queryFn: async () => {
+    queryKey: queryKeys.operationsAudit.list({ page, actor, operation, entityType, riskLevel, highRiskOnly, rollbackOnly, pageSize: 25 }),
+    queryFn: async ({ signal }) => {
       const response = await apiRequest<AuditResponse>({
         path: `/api/students/operations?${queryParams.toString()}`,
+        signal,
       });
       return response.data;
     },

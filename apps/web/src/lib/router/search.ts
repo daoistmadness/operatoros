@@ -5,10 +5,12 @@ import { useCallback, useMemo } from 'react';
 
 const searchSchema = Type.Record(Type.String(), Type.Union([Type.String(), Type.Array(Type.String())]));
 type SearchValues = Static<typeof searchSchema>;
+const reservedSearchKeys = new Set(['__proto__', 'constructor', 'toString']);
 
 export function validateSearch(raw: Record<string, unknown>): SearchValues {
   const normalized: Record<string, string | string[]> = {};
   for (const [key, value] of Object.entries(raw)) {
+    if (reservedSearchKeys.has(key)) continue;
     if (typeof value === 'string') normalized[key] = value;
     else if (typeof value === 'number' || typeof value === 'boolean') normalized[key] = String(value);
     else if (Array.isArray(value) && value.every((item) => typeof item === 'string')) normalized[key] = value;
@@ -19,7 +21,8 @@ export function validateSearch(raw: Record<string, unknown>): SearchValues {
 export function parseSearch(search: string): Record<string, string | string[]> {
   const values: Record<string, string | string[]> = {};
   for (const [key, value] of new URLSearchParams(search)) {
-    const previous = values[key];
+    if (reservedSearchKeys.has(key)) continue;
+    const previous = Object.hasOwn(values, key) ? values[key] : undefined;
     values[key] = previous === undefined ? value : Array.isArray(previous) ? [...previous, value] : [previous, value];
   }
   return values;
@@ -28,7 +31,7 @@ export function parseSearch(search: string): Record<string, string | string[]> {
 export function stringifySearch(search: Record<string, unknown>): string {
   const values = new URLSearchParams();
   for (const [key, value] of Object.entries(search)) {
-    if (value === undefined || value === null) continue;
+    if (reservedSearchKeys.has(key) || value === undefined || value === null) continue;
     for (const item of Array.isArray(value) ? value : [value]) values.append(key, String(item));
   }
   const query = values.toString();
@@ -38,7 +41,8 @@ export function stringifySearch(search: Record<string, unknown>): string {
 function toSearchObject(params: URLSearchParams): SearchValues {
   const values: Record<string, string | string[]> = {};
   for (const [key, value] of params) {
-    const previous = values[key];
+    if (reservedSearchKeys.has(key)) continue;
+    const previous = Object.hasOwn(values, key) ? values[key] : undefined;
     values[key] = previous === undefined ? value : Array.isArray(previous) ? [...previous, value] : [previous, value];
   }
   return values;

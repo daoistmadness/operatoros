@@ -54,4 +54,10 @@ describe("DeferredChart", () => {
     await act(async () => root.render(<DeferredChart><span>Chart</span></DeferredChart>));
     expect(container.textContent).toBe("Chart");
   });
+
+  it("keeps the caller-provided chart height", async () => {
+    await act(async () => root.render(<DeferredChart className="h-56"><span>Chart</span></DeferredChart>));
+    expect(container.firstElementChild?.className).toContain("h-56");
+    expect(container.firstElementChild?.className).not.toContain("h-[300px]");
+  });
 });

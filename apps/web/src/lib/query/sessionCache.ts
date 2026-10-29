@@ -18,11 +18,16 @@ export function cancelProtectedQueries(client: QueryClient): Promise<void> {
   return client.cancelQueries({ predicate: isProtectedQuery });
 }
 
-export function resetProtectedQueries(client: QueryClient): Promise<void> {
-  return client.resetQueries({ predicate: isProtectedQuery });
+export function cancelCurrentUserQuery(client: QueryClient): Promise<void> {
+  return client.cancelQueries({ queryKey: queryKeys.auth.me, exact: true });
+}
+
+export function refetchStaleProtectedQueries(client: QueryClient): Promise<void> {
+  return client.refetchQueries({ predicate: isProtectedQuery, type: "active", stale: true });
 }
 
 export async function clearSessionQueries(client: QueryClient): Promise<void> {
+  await cancelCurrentUserQuery(client);
   client.setQueryData(queryKeys.auth.me, null);
   await clearProtectedQueries(client);
 }

@@ -1,0 +1,1088 @@
+{
+  "schemaVersion": 1,
+  "claim": "Local compatibility and performance research only. No overall speedup is claimed; these lab results are not field percentiles or INP.",
+  "methodology": {
+    "samplesPerBatch": 5,
+    "viewport": "1365x900",
+    "browser": "Chromium 149.0.7827.55",
+    "workers": 1,
+    "network": "Unthrottled local loopback; each sample uses a new browser context; preview uses Cache-Control: no-store.",
+    "eventTiming": "Raw Event Timing maximum at a 16 ms threshold. Not INP.",
+    "longTasks": "Chromium PerformanceLongTaskTiming observer; lab proxy, not a direct responsiveness metric.",
+    "comparability": "Two batches per runtime, interleaved on a four-processor host. Host load increased between batches; report paired batches separately."
+  },
+  "productionBuild": {
+    "react": {
+      "javascriptFileCount": 126,
+      "totalJavaScript": {
+        "rawBytes": 2118427,
+        "gzipBytes": 622575
+      },
+      "routeEntryCount": 48,
+      "routeEntryBudgetViolations": 0,
+      "largestRawRouteEntry": {
+        "source": "src/pages/UploadCenter.tsx",
+        "rawBytes": 142131,
+        "gzipBytes": 32615
+      },
+      "largestGzipRouteEntry": {
+        "source": "src/pages/UploadCenter.tsx",
+        "rawBytes": 142131,
+        "gzipBytes": 32615
+      }
+    },
+    "redact": {
+      "javascriptFileCount": 140,
+      "totalJavaScript": {
+        "rawBytes": 1904979,
+        "gzipBytes": 586927
+      },
+      "routeEntryCount": 48,
+      "routeEntryBudgetViolations": 0,
+      "largestRawRouteEntry": {
+        "source": "src/pages/UploadCenter.tsx",
+        "rawBytes": 130662,
+        "gzipBytes": 32234
+      },
+      "largestGzipRouteEntry": {
+        "source": "src/pages/UploadCenter.tsx",
+        "rawBytes": 130662,
+        "gzipBytes": 32234
+      }
+    }
+  },
+  "browserBatches": {
+    "reactA1": {
+      "label": "React A1",
+      "runtime": "react@19.2.7",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "capturedAt": "2026-10-29T14:21:11.131Z",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "host": {
+        "platform": "linux",
+        "architecture": "x64",
+        "nodeVersion": "v24.19.0",
+        "nproc": 4,
+        "loadAverages": "3.20, 2.80, 2.33"
+      },
+      "summary": {
+        "loginFormReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 521,
+          "range": [
+            500,
+            545
+          ]
+        },
+        "dashboardDocumentReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 407,
+          "range": [
+            366,
+            416
+          ]
+        },
+        "firstAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 539,
+          "range": [
+            529,
+            587
+          ]
+        },
+        "repeatAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 191,
+          "range": [
+            162,
+            196
+          ]
+        },
+        "tableFilterMs": {
+          "runCount": 5,
+          "p75NearestRank": 112,
+          "range": [
+            98,
+            118
+          ]
+        },
+        "tableSortMs": {
+          "runCount": 5,
+          "p75NearestRank": 73,
+          "range": [
+            59,
+            110
+          ]
+        },
+        "initialTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 193799,
+          "range": [
+            193799,
+            193799
+          ]
+        },
+        "firstAcademicRouteTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 71513,
+          "range": [
+            71513,
+            71513
+          ]
+        },
+        "heapUsedBytes": {
+          "runCount": 5,
+          "p75NearestRank": 13400000,
+          "range": [
+            12700000,
+            14300000
+          ]
+        },
+        "lcpMs": {
+          "runCount": 5,
+          "p75NearestRank": 392,
+          "range": [
+            376,
+            404
+          ]
+        },
+        "cls": {
+          "runCount": 5,
+          "p75NearestRank": 0.00000832044685066663,
+          "range": [
+            0.00000832044685066663,
+            0.00000832044685066663
+          ]
+        },
+        "maxEventTimingDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 80,
+          "range": [
+            80,
+            88
+          ]
+        },
+        "longTaskCount": {
+          "runCount": 5,
+          "p75NearestRank": 2,
+          "range": [
+            2,
+            2
+          ]
+        },
+        "maxLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 70,
+          "range": [
+            61,
+            70
+          ]
+        },
+        "totalLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 126,
+          "range": [
+            116,
+            133
+          ]
+        }
+      },
+      "samples": [
+        {
+          "run": 1,
+          "loginFormReadyMs": 545,
+          "dashboardDocumentReadyMs": 399,
+          "firstAcademicSpaNavigationMs": 587,
+          "repeatAcademicSpaNavigationMs": 169,
+          "tableFilterMs": 112,
+          "tableSortMs": 73,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 14300000,
+          "lcpMs": 392,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 70,
+          "totalLongTaskDurationMs": 126
+        },
+        {
+          "run": 2,
+          "loginFormReadyMs": 521,
+          "dashboardDocumentReadyMs": 382,
+          "firstAcademicSpaNavigationMs": 539,
+          "repeatAcademicSpaNavigationMs": 196,
+          "tableFilterMs": 118,
+          "tableSortMs": 110,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 12700000,
+          "lcpMs": 376,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 70,
+          "totalLongTaskDurationMs": 133
+        },
+        {
+          "run": 3,
+          "loginFormReadyMs": 504,
+          "dashboardDocumentReadyMs": 416,
+          "firstAcademicSpaNavigationMs": 536,
+          "repeatAcademicSpaNavigationMs": 162,
+          "tableFilterMs": 111,
+          "tableSortMs": 68,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 13400000,
+          "lcpMs": 404,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 66,
+          "totalLongTaskDurationMs": 123
+        },
+        {
+          "run": 4,
+          "loginFormReadyMs": 502,
+          "dashboardDocumentReadyMs": 366,
+          "firstAcademicSpaNavigationMs": 529,
+          "repeatAcademicSpaNavigationMs": 189,
+          "tableFilterMs": 98,
+          "tableSortMs": 69,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 12700000,
+          "lcpMs": 384,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 64,
+          "totalLongTaskDurationMs": 124
+        },
+        {
+          "run": 5,
+          "loginFormReadyMs": 500,
+          "dashboardDocumentReadyMs": 407,
+          "firstAcademicSpaNavigationMs": 535,
+          "repeatAcademicSpaNavigationMs": 191,
+          "tableFilterMs": 101,
+          "tableSortMs": 59,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 13400000,
+          "lcpMs": 388,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 88,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 61,
+          "totalLongTaskDurationMs": 116
+        }
+      ]
+    },
+    "reactA2": {
+      "label": "React A2",
+      "runtime": "react@19.2.7",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "capturedAt": "2026-10-29T14:22:59.603Z",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "host": {
+        "platform": "linux",
+        "architecture": "x64",
+        "nodeVersion": "v24.19.0",
+        "nproc": 4,
+        "loadAverages": "3.39, 2.96, 2.44"
+      },
+      "summary": {
+        "loginFormReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 523,
+          "range": [
+            510,
+            550
+          ]
+        },
+        "dashboardDocumentReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 389,
+          "range": [
+            360,
+            616
+          ]
+        },
+        "firstAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 551,
+          "range": [
+            504,
+            1029
+          ]
+        },
+        "repeatAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 203,
+          "range": [
+            168,
+            203
+          ]
+        },
+        "tableFilterMs": {
+          "runCount": 5,
+          "p75NearestRank": 114,
+          "range": [
+            97,
+            132
+          ]
+        },
+        "tableSortMs": {
+          "runCount": 5,
+          "p75NearestRank": 74,
+          "range": [
+            62,
+            78
+          ]
+        },
+        "initialTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 193799,
+          "range": [
+            193799,
+            193799
+          ]
+        },
+        "firstAcademicRouteTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 71513,
+          "range": [
+            71513,
+            71513
+          ]
+        },
+        "heapUsedBytes": {
+          "runCount": 5,
+          "p75NearestRank": 14300000,
+          "range": [
+            10000000,
+            14300000
+          ]
+        },
+        "lcpMs": {
+          "runCount": 5,
+          "p75NearestRank": 404,
+          "range": [
+            356,
+            588
+          ]
+        },
+        "cls": {
+          "runCount": 5,
+          "p75NearestRank": 0.00000832044685066663,
+          "range": [
+            0.00000832044685066663,
+            0.00000832044685066663
+          ]
+        },
+        "maxEventTimingDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 80,
+          "range": [
+            72,
+            88
+          ]
+        },
+        "longTaskCount": {
+          "runCount": 5,
+          "p75NearestRank": 2,
+          "range": [
+            2,
+            2
+          ]
+        },
+        "maxLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 73,
+          "range": [
+            62,
+            76
+          ]
+        },
+        "totalLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 131,
+          "range": [
+            120,
+            139
+          ]
+        }
+      },
+      "samples": [
+        {
+          "run": 1,
+          "loginFormReadyMs": 550,
+          "dashboardDocumentReadyMs": 389,
+          "firstAcademicSpaNavigationMs": 1029,
+          "repeatAcademicSpaNavigationMs": 180,
+          "tableFilterMs": 114,
+          "tableSortMs": 78,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 13400000,
+          "lcpMs": 404,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 73,
+          "totalLongTaskDurationMs": 139
+        },
+        {
+          "run": 2,
+          "loginFormReadyMs": 523,
+          "dashboardDocumentReadyMs": 616,
+          "firstAcademicSpaNavigationMs": 532,
+          "repeatAcademicSpaNavigationMs": 203,
+          "tableFilterMs": 132,
+          "tableSortMs": 74,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 588,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 66,
+          "totalLongTaskDurationMs": 120
+        },
+        {
+          "run": 3,
+          "loginFormReadyMs": 518,
+          "dashboardDocumentReadyMs": 363,
+          "firstAcademicSpaNavigationMs": 504,
+          "repeatAcademicSpaNavigationMs": 172,
+          "tableFilterMs": 97,
+          "tableSortMs": 62,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 12700000,
+          "lcpMs": 376,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 80,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 62,
+          "totalLongTaskDurationMs": 121
+        },
+        {
+          "run": 4,
+          "loginFormReadyMs": 510,
+          "dashboardDocumentReadyMs": 365,
+          "firstAcademicSpaNavigationMs": 551,
+          "repeatAcademicSpaNavigationMs": 168,
+          "tableFilterMs": 102,
+          "tableSortMs": 71,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 14300000,
+          "lcpMs": 380,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 72,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 76,
+          "totalLongTaskDurationMs": 131
+        },
+        {
+          "run": 5,
+          "loginFormReadyMs": 515,
+          "dashboardDocumentReadyMs": 360,
+          "firstAcademicSpaNavigationMs": 531,
+          "repeatAcademicSpaNavigationMs": 203,
+          "tableFilterMs": 108,
+          "tableSortMs": 73,
+          "initialTransferBytes": 193799,
+          "firstAcademicRouteTransferBytes": 71513,
+          "heapUsedBytes": 14300000,
+          "lcpMs": 356,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 88,
+          "longTaskCount": 2,
+          "maxLongTaskDurationMs": 62,
+          "totalLongTaskDurationMs": 122
+        }
+      ]
+    },
+    "redactR1": {
+      "label": "Redact R1",
+      "runtime": "@tanstack/redact@0.2.3",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "capturedAt": "2026-10-29T14:20:13.152Z",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "host": {
+        "platform": "linux",
+        "architecture": "x64",
+        "nodeVersion": "v24.19.0",
+        "nproc": 4,
+        "loadAverages": "2.80, 2.68, 2.27"
+      },
+      "summary": {
+        "loginFormReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 249,
+          "range": [
+            230,
+            301
+          ]
+        },
+        "dashboardDocumentReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 452,
+          "range": [
+            430,
+            506
+          ]
+        },
+        "firstAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 382,
+          "range": [
+            322,
+            393
+          ]
+        },
+        "repeatAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 231,
+          "range": [
+            200,
+            235
+          ]
+        },
+        "tableFilterMs": {
+          "runCount": 5,
+          "p75NearestRank": 111,
+          "range": [
+            99,
+            137
+          ]
+        },
+        "tableSortMs": {
+          "runCount": 5,
+          "p75NearestRank": 90,
+          "range": [
+            66,
+            96
+          ]
+        },
+        "initialTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 164138,
+          "range": [
+            164138,
+            164138
+          ]
+        },
+        "firstAcademicRouteTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 71463,
+          "range": [
+            71463,
+            71463
+          ]
+        },
+        "heapUsedBytes": {
+          "runCount": 5,
+          "p75NearestRank": 11200000,
+          "range": [
+            10000000,
+            16100000
+          ]
+        },
+        "lcpMs": {
+          "runCount": 5,
+          "p75NearestRank": 452,
+          "range": [
+            428,
+            492
+          ]
+        },
+        "cls": {
+          "runCount": 5,
+          "p75NearestRank": 0.00000832044685066663,
+          "range": [
+            0.00000832044685066663,
+            0.00000832044685066663
+          ]
+        },
+        "maxEventTimingDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 120,
+          "range": [
+            112,
+            136
+          ]
+        },
+        "longTaskCount": {
+          "runCount": 5,
+          "p75NearestRank": 8,
+          "range": [
+            7,
+            8
+          ]
+        },
+        "maxLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 118,
+          "range": [
+            112,
+            124
+          ]
+        },
+        "totalLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 591,
+          "range": [
+            532,
+            652
+          ]
+        }
+      },
+      "samples": [
+        {
+          "run": 1,
+          "loginFormReadyMs": 301,
+          "dashboardDocumentReadyMs": 506,
+          "firstAcademicSpaNavigationMs": 393,
+          "repeatAcademicSpaNavigationMs": 231,
+          "tableFilterMs": 111,
+          "tableSortMs": 83,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 492,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 112,
+          "longTaskCount": 7,
+          "maxLongTaskDurationMs": 124,
+          "totalLongTaskDurationMs": 555
+        },
+        {
+          "run": 2,
+          "loginFormReadyMs": 247,
+          "dashboardDocumentReadyMs": 451,
+          "firstAcademicSpaNavigationMs": 339,
+          "repeatAcademicSpaNavigationMs": 200,
+          "tableFilterMs": 107,
+          "tableSortMs": 96,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 16100000,
+          "lcpMs": 452,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 112,
+          "longTaskCount": 8,
+          "maxLongTaskDurationMs": 118,
+          "totalLongTaskDurationMs": 581
+        },
+        {
+          "run": 3,
+          "loginFormReadyMs": 249,
+          "dashboardDocumentReadyMs": 440,
+          "firstAcademicSpaNavigationMs": 382,
+          "repeatAcademicSpaNavigationMs": 223,
+          "tableFilterMs": 137,
+          "tableSortMs": 90,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 436,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 136,
+          "longTaskCount": 8,
+          "maxLongTaskDurationMs": 112,
+          "totalLongTaskDurationMs": 652
+        },
+        {
+          "run": 4,
+          "loginFormReadyMs": 234,
+          "dashboardDocumentReadyMs": 430,
+          "firstAcademicSpaNavigationMs": 322,
+          "repeatAcademicSpaNavigationMs": 216,
+          "tableFilterMs": 99,
+          "tableSortMs": 73,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 11200000,
+          "lcpMs": 428,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 112,
+          "longTaskCount": 7,
+          "maxLongTaskDurationMs": 113,
+          "totalLongTaskDurationMs": 532
+        },
+        {
+          "run": 5,
+          "loginFormReadyMs": 230,
+          "dashboardDocumentReadyMs": 452,
+          "firstAcademicSpaNavigationMs": 355,
+          "repeatAcademicSpaNavigationMs": 235,
+          "tableFilterMs": 103,
+          "tableSortMs": 66,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 452,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 120,
+          "longTaskCount": 8,
+          "maxLongTaskDurationMs": 113,
+          "totalLongTaskDurationMs": 591
+        }
+      ]
+    },
+    "redactR2": {
+      "label": "Redact R2",
+      "runtime": "@tanstack/redact@0.2.3",
+      "browser": "chromium",
+      "browserVersion": "149.0.7827.55",
+      "capturedAt": "2026-10-29T14:22:10.437Z",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "playwrightWorkers": 1,
+      "host": {
+        "platform": "linux",
+        "architecture": "x64",
+        "nodeVersion": "v24.19.0",
+        "nproc": 4,
+        "loadAverages": "3.32, 2.91, 2.40"
+      },
+      "summary": {
+        "loginFormReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 255,
+          "range": [
+            219,
+            285
+          ]
+        },
+        "dashboardDocumentReadyMs": {
+          "runCount": 5,
+          "p75NearestRank": 470,
+          "range": [
+            425,
+            493
+          ]
+        },
+        "firstAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 347,
+          "range": [
+            325,
+            363
+          ]
+        },
+        "repeatAcademicSpaNavigationMs": {
+          "runCount": 5,
+          "p75NearestRank": 227,
+          "range": [
+            173,
+            236
+          ]
+        },
+        "tableFilterMs": {
+          "runCount": 5,
+          "p75NearestRank": 107,
+          "range": [
+            101,
+            111
+          ]
+        },
+        "tableSortMs": {
+          "runCount": 5,
+          "p75NearestRank": 81,
+          "range": [
+            58,
+            84
+          ]
+        },
+        "initialTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 164138,
+          "range": [
+            164138,
+            164138
+          ]
+        },
+        "firstAcademicRouteTransferBytes": {
+          "runCount": 5,
+          "p75NearestRank": 71463,
+          "range": [
+            71463,
+            71463
+          ]
+        },
+        "heapUsedBytes": {
+          "runCount": 5,
+          "p75NearestRank": 10000000,
+          "range": [
+            10000000,
+            16100000
+          ]
+        },
+        "lcpMs": {
+          "runCount": 5,
+          "p75NearestRank": 468,
+          "range": [
+            432,
+            476
+          ]
+        },
+        "cls": {
+          "runCount": 5,
+          "p75NearestRank": 0.00000832044685066663,
+          "range": [
+            0.00000832044685066663,
+            0.00000832044685066663
+          ]
+        },
+        "maxEventTimingDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 120,
+          "range": [
+            104,
+            120
+          ]
+        },
+        "longTaskCount": {
+          "runCount": 5,
+          "p75NearestRank": 8,
+          "range": [
+            7,
+            8
+          ]
+        },
+        "maxLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 117,
+          "range": [
+            112,
+            124
+          ]
+        },
+        "totalLongTaskDurationMs": {
+          "runCount": 5,
+          "p75NearestRank": 569,
+          "range": [
+            525,
+            574
+          ]
+        }
+      },
+      "samples": [
+        {
+          "run": 1,
+          "loginFormReadyMs": 285,
+          "dashboardDocumentReadyMs": 470,
+          "firstAcademicSpaNavigationMs": 363,
+          "repeatAcademicSpaNavigationMs": 227,
+          "tableFilterMs": 111,
+          "tableSortMs": 81,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 468,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 120,
+          "longTaskCount": 7,
+          "maxLongTaskDurationMs": 124,
+          "totalLongTaskDurationMs": 542
+        },
+        {
+          "run": 2,
+          "loginFormReadyMs": 243,
+          "dashboardDocumentReadyMs": 493,
+          "firstAcademicSpaNavigationMs": 347,
+          "repeatAcademicSpaNavigationMs": 225,
+          "tableFilterMs": 107,
+          "tableSortMs": 69,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 476,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 112,
+          "longTaskCount": 7,
+          "maxLongTaskDurationMs": 117,
+          "totalLongTaskDurationMs": 530
+        },
+        {
+          "run": 3,
+          "loginFormReadyMs": 255,
+          "dashboardDocumentReadyMs": 432,
+          "firstAcademicSpaNavigationMs": 325,
+          "repeatAcademicSpaNavigationMs": 173,
+          "tableFilterMs": 106,
+          "tableSortMs": 84,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 16100000,
+          "lcpMs": 432,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 104,
+          "longTaskCount": 8,
+          "maxLongTaskDurationMs": 116,
+          "totalLongTaskDurationMs": 569
+        },
+        {
+          "run": 4,
+          "loginFormReadyMs": 223,
+          "dashboardDocumentReadyMs": 442,
+          "firstAcademicSpaNavigationMs": 330,
+          "repeatAcademicSpaNavigationMs": 196,
+          "tableFilterMs": 103,
+          "tableSortMs": 62,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 444,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 120,
+          "longTaskCount": 8,
+          "maxLongTaskDurationMs": 112,
+          "totalLongTaskDurationMs": 574
+        },
+        {
+          "run": 5,
+          "loginFormReadyMs": 219,
+          "dashboardDocumentReadyMs": 425,
+          "firstAcademicSpaNavigationMs": 332,
+          "repeatAcademicSpaNavigationMs": 236,
+          "tableFilterMs": 101,
+          "tableSortMs": 58,
+          "initialTransferBytes": 164138,
+          "firstAcademicRouteTransferBytes": 71463,
+          "heapUsedBytes": 10000000,
+          "lcpMs": 440,
+          "cls": 0.00000832044685066663,
+          "maxEventTimingDurationMs": 112,
+          "longTaskCount": 7,
+          "maxLongTaskDurationMs": 115,
+          "totalLongTaskDurationMs": 525
+        }
+      ]
+    }
+  },
+  "virtualTable": {
+    "fixtureRows": 2000,
+    "chromium": {
+      "react": {
+        "navigationToVisibleSamplesMs": [
+          546.0999999046326,
+          415.60000002384186,
+          498.8000000715256,
+          474.59999990463257,
+          398.10000002384186
+        ],
+        "navigationToVisibleP75Ms": 498.8000000715256,
+        "scrollToLastRowSamplesMs": [
+          69.79999995231628,
+          80.60000002384186,
+          59.200000047683716,
+          59.09999990463257,
+          66.39999997615814
+        ],
+        "scrollToLastRowP75Ms": 69.79999995231628,
+        "functionalOutcome": "passed; final row and aria-rowindex verified"
+      },
+      "redact": {
+        "navigationToVisibleSamplesMs": [
+          539.2999999523163,
+          489.39999997615814,
+          462.39999997615814,
+          483.7999999523163,
+          556.3999999761581
+        ],
+        "navigationToVisibleP75Ms": 539.2999999523163,
+        "scrollToLastRowSamplesMs": [
+          67.60000002384186,
+          59.39999997615814,
+          64.30000007152557,
+          62.89999997615814,
+          68
+        ],
+        "scrollToLastRowP75Ms": 67.60000002384186,
+        "functionalOutcome": "failed; final row disappeared before final visibility/aria-rowindex assertion"
+      }
+    },
+    "firefox": {
+      "react": {
+        "navigationToVisibleSamplesMs": [
+          771,
+          777,
+          762,
+          881,
+          719
+        ],
+        "navigationToVisibleP75Ms": 777,
+        "scrollToLastRowSamplesMs": [
+          93,
+          107,
+          86,
+          79,
+          82
+        ],
+        "scrollToLastRowP75Ms": 93,
+        "functionalOutcome": "passed; final row and aria-rowindex verified"
+      },
+      "redact": {
+        "navigationToVisibleSamplesMs": [
+          1008,
+          721,
+          812,
+          784,
+          772
+        ],
+        "navigationToVisibleP75Ms": 812,
+        "scrollToLastRowSamplesMs": [
+          91,
+          86,
+          88,
+          85,
+          86
+        ],
+        "scrollToLastRowP75Ms": 88,
+        "functionalOutcome": "passed; final row and aria-rowindex verified"
+      },
+      "note": "Redact passed on a repeat Firefox run after one earlier run failed a query-filter URL assertion."
+    }
+  },
+  "compatibilityMatrix": {
+    "chromium": {
+      "redact": "16 passed, 3 failed in a 19-test compatibility matrix; failures: virtual table final row, employee import route error, and mobile navigation focus. The same mobile-focus case also fails under React.",
+      "reactControl": "4 passed, 1 failed in a targeted control; the same mobile-focus case failed."
+    },
+    "firefox": {
+      "redact": "11 passed, 1 failed; employee import route error.",
+      "reactControl": "12 passed, 0 failed."
+    },
+    "shared": {
+      "rootRouteErrorBoundaryRetry": "passed for React and Redact in Chromium and Firefox.",
+      "employeeImport": "React passed; Redact failed on Chromium and Firefox by reaching the root route-error screen.",
+      "virtualTable": "React passed in Chromium and Firefox; Redact failed the final-row assertion repeatedly in Chromium and passed Firefox on repeat."
+    },
+    "webkit": "Unavailable: Playwright WebKit launch failed because this host lacks GTK 4, Graphene, and GStreamer system libraries. No system packages were installed."
+  }
+}

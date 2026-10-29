@@ -18,8 +18,9 @@ describe("authentication API", () => {
 
   it("loads the current session through the canonical endpoint", async () => {
     vi.mocked(apiRequest).mockResolvedValueOnce({ data: user, status: 200, headers: {} });
-    await getCurrentUser();
-    expect(apiRequest).toHaveBeenCalledWith({ path: "/api/auth/me" });
+    const controller = new AbortController();
+    await getCurrentUser(controller.signal);
+    expect(apiRequest).toHaveBeenCalledWith({ path: "/api/auth/me", signal: controller.signal });
   });
 
   it("logs out through the canonical endpoint", async () => {

@@ -9,9 +9,12 @@ import { cn } from "../lib/cn";
 import { getSystemHealth } from "../lib/api/endpoints";
 import { getPageApiError } from "../lib/api/errors";
 import { useAuth } from "../context/AuthContext";
+import { useUiPreferences } from "../context/UiPreferencesContext";
 import { Alert } from "../components/ui/alert";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
+import { Checkbox } from "../components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -70,6 +73,7 @@ const RESET_ACTIONS: readonly {
 
 function Settings() {
   const { user } = useAuth();
+  const { preferences, setSidebarCollapsed, resetPreferences } = useUiPreferences();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -82,6 +86,7 @@ function Settings() {
   const [error, setError] = useState("");
   const [destructiveOperationsEnabled, setDestructiveOperationsEnabled] = useState(false);
   const [healthLoaded, setHealthLoaded] = useState(false);
+  const [preferenceStatus, setPreferenceStatus] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -137,8 +142,22 @@ function Settings() {
   const action = RESET_ACTIONS.find((value) => value.scope === selectedScope);
   const resetControlsVisible = isAdmin && healthLoaded && destructiveOperationsEnabled;
 
+  const updateSidebarPreference = (value: boolean) => {
+    const saved = setSidebarCollapsed(value);
+    setPreferenceStatus(saved
+      ? "Interface preference saved in this browser."
+      : "Interface preference applies for this session only because browser storage is unavailable.");
+  };
+
+  const handleResetPreferences = () => {
+    const reset = resetPreferences();
+    setPreferenceStatus(reset
+      ? "Interface preferences restored to their defaults."
+      : "Interface preferences reset for this session. Browser storage is unavailable.");
+  };
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="mx-auto min-w-0 max-w-3xl space-y-8 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
       <header className="flex items-center gap-4">
         <Link to="/" className="rounded-xl border border-slate-200 bg-white p-2 transition-colors hover:bg-slate-50" aria-label="Back to dashboard">
           <ArrowLeft size={20} className="text-slate-600" />
@@ -150,6 +169,31 @@ function Settings() {
       </header>
 
       <div className="grid grid-cols-1 gap-6">
+        <Card className="min-w-0 p-5 sm:p-6">
+          <div className="mb-5 border-b border-border pb-4">
+            <h2 className="font-bold text-foreground">Interface preferences</h2>
+            <p className="mt-1 text-sm text-muted-foreground">These preferences stay in this browser and do not contain school or account data.</p>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <label htmlFor="sidebar-collapsed" className="flex min-h-11 min-w-0 cursor-pointer items-start gap-3">
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-foreground">Use a compact sidebar on desktop</span>
+                <span id="sidebar-collapsed-description" className="mt-1 block text-sm text-muted-foreground">The mobile navigation drawer stays full width.</span>
+              </span>
+            </label>
+            <Checkbox
+              id="sidebar-collapsed"
+              aria-describedby="sidebar-collapsed-description"
+              checked={preferences.sidebarCollapsed}
+              onCheckedChange={(checked) => updateSidebarPreference(checked === true)}
+            />
+          </div>
+          <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="outline" onClick={handleResetPreferences}>Restore defaults</Button>
+            <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">{preferenceStatus}</p>
+          </div>
+        </Card>
+
         <Card className="p-6">
           <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
             <SettingsIcon size={20} className="text-brand" />

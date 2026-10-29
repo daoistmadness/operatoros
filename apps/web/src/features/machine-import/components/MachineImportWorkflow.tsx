@@ -14,6 +14,7 @@ import { useAnalyticsFiltersQuery } from "../../../hooks/useAnalyticsQueries";
 import { applyMachineAttendance, createStudent, linkDeviceIdentity, previewMachineAttendance, searchMachineImportStudents } from "../api/machineImport";
 import { isApiError, getPageApiError } from "../../../lib/api/errors";
 import { invalidateAttendanceQueries } from "../../../lib/query/attendanceInvalidation";
+import { queryKeys } from "../../../lib/query/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FeatureReadinessCard, useReadinessQuery } from "../../readiness";
 
@@ -64,8 +65,8 @@ export default function MachineImportWorkflow({ embedded = false }: { embedded?:
   const [createConfirmed, setCreateConfirmed] = useState(false);
   const preview = useMutation({ mutationFn: ({ file: selected, year, jenjang, page: selectedPage }: { file: File; year: number; jenjang: number; page: number }) => previewMachineAttendance(selected, year, jenjang, selectedPage) });
   const studentResults = useQuery({
-    queryKey: ["machine-import", "student-search", studentSearch, yearId, jenjangId],
-    queryFn: () => searchMachineImportStudents({ search: studentSearch, academicYearId: yearId!, jenjangId: jenjangId! }),
+    queryKey: queryKeys.machineImport.studentSearch(studentSearch, yearId, jenjangId),
+    queryFn: ({ signal }) => searchMachineImportStudents({ search: studentSearch, academicYearId: yearId!, jenjangId: jenjangId! }, signal),
     enabled: identityAction?.mode === "link" && can("manage_device_identity") && yearId !== null && jenjangId !== null,
   });
   const refreshPreview = async () => {

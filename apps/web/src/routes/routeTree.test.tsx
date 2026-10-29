@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { AuthLoading, AccessDenied } from '../components/auth/RouteGuards';
 import NotFoundPage from '../components/NotFoundPage';
 import type { AuthContextValue } from '../context/AuthContext';
-import { isRouteAuthorized, routeAuthorizations } from '../lib/router/access';
+import { authorizeRoute, isRouteAuthorized, routeAuthorizations } from '../lib/router/access';
 import { parseSearch, stringifySearch } from '../lib/router/search';
 import { RouteLoadingFallback } from './RouteLoadingFallback';
 import { routeTree } from '../routeTree.gen';
@@ -30,9 +30,20 @@ function createTestRouter(initialEntry: string, currentAuth: AuthContextValue) {
   });
 }
 
+function normalizeGeneratedRoutePath(path: string): string {
+  const normalized = path === '/' ? path : path.replace(/\/+$/, '');
+  if (normalized === '/$') return '*';
+  return normalized.split('/').map((segment) => segment.startsWith('$') ? `:${segment.slice(1)}` : segment).join('/') || '/';
+}
+
 describe('file-based route migration', () => {
   it('keeps the authorization policy for every authenticated path', () => {
-    expect(Object.keys(routeAuthorizations)).toHaveLength(60);
+    const router = createTestRouter('/', auth('admin', ['*']));
+    const generatedPaths = new Set(Object.keys(router.routesByPath)
+      .map(normalizeGeneratedRoutePath)
+      .filter((path) => path !== '/login'));
+    const policyPaths = new Set(Object.keys(routeAuthorizations));
+    expect([...generatedPaths].sort()).toEqual([...policyPaths].sort());
     expect(routeAuthorizations['/staff/:id/edit']).toEqual({ type: 'capability', capability: 'manage_staff' });
     expect(routeAuthorizations['/attendance/reconciliation']).toEqual({ type: 'role', role: 'admin' });
     expect(routeAuthorizations['*']).toEqual({ type: 'authenticated' });
@@ -51,6 +62,15 @@ describe('file-based route migration', () => {
     expect(isRouteAuthorized('/staff/27/edit', auth('staff', ['manage_staff']))).toBe(true);
     expect(isRouteAuthorized('/attendance/calendar/', auth('staff'))).toBe(false);
     expect(isRouteAuthorized('/unknown/path', auth(null))).toBe(false);
+  });
+
+  it('denies an unclassified route guard while keeping the authenticated wildcard fallback', () => {
+    const currentAuth = auth('staff');
+    expect(authorizeRoute('/unclassified')({
+      context: { auth: currentAuth, setupLoading: false, setupRequired: false },
+      location: { pathname: '/unclassified' },
+    })).toEqual({ accessDenied: true });
+    expect(isRouteAuthorized('/unknown/path', currentAuth)).toBe(true);
   });
 
   it('revalidates active role and capability guards after auth context changes', async () => {

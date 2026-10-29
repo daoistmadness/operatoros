@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-28
 ---
 
 # Architecture overview
@@ -20,10 +20,10 @@ and SQLite. PostgreSQL is unsupported; containers are not required.
 | packages/ui | Domain-neutral UI primitives and source-owned shadcn components |
 | packages/excel | Excel infrastructure used by the API |
 
-The application uses React 19, Vite 8.3.4, and React Router 8.5.0. Routing stays
-in declarative mode: apps/web/src/App.tsx mounts BrowserRouter, Routes, and
-Route from react-router. React Router Framework Mode and server-side rendering
-are not configured.
+The browser application uses React 19, Vite 8.3.4, and TanStack Router. The Vite
+plugin builds the route tree from `apps/web/src/routes/`. `apps/web/src/router.ts`
+configures the router, and `apps/web/src/App.tsx` provides auth and setup state
+through router context. The app remains a client-rendered Vite SPA without SSR.
 
 ## Request and data flow
 

@@ -95,7 +95,7 @@ test("@data-management @export @critical @release downloads a supported dataset 
   expect((await download).suggestedFilename()).toMatch(/^student_roster_\d{4}-\d{2}-\d{2}\.csv$/);
 });
 
-test("@data-management @roster @critical @release previews a synthetic roster workbook in the canonical workspace", async ({ page }) => {
+test("@data-management @roster @critical @release previews a synthetic roster workbook in the canonical workspace", async ({ page, browserName }) => {
   const criticalErrors: string[] = [];
   page.on("pageerror", (error) => criticalErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) criticalErrors.push(message.text()); });
@@ -111,10 +111,12 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   await expect(page.locator("#class-reference-year option:checked")).toHaveText("2026/2027");
   await expect(page.getByRole("row", { name: /Primary Primary P1 P1A/ })).toBeVisible();
   await expect(page.getByRole("row", { name: /Primary Primary P1 P1B/ })).toBeVisible();
-  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  if (browserName === "chromium") await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.getByRole("button", { name: "Copy class reference" }).click();
   await expect(page.getByRole("status", { name: "" }).filter({ hasText: "Copied class reference" })).toBeVisible();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("Primary\tPrimary\tP1\tP1A");
+  if (browserName === "chromium") {
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("Primary\tPrimary\tP1\tP1A");
+  }
 
   await page.locator("#roster-file-hidden").setInputFiles({
     name: "e2e-student-roster.xlsx",

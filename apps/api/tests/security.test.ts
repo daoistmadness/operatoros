@@ -97,6 +97,20 @@ describe("proxy trust and Origin protection", () => {
     expect(options.status).toBe(204);
   });
 
+  it("marks API responses non-cacheable while leaving non-API health responses unchanged", async () => {
+    const app = createApp() as any;
+    app.get("/api/test-sensitive", () => ({ value: "synthetic" }));
+    app.get("/health", () => ({ status: "ok" }));
+
+    const apiResponse = await app.handle(new Request("http://local/api/test-sensitive"));
+    const healthResponse = await app.handle(new Request("http://local/health"));
+
+    expect(apiResponse.status).toBe(200);
+    expect(apiResponse.headers.get("cache-control")).toContain("private");
+    expect(apiResponse.headers.get("cache-control")).toContain("no-store");
+    expect(healthResponse.headers.get("cache-control")).toBeNull();
+  });
+
   it("requires the exact Tailnet Origin for cookie-authenticated POST, PUT, PATCH, and DELETE", async () => {
     const origin = "https://node.tailnet.ts.net:8444";
     const app = createApp({ auth: { allowedOrigins: [origin] } }) as any;

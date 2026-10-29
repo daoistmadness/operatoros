@@ -10,14 +10,15 @@ import {
 import { queryKeys } from "../lib/query/queryKeys";
 import { invalidateReadiness } from "../features/readiness";
 import { invalidateEnrollmentQueries } from "../lib/query/enrollmentInvalidation";
+import { queryFreshness } from "../lib/query/queryConfig";
 
-export const useStudents = (filters: StudentFilters) => useQuery({ queryKey: queryKeys.students.list(filters), queryFn: () => fetchStudents(filters), placeholderData: (previous) => previous });
-export const useStudent = (id?: string) => useQuery({ queryKey: queryKeys.students.detail(id || ""), queryFn: () => fetchStudent(id!), enabled: Boolean(id) });
-export const useStudentOverview = (id?: string) => useQuery({ queryKey: queryKeys.students.overview(id || ""), queryFn: () => fetchStudentOverview(id!), enabled: Boolean(id) });
-export const useLegacyLinkStatus = (id?: string) => useQuery({ queryKey: queryKeys.students.legacyLink(id || ""), queryFn: () => fetchLegacyLinkStatus(id!), enabled: Boolean(id) });
-export const useStudentQuality = () => useQuery({ queryKey: queryKeys.students.quality, queryFn: fetchStudentQuality });
-export const useStudentHistory = (id?: string) => useQuery({ queryKey: queryKeys.students.history(id || ""), queryFn: () => fetchStudentHistory(id!), enabled: Boolean(id) });
-export const useStudentEnrollments = (id?: string) => useQuery({ queryKey: queryKeys.students.enrollments(id || ""), queryFn: () => fetchStudentEnrollments(id!), enabled: Boolean(id) });
+export const useStudents = (filters: StudentFilters) => useQuery({ queryKey: queryKeys.students.list(filters), queryFn: ({ signal }) => fetchStudents(filters, signal), staleTime: queryFreshness.records, placeholderData: (previous) => previous });
+export const useStudent = (id?: string) => useQuery({ queryKey: queryKeys.students.detail(id || ""), queryFn: ({ signal }) => fetchStudent(id!, signal), staleTime: queryFreshness.records, enabled: Boolean(id) });
+export const useStudentOverview = (id?: string) => useQuery({ queryKey: queryKeys.students.overview(id || ""), queryFn: ({ signal }) => fetchStudentOverview(id!, signal), staleTime: queryFreshness.records, enabled: Boolean(id) });
+export const useLegacyLinkStatus = (id?: string) => useQuery({ queryKey: queryKeys.students.legacyLink(id || ""), queryFn: ({ signal }) => fetchLegacyLinkStatus(id!, signal), staleTime: queryFreshness.records, enabled: Boolean(id) });
+export const useStudentQuality = () => useQuery({ queryKey: queryKeys.students.quality, queryFn: ({ signal }) => fetchStudentQuality(signal), staleTime: queryFreshness.records });
+export const useStudentHistory = (id?: string) => useQuery({ queryKey: queryKeys.students.history(id || ""), queryFn: ({ signal }) => fetchStudentHistory(id!, signal), staleTime: queryFreshness.records, enabled: Boolean(id) });
+export const useStudentEnrollments = (id?: string) => useQuery({ queryKey: queryKeys.students.enrollments(id || ""), queryFn: ({ signal }) => fetchStudentEnrollments(id!, signal), staleTime: queryFreshness.records, enabled: Boolean(id) });
 
 function useStudentDomainInvalidation(id?: string) {
   const client = useQueryClient();

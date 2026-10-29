@@ -1,0 +1,6388 @@
+{
+  "claim": "Local baseline only. No speedup is claimed.",
+  "methodology": {
+    "runCount": 5,
+    "cacheCondition": "New browser context per sample. Vite preview responses use Cache-Control: no-store. Repeat SPA navigation reuses code in the active page runtime and is not a warm HTTP cache sample.",
+    "networkProfile": "Unthrottled local loopback preview and API. No field network cohort is defined.",
+    "eventTiming": "Raw PerformanceEventTiming entries at a 16 ms threshold. These values are not INP."
+  },
+  "metadata": {
+    "capturedAt": "2026-10-28T15:59:35.486Z",
+    "platform": "linux",
+    "architecture": "x64",
+    "nodeVersion": "v24.19.0",
+    "browser": "chromium",
+    "browserVersion": "149.0.7827.55",
+    "viewport": {
+      "width": 1365,
+      "height": 900
+    },
+    "playwrightWorkers": 1,
+    "uptimeBeforeRun": "22:58:42 up 6 days, 10:01, 2 users, load average: 1.56, 1.78, 1.89",
+    "nprocBeforeRun": "4"
+  },
+  "summary": {
+    "loginFormReadyMs": {
+      "runCount": 5,
+      "p75NearestRank": 608,
+      "range": [
+        582,
+        620
+      ]
+    },
+    "dashboardDocumentReadyMs": {
+      "runCount": 5,
+      "p75NearestRank": 824,
+      "range": [
+        703,
+        973
+      ]
+    },
+    "authenticatedResponseStartMs": {
+      "runCount": 5,
+      "p75NearestRank": 4.899999976158142,
+      "range": [
+        2.299999952316284,
+        6.5
+      ]
+    },
+    "authenticatedDomContentLoadedMs": {
+      "runCount": 5,
+      "p75NearestRank": 77,
+      "range": [
+        73.10000002384186,
+        122.5
+      ]
+    },
+    "authenticatedLoadEventEndMs": {
+      "runCount": 5,
+      "p75NearestRank": 77,
+      "range": [
+        73.10000002384186,
+        122.80000007152557
+      ]
+    },
+    "firstAcademicSpaNavigationMs": {
+      "runCount": 5,
+      "p75NearestRank": 695,
+      "range": [
+        645,
+        713
+      ]
+    },
+    "repeatAcademicSpaNavigationMs": {
+      "runCount": 5,
+      "p75NearestRank": 308,
+      "range": [
+        302,
+        317
+      ]
+    },
+    "repeatedAcademicRouteAdditionalScriptCount": {
+      "runCount": 5,
+      "p75NearestRank": 0,
+      "range": [
+        0,
+        0
+      ]
+    },
+    "tableFilterMs": {
+      "runCount": 5,
+      "p75NearestRank": 143,
+      "range": [
+        134,
+        143
+      ]
+    },
+    "tableSortMs": {
+      "runCount": 5,
+      "p75NearestRank": 83,
+      "range": [
+        58,
+        162
+      ]
+    },
+    "chartHoverMs": {
+      "runCount": 5,
+      "p75NearestRank": 54,
+      "range": [
+        48,
+        65
+      ]
+    },
+    "dirtyNavigationMs": {
+      "runCount": 5,
+      "p75NearestRank": 133,
+      "range": [
+        114,
+        158
+      ]
+    },
+    "initialEncodedBodyBytes": {
+      "runCount": 5,
+      "p75NearestRank": 249048,
+      "range": [
+        249048,
+        249048
+      ]
+    },
+    "initialTransferBytes": {
+      "runCount": 5,
+      "p75NearestRank": 258948,
+      "range": [
+        258948,
+        258948
+      ]
+    },
+    "firstAcademicRouteEncodedBodyBytes": {
+      "runCount": 5,
+      "p75NearestRank": 71529,
+      "range": [
+        71529,
+        71529
+      ]
+    },
+    "firstAcademicRouteTransferBytes": {
+      "runCount": 5,
+      "p75NearestRank": 72429,
+      "range": [
+        72429,
+        72429
+      ]
+    },
+    "apiRequestCount": {
+      "runCount": 5,
+      "p75NearestRank": 48,
+      "range": [
+        48,
+        48
+      ]
+    },
+    "apiResponseFailureCount": {
+      "runCount": 5,
+      "p75NearestRank": 1,
+      "range": [
+        1,
+        1
+      ]
+    },
+    "apiTransportFailureCount": {
+      "runCount": 5,
+      "p75NearestRank": 7,
+      "range": [
+        7,
+        7
+      ]
+    },
+    "dashboardDomNodeCount": {
+      "runCount": 5,
+      "p75NearestRank": 855,
+      "range": [
+        855,
+        855
+      ]
+    },
+    "academicAnalyticsDomNodeCount": {
+      "runCount": 5,
+      "p75NearestRank": 683,
+      "range": [
+        683,
+        683
+      ]
+    },
+    "attendanceCalendarDomNodeCount": {
+      "runCount": 5,
+      "p75NearestRank": 548,
+      "range": [
+        548,
+        548
+      ]
+    },
+    "heapUsedBytes": {
+      "runCount": 5,
+      "p75NearestRank": 15200000,
+      "range": [
+        10600000,
+        15200000
+      ]
+    },
+    "lcpMs": {
+      "runCount": 5,
+      "p75NearestRank": 856,
+      "range": [
+        744,
+        892
+      ]
+    },
+    "cls": {
+      "runCount": 5,
+      "p75NearestRank": 0.13667369007925326,
+      "range": [
+        0.017955696635985095,
+        0.20523065746405947
+      ]
+    },
+    "maxEventTimingDurationMs": {
+      "runCount": 5,
+      "p75NearestRank": 200,
+      "range": [
+        200,
+        200
+      ]
+    }
+  },
+  "samples": [
+    {
+      "run": 1,
+      "coldEntry": {
+        "loginFormReadyMs": 620,
+        "dashboardDocumentReadyMs": 803,
+        "authenticatedNavigationTiming": {
+          "type": "navigate",
+          "responseStartMs": 4.899999976158142,
+          "domContentLoadedMs": 77,
+          "loadEventEndMs": 77
+        },
+        "cacheControl": "no-store"
+      },
+      "javascript": {
+        "initialResources": [
+          {
+            "path": "/assets/index-gNQix3QF.js",
+            "encodedBodyBytes": 183552,
+            "transferBytes": 183852
+          },
+          {
+            "path": "/assets/rolldown-runtime-XKyaHtl9.js",
+            "encodedBodyBytes": 726,
+            "transferBytes": 1026
+          },
+          {
+            "path": "/assets/jsx-dev-runtime-DPz9kuRz.js",
+            "encodedBodyBytes": 8109,
+            "transferBytes": 8409
+          },
+          {
+            "path": "/assets/jsx-runtime-DegY4zhB.js",
+            "encodedBodyBytes": 2290,
+            "transferBytes": 2590
+          },
+          {
+            "path": "/assets/createLucideIcon-B5Pgayw0.js",
+            "encodedBodyBytes": 3728,
+            "transferBytes": 4028
+          },
+          {
+            "path": "/assets/QueryClientProvider-BDno_QOq.js",
+            "encodedBodyBytes": 467,
+            "transferBytes": 767
+          },
+          {
+            "path": "/assets/useQuery-RxKSee9v.js",
+            "encodedBodyBytes": 8253,
+            "transferBytes": 8553
+          },
+          {
+            "path": "/assets/bundle-mjs-DRr6pK88.js",
+            "encodedBodyBytes": 6827,
+            "transferBytes": 7127
+          },
+          {
+            "path": "/assets/utils-_hzB4itR.js",
+            "encodedBodyBytes": 94,
+            "transferBytes": 394
+          },
+          {
+            "path": "/assets/esm-BlDHuvDz.js",
+            "encodedBodyBytes": 105,
+            "transferBytes": 405
+          },
+          {
+            "path": "/assets/Dashboard-ClTJhDFh.js",
+            "encodedBodyBytes": 9407,
+            "transferBytes": 9707
+          },
+          {
+            "path": "/assets/bell-ring-e7lwz87U.js",
+            "encodedBodyBytes": 396,
+            "transferBytes": 696
+          },
+          {
+            "path": "/assets/check-CRAWq9NJ.js",
+            "encodedBodyBytes": 124,
+            "transferBytes": 424
+          },
+          {
+            "path": "/assets/readiness-CwcXsTRo.js",
+            "encodedBodyBytes": 4281,
+            "transferBytes": 4581
+          },
+          {
+            "path": "/assets/inbox-BGzv3uIk.js",
+            "encodedBodyBytes": 482,
+            "transferBytes": 782
+          },
+          {
+            "path": "/assets/lock-keyhole-B-ko5JiH.js",
+            "encodedBodyBytes": 254,
+            "transferBytes": 554
+          },
+          {
+            "path": "/assets/lock-X7TWtLNZ.js",
+            "encodedBodyBytes": 206,
+            "transferBytes": 506
+          },
+          {
+            "path": "/assets/refresh-cw-CDAoVjOy.js",
+            "encodedBodyBytes": 320,
+            "transferBytes": 620
+          },
+          {
+            "path": "/assets/settings-2-DFmyzt_K.js",
+            "encodedBodyBytes": 252,
+            "transferBytes": 552
+          },
+          {
+            "path": "/assets/page-header-cjUGzc9h.js",
+            "encodedBodyBytes": 660,
+            "transferBytes": 960
+          },
+          {
+            "path": "/assets/state-message-CpZOsAeM.js",
+            "encodedBodyBytes": 849,
+            "transferBytes": 1149
+          },
+          {
+            "path": "/assets/download-qhPW8vZb.js",
+            "encodedBodyBytes": 262,
+            "transferBytes": 562
+          },
+          {
+            "path": "/assets/file-spreadsheet-C2oAX-NE.js",
+            "encodedBodyBytes": 375,
+            "transferBytes": 675
+          },
+          {
+            "path": "/assets/triangle-alert-Cx4h56Y8.js",
+            "encodedBodyBytes": 264,
+            "transferBytes": 564
+          },
+          {
+            "path": "/assets/useOperatorQueries-CWo-H3wS.js",
+            "encodedBodyBytes": 635,
+            "transferBytes": 935
+          },
+          {
+            "path": "/assets/queryOptions-Dfvzj6n2.js",
+            "encodedBodyBytes": 38,
+            "transferBytes": 338
+          },
+          {
+            "path": "/assets/native-select-DXJq8emA.js",
+            "encodedBodyBytes": 628,
+            "transferBytes": 928
+          },
+          {
+            "path": "/assets/useAnalyticsQueries-CXt8vJfY.js",
+            "encodedBodyBytes": 1131,
+            "transferBytes": 1431
+          },
+          {
+            "path": "/assets/academicMasters-CNfKFc3-.js",
+            "encodedBodyBytes": 509,
+            "transferBytes": 809
+          },
+          {
+            "path": "/assets/dialog-Bx-6BY6d.js",
+            "encodedBodyBytes": 9671,
+            "transferBytes": 9971
+          },
+          {
+            "path": "/assets/dist-B0G5QAJn.js",
+            "encodedBodyBytes": 3009,
+            "transferBytes": 3309
+          },
+          {
+            "path": "/assets/data-table-DbzwsD32.js",
+            "encodedBodyBytes": 657,
+            "transferBytes": 957
+          },
+          {
+            "path": "/assets/filter-bar-B9-rKXTO.js",
+            "encodedBodyBytes": 487,
+            "transferBytes": 787
+          }
+        ],
+        "initialEncodedBodyBytes": 249048,
+        "initialTransferBytes": 258948,
+        "firstAcademicRouteResources": [
+          {
+            "path": "/assets/AcademicAnalytics-BoX3qsKO.js",
+            "encodedBodyBytes": 4543,
+            "transferBytes": 4843
+          },
+          {
+            "path": "/assets/dist-rem5wb1B.js",
+            "encodedBodyBytes": 66420,
+            "transferBytes": 66720
+          },
+          {
+            "path": "/assets/useAcademicAnalyticsQueries-BDf1wYHS.js",
+            "encodedBodyBytes": 566,
+            "transferBytes": 866
+          }
+        ],
+        "firstAcademicRouteEncodedBodyBytes": 71529,
+        "firstAcademicRouteTransferBytes": 72429,
+        "repeatedAcademicRouteResources": []
+      },
+      "spaNavigation": {
+        "firstAcademicSpaNavigationMs": 713,
+        "repeatAcademicSpaNavigationMs": 308
+      },
+      "interactions": {
+        "tableFilterMs": 143,
+        "tableSortMs": 162,
+        "chartHoverMs": 65,
+        "dirtyNavigationMs": 130,
+        "dirtyNavigationPrompt": true,
+        "dirtyNavigationWrites": 0
+      },
+      "api": {
+        "requestCount": 48,
+        "writes": [
+          {
+            "method": "POST",
+            "path": "/api/auth/login"
+          }
+        ],
+        "responseFailures": [
+          {
+            "path": "/api/auth/me",
+            "status": 401,
+            "expected": true
+          }
+        ],
+        "transportFailures": [
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      "domNodeCount": {
+        "dashboard": 855,
+        "academicAnalytics": 683,
+        "attendanceCalendar": 548
+      },
+      "heapUsedBytes": 11200000,
+      "labVitals": {
+        "lcpMs": 836,
+        "cls": 0.13667369007925326,
+        "layoutShiftSupported": true,
+        "rawLayoutShifts": [
+          {
+            "startTimeMs": 409,
+            "value": 0.00000832044685066663
+          },
+          {
+            "startTimeMs": 557.5999999046326,
+            "value": 0.017947376189134428
+          },
+          {
+            "startTimeMs": 792.5,
+            "value": 0.11871799344326817
+          }
+        ],
+        "eventTimingSupported": true,
+        "eventTimingThresholdMs": 16,
+        "eventTimingEntries": [
+          {
+            "name": "pointerover",
+            "startTimeMs": 61.299999952316284,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 61.299999952316284,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 61.299999952316284,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 61.299999952316284,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 148.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 328.89999997615814,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 697.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 791.5999999046326,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 992.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 992.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 992.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 992.7999999523163,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 992.7999999523163,
+            "durationMs": 104
+          },
+          {
+            "name": "click",
+            "startTimeMs": 992.7999999523163,
+            "durationMs": 104
+          },
+          {
+            "name": "beforeinput",
+            "startTimeMs": 1697.7999999523163,
+            "durationMs": 32
+          },
+          {
+            "name": "input",
+            "startTimeMs": 1698.2999999523163,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1874,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1874.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1874.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1874.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1874.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1874.0999999046326,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1882.2999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1959.8999999761581,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2174.1999999284744,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2175.6999999284744,
+            "durationMs": 192
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2175.6999999284744,
+            "durationMs": 192
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2175.6999999284744,
+            "durationMs": 192
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2449.7999999523163,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2453.5,
+            "durationMs": 104
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2453.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2453.5,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2453.5,
+            "durationMs": 104
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2453.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2795.399999976158,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2801,
+            "durationMs": 152
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2801,
+            "durationMs": 152
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2801.1999999284744,
+            "durationMs": 152
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2801.1999999284744,
+            "durationMs": 152
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2801.1999999284744,
+            "durationMs": 152
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 3555.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 3555.5999999046326,
+            "durationMs": 24
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 3555.5999999046326,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 3555.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 3555.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 3555.6999999284744,
+            "durationMs": 24
+          }
+        ],
+        "maxEventTimingDurationMs": 200
+      }
+    },
+    {
+      "run": 2,
+      "coldEntry": {
+        "loginFormReadyMs": 582,
+        "dashboardDocumentReadyMs": 703,
+        "authenticatedNavigationTiming": {
+          "type": "navigate",
+          "responseStartMs": 6.5,
+          "domContentLoadedMs": 75.39999997615814,
+          "loadEventEndMs": 75.5
+        },
+        "cacheControl": "no-store"
+      },
+      "javascript": {
+        "initialResources": [
+          {
+            "path": "/assets/index-gNQix3QF.js",
+            "encodedBodyBytes": 183552,
+            "transferBytes": 183852
+          },
+          {
+            "path": "/assets/rolldown-runtime-XKyaHtl9.js",
+            "encodedBodyBytes": 726,
+            "transferBytes": 1026
+          },
+          {
+            "path": "/assets/jsx-runtime-DegY4zhB.js",
+            "encodedBodyBytes": 2290,
+            "transferBytes": 2590
+          },
+          {
+            "path": "/assets/jsx-dev-runtime-DPz9kuRz.js",
+            "encodedBodyBytes": 8109,
+            "transferBytes": 8409
+          },
+          {
+            "path": "/assets/createLucideIcon-B5Pgayw0.js",
+            "encodedBodyBytes": 3728,
+            "transferBytes": 4028
+          },
+          {
+            "path": "/assets/QueryClientProvider-BDno_QOq.js",
+            "encodedBodyBytes": 467,
+            "transferBytes": 767
+          },
+          {
+            "path": "/assets/useQuery-RxKSee9v.js",
+            "encodedBodyBytes": 8253,
+            "transferBytes": 8553
+          },
+          {
+            "path": "/assets/bundle-mjs-DRr6pK88.js",
+            "encodedBodyBytes": 6827,
+            "transferBytes": 7127
+          },
+          {
+            "path": "/assets/utils-_hzB4itR.js",
+            "encodedBodyBytes": 94,
+            "transferBytes": 394
+          },
+          {
+            "path": "/assets/esm-BlDHuvDz.js",
+            "encodedBodyBytes": 105,
+            "transferBytes": 405
+          },
+          {
+            "path": "/assets/Dashboard-ClTJhDFh.js",
+            "encodedBodyBytes": 9407,
+            "transferBytes": 9707
+          },
+          {
+            "path": "/assets/bell-ring-e7lwz87U.js",
+            "encodedBodyBytes": 396,
+            "transferBytes": 696
+          },
+          {
+            "path": "/assets/check-CRAWq9NJ.js",
+            "encodedBodyBytes": 124,
+            "transferBytes": 424
+          },
+          {
+            "path": "/assets/readiness-CwcXsTRo.js",
+            "encodedBodyBytes": 4281,
+            "transferBytes": 4581
+          },
+          {
+            "path": "/assets/inbox-BGzv3uIk.js",
+            "encodedBodyBytes": 482,
+            "transferBytes": 782
+          },
+          {
+            "path": "/assets/lock-keyhole-B-ko5JiH.js",
+            "encodedBodyBytes": 254,
+            "transferBytes": 554
+          },
+          {
+            "path": "/assets/lock-X7TWtLNZ.js",
+            "encodedBodyBytes": 206,
+            "transferBytes": 506
+          },
+          {
+            "path": "/assets/refresh-cw-CDAoVjOy.js",
+            "encodedBodyBytes": 320,
+            "transferBytes": 620
+          },
+          {
+            "path": "/assets/settings-2-DFmyzt_K.js",
+            "encodedBodyBytes": 252,
+            "transferBytes": 552
+          },
+          {
+            "path": "/assets/page-header-cjUGzc9h.js",
+            "encodedBodyBytes": 660,
+            "transferBytes": 960
+          },
+          {
+            "path": "/assets/state-message-CpZOsAeM.js",
+            "encodedBodyBytes": 849,
+            "transferBytes": 1149
+          },
+          {
+            "path": "/assets/download-qhPW8vZb.js",
+            "encodedBodyBytes": 262,
+            "transferBytes": 562
+          },
+          {
+            "path": "/assets/file-spreadsheet-C2oAX-NE.js",
+            "encodedBodyBytes": 375,
+            "transferBytes": 675
+          },
+          {
+            "path": "/assets/triangle-alert-Cx4h56Y8.js",
+            "encodedBodyBytes": 264,
+            "transferBytes": 564
+          },
+          {
+            "path": "/assets/useOperatorQueries-CWo-H3wS.js",
+            "encodedBodyBytes": 635,
+            "transferBytes": 935
+          },
+          {
+            "path": "/assets/queryOptions-Dfvzj6n2.js",
+            "encodedBodyBytes": 38,
+            "transferBytes": 338
+          },
+          {
+            "path": "/assets/native-select-DXJq8emA.js",
+            "encodedBodyBytes": 628,
+            "transferBytes": 928
+          },
+          {
+            "path": "/assets/useAnalyticsQueries-CXt8vJfY.js",
+            "encodedBodyBytes": 1131,
+            "transferBytes": 1431
+          },
+          {
+            "path": "/assets/academicMasters-CNfKFc3-.js",
+            "encodedBodyBytes": 509,
+            "transferBytes": 809
+          },
+          {
+            "path": "/assets/dialog-Bx-6BY6d.js",
+            "encodedBodyBytes": 9671,
+            "transferBytes": 9971
+          },
+          {
+            "path": "/assets/dist-B0G5QAJn.js",
+            "encodedBodyBytes": 3009,
+            "transferBytes": 3309
+          },
+          {
+            "path": "/assets/data-table-DbzwsD32.js",
+            "encodedBodyBytes": 657,
+            "transferBytes": 957
+          },
+          {
+            "path": "/assets/filter-bar-B9-rKXTO.js",
+            "encodedBodyBytes": 487,
+            "transferBytes": 787
+          }
+        ],
+        "initialEncodedBodyBytes": 249048,
+        "initialTransferBytes": 258948,
+        "firstAcademicRouteResources": [
+          {
+            "path": "/assets/AcademicAnalytics-BoX3qsKO.js",
+            "encodedBodyBytes": 4543,
+            "transferBytes": 4843
+          },
+          {
+            "path": "/assets/dist-rem5wb1B.js",
+            "encodedBodyBytes": 66420,
+            "transferBytes": 66720
+          },
+          {
+            "path": "/assets/useAcademicAnalyticsQueries-BDf1wYHS.js",
+            "encodedBodyBytes": 566,
+            "transferBytes": 866
+          }
+        ],
+        "firstAcademicRouteEncodedBodyBytes": 71529,
+        "firstAcademicRouteTransferBytes": 72429,
+        "repeatedAcademicRouteResources": []
+      },
+      "spaNavigation": {
+        "firstAcademicSpaNavigationMs": 648,
+        "repeatAcademicSpaNavigationMs": 302
+      },
+      "interactions": {
+        "tableFilterMs": 136,
+        "tableSortMs": 83,
+        "chartHoverMs": 49,
+        "dirtyNavigationMs": 133,
+        "dirtyNavigationPrompt": true,
+        "dirtyNavigationWrites": 0
+      },
+      "api": {
+        "requestCount": 48,
+        "writes": [
+          {
+            "method": "POST",
+            "path": "/api/auth/login"
+          }
+        ],
+        "responseFailures": [
+          {
+            "path": "/api/auth/me",
+            "status": 401,
+            "expected": true
+          }
+        ],
+        "transportFailures": [
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      "domNodeCount": {
+        "dashboard": 855,
+        "academicAnalytics": 683,
+        "attendanceCalendar": 548
+      },
+      "heapUsedBytes": 10600000,
+      "labVitals": {
+        "lcpMs": 804,
+        "cls": 0.13667369007925326,
+        "layoutShiftSupported": true,
+        "rawLayoutShifts": [
+          {
+            "startTimeMs": 453.2000000476837,
+            "value": 0.00000832044685066663
+          },
+          {
+            "startTimeMs": 560.5,
+            "value": 0.017947376189134428
+          },
+          {
+            "startTimeMs": 775.8999999761581,
+            "value": 0.11871799344326817
+          }
+        ],
+        "eventTimingSupported": true,
+        "eventTimingThresholdMs": 16,
+        "eventTimingEntries": [
+          {
+            "name": "pointerover",
+            "startTimeMs": 60.700000047683716,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 60.700000047683716,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 60.700000047683716,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 60.700000047683716,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 156,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 335.3000000715256,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 671.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 949.3999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 949.5,
+            "durationMs": 104
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 949.5,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 951.3000000715256,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 951.3000000715256,
+            "durationMs": 96
+          },
+          {
+            "name": "click",
+            "startTimeMs": 951.3000000715256,
+            "durationMs": 96
+          },
+          {
+            "name": "beforeinput",
+            "startTimeMs": 1599.7000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "input",
+            "startTimeMs": 1600.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1766.8999999761581,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1767,
+            "durationMs": 32
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1767,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1767.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1767.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1767.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1774.8999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1856.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2047.2000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2047.3000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2047.3000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2047.3000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2047.3000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2047.3000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2323,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2329.8000000715256,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2329.899999976158,
+            "durationMs": 88
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2329.899999976158,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2330,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2330,
+            "durationMs": 88
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2330,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2613.899999976158,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2614.100000023842,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2614.100000023842,
+            "durationMs": 144
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2614.100000023842,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 3346.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 3346.5,
+            "durationMs": 24
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 3346.5,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 3346.600000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 3346.600000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 3346.600000023842,
+            "durationMs": 24
+          }
+        ],
+        "maxEventTimingDurationMs": 200
+      }
+    },
+    {
+      "run": 3,
+      "coldEntry": {
+        "loginFormReadyMs": 584,
+        "dashboardDocumentReadyMs": 824,
+        "authenticatedNavigationTiming": {
+          "type": "navigate",
+          "responseStartMs": 2.299999952316284,
+          "domContentLoadedMs": 73.10000002384186,
+          "loadEventEndMs": 73.10000002384186
+        },
+        "cacheControl": "no-store"
+      },
+      "javascript": {
+        "initialResources": [
+          {
+            "path": "/assets/index-gNQix3QF.js",
+            "encodedBodyBytes": 183552,
+            "transferBytes": 183852
+          },
+          {
+            "path": "/assets/rolldown-runtime-XKyaHtl9.js",
+            "encodedBodyBytes": 726,
+            "transferBytes": 1026
+          },
+          {
+            "path": "/assets/jsx-dev-runtime-DPz9kuRz.js",
+            "encodedBodyBytes": 8109,
+            "transferBytes": 8409
+          },
+          {
+            "path": "/assets/jsx-runtime-DegY4zhB.js",
+            "encodedBodyBytes": 2290,
+            "transferBytes": 2590
+          },
+          {
+            "path": "/assets/createLucideIcon-B5Pgayw0.js",
+            "encodedBodyBytes": 3728,
+            "transferBytes": 4028
+          },
+          {
+            "path": "/assets/QueryClientProvider-BDno_QOq.js",
+            "encodedBodyBytes": 467,
+            "transferBytes": 767
+          },
+          {
+            "path": "/assets/useQuery-RxKSee9v.js",
+            "encodedBodyBytes": 8253,
+            "transferBytes": 8553
+          },
+          {
+            "path": "/assets/bundle-mjs-DRr6pK88.js",
+            "encodedBodyBytes": 6827,
+            "transferBytes": 7127
+          },
+          {
+            "path": "/assets/utils-_hzB4itR.js",
+            "encodedBodyBytes": 94,
+            "transferBytes": 394
+          },
+          {
+            "path": "/assets/esm-BlDHuvDz.js",
+            "encodedBodyBytes": 105,
+            "transferBytes": 405
+          },
+          {
+            "path": "/assets/Dashboard-ClTJhDFh.js",
+            "encodedBodyBytes": 9407,
+            "transferBytes": 9707
+          },
+          {
+            "path": "/assets/bell-ring-e7lwz87U.js",
+            "encodedBodyBytes": 396,
+            "transferBytes": 696
+          },
+          {
+            "path": "/assets/check-CRAWq9NJ.js",
+            "encodedBodyBytes": 124,
+            "transferBytes": 424
+          },
+          {
+            "path": "/assets/readiness-CwcXsTRo.js",
+            "encodedBodyBytes": 4281,
+            "transferBytes": 4581
+          },
+          {
+            "path": "/assets/inbox-BGzv3uIk.js",
+            "encodedBodyBytes": 482,
+            "transferBytes": 782
+          },
+          {
+            "path": "/assets/lock-keyhole-B-ko5JiH.js",
+            "encodedBodyBytes": 254,
+            "transferBytes": 554
+          },
+          {
+            "path": "/assets/lock-X7TWtLNZ.js",
+            "encodedBodyBytes": 206,
+            "transferBytes": 506
+          },
+          {
+            "path": "/assets/refresh-cw-CDAoVjOy.js",
+            "encodedBodyBytes": 320,
+            "transferBytes": 620
+          },
+          {
+            "path": "/assets/settings-2-DFmyzt_K.js",
+            "encodedBodyBytes": 252,
+            "transferBytes": 552
+          },
+          {
+            "path": "/assets/page-header-cjUGzc9h.js",
+            "encodedBodyBytes": 660,
+            "transferBytes": 960
+          },
+          {
+            "path": "/assets/state-message-CpZOsAeM.js",
+            "encodedBodyBytes": 849,
+            "transferBytes": 1149
+          },
+          {
+            "path": "/assets/download-qhPW8vZb.js",
+            "encodedBodyBytes": 262,
+            "transferBytes": 562
+          },
+          {
+            "path": "/assets/file-spreadsheet-C2oAX-NE.js",
+            "encodedBodyBytes": 375,
+            "transferBytes": 675
+          },
+          {
+            "path": "/assets/triangle-alert-Cx4h56Y8.js",
+            "encodedBodyBytes": 264,
+            "transferBytes": 564
+          },
+          {
+            "path": "/assets/useOperatorQueries-CWo-H3wS.js",
+            "encodedBodyBytes": 635,
+            "transferBytes": 935
+          },
+          {
+            "path": "/assets/queryOptions-Dfvzj6n2.js",
+            "encodedBodyBytes": 38,
+            "transferBytes": 338
+          },
+          {
+            "path": "/assets/native-select-DXJq8emA.js",
+            "encodedBodyBytes": 628,
+            "transferBytes": 928
+          },
+          {
+            "path": "/assets/useAnalyticsQueries-CXt8vJfY.js",
+            "encodedBodyBytes": 1131,
+            "transferBytes": 1431
+          },
+          {
+            "path": "/assets/academicMasters-CNfKFc3-.js",
+            "encodedBodyBytes": 509,
+            "transferBytes": 809
+          },
+          {
+            "path": "/assets/dialog-Bx-6BY6d.js",
+            "encodedBodyBytes": 9671,
+            "transferBytes": 9971
+          },
+          {
+            "path": "/assets/dist-B0G5QAJn.js",
+            "encodedBodyBytes": 3009,
+            "transferBytes": 3309
+          },
+          {
+            "path": "/assets/data-table-DbzwsD32.js",
+            "encodedBodyBytes": 657,
+            "transferBytes": 957
+          },
+          {
+            "path": "/assets/filter-bar-B9-rKXTO.js",
+            "encodedBodyBytes": 487,
+            "transferBytes": 787
+          }
+        ],
+        "initialEncodedBodyBytes": 249048,
+        "initialTransferBytes": 258948,
+        "firstAcademicRouteResources": [
+          {
+            "path": "/assets/AcademicAnalytics-BoX3qsKO.js",
+            "encodedBodyBytes": 4543,
+            "transferBytes": 4843
+          },
+          {
+            "path": "/assets/dist-rem5wb1B.js",
+            "encodedBodyBytes": 66420,
+            "transferBytes": 66720
+          },
+          {
+            "path": "/assets/useAcademicAnalyticsQueries-BDf1wYHS.js",
+            "encodedBodyBytes": 566,
+            "transferBytes": 866
+          }
+        ],
+        "firstAcademicRouteEncodedBodyBytes": 71529,
+        "firstAcademicRouteTransferBytes": 72429,
+        "repeatedAcademicRouteResources": []
+      },
+      "spaNavigation": {
+        "firstAcademicSpaNavigationMs": 663,
+        "repeatAcademicSpaNavigationMs": 305
+      },
+      "interactions": {
+        "tableFilterMs": 143,
+        "tableSortMs": 77,
+        "chartHoverMs": 48,
+        "dirtyNavigationMs": 114,
+        "dirtyNavigationPrompt": true,
+        "dirtyNavigationWrites": 0
+      },
+      "api": {
+        "requestCount": 48,
+        "writes": [
+          {
+            "method": "POST",
+            "path": "/api/auth/login"
+          }
+        ],
+        "responseFailures": [
+          {
+            "path": "/api/auth/me",
+            "status": 401,
+            "expected": true
+          }
+        ],
+        "transportFailures": [
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      "domNodeCount": {
+        "dashboard": 855,
+        "academicAnalytics": 683,
+        "attendanceCalendar": 548
+      },
+      "heapUsedBytes": 15200000,
+      "labVitals": {
+        "lcpMs": 856,
+        "cls": 0.20523065746405947,
+        "layoutShiftSupported": true,
+        "rawLayoutShifts": [
+          {
+            "startTimeMs": 433.6999999284744,
+            "value": 0.00000832044685066663
+          },
+          {
+            "startTimeMs": 539.5,
+            "value": 0.017947376189134428
+          },
+          {
+            "startTimeMs": 812.7999999523163,
+            "value": 0.18727496082807438
+          }
+        ],
+        "eventTimingSupported": true,
+        "eventTimingThresholdMs": 16,
+        "eventTimingEntries": [
+          {
+            "name": "pointerover",
+            "startTimeMs": 48.60000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 48.60000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 48.60000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 48.60000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 148.10000002384186,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 318.6999999284744,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 812,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1004.6999999284744,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1004.8999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1004.8999999761581,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1005,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1005,
+            "durationMs": 104
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1005,
+            "durationMs": 104
+          },
+          {
+            "name": "beforeinput",
+            "startTimeMs": 1663.5,
+            "durationMs": 40
+          },
+          {
+            "name": "input",
+            "startTimeMs": 1664.1000000238419,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1837.1999999284744,
+            "durationMs": 32
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1837.1999999284744,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1837.1999999284744,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1837.1999999284744,
+            "durationMs": 32
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1837.1999999284744,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1845.3999999761581,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1914.7999999523163,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2103.399999976158,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2103.5,
+            "durationMs": 200
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2103.5,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2105.600000023842,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2105.600000023842,
+            "durationMs": 200
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2105.600000023842,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2384.7999999523163,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2392.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2392.7999999523163,
+            "durationMs": 96
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2392.7999999523163,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2392.7999999523163,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2392.7999999523163,
+            "durationMs": 96
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2392.7999999523163,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2704.6999999284744,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2704.7999999523163,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2704.7999999523163,
+            "durationMs": 136
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2704.7999999523163,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 3419.399999976158,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 3419.600000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 3419.600000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 3421,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 3421,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 3421,
+            "durationMs": 24
+          }
+        ],
+        "maxEventTimingDurationMs": 200
+      }
+    },
+    {
+      "run": 4,
+      "coldEntry": {
+        "loginFormReadyMs": 588,
+        "dashboardDocumentReadyMs": 973,
+        "authenticatedNavigationTiming": {
+          "type": "navigate",
+          "responseStartMs": 3.100000023841858,
+          "domContentLoadedMs": 122.5,
+          "loadEventEndMs": 122.80000007152557
+        },
+        "cacheControl": "no-store"
+      },
+      "javascript": {
+        "initialResources": [
+          {
+            "path": "/assets/index-gNQix3QF.js",
+            "encodedBodyBytes": 183552,
+            "transferBytes": 183852
+          },
+          {
+            "path": "/assets/rolldown-runtime-XKyaHtl9.js",
+            "encodedBodyBytes": 726,
+            "transferBytes": 1026
+          },
+          {
+            "path": "/assets/jsx-dev-runtime-DPz9kuRz.js",
+            "encodedBodyBytes": 8109,
+            "transferBytes": 8409
+          },
+          {
+            "path": "/assets/jsx-runtime-DegY4zhB.js",
+            "encodedBodyBytes": 2290,
+            "transferBytes": 2590
+          },
+          {
+            "path": "/assets/createLucideIcon-B5Pgayw0.js",
+            "encodedBodyBytes": 3728,
+            "transferBytes": 4028
+          },
+          {
+            "path": "/assets/QueryClientProvider-BDno_QOq.js",
+            "encodedBodyBytes": 467,
+            "transferBytes": 767
+          },
+          {
+            "path": "/assets/bundle-mjs-DRr6pK88.js",
+            "encodedBodyBytes": 6827,
+            "transferBytes": 7127
+          },
+          {
+            "path": "/assets/useQuery-RxKSee9v.js",
+            "encodedBodyBytes": 8253,
+            "transferBytes": 8553
+          },
+          {
+            "path": "/assets/utils-_hzB4itR.js",
+            "encodedBodyBytes": 94,
+            "transferBytes": 394
+          },
+          {
+            "path": "/assets/esm-BlDHuvDz.js",
+            "encodedBodyBytes": 105,
+            "transferBytes": 405
+          },
+          {
+            "path": "/assets/Dashboard-ClTJhDFh.js",
+            "encodedBodyBytes": 9407,
+            "transferBytes": 9707
+          },
+          {
+            "path": "/assets/bell-ring-e7lwz87U.js",
+            "encodedBodyBytes": 396,
+            "transferBytes": 696
+          },
+          {
+            "path": "/assets/check-CRAWq9NJ.js",
+            "encodedBodyBytes": 124,
+            "transferBytes": 424
+          },
+          {
+            "path": "/assets/readiness-CwcXsTRo.js",
+            "encodedBodyBytes": 4281,
+            "transferBytes": 4581
+          },
+          {
+            "path": "/assets/inbox-BGzv3uIk.js",
+            "encodedBodyBytes": 482,
+            "transferBytes": 782
+          },
+          {
+            "path": "/assets/lock-keyhole-B-ko5JiH.js",
+            "encodedBodyBytes": 254,
+            "transferBytes": 554
+          },
+          {
+            "path": "/assets/lock-X7TWtLNZ.js",
+            "encodedBodyBytes": 206,
+            "transferBytes": 506
+          },
+          {
+            "path": "/assets/refresh-cw-CDAoVjOy.js",
+            "encodedBodyBytes": 320,
+            "transferBytes": 620
+          },
+          {
+            "path": "/assets/settings-2-DFmyzt_K.js",
+            "encodedBodyBytes": 252,
+            "transferBytes": 552
+          },
+          {
+            "path": "/assets/page-header-cjUGzc9h.js",
+            "encodedBodyBytes": 660,
+            "transferBytes": 960
+          },
+          {
+            "path": "/assets/state-message-CpZOsAeM.js",
+            "encodedBodyBytes": 849,
+            "transferBytes": 1149
+          },
+          {
+            "path": "/assets/download-qhPW8vZb.js",
+            "encodedBodyBytes": 262,
+            "transferBytes": 562
+          },
+          {
+            "path": "/assets/file-spreadsheet-C2oAX-NE.js",
+            "encodedBodyBytes": 375,
+            "transferBytes": 675
+          },
+          {
+            "path": "/assets/triangle-alert-Cx4h56Y8.js",
+            "encodedBodyBytes": 264,
+            "transferBytes": 564
+          },
+          {
+            "path": "/assets/useOperatorQueries-CWo-H3wS.js",
+            "encodedBodyBytes": 635,
+            "transferBytes": 935
+          },
+          {
+            "path": "/assets/queryOptions-Dfvzj6n2.js",
+            "encodedBodyBytes": 38,
+            "transferBytes": 338
+          },
+          {
+            "path": "/assets/native-select-DXJq8emA.js",
+            "encodedBodyBytes": 628,
+            "transferBytes": 928
+          },
+          {
+            "path": "/assets/useAnalyticsQueries-CXt8vJfY.js",
+            "encodedBodyBytes": 1131,
+            "transferBytes": 1431
+          },
+          {
+            "path": "/assets/academicMasters-CNfKFc3-.js",
+            "encodedBodyBytes": 509,
+            "transferBytes": 809
+          },
+          {
+            "path": "/assets/dialog-Bx-6BY6d.js",
+            "encodedBodyBytes": 9671,
+            "transferBytes": 9971
+          },
+          {
+            "path": "/assets/dist-B0G5QAJn.js",
+            "encodedBodyBytes": 3009,
+            "transferBytes": 3309
+          },
+          {
+            "path": "/assets/data-table-DbzwsD32.js",
+            "encodedBodyBytes": 657,
+            "transferBytes": 957
+          },
+          {
+            "path": "/assets/filter-bar-B9-rKXTO.js",
+            "encodedBodyBytes": 487,
+            "transferBytes": 787
+          }
+        ],
+        "initialEncodedBodyBytes": 249048,
+        "initialTransferBytes": 258948,
+        "firstAcademicRouteResources": [
+          {
+            "path": "/assets/AcademicAnalytics-BoX3qsKO.js",
+            "encodedBodyBytes": 4543,
+            "transferBytes": 4843
+          },
+          {
+            "path": "/assets/dist-rem5wb1B.js",
+            "encodedBodyBytes": 66420,
+            "transferBytes": 66720
+          },
+          {
+            "path": "/assets/useAcademicAnalyticsQueries-BDf1wYHS.js",
+            "encodedBodyBytes": 566,
+            "transferBytes": 866
+          }
+        ],
+        "firstAcademicRouteEncodedBodyBytes": 71529,
+        "firstAcademicRouteTransferBytes": 72429,
+        "repeatedAcademicRouteResources": []
+      },
+      "spaNavigation": {
+        "firstAcademicSpaNavigationMs": 695,
+        "repeatAcademicSpaNavigationMs": 305
+      },
+      "interactions": {
+        "tableFilterMs": 135,
+        "tableSortMs": 65,
+        "chartHoverMs": 54,
+        "dirtyNavigationMs": 125,
+        "dirtyNavigationPrompt": true,
+        "dirtyNavigationWrites": 0
+      },
+      "api": {
+        "requestCount": 48,
+        "writes": [
+          {
+            "method": "POST",
+            "path": "/api/auth/login"
+          }
+        ],
+        "responseFailures": [
+          {
+            "path": "/api/auth/me",
+            "status": 401,
+            "expected": true
+          }
+        ],
+        "transportFailures": [
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      "domNodeCount": {
+        "dashboard": 855,
+        "academicAnalytics": 683,
+        "attendanceCalendar": 548
+      },
+      "heapUsedBytes": 13400000,
+      "labVitals": {
+        "lcpMs": 892,
+        "cls": 0.017955696635985095,
+        "layoutShiftSupported": true,
+        "rawLayoutShifts": [
+          {
+            "startTimeMs": 586.4000000953674,
+            "value": 0.00000832044685066663
+          },
+          {
+            "startTimeMs": 657.8000000715256,
+            "value": 0.017947376189134428
+          }
+        ],
+        "eventTimingSupported": true,
+        "eventTimingThresholdMs": 16,
+        "eventTimingEntries": [
+          {
+            "name": "pointerover",
+            "startTimeMs": 81.80000007152557,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 81.80000007152557,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 81.80000007152557,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 81.80000007152557,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 457.8000000715256,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 869.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1140.3000000715256,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1140.4000000953674,
+            "durationMs": 104
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1140.4000000953674,
+            "durationMs": 104
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1140.4000000953674,
+            "durationMs": 104
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1140.4000000953674,
+            "durationMs": 104
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1140.4000000953674,
+            "durationMs": 104
+          },
+          {
+            "name": "beforeinput",
+            "startTimeMs": 1833.9000000953674,
+            "durationMs": 40
+          },
+          {
+            "name": "input",
+            "startTimeMs": 1834.4000000953674,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1989.2000000476837,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1989.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1989.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1989.5,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1989.5,
+            "durationMs": 32
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1989.5,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1996.7000000476837,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2067.100000023842,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2270.4000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2270.5,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2270.5,
+            "durationMs": 200
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2270.5,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2560.100000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2560.4000000953674,
+            "durationMs": 88
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2560.4000000953674,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2560.600000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2560.600000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2560.600000023842,
+            "durationMs": 88
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2852.7000000476837,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2852.8000000715256,
+            "durationMs": 144
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2852.8000000715256,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2852.9000000953674,
+            "durationMs": 144
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2852.9000000953674,
+            "durationMs": 144
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2852.9000000953674,
+            "durationMs": 144
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 3585.100000023842,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 3585.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 3585.3000000715256,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 3585.3000000715256,
+            "durationMs": 24
+          }
+        ],
+        "maxEventTimingDurationMs": 200
+      }
+    },
+    {
+      "run": 5,
+      "coldEntry": {
+        "loginFormReadyMs": 608,
+        "dashboardDocumentReadyMs": 757,
+        "authenticatedNavigationTiming": {
+          "type": "navigate",
+          "responseStartMs": 2.4000000953674316,
+          "domContentLoadedMs": 75.60000002384186,
+          "loadEventEndMs": 75.60000002384186
+        },
+        "cacheControl": "no-store"
+      },
+      "javascript": {
+        "initialResources": [
+          {
+            "path": "/assets/index-gNQix3QF.js",
+            "encodedBodyBytes": 183552,
+            "transferBytes": 183852
+          },
+          {
+            "path": "/assets/rolldown-runtime-XKyaHtl9.js",
+            "encodedBodyBytes": 726,
+            "transferBytes": 1026
+          },
+          {
+            "path": "/assets/jsx-dev-runtime-DPz9kuRz.js",
+            "encodedBodyBytes": 8109,
+            "transferBytes": 8409
+          },
+          {
+            "path": "/assets/jsx-runtime-DegY4zhB.js",
+            "encodedBodyBytes": 2290,
+            "transferBytes": 2590
+          },
+          {
+            "path": "/assets/createLucideIcon-B5Pgayw0.js",
+            "encodedBodyBytes": 3728,
+            "transferBytes": 4028
+          },
+          {
+            "path": "/assets/QueryClientProvider-BDno_QOq.js",
+            "encodedBodyBytes": 467,
+            "transferBytes": 767
+          },
+          {
+            "path": "/assets/useQuery-RxKSee9v.js",
+            "encodedBodyBytes": 8253,
+            "transferBytes": 8553
+          },
+          {
+            "path": "/assets/bundle-mjs-DRr6pK88.js",
+            "encodedBodyBytes": 6827,
+            "transferBytes": 7127
+          },
+          {
+            "path": "/assets/utils-_hzB4itR.js",
+            "encodedBodyBytes": 94,
+            "transferBytes": 394
+          },
+          {
+            "path": "/assets/esm-BlDHuvDz.js",
+            "encodedBodyBytes": 105,
+            "transferBytes": 405
+          },
+          {
+            "path": "/assets/Dashboard-ClTJhDFh.js",
+            "encodedBodyBytes": 9407,
+            "transferBytes": 9707
+          },
+          {
+            "path": "/assets/bell-ring-e7lwz87U.js",
+            "encodedBodyBytes": 396,
+            "transferBytes": 696
+          },
+          {
+            "path": "/assets/check-CRAWq9NJ.js",
+            "encodedBodyBytes": 124,
+            "transferBytes": 424
+          },
+          {
+            "path": "/assets/readiness-CwcXsTRo.js",
+            "encodedBodyBytes": 4281,
+            "transferBytes": 4581
+          },
+          {
+            "path": "/assets/inbox-BGzv3uIk.js",
+            "encodedBodyBytes": 482,
+            "transferBytes": 782
+          },
+          {
+            "path": "/assets/lock-keyhole-B-ko5JiH.js",
+            "encodedBodyBytes": 254,
+            "transferBytes": 554
+          },
+          {
+            "path": "/assets/lock-X7TWtLNZ.js",
+            "encodedBodyBytes": 206,
+            "transferBytes": 506
+          },
+          {
+            "path": "/assets/refresh-cw-CDAoVjOy.js",
+            "encodedBodyBytes": 320,
+            "transferBytes": 620
+          },
+          {
+            "path": "/assets/settings-2-DFmyzt_K.js",
+            "encodedBodyBytes": 252,
+            "transferBytes": 552
+          },
+          {
+            "path": "/assets/page-header-cjUGzc9h.js",
+            "encodedBodyBytes": 660,
+            "transferBytes": 960
+          },
+          {
+            "path": "/assets/state-message-CpZOsAeM.js",
+            "encodedBodyBytes": 849,
+            "transferBytes": 1149
+          },
+          {
+            "path": "/assets/download-qhPW8vZb.js",
+            "encodedBodyBytes": 262,
+            "transferBytes": 562
+          },
+          {
+            "path": "/assets/file-spreadsheet-C2oAX-NE.js",
+            "encodedBodyBytes": 375,
+            "transferBytes": 675
+          },
+          {
+            "path": "/assets/triangle-alert-Cx4h56Y8.js",
+            "encodedBodyBytes": 264,
+            "transferBytes": 564
+          },
+          {
+            "path": "/assets/useOperatorQueries-CWo-H3wS.js",
+            "encodedBodyBytes": 635,
+            "transferBytes": 935
+          },
+          {
+            "path": "/assets/queryOptions-Dfvzj6n2.js",
+            "encodedBodyBytes": 38,
+            "transferBytes": 338
+          },
+          {
+            "path": "/assets/native-select-DXJq8emA.js",
+            "encodedBodyBytes": 628,
+            "transferBytes": 928
+          },
+          {
+            "path": "/assets/useAnalyticsQueries-CXt8vJfY.js",
+            "encodedBodyBytes": 1131,
+            "transferBytes": 1431
+          },
+          {
+            "path": "/assets/academicMasters-CNfKFc3-.js",
+            "encodedBodyBytes": 509,
+            "transferBytes": 809
+          },
+          {
+            "path": "/assets/dialog-Bx-6BY6d.js",
+            "encodedBodyBytes": 9671,
+            "transferBytes": 9971
+          },
+          {
+            "path": "/assets/dist-B0G5QAJn.js",
+            "encodedBodyBytes": 3009,
+            "transferBytes": 3309
+          },
+          {
+            "path": "/assets/data-table-DbzwsD32.js",
+            "encodedBodyBytes": 657,
+            "transferBytes": 957
+          },
+          {
+            "path": "/assets/filter-bar-B9-rKXTO.js",
+            "encodedBodyBytes": 487,
+            "transferBytes": 787
+          }
+        ],
+        "initialEncodedBodyBytes": 249048,
+        "initialTransferBytes": 258948,
+        "firstAcademicRouteResources": [
+          {
+            "path": "/assets/AcademicAnalytics-BoX3qsKO.js",
+            "encodedBodyBytes": 4543,
+            "transferBytes": 4843
+          },
+          {
+            "path": "/assets/dist-rem5wb1B.js",
+            "encodedBodyBytes": 66420,
+            "transferBytes": 66720
+          },
+          {
+            "path": "/assets/useAcademicAnalyticsQueries-BDf1wYHS.js",
+            "encodedBodyBytes": 566,
+            "transferBytes": 866
+          }
+        ],
+        "firstAcademicRouteEncodedBodyBytes": 71529,
+        "firstAcademicRouteTransferBytes": 72429,
+        "repeatedAcademicRouteResources": []
+      },
+      "spaNavigation": {
+        "firstAcademicSpaNavigationMs": 645,
+        "repeatAcademicSpaNavigationMs": 317
+      },
+      "interactions": {
+        "tableFilterMs": 134,
+        "tableSortMs": 58,
+        "chartHoverMs": 52,
+        "dirtyNavigationMs": 158,
+        "dirtyNavigationPrompt": true,
+        "dirtyNavigationWrites": 0
+      },
+      "api": {
+        "requestCount": 48,
+        "writes": [
+          {
+            "method": "POST",
+            "path": "/api/auth/login"
+          }
+        ],
+        "responseFailures": [
+          {
+            "path": "/api/auth/me",
+            "status": 401,
+            "expected": true
+          }
+        ],
+        "transportFailures": [
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/dashboard-overview",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/operator/bosp-reminder",
+            "error": "net::ERR_ABORTED"
+          },
+          {
+            "path": "/api/readiness",
+            "error": "net::ERR_ABORTED"
+          }
+        ]
+      },
+      "domNodeCount": {
+        "dashboard": 855,
+        "academicAnalytics": 683,
+        "attendanceCalendar": 548
+      },
+      "heapUsedBytes": 15200000,
+      "labVitals": {
+        "lcpMs": 744,
+        "cls": 0.017955696635985095,
+        "layoutShiftSupported": true,
+        "rawLayoutShifts": [
+          {
+            "startTimeMs": 436.60000002384186,
+            "value": 0.00000832044685066663
+          },
+          {
+            "startTimeMs": 540.3000000715256,
+            "value": 0.017947376189134428
+          }
+        ],
+        "eventTimingSupported": true,
+        "eventTimingThresholdMs": 16,
+        "eventTimingEntries": [
+          {
+            "name": "pointerover",
+            "startTimeMs": 50.300000071525574,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 50.300000071525574,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 50.300000071525574,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 50.300000071525574,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 150.5,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 322.2000000476837,
+            "durationMs": 16
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 710.3000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 907.3000000715256,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 907.4000000953674,
+            "durationMs": 112
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 907.4000000953674,
+            "durationMs": 112
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 907.5,
+            "durationMs": 112
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 907.5,
+            "durationMs": 112
+          },
+          {
+            "name": "click",
+            "startTimeMs": 907.5,
+            "durationMs": 112
+          },
+          {
+            "name": "beforeinput",
+            "startTimeMs": 1561.4000000953674,
+            "durationMs": 32
+          },
+          {
+            "name": "input",
+            "startTimeMs": 1561.9000000953674,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1710.8000000715256,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1711.1000000238419,
+            "durationMs": 32
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1711.1000000238419,
+            "durationMs": 32
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1712.1000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1712.1000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1712.1000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1718.6000000238419,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1789.2000000476837,
+            "durationMs": 48
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 1989.7000000476837,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 1989.8000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 1989.8000000715256,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 1989.9000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 1989.9000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "click",
+            "startTimeMs": 1989.9000000953674,
+            "durationMs": 200
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2269.600000023842,
+            "durationMs": 40
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2286.600000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2288,
+            "durationMs": 96
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2288,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2288.100000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2288.100000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2288.100000023842,
+            "durationMs": 96
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 2607.2000000476837,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 2607.4000000953674,
+            "durationMs": 136
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 2607.4000000953674,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 2607.4000000953674,
+            "durationMs": 136
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 2607.4000000953674,
+            "durationMs": 136
+          },
+          {
+            "name": "click",
+            "startTimeMs": 2607.4000000953674,
+            "durationMs": 136
+          },
+          {
+            "name": "pointerout",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerleave",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerover",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerenter",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseout",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseover",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerdown",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "mousedown",
+            "startTimeMs": 3355.9000000953674,
+            "durationMs": 24
+          },
+          {
+            "name": "pointerup",
+            "startTimeMs": 3356,
+            "durationMs": 24
+          },
+          {
+            "name": "mouseup",
+            "startTimeMs": 3356,
+            "durationMs": 24
+          },
+          {
+            "name": "click",
+            "startTimeMs": 3356,
+            "durationMs": 24
+          }
+        ],
+        "maxEventTimingDurationMs": 200
+      }
+    }
+  ]
+}

@@ -20,9 +20,16 @@ describe("shared application patterns", () => {
   });
 
   it("exposes loading and errors to assistive technology", () => {
-    expect(renderToStaticMarkup(<LoadingState title="Loading" />)).toContain('role="status"');
-    expect(renderToStaticMarkup(<ErrorState title="Failed" />)).toContain('role="alert"');
-    expect(renderToStaticMarkup(<EmptyState title="Empty" />)).toContain("Empty");
+    const loading = renderToStaticMarkup(<LoadingState title="Loading" />);
+    const error = renderToStaticMarkup(<ErrorState title="Failed" />);
+    const empty = renderToStaticMarkup(<EmptyState title="Empty" />);
+
+    expect(loading).toContain('role="status"');
+    expect(loading).toContain("motion-safe:animate-spin");
+    expect(error).toContain('role="alert"');
+    expect(error).toContain("bg-danger-surface");
+    expect(empty).toContain("Empty");
+    expect(empty).toContain("bg-surface-muted");
   });
 
   it("preserves semantic table headers", () => {

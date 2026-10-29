@@ -1,4 +1,4 @@
-import React, { act, useLayoutEffect } from 'react';
+import React, { act, useLayoutEffect, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClientProvider, useQuery, type QueryClient } from '@tanstack/react-query';
 import {
@@ -70,6 +70,16 @@ function ProtectedPage() {
   return <div data-testid="protected-content">Privileged content</div>;
 }
 
+function DraftPage() {
+  const [draft, setDraft] = useState('');
+  return (
+    <label>
+      Draft
+      <input aria-label="Draft" value={draft} onChange={(event) => setDraft(event.currentTarget.value)} />
+    </label>
+  );
+}
+
 function renderRouter(router: ReturnType<typeof createVisibilityRouter>, client: QueryClient, value: AuthContextValue) {
   return (
     <QueryClientProvider client={client}>
@@ -121,6 +131,70 @@ describe('protected content during authorization transitions', () => {
     await act(async () => { await view.router.invalidate(); });
     expect(view.container.querySelector('[data-testid="protected-content"]')).toBeNull();
     expect(view.container.querySelector('[role="alert"]')?.textContent).toContain('Access denied');
+  });
+
+  it('covers session verification without unmounting the page or losing its draft', async () => {
+    const initialAuth = auth('admin', ['view_attendance']);
+    const router = createVisibilityRouter('/attendance/calendar', initialAuth, DraftPage);
+    await router.load();
+    const client = createTestQueryClient();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    roots.push(root);
+    containers.push(container);
+    clients.push(client);
+
+    await act(async () => { root.render(renderRouter(router, client, initialAuth)); });
+    const draftInput = container.querySelector<HTMLInputElement>('[aria-label="Draft"]');
+    expect(draftInput).not.toBeNull();
+    if (!draftInput) throw new Error('Expected draft field');
+    const setInputValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setInputValue?.call(draftInput, 'unsaved attendance note');
+    await act(async () => { draftInput.dispatchEvent(new Event('input', { bubbles: true })); });
+    expect(draftInput.value).toBe('unsaved attendance note');
+    draftInput.focus();
+    expect(document.activeElement).toBe(draftInput);
+    const externalDialog = document.createElement('div');
+    externalDialog.textContent = 'Portaled dialog';
+    document.body.appendChild(externalDialog);
+
+    await act(async () => {
+      root.render(renderRouter(router, client, { ...initialAuth, sessionVerification: 'checking' }));
+    });
+
+    expect(container.querySelector('.app-shell')?.getAttribute('inert')).not.toBeNull();
+    expect(container.querySelector('.app-shell')?.getAttribute('aria-hidden')).toBe('true');
+    expect(externalDialog.inert).toBe(true);
+    expect(externalDialog.getAttribute('aria-hidden')).toBe('true');
+    expect(document.body.querySelector('[data-testid="session-verification-overlay"] [role="status"]')?.textContent).toContain('Checking your session');
+    expect(container.querySelector('[aria-label="Draft"]')).toBe(draftInput);
+    expect(draftInput.value).toBe('unsaved attendance note');
+
+    const retry = vi.fn(async () => undefined);
+    await act(async () => {
+      root.render(renderRouter(router, client, {
+        ...initialAuth,
+        sessionVerification: 'unavailable',
+        retrySessionVerification: retry,
+      }));
+    });
+    expect(document.body.querySelector('[data-testid="session-verification-overlay"] [role="alertdialog"]')).not.toBeNull();
+    const retryButton = document.body.querySelector<HTMLButtonElement>('[data-testid="session-verification-overlay"] button');
+    expect(retryButton?.textContent).toBe('Retry session check');
+    expect(document.activeElement).toBe(retryButton);
+    await act(async () => retryButton?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true })));
+    expect(document.activeElement).toBe(retryButton);
+    await act(async () => retryButton?.click());
+    expect(retry).toHaveBeenCalledOnce();
+
+    await act(async () => { root.render(renderRouter(router, client, initialAuth)); });
+    expect(externalDialog.inert).toBe(false);
+    expect(externalDialog.hasAttribute('aria-hidden')).toBe(false);
+    externalDialog.remove();
+    expect(container.querySelector('[aria-label="Draft"]')).toBe(draftInput);
+    expect(draftInput.value).toBe('unsaved attendance note');
+    expect(document.activeElement).toBe(draftInput);
   });
 
   it('cancels protected requests before confirmed logout and hides their page when logout succeeds', async () => {

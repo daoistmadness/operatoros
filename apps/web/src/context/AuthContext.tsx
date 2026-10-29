@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { AuthUser } from "../api/auth";
 import { getCurrentUser } from "../api/auth";
@@ -6,7 +6,7 @@ import { advanceAuthSessionEpoch, AUTH_FORBIDDEN_EVENT, AUTH_UNAUTHORIZED_EVENT 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
-import { clearProtectedQueries, clearSessionQueries, resetProtectedQueries } from "../lib/query/sessionCache";
+import { cancelProtectedQueries, clearProtectedQueries, clearSessionQueries, refetchStaleProtectedQueries } from "../lib/query/sessionCache";
 import { queryKeys } from "../lib/query/queryKeys";
 
 export interface AuthContextValue {
@@ -16,6 +16,8 @@ export interface AuthContextValue {
   can: (capability: string) => boolean;
   login: (username: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  sessionVerification?: "idle" | "checking" | "unavailable";
+  retrySessionVerification?: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -33,36 +35,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
   const revalidationSequence = useRef(0);
+  const revalidationController = useRef<AbortController | null>(null);
+  const focusRevalidation = useRef<Promise<void> | null>(null);
+  const [sessionVerification, setSessionVerification] = useState<"idle" | "checking" | "unavailable">("idle");
   const user = currentUser.data ?? null;
   const loading = currentUser.isLoading && !currentUser.isError;
 
-  const revalidateSession = useCallback(async (sessionEpochAdvanced = false) => {
-    const sequence = revalidationSequence.current + 1;
-    revalidationSequence.current = sequence;
-    await client.cancelQueries({ queryKey: queryKeys.auth.me });
+  const invalidateRevalidation = useCallback(() => {
+    revalidationSequence.current += 1;
+    revalidationController.current?.abort();
+    revalidationController.current = null;
+  }, []);
+
+  const revalidateSession = useCallback(async (sessionEpochAdvanced = false): Promise<boolean> => {
+    invalidateRevalidation();
+    setSessionVerification("checking");
+    const sequence = revalidationSequence.current;
+    const controller = new AbortController();
+    revalidationController.current = controller;
     try {
-      const nextUser = await getCurrentUser();
-      if (sequence !== revalidationSequence.current) return;
+      await client.cancelQueries({ queryKey: queryKeys.auth.me, exact: true });
+      if (sequence !== revalidationSequence.current) return false;
+      const nextUser = await getCurrentUser(controller.signal);
+      if (sequence !== revalidationSequence.current || controller.signal.aborted) return false;
       const previousUser = client.getQueryData<AuthUser | null>(queryKeys.auth.me) ?? null;
       const identityChanged = (previousUser?.id ?? null) !== (nextUser?.id ?? null);
       const permissionsChanged = authorizationChanged(previousUser, nextUser);
       if (identityChanged || permissionsChanged) {
         if (identityChanged && !sessionEpochAdvanced) advanceAuthSessionEpoch();
         await clearProtectedQueries(client);
-        if (sequence !== revalidationSequence.current) return;
+        if (sequence !== revalidationSequence.current || controller.signal.aborted) return false;
         if (!identityChanged && permissionsChanged) sessionSync.notifyAuthorizationChange();
       }
       client.setQueryData(queryKeys.auth.me, nextUser);
+      setSessionVerification("idle");
+      return true;
     } catch {
       // A 401 response dispatches AUTH_UNAUTHORIZED_EVENT. Network failures keep the current session.
+      if (sequence === revalidationSequence.current && !controller.signal.aborted) {
+        setSessionVerification("unavailable");
+      }
+      return false;
+    } finally {
+      if (revalidationController.current === controller) revalidationController.current = null;
     }
-  }, [client, sessionSync]);
+  }, [client, invalidateRevalidation, sessionSync]);
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      void clearSessionQueries(client);
+      invalidateRevalidation();
+      setSessionVerification("checking");
+      void clearSessionQueries(client).finally(() => setSessionVerification("idle"));
     };
     const handleForbidden = () => {
+      setSessionVerification("checking");
       void (async () => {
         await clearProtectedQueries(client);
         await revalidateSession();
@@ -74,18 +100,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
       window.removeEventListener(AUTH_FORBIDDEN_EVENT, handleForbidden);
     };
-  }, [client, revalidateSession]);
+  }, [client, invalidateRevalidation, revalidateSession]);
 
   const revalidateAfterFocus = useCallback(async () => {
-    const reset = resetProtectedQueries(client);
-    await revalidateSession();
-    await reset;
-  }, [client, revalidateSession]);
+    if (focusRevalidation.current) return focusRevalidation.current;
+    invalidateRevalidation();
+    const sequence = revalidationSequence.current;
+    const operation = (async () => {
+      setSessionVerification("checking");
+      await cancelProtectedQueries(client);
+      if (sequence !== revalidationSequence.current) return;
+      if (await revalidateSession()) await refetchStaleProtectedQueries(client);
+    })();
+    focusRevalidation.current = operation;
+    try {
+      await operation;
+    } finally {
+      if (focusRevalidation.current === operation) focusRevalidation.current = null;
+    }
+  }, [client, invalidateRevalidation, revalidateSession]);
 
   useEffect(() => {
     const handleSessionChange = (change: "session" | "authorization") => {
       if (change === "authorization") {
         void (async () => {
+          invalidateRevalidation();
+          setSessionVerification("checking");
           await clearProtectedQueries(client);
           await revalidateSession();
         })();
@@ -93,13 +133,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       void (async () => {
         advanceAuthSessionEpoch();
-        revalidationSequence.current += 1;
+        invalidateRevalidation();
+        setSessionVerification("checking");
         await clearSessionQueries(client);
         await revalidateSession(true);
       })();
     };
     return sessionSync.subscribe(handleSessionChange);
-  }, [client, revalidateSession, sessionSync]);
+  }, [client, invalidateRevalidation, revalidateSession, sessionSync]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -117,15 +158,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [revalidateAfterFocus]);
 
   const login = useCallback(async (username: string, password: string) => {
-    const nextUser = await loginMutation.mutateAsync({ username, password });
-    sessionSync.notify();
-    return nextUser;
-  }, [loginMutation, sessionSync]);
+    invalidateRevalidation();
+    setSessionVerification("checking");
+    try {
+      const nextUser = await loginMutation.mutateAsync({ username, password });
+      sessionSync.notify();
+      setSessionVerification("idle");
+      return nextUser;
+    } catch (error) {
+      setSessionVerification("idle");
+      throw error;
+    }
+  }, [invalidateRevalidation, loginMutation, sessionSync]);
 
   const logout = useCallback(async () => {
-    await logoutMutation.mutateAsync();
-    sessionSync.notify();
-  }, [logoutMutation, sessionSync]);
+    invalidateRevalidation();
+    setSessionVerification("checking");
+    try {
+      await logoutMutation.mutateAsync();
+      sessionSync.notify();
+      setSessionVerification("idle");
+    } catch (error) {
+      setSessionVerification("idle");
+      throw error;
+    }
+  }, [invalidateRevalidation, logoutMutation, sessionSync]);
+
+  const retrySessionVerification = useCallback(() => revalidateAfterFocus(), [revalidateAfterFocus]);
 
   const can = useCallback(
     (capability: string) => Boolean(user?.capabilities?.includes(capability)),
@@ -133,8 +192,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, authenticated: user !== null, can, login, logout }),
-    [user, loading, can, login, logout],
+    () => ({ user, loading, authenticated: user !== null, can, login, logout, sessionVerification, retrySessionVerification }),
+    [user, loading, can, login, logout, sessionVerification, retrySessionVerification],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
