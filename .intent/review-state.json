@@ -8073,17 +8073,15 @@
       ]
     },
     "source:e2e/smoke/web/frontend-performance-baseline.spec.ts": {
-      "fingerprint": "2b8517f060aada6481b03ecc2b2aec4f3e544d4939163880266f80d281ed7d73",
+      "fingerprint": "26045b1f8af50ac6d854355df49b0975d7d9bd858149a04ffe5f9974ae9da9f6",
       "snapshot": {
-        "e2e/smoke/web/frontend-performance-baseline.spec.ts": "ec30be91423df5b47dd2718cdb15d71edaadad4bf2731d05f524c9f7c6fd23e3"
+        "e2e/smoke/web/frontend-performance-baseline.spec.ts": "a31aa40f4c144296a42c8ec1ce08165e1e6ee5b262bd5da598c789b558ccf031"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "484b124015997110dbf8692c99e7dc51727756b4",
+      "outcome": "no-change",
+      "reason": "The two E2E spec edits replace arbitrary millisecond sleeps with two animation-frame callbacks so browser measurement and focus-revalidation requests can settle at a rendering boundary. They change no Elysia implementation or guidance; the registered skill remains backend-only.",
       "evidence": [
-        "Reviewed e2e/smoke/web/frontend-performance-baseline.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/frontend-performance-baseline.spec.ts at 484b124015997110dbf8692c99e7dc51727756b4"
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
@@ -8115,17 +8113,15 @@
       ]
     },
     "source:e2e/smoke/web/query-focus-revalidation.spec.ts": {
-      "fingerprint": "3e6eade311e34b109e1dabe13471b6027c853b2425cac913f10b737edd90fc96",
+      "fingerprint": "4fa56c7139bde3a99665637932671e24725479d5f114f9175571f3574f95bbb1",
       "snapshot": {
-        "e2e/smoke/web/query-focus-revalidation.spec.ts": "4087921cc71fc5e3a048b857d6fa096e709fe22f3198b0c092a6da62051014ea"
+        "e2e/smoke/web/query-focus-revalidation.spec.ts": "e07b2da24983b73609453edf76bda704950f110c9b058467e1ad3883859a3046"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "484b124015997110dbf8692c99e7dc51727756b4",
+      "outcome": "no-change",
+      "reason": "The two E2E spec edits replace arbitrary millisecond sleeps with two animation-frame callbacks so browser measurement and focus-revalidation requests can settle at a rendering boundary. They change no Elysia implementation or guidance; the registered skill remains backend-only.",
       "evidence": [
-        "Reviewed e2e/smoke/web/query-focus-revalidation.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/query-focus-revalidation.spec.ts at 484b124015997110dbf8692c99e7dc51727756b4"
       ]
     },
     "source:e2e/smoke/web/redact-compatibility.spec.ts": {
