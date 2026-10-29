@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Add a TanStack Form pilot for staff profiles with TypeBox validation, mapped API errors, and dirty-navigation protection.
 - Revalidate the session before refetching protected queries, apply domain freshness and cancellation policies, and avoid caching authenticated API responses.
 - Enforce generated route-policy coverage, discard reserved search keys, and add an opt-in local frontend baseline.
 - Add a route-policy-filtered navigation registry, command search, breadcrumbs, and shell page titles.

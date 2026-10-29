@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-29
 ---
 
 # Frontend architecture
@@ -39,6 +39,19 @@ queries are not persisted to localStorage.
 The committed OpenAPI contract is generated from the API and checked for drift.
 Pages do not import generated contract code directly. Cross-workspace DTOs use
 the TypeBox schemas in packages/contracts.
+
+## Forms
+
+The staff profile form is the first TanStack Form pilot. It uses a small
+TypeBox `Value.Check` / `Value.Errors` adapter and shared field controls built
+on the existing UI primitives. API errors pass through the sanitized API error
+layer before field paths are mapped to the currently visible fields.
+
+Forms submit through existing feature APIs and TanStack Query mutations. Failed
+submissions retain entered values; a successful API response resets the form
+before navigation. Dirty forms use TanStack Router blockers, with a history blocker for
+hash-only transitions and Router's before-unload integration. Protected staff
+form values remain in memory and are not persisted in browser storage.
 
 ## Presentation
 

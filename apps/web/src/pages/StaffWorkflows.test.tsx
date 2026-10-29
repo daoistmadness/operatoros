@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from '../test/TestRouter';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestQueryClient } from "../lib/query/queryClient";
 import { queryKeys } from "../lib/query/queryKeys";
+import { ApiError } from "../lib/api/errors";
 
 const state = vi.hoisted(() => ({ capabilities: new Set<string>() }));
 const staffApi = vi.hoisted(() => ({
@@ -76,6 +77,17 @@ describe("employee workflows", () => {
     expect(host.textContent).toContain("Identifiers remain text");
   });
 
+  it("validates a required name with TypeBox before calling the create API", async () => {
+    state.capabilities = new Set(["manage_staff"]);
+    await render(<Routes><Route path="/staff/new" element={<StaffForm />} /></Routes>, "/staff/new");
+    const save = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.includes("Save employee"));
+    await act(async () => save?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+
+    expect(staffApi.createStaff).not.toHaveBeenCalled();
+    expect(host.textContent).toContain("Full name");
+    expect(Array.from(host.querySelectorAll('[role="alert"]')).some((item) => item.textContent)).toBe(true);
+  });
+
   it("loads and submits raw position and DAPODIK values separately from display values", async () => {
     state.capabilities = new Set(["manage_staff", "edit_sensitive_staff_fields", "view_staff_sensitive"]);
     staffApi.fetchStaffDetail.mockResolvedValue({
@@ -96,6 +108,64 @@ describe("employee workflows", () => {
     await act(async () => button?.click());
     await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
     expect(staffApi.updateStaff).toHaveBeenCalledWith("staff-raw", expect.objectContaining({ full_name: "Synthetic Renamed Employee", job_title_raw: "Teacher A", dapodik_status_raw: "AKTIF" }));
+  });
+
+  it("shows sanitized server field errors and preserves the submitted value", async () => {
+    state.capabilities = new Set(["manage_staff"]);
+    staffApi.fetchStaffDetail.mockResolvedValue({
+      id: "staff-raw", source_staff_id: "TEST-RAW", full_name: "Synthetic Employee", employment_status: "ACTIVE", job_title: "Teacher", job_title_raw: "Teacher A",
+      employment_start_date: "2020-01-01", employment_end_date: null, dapodik_status: "ACTIVE", dapodik_status_raw: "AKTIF", nip: null, has_nuptk: false,
+      jenjangs: [], service_years: null, service_months: null, highest_education_level: null, highest_education_institution: null, updated_at: "2026-10-02 10:00:00",
+      identifiers: [], education_history: [],
+    });
+    staffApi.updateStaff.mockRejectedValueOnce(new ApiError("Employee could not be saved.", {
+      kind: "validation",
+      status: 422,
+      fieldErrors: { "body.full_name": ["Name is already assigned."] },
+    }));
+    await render(<Routes><Route path="/staff/:id/edit" element={<StaffForm />} /></Routes>, "/staff/staff-raw/edit");
+
+    const name = host.querySelector<HTMLInputElement>('input[name="full_name"]')!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(name, "Synthetic Renamed Employee");
+      name.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.includes("Save employee"))?.click());
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+
+    expect(name.value).toBe("Synthetic Renamed Employee");
+    expect(host.textContent).toContain("Name is already assigned.");
+    expect(staffApi.updateStaff).toHaveBeenCalledTimes(1);
+  });
+
+  it("disables submission while the mutation is pending and allows one request", async () => {
+    state.capabilities = new Set(["manage_staff"]);
+    staffApi.fetchStaffDetail.mockResolvedValue({
+      id: "staff-raw", source_staff_id: "TEST-RAW", full_name: "Synthetic Employee", employment_status: "ACTIVE", job_title: "Teacher", job_title_raw: "Teacher A",
+      employment_start_date: "2020-01-01", employment_end_date: null, dapodik_status: "ACTIVE", dapodik_status_raw: "AKTIF", nip: null, has_nuptk: false,
+      jenjangs: [], service_years: null, service_months: null, highest_education_level: null, highest_education_institution: null, updated_at: "2026-10-02 10:00:00",
+      identifiers: [], education_history: [],
+    });
+    let resolveSave: ((value: { id: string }) => void) | undefined;
+    staffApi.updateStaff.mockImplementation(() => new Promise((resolve) => { resolveSave = resolve; }));
+    await render(<Routes><Route path="/staff/:id/edit" element={<StaffForm />} /></Routes>, "/staff/staff-raw/edit");
+
+    const name = host.querySelector<HTMLInputElement>('input[name="full_name"]')!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(name, "Synthetic Renamed Employee");
+      name.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    const save = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.includes("Save employee")) as HTMLButtonElement;
+    await act(async () => save.click());
+
+    const pendingSave = Array.from(host.querySelectorAll("button")).find((item) => item.textContent?.includes("Saving")) as HTMLButtonElement;
+    expect(pendingSave.disabled).toBe(true);
+    expect(name.disabled).toBe(true);
+    await act(async () => pendingSave.click());
+    expect(staffApi.updateStaff).toHaveBeenCalledTimes(1);
+
+    await act(async () => resolveSave?.({ id: "staff-raw" }));
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
   });
 
   it("refreshes the sensitive profile after a birth date edit", async () => {
