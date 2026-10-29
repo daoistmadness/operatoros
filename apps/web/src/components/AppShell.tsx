@@ -1,16 +1,26 @@
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
 import SidebarNav from './SidebarNav';
+import { NavigationCommandSearch } from './navigation/NavigationCommandSearch';
+import { AppLink } from './AppLink';
 import { AccessDenied } from './auth/RouteGuards';
 import { RouteLoadingFallback } from '../routes/RouteLoadingFallback';
 import { useAuth } from '../context/AuthContext';
+import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { isRouteAuthorized } from '../lib/router/access';
+import {
+  canSelectNavigationItem,
+  navigationPresentationForPath,
+  visibleNavigationGroups,
+} from '../lib/navigation/registry';
 
 export function AppShell() {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [navigationCollapsed, setNavigationCollapsed] = useState(false);
+  const [commandSearchOpen, setCommandSearchOpen] = useState(false);
+  const [commandReturnFocusTarget, setCommandReturnFocusTarget] = useState<HTMLElement | null>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
   const mainRef = useRef<HTMLElement>(null);
   const sessionStatusRef = useRef<HTMLDivElement>(null);
@@ -18,16 +28,59 @@ export function AppShell() {
   const sessionOverlayRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   const auth = useAuth();
+  const { isSingleUserMode } = useDeploymentMode();
   const sessionVerification = auth.sessionVerification ?? 'idle';
   const verifyingSession = sessionVerification !== 'idle';
   const previousSessionVerification = useRef(sessionVerification);
   const focusReturnRef = useRef<HTMLElement | null>(null);
   const accessDenied = !isRouteAuthorized(pathname, auth);
+  const navigationContext = useMemo(() => ({ auth, isSingleUserMode }), [auth, isSingleUserMode]);
+  const groups = useMemo(() => visibleNavigationGroups(navigationContext), [navigationContext]);
+  const presentation = useMemo(() => navigationPresentationForPath(groups, pathname), [groups, pathname]);
+  const pageTitle = accessDenied ? 'Access denied' : presentation?.title;
 
   useEffect(() => {
     setNavigationOpen(false);
+    setCommandSearchOpen(false);
+    setCommandReturnFocusTarget(null);
     mainRef.current?.focus({ preventScroll: true });
   }, [pathname]);
+
+  useEffect(() => {
+    if (verifyingSession) {
+      setNavigationOpen(false);
+      setCommandSearchOpen(false);
+    }
+  }, [verifyingSession]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'k') return;
+      if (event.defaultPrevented || event.repeat || event.isComposing || verifyingSession) return;
+      const target = event.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || target.closest('input, textarea, select, [contenteditable="true"]'))) return;
+      event.preventDefault();
+      const activeElement = document.activeElement;
+      const returnTarget = navigationOpen
+        ? openerRef.current
+        : activeElement instanceof HTMLElement && activeElement !== document.body
+          ? activeElement
+          : mainRef.current;
+      setCommandReturnFocusTarget(returnTarget);
+      setNavigationOpen(false);
+      setCommandSearchOpen(true);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [navigationOpen, verifyingSession]);
+
+  useEffect(() => {
+    document.title = `${pageTitle ?? 'OperatorOS'}${pageTitle ? ' | OperatorOS' : ''}`;
+  }, [pageTitle]);
+
+  useEffect(() => () => {
+    document.title = 'OperatorOS';
+  }, []);
 
   useLayoutEffect(() => {
     const previous = previousSessionVerification.current;
@@ -130,13 +183,48 @@ export function AppShell() {
             className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[1px] xl:hidden"
           />
         )}
-        <SidebarNav open={navigationOpen} collapsed={navigationCollapsed} onToggleCollapsed={() => setNavigationCollapsed((value) => !value)} onNavigate={() => setNavigationOpen(false)} />
+        <SidebarNav
+          groups={groups}
+          open={navigationOpen}
+          collapsed={navigationCollapsed}
+          onToggleCollapsed={() => setNavigationCollapsed((value) => !value)}
+          onNavigate={() => setNavigationOpen(false)}
+          onOpenCommandSearch={(event) => {
+            setCommandReturnFocusTarget(navigationOpen ? openerRef.current : event.currentTarget);
+            setNavigationOpen(false);
+            setCommandSearchOpen(true);
+          }}
+        />
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-hidden={navigationOpen ? 'true' : undefined} className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8 ${navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'}`}>
           <div className="mx-auto max-w-7xl">
+            {presentation && !accessDenied && (
+              <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
+                <ol className="flex min-h-6 items-center gap-2">
+                  {presentation.breadcrumbs.map((breadcrumb, index) => (
+                    <li key={`${breadcrumb.label}-${index}`} aria-current={index === presentation.breadcrumbs.length - 1 ? 'page' : undefined}>
+                      {breadcrumb.href
+                        ? <AppLink to={breadcrumb.href} className="rounded-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{breadcrumb.label}</AppLink>
+                        : <span className="font-semibold text-foreground">{breadcrumb.label}</span>}
+                      {index < presentation.breadcrumbs.length - 1 && <span aria-hidden="true" className="ml-2">/</span>}
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            )}
             {accessDenied ? <AccessDenied /> : <SuspendedOutlet />}
           </div>
         </main>
       </div>
+      <NavigationCommandSearch
+        open={commandSearchOpen && !verifyingSession}
+        onOpenChange={setCommandSearchOpen}
+        groups={groups}
+        pathname={pathname}
+        returnFocusTarget={commandReturnFocusTarget}
+        sessionVerificationActive={verifyingSession}
+        canSelect={(item) => canSelectNavigationItem(item, navigationContext)}
+        onCommittedNavigation={() => mainRef.current?.focus({ preventScroll: true })}
+      />
       {verifyingSession && createPortal(
         <div ref={sessionOverlayRef} data-testid="session-verification-overlay" className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center bg-slate-950/90 p-6 text-center text-white">
           {sessionVerification === 'checking' ? (

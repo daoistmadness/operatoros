@@ -2,14 +2,23 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-export function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
+type DialogProps = React.ComponentProps<typeof DialogPrimitive.Root> & {
+  /** Set false when the caller owns focus restoration across route or overlay changes. */
+  restoreFocus?: boolean;
+};
+
+export function Dialog({ restoreFocus = true, ...props }: DialogProps) {
   const restoreTarget = useRef<HTMLElement | null>(null);
   const wasOpen = useRef(false);
   useEffect(() => {
+    if (!restoreFocus) {
+      wasOpen.current = Boolean(props.open);
+      return;
+    }
     if (props.open && !wasOpen.current) restoreTarget.current = document.activeElement as HTMLElement | null;
     if (!props.open && wasOpen.current) queueMicrotask(() => restoreTarget.current?.focus());
     wasOpen.current = Boolean(props.open);
-  }, [props.open]);
+  }, [props.open, restoreFocus]);
   return <DialogPrimitive.Root {...props} />;
 }
 export const DialogTrigger = DialogPrimitive.Trigger; export const DialogClose = DialogPrimitive.Close;

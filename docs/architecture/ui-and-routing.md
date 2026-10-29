@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-29
 ---
 
 # UI and routing
@@ -35,6 +35,36 @@ URL state. The shared router schema does not define page ranges, sort allowlists
 or date rules; route components and API/domain validation continue to own those
 checks. See [Frontend performance baseline](../reference/frontend-performance-baseline.md)
 for the audited consumers and their current limits.
+
+## Shared navigation
+
+The typed grouped navigation registry in `apps/web/src/lib/navigation/registry.ts`
+is the presentation source for the sidebar, command search, breadcrumbs, and
+browser page titles. It holds route labels, icons, route aliases, search
+keywords, and generic presentation labels for protected detail routes; it does
+not copy role or capability rules. Visibility and command selection call
+`isRouteAuthorized()` from `apps/web/src/lib/router/access.ts`, while file-route
+guards and Elysia continue to enforce access independently.
+
+The registry preserves the single-user-mode hiding rule for Teacher
+Assignments as a presentation restriction. Protected detail and compatibility
+routes without a navigation entry remain protected by their existing route
+policies and are not added to command results. The command search uses only
+static registry metadata, not student, staff, or other Query data.
+
+The sidebar exposes Search navigation and the shell handles Ctrl+K and Cmd+K.
+The dialog focuses its labeled search field, lists eligible destinations as
+ordinary links, and restores focus on dismissal. Selecting a destination uses
+`AppLink`, so TanStack Router guards and dirty-form blockers still apply. The
+dialog stays open when a blocker cancels navigation; after a committed route
+change, focus moves to the main content. Search is disabled while session
+verification is active.
+
+Breadcrumbs and `document.title` use the active visible registry entry or a
+generic detail-route label resolved through the existing route-policy matcher.
+Existing page headings remain the only visible `<h1>` and can include
+record-specific names. Routes without a registry entry keep the generic
+OperatorOS document title and do not gain a synthetic breadcrumb.
 
 The app remains a browser-rendered Vite SPA. It does not use TanStack Start, SSR,
 or a hydration entry.

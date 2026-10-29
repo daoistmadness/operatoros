@@ -6,11 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthUser } from '../api/auth';
 import { ApiError } from '../lib/api/errors';
 import { AuthContext, type AuthContextValue } from '../context/AuthContext';
-import SidebarNav, {
-  NAV_GROUPS,
+import SidebarNav from './SidebarNav';
+import {
+  navigationGroups,
   navigationItemIsActive,
   visibleNavigationGroups,
-} from './SidebarNav';
+} from '../lib/navigation/registry';
 import { routeAuthorizations } from '../lib/router/access';
 
 vi.mock('../hooks/useServerStatusQuery', () => ({
@@ -53,12 +54,14 @@ describe('role-aware sidebar navigation', () => {
     user = users.admin,
     path = '/',
     collapsed = false,
+    isSingleUserMode = false,
     onToggleCollapsed = vi.fn(),
     logout = vi.fn<() => Promise<void>>(),
   }: {
     user?: AuthUser | null;
     path?: string;
     collapsed?: boolean;
+    isSingleUserMode?: boolean;
     onToggleCollapsed?: () => void;
     logout?: () => Promise<void>;
   } = {}) {
@@ -66,7 +69,14 @@ describe('role-aware sidebar navigation', () => {
       root.render(
         <MemoryRouter initialEntries={[path]}>
           <AuthContext.Provider value={{ ...authFor(user), logout }}>
-            <SidebarNav open collapsed={collapsed} onNavigate={vi.fn()} onToggleCollapsed={onToggleCollapsed} />
+            <SidebarNav
+              groups={visibleNavigationGroups({ auth: authFor(user), isSingleUserMode })}
+              open
+              collapsed={collapsed}
+              onNavigate={vi.fn()}
+              onOpenCommandSearch={vi.fn()}
+              onToggleCollapsed={onToggleCollapsed}
+            />
           </AuthContext.Provider>
         </MemoryRouter>,
       );
@@ -76,23 +86,32 @@ describe('role-aware sidebar navigation', () => {
 
   it('shows the complete administrator inventory with one current destination', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(NAV_GROUPS.reduce((count, group) => count + group.items.length, 0));
+    expect(container.querySelectorAll('nav a')).toHaveLength(navigationGroups.reduce((count, group) => count + group.items.length, 0));
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
 
   it('removes restricted links and empty groups for staff and anonymous states', () => {
-    const staff = visibleNavigationGroups(users.staff, authFor(users.staff).can);
+    const staff = visibleNavigationGroups({ auth: authFor(users.staff), isSingleUserMode: false });
     const staffNames = staff.flatMap((group) => group.items.map((item) => item.name));
     expect(staffNames).toContain('Student Directory');
     expect(staffNames).not.toContain('Data Import & Export');
     expect(staffNames).not.toContain('Operations Audit');
     expect(staff.every((group) => group.items.length > 0)).toBe(true);
-    expect(visibleNavigationGroups(null, () => false)).toEqual([]);
+    expect(visibleNavigationGroups({ auth: authFor(null), isSingleUserMode: false })).toEqual([]);
+  });
+
+  it('hides teacher assignments in single-user mode without changing its route policy', () => {
+    const adminAuth = authFor(users.admin);
+    const multiUserNames = visibleNavigationGroups({ auth: adminAuth, isSingleUserMode: false }).flatMap((group) => group.items.map((item) => item.name));
+    const singleUserNames = visibleNavigationGroups({ auth: adminAuth, isSingleUserMode: true }).flatMap((group) => group.items.map((item) => item.name));
+    expect(multiUserNames).toContain('Teacher Assignments');
+    expect(singleUserNames).not.toContain('Teacher Assignments');
+    expect(routeAuthorizations['/teacher-class-assignments']).toEqual({ type: 'role', role: 'admin' });
   });
 
   it('matches exact, nested, query-safe, and canonical redirect destinations without duplicates', () => {
-    const items = NAV_GROUPS.flatMap((group) => group.items);
+    const items = navigationGroups.flatMap((group) => group.items);
     const activeNames = (path: string) => items.filter((item) => navigationItemIsActive(item, path)).map((item) => item.name);
     expect(activeNames('/')).toEqual(['Dashboard']);
     expect(activeNames('/students/42')).toEqual(['Student Directory']);
@@ -153,16 +172,14 @@ describe('role-aware sidebar navigation', () => {
   });
 
   it('keeps navigation authorization identical to the canonical route contract', () => {
-    for (const item of NAV_GROUPS.flatMap((group) => group.items)) {
-      expect(routeAuthorizations[item.path]).toBe(item.authorization);
-    }
+    for (const item of navigationGroups.flatMap((group) => group.items)) expect(routeAuthorizations[item.path]).toBeDefined();
   });
 
   it('uses the reviewed six-group hierarchy and keeps configured links unique', () => {
-    expect(NAV_GROUPS.map((group) => group.title)).toEqual([
+    expect(navigationGroups.map((group) => group.title)).toEqual([
       'Overview', 'Attendance', 'Academic & Students', 'Analytics & Reports', 'Data Management', 'Administration',
     ]);
-    expect(NAV_GROUPS.map((group) => group.items.map((item) => item.name))).toEqual([
+    expect(navigationGroups.map((group) => group.items.map((item) => item.name))).toEqual([
       ['Dashboard', 'Setup & Readiness'],
       ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Monthly Recap Input', 'Monthly Reconciliation', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
@@ -170,16 +187,16 @@ describe('role-aware sidebar navigation', () => {
       ['Data Import & Export'],
       ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Staff Monthly Activity', 'Monthly UPP Reports', 'Settings'],
     ]);
-    for (const group of NAV_GROUPS) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
+    for (const group of navigationGroups) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
   });
 
   it('keeps every configured sidebar destination in the authenticated route table', () => {
     const routePaths = new Set(Object.keys(routeAuthorizations));
-    for (const item of NAV_GROUPS.flatMap((group) => group.items)) expect(routePaths.has(item.path)).toBe(true);
+    for (const item of navigationGroups.flatMap((group) => group.items)) expect(routePaths.has(item.path)).toBe(true);
   });
 
   it('filters Attendance Review using the same capability as its route', () => {
-    expect(visibleNavigationGroups(users.admin, authFor(users.admin).can).flatMap((group) => group.items).map((item) => item.name)).toContain('Attendance Review');
-    expect(visibleNavigationGroups(users.staff, authFor(users.staff).can).flatMap((group) => group.items).map((item) => item.name)).not.toContain('Attendance Review');
+    expect(visibleNavigationGroups({ auth: authFor(users.admin), isSingleUserMode: false }).flatMap((group) => group.items).map((item) => item.name)).toContain('Attendance Review');
+    expect(visibleNavigationGroups({ auth: authFor(users.staff), isSingleUserMode: false }).flatMap((group) => group.items).map((item) => item.name)).not.toContain('Attendance Review');
   });
 });

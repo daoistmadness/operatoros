@@ -1,155 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import type { AuthUser } from '../api/auth';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { AppLink as Link } from './AppLink';
 import { useLocation } from '@tanstack/react-router';
 import {
-  Activity, BarChart3, BookOpen, CalendarCheck, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3,
-  Edit3, FileClock, FileText, GraduationCap, LayoutDashboard,
-  ClipboardList, Layers3, LogOut, Server, Settings as SettingsIcon, ShieldCheck, TrendingUp,
-  UploadCloud, UserCheck, Users as UsersIcon, UserRound, Wrench,
+  ChevronDown, ChevronLeft, ChevronRight, LogOut, Search, Server,
 } from 'lucide-react';
 
 import { cn } from '../lib/cn';
 import { isApiError } from '../lib/api/errors';
 import { useAuth } from '../context/AuthContext';
-import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { useServerStatusQuery } from '../hooks/useServerStatusQuery';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { routeAuthorizations, type RouteAuthorization } from '../lib/router/access';
-
-export type NavigationItem = {
-  name: string;
-  path: string;
-  icon: LucideIcon;
-  matches?: string[];
-  authorization: RouteAuthorization;
-  nested?: boolean;
-  exclude?: string[];
-};
-
-export type NavigationGroup = {
-  id: string;
-  title: string;
-  items: NavigationItem[];
-};
-
-type NavigationItemInput = Omit<NavigationItem, 'authorization'>;
-type NavigationGroupInput = Omit<NavigationGroup, 'items'> & { items: NavigationItemInput[] };
-
-const RAW_NAV_GROUPS: NavigationGroupInput[] = [
-  {
-    id: 'overview', title: 'Overview',
-    items: [{ name: 'Dashboard', path: '/', icon: LayoutDashboard, matches: ['/'] }, { name: 'Setup & Readiness', path: '/setup', icon: SettingsIcon }],
-  },
-  {
-    id: 'attendance', title: 'Attendance',
-    items: [
-      { name: 'Operator Work Queue', path: '/operator/work-queue', icon: ShieldCheck },
-      { name: 'Class Attendance', path: '/attendance/class-entry', icon: CalendarDays },
-      { name: 'Daily Attendance', path: '/attendance/daily', icon: ClipboardList },
-      { name: 'Attendance Calendar', path: '/attendance/calendar', icon: CalendarCheck },
-      { name: 'Monthly Recap Input', path: '/attendance/monthly-recap', icon: FileText },
-      { name: 'Monthly Reconciliation', path: '/attendance/reconciliation', icon: BookOpen },
-      { name: 'Early Departures', path: '/attendance/class-departures', icon: Clock3 },
-      { name: 'Attendance Review', path: '/attendance-review', icon: Edit3 },
-      { name: 'Attendance Corrections', path: '/attendance-corrections', icon: Wrench },
-      { name: 'Correction Review', path: '/attendance/override-review', icon: FileClock },
-      { name: 'Follow-Up Queue', path: '/attendance/followups', icon: UserCheck },
-    ],
-  },
-  {
-    id: 'academic-students', title: 'Academic & Students',
-    items: [
-      { name: 'Student Directory', path: '/students', icon: UsersIcon, nested: true, exclude: ['/students/operations'] },
-      { name: 'Student Enrollment', path: '/enrollment', icon: UserRound },
-      { name: 'Academic Management', path: '/academic-management', icon: Layers3 },
-      { name: 'Teacher Assignments', path: '/teacher-class-assignments', icon: UserCheck },
-      { name: 'Grade Ledger', path: '/grades', icon: GraduationCap },
-      { name: 'Assessment Operations', path: '/grades/operations', icon: ClipboardList },
-    ],
-  },
-  {
-    id: 'insights', title: 'Analytics & Reports',
-    items: [
-      { name: 'Management Analytics', path: '/analytics', icon: TrendingUp },
-      { name: 'Population Overview', path: '/analytics/recapitulation', icon: ClipboardList },
-      { name: 'Data Quality', path: '/analytics/data-quality', icon: ShieldCheck },
-      { name: 'Attendance', path: '/analytics/attendance', icon: Server },
-      { name: 'Academic Analytics', path: '/analytics/academic', icon: BookOpen },
-      { name: 'Student Insights', path: '/analytics/student-insights', icon: Activity, matches: ['/analytics/trends', '/analytics/indicators'] },
-      { name: 'Reports & Reviews', path: '/reports', icon: BarChart3, matches: ['/reports', '/reports/monthly', '/reports/annual', '/reports/management/monthly', '/analytics/management-review/student-profile'] },
-    ],
-  },
-  {
-    id: 'data-management', title: 'Data Management',
-    items: [
-      { name: 'Data Import & Export', path: '/upload', icon: UploadCloud },
-    ],
-  },
-  {
-    id: 'administration', title: 'Administration',
-    items: [
-      { name: 'Departure Policies', path: '/attendance/departure-policies', icon: Clock3 },
-      { name: 'Grade Level Cutoff', path: '/config/jenjang', icon: GraduationCap },
-      { name: 'HEB Overrides', path: '/config/heb', icon: CalendarDays },
-      { name: 'Operations Audit', path: '/students/operations', icon: ShieldCheck },
-      { name: 'Employee Directory', path: '/staff', icon: UsersIcon },
-      { name: 'Staff Monthly Activity', path: '/staff/monthly-activities', icon: CalendarCheck },
-      { name: 'Monthly UPP Reports', path: '/reports/upp', icon: FileText },
-      { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true },
-    ],
-  },
-];
-
-function navigationItem(input: NavigationItemInput): NavigationItem {
-  const authorization = routeAuthorizations[input.path];
-  if (!authorization) throw new Error(`Navigation item has no authenticated route: ${input.path}`);
-  return { ...input, authorization };
-}
-
-export const NAV_GROUPS: NavigationGroup[] = RAW_NAV_GROUPS.map((group) => ({
-  ...group,
-  items: group.items.map(navigationItem),
-}));
-
-export function canAccessNavigationItem(
-  item: NavigationItem,
-  user: AuthUser | null,
-  can: (capability: string) => boolean,
-): boolean {
-  if (!user) return false;
-  if (item.authorization.type === 'role' && user.role !== item.authorization.role) return false;
-  if (item.authorization.type === 'capability' && !can(item.authorization.capability)) return false;
-  return true;
-}
-
-export function navigationItemIsActive(item: NavigationItem, pathname: string): boolean {
-  if (item.exclude?.some((path) => pathname === path || pathname.startsWith(`${path}/`))) return false;
-  if (item.matches) return item.matches.includes(pathname);
-  return pathname === item.path || Boolean(item.nested && pathname.startsWith(`${item.path}/`));
-}
-
-export function visibleNavigationGroups(
-  user: AuthUser | null,
-  can: (capability: string) => boolean,
-  isSingleUserMode = false,
-): NavigationGroup[] {
-  return NAV_GROUPS.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => {
-      if (!canAccessNavigationItem(item, user, can)) return false;
-      if (isSingleUserMode && item.path === '/teacher-class-assignments') return false;
-      return true;
-    }),
-  })).filter((group) => group.items.length > 0);
-}
+import { navigationGroups, navigationItemIsActive, type NavigationGroup } from '../lib/navigation/registry';
 
 type SidebarNavProps = {
+  groups: readonly NavigationGroup[];
   open?: boolean;
   collapsed?: boolean;
   onNavigate?: () => void;
+  onOpenCommandSearch: (event: MouseEvent<HTMLButtonElement>) => void;
   onToggleCollapsed?: () => void;
 };
 
@@ -162,16 +31,14 @@ function logoutFailureMessage(error: unknown): string {
   return 'Sign out could not be confirmed. Your session may still be active. Try again.';
 }
 
-function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleCollapsed }: SidebarNavProps) {
+function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpenCommandSearch, onToggleCollapsed }: SidebarNavProps) {
   const location = useLocation();
-  const { user, can, logout } = useAuth();
+  const { user, logout } = useAuth();
   const serverStatusQuery = useServerStatusQuery();
-  const { isSingleUserMode } = useDeploymentMode();
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState('');
-  const groups = useMemo(() => visibleNavigationGroups(user, can, isSingleUserMode), [user, can, isSingleUserMode]);
   const activeGroupId = groups.find((group) => group.items.some((item) => navigationItemIsActive(item, location.pathname)))?.id;
-  const [expanded, setExpanded] = useState(() => new Set(NAV_GROUPS.map((group) => group.id)));
+  const [expanded, setExpanded] = useState(() => new Set(navigationGroups.map((group) => group.id)));
 
   useEffect(() => {
     if (!activeGroupId) return;
@@ -227,6 +94,19 @@ function SidebarNav({ open = false, collapsed = false, onNavigate, onToggleColla
       </div>
 
       <nav aria-label="Primary navigation" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4">
+        <Button
+          type="button"
+          variant="outline"
+          aria-label="Search navigation"
+          aria-keyshortcuts="Control+K Meta+K"
+          title={collapsed ? 'Search navigation (Ctrl+K / ⌘K)' : undefined}
+          onClick={onOpenCommandSearch}
+          className={cn('mb-4 w-full justify-start', collapsed && 'justify-center px-0')}
+        >
+          <Search aria-hidden="true" className="size-4 shrink-0" />
+          <span className={collapsed ? 'sr-only' : 'min-w-0 flex-1 text-left'}>Search navigation</span>
+          {!collapsed && <kbd aria-hidden="true" className="rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">Ctrl K / ⌘ K</kbd>}
+        </Button>
         {groups.map((group) => {
           const isExpanded = expanded.has(group.id) || collapsed;
           return <section key={group.id} className="mb-3 border-b border-slate-100 pb-3 last:border-0">
