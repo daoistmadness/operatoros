@@ -72,11 +72,13 @@ test("@management @analytics @release management overview preserves scope throug
   await expect(page.getByText(`Late: ${lateCount} records`, { exact: true })).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
-  const chartBounds = await attendanceChart.boundingBox();
-  const mainBounds = await page.locator("main").boundingBox();
-  if (!chartBounds || !mainBounds) throw new Error("Expected the attendance chart and main content to have a layout box.");
-  expect(chartBounds.x).toBeGreaterThanOrEqual(mainBounds.x);
-  expect(chartBounds.x + chartBounds.width).toBeLessThanOrEqual(mainBounds.x + mainBounds.width);
+  await expect.poll(async () => {
+    const chartBounds = await attendanceChart.boundingBox();
+    const mainBounds = await page.locator("main").boundingBox();
+    return Boolean(chartBounds && mainBounds
+      && chartBounds.x >= mainBounds.x
+      && chartBounds.x + chartBounds.width <= mainBounds.x + mainBounds.width);
+  }).toBe(true);
   await page.setViewportSize({ width: 1280, height: 800 });
 
   const jenjang = page.getByLabel("Jenjang", { exact: true });
