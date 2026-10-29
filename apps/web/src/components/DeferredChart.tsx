@@ -19,7 +19,7 @@ export function DeferredChart({ children, className }: { children: ReactNode; cl
   }, [nearViewport]);
 
   return (
-    <div ref={container} className={`w-full ${className ?? "h-[300px]"}`}>
+    <div ref={container} className={`w-full min-w-0 ${className ?? "h-[300px]"}`}>
       {nearViewport && (
         <Suspense
           fallback={

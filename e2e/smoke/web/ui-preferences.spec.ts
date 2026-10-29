@@ -27,6 +27,7 @@ test("@ui-preferences @release restores the safe sidebar preference and keeps th
     await page.getByRole("button", { name: "Open navigation" }).click();
     await expect(sidebar).toHaveAttribute("role", "dialog");
     await expect(sidebar).toHaveClass(/w-64/);
+    await expect(sidebar).toHaveCSS("width", "256px");
     await expect(sidebar.getByRole("link", { name: "Student Directory" })).toBeVisible();
     const bounds = await sidebar.boundingBox();
     expect(bounds?.width).toBeGreaterThanOrEqual(220);
