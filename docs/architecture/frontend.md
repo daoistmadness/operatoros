@@ -53,6 +53,25 @@ before navigation. Dirty forms use TanStack Router blockers, with a history bloc
 hash-only transitions and Router's before-unload integration. Protected staff
 form values remain in memory and are not persisted in browser storage.
 
+## Tables
+
+The attendance follow-up queue uses TanStack Table for stable row identity and
+column visibility. Its tab and enum filters use allowlisted URL values through
+the shared router search layer. Free-text search can contain student details,
+so it stays in memory and is not added to the URL or browser history. Table
+column visibility is also in memory.
+
+The queue receives complete candidate and case arrays from the existing API.
+`VirtualizedDataTable` virtualizes these two lists at 100 or more filtered rows,
+with stable row IDs, semantic table markup, row counts and indices, and keyboard
+focus movement across virtual windows. The API payload and server-side
+authorization remain unchanged. Student Management continues to use server
+pagination; virtualization is not applied to its bounded page of results.
+
+Tables retain their page-specific filtering and pagination behavior. The
+follow-up queue has no export action; any future export must use the full
+filtered dataset rather than the currently mounted virtual rows.
+
 ## Presentation
 
 Route and business behavior belong in apps/web. Domain-neutral UI primitives

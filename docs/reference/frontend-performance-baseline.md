@@ -97,6 +97,34 @@ the 250 ms hold is a test synchronization window, not a latency measurement.
 Raw samples and environment details are in
 [frontend-query-focus-comparison.json](frontend-query-focus-comparison.json).
 
+### PR-05 large attendance table comparison
+
+The PR-05 E2E fixture returns 2,000 synthetic candidate rows through a
+Playwright API route. It measures navigation to the first visible table row,
+then records how many data rows are mounted. The comparison used the PR-04
+base (`ac40e22`) and the PR-05 implementation in the same local E2E runner,
+Chromium setup, 1280 × 720 viewport, and five-run nearest-rank p75 method. This isolates
+browser rendering with the synthetic payload; it does not measure production
+API latency or backend query time.
+
+| Metric | PR-04 base | PR-05 | Change |
+| --- | ---: | ---: | ---: |
+| Navigation to first visible table row, p75 | 3,829 ms | 907.4 ms | 76.3% lower |
+| Mounted data rows at initial render | 2,000 | 19 | 99.1% fewer |
+
+Navigation-to-visible p75 ranges and raw samples in milliseconds (n = 5):
+
+- PR-04 base range: 3,094.2–3,980; samples: 3,980; 3,829; 3,788.4; 3,559.7; 3,094.2.
+- PR-05 range: 846.4–909.3; samples: 898.4; 846.4; 909.3; 907.4; 846.7.
+
+Both runs used the same 2,000-row fixture. The queue still receives the
+complete API array; virtualization bounds the mounted DOM and does not reduce
+response size, backend work, or JavaScript data memory. The PR-05 E2E check
+also verifies the full row count, scrolling to the final row, keyboard focus
+across virtual windows, tab history, in-memory free-text search, and column
+visibility. The command was
+`OPERATOROS_E2E_GREP='@table-benchmark|@data-reset' OPERATOROS_E2E_PRESERVE_SUCCESS_ARTIFACTS=true timeout 300 make e2e-smoke`.
+
 ## Results
 
 The baseline run completed on 2026-10-28. The repository runner reported 8 of
