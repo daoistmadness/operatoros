@@ -1240,17 +1240,15 @@
       ]
     },
     "source:apps/web/src/components/DeferredChart.tsx": {
-      "fingerprint": "6554c30f2eeda86038491b26c4d4531ed33d69826501bafd1d9b1c8118baaedd",
+      "fingerprint": "ff923b8d44014d3f9db80caa3203a413f19d601324acb5109366a7998a8a9346",
       "snapshot": {
-        "apps/web/src/components/DeferredChart.tsx": "d33498840d9d5168a3f91b6723e8bb4da458451546ff2ec42b23e91cd02a0102"
+        "apps/web/src/components/DeferredChart.tsx": "0029be4e18ed4825b688b60b5a95fe3dfa8a77f4b328cbd9aa34b82194412663"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "4f1950c9feddd187b87d1fa3ba26586ffb2d2669",
+      "outcome": "no-change",
+      "reason": "This React chart constraint and drawer animation assertion are frontend-only. The registered Elysia backend guidance and planning records remain accurate and do not define frontend layout behavior; the focused Chromium smoke tests pass.",
       "evidence": [
-        "Reviewed apps/web/src/components/DeferredChart.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/DeferredChart.tsx at 4f1950c9feddd187b87d1fa3ba26586ffb2d2669"
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
@@ -8153,17 +8151,15 @@
       ]
     },
     "source:e2e/smoke/web/ui-preferences.spec.ts": {
-      "fingerprint": "20ad98a386a5cf959d99e5dc334713a2d4c9cfb5edfe929ec9289163f4adec2d",
+      "fingerprint": "3fb2e82adbc79e405c93a38142f447382176cc224ab617dccc41de944b0af2d5",
       "snapshot": {
-        "e2e/smoke/web/ui-preferences.spec.ts": "2815dbcc8c47554bee72caf00456aef0ecbac4339e105d036db6c460305b2303"
+        "e2e/smoke/web/ui-preferences.spec.ts": "dd41ce1675146eaf3a4915a300116083cc21261d72da0136d6ef76936b3cb713"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "4f1950c9feddd187b87d1fa3ba26586ffb2d2669",
+      "outcome": "no-change",
+      "reason": "This React chart constraint and drawer animation assertion are frontend-only. The registered Elysia backend guidance and planning records remain accurate and do not define frontend layout behavior; the focused Chromium smoke tests pass.",
       "evidence": [
-        "Reviewed e2e/smoke/web/ui-preferences.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/ui-preferences.spec.ts at 4f1950c9feddd187b87d1fa3ba26586ffb2d2669"
       ]
     },
     "source:e2e/start-elysia-test-stack.sh": {
