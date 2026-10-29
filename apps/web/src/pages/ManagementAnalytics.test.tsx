@@ -53,16 +53,30 @@ describe("ManagementAnalytics overview", () => {
     expect(view.textContent).toContain("24");
     expect(view.textContent).toContain("92.5%");
     expect(view.textContent).toContain("84.5");
+    const attendanceChart = view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]');
+    expect(attendanceChart?.getAttribute("aria-label")).toBe("Attendance status distribution: Present 80, Late 10, Sakit 3, Izin 2, Alfa 5");
+    expect(attendanceChart?.querySelector("svg")).toBeTruthy();
+    expect(view.querySelector('[aria-label="Attendance status colors"]')?.textContent).toContain("Sakit");
+    const attendanceTable = Array.from(view.querySelectorAll("table")).find((table) => table.querySelector("caption")?.textContent === "Attendance status distribution");
+    expect(Array.from(attendanceTable?.querySelectorAll("tbody tr") ?? [], (row) => row.textContent?.replace(/\s+/g, "").trim())).toEqual([
+      "Present80",
+      "Late10",
+      "Sakit3",
+      "Izin2",
+      "Alfa5",
+    ]);
     expect(view.querySelector('a[href="/analytics/attendance?academic_year_id=10"]')).toBeTruthy();
     expect(view.querySelector('a[href="/analytics/academic?academic_year_id=10"]')).toBeTruthy();
     expect(overviewApi.fetchManagementOverview).toHaveBeenCalledWith({ academic_year_id: 10, jenjang_id: null, class_id: null });
   });
 
   it("shows section-level authorization without exposing unavailable metrics", async () => {
-    vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue({ ...overview, school: { ...overview.school, staff: { status: "unavailable", reason: "unauthorized" } }, dataQuality: { ...overview.dataQuality, staff: { status: "unavailable", reason: "unauthorized" } } } as never);
+    vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue({ ...overview, school: { ...overview.school, staff: { status: "unavailable", reason: "unauthorized" } }, attendance: { status: "unavailable", reason: "unauthorized" }, dataQuality: { ...overview.dataQuality, staff: { status: "unavailable", reason: "unauthorized" } } } as never);
     const view = await renderPage({ ...auth, user: { ...auth.user!, capabilities: ["view_student"] }, can: (capability) => capability === "view_student" });
     await vi.waitFor(() => expect(view.textContent).toContain("Management Overview"));
     expect(view.textContent).toContain("Staff snapshot is not available for this account.");
+    expect(view.textContent).toContain("Attendance summary is not available for this account.");
+    expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]')).toBeNull();
     expect(view.textContent).toContain("Staff quality is not available for this account.");
   });
 

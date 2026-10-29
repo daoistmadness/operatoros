@@ -76,7 +76,13 @@ filtered dataset rather than the currently mounted virtual rows.
 
 Route and business behavior belong in apps/web. Domain-neutral UI primitives
 belong in packages/ui. Server responses own analytics calculations and Excel
-exports; the browser formats values and adapts chart data for display.
+exports; the browser formats values and adapts chart data for display. The
+Management Overview attendance distribution uses the shared Unovis chart
+surface, typed DTO adapter, tooltip, and status legend. Its adjacent semantic
+table remains the exact-value alternative. Other production charts continue
+to use Chart.js, including student-specific, report, and print/export charts;
+keep Chart.js until Unovis parity is demonstrated for each required feature.
+Unovis charts do not calculate metrics or persist chart data.
 
 See [UI and routing](ui-and-routing.md) for the current router and shell
 structure, and [frontend data flow](frontend-data.md) for query ownership.

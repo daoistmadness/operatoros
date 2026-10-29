@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Modernize the Management Overview attendance distribution with Unovis while retaining the exact-value table and Chart.js for other charts.
 - Use TanStack Table for attendance follow-up lists and virtualize large result sets.
 - Add a TanStack Form pilot for staff profiles with TypeBox validation, mapped API errors, and dirty-navigation protection.
 - Revalidate the session before refetching protected queries, apply domain freshness and cancellation policies, and avoid caching authenticated API responses.

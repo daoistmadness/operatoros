@@ -72,6 +72,29 @@ includes its run count and observed range. Byte counts sum same-origin script
 resource `encodedBodySize` and `transferSize`; browser timing and heap values
 are local lab readings.
 
+### PR-06 chart bundle comparison
+
+The PR-05 base (`af1405e`) and PR-06 production builds used Bun 1.4.4, Vite
+8.3.4, and `bun --filter @operatoros/web build`. The report sums emitted `*.js`
+files and independently gzip-compresses each file at level 9. The route import
+closure follows static relative JavaScript imports from the
+`ManagementAnalytics` entry. These are build-size estimates, not browser
+transfer measurements; the gzip sum does not model Brotli or response headers.
+
+| Measure | PR-05 base | PR-06 | Change |
+| --- | ---: | ---: | ---: |
+| All emitted JavaScript, raw | 1,946,939 bytes | 2,113,750 bytes | +166,811 bytes (+8.6%) |
+| All emitted JavaScript, gzip sum | 562,699 bytes | 617,365 bytes | +54,666 bytes (+9.7%) |
+| Management Analytics entry, raw | 13,540 bytes | 180,351 bytes | +166,811 bytes |
+| Management Analytics entry, gzip | 3,492 bytes | 58,113 bytes | +54,621 bytes |
+| Management Analytics static import closure, raw | 734,174 bytes | 900,985 bytes | +166,811 bytes |
+| Management Analytics static import closure, gzip sum | 234,471 bytes | 289,084 bytes | +54,613 bytes |
+
+The added Unovis code is confined to the already lazy-loaded Management
+Analytics route. It increases that route's compressed JavaScript payload; this
+phase makes no runtime speedup claim. Chart.js remains in the build for the
+other charts that still need it.
+
 ### PR-02 query focus request comparison
 
 The opt-in `@query-focus` E2E case was run five times on the PR-01 base and
