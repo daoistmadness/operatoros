@@ -122,7 +122,10 @@ async function navigationTiming(page: Page) {
 }
 
 async function labMetrics(page: Page) {
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
     const state = Reflect.get(window, "__operatorosPerformanceMetrics");
     if (typeof state !== "object" || state === null) throw new Error("Performance observers did not initialize");
     const rawShifts = Reflect.get(state, "layoutShifts");
@@ -239,7 +242,6 @@ test("@frontend-baseline opt-in local baseline covers representative frontend wo
     const initialJsResources = await scriptResources(page);
     const dashboardDomNodeCount = await page.evaluate(() => document.getElementsByTagName("*").length);
     const authenticatedNavigationTiming = await navigationTiming(page);
-    await page.waitForTimeout(50);
     const dashboardVitals = await labMetrics(page);
 
     const firstAcademicSpaNavigationMs = await visitLink(page, "Academic Analytics", "Academic Analytics");
@@ -301,7 +303,6 @@ test("@frontend-baseline opt-in local baseline covers representative frontend wo
     const dirtyNavigationWrites = api.writes.length - writesBeforeDirtyNavigation;
     const calendarDomNodeCount = await page.evaluate(() => document.getElementsByTagName("*").length);
 
-    await page.waitForTimeout(50);
     const vitals = await labMetrics(page);
     const layoutShiftCls = dashboardVitals.layoutShiftSupported ? calculateCls(dashboardVitals.layoutShifts) : null;
     const eventTimingMaxMs = Math.max(0, ...vitals.eventTiming.map((entry) => entry.durationMs));

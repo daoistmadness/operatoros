@@ -52,7 +52,9 @@ test("@query-focus measures paired focus and visibility revalidation", async ({ 
       document.dispatchEvent(new Event("visibilitychange"));
     });
     await authCheckStarted;
-    await page.waitForTimeout(250);
+    await page.evaluate(() => new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    }));
     const protectedBeforeAuthSuccess = requests.filter((path) => path !== "/api/auth/me" && path !== "/api/system/health").length;
     releaseAuthCheck();
     await page.waitForLoadState("networkidle");
