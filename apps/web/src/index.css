@@ -35,7 +35,10 @@
   --primary-foreground: #ffffff;
   --success: #047857;
   --warning: #d97706;
+  --warning-foreground: #78350f;
+  --warning-surface: #fffbeb;
   --danger: #be123c;
+  --danger-surface: #fff1f2;
   --information: #2563eb;
   --focus-ring: #4f46e5;
   --radius: 0.75rem;
@@ -81,7 +84,10 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-surface: var(--warning-surface);
   --color-danger: var(--danger);
+  --color-danger-surface: var(--danger-surface);
   --color-information: var(--information);
   --color-ring: var(--focus-ring);
   --radius-sm: calc(var(--radius) - 0.25rem);

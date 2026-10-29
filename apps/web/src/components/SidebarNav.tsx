@@ -32,6 +32,7 @@ function logoutFailureMessage(error: unknown): string {
 }
 
 function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpenCommandSearch, onToggleCollapsed }: SidebarNavProps) {
+  const isCollapsed = collapsed && !open;
   const location = useLocation();
   const { user, logout } = useAuth();
   const serverStatusQuery = useServerStatusQuery();
@@ -79,18 +80,18 @@ function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpe
       aria-modal={open ? 'true' : undefined}
       role={open ? 'dialog' : undefined}
       className={cn(
-        'app-sidebar fixed inset-y-0 left-0 z-50 flex max-h-dvh flex-col border-r border-slate-200 bg-white transition-[width,transform] duration-200 motion-reduce:transition-none no-print',
-        collapsed ? 'w-20' : 'w-64',
+        'app-sidebar fixed inset-y-0 left-0 z-50 flex max-h-dvh flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 motion-reduce:transition-none no-print',
+        isCollapsed ? 'w-20' : 'w-64',
         open ? 'translate-x-0' : '-translate-x-full xl:translate-x-0',
       )}
     >
-      <div className={cn('flex h-20 shrink-0 items-center border-b border-slate-100 px-4', collapsed ? 'justify-center' : 'justify-between')}>
+      <div className={cn('flex h-20 shrink-0 items-center border-b border-sidebar-border px-4', isCollapsed ? 'justify-center' : 'justify-between')}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-xl font-bold text-white shadow-lg shadow-brand/20">O</div>
-          <span className={cn('truncate text-xl font-bold tracking-tight text-slate-800', collapsed && 'sr-only')}>OperatorOS</span>
+          <span className={cn('truncate text-xl font-bold tracking-tight text-sidebar-foreground', isCollapsed && 'sr-only')}>OperatorOS</span>
         </div>
-        {!collapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Collapse sidebar" className="hidden size-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronLeft aria-hidden="true" className="size-4" /></button>}
-        {collapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Expand sidebar" className="hidden size-10 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronRight aria-hidden="true" className="size-4" /></button>}
+        {!isCollapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Collapse sidebar" className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronLeft aria-hidden="true" className="size-4" /></button>}
+        {isCollapsed && <button type="button" onClick={onToggleCollapsed} aria-label="Expand sidebar" className="hidden size-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand xl:inline-flex"><ChevronRight aria-hidden="true" className="size-4" /></button>}
       </div>
 
       <nav aria-label="Primary navigation" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4">
@@ -99,27 +100,27 @@ function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpe
           variant="outline"
           aria-label="Search navigation"
           aria-keyshortcuts="Control+K Meta+K"
-          title={collapsed ? 'Search navigation (Ctrl+K / ⌘K)' : undefined}
+          title={isCollapsed ? 'Search navigation (Ctrl+K / ⌘K)' : undefined}
           onClick={onOpenCommandSearch}
-          className={cn('mb-4 w-full justify-start', collapsed && 'justify-center px-0')}
+          className={cn('mb-4 w-full justify-start', isCollapsed && 'justify-center px-0')}
         >
           <Search aria-hidden="true" className="size-4 shrink-0" />
-          <span className={collapsed ? 'sr-only' : 'min-w-0 flex-1 text-left'}>Search navigation</span>
-          {!collapsed && <kbd aria-hidden="true" className="rounded border border-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">Ctrl K / ⌘ K</kbd>}
+          <span className={isCollapsed ? 'sr-only' : 'min-w-0 flex-1 text-left'}>Search navigation</span>
+          {!isCollapsed && <kbd aria-hidden="true" className="rounded border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">Ctrl K / ⌘ K</kbd>}
         </Button>
         {groups.map((group) => {
-          const isExpanded = expanded.has(group.id) || collapsed;
-          return <section key={group.id} className="mb-3 border-b border-slate-100 pb-3 last:border-0">
-            <button type="button" onClick={() => toggleGroup(group.id)} aria-expanded={isExpanded} aria-controls={`nav-group-${group.id}`} disabled={collapsed} className={cn('flex min-h-10 w-full items-center rounded-lg px-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-400 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:hover:bg-transparent', collapsed ? 'justify-center' : 'justify-between')} title={collapsed ? group.title : undefined}>
-              <span className={collapsed ? 'sr-only' : undefined}>{group.title}</span>
-              <ChevronDown aria-hidden="true" className={cn('size-4 transition-transform motion-reduce:transition-none', !isExpanded && '-rotate-90', collapsed && 'hidden')} />
-              {collapsed && <span aria-hidden="true" className="size-1.5 rounded-full bg-slate-300" />}
+          const isExpanded = expanded.has(group.id) || isCollapsed;
+          return <section key={group.id} className="mb-3 border-b border-sidebar-border pb-3 last:border-0">
+            <button type="button" onClick={() => toggleGroup(group.id)} aria-expanded={isExpanded} aria-controls={`nav-group-${group.id}`} disabled={isCollapsed} className={cn('flex min-h-10 w-full items-center rounded-lg px-3 text-[11px] font-black uppercase tracking-[0.16em] text-muted-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:hover:bg-transparent', isCollapsed ? 'justify-center' : 'justify-between')} title={isCollapsed ? group.title : undefined}>
+              <span className={isCollapsed ? 'sr-only' : undefined}>{group.title}</span>
+              <ChevronDown aria-hidden="true" className={cn('size-4 transition-transform motion-reduce:transition-none', !isExpanded && '-rotate-90', isCollapsed && 'hidden')} />
+              {isCollapsed && <span aria-hidden="true" className="size-1.5 rounded-full bg-slate-300" />}
             </button>
             {isExpanded && <ul id={`nav-group-${group.id}`} className="mt-1 space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = navigationItemIsActive(item, location.pathname);
-                return <li key={item.path}><Link to={item.path} onClick={onNavigate} aria-current={active ? 'page' : undefined} title={collapsed ? item.name : undefined} className={cn('flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand', collapsed && 'justify-center', active ? 'bg-brand/10 font-black text-brand ring-1 ring-brand/20' : 'font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-800')}><Icon aria-hidden="true" className="size-5 shrink-0" /><span className={cn('min-w-0 leading-tight', collapsed ? 'sr-only' : 'break-words')}>{item.name}</span></Link></li>;
+                return <li key={item.path}><Link to={item.path} onClick={onNavigate} aria-current={active ? 'page' : undefined} title={isCollapsed ? item.name : undefined} className={cn('flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand', isCollapsed && 'justify-center', active ? 'bg-brand/10 font-black text-brand ring-1 ring-brand/20' : 'font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground')}><Icon aria-hidden="true" className="size-5 shrink-0" /><span className={cn('min-w-0 leading-tight', isCollapsed ? 'sr-only' : 'break-words')}>{item.name}</span></Link></li>;
               })}
             </ul>}
           </section>;
@@ -127,15 +128,15 @@ function SidebarNav({ groups, open = false, collapsed = false, onNavigate, onOpe
       </nav>
 
       <div className="shrink-0 border-t border-slate-100 p-3">
-        <div className={cn('rounded-xl border border-slate-200 bg-slate-50 p-3', collapsed && 'text-center')}>
-          <p className={cn('truncate text-sm font-black text-slate-800', collapsed && 'sr-only')}>{user?.username}</p>
-          {!collapsed && <Badge className="mt-1" variant="default">{user?.role}</Badge>}
-          {logoutError && <p role="alert" className={cn('mt-2 rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-left text-xs font-semibold text-rose-700', collapsed && 'sr-only')}>{logoutError}</p>}
-          <Button aria-label={loggingOut ? 'Signing out' : 'Logout'} variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut} className={cn('mt-2 text-xs hover:border-rose-200 hover:text-rose-600', collapsed ? 'w-11 px-0' : 'w-full')}><LogOut aria-hidden="true" size={14} /><span className={collapsed ? 'sr-only' : undefined}>{loggingOut ? 'Signing out…' : 'Logout'}</span></Button>
+        <div className={cn('rounded-xl border border-sidebar-border bg-sidebar-accent p-3', isCollapsed && 'text-center')}>
+          <p className={cn('truncate text-sm font-black text-sidebar-foreground', isCollapsed && 'sr-only')}>{user?.username}</p>
+          {!isCollapsed && <Badge className="mt-1" variant="default">{user?.role}</Badge>}
+          {logoutError && <p role="alert" className={cn('mt-2 rounded-lg border border-danger/20 bg-danger-surface px-2 py-2 text-left text-xs font-semibold text-danger', isCollapsed && 'sr-only')}>{logoutError}</p>}
+          <Button aria-label={loggingOut ? 'Signing out' : 'Logout'} variant="outline" size="sm" onClick={handleLogout} disabled={loggingOut} className={cn('mt-2 text-xs hover:border-danger/40 hover:text-danger', isCollapsed ? 'w-11 px-0' : 'w-full')}><LogOut aria-hidden="true" size={14} /><span className={isCollapsed ? 'sr-only' : undefined}>{loggingOut ? 'Signing out…' : 'Logout'}</span></Button>
         </div>
-        <div className={cn('mt-2 flex min-h-10 items-center rounded-xl border border-slate-100 bg-slate-50 px-3', collapsed ? 'justify-center' : 'justify-between')} title={collapsed ? `Server ${serverStatus}` : undefined}>
-          <div className="flex items-center gap-2"><Server aria-hidden="true" size={14} className="text-slate-400" /><span className={collapsed ? 'sr-only' : 'text-[10px] font-bold uppercase tracking-wider text-slate-400'}>Server</span></div>
-          {!collapsed && <span className={cn('text-[10px] font-black uppercase', serverStatus === 'online' ? 'text-emerald-600' : serverStatus === 'offline' ? 'text-rose-600' : 'text-amber-600')}>{serverStatus}</span>}
+        <div className={cn('mt-2 flex min-h-10 items-center rounded-xl border border-sidebar-border bg-sidebar-accent px-3', isCollapsed ? 'justify-center' : 'justify-between')} title={isCollapsed ? `Server ${serverStatus}` : undefined}>
+          <div className="flex items-center gap-2"><Server aria-hidden="true" size={14} className="text-muted-foreground" /><span className={isCollapsed ? 'sr-only' : 'text-[10px] font-bold uppercase tracking-wider text-muted-foreground'}>Server</span></div>
+          {!isCollapsed && <span className={cn('text-[10px] font-black uppercase', serverStatus === 'online' ? 'text-success' : serverStatus === 'offline' ? 'text-danger' : 'text-warning')}>{serverStatus}</span>}
         </div>
       </div>
     </aside>

@@ -40,6 +40,17 @@ The committed OpenAPI contract is generated from the API and checked for drift.
 Pages do not import generated contract code directly. Cross-workspace DTOs use
 the TypeBox schemas in packages/contracts.
 
+## UI preferences
+
+`UiPreferencesProvider` restores the versioned allowlist in
+`apps/web/src/lib/ui-preferences.ts`. The current schema stores only the
+sidebar's collapsed state. It contains no identity, role, session, or school
+data. Unsupported or malformed values fall back to defaults, and the Settings
+page can remove the stored preference. If browser storage is unavailable, the
+control still works for the current session and reports that it was not saved.
+The collapsed state applies to wide-screen navigation; an opened mobile drawer
+always uses its full width.
+
 ## Forms
 
 The staff profile form is the first TanStack Form pilot. It uses a small
@@ -83,6 +94,8 @@ table remains the exact-value alternative. Other production charts continue
 to use Chart.js, including student-specific, report, and print/export charts;
 keep Chart.js until Unovis parity is demonstrated for each required feature.
 Unovis charts do not calculate metrics or persist chart data.
+Shared loading, empty, error, and restricted states use semantic color tokens.
+Loading animation runs only when the user has not requested reduced motion.
 
 See [UI and routing](ui-and-routing.md) for the current router and shell
 structure, and [frontend data flow](frontend-data.md) for query ownership.

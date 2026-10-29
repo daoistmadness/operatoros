@@ -9,6 +9,7 @@ import { AccessDenied } from './auth/RouteGuards';
 import { RouteLoadingFallback } from '../routes/RouteLoadingFallback';
 import { useAuth } from '../context/AuthContext';
 import { useDeploymentMode } from '../context/DeploymentModeContext';
+import { UiPreferencesProvider, useUiPreferences } from '../context/UiPreferencesContext';
 import { isRouteAuthorized } from '../lib/router/access';
 import {
   canSelectNavigationItem,
@@ -17,8 +18,15 @@ import {
 } from '../lib/navigation/registry';
 
 export function AppShell() {
+  return (
+    <UiPreferencesProvider>
+      <AppShellContent />
+    </UiPreferencesProvider>
+  );
+}
+
+function AppShellContent() {
   const [navigationOpen, setNavigationOpen] = useState(false);
-  const [navigationCollapsed, setNavigationCollapsed] = useState(false);
   const [commandSearchOpen, setCommandSearchOpen] = useState(false);
   const [commandReturnFocusTarget, setCommandReturnFocusTarget] = useState<HTMLElement | null>(null);
   const openerRef = useRef<HTMLButtonElement>(null);
@@ -28,6 +36,8 @@ export function AppShell() {
   const sessionOverlayRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
   const auth = useAuth();
+  const { preferences, setSidebarCollapsed } = useUiPreferences();
+  const navigationCollapsed = preferences.sidebarCollapsed;
   const { isSingleUserMode } = useDeploymentMode();
   const sessionVerification = auth.sessionVerification ?? 'idle';
   const verifyingSession = sessionVerification !== 'idle';
@@ -160,7 +170,7 @@ export function AppShell() {
 
   return (
     <>
-      <div className="app-shell min-h-screen bg-slate-50 xl:flex" inert={verifyingSession || undefined} aria-hidden={verifyingSession || undefined}>
+      <div className="app-shell min-h-screen bg-background xl:flex" inert={verifyingSession || undefined} aria-hidden={verifyingSession || undefined}>
         <a href="#main-content" className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
         <button
           ref={openerRef}
@@ -169,7 +179,7 @@ export function AppShell() {
           aria-expanded={navigationOpen}
           aria-controls="navigation-drawer"
           onClick={() => setNavigationOpen((open) => !open)}
-          className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm xl:hidden"
+          className="fixed left-4 top-4 z-[60] inline-flex size-11 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-foreground shadow-sm xl:hidden"
         >
           {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
@@ -187,7 +197,7 @@ export function AppShell() {
           groups={groups}
           open={navigationOpen}
           collapsed={navigationCollapsed}
-          onToggleCollapsed={() => setNavigationCollapsed((value) => !value)}
+          onToggleCollapsed={() => setSidebarCollapsed(!navigationCollapsed)}
           onNavigate={() => setNavigationOpen(false)}
           onOpenCommandSearch={(event) => {
             setCommandReturnFocusTarget(navigationOpen ? openerRef.current : event.currentTarget);

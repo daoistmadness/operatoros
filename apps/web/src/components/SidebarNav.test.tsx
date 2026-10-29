@@ -53,6 +53,7 @@ describe('role-aware sidebar navigation', () => {
   async function renderSidebar({
     user = users.admin,
     path = '/',
+    open = true,
     collapsed = false,
     isSingleUserMode = false,
     onToggleCollapsed = vi.fn(),
@@ -60,6 +61,7 @@ describe('role-aware sidebar navigation', () => {
   }: {
     user?: AuthUser | null;
     path?: string;
+    open?: boolean;
     collapsed?: boolean;
     isSingleUserMode?: boolean;
     onToggleCollapsed?: () => void;
@@ -71,7 +73,7 @@ describe('role-aware sidebar navigation', () => {
           <AuthContext.Provider value={{ ...authFor(user), logout }}>
             <SidebarNav
               groups={visibleNavigationGroups({ auth: authFor(user), isSingleUserMode })}
-              open
+              open={open}
               collapsed={collapsed}
               onNavigate={vi.fn()}
               onOpenCommandSearch={vi.fn()}
@@ -150,12 +152,22 @@ describe('role-aware sidebar navigation', () => {
 
   it('keeps collapsed links named and exposes a usable expand control', async () => {
     const onToggleCollapsed = vi.fn();
-    await renderSidebar({ collapsed: true, onToggleCollapsed });
+    await renderSidebar({ collapsed: true, onToggleCollapsed, open: false });
     expect(container.querySelector('a[href="/analytics/attendance"]')?.textContent).toContain('Attendance');
     const expand = container.querySelector('button[aria-label="Expand sidebar"]');
     expect(expand).not.toBeNull();
     await act(async () => (expand as HTMLButtonElement).click());
     expect(onToggleCollapsed).toHaveBeenCalledOnce();
+  });
+
+  it('opens the mobile drawer at full width when the desktop preference is collapsed', async () => {
+    await renderSidebar({ collapsed: true, open: true });
+
+    const sidebar = container.querySelector('aside');
+    expect(sidebar?.className).toContain('w-64');
+    const analyticsGroup = Array.from(sidebar?.querySelectorAll('nav button') ?? []).find((button) => button.textContent?.includes('Analytics & Reports'));
+    expect(analyticsGroup?.hasAttribute('disabled')).toBe(false);
+    expect(container.querySelector('a[href="/analytics/attendance"]')?.textContent).toContain('Attendance');
   });
 
   it('operates disclosure groups by keyboard-compatible native buttons and preserves the active group', async () => {

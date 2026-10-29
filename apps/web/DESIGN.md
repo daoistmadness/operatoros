@@ -190,6 +190,7 @@ The application shell owns navigation and provides a centered content area with 
 - Use `DataTableContainer` for every wide table so horizontal scrolling belongs to the table region, never the page body. Sticky headers or first columns are acceptable when they preserve context.
 - Keep action groups near the content they affect. Destructive actions must not visually compete with the primary workflow.
 - At 390px, labels and actions must remain visible, cards must stay inside the viewport, and content must reflow without horizontal body overflow.
+- A saved compact sidebar affects wide layouts only. The mobile drawer opens at full width and keeps its labels available.
 
 ## Elevation & Depth
 
@@ -242,6 +243,7 @@ Use `Badge` for compact state, `Alert` for consequential inline feedback, and `L
 ### Do
 
 - Reuse shared primitives and semantic tokens before adding page-local utility strings.
+- Use semantic color tokens for shared loading, empty, error, and restricted states. Respect reduced motion for loading animation.
 - Preserve visible keyboard focus, descriptive accessible names, correct button types, and meaningful disabled/loading states.
 - Test long Indonesian labels, large datasets, empty/error/loading states, keyboard navigation, narrow screens, and report printing.
 - Keep tables within scroll containers and keep page-level overflow at zero.

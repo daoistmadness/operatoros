@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 ### Changed
+- Add a versioned browser preference for the desktop sidebar, standardize shared state colors, and keep the mobile navigation drawer full width.
 - Modernize the Management Overview attendance distribution with Unovis while retaining the exact-value table and Chart.js for other charts.
 - Use TanStack Table for attendance follow-up lists and virtualize large result sets.
 - Add a TanStack Form pilot for staff profiles with TypeBox validation, mapped API errors, and dirty-navigation protection.

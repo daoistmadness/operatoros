@@ -12,14 +12,14 @@ function StateMessage({ title, description, action, className, children, ...prop
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center",
+        "flex min-w-0 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface-muted p-6 text-center text-foreground sm:p-8",
         className
       )}
       {...props}
     >
       {children}
-      <p className="mt-3 font-black text-slate-800 text-lg">{title}</p>
-      {description && <p className="mt-1.5 max-w-xl text-sm font-semibold text-slate-500">{description}</p>}
+      <p className="mt-3 text-lg font-bold text-foreground">{title}</p>
+      {description && <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-4 flex flex-wrap justify-center gap-3">{action}</div>}
     </div>
   );
@@ -28,7 +28,7 @@ function StateMessage({ title, description, action, className, children, ...prop
 export function EmptyState(props: StateProps) {
   return (
     <StateMessage {...props}>
-      <Inbox className="h-8 w-8 text-slate-400" aria-hidden="true" />
+      <Inbox className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
     </StateMessage>
   );
 }
@@ -36,7 +36,7 @@ export function EmptyState(props: StateProps) {
 export function LoadingState(props: StateProps) {
   return (
     <StateMessage role="status" aria-live="polite" {...props}>
-      <Loader2 className="h-8 w-8 animate-spin text-brand" aria-hidden="true" />
+      <Loader2 className="h-8 w-8 text-brand motion-safe:animate-spin" aria-hidden="true" />
     </StateMessage>
   );
 }
@@ -45,10 +45,10 @@ export function ErrorState(props: StateProps) {
   return (
     <StateMessage
       role="alert"
-      className={cn("border-rose-200 bg-rose-50/60 text-rose-900", props.className)}
+      className={cn("border-danger/20 bg-danger-surface text-danger", props.className)}
       {...props}
     >
-      <AlertCircle className="h-8 w-8 text-rose-500" aria-hidden="true" />
+      <AlertCircle className="h-8 w-8 text-danger" aria-hidden="true" />
     </StateMessage>
   );
 }
@@ -56,7 +56,7 @@ export function ErrorState(props: StateProps) {
 export function FilteredEmptyState(props: StateProps) {
   return (
     <StateMessage {...props}>
-      <FilterX className="h-8 w-8 text-amber-500" aria-hidden="true" />
+      <FilterX className="h-8 w-8 text-warning" aria-hidden="true" />
     </StateMessage>
   );
 }
@@ -64,10 +64,10 @@ export function FilteredEmptyState(props: StateProps) {
 export function SetupRequiredState(props: StateProps) {
   return (
     <StateMessage
-      className={cn("border-amber-200 bg-amber-50/40 text-amber-950", props.className)}
+      className={cn("border-warning/30 bg-warning-surface text-warning-foreground", props.className)}
       {...props}
     >
-      <Settings className="h-8 w-8 text-amber-600" aria-hidden="true" />
+      <Settings className="h-8 w-8 text-warning" aria-hidden="true" />
     </StateMessage>
   );
 }
@@ -76,10 +76,10 @@ export function PermissionRestrictedState(props: StateProps) {
   return (
     <StateMessage
       role="alert"
-      className={cn("border-slate-300 bg-slate-100/80 text-slate-800", props.className)}
+      className={cn("border-border bg-surface-muted text-foreground", props.className)}
       {...props}
     >
-      <Lock className="h-8 w-8 text-slate-500" aria-hidden="true" />
+      <Lock className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
     </StateMessage>
   );
 }
