@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Document the file-based TanStack Router setup and authorization boundaries in the README.
 - Align roster and student import validation across the API and web app.
 - Reduce repeated score processing in academic analytics summaries (#341).
 - Clear protected page state after identity or permission changes and cancel superseded follow-up and analytics reads.

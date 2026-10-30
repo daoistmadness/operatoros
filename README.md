@@ -63,6 +63,7 @@ flowchart LR
 ### Architectural Principles
 
 - **Server-Owned Computation**: The API server is the sole authority for authentication, role authorization, attendance processing, HEB derivation, and academic metrics. The frontend renders server DTOs and formats charts via Chart.js; it never recomputes business metrics or generates authoritative reports.
+- **Browser Routing**: The Vite SPA uses TanStack Router file-based routes under `apps/web/src/routes/`; Vite generates the route tree. Route guards manage browser navigation, while the API independently authorizes every protected request. See [UI and routing](docs/architecture/ui-and-routing.md) for route conventions and navigation behavior.
 - **Contract Boundary Integrity**: Monorepo packages enforce strict dependency boundaries via automated architectural tests (`bun run check:architecture`). Shared TypeBox schemas in `packages/contracts/` define cross-boundary DTOs without leaking database or framework internals.
 - **Transactional Ingestion**: Attendance data enters through non-mutating preview endpoints (`/api/uploads/preview`) before being confirmed in an explicit transactional commit. Unresolved student identifiers are flagged as conflicts and never create unverified student records.
 
@@ -145,7 +146,7 @@ flowchart TD
 ## Repository Layout
 
 - [`apps/api/`](apps/api/): Elysia HTTP API, domain services, authentication, security, and backup tooling.
-- [`apps/web/`](apps/web/): React pages, shared components, API client, query hooks, and frontend configuration.
+- [`apps/web/`](apps/web/): React pages and shared components, file-based TanStack Router routes, API client, query hooks, and frontend configuration.
 - [`packages/db/`](packages/db/): Drizzle schema, SQLite lifecycle, schema manifest, migrations, and canonical data-path resolution.
 - [`packages/contracts/`](packages/contracts/): Shared TypeBox schemas and types.
 - [`packages/ui/`](packages/ui/): Domain-neutral UI primitives and source-owned shadcn components.
@@ -413,6 +414,7 @@ bun --filter @operatoros/web api:check
 - [Agent Execution Contract](AGENTS.md)
 - [Frontend Guide](apps/web/README.md)
 - [Frontend Architecture](docs/architecture/frontend.md)
+- [UI and Routing Architecture](docs/architecture/ui-and-routing.md)
 - [Database Schema Architecture](docs/architecture/database-schema.md)
 - [Platform Portability](docs/reference/runtime-support.md)
 - [Identity & Authentication](docs/reference/identity-authentication.md)
