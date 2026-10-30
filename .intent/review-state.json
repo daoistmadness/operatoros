@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "c1dd4008ef147f5f8ea0642f5207e4aa0147ecd145074e6841ca315e787a4b89",
+      "fingerprint": "7586148ebf9396671d70edb2edc1ed6c50412985971d785b88a674a62ffa07dc",
       "snapshot": {
         ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "c89c723df35516cc31bae86328c3fbe507e076406812064daefff0c70fe591fe",
+        "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
         "bun.lock": "5f991cab9384cce1e70dc3e2be0c3fc7fed53dfead8d491a5b33edd9d8050405",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
       "evidence": [
-        "Changed: AGENTS.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: AGENTS.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "f5ccfa5c9e9449004a6f8a2ca7b22213519206d0a28aee4d6700d2ada34ae428",
+      "fingerprint": "a999af1b9db614b74fb37a50ba9a38e44166586bb06e76ffc5ca1a544b4bfbc6",
       "snapshot": {
         ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "c89c723df35516cc31bae86328c3fbe507e076406812064daefff0c70fe591fe",
+        "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
       "evidence": [
-        "Changed: AGENTS.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: AGENTS.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -3243,15 +3243,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "fb925f6a142b155cf4a710e57a45f88377a9bc75a1e883365711b58275ed9cb4",
+      "fingerprint": "2c20bf0361bc5742df0fe7dbe990487f53cdd86483a7a3444ddb641f6448515e",
       "snapshot": {
-        "docs/architecture/database-schema.md": "4b56859ebcd0480961831798d737313e2c928f4352141ad4bc8ac756516fb9ca"
+        "docs/architecture/database-schema.md": "519b046105618b28c135b0a1e68bd76f156970a2db9824b68505b7e6e9e35c4a"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/architecture/database-schema.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
