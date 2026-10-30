@@ -1660,15 +1660,15 @@
       ]
     },
     "source:apps/api/tests/attendance-import.test.ts": {
-      "fingerprint": "a88207b3d5a785882f6d3aa38cac37aa1d9fe6f24cb37d60f025d220c000f35d",
+      "fingerprint": "944ed2e8a2c93b0cb3a6d5ed8486cbd761b823e2d27f9119565a7bb63d8d6215",
       "snapshot": {
-        "apps/api/tests/attendance-import.test.ts": "bf004f87a21bc205d316b6b8b848de2d05bfed1e51163a1264d916d771c7b6e7"
+        "apps/api/tests/attendance-import.test.ts": "6492195e8cfafc9b0fb9a04e3248d72362f3bf85e934a6222358d0a3dfbb07b5"
       },
-      "head": "82fb3dff99e6fdf70de151b112f63ff8fe40f161",
+      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
       "outcome": "no-change",
-      "reason": "The source change now rejects a committed staged-import replay when the checksum or selected row set differs; the regression test uses the existing app.handle synthetic SQLite pattern, and the changelog records the behavior. The installed Elysia v1 route and testing guidance remain accurate, so no skill or source-note update is needed.",
+      "reason": "Reviewed the attendance retry service, final route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
       "evidence": [
-        "Changed: apps/api/tests/attendance-import.test.ts at 82fb3dff99e6fdf70de151b112f63ff8fe40f161"
+        "Changed: apps/api/tests/attendance-import.test.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "bf2ab118f4f2a55bbe61080bf5fdafb9f74d225b727b695b0bf7114c7dac78a4",
+      "fingerprint": "74dd8f6e7bf693c103e00f8c0ab3f1cb79fab306a4c960634b648b0d704dd127",
       "snapshot": {
-        "CHANGELOG.md": "93b478648022f70a7930bd7955df85775c1739867db820111fccd0ba50fa75a5"
+        "CHANGELOG.md": "bef615d922a098f438b23e40962da3376fb47d6c9f38fe1a82dfb7dc5761a3b6"
       },
-      "head": "9afac7efc3add910ee8282b47dfd1cdc9b1fafd2",
+      "head": "0d18b461396670ad31aea287dbba72c99a1c5cd9",
       "outcome": "no-change",
-      "reason": "The changelog bullet only gained PR #349 tracking; it still records the same retry-selection correction and adds no Elysia framework or testing guidance.",
+      "reason": "Reviewed the changelog entry against the verified conflict-retry change and repository release-note rules; no maintainer skill guidance needs updating.",
       "evidence": [
-        "Changed: CHANGELOG.md at 9afac7efc3add910ee8282b47dfd1cdc9b1fafd2"
+        "Changed: CHANGELOG.md at 0d18b461396670ad31aea287dbba72c99a1c5cd9"
       ]
     },
     "source:COMMANDS.md": {
@@ -8510,6 +8510,30 @@
       "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
       "evidence": [
         "Changed: scripts/test-tier.sh at b9f743615e4636dac0f045d6ecac38e26f73a963"
+      ]
+    },
+    "source:apps/api/src/domains/upload-conflicts.ts": {
+      "fingerprint": "68fb30e3cfa13d9da723bc68282a95833064b6e2cf4d9cbc53d2a1e5037e3c5a",
+      "snapshot": {
+        "apps/api/src/domains/upload-conflicts.ts": "aec548721ec470c662a736d66bdcc76162ff4c654ba17980edfd22438de16ef3"
+      },
+      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
+      "outcome": "no-change",
+      "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upload-conflicts.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
+      ]
+    },
+    "source:apps/api/tests/machine-attendance-preview.test.ts": {
+      "fingerprint": "e894538c1af26cd3afbf4d99b3be8809b7529ab14cd1aeae7b035742805d85ca",
+      "snapshot": {
+        "apps/api/tests/machine-attendance-preview.test.ts": "e98cf3233a8c1996d4e85b8444ae2600bc160bf4af0392044970cbd1c2958c0d"
+      },
+      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
+      "outcome": "no-change",
+      "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
+      "evidence": [
+        "Changed: apps/api/tests/machine-attendance-preview.test.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
       ]
     }
   }

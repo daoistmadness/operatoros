@@ -198,6 +198,65 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("accepts concurrent exact conflict-retry commits without duplicating attendance or audit", async () => {
+    const value = await setup("conflict-retry-commit");
+    try {
+      const bytes = await workbook([
+        [9999, "Andi", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"],
+        [9998, "Beta", "02/07/2026", "07:30", "16:00", "", "", "", "Thursday"],
+      ]);
+      const source = await (await preview(value.app, value.cookie, bytes, "conflict-retry.xlsx")).json() as any;
+      const references = source.rows.map((row: any) => `attendance:${row.id}`);
+      for (const [index, deviceIdentifier, query] of [[0, "9999", "Andi"], [1, "9998", "Beta"]] as const) {
+        const reference = references[index];
+        const candidateResponse = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/student-candidates?query=${query}`, { headers: { cookie: value.cookie, origin: value.origin } }));
+        const candidate = (await candidateResponse.json() as any).items[0];
+        const linked = await value.app.handle(new Request(`http://local/api/upload-conflicts/${reference}/link-device`, {
+          method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+          body: JSON.stringify({ expected_source_checksum: source.checksum, expected_device_identifier: deviceIdentifier, student_master_id: candidate.id, expected_student_version: candidate.record_version, confirmation: "LINK_UNMATCHED_DEVICE_ID" }),
+        }));
+        expect([200, 201]).toContain(linked.status);
+      }
+
+      const retryResponse = await value.app.handle(new Request("http://local/api/upload-conflicts/retry-preview", {
+        method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+        body: JSON.stringify({ source_session_id: source.batch_id, source_checksum: source.checksum, resolution_item_ids: references, expected_classification: "CONFLICT", retry_mode: "PREVIEW_ONLY" }),
+      }));
+      const retry = await retryResponse.json() as any;
+      expect(retryResponse.status).toBe(200);
+      expect(retry.outcomes.map((outcome: any) => [outcome.outcome, outcome.classification])).toEqual([["NOW_ELIGIBLE", "NEW"], ["NOW_ELIGIBLE", "NEW"]]);
+      const selectedRetryRowIds = retry.outcomes.map((outcome: any) => outcome.retry_row_id);
+      const commit = (resolutionItemIds: string[], retryRowIds: number[]) => value.app.handle(new Request("http://local/api/upload-conflicts/retry-commit", {
+        method: "POST", headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+        body: JSON.stringify({ source_session_id: source.batch_id, source_checksum: source.checksum, resolution_item_ids: resolutionItemIds, retry_batch_id: retry.retry_batch_id, retry_checksum: retry.source_checksum, selected_retry_row_ids: retryRowIds, confirmation: "COMMIT_ATTENDANCE_IMPORT" }),
+      }));
+
+      value.database.client.run("CREATE TRIGGER conflict_retry_test_failure BEFORE INSERT ON attendance WHEN NEW.student_id = 9998 BEGIN SELECT RAISE(ABORT, 'controlled failure'); END");
+      const rolledBack = await commit(references, selectedRetryRowIds);
+      expect(rolledBack.status).toBe(409);
+      expect((value.database.client.query("SELECT status FROM attendance_import_batches WHERE id = ?").get(retry.retry_batch_id) as any).status).toBe("preview");
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id IN (9998, 9999) AND date IN ('2026-07-01', '2026-07-02')").get() as any).count)).toBe(0);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE entity_type = 'UPLOAD_CONFLICT' AND operation = 'UPLOAD_CONFLICT_RETRY_COMMITTED'").get() as any).count)).toBe(0);
+      value.database.client.run("DROP TRIGGER conflict_retry_test_failure");
+
+      const responses = await Promise.all([commit(references, selectedRetryRowIds), commit(references, selectedRetryRowIds)]);
+      expect(responses.map((response) => response.status).sort()).toEqual([200, 200]);
+      const results = await Promise.all(responses.map((response) => response.json()));
+      expect(results[1]).toEqual(results[0]);
+      const mismatched = await commit([references[1]], [selectedRetryRowIds[1]]);
+      expect(mismatched.status).toBe(409);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9999 AND date = '2026-07-01'").get() as any).count)).toBe(1);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id = 9998 AND date = '2026-07-02'").get() as any).count)).toBe(1);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM upload_logs WHERE filename = 'Retry - conflict-retry.xlsx'").get() as any).count)).toBe(1);
+      for (const [index, reference] of references.entries()) {
+        expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE entity_type = 'UPLOAD_CONFLICT' AND entity_reference = ? AND operation = 'UPLOAD_CONFLICT_RETRY_COMMITTED'").get(reference) as any).count)).toBe(1);
+        const audit = value.database.client.query("SELECT actor_id, actor_role, capability, metadata FROM operations_audit_events WHERE entity_type = 'UPLOAD_CONFLICT' AND entity_reference = ? AND operation = 'UPLOAD_CONFLICT_RETRY_COMMITTED'").get(reference) as any;
+        expect(audit).toMatchObject({ actor_id: "golden-admin", actor_role: "admin", capability: "import_attendance" });
+        expect(JSON.parse(audit.metadata)).toMatchObject({ retry_batch_id: retry.retry_batch_id, retry_row_id: selectedRetryRowIds[index], outcome: "COMMITTED" });
+      }
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("rolls back earlier writes when a later selected row is stale", async () => {
     const value = await setup("rollback");
     try {

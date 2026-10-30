@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Make attendance conflict-retry commits idempotent across exact and concurrent replays without duplicate audit entries (#350).
 - Reject committed attendance-import retries that change the selected rows (#349).
 - Include the disposable data-reset scenario in focused pull-request E2E validation (#348).
 - Document optional UPP report and student IOM upload-size limits and defaults (#347).
