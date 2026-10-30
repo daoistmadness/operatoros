@@ -2967,15 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6faa5c788cd4aeb2d372bcd67a264ebf61168b51522b0f3398a737e24d9cf664",
+      "fingerprint": "f584f7fbf096aa111cda27d8483f96f3d75b171710a42a1ff2775929e1a54072",
       "snapshot": {
-        "CHANGELOG.md": "d363b09fc1883e59b6f642c78b37b7907e109cdb3ef7106d57237af453fe4afd"
+        "CHANGELOG.md": "5a3e69cc4b2b7c6e8851e568419c68df77f290d90088cffa75a3ff3860c5bebd"
       },
-      "head": "2b240fd0732ae84c0728f4ddcfece84fcfd49079",
+      "head": "64a4c5b56f681f731bfdda80b95d1af38100594d",
       "outcome": "no-change",
-      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note for PR #341; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
+      "reason": "The Unreleased bullet accurately summarizes the import validation consistency work and does not change maintained guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 2b240fd0732ae84c0728f4ddcfece84fcfd49079"
+        "Changed: CHANGELOG.md at 64a4c5b56f681f731bfdda80b95d1af38100594d"
       ]
     },
     "source:COMMANDS.md": {
