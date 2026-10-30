@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2e6041c2ab4906d989bc89ead65f27338f353c2c8c85aa4ff5a42d2e5d9400fc",
+      "fingerprint": "f94924dfb9c108a30574d88cfa19a1f08dbf6168dc5d3b1f28e397b7357d1ddf",
       "snapshot": {
-        "CHANGELOG.md": "383f876e857aa3d2625cc2512de08a09c7e0c90a2d7c073cc82811fb37967fcc"
+        "CHANGELOG.md": "1816ff8955d60cfd556a00dc51083c961b4b5d720ba3918a421432d1fbe5c863"
       },
-      "head": "b9f743615e4636dac0f045d6ecac38e26f73a963",
+      "head": "2c1fb9c31ae24d7c747419a64787dede5b928f0b",
       "outcome": "no-change",
-      "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
+      "reason": "The only new delta is adding PR number #348 to the existing changelog bullet. It records the same test-harness correction; it changes no runtime behavior or Elysia guidance. The validation evidence remains make test-pr and the focused reset-inclusive smoke passing, plus check:pre-push and push-time affected tests passing.",
       "evidence": [
-        "Changed: CHANGELOG.md at b9f743615e4636dac0f045d6ecac38e26f73a963"
+        "Changed: CHANGELOG.md at 2c1fb9c31ae24d7c747419a64787dede5b928f0b"
       ]
     },
     "source:COMMANDS.md": {
