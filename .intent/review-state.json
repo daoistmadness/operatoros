@@ -587,17 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "4c9678f42d9763ca5db2f5a1308757b1fa0d0e6a13694450c3ec8a9ac7148bfe",
+      "fingerprint": "b8178ee092971552fe86d9bb2b6b79b8a8e905e761f8210fb09c5ff3c5c04a8d",
       "snapshot": {
-        "README.md": "4b68f9011e97bc2b132ad3756fd69ea7e2024d6ed115343410f85765511d28e2"
+        "README.md": "27fc319a661748e60565fd93bfac0fa20ff9bd6bfa1229d5c0cc80249703ca7c"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "eaabefd6a2a0197c7773f9560f51bc62557bdf0f",
+      "outcome": "no-change",
+      "reason": "README and Unreleased changelog document the existing TanStack Router setup and link to its canonical architecture guide; no registered skill guidance changed.",
       "evidence": [
-        "Reviewed README.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: README.md at eaabefd6a2a0197c7773f9560f51bc62557bdf0f"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -2967,15 +2965,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "f584f7fbf096aa111cda27d8483f96f3d75b171710a42a1ff2775929e1a54072",
+      "fingerprint": "afd6aa562b00d1afcd8bff9fadd74076f2e6c97966a60e0cfb0c609a1bf03449",
       "snapshot": {
-        "CHANGELOG.md": "5a3e69cc4b2b7c6e8851e568419c68df77f290d90088cffa75a3ff3860c5bebd"
+        "CHANGELOG.md": "0f658b3d048af9cae15bc70464582aea02628ff5e813d5fda86c27ee39ce8368"
       },
-      "head": "64a4c5b56f681f731bfdda80b95d1af38100594d",
+      "head": "eaabefd6a2a0197c7773f9560f51bc62557bdf0f",
       "outcome": "no-change",
-      "reason": "The Unreleased bullet accurately summarizes the import validation consistency work and does not change maintained guidance.",
+      "reason": "README and Unreleased changelog document the existing TanStack Router setup and link to its canonical architecture guide; no registered skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 64a4c5b56f681f731bfdda80b95d1af38100594d"
+        "Changed: CHANGELOG.md at eaabefd6a2a0197c7773f9560f51bc62557bdf0f"
       ]
     },
     "source:COMMANDS.md": {
