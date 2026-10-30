@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Reduce repeated score processing in academic analytics summaries (#341).
 - Clear protected page state after identity or permission changes and cancel superseded follow-up and analytics reads.
 - Add an isolated TanStack Redact research build and document its compatibility and performance results while keeping React as the production renderer.
 - Record consolidated frontend release validation against a corrected production-mode baseline and fix mobile navigation focus and cross-browser E2E assumptions.

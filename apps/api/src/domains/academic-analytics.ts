@@ -17,6 +17,13 @@ type Row = Record<string, any>;
 type Context = any;
 type Group = "subjects" | "classes" | "jenjang";
 
+const GROUPS: readonly Group[] = ["subjects", "classes", "jenjang"];
+const GROUP_COLUMNS: Record<Group, { id: string; label: string }> = {
+  subjects: { id: "subject_id", label: "subject_name" },
+  classes: { id: "class_id", label: "class_name" },
+  jenjang: { id: "jenjang_id", label: "jenjang_name" },
+};
+
 const TYPES = ["sumatif", "formatif"] as const;
 const DISTRIBUTION = [
   ["0-49", 0, 49], ["50-59", 50, 59], ["60-69", 60, 69],
@@ -59,6 +66,7 @@ interface AcademicScope {
 }
 
 interface BuiltQuery { sql: string; params: unknown[] }
+interface ScopedCteOptions { materializeScoreSlots?: boolean }
 
 function parseId(value: unknown): number | null {
   if (value === undefined || value === null || value === "") return null;
@@ -99,7 +107,7 @@ function buildScope(context: AuthContext, query: Row): AcademicScope | null {
   return { academicYearId, academicYearLabel: String(year.label), jenjangId, classId, subjectId, assessmentType, term: termValue };
 }
 
-function scopedCte(context: AuthContext, scope: AcademicScope): BuiltQuery {
+function scopedCte(context: AuthContext, scope: AcademicScope, options: ScopedCteOptions = {}): BuiltQuery {
   const filters = ["e.academic_year_id = ?"];
   const enrollmentParams: unknown[] = [scope.academicYearId];
   if (scope.jenjangId !== null) { filters.push("e.jenjang_id = ?"); enrollmentParams.push(scope.jenjangId); }
@@ -151,7 +159,7 @@ function scopedCte(context: AuthContext, scope: AcademicScope): BuiltQuery {
        WHERE ${filters.join(" AND ")}
     ), scope_enrollments AS (
       SELECT * FROM ranked_enrollments WHERE enrollment_rank = 1
-    ), catalog AS (${catalogSql}), score_slots AS (
+    ), catalog AS (${catalogSql}), score_slots AS${options.materializeScoreSlots ? " MATERIALIZED" : ""} (
       SELECT e.enrollment_id, e.student_id, e.student_name, e.class_id, e.class_name,
              e.jenjang_id, e.jenjang_name, c.subject_id, c.subject_name, c.component_id,
              c.component_name, c.assessment_type, c.assessment_session_id, g.score
@@ -206,12 +214,11 @@ function scoreSummary(value: Row, prefix = ""): Row {
   };
 }
 
-function groupRows(context: AuthContext, scope: AcademicScope, group: Group): Row[] {
-  const built = scopedCte(context, scope);
-  const groupId = group === "subjects" ? "subject_id" : group === "classes" ? "class_id" : "jenjang_id";
-  const groupLabel = group === "subjects" ? "subject_name" : group === "classes" ? "class_name" : "jenjang_name";
-  const values = rows(context, `${built.sql}
-    SELECT ${groupId} AS group_id, COALESCE(${groupLabel}, 'Unassigned') AS group_label,
+function groupRows(context: AuthContext, scope: AcademicScope): Record<Group, Row[]> {
+  const built = scopedCte(context, scope, { materializeScoreSlots: true });
+  const selects = GROUPS.map((group) => {
+    const { id, label } = GROUP_COLUMNS[group];
+    return `SELECT '${group}' AS group_key, ${id} AS group_id, COALESCE(${label}, 'Unassigned') AS group_label,
            COUNT(DISTINCT enrollment_id) AS students,
            COUNT(DISTINCT CASE WHEN score IS NOT NULL THEN enrollment_id END) AS scored_students,
            COUNT(DISTINCT subject_id || ':' || component_id) AS assessments,
@@ -221,8 +228,13 @@ function groupRows(context: AuthContext, scope: AcademicScope, group: Group): Ro
            SUM(CASE WHEN assessment_type = 'formatif' AND score IS NOT NULL THEN 1 ELSE 0 END) AS formative_count,
            SUM(CASE WHEN assessment_type = 'sumatif' AND score IS NOT NULL THEN score ELSE 0 END) AS summative_sum,
            SUM(CASE WHEN assessment_type = 'sumatif' AND score IS NOT NULL THEN 1 ELSE 0 END) AS summative_count
-      FROM score_slots GROUP BY ${groupId}, ${groupLabel} ORDER BY group_label`, built.params);
-  return values.map((value) => ({
+      FROM score_slots GROUP BY ${id}, ${label}`;
+  });
+  const values = rows(context, `${built.sql}
+    ${selects.join("\nUNION ALL\n")}
+    ORDER BY group_key, group_label`, built.params);
+  const grouped: Record<Group, Row[]> = { subjects: [], classes: [], jenjang: [] };
+  const mapValue = (value: Row): Row => ({
     id: value.group_id === null ? null : Number(value.group_id), label: String(value.group_label),
     students: Number(value.students ?? 0), scoredStudents: Number(value.scored_students ?? 0), assessments: Number(value.assessments ?? 0),
     expectedResults: Number(value.expected_results ?? 0), scoredResults: Number(value.scored_results ?? 0),
@@ -232,7 +244,13 @@ function groupRows(context: AuthContext, scope: AcademicScope, group: Group): Ro
     min: numberOrNull(value.score_min), max: numberOrNull(value.score_max),
     formativeAverage: average(Number(value.formative_sum ?? 0), Number(value.formative_count ?? 0)),
     summativeAverage: average(Number(value.summative_sum ?? 0), Number(value.summative_count ?? 0)),
-  }));
+  });
+  for (const value of values) {
+    const group = GROUPS.find((candidate) => candidate === value.group_key);
+    if (!group) throw new Error("Unexpected academic analytics group");
+    grouped[group].push(mapValue(value));
+  }
+  return grouped;
 }
 
 function assessmentRows(context: AuthContext, scope: AcademicScope): Row[] {
@@ -301,14 +319,16 @@ function overview(context: AuthContext, scope: AcademicScope): Row {
   const value = summaryQuery(context, scope);
   const expectedResults = Number(value.expected_results ?? 0);
   const scoredResults = Number(value.scored_results ?? 0);
+  const masterySummary = mastery(context, scope);
+  const groupedRows = groupRows(context, scope);
   return {
     scope: scopeMetadata(scope, value),
     summary: {
       students: Number(value.students ?? 0), assessments: Number(value.assessments ?? 0), expectedResults, scoredResults,
       missingResults: Math.max(0, expectedResults - scoredResults), participationPercentage: percentage(scoredResults, expectedResults),
-      score: scoreSummary(value, "score_"), formative: scoreSummary(value, "formative_"), summative: scoreSummary(value, "summative_"), mastery: mastery(context, scope),
+      score: scoreSummary(value, "score_"), formative: scoreSummary(value, "formative_"), summative: scoreSummary(value, "summative_"), mastery: masterySummary,
     },
-    subjects: groupRows(context, scope, "subjects"), classes: groupRows(context, scope, "classes"), jenjang: groupRows(context, scope, "jenjang"),
+    subjects: groupedRows.subjects, classes: groupedRows.classes, jenjang: groupedRows.jenjang,
     assessments: assessmentRows(context, scope), distribution: distribution(context, scope),
     metricDefinitions: {
       average: "Raw non-null scores divided by raw scored-result count. No average of averages.",
