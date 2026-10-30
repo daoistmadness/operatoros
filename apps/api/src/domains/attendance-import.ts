@@ -218,14 +218,20 @@ export function commitPreview(context: AuthContext, batchId: string, selectedIds
   const client = context.database.client;
   const batch = row(client, "SELECT * FROM attendance_import_batches WHERE id = ?", [batchId]);
   if (!batch) throw new ImportError(404, "Attendance import preview not found");
-  if (batch.status === "committed") return parseJson(batch.commit_result) ?? { status: "committed", idempotent: true };
-  if (batch.status !== "preview") throw new ImportError(409, "Attendance import preview is not committable");
+  if (batch.status !== "preview" && batch.status !== "committed") throw new ImportError(409, "Attendance import preview is not committable");
   if (checksum !== batch.checksum) throw new ImportError(409, { code: "ATTENDANCE_PREVIEW_SOURCE_MISMATCH", message: "The attendance preview no longer matches the source workbook." });
   const uniqueIds = [...new Set(selectedIds)];
   if (!uniqueIds.length) throw new ImportError(400, "Selected rows are not part of this preview");
   const placeholders = uniqueIds.map(() => "?").join(", ");
   const importRows = rows(client, `SELECT * FROM attendance_import_rows WHERE batch_id = ? AND id IN (${placeholders}) ORDER BY id`, [batchId, ...uniqueIds]);
   if (importRows.length !== uniqueIds.length) throw new ImportError(400, "Selected rows are not part of this preview");
+  if (batch.status === "committed") {
+    const committedIds = new Set(rows(client, "SELECT id FROM attendance_import_rows WHERE batch_id = ? AND selected_for_commit = 1", [batchId]).map((value) => Number(value.id)));
+    if (uniqueIds.length !== committedIds.size || uniqueIds.some((id) => !committedIds.has(id))) {
+      throw new ImportError(409, { code: "ATTENDANCE_COMMIT_REPLAY_MISMATCH", message: "The attendance import batch was already committed with a different row selection." });
+    }
+    return parseJson(batch.commit_result) ?? { status: "committed", idempotent: true };
+  }
   const blocked = importRows.filter((value) => !COMMITTABLE.has(String(value.classification))).map((value) => value.id);
   if (blocked.length) throw new ImportError(409, { code: "UNRESOLVED_IMPORT_ROWS", message: "Selected attendance import rows require identity resolution.", row_ids: blocked });
   let inserted = 0; let updated = 0; let unchanged = 0; let lateEntries = 0; let incompleteEntries = 0;

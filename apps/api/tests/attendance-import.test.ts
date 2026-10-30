@@ -154,6 +154,29 @@ describe("Excel attendance import", () => {
     } finally { cleanup(value); }
   }, 30000);
 
+  it("rejects a concurrent replay of the same batch with a different row selection", async () => {
+    const value = await setup("concurrent-selection");
+    try {
+      const bytes = await workbook([
+        [9003, "Citra", "01/07/2026", "07:30", "16:00", "", "", "", "Wednesday"],
+        [9101, "Diana", "02/07/2026", "07:30", "16:00", "", "", "", "Thursday"],
+      ]);
+      const previewBody = await (await preview(value.app, value.cookie, bytes)).json() as any;
+      const [firstRow, secondRow] = previewBody.rows;
+      const submit = (rowId: number) => value.app.handle(new Request(`http://local/api/uploads/preview/${previewBody.batch_id}/commit`, {
+        method: "POST",
+        headers: { cookie: value.cookie, "content-type": "application/json", origin: value.origin },
+        body: JSON.stringify({ selected_row_ids: [rowId], confirmation: "COMMIT_ATTENDANCE_IMPORT", preview_checksum: previewBody.checksum }),
+      }));
+
+      const responses = await Promise.all([submit(firstRow.id), submit(secondRow.id)]);
+      expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE date IN ('2026-07-01', '2026-07-02')").get() as any).count)).toBe(1);
+      expect(Number((value.database.client.query("SELECT COUNT(*) AS count FROM upload_logs").get() as any).count)).toBe(1);
+      expect(value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_rows WHERE batch_id = ? AND selected_for_commit = 1").get(previewBody.batch_id)).toMatchObject({ count: 1 });
+    } finally { cleanup(value); }
+  }, 30000);
+
   it("exposes unresolved attendance conflicts with retry-safe provenance", async () => {
     const value = await setup("conflicts");
     try {
