@@ -422,6 +422,29 @@ describe("attendance machine preview", () => {
     } finally { value.database.close(); rmSync(value.path, { force: true }); }
   }, 30000);
 
+  it("serializes concurrent applies of one machine preview and audits only the committed batch", async () => {
+    const value = await setup("concurrent-apply");
+    try {
+      const source = await twoEligibleFixture();
+      const previewForm = new FormData(); previewForm.append("file", new File([source], "synthetic-machine.xlsx")); previewForm.append("academic_year_id", "1"); previewForm.append("jenjang_id", "1");
+      const preview = await value.app.handle(new Request("http://local/api/attendance/machine-import/preview", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: previewForm }));
+      const previewBody = await preview.json() as any;
+      const apply = () => {
+        const form = new FormData(); form.append("file", new File([source], "synthetic-machine.xlsx")); form.append("academic_year_id", "1"); form.append("jenjang_id", "1"); form.append("expected_preview_digest", previewBody.previewDigest); form.append("confirmation", "IMPORT_MACHINE_ATTENDANCE");
+        return value.app.handle(new Request("http://local/api/attendance/machine-import/apply", { method: "POST", headers: { cookie: value.cookie, origin: "http://localhost:5173" }, body: form }));
+      };
+
+      const responses = await Promise.all([apply(), apply()]);
+      expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+      const rejected = responses.find((response) => response.status === 409)!;
+      expect(await rejected.json()).toMatchObject({ detail: { code: "PREVIEW_STALE" } });
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance WHERE student_id IN (123, 456) AND date = '2026-04-03'").get() as any).count).toBe(2);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM attendance_import_batches WHERE status = 'committed'").get() as any).count).toBe(1);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation = 'MACHINE_IMPORT_APPLY'").get() as any).count).toBe(1);
+      expect((value.database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE operation = 'MACHINE_IMPORT_CREATE'").get() as any).count).toBe(2);
+    } finally { value.database.close(); rmSync(value.path, { force: true }); }
+  }, 30000);
+
   it("rolls back the whole batch when one canonical insert fails", async () => {
     const value = await setup("transaction");
     try {
