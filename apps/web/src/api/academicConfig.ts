@@ -89,11 +89,12 @@ export async function deleteKkmThreshold(id: number): Promise<{ status: "success
   return response.data;
 }
 
-export async function fetchEffectiveTerms(academicYearId: number): Promise<AcademicTermConfig[]> {
+export async function fetchEffectiveTerms(academicYearId: number, signal?: AbortSignal): Promise<AcademicTermConfig[]> {
   const response = await apiRequest<AcademicTermConfig[]>({
     path: academicConfigApiPath("/terms/effective"),
     method: "GET",
     params: { academic_year_id: academicYearId },
+    ...(signal ? { signal } : {}),
   });
 
   return response.data;

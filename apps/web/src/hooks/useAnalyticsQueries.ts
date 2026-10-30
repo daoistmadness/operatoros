@@ -39,7 +39,7 @@ export function useDashboardSnapshotQuery(month: number, year: number, enabled =
 export function useAnalyticsFiltersQuery(filters: { academic_year_id?: number | null; jenjang_id?: number | null }, enabled = true) {
   return useQuery({
     queryKey: queryKeys.analytics.filters(filtersKey(filters)),
-    queryFn: () => fetchAnalyticsFilters({ academic_year_id: filters.academic_year_id, jenjang_id: filters.jenjang_id }),
+    queryFn: ({ signal }) => fetchAnalyticsFilters({ academic_year_id: filters.academic_year_id, jenjang_id: filters.jenjang_id }, signal),
     enabled,
   });
 }
@@ -47,7 +47,7 @@ export function useAnalyticsFiltersQuery(filters: { academic_year_id?: number | 
 export function useManagementSummaryQuery(params: FetchSummaryParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.managementSummary({ ...params }) : [...queryKeys.analytics.all, "management-summary", "idle"],
-    queryFn: () => fetchManagementSummary(params as FetchSummaryParams),
+    queryFn: ({ signal }) => fetchManagementSummary(params as FetchSummaryParams, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -55,39 +55,39 @@ export function useManagementSummaryQuery(params: FetchSummaryParams | null, ena
 export function useManagementOverviewQuery(params: ManagementOverviewFilters | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.managementOverview({ ...params }) : [...queryKeys.analytics.all, "management-overview", "idle"],
-    queryFn: () => fetchManagementOverview(params as ManagementOverviewFilters),
+    queryFn: ({ signal }) => fetchManagementOverview(params as ManagementOverviewFilters, signal),
     enabled: enabled && params !== null,
   });
 }
 
 export function useManagementReviewTermsQuery(academicYearId: number | null, enabled = true) {
-  return useQuery({ queryKey: queryKeys.analytics.managementReviewTerms(academicYearId), queryFn: () => fetchConfiguredTerms(academicYearId as number), enabled: enabled && academicYearId !== null });
+  return useQuery({ queryKey: queryKeys.analytics.managementReviewTerms(academicYearId), queryFn: ({ signal }) => fetchConfiguredTerms(academicYearId as number, signal), enabled: enabled && academicYearId !== null });
 }
 
 export function useAttendanceEffectiveTermsQuery(academicYearId: number | null, enabled = true) {
   return useQuery({
     queryKey: queryKeys.analytics.attendanceEffectiveTerms(academicYearId),
-    queryFn: () => fetchEffectiveTerms(academicYearId as number),
+    queryFn: ({ signal }) => fetchEffectiveTerms(academicYearId as number, signal),
     enabled: enabled && academicYearId !== null,
   });
 }
 
 export function useTardinessJenjangsQuery(enabled = true) {
-  return useQuery({ queryKey: queryKeys.analytics.tardinessJenjangs, queryFn: getJenjangs, enabled });
+  return useQuery({ queryKey: queryKeys.analytics.tardinessJenjangs, queryFn: ({ signal }) => getJenjangs(signal), enabled });
 }
 
 export function useManagementReviewProgramsQuery(enabled = true) {
-  return useQuery({ queryKey: queryKeys.analytics.managementReviewPrograms(), queryFn: fetchAcademicPrograms, enabled });
+  return useQuery({ queryKey: queryKeys.analytics.managementReviewPrograms(), queryFn: ({ signal }) => fetchAcademicPrograms(signal), enabled });
 }
 
 export function useManagementReviewProfileQuery(params: ManagementReviewProfileFilters | null, enabled = true) {
-  return useQuery({ queryKey: params ? queryKeys.analytics.managementReviewProfile(params) : [...queryKeys.analytics.all, "management-review-profile", "idle"], queryFn: () => fetchManagementReviewProfile(params as ManagementReviewProfileFilters), enabled: enabled && params !== null });
+  return useQuery({ queryKey: params ? queryKeys.analytics.managementReviewProfile(params) : [...queryKeys.analytics.all, "management-review-profile", "idle"], queryFn: ({ signal }) => fetchManagementReviewProfile(params as ManagementReviewProfileFilters, signal), enabled: enabled && params !== null });
 }
 
 export function useStudentTrendInsightsQuery(params: StudentTrendFilters | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.studentTrends(params) : ["analytics", "student-trends", "idle"],
-    queryFn: () => fetchStudentTrendInsights(params as StudentTrendFilters),
+    queryFn: ({ signal }) => fetchStudentTrendInsights(params as StudentTrendFilters, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -95,7 +95,7 @@ export function useStudentTrendInsightsQuery(params: StudentTrendFilters | null,
 export function useStudentIndicatorInsightsQuery(params: StudentIndicatorFilters | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.studentIndicators(params) : ["analytics", "student-indicators", "idle"],
-    queryFn: () => fetchStudentIndicatorInsights(params as StudentIndicatorFilters),
+    queryFn: ({ signal }) => fetchStudentIndicatorInsights(params as StudentIndicatorFilters, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -103,7 +103,7 @@ export function useStudentIndicatorInsightsQuery(params: StudentIndicatorFilters
 export function useHistoricalTrendsQuery(params: FetchHistoricalTrendsParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.historicalTrends({ ...params }) : [...queryKeys.analytics.all, "historical-trends", "idle"],
-    queryFn: () => fetchHistoricalTrends(params as FetchHistoricalTrendsParams),
+    queryFn: ({ signal }) => fetchHistoricalTrends(params as FetchHistoricalTrendsParams, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -111,7 +111,7 @@ export function useHistoricalTrendsQuery(params: FetchHistoricalTrendsParams | n
 export function useInterventionImpactQuery(params: FetchInterventionImpactParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.interventionImpact({ ...params }) : [...queryKeys.analytics.all, "intervention-impact", "idle"],
-    queryFn: () => fetchInterventionImpact(params as FetchInterventionImpactParams),
+    queryFn: ({ signal }) => fetchInterventionImpact(params as FetchInterventionImpactParams, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -119,7 +119,7 @@ export function useInterventionImpactQuery(params: FetchInterventionImpactParams
 export function useAnalyticsOverviewQuery(params: CanonicalAnalyticsParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.overview({ ...params }) : [...queryKeys.analytics.all, "overview", "idle"],
-    queryFn: () => fetchAnalyticsOverview(params as CanonicalAnalyticsParams),
+    queryFn: ({ signal }) => fetchAnalyticsOverview(params as CanonicalAnalyticsParams, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -127,7 +127,7 @@ export function useAnalyticsOverviewQuery(params: CanonicalAnalyticsParams | nul
 export function useAnalyticsTrendsQuery(params: CanonicalAnalyticsParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.trends({ ...params }) : [...queryKeys.analytics.all, "trends", "idle"],
-    queryFn: () => fetchAnalyticsTrends(params as CanonicalAnalyticsParams),
+    queryFn: ({ signal }) => fetchAnalyticsTrends(params as CanonicalAnalyticsParams, signal),
     enabled: enabled && params !== null,
   });
 }
@@ -135,7 +135,7 @@ export function useAnalyticsTrendsQuery(params: CanonicalAnalyticsParams | null,
 export function useAnalyticsCohortsQuery(dimension: "class" | "jenjang", params: CanonicalAnalyticsParams | null, enabled = true) {
   return useQuery({
     queryKey: params ? queryKeys.analytics.cohorts(dimension, { ...params }) : [...queryKeys.analytics.all, "cohorts", dimension, "idle"],
-    queryFn: () => fetchAnalyticsCohorts(params as CanonicalAnalyticsParams, dimension),
+    queryFn: ({ signal }) => fetchAnalyticsCohorts(params as CanonicalAnalyticsParams, dimension, signal),
     enabled: enabled && params !== null,
   });
 }

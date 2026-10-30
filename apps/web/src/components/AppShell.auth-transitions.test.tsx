@@ -90,8 +90,8 @@ function renderRouter(router: ReturnType<typeof createVisibilityRouter>, client:
   );
 }
 
-async function mount(path: string, initialAuth: AuthContextValue) {
-  const router = createVisibilityRouter(path, initialAuth);
+async function mount(path: string, initialAuth: AuthContextValue, pageComponent = ProtectedPage) {
+  const router = createVisibilityRouter(path, initialAuth, pageComponent);
   await router.load();
   const client = createTestQueryClient();
   const container = document.createElement('div');
@@ -195,6 +195,34 @@ describe('protected content during authorization transitions', () => {
     expect(container.querySelector('[aria-label="Draft"]')).toBe(draftInput);
     expect(draftInput.value).toBe('unsaved attendance note');
     expect(document.activeElement).toBe(draftInput);
+  });
+
+  it.each(['identity', 'authorization'] as const)('clears protected page state after a verified %s change', async (change) => {
+    const initialAuth = change === 'identity'
+      ? auth('admin', ['view_attendance'])
+      : auth('staff', ['view_attendance']);
+    const nextAuth: AuthContextValue = change === 'identity'
+      ? { ...initialAuth, user: { ...initialAuth.user!, id: 3 } }
+      : {
+          ...initialAuth,
+          user: { ...initialAuth.user!, capabilities: ['view_attendance', 'view_staff'] },
+          can: (capability) => ['view_attendance', 'view_staff'].includes(capability),
+        };
+    const view = await mount('/attendance/calendar', initialAuth, DraftPage);
+    const oldInput = view.container.querySelector<HTMLInputElement>('[aria-label="Draft"]');
+    expect(oldInput).not.toBeNull();
+    if (!oldInput) throw new Error('Expected protected draft field');
+    const setInputValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setInputValue?.call(oldInput, 'private unsaved draft');
+    await act(async () => { oldInput.dispatchEvent(new Event('input', { bubbles: true })); });
+    expect(oldInput.value).toBe('private unsaved draft');
+
+    await act(async () => { view.root.render(renderRouter(view.router, view.client, nextAuth)); });
+
+    const nextInput = view.container.querySelector<HTMLInputElement>('[aria-label="Draft"]');
+    expect(nextInput).not.toBeNull();
+    expect(nextInput).not.toBe(oldInput);
+    expect(nextInput?.value).toBe('');
   });
 
   it('cancels protected requests before confirmed logout and hides their page when logout succeeds', async () => {

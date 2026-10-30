@@ -251,8 +251,8 @@ export async function getSystemHealth(): Promise<JsonObject> {
   return response.data;
 }
 
-export async function getJenjangs(): Promise<string[]> {
-  const response = await apiRequest<string[]>({ path: '/api/analytics/jenjangs' });
+export async function getJenjangs(signal?: AbortSignal): Promise<string[]> {
+  const response = await apiRequest<string[]>({ path: '/api/analytics/jenjangs', ...(signal ? { signal } : {}) });
   return ensureArray<string>(response.data);
 }
 

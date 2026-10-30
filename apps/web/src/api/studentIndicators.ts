@@ -14,7 +14,7 @@ export type StudentIndicatorFilters = {
   page_size?: number;
 };
 
-export async function fetchStudentIndicatorInsights(filters: StudentIndicatorFilters): Promise<StudentIndicatorInsightsResponse> {
+export async function fetchStudentIndicatorInsights(filters: StudentIndicatorFilters, signal?: AbortSignal): Promise<StudentIndicatorInsightsResponse> {
   const response = await apiRequest<StudentIndicatorInsightsResponse>({
     path: "/api/analytics/student-indicators",
     params: {
@@ -29,6 +29,7 @@ export async function fetchStudentIndicatorInsights(filters: StudentIndicatorFil
       page: filters.page ?? 1,
       page_size: filters.page_size ?? 25,
     },
+    ...(signal ? { signal } : {}),
   });
   return response.data;
 }

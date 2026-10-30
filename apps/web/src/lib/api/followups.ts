@@ -114,20 +114,24 @@ export type FollowUpHistory = {
 
 export async function fetchFollowUpCandidates(
   params: FollowUpCandidateQuery = {},
+  signal?: AbortSignal,
 ): Promise<FollowUpPage<FollowUpCandidate> | []> {
   const response = await apiRequest<FollowUpPage<FollowUpCandidate>>({
     path: '/api/attendance/followups/candidates',
     params,
+    signal,
   });
   return response.data || [];
 }
 
 export async function fetchFollowUpCases(
   params: FollowUpListQuery = {},
+  signal?: AbortSignal,
 ): Promise<FollowUpPage<FollowUpCase> | []> {
   const response = await apiRequest<FollowUpPage<FollowUpCase>>({
     path: '/api/attendance/followups',
     params,
+    signal,
   });
   return response.data || [];
 }
@@ -181,9 +185,10 @@ export async function fetchFollowUpHistory(
   return response.data?.history || [];
 }
 
-export async function fetchFollowUpMetrics(): Promise<FollowUpMetrics> {
+export async function fetchFollowUpMetrics(signal?: AbortSignal): Promise<FollowUpMetrics> {
   const response = await apiRequest<FollowUpMetrics>({
     path: '/api/attendance/followups/metrics/summary',
+    signal,
   });
   return response.data || {};
 }

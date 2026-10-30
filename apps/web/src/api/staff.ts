@@ -46,8 +46,8 @@ export type StaffImportBatch = { id: string; source_filename: string; source_she
 export async function fetchStaff(params: StaffListParams = {}): Promise<StaffListResponse> {
   return (await apiRequest<StaffListResponse>({ path: "/api/staff", params: { ...params, has_nuptk: params.has_nuptk === undefined ? undefined : String(params.has_nuptk) } })).data;
 }
-export async function fetchStaffDetail(id: string): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}` })).data; }
-export async function fetchSensitiveStaff(id: string): Promise<StaffSensitive> { return (await apiRequest<StaffSensitive>({ path: `/api/staff/${id}/sensitive` })).data; }
+export async function fetchStaffDetail(id: string, signal?: AbortSignal): Promise<StaffDetail> { return (await apiRequest<StaffDetail>({ path: `/api/staff/${id}`, ...(signal ? { signal } : {}) })).data; }
+export async function fetchSensitiveStaff(id: string, signal?: AbortSignal): Promise<StaffSensitive> { return (await apiRequest<StaffSensitive>({ path: `/api/staff/${id}/sensitive`, ...(signal ? { signal } : {}) })).data; }
 export async function fetchStaffHistory(id: string): Promise<StaffHistory> { return (await apiRequest<StaffHistory>({ path: `/api/staff/${id}/history` })).data; }
 export async function fetchSchoolUnits(): Promise<SchoolUnitResponseDto[]> { return (await apiRequest<SchoolUnitResponseDto[]>({ path: "/api/staff/school-units" })).data; }
 export async function createSchoolUnit(body: { name: string; reason: string }): Promise<SchoolUnitResponseDto> { return (await apiRequest<SchoolUnitResponseDto>({ path: "/api/staff/school-units", method: "POST", body })).data; }

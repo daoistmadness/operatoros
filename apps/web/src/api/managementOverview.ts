@@ -9,7 +9,7 @@ export type ManagementOverviewFilters = {
   attendance_date_to?: string | null;
 };
 
-export async function fetchManagementOverview(filters: ManagementOverviewFilters): Promise<ManagementOverviewResponse> {
+export async function fetchManagementOverview(filters: ManagementOverviewFilters, signal?: AbortSignal): Promise<ManagementOverviewResponse> {
   const response = await apiRequest<ManagementOverviewResponse>({
     path: "/api/analytics/management-overview",
     params: {
@@ -19,6 +19,7 @@ export async function fetchManagementOverview(filters: ManagementOverviewFilters
       attendance_date_from: filters.attendance_date_from ?? undefined,
       attendance_date_to: filters.attendance_date_to ?? undefined,
     },
+    ...(signal ? { signal } : {}),
   });
   return response.data;
 }

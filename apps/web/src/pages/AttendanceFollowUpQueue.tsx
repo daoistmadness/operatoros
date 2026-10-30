@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Eye,
@@ -100,6 +100,7 @@ export default function AttendanceFollowUpQueue() {
   // Selected Detail Modal
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [submittingKey, setSubmittingKey] = useState('');
+  const loadController = useRef<AbortController | null>(null);
   const setUrlFilter = useCallback((key: string, value: string) => {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
@@ -110,30 +111,42 @@ export default function AttendanceFollowUpQueue() {
   }, [setSearchParams]);
 
   const loadData = useCallback(async () => {
+    loadController.current?.abort();
+    const controller = new AbortController();
+    loadController.current = controller;
     setLoading(true);
     setError('');
     try {
       const [candRes, caseRes, metricRes] = await Promise.all([
-        fetchFollowUpCandidates(kindFilter ? { exception_kind: kindFilter } : {}),
+        fetchFollowUpCandidates(kindFilter ? { exception_kind: kindFilter } : {}, controller.signal),
         fetchFollowUpCases({
           ...(kindFilter ? { exception_kind: kindFilter } : {}),
           ...(statusFilter ? { status: statusFilter } : {}),
           ...(priorityFilter ? { priority: priorityFilter } : {}),
-        }),
-        fetchFollowUpMetrics(),
+        }, controller.signal),
+        fetchFollowUpMetrics(controller.signal),
       ]);
+      if (controller.signal.aborted) return;
       setCandidates(Array.isArray(candRes) ? candRes : candRes.items);
       setCases(Array.isArray(caseRes) ? caseRes : caseRes.items);
       setMetrics(metricRes);
     } catch (err: unknown) {
-      setError(getFollowUpError(err, 'Gagal memuat data antrean pengecualian.'));
+      if (!controller.signal.aborted) setError(getFollowUpError(err, 'Gagal memuat data antrean pengecualian.'));
     } finally {
-      setLoading(false);
+      if (loadController.current === controller) {
+        loadController.current = null;
+        setLoading(false);
+      }
     }
   }, [kindFilter, statusFilter, priorityFilter]);
 
   useEffect(() => {
     void loadData();
+    return () => {
+      const controller = loadController.current;
+      loadController.current = null;
+      controller?.abort();
+    };
   }, [loadData]);
 
   const handleMaterializeCandidate = useCallback(async (candidate: FollowUpCandidate) => {

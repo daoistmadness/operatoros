@@ -31,18 +31,18 @@ function canonicalParams(params: CanonicalAnalyticsParams) {
   };
 }
 
-export async function fetchAnalyticsOverview(params: CanonicalAnalyticsParams): Promise<AnalyticsOverviewResponse> {
-  const response = await apiRequest<AnalyticsOverviewResponse>({ path: analyticsApiPath("/overview"), method: "GET", params: canonicalParams(params) });
+export async function fetchAnalyticsOverview(params: CanonicalAnalyticsParams, signal?: AbortSignal): Promise<AnalyticsOverviewResponse> {
+  const response = await apiRequest<AnalyticsOverviewResponse>({ path: analyticsApiPath("/overview"), method: "GET", params: canonicalParams(params), ...(signal ? { signal } : {}) });
   return response.data;
 }
 
-export async function fetchAnalyticsTrends(params: CanonicalAnalyticsParams): Promise<AnalyticsTrendsResponse> {
-  const response = await apiRequest<AnalyticsTrendsResponse>({ path: analyticsApiPath("/trends"), method: "GET", params: canonicalParams(params) });
+export async function fetchAnalyticsTrends(params: CanonicalAnalyticsParams, signal?: AbortSignal): Promise<AnalyticsTrendsResponse> {
+  const response = await apiRequest<AnalyticsTrendsResponse>({ path: analyticsApiPath("/trends"), method: "GET", params: canonicalParams(params), ...(signal ? { signal } : {}) });
   return response.data;
 }
 
-export async function fetchAnalyticsCohorts(params: CanonicalAnalyticsParams, dimension: "class" | "jenjang"): Promise<AnalyticsCohortsResponse> {
-  const response = await apiRequest<AnalyticsCohortsResponse>({ path: analyticsApiPath("/cohorts"), method: "GET", params: { ...canonicalParams(params), dimension } });
+export async function fetchAnalyticsCohorts(params: CanonicalAnalyticsParams, dimension: "class" | "jenjang", signal?: AbortSignal): Promise<AnalyticsCohortsResponse> {
+  const response = await apiRequest<AnalyticsCohortsResponse>({ path: analyticsApiPath("/cohorts"), method: "GET", params: { ...canonicalParams(params), dimension }, ...(signal ? { signal } : {}) });
   return response.data;
 }
 
@@ -75,18 +75,20 @@ export interface FetchInterventionImpactParams extends FetchSummaryParams {
 export async function fetchAnalyticsFilters(params?: {
   academic_year_id?: number | null;
   jenjang_id?: number | null;
-}): Promise<AnalyticsFiltersResponse> {
+}, signal?: AbortSignal): Promise<AnalyticsFiltersResponse> {
   const response = await apiRequest<AnalyticsFiltersResponse>({
     path: analyticsApiPath("/filters"),
     method: "GET",
     params,
+    ...(signal ? { signal } : {}),
   });
 
   return response.data;
 }
 
 export async function fetchManagementSummary(
-  params: FetchSummaryParams
+  params: FetchSummaryParams,
+  signal?: AbortSignal,
 ): Promise<ManagementSummaryResponse> {
   const response = await apiRequest<ManagementSummaryResponse>({
     path: analyticsApiPath("/management-summary"),
@@ -98,13 +100,15 @@ export async function fetchManagementSummary(
       term: params.term ?? undefined,
       subject_id: params.subject_id ?? undefined,
     },
+    ...(signal ? { signal } : {}),
   });
 
   return response.data;
 }
 
 export async function fetchHistoricalTrends(
-  params: FetchHistoricalTrendsParams
+  params: FetchHistoricalTrendsParams,
+  signal?: AbortSignal,
 ): Promise<HistoricalTrendsResponse> {
   const response = await apiRequest<HistoricalTrendsResponse>({
     path: analyticsApiPath("/historical-trends"),
@@ -119,13 +123,15 @@ export async function fetchHistoricalTrends(
       include_forecast: params.include_forecast ?? true,
       forecast_method: params.forecast_method ?? "linear_trend",
     },
+    ...(signal ? { signal } : {}),
   });
 
   return response.data;
 }
 
 export async function fetchInterventionImpact(
-  params: FetchInterventionImpactParams
+  params: FetchInterventionImpactParams,
+  signal?: AbortSignal,
 ): Promise<InterventionImpactResponse> {
   const response = await apiRequest<InterventionImpactResponse>({
     path: analyticsApiPath("/intervention-impact"),
@@ -142,6 +148,7 @@ export async function fetchInterventionImpact(
       owner_name: params.owner_name ?? undefined,
       risk_level: params.risk_level ?? undefined,
     },
+    ...(signal ? { signal } : {}),
   });
 
   return response.data;
