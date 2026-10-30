@@ -8414,15 +8414,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceReviewSafety.test.ts": {
-      "fingerprint": "797cbe5dc027f948ba2b9b33bc09e8650e12d0d925df8b4eef62d755b6060391",
+      "fingerprint": "a9badd4adf445e83fa73e4d2ed2c85d138a40a7c95c1e11b19128d126576f05b",
       "snapshot": {
-        "apps/web/src/pages/AttendanceReviewSafety.test.ts": "a2500a27670dec5e7c4930f9942a4821009e4f6f9d9bad206f72c6f8cf213c8a"
+        "apps/web/src/pages/AttendanceReviewSafety.test.ts": "97de6321f866c17426c6b9c7d6c2c62124ea11bc106082d88801c4b6c822e31c"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "63fbeabe18fb0519a9cafe88ad3f8fcdbca1729f",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "The test follows the existing attendance review flow by explicitly loading rows before asserting role-gated controls; current test conventions already cover this, so no guidance change is needed.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceReviewSafety.test.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/web/src/pages/AttendanceReviewSafety.test.ts at 63fbeabe18fb0519a9cafe88ad3f8fcdbca1729f"
       ]
     },
     "source:apps/web/src/pages/HebConfig.tsx": {
