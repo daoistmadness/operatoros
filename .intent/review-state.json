@@ -2965,15 +2965,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "afd6aa562b00d1afcd8bff9fadd74076f2e6c97966a60e0cfb0c609a1bf03449",
+      "fingerprint": "bd05d85a51f771471e2fb86d34e6fcb1771c78a2fe1ccee731044c0594ecca18",
       "snapshot": {
-        "CHANGELOG.md": "0f658b3d048af9cae15bc70464582aea02628ff5e813d5fda86c27ee39ce8368"
+        "CHANGELOG.md": "3449a9ce47fb56fd5f5f31884044892eddfa8d4a98a9f114be138f33c5aa10bd"
       },
-      "head": "eaabefd6a2a0197c7773f9560f51bc62557bdf0f",
+      "head": "d3255e71d132bfbdd7139c500b0a2a96f4c6dce6",
       "outcome": "no-change",
-      "reason": "README and Unreleased changelog document the existing TanStack Router setup and link to its canonical architecture guide; no registered skill guidance changed.",
+      "reason": "The Unreleased note records the schema-documentation correction; it does not affect Elysia guidance, skill mappings, or planning records.",
       "evidence": [
-        "Changed: CHANGELOG.md at eaabefd6a2a0197c7773f9560f51bc62557bdf0f"
+        "Changed: CHANGELOG.md at d3255e71d132bfbdd7139c500b0a2a96f4c6dce6"
       ]
     },
     "source:COMMANDS.md": {
