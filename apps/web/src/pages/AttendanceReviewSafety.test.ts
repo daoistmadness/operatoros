@@ -40,6 +40,15 @@ async function renderReview(capabilities: string[]) {
   });
 }
 
+async function loadAttendance() {
+  const load = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Load");
+  if (!load) throw new Error("Attendance Load button was not rendered");
+  await act(async () => {
+    load.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
 beforeEach(() => {
   api.get.mockImplementation(async (path: string) => {
     if (path === "/api/academic-masters/academic-years") return { data: [{ id: 1, label: "2026/2027", is_default: true }] };
@@ -59,6 +68,7 @@ afterEach(async () => {
 describe("attendance review permissions", () => {
   it("shows records and history to a read-only actor without exposing override controls", async () => {
     await renderReview([]);
+    await loadAttendance();
 
     expect(host.textContent).toContain("Synthetic Student");
     expect(Array.from(host.querySelectorAll("button")).some((button) => button.textContent?.includes("History"))).toBe(true);
@@ -67,8 +77,9 @@ describe("attendance review permissions", () => {
 
   it("lets an actor with attendance management permission open the override form", async () => {
     await renderReview(["manage_attendance"]);
+    await loadAttendance();
 
-    const override = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.includes("Override"));
+    const override = Array.from(host.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Override");
     expect(override).toBeDefined();
     await act(async () => override?.click());
 
