@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 - Align CI documentation with the seven status checks enforced on `main` (#345).
+- Document configurable session timeout and account lockout settings.
 - Correct the documented SQLite schema head and migration target to S5.4.
 - Document the file-based TanStack Router setup and authorization boundaries in the README.
 - Align roster and student import validation across the API and web app.
