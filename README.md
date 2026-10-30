@@ -274,6 +274,10 @@ The managed launcher automatically sets the development data root derived from r
 | `AUTH_COOKIE_SECRET` | Backend | **Yes** | Unset | Secret used to derive HMAC digests of server-side session tokens. Must be at least 32 characters. | *(secret value)* |
 | `ASTRYX_SETUP_TOKEN` | Backend | No | Unset | Optional external token authorizing first-run admin provisioning. Automatically generated per-session by `./start-dev.sh`. | *(secret value)* |
 | `COOKIE_SECURE` | Backend | No | `false` | Sets `Secure` flag on session cookies. Use `false` for localhost HTTP; set to `true` for HTTPS reverse-proxy setups. | `true` |
+| `SESSION_IDLE_TIMEOUT_HOURS` | Backend | No | `6` | Idle expiration for server-side sessions, in hours. Must be a positive integer no greater than `SESSION_ABSOLUTE_TIMEOUT_HOURS`. | `6` |
+| `SESSION_ABSOLUTE_TIMEOUT_HOURS` | Backend | No | `24` | Absolute expiration for server-side sessions, in hours. Must be a positive integer no less than the idle timeout. | `24` |
+| `MAX_FAILED_LOGIN_ATTEMPTS` | Backend | No | `5` | Consecutive failed login attempts before an account is locked. Must be a positive integer. | `5` |
+| `ACCOUNT_LOCK_MINUTES` | Backend | No | `30` | Account lock duration after the failed-login limit is reached. Must be a positive integer. | `30` |
 | `ALLOWED_ORIGINS` | Backend | No | `http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173` | Comma-separated Origin allowlist for CORS and unsafe state-changing requests. | `http://127.0.0.1:5173` |
 | `TRUSTED_PROXY_ADDRESSES` | Backend | No | Unset | Comma-separated IP allowlist for upstream reverse proxies. Forwarded-IP headers from unlisted peers are ignored. | `127.0.0.1` |
 | `HOST` | Backend | No | `127.0.0.1` | IP address bound by the Elysia backend HTTP server. | `127.0.0.1` |
@@ -281,9 +285,6 @@ The managed launcher automatically sets the development data root derived from r
 | `BACKUP_ENCRYPTION_KEY` | Backend | **Yes** (for backup/restore) | Unset | Canonical Base64-encoded 32-byte key used to encrypt and decrypt AES-256-GCM backup archives. Must differ from `AUTH_COOKIE_SECRET`. | *(secret value)* |
 | `BACKUP_ENCRYPTION_KEY_ID` | Backend | **Yes** (if key set) | Unset | Identifier tag stored in the backup envelope header for key identification. | `local-1` |
 | `VITE_API_BASE_URL` | Frontend | No | Unset | Build-time API base URL. When unset, Vite routes `/api` calls through its internal development proxy. | `http://127.0.0.1:8000` |
-
-> [!NOTE]
-> Session timeout parameters (idle session: 6 hours; absolute session: 24 hours) and account lockout policy (5 consecutive failed attempts triggering a 30-minute lock) are enforced by constant configuration in the authentication domain service.
 
 ---
 

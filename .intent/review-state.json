@@ -592,15 +592,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "b8178ee092971552fe86d9bb2b6b79b8a8e905e761f8210fb09c5ff3c5c04a8d",
+      "fingerprint": "86a805d0d612772a83812feac486f51b43151a958aefa434fc4afcf59d015e2c",
       "snapshot": {
-        "README.md": "27fc319a661748e60565fd93bfac0fa20ff9bd6bfa1229d5c0cc80249703ca7c"
+        "README.md": "c34acc4f5c5dd81cb3063de49c1dbaecce4884eaa1eeb601be1f2526f108a564"
       },
-      "head": "eaabefd6a2a0197c7773f9560f51bc62557bdf0f",
+      "head": "46918b9c6d158c5aa247ca685749e3843bb65984",
       "outcome": "no-change",
-      "reason": "README and Unreleased changelog document the existing TanStack Router setup and link to its canonical architecture guide; no registered skill guidance changed.",
+      "reason": "Corrects root configuration and README descriptions of existing session and lockout environment overrides; no agent skill source, example, or planning guidance changed. Application behavior is unchanged.",
       "evidence": [
-        "Changed: README.md at eaabefd6a2a0197c7773f9560f51bc62557bdf0f"
+        "Changed: README.md at 46918b9c6d158c5aa247ca685749e3843bb65984"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9847893bdf77bc033d4cab14397962d6a79e0ce8649a92d4204f033cc80880fe",
+      "fingerprint": "a62a6895efbc6b1d0c5928f2f9746e8abb2de1657f7432a8ac98c7192dc875f5",
       "snapshot": {
-        "CHANGELOG.md": "76e9c7cfb553ef55afd582d5af860aef7f1fc0129e1d79f3f1fb71ccc1e22444"
+        "CHANGELOG.md": "5b477cb7bb08f9b05d5ad724789cabcb12e80ef4b8f2531692fe82b917a9641f"
       },
-      "head": "4bbd93f5c7f50267e7e7063a7d3821c8c00cc171",
+      "head": "b1f77b379344657742288c4840daedb4b9a75d5d",
       "outcome": "no-change",
-      "reason": "Added PR #345 to the existing Unreleased note for traceability; this changes no Elysia guidance, skill mapping, or planning decision.",
+      "reason": "Added the assigned PR number to the Unreleased bullet; no agent-skill source, example, or planning guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 4bbd93f5c7f50267e7e7063a7d3821c8c00cc171"
+        "Changed: CHANGELOG.md at b1f77b379344657742288c4840daedb4b9a75d5d"
       ]
     },
     "source:COMMANDS.md": {
@@ -5107,15 +5107,15 @@
       ]
     },
     "source:.env.example": {
-      "fingerprint": "6c730a46817fbb1df5449baad9b0701d681c67ebdf85cfaa22f9690d3f7b4280",
+      "fingerprint": "fd4ff39a4722a9a07715aec69214d9ff31ebad0ee0667baef5d566944ae3b6f9",
       "snapshot": {
-        ".env.example": "d2061c9c45e2546403080228cdadd09d0763bcdc8c659a9042a7c47471403caa"
+        ".env.example": "be3d48992e017207656fd5de0e04982370470ebd8df4baa034b60a6d0a0f19c8"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "46918b9c6d158c5aa247ca685749e3843bb65984",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Corrects root configuration and README descriptions of existing session and lockout environment overrides; no agent skill source, example, or planning guidance changed. Application behavior is unchanged.",
       "evidence": [
-        "Changed: .env.example at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: .env.example at 46918b9c6d158c5aa247ca685749e3843bb65984"
       ]
     },
     "source:docs/session/2026-10-26-docs-restructure.md": {
