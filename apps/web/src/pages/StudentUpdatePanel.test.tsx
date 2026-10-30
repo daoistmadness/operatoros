@@ -25,7 +25,7 @@ vi.mock("../hooks/useStudentQueries", () => ({
 }));
 vi.mock("../api/students", () => studentApi);
 
-import { StudentUpdatePanel } from "./UploadCenter";
+import { StudentUpdatePanel } from "../components/upload/StudentUpdatePanel";
 
 const auth: AuthContextValue = { user: null, loading: false, authenticated: true, can: () => false, login: vi.fn(), logout: vi.fn() };
 const unchanged = { id: 1, source_row: 17, classification: "NO_CHANGE", payload: { "Legal Name": "Synthetic Student A", NIPD: "001234" }, differences: {}, errors: [] };

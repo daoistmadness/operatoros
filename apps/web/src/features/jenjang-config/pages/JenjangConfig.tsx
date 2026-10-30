@@ -3,6 +3,8 @@ import { AppLink as Link } from '../../../components/AppLink';
 import { AlertTriangle, CheckCircle2, Clock3, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../../../api";
+import { fetchAvailableJenjang } from "../../../api/jenjangConfig";
+import type { AvailableJenjangResponse } from "@operatoros/contracts/config";
 import { useAuth } from "../../../context/AuthContext";
 import { getPageApiError } from "../../../lib/api/errors";
 import { PageHeader } from "../../../components/common/page-header";
@@ -57,9 +59,7 @@ export type JenjangConfigPayload = {
   unconfigured: string[];
 };
 
-export type AvailableJenjangPayload = {
-  jenjang_list: string[];
-};
+export type AvailableJenjangPayload = AvailableJenjangResponse;
 
 type NormalizedJenjangConfig = {
   availableJenjangs: string[];
@@ -155,9 +155,9 @@ function JenjangConfig() {
     try {
       const [configResponse, availableResponse] = await Promise.all([
         api.get<JenjangConfigPayload>("/api/config/jenjang"),
-        api.get<AvailableJenjangPayload>("/api/config/jenjang/available"),
+        fetchAvailableJenjang(),
       ]);
-      const normalized = normalizeJenjangPayload(configResponse.data, availableResponse.data);
+      const normalized = normalizeJenjangPayload(configResponse.data, availableResponse);
       if (requestId === requestIdRef.current) setData(normalized);
       return normalized;
     } catch (err) {

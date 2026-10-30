@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), delete: vi.fn() }));
 vi.mock("../api", () => ({ default: api }));
+const jenjangConfigApi = vi.hoisted(() => ({ fetchAvailableJenjang: vi.fn() }));
+vi.mock("../api/jenjangConfig", () => jenjangConfigApi);
 
 import HebConfig from "./HebConfig";
 
@@ -12,13 +14,12 @@ describe("HEB configuration authorship", () => {
   let root: Root;
 
   beforeEach(() => {
-    api.get.mockImplementation(async (path: string) => ({
-      data: path === "/api/config/jenjang/available"
-        ? { jenjang_list: ["SMP"] }
-        : { heb_by_jenjang: [{ jenjang: "SMP", heb: 10, auto_heb: 10, source: "auto" }] },
+    api.get.mockImplementation(async () => ({
+      data: { heb_by_jenjang: [{ jenjang: "SMP", heb: 10, auto_heb: 10, source: "auto" }] },
       status: 200,
       headers: {},
     }));
+    jenjangConfigApi.fetchAvailableJenjang.mockResolvedValue({ jenjang_list: ["SMP"] });
     api.put.mockResolvedValue({ data: {}, status: 200, headers: {} });
     host = document.createElement("div");
     document.body.append(host);

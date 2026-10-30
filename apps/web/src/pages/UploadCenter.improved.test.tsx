@@ -26,7 +26,7 @@ vi.mock("../hooks/useStudentQueries", async () => {
 
 function renderRoster() {
   // Dynamic import after mock
-  return import("./UploadCenter").then(({ RosterImportPanel }) => {
+  return import("../components/upload/RosterImportPanel").then(({ RosterImportPanel }) => {
     const client = createTestQueryClient();
     const html = renderToStaticMarkup(
       <QueryClientProvider client={client}>
@@ -40,7 +40,7 @@ function renderRoster() {
 }
 
 describe("Roster import improved UX - static contract", () => {
-  const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "./UploadCenter.tsx"), "utf8");
+  const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../components/upload/RosterImportPanel.tsx"), "utf8");
 
   it("has prominent upload card with drag-and-drop and Choose XLSX button", () => {
     expect(source).toContain("Choose XLSX file");

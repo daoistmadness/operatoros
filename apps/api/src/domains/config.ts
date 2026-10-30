@@ -1,5 +1,5 @@
 import { t } from "elysia";
-import { HebOverrideWriteRequestSchema } from "@operatoros/contracts/config";
+import { AvailableJenjangResponseSchema, HebOverrideWriteRequestSchema } from "@operatoros/contracts/config";
 import { inTransaction } from "@operatoros/db";
 import { authorize, readCookie, requestContext, SESSION_COOKIE_NAME, type AuthContext, type CurrentUser } from "../auth/service";
 import { actor } from "./core";
@@ -117,7 +117,7 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
   app.get("/api/config/jenjang/available", (ctx: Context) => {
     if (!currentUser(context, ctx)) return { detail: "Authentication required" };
     return { jenjang_list: rows(context, "SELECT DISTINCT trim(jenjang) AS jenjang FROM students WHERE jenjang IS NOT NULL AND trim(jenjang) <> '' ORDER BY jenjang").map((item) => item.jenjang) };
-  });
+  }, { response: { 200: AvailableJenjangResponseSchema } });
   app.put("/api/config/jenjang/:jenjang", (ctx: Context) => {
     const user = actor(context, ctx, { role: "admin" }); if (!user) return { detail: "Insufficient permissions" };
     const key = ctx.params.jenjang.trim(); const cutoff = ctx.body.cutoff_time.trim();
