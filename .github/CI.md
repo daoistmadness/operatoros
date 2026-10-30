@@ -2,13 +2,13 @@
 
 ## Workflows
 
-[`ci.yml`](workflows/ci.yml) is the single repository-owned workflow. On every PR, merge group, and push to `main`, `master`, or `develop`, `preflight` runs before API checks, E2E scope selection, and the complete browser/API smoke suite. The remaining frontend checks run independently. No path exclusions apply. Keep the six existing required check names and add `preflight` as a seventh required check before merging this workflow change.
+[`ci.yml`](workflows/ci.yml) is the single repository-owned workflow. On every PR, merge group, and push to `main`, `master`, or `develop`, `preflight` runs before API checks, E2E scope selection, and the complete browser/API smoke suite. The remaining frontend checks run independently. No path exclusions apply. The `main` ruleset requires all seven checks listed under Security settings and rollback for pull requests targeting `main`.
 
 Pull-request label changes also trigger the workflow so `skip-changelog` takes effect immediately. Any label change reruns the required jobs.
 
 The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs preflight before the complete browser/API smoke suite. Scheduled release and audit jobs do not depend on preflight. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
 
-The `preflight` job validates Markdown links and organization, validates agent skills, runs the Intent maintainer check against the event base, and checks the pull-request changelog. It fetches the pull-request, merge-group, or push base before the maintainer check. A first push with an all-zero `before` SHA falls back to the event SHA. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset must require `preflight` so a failed gate cannot be treated as a successful skipped check.
+The `preflight` job validates Markdown links and organization, validates agent skills, runs the Intent maintainer check against the event base, and checks the pull-request changelog. It fetches the pull-request, merge-group, or push base before the maintainer check. A first push with an all-zero `before` SHA falls back to the event SHA. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset requires `preflight` so a failed gate cannot pass as a successful skipped check.
 
 The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.4's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates docs structure and the index, tests documentation checker fixtures, checks current developer commands, and verifies every package file in the agent-skills tarball. It installs the tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter after preflight passes: every browser scenario, API smoke check, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
 
@@ -45,15 +45,13 @@ The E2E job keeps its fixed admin credentials scoped to the test job. The runner
 
 Workflow files request only `contents: read`. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
 
-The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires a PR, up-to-date status checks, zero approving reviews, and no code-owner or last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
+The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires pull requests and strict, up-to-date status checks. It requires zero approving reviews, no code-owner review, and no last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
 
-The current main ruleset requires these checks from their trusted GitHub integrations. Add `preflight` as a required GitHub Actions check, app ID `15368`, before merging this workflow change. Keep every existing check below unchanged.
+The active `main` ruleset requires these seven checks from their trusted GitHub integrations:
 
-- `api` and `frontend` (GitHub Actions, app ID `15368`);
+- `api`, `frontend`, and `preflight` (GitHub Actions, app ID `15368`);
 - `Select E2E scope`, `E2E full regression`, and `E2E regression result` (GitHub Actions, app ID `15368`);
 - `CodeQL` (GitHub Code Scanning, app ID `57789`).
-
-After that ruleset update, the required set contains the six checks above and `preflight`.
 
 `preflight` covers relative Markdown links, Markdown organization and index, the changelog rule, agent-skill validation, and Intent maintainer review. `api` covers frozen installation, the security audit, hk lint/architecture, Turbo workspace typechecks/tests (including security behavior)/production build, development-launcher typecheck, synthetic SQLite migration/fresh-schema tests, runtime health, TypeBox, architecture fixtures, and contract boundaries. `frontend` covers dependency consistency, package-manager regressions, UI/web boundaries, OpenAPI drift, documentation checker fixtures, current developer guidance, and the tarball consumer smoke test. No production credentials or real student data are needed. Weekly/manual full release validation remains an additional gate, not a required PR check that is skipped on ordinary PRs.
 
