@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "97ec62ee3cd7af6150b1f538598d479ad1c67bab94982a13bc58eda0c7000956",
+      "fingerprint": "74dd8f6e7bf693c103e00f8c0ab3f1cb79fab306a4c960634b648b0d704dd127",
       "snapshot": {
-        "CHANGELOG.md": "0a6dc50557cb7ca280e83abe05d75fa29c30d6284da58797e441a74e746d46d5"
+        "CHANGELOG.md": "bef615d922a098f438b23e40962da3376fb47d6c9f38fe1a82dfb7dc5761a3b6"
       },
-      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
+      "head": "0d18b461396670ad31aea287dbba72c99a1c5cd9",
       "outcome": "no-change",
-      "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
+      "reason": "Reviewed the changelog entry against the verified conflict-retry change and repository release-note rules; no maintainer skill guidance needs updating.",
       "evidence": [
-        "Changed: CHANGELOG.md at b564d7438f8247639ae32c51a5ecb649d15da781"
+        "Changed: CHANGELOG.md at 0d18b461396670ad31aea287dbba72c99a1c5cd9"
       ]
     },
     "source:COMMANDS.md": {
