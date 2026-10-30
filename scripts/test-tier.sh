@@ -113,6 +113,7 @@ case "$tier" in
     tooling_tests
     backend_full
     scenario_grep="$(bun -e 'const items=(await Bun.file(process.argv[1]).json()).browser_scenarios; console.log(items.length ? items.map(item=>"@"+item).join("|") : "@release")' "$scope_file")"
+    scenario_grep="${scenario_grep}|@data-reset"
     OPERATOROS_E2E_GREP="$scenario_grep" make -C "$repo" e2e-smoke
     ;;
   release)

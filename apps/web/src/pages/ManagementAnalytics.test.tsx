@@ -55,12 +55,12 @@ describe("ManagementAnalytics overview", () => {
     const view = await renderPage();
     await vi.waitFor(() => expect(view.textContent).toContain("Management Overview"));
     await vi.waitFor(() => expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]')).toBeTruthy());
+    await vi.waitFor(() => expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"] svg')).toBeTruthy(), { timeout: 5000 });
     expect(view.textContent).toContain("24");
     expect(view.textContent).toContain("92.5%");
     expect(view.textContent).toContain("84.5");
     const attendanceChart = view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]');
     expect(attendanceChart?.getAttribute("aria-label")).toBe("Attendance status distribution: Present 80, Late 10, Sakit 3, Izin 2, Alfa 5");
-    expect(attendanceChart?.querySelector("svg")).toBeTruthy();
     expect(view.querySelector('[aria-label="Attendance status colors"]')?.textContent).toContain("Sakit");
     const attendanceTable = Array.from(view.querySelectorAll("table")).find((table) => table.querySelector("caption")?.textContent === "Attendance status distribution");
     expect(Array.from(attendanceTable?.querySelectorAll("tbody tr") ?? [], (row) => row.textContent?.replace(/\s+/g, "").trim())).toEqual([

@@ -2385,15 +2385,15 @@
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.test.tsx": {
-      "fingerprint": "80deab61f1eba29d4b0ced945fd0e7297a37f01ce1943c4b975ebcdb44625f37",
+      "fingerprint": "75f6a46f11734734f363af30968ad5db15dbc54d15501b60274d186177e03360",
       "snapshot": {
-        "apps/web/src/pages/ManagementAnalytics.test.tsx": "0313533131fea34a55a090f4c6706b4a4646840f92ad8d13955acda7bab82014"
+        "apps/web/src/pages/ManagementAnalytics.test.tsx": "dfa5062551c15f0681aeb59a1b0e5b31980fd5511224c01877b55f50fe27d0f2"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "b9f743615e4636dac0f045d6ecac38e26f73a963",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
       "evidence": [
-        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at b9f743615e4636dac0f045d6ecac38e26f73a963"
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.tsx": {
@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "f461b1a658f91507f342810d3f2003131c52dbec3a4c96d83cb2161dd630b81c",
+      "fingerprint": "f94924dfb9c108a30574d88cfa19a1f08dbf6168dc5d3b1f28e397b7357d1ddf",
       "snapshot": {
-        "CHANGELOG.md": "1d5b36ce0bbe35e7acfe315e6fd9c46fefdd62a8ddfa152c8cdce4276396df1d"
+        "CHANGELOG.md": "1816ff8955d60cfd556a00dc51083c961b4b5d720ba3918a421432d1fbe5c863"
       },
-      "head": "af701b8c58df3f375c81bbcf1f668ab028d2d351",
+      "head": "2c1fb9c31ae24d7c747419a64787dede5b928f0b",
       "outcome": "no-change",
-      "reason": "Reviewed .env.example and CHANGELOG.md against apps/api/src/config.ts:79-80 and apps/api/src/app.ts:97-101; #347 only identifies this PR in the Unreleased entry, and neither file changes runtime behavior or agent-skill guidance.",
+      "reason": "The only new delta is adding PR number #348 to the existing changelog bullet. It records the same test-harness correction; it changes no runtime behavior or Elysia guidance. The validation evidence remains make test-pr and the focused reset-inclusive smoke passing, plus check:pre-push and push-time affected tests passing.",
       "evidence": [
-        "Changed: CHANGELOG.md at af701b8c58df3f375c81bbcf1f668ab028d2d351"
+        "Changed: CHANGELOG.md at 2c1fb9c31ae24d7c747419a64787dede5b928f0b"
       ]
     },
     "source:COMMANDS.md": {
@@ -8498,6 +8498,18 @@
       "reason": "Removed the unused grades compatibility re-export after searching current apps and packages found no references. This does not change existing guidance; web typecheck and diff check passed.",
       "evidence": [
         "Changed: apps/web/src/api/grades.compat.ts at 39d411e787838f58d548055cb7c576b26ec411e1"
+      ]
+    },
+    "source:scripts/test-tier.sh": {
+      "fingerprint": "b4023ce16a02a78ccf80a1c5f538db9cc80973e460f7965c9306a3234fbcb4fd",
+      "snapshot": {
+        "scripts/test-tier.sh": "26eb1ecd646ed47ffc3721041ef9eccf1f3044ab31a04ef12c34e2b173572e4c"
+      },
+      "head": "b9f743615e4636dac0f045d6ecac38e26f73a963",
+      "outcome": "no-change",
+      "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
+      "evidence": [
+        "Changed: scripts/test-tier.sh at b9f743615e4636dac0f045d6ecac38e26f73a963"
       ]
     }
   }
