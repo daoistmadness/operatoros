@@ -8484,6 +8484,18 @@
       "evidence": [
         "Changed: apps/web/src/pages/LegacyApiRoutes.test.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
+    },
+    "source:apps/web/src/api/grades.compat.ts": {
+      "fingerprint": "fcbee0c966171945c75af5d4d84466e0aeca9e8f4affcd49313530a1cf1d2e86",
+      "snapshot": {
+        "apps/web/src/api/grades.compat.ts": null
+      },
+      "head": "39d411e787838f58d548055cb7c576b26ec411e1",
+      "outcome": "no-change",
+      "reason": "Removed the unused grades compatibility re-export after searching current apps and packages found no references. This does not change existing guidance; web typecheck and diff check passed.",
+      "evidence": [
+        "Changed: apps/web/src/api/grades.compat.ts at 39d411e787838f58d548055cb7c576b26ec411e1"
+      ]
     }
   }
 }
