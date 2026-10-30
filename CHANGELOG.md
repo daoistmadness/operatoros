@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Include the disposable data-reset scenario in focused pull-request E2E validation.
 - Document optional UPP report and student IOM upload-size limits and defaults (#347).
 - Align CI documentation with the seven status checks enforced on `main` (#345).
 - Document configurable session timeout and account lockout settings (#346).
