@@ -8366,27 +8366,27 @@
       ]
     },
     "source:apps/web/src/components/upload/RosterImportPanel.tsx": {
-      "fingerprint": "6d2a51e2ac4b04c933e1cd05a57aaba8a0909b58c22f9482940a24a047409d40",
+      "fingerprint": "49bbab3e99867f379ce6ce782314ab968bcb1d36959f1345fa2b7a4790be7d86",
       "snapshot": {
-        "apps/web/src/components/upload/RosterImportPanel.tsx": "f2c1443a54a199755f4ac8d184ad396142bd143995a5141b1846dd386295056f"
+        "apps/web/src/components/upload/RosterImportPanel.tsx": "28e97076bd4815fd63685029a26a05e93d19a37b4fc80f19ed587d9caec2a200"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "e2f31223cd3a7cf60062c281ccba616a178c42c7",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Trimmed only trailing blank lines in the extracted panels. Existing upload flow and guidance remain unchanged; git diff --check passes.",
       "evidence": [
-        "Changed: apps/web/src/components/upload/RosterImportPanel.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/web/src/components/upload/RosterImportPanel.tsx at e2f31223cd3a7cf60062c281ccba616a178c42c7"
       ]
     },
     "source:apps/web/src/components/upload/StudentUpdatePanel.tsx": {
-      "fingerprint": "46cabd6cd28e13f1b86a70a4cd82f58df56e48070d3e330efe6412b5b6223544",
+      "fingerprint": "4a6f02313831abb411ed261c69350d3db78d85ffe606508bc365f69d115f3161",
       "snapshot": {
-        "apps/web/src/components/upload/StudentUpdatePanel.tsx": "bb016a6f09847bd4d7517a9c6163ab8b9bd07b3aa457739c50372fd0b0e24bcc"
+        "apps/web/src/components/upload/StudentUpdatePanel.tsx": "261dc643e5e0de0f5bfd3cd696e7806549810313c813e982e5c47d4d53b47101"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "e2f31223cd3a7cf60062c281ccba616a178c42c7",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Trimmed only trailing blank lines in the extracted panels. Existing upload flow and guidance remain unchanged; git diff --check passes.",
       "evidence": [
-        "Changed: apps/web/src/components/upload/StudentUpdatePanel.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/web/src/components/upload/StudentUpdatePanel.tsx at e2f31223cd3a7cf60062c281ccba616a178c42c7"
       ]
     },
     "source:apps/web/src/lib/download.ts": {
