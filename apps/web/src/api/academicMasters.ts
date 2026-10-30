@@ -51,6 +51,6 @@ export async function fetchAcademicMasters(): Promise<{
   return { jenjangs: jenjangs.data, programs: programs.data, grades: grades.data, classes: classes.data };
 }
 
-export async function fetchAcademicPrograms(): Promise<AcademicMasterProgram[]> {
-  return (await apiRequest<AcademicMasterProgram[]>({ path: "/api/academic-masters/programs", method: "GET" })).data;
+export async function fetchAcademicPrograms(signal?: AbortSignal): Promise<AcademicMasterProgram[]> {
+  return (await apiRequest<AcademicMasterProgram[]>({ path: "/api/academic-masters/programs", method: "GET", ...(signal ? { signal } : {}) })).data;
 }

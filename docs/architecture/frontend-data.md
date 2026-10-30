@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-29
+last_reviewed: 2026-10-30
 ---
 
 # Frontend data architecture
@@ -26,7 +26,7 @@ Every server-side request input must be represented in its key. Invalidation may
 
 The shared policy defines authentication as immediately stale, operational data as fresh for 30 seconds, records for two minutes, analytics for five minutes, and reference data for ten minutes. The application client applies domain defaults by query-key prefix; analytics is also the fallback for unclassified queries. Explicit query options can override these defaults. The client retains unused queries for thirty minutes. Window-focus refetch is disabled globally; the health query opts in to a Query-managed 10-second poll, backs off to 60 seconds after repeated failures, and pauses while the document is hidden. A failed network request or 5xx response receives one retry. Authentication, permission, and other 4xx responses are never retried. Tests use a new client with retries disabled and no retained cache.
 
-Current-user, selected student, attendance, health, and dashboard query functions pass TanStack Query's `AbortSignal` to the shared API client. Cancellation is best-effort for query functions that still use legacy APIs. The shared browser request uses `cache: "no-store"`, and the API sets `Cache-Control: private, no-store` on `/api/` responses so authenticated data is not stored by the browser's HTTP cache.
+Current-user, selected student, attendance, health, dashboard, staff detail, and query functions in `useAnalyticsQueries.ts` pass TanStack Query's `AbortSignal` to the shared API client. The attendance follow-up queue aborts its list and summary reads when filters change or its protected route unmounts. Cancellation is best-effort for query functions that still use legacy APIs. The shared browser request uses `cache: "no-store"`, and the API sets `Cache-Control: private, no-store` on `/api/` responses so authenticated data is not stored by the browser's HTTP cache.
 
 The existing API client remains responsible for credentials, typed `ApiError` values, and the global unauthorized event. A 401 clears the current-user cache and protected query caches so existing route guards return to login. A 403 remains a query error and is rendered by the screen as permission denied/request failure state.
 
@@ -36,7 +36,7 @@ Each browser tab owns a separate in-memory `QueryClient`. Successful login and c
 
 A receiving tab clears the current-user cache, cancels outstanding queries, removes every non-auth query, and revalidates `/api/auth/me` before applying another session. The logging-in tab also clears protected queries before applying its new user. The server session and its database role remain authoritative.
 
-Tabs additionally revalidate `/api/auth/me` on window focus and visibility changes. Paired events share one request. Before verification, in-flight protected queries are cancelled and the app shell is covered, inert, and hidden from assistive technology while remaining mounted so unsaved drafts survive. On a confirmed same-user session, cached data remains and only stale active protected queries are refetched. A changed identity or authorization clears protected caches before the new user is applied. If verification fails for a network reason, the shell stays covered and offers a retry. An authoritative 401 clears the session and returns the route guards to login.
+Tabs additionally revalidate `/api/auth/me` on window focus and visibility changes. Paired events share one request. Before verification, in-flight protected queries are cancelled and the app shell is covered, inert, and hidden from assistive technology while remaining mounted so same-user drafts survive. On a confirmed same-user session, cached data remains and only stale active protected queries are refetched. A changed identity or authorization clears protected caches before the new user is applied; the protected route subtree then remounts for the new identity, role, or capability set, clearing local drafts and aborting mounted reads that consume their signal. If verification fails for a network reason, the shell stays covered and offers a retry. An authoritative 401 clears the session and returns the route guards to login.
 
 ## Mutations and invalidation
 

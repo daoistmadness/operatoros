@@ -40,6 +40,11 @@ function AppShellContent() {
   }, []);
   const { pathname } = useLocation();
   const auth = useAuth();
+  const protectedContentKey = JSON.stringify([
+    auth.user?.id ?? null,
+    auth.user?.role ?? null,
+    [...(auth.user?.capabilities ?? [])].sort(),
+  ]);
   const { preferences, setSidebarCollapsed } = useUiPreferences();
   const navigationCollapsed = preferences.sidebarCollapsed;
   const { isSingleUserMode } = useDeploymentMode();
@@ -227,7 +232,7 @@ function AppShellContent() {
                 </ol>
               </nav>
             )}
-            {accessDenied ? <AccessDenied /> : <SuspendedOutlet />}
+            {accessDenied ? <AccessDenied /> : <SuspendedOutlet key={protectedContentKey} />}
           </div>
         </main>
       </div>

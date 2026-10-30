@@ -41,8 +41,8 @@ export default function StaffDetail() {
   const { id = "" } = useParams({ strict: false });
   const { can } = useAuth();
   const queryClient = useQueryClient();
-  const detail = useQuery({ queryKey: queryKeys.staff.detail(id), queryFn: () => fetchStaffDetail(id), enabled: Boolean(id) });
-  const sensitive = useQuery({ queryKey: queryKeys.staff.sensitive(id), queryFn: () => fetchSensitiveStaff(id), enabled: Boolean(id) && can("view_staff_sensitive") });
+  const detail = useQuery({ queryKey: queryKeys.staff.detail(id), queryFn: ({ signal }) => fetchStaffDetail(id, signal), enabled: Boolean(id) });
+  const sensitive = useQuery({ queryKey: queryKeys.staff.sensitive(id), queryFn: ({ signal }) => fetchSensitiveStaff(id, signal), enabled: Boolean(id) && can("view_staff_sensitive") });
   const history = useQuery({ queryKey: queryKeys.staff.history(id), queryFn: () => fetchStaffHistory(id), enabled: Boolean(id) && can("view_staff_audit") });
   const schoolUnits = useQuery({ queryKey: queryKeys.staff.schoolUnits, queryFn: fetchSchoolUnits, enabled: Boolean(id) && can("view_staff") });
   const jenjangs = useQuery({ queryKey: queryKeys.academicMasters.jenjangs, queryFn: fetchJenjangOptions });

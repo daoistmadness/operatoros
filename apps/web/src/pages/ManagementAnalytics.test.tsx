@@ -10,6 +10,7 @@ import * as academicApi from "../api/academicAnalytics";
 import * as attendanceApi from "../api/attendanceAnalytics";
 import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import { createTestQueryClient } from "../lib/query/queryClient";
+import { queryKeys } from "../lib/query/queryKeys";
 
 vi.mock("react-chartjs-2", () => ({ Bar: () => <div data-testid="bar-chart" /> }));
 vi.mock("../api/analytics", () => ({ fetchAnalyticsFilters: vi.fn() }));
@@ -30,10 +31,12 @@ const overview = {
 
 let container: HTMLDivElement;
 let root: Root;
+let queryClient: ReturnType<typeof createTestQueryClient>;
 
 async function renderPage(currentAuth = auth) {
   container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container);
-  await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={createTestQueryClient()}><AuthContext.Provider value={currentAuth}><ManagementAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
+  queryClient = createTestQueryClient();
+  await act(async () => { root.render(<MemoryRouter><QueryClientProvider client={queryClient}><AuthContext.Provider value={currentAuth}><ManagementAnalytics /></AuthContext.Provider></QueryClientProvider></MemoryRouter>); });
   return container;
 }
 
@@ -46,7 +49,7 @@ describe("ManagementAnalytics overview", () => {
     vi.mocked(academicApi.fetchAcademicAnalyticsOptions).mockResolvedValue({ academicYears: [], jenjangs: [], classes: [{ id: 7, name: "1A", jenjangId: 1 }], subjects: [], assessmentTypes: [] } as never);
     vi.mocked(attendanceApi.fetchAttendanceAnalyticsOptions).mockResolvedValue({ academicYears: [], jenjangs: [], classes: [] } as never);
   });
-  afterEach(async () => { if (root) await act(async () => root.unmount()); container?.remove(); vi.unstubAllGlobals(); });
+  afterEach(async () => { if (root) await act(async () => root.unmount()); queryClient?.clear(); container?.remove(); vi.unstubAllGlobals(); });
 
   it("renders server values and canonical drill-through links", async () => {
     const view = await renderPage();
@@ -69,7 +72,25 @@ describe("ManagementAnalytics overview", () => {
     ]);
     expect(view.querySelector('a[href="/analytics/attendance?academic_year_id=10"]')).toBeTruthy();
     expect(view.querySelector('a[href="/analytics/academic?academic_year_id=10"]')).toBeTruthy();
-    expect(overviewApi.fetchManagementOverview).toHaveBeenCalledWith({ academic_year_id: 10, jenjang_id: null, class_id: null });
+    const overviewRequest = vi.mocked(overviewApi.fetchManagementOverview).mock.calls.find(([request]) => request.academic_year_id === 10);
+    expect(overviewRequest?.[0]).toEqual({ academic_year_id: 10, jenjang_id: null, class_id: null });
+    expect(overviewRequest?.[1]).toBeInstanceOf(AbortSignal);
+  });
+
+  it("aborts an in-flight overview request when its query is cancelled", async () => {
+    let signal: AbortSignal | undefined;
+    vi.mocked(overviewApi.fetchManagementOverview).mockImplementation((_filters, requestSignal) => {
+      signal = requestSignal;
+      return new Promise<never>(() => {});
+    });
+    await renderPage();
+    await vi.waitFor(() => expect(signal).toBeInstanceOf(AbortSignal));
+
+    await act(async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.analytics.managementOverview({ academic_year_id: 10, jenjang_id: null, class_id: null }) });
+    });
+
+    expect(signal?.aborted).toBe(true);
   });
 
   it("shows section-level authorization without exposing unavailable metrics", async () => {

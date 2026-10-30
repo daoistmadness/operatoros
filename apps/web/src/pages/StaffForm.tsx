@@ -103,8 +103,8 @@ export default function StaffForm() {
   const client = useQueryClient();
   const submissionInFlight = useRef(false);
   const allowNextNavigation = useRef<() => void>(() => {});
-  const detail = useQuery({ queryKey: queryKeys.staff.detail(id), queryFn: () => fetchStaffDetail(id), enabled: isEdit });
-  const sensitive = useQuery({ queryKey: queryKeys.staff.sensitive(id), queryFn: () => fetchSensitiveStaff(id), enabled: isEdit && can("view_staff_sensitive") });
+  const detail = useQuery({ queryKey: queryKeys.staff.detail(id), queryFn: ({ signal }) => fetchStaffDetail(id, signal), enabled: isEdit });
+  const sensitive = useQuery({ queryKey: queryKeys.staff.sensitive(id), queryFn: ({ signal }) => fetchSensitiveStaff(id, signal), enabled: isEdit && can("view_staff_sensitive") });
   const showSensitive = can("edit_sensitive_staff_fields") && (!isEdit || can("view_staff_sensitive") && Boolean(sensitive.data));
 
   const mutation = useMutation({

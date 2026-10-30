@@ -14,7 +14,7 @@ export type StudentTrendFilters = {
   page_size?: number;
 };
 
-export async function fetchStudentTrendInsights(filters: StudentTrendFilters): Promise<StudentTrendInsightsResponse> {
+export async function fetchStudentTrendInsights(filters: StudentTrendFilters, signal?: AbortSignal): Promise<StudentTrendInsightsResponse> {
   const response = await apiRequest<StudentTrendInsightsResponse>({
     path: "/api/analytics/student-trends",
     params: {
@@ -29,6 +29,7 @@ export async function fetchStudentTrendInsights(filters: StudentTrendFilters): P
       page: filters.page ?? 1,
       page_size: filters.page_size ?? 25,
     },
+    ...(signal ? { signal } : {}),
   });
   return response.data;
 }

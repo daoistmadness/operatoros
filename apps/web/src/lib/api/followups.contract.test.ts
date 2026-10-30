@@ -4,7 +4,9 @@ import {
   addFollowUpNote,
   createFollowUpCase,
   fetchFollowUpCandidates,
+  fetchFollowUpCases,
   fetchFollowUpDetail,
+  fetchFollowUpMetrics,
   updateFollowUpState,
 } from './followups';
 
@@ -48,6 +50,33 @@ describe('attendance follow-up API', () => {
       path: '/api/attendance/followups/42/notes',
       method: 'POST',
       body: notePayload,
+    });
+  });
+
+  it("forwards cancellation to follow-up list and summary requests", async () => {
+    const signal = new AbortController().signal;
+    vi.mocked(apiRequest)
+      .mockResolvedValueOnce({ data: { total: 0, items: [] }, status: 200, headers: {} })
+      .mockResolvedValueOnce({ data: { total: 0, items: [] }, status: 200, headers: {} })
+      .mockResolvedValueOnce({ data: {}, status: 200, headers: {} });
+
+    await fetchFollowUpCandidates({ exception_kind: "LATE" }, signal);
+    await fetchFollowUpCases({ status: "OPEN" }, signal);
+    await fetchFollowUpMetrics(signal);
+
+    expect(apiRequest).toHaveBeenNthCalledWith(1, {
+      path: "/api/attendance/followups/candidates",
+      params: { exception_kind: "LATE" },
+      signal,
+    });
+    expect(apiRequest).toHaveBeenNthCalledWith(2, {
+      path: "/api/attendance/followups",
+      params: { status: "OPEN" },
+      signal,
+    });
+    expect(apiRequest).toHaveBeenNthCalledWith(3, {
+      path: "/api/attendance/followups/metrics/summary",
+      signal,
     });
   });
 });

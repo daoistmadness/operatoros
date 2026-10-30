@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "dd1d81706b908b5c9bc34b7cd1687acfb1aad70366bf087262dd1d3d9bb6a248",
+      "fingerprint": "c1dd4008ef147f5f8ea0642f5207e4aa0147ecd145074e6841ca315e787a4b89",
       "snapshot": {
         ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
+        "AGENTS.md": "c89c723df35516cc31bae86328c3fbe507e076406812064daefff0c70fe591fe",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
         "bun.lock": "5f991cab9384cce1e70dc3e2be0c3fc7fed53dfead8d491a5b33edd9d8050405",
@@ -44,22 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
       "outcome": "no-change",
-      "reason": "The lockfile changes add frontend dependencies for the approved React work. apps/api/package.json still pins Elysia 1.4.29, and the only API behavior change adds a tested private, no-store cache header without changing Elysia APIs or the existing auth and Origin contract. The skill still directs OperatorOS work to its installed version and project security sources.",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Compared apps/api/package.json with 4c855d2d14a1211a2c9d80488630da6fcaa3df7b; Elysia remains pinned to 1.4.29.",
-        "Reviewed the bun.lock additions and confirmed TanStack Form, TanStack Virtual, Unovis, and Redact are frontend dependencies; the Elysia dependency did not change.",
-        "apps/api/src/security/http.ts adds only Cache-Control: private, no-store for /api/; apps/api/tests/security.test.ts covers that behavior and the health-response boundary.",
-        "The completed mise run check:full, workspace typecheck, and API security tests are recorded in docs/reference/frontend-release-validation.md."
+        "Changed: AGENTS.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "e701d3bd68876811ba3092c4ae96bcd9b3302ce6d3a5f1bba661bec0349313d1",
+      "fingerprint": "f5ccfa5c9e9449004a6f8a2ca7b22213519206d0a28aee4d6700d2ada34ae428",
       "snapshot": {
         ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "f9611e253ae9307ee0f7213ad857d1adb21895e781c131fad417c244b44c5efa",
+        "AGENTS.md": "c89c723df35516cc31bae86328c3fbe507e076406812064daefff0c70fe591fe",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -99,13 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
       "outcome": "no-change",
-      "reason": "The three cumulative planning records remain accurate: they describe the only registered skill as Elysia backend guidance and explicitly limit prior assessment to that skill. This PR implements the requested React frontend phases and does not author or change skills, so the records need no coverage or decision changes.",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Read _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; they consistently list only the existing Elysia backend skill and state that other domains are unassessed.",
-        "Compared the current skill package and all three planning records with 4c855d2d14a1211a2c9d80488630da6fcaa3df7b..ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; no skill or planning-record files changed.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and the Chromium and Firefox smoke suites passed."
+        "Changed: AGENTS.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2387,17 +2382,15 @@
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.test.tsx": {
-      "fingerprint": "409626c989f8f2aaac17025eef6ce67fe459d4f4d80b1bcf2b969332fd01a9cc",
+      "fingerprint": "80deab61f1eba29d4b0ced945fd0e7297a37f01ce1943c4b975ebcdb44625f37",
       "snapshot": {
-        "apps/web/src/pages/ManagementAnalytics.test.tsx": "db0221ff04fdbe9e39869e1d3923606eb612b6c30dae948bf33801cf76b6e6ac"
+        "apps/web/src/pages/ManagementAnalytics.test.tsx": "0313533131fea34a55a090f4c6706b4a4646840f92ad8d13955acda7bab82014"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/pages/ManagementAnalytics.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.tsx": {
@@ -2551,31 +2544,27 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "d40edfa7d557d83d8d1a0db8a8d60aedf3f6cbfc2a18bd3718f5f67db6367efa",
+      "fingerprint": "bb03e941d4647071210578007a2354b2a3a094b0f3797ae489a9975332bc46d5",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "c94c53204ca0f86619410ed379e60a957005f1dcdd34d4e42d686200bbeb089e"
+        "apps/web/src/pages/StaffDetail.tsx": "d056563c6e8115628de706360d040c1b8a2beae304d8fbedd2ecfdbb418683e4"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/pages/StaffDetail.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/StaffDetail.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
-      "fingerprint": "abedb5f569ed29d353336edf0420c7eaef19e982da7a718486a5e8fff117bd41",
+      "fingerprint": "a0e0c0063da3ff4bc0bfb387885949dd7c36af34eb458e1dfbd9d88273b30274",
       "snapshot": {
-        "apps/web/src/pages/StaffForm.tsx": "a7cc7ab601504343c1e7b3d3cff07026f076631648561873019796a38a19b001"
+        "apps/web/src/pages/StaffForm.tsx": "fd419562be3dbc7fb56b034f41980cb9b8c450c61b3e6aeb5fd933726e2026ee"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/pages/StaffForm.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/StaffForm.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/pages/StaffImport.tsx": {
@@ -2978,17 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a517d7cf1fe14af0a576de5dfcd107c20937a6bb384ed421b80612eb010b9116",
+      "fingerprint": "00093d44f8c8a41bc39eac05f381ff5ce3e3eee33972f0daab69f814bc11e85e",
       "snapshot": {
-        "CHANGELOG.md": "fdaa5740b633fbc0f4bbcb23d10ae5a21d158703ff76b83bf28c09fa859d1873"
+        "CHANGELOG.md": "1cc2ce4a8affcf47a8c1b9741735003512db5657e2c3cb447720b67e1c8c1d91"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed CHANGELOG.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: CHANGELOG.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:COMMANDS.md": {
@@ -3340,17 +3327,15 @@
       ]
     },
     "source:docs/architecture/frontend-data.md": {
-      "fingerprint": "a7cc36d298ad2859b1fa0575971933c52f31bd3203b3676cb0fbff8e57d5bc2e",
+      "fingerprint": "8a9362696c34b3425e6d623d4592690f2300c134cd448e87d7dcc9cf5cc634a0",
       "snapshot": {
-        "docs/architecture/frontend-data.md": "d12973c96bc2f3e6d948dd845b938b084d143304ea26624c7ec6537f658baff4"
+        "docs/architecture/frontend-data.md": "4b9ad949ed187a1b50a36a151f53f3fbbd17580b967762b55fc8540989ca9b28"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed docs/architecture/frontend-data.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/architecture/frontend-data.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:docs/architecture/frontend.md": {
@@ -5303,15 +5288,15 @@
       ]
     },
     "source:apps/web/src/api/staff.ts": {
-      "fingerprint": "c6e52a1630150b6c9630fe18910994dcd3d320d402b34903d8f57ae62154ae62",
+      "fingerprint": "8fbf2f215d04dd33bae73d95f677bf799884ecdf13136c4f1dc1d8978bf41b68",
       "snapshot": {
-        "apps/web/src/api/staff.ts": "3d49405c34268b1354eeef59ea3b7cffcf6d700c627ab5bd15340f5d52c2cb63"
+        "apps/web/src/api/staff.ts": "8cfd96f6bba62dfbb41012e5085644dbcdb27dad27ff73b797a5db3d91c26b6c"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Changed: apps/web/src/api/staff.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/web/src/api/staff.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
@@ -5925,27 +5910,27 @@
       ]
     },
     "source:apps/web/src/lib/api/followups.contract.test.ts": {
-      "fingerprint": "d7272857a156691d4f01609099d24085133c0cd3b3bce8c3faed7b980c2ce776",
+      "fingerprint": "d8ff6b8f661a6bd6717835c96f438be69334f2edbb90d6c8736abf2ba5806a4c",
       "snapshot": {
-        "apps/web/src/lib/api/followups.contract.test.ts": "944760b24a2e550b60e059f8c04431958872f042213342aa2cca6e21dd5bc470"
+        "apps/web/src/lib/api/followups.contract.test.ts": "a2abfdc7cf9bb422af121ccd541212b00f5f102dd5c9424116a07464c94d5019"
       },
-      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
       "outcome": "no-change",
-      "reason": "These API and browser tests do not change agent skill guidance.",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/followups.contract.test.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+        "Changed: apps/web/src/lib/api/followups.contract.test.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/lib/api/followups.ts": {
-      "fingerprint": "53300282a90d985b948444e22a1c892c7bf945dcdc7b06e992c306e4bebefb4c",
+      "fingerprint": "54aba90b2ce62d380e787c83bf8a546b42072d988999702bd3d92debd0e3d93d",
       "snapshot": {
-        "apps/web/src/lib/api/followups.ts": "077b672e2f10f6d6f078ffd7ef98d9a4e75f9b1945b925432dd432805284c8e7"
+        "apps/web/src/lib/api/followups.ts": "7a06ac66018037dab1370fbdf745a0dd2a7d8270f0dde642a9577029b6c64de8"
       },
-      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
       "outcome": "no-change",
-      "reason": "These API and browser tests do not change agent skill guidance.",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/followups.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+        "Changed: apps/web/src/lib/api/followups.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/api/src/auth/routes.ts": {
@@ -6021,17 +6006,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.tsx": {
-      "fingerprint": "6d6c6b377e7a705377054601e54ebc47af936e55eb25a8cdfe1ce62dea45571a",
+      "fingerprint": "64f402ddf216c797199302a09b15e5d97408da40e3a71500abac55960faeb55e",
       "snapshot": {
-        "apps/web/src/components/AppShell.tsx": "6e13a3f414dd5c80bddaa32798eb980f9426fd06e14ea4de7ac7d03e6ec7a39d"
+        "apps/web/src/components/AppShell.tsx": "8e242b2329e6e2e8719f82d36c9c7943267da614211571f61c0e3fa2be48fc8b"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/components/AppShell.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/AppShell.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/components/NotFoundPage.tsx": {
@@ -7128,17 +7111,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
-      "fingerprint": "66c4cae83a3c70f0f99dd039de500090afebb51ebee29b79a2fe8ea57ba517c1",
+      "fingerprint": "9524d88dcbc8808c700db19fadd29f6a6df9f31113e2d2604d93273c5f466b6a",
       "snapshot": {
-        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "b622fc3c7e364e6c2923295614825201e62972f8cf392ca2875f5e6646f4ee41"
+        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "8cb1170f31c2ba48eca1e4d1af20d6d030f498fcdbd9379d2a203a7f8799beda"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/components/AppShell.auth-transitions.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:scripts/check-pre-push.sh": {
@@ -7525,17 +7506,15 @@
       ]
     },
     "source:apps/web/src/hooks/useAnalyticsQueries.ts": {
-      "fingerprint": "df7309fd2b4fd4bc8492d4b47314a29ee9ecb3656ba1e43f5fc6e0603b4d72be",
+      "fingerprint": "eb93d73ed7f53040c0f84a322c73d060982dd4d631fa99e3750a47db3593ae92",
       "snapshot": {
-        "apps/web/src/hooks/useAnalyticsQueries.ts": "dd9206d7998e65f0a6dadab10622d6899e6b91bc781cd4952edc5da2a1d8c142"
+        "apps/web/src/hooks/useAnalyticsQueries.ts": "7058d5f7a29051260ae415ccb7123e291918cf021446090523d0fb36f34e1b19"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/hooks/useAnalyticsQueries.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/hooks/useAnalyticsQueries.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/hooks/useAttendanceCalendarQuery.ts": {
@@ -7609,17 +7588,15 @@
       ]
     },
     "source:apps/web/src/lib/api/endpoints.ts": {
-      "fingerprint": "f54a43aff3f72b56e543664f1c3918f6360308bbd551b33b386dc520b86ff95d",
+      "fingerprint": "2080e724421e2d7d909d39fd558a41fabfe82d9cdd1ae6cfe57d6763c41dcb86",
       "snapshot": {
-        "apps/web/src/lib/api/endpoints.ts": "ba5fad7ef2f91ef0e3236966172b687d8c1a79238231021bf18c38ebae981c5e"
+        "apps/web/src/lib/api/endpoints.ts": "cba466c34c9ab0f8f4bb87606bc03fb17b39d798c7623de597efef6bcb8177c3"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/lib/api/endpoints.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/api/endpoints.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/lib/charts/attendanceStatusChart.test.ts": {
@@ -7875,17 +7852,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceFollowUpQueue.tsx": {
-      "fingerprint": "53cdf8dd1aef0b9817aa3d5ab42b36a4e475eb65f095a58e664fa10071450e8e",
+      "fingerprint": "68ada2780accf1a6da4591072b07826e0a3d182c749c73ec946a61c514fa0161",
       "snapshot": {
-        "apps/web/src/pages/AttendanceFollowUpQueue.tsx": "b35165c95b632459b8481ff4bc52fb8f090ac4dd0162489fcdb6db40394dee9d"
+        "apps/web/src/pages/AttendanceFollowUpQueue.tsx": "54aa9856fa4b3f2a438eca193fb4c536054bd2629652c16bb552793edf13a70b"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
-        "Reviewed apps/web/src/pages/AttendanceFollowUpQueue.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/AttendanceFollowUpQueue.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     },
     "source:apps/web/src/pages/OperationsAudit.tsx": {
@@ -8200,6 +8175,126 @@
         "Reviewed scripts/frontend-bundle-report.test.mjs in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
         "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
         "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+      ]
+    },
+    "source:apps/web/src/api/academicConfig.ts": {
+      "fingerprint": "22efdb77ee347c28b71934d3c10a7e4259fbe97280be2708232f970940affbde",
+      "snapshot": {
+        "apps/web/src/api/academicConfig.ts": "4cf0250a23d2c4eff98226a4f4715a7301bacd5298ea487a027843e9219a153e"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/academicConfig.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/academicMasters.ts": {
+      "fingerprint": "1887158a12b69f1e1816b197ded5082f40abc5d7934fd09ee227e8cd3b4aeb34",
+      "snapshot": {
+        "apps/web/src/api/academicMasters.ts": "ab002b9396396a087e69b02fd7ea90bba7d8c96ebd15f2e480112ae9c2cf9851"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/academicMasters.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/analytics.ts": {
+      "fingerprint": "636a56fa119e48e1c5bc58434a6f997735020db38608608c578dcc8faf9e9e64",
+      "snapshot": {
+        "apps/web/src/api/analytics.ts": "ab412852e5196bb8a69f27e57e0729af4599ccff76513740abdcf7393672c46d"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/analytics.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/managementOverview.test.ts": {
+      "fingerprint": "910dc12e673cb6b9b4eb93a3d35e75936508595c26f9efea84c283526765111d",
+      "snapshot": {
+        "apps/web/src/api/managementOverview.test.ts": "eb310913fdb6b2b612f19295d390aa0e9849bbd7421b7a182eb0914164a9e386"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/managementOverview.test.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/managementOverview.ts": {
+      "fingerprint": "c8f51b97155acf1f91750c230761468100b924ea23d6793dd1163a39e467a18f",
+      "snapshot": {
+        "apps/web/src/api/managementOverview.ts": "4aad390f6e86444248aa971d4ee323deb3473dbf7521377882bf83c747c94d51"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/managementOverview.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/managementReviewProfile.ts": {
+      "fingerprint": "72a2e4914c292d7f4362698ad6428a5f4fe791ef5a183bbf1b01900b7edc1c6b",
+      "snapshot": {
+        "apps/web/src/api/managementReviewProfile.ts": "d09ead418cc8268729c401c69c7d71d82eba599bf9ca8a55df1f89a6e19888a5"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/managementReviewProfile.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/staff.test.ts": {
+      "fingerprint": "fe50ce8e42d3da1876926a494c26d7a0fe69af1d90e4f8dfdc26bfe139afbf69",
+      "snapshot": {
+        "apps/web/src/api/staff.test.ts": "a6a0f5b8a75c073a71ec966b86cf27fd678f52a1807188a2decc80e91e27d756"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/staff.test.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/studentIndicators.ts": {
+      "fingerprint": "e11fe8e522139503da1b937fe1abcfe31abe2e0f5ab86bbe0e16574de1184840",
+      "snapshot": {
+        "apps/web/src/api/studentIndicators.ts": "8e0d5cf89302dcbb875ee473b8afdd2fc8042751e0bf87abf512b5c95b7bf8ec"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/studentIndicators.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/api/studentTrends.ts": {
+      "fingerprint": "ff711b35f1b85d905893f367dc6a9c12b9c68ba920d1e01fb813aafec8119059",
+      "snapshot": {
+        "apps/web/src/api/studentTrends.ts": "1c9c7572e1a8af8223d36e43b8ec6642dc974350c70dc99827117a6aeb5d9b69"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/api/studentTrends.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/web/src/pages/AttendanceFollowUpQueue.test.tsx": {
+      "fingerprint": "7c952b0e524b69165c453b7823fc1db3f80b1dc5388183d47a009bd56611a28d",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceFollowUpQueue.test.tsx": "ea6108d92e8a999bd71f95737f1ffab4698841fa20d8127a4954d239ce260654"
+      },
+      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "outcome": "no-change",
+      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceFollowUpQueue.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
       ]
     }
   }
