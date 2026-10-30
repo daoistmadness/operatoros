@@ -2970,16 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9761ec9add2dfc3743f5c60d2352ce2d6eac933cad5afbcd7c46115d3800dbc2",
+      "fingerprint": "9847893bdf77bc033d4cab14397962d6a79e0ce8649a92d4204f033cc80880fe",
       "snapshot": {
-        "CHANGELOG.md": "8d5938b5d9806681bc400b4671c719ddc44989d86797a9f3807cd7d635c1d5a5"
+        "CHANGELOG.md": "76e9c7cfb553ef55afd582d5af860aef7f1fc0129e1d79f3f1fb71ccc1e22444"
       },
-      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
+      "head": "4bbd93f5c7f50267e7e7063a7d3821c8c00cc171",
       "outcome": "no-change",
-      "reason": "The Unreleased bullet records the CI documentation correction. It does not change Elysia guidance, skill mappings, or planning records.",
+      "reason": "Added PR #345 to the existing Unreleased note for traceability; this changes no Elysia guidance, skill mapping, or planning decision.",
       "evidence": [
-        "The new CHANGELOG.md bullet describes only the seven status checks enforced on main.",
-        "The existing review state uses the same no-change outcome for a documentation-only Unreleased note with no skill or planning impact."
+        "Changed: CHANGELOG.md at 4bbd93f5c7f50267e7e7063a7d3821c8c00cc171"
       ]
     },
     "source:COMMANDS.md": {
