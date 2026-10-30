@@ -5,6 +5,7 @@ import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
 import { restoreStudentUpdate, studentUpdateState } from "./student-update-rollback";
 import { setStudentMasterStatus } from "./student-master-status";
+import { StudentUpdateRollbackPreviewSchema, StudentUpdateRollbackRequestSchema, StudentUpdateRollbackResponseSchema } from "@operatoros/contracts/students";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -159,13 +160,13 @@ export function studentImportSessionRoutes(app: any, context: AuthContext): any 
     if (!session) return fail(set, 404, "Import session not found");
     if (session.status !== "COMMITTED" && session.provenance_status !== "LEGACY_PROVENANCE_UNAVAILABLE") return fail(set, 409, `Import session status is '${session.status}', only COMMITTED sessions can be rolled back`);
     return preview(context, session, user);
-  }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }) });
+  }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }), response: { 200: StudentUpdateRollbackPreviewSchema } });
   app.post("/api/student-import-sessions/:session_id/rollback", ({ params, body, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "rollback_import_session" }); if (!user) return { detail: "Insufficient permissions" };
     const session = row(context, "SELECT * FROM student_import_sessions WHERE id = ? OR session_uuid = ? LIMIT 1", [params.session_id, params.session_id]);
     if (!session) return fail(set, 404, "Import session not found");
     if (session.status !== "COMMITTED") return fail(set, 409, `Import session status is '${session.status}', only COMMITTED sessions can be rolled back`);
     return commitRollback(context, session, user, body, set);
-  }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }), body: t.Object({ preview_checksum: t.String({ minLength: 1 }), mode: t.Optional(t.String()), selected_action_ids: t.Optional(t.Array(t.Number({ minimum: 1 }))), reason: t.String({ minLength: 5 }), confirmation_value: t.String({ minLength: 1 }), idempotency_token: t.String({ minLength: 8 }) }) });
+  }, { params: t.Object({ session_id: t.String({ minLength: 1 }) }), body: StudentUpdateRollbackRequestSchema, response: { 200: StudentUpdateRollbackResponseSchema } });
   return app;
 }

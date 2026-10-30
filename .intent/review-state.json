@@ -1906,27 +1906,27 @@
       ]
     },
     "source:apps/web/src/features/jenjang-config/pages/JenjangConfig.test.tsx": {
-      "fingerprint": "110f11a6b932581d6d24c3b46cad0df96508e025d264c5e9c745793f2ef396f1",
+      "fingerprint": "ad1bcbba9766d1f5c076cefbc76007fe28fb91389c1d097932c5d2ad673be978",
       "snapshot": {
-        "apps/web/src/features/jenjang-config/pages/JenjangConfig.test.tsx": "f6bee7c4f7fb1ee1504511fa677cb3e1652df1ad01406ec2325157e3c8606430"
+        "apps/web/src/features/jenjang-config/pages/JenjangConfig.test.tsx": "11bc634751eb43857d8b6704f49ac2f47601483c422877736300c804608d3781"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.test.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": {
-      "fingerprint": "de8b9d91336854831ca9ca1a199d6df9fc1e30e66942bba8a259ecf822475c3b",
+      "fingerprint": "2cb74d1fdc06a19ae228669689db2cdba766403a3fece427af34a6141950e327",
       "snapshot": {
-        "apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": "1fda86623e0ae590a3d8e4f5a33a14c4207e00e1c9704df073237718372e94c6"
+        "apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": "3b1e2f1956e0901bf753b857d6a54a4bae5a524f2ac4abd47fd0ffc387e762bd"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/web/src/features/machine-import/components/MachineImportWorkflow.test.tsx": {
@@ -2678,15 +2678,15 @@
       ]
     },
     "source:apps/web/src/pages/StudentUpdatePanel.test.tsx": {
-      "fingerprint": "3aa6cd4ad2357755c1f1f546b7f982b0e81345303e44d60155072a3dbc940fb5",
+      "fingerprint": "88c14e92bd666b8fd56eda53c7535e64f273396db39ff88fb418ac80277559bf",
       "snapshot": {
-        "apps/web/src/pages/StudentUpdatePanel.test.tsx": "8eaee2a74846fbd81b3627fc13c0c222239766bcdd8ee5d9503d3db09272017e"
+        "apps/web/src/pages/StudentUpdatePanel.test.tsx": "39d5942ae36ac8a2ca4438921ad7d187410d01e5ea989817555bf4e57b8bde17"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentUpdatePanel.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/StudentUpdatePanel.test.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/web/src/pages/TardinessReport.tsx": {
@@ -2702,15 +2702,15 @@
       ]
     },
     "source:apps/web/src/pages/UploadCenter.improved.test.tsx": {
-      "fingerprint": "c8d7572f4afcc4c6356fbd9f6fce06d0a646583c5a6cd22c05a78566aae06b62",
+      "fingerprint": "5932a3ea131fd7b14f51f4d2b5ea44faea9b38971700b882e0913d8bcadac1da",
       "snapshot": {
-        "apps/web/src/pages/UploadCenter.improved.test.tsx": "3185fc2db756f4527366a3314cbd685ca6ca8a302983677a9d7aa92f63facab4"
+        "apps/web/src/pages/UploadCenter.improved.test.tsx": "e3bb028804e79d1e9b82ae872adaacc614d62b8cd6962d05df10a4e1d94ba7bc"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: apps/web/src/pages/UploadCenter.improved.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/UploadCenter.improved.test.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/web/src/pages/UploadCenter.test.tsx": {
@@ -2726,15 +2726,15 @@
       ]
     },
     "source:apps/web/src/pages/UploadCenter.tsx": {
-      "fingerprint": "16c774aed3123e17f892cc1924e382a85aacd394aa5653a07734b902103eaa0b",
+      "fingerprint": "e11458b26c3b12c9f1cbaf73a1a3bae5ced183a2108158fbf58eb99a1b69dbcf",
       "snapshot": {
-        "apps/web/src/pages/UploadCenter.tsx": "bf2c9cce2db57eef6e9474bac54082d89b1770502f03354d2b04f74e7ceafc45"
+        "apps/web/src/pages/UploadCenter.tsx": "a0037ed61a3b538179965f7827e28c6ec1a722de800e63ddd46a89722347ea1d"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: apps/web/src/pages/UploadCenter.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/UploadCenter.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/web/src/pages/__tests__/ClassEarlyDeparture.test.tsx": {
@@ -2967,15 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6faa5c788cd4aeb2d372bcd67a264ebf61168b51522b0f3398a737e24d9cf664",
+      "fingerprint": "f584f7fbf096aa111cda27d8483f96f3d75b171710a42a1ff2775929e1a54072",
       "snapshot": {
-        "CHANGELOG.md": "d363b09fc1883e59b6f642c78b37b7907e109cdb3ef7106d57237af453fe4afd"
+        "CHANGELOG.md": "5a3e69cc4b2b7c6e8851e568419c68df77f290d90088cffa75a3ff3860c5bebd"
       },
-      "head": "2b240fd0732ae84c0728f4ddcfece84fcfd49079",
+      "head": "64a4c5b56f681f731bfdda80b95d1af38100594d",
       "outcome": "no-change",
-      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note for PR #341; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
+      "reason": "The Unreleased bullet accurately summarizes the import validation consistency work and does not change maintained guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 2b240fd0732ae84c0728f4ddcfece84fcfd49079"
+        "Changed: CHANGELOG.md at 64a4c5b56f681f731bfdda80b95d1af38100594d"
       ]
     },
     "source:COMMANDS.md": {
@@ -5178,29 +5178,27 @@
       ]
     },
     "source:apps/web/src/api/students.ts": {
-      "fingerprint": "8cf782e1b8bb3039d8e3b235efe52bdc3c901c8df21a4984f27236c71525deff",
+      "fingerprint": "0917949ba83b34be7dd78da1dfd76b5e65d77a03ef63114b6be72830ac874e34",
       "snapshot": {
-        "apps/web/src/api/students.ts": "00bb8cfa9b925ae952d5d76471594d355a55e64f204beb333b6db52155009d01"
+        "apps/web/src/api/students.ts": "a682dea076b09658bc3f90665044449c6e08292a29b3fcae0605455cfb73a0b7"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Reviewed apps/web/src/api/students.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/api/students.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:packages/contracts/src/students/index.ts": {
-      "fingerprint": "b99d09b95ed7bd617156bdbcc991ce407d0c730e4cdf9bef5b4c86e2febcf519",
+      "fingerprint": "f23c845e1f5d0b3f2bdc9de62292c57df169da07c701176c09945ad7ce1dd334",
       "snapshot": {
-        "packages/contracts/src/students/index.ts": "210ca9cf64d1b116b0449b45bbb4458dcb0b6794ef2dd6040db7ab18f02b3ead"
+        "packages/contracts/src/students/index.ts": "2c7ff6502b23b06c65f0125c9daa670696568bb6d901b6e08a248ab3e7413ed9"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Changed: packages/contracts/src/students/index.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: packages/contracts/src/students/index.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:apps/api/src/domains/data-reset.ts": {
@@ -5848,17 +5846,15 @@
       ]
     },
     "source:apps/web/src/hooks/useStudentQueries.ts": {
-      "fingerprint": "39fc51c8de68bcba25e9982f469202a9ee74d41e7bf52a0d5bf5c1312cf5bf84",
+      "fingerprint": "78439c01aa63170ccb0d3a3d7955ed1094b288a1413ebc558b3e50045cbec9dd",
       "snapshot": {
-        "apps/web/src/hooks/useStudentQueries.ts": "70027ade0ee9e8f995675eb223bfc9dcd2ade98c44d147726e66bfa57a03d174"
+        "apps/web/src/hooks/useStudentQueries.ts": "4ca45d8109e07b1c7c3307082e10f6654e5c8b4357db2d90e03714e039275505"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
       "evidence": [
-        "Reviewed apps/web/src/hooks/useStudentQueries.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/hooks/useStudentQueries.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
       ]
     },
     "source:packages/db/src/s52-migration.sql": {
@@ -8307,6 +8303,198 @@
       "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
       "evidence": [
         "Changed: apps/api/src/domains/academic-analytics.ts at c6789054b6b60132a71a0fd835baf4d9eb55b417"
+      ]
+    },
+    "source:apps/api/src/domains/config.ts": {
+      "fingerprint": "420b62e150202e9fbd381fc24aa1fc41e8aba20c4b0f2eb5546037387ef11e53",
+      "snapshot": {
+        "apps/api/src/domains/config.ts": "d778266599e11c4f91c2d376ce583c1bde482c61f4a99452128e8b40df4ab589"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/api/src/domains/config.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/api/src/domains/roster.ts": {
+      "fingerprint": "44824d8728ed9054c216bdb66c2e3b7ba3ab43613080af374b1fed4729615512",
+      "snapshot": {
+        "apps/api/src/domains/roster.ts": "fb56c2d1f473d47993422b8e05e17635ee2bd607d775db83c4ae5829e4a304fe"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/api/src/domains/roster.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/api/src/domains/student-import-sessions.ts": {
+      "fingerprint": "9c8a8f9ac30383d0b2ebdcd2d9d531f0c8447b0579130679dc4d1cff8a45e84d",
+      "snapshot": {
+        "apps/api/src/domains/student-import-sessions.ts": "beb34f1aa4f113cd553e68a3e81c35a0a466133ed8943c8f66d3737ab4270657"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-import-sessions.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/api/src/domains/student-update.ts": {
+      "fingerprint": "46291169c953d3b033c264a9c6c6a514fd35ccfe1b7dc67a80e43da0de038db6",
+      "snapshot": {
+        "apps/api/src/domains/student-update.ts": "d65099cc1e4a0466dbaceec5a67a332f754530c514ce192f523805ef647dbe44"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-update.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/api/jenjangConfig.ts": {
+      "fingerprint": "aa147ca8d215a340698b106a22a368f65eebf1be52177af585e32258cb1b8616",
+      "snapshot": {
+        "apps/web/src/api/jenjangConfig.ts": "8412326a61c77b4ad6a0ea0fd77fd2943d2bc546df207d742cce78f5f54e02b3"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/api/jenjangConfig.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/components/upload/RosterImportPanel.tsx": {
+      "fingerprint": "49bbab3e99867f379ce6ce782314ab968bcb1d36959f1345fa2b7a4790be7d86",
+      "snapshot": {
+        "apps/web/src/components/upload/RosterImportPanel.tsx": "28e97076bd4815fd63685029a26a05e93d19a37b4fc80f19ed587d9caec2a200"
+      },
+      "head": "e2f31223cd3a7cf60062c281ccba616a178c42c7",
+      "outcome": "no-change",
+      "reason": "Trimmed only trailing blank lines in the extracted panels. Existing upload flow and guidance remain unchanged; git diff --check passes.",
+      "evidence": [
+        "Changed: apps/web/src/components/upload/RosterImportPanel.tsx at e2f31223cd3a7cf60062c281ccba616a178c42c7"
+      ]
+    },
+    "source:apps/web/src/components/upload/StudentUpdatePanel.tsx": {
+      "fingerprint": "4a6f02313831abb411ed261c69350d3db78d85ffe606508bc365f69d115f3161",
+      "snapshot": {
+        "apps/web/src/components/upload/StudentUpdatePanel.tsx": "261dc643e5e0de0f5bfd3cd696e7806549810313c813e982e5c47d4d53b47101"
+      },
+      "head": "e2f31223cd3a7cf60062c281ccba616a178c42c7",
+      "outcome": "no-change",
+      "reason": "Trimmed only trailing blank lines in the extracted panels. Existing upload flow and guidance remain unchanged; git diff --check passes.",
+      "evidence": [
+        "Changed: apps/web/src/components/upload/StudentUpdatePanel.tsx at e2f31223cd3a7cf60062c281ccba616a178c42c7"
+      ]
+    },
+    "source:apps/web/src/lib/download.ts": {
+      "fingerprint": "2fba7af156ac136df94de371470da6c69254a7aad40358b4dc2f8254dc85ab7b",
+      "snapshot": {
+        "apps/web/src/lib/download.ts": "1809fe450d6439666ee203949cdfe87f2515516264e51488bebf814cc331f0d8"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/lib/download.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/pages/AttendanceCorrections.test.ts": {
+      "fingerprint": "666341a043f0b2a8244326a55ca39f0a11ec3146f038bf0bbcb8752a1a969c5f",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceCorrections.test.ts": "aac2c31cc287d1f625f4137f59a704460464322d04dfa823ee6c1eeaa674d82f"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceCorrections.test.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/pages/AttendanceReviewSafety.test.ts": {
+      "fingerprint": "a9badd4adf445e83fa73e4d2ed2c85d138a40a7c95c1e11b19128d126576f05b",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceReviewSafety.test.ts": "97de6321f866c17426c6b9c7d6c2c62124ea11bc106082d88801c4b6c822e31c"
+      },
+      "head": "63fbeabe18fb0519a9cafe88ad3f8fcdbca1729f",
+      "outcome": "no-change",
+      "reason": "The test follows the existing attendance review flow by explicitly loading rows before asserting role-gated controls; current test conventions already cover this, so no guidance change is needed.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceReviewSafety.test.ts at 63fbeabe18fb0519a9cafe88ad3f8fcdbca1729f"
+      ]
+    },
+    "source:apps/web/src/pages/HebConfig.tsx": {
+      "fingerprint": "81d20695b55403218165d1f94869c96ebf513ed06937598443dd5444f7dcdfe6",
+      "snapshot": {
+        "apps/web/src/pages/HebConfig.tsx": "d2791bb48026790eb2b9414ad6ab2849d9cd338032e490eed75f75dbc86879c2"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/pages/HebConfig.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:packages/contracts/src/config/index.ts": {
+      "fingerprint": "b08a196fba12461612468714fca80f17fc782f5708e81af83b239bad54b6e7e1",
+      "snapshot": {
+        "packages/contracts/src/config/index.ts": "cbaeec0e933f9b0dcc5f771f33fe75fcab7d452e73730c50b39966f02362d1ae"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: packages/contracts/src/config/index.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:packages/contracts/src/students/imports.ts": {
+      "fingerprint": "f28dfed3c71e952f3749d6f2a1ee360d7b3fd688a23049464ab299ec5a3eeb92",
+      "snapshot": {
+        "packages/contracts/src/students/imports.ts": "f0939509b83f9994d523ebfdfe24b4582fb6a795d37e53cc4a95c8cf0ade13be"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: packages/contracts/src/students/imports.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/pages/HebConfig.test.tsx": {
+      "fingerprint": "22c3cd5b9b493e4d00b64838c72dbf87b05fa98fb0c11d2ab61324e436130018",
+      "snapshot": {
+        "apps/web/src/pages/HebConfig.test.tsx": "d32d9c28b5899ab525426ab4fbf57ec934cfc843c0326d4dc173726fb82ec651"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/pages/HebConfig.test.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/pages/LegacyApiRoutes.test.ts": {
+      "fingerprint": "eb326671da73bf0628f31d014d4e64476eef10887330a3ccf4dc380410d0e1c8",
+      "snapshot": {
+        "apps/web/src/pages/LegacyApiRoutes.test.ts": "d1d4472ae5e94df33c53095fb7399843f7ecd21d962c75811a63b84397fe158d"
+      },
+      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "outcome": "no-change",
+      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "evidence": [
+        "Changed: apps/web/src/pages/LegacyApiRoutes.test.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+      ]
+    },
+    "source:apps/web/src/api/grades.compat.ts": {
+      "fingerprint": "fcbee0c966171945c75af5d4d84466e0aeca9e8f4affcd49313530a1cf1d2e86",
+      "snapshot": {
+        "apps/web/src/api/grades.compat.ts": null
+      },
+      "head": "39d411e787838f58d548055cb7c576b26ec411e1",
+      "outcome": "no-change",
+      "reason": "Removed the unused grades compatibility re-export after searching current apps and packages found no references. This does not change existing guidance; web typecheck and diff check passed.",
+      "evidence": [
+        "Changed: apps/web/src/api/grades.compat.ts at 39d411e787838f58d548055cb7c576b26ec411e1"
       ]
     }
   }

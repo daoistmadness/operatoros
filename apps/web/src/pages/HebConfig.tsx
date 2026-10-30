@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, Loader2, Pencil, Trash2, XCircle } from "lucide-react";
 
 import api from "../api";
+import { fetchAvailableJenjang } from "../api/jenjangConfig";
 import { PageHeader } from "../components/common/page-header";
 import { LoadingState, EmptyState } from "../components/common/state-message";
 import { getPageApiError } from "../lib/api/errors";
@@ -55,7 +56,6 @@ type HebSummaryRow = {
 };
 
 type HebResponse = { heb_by_jenjang?: HebApiRow[] };
-type AvailableJenjangResponse = { jenjang_list?: string[] };
 
 function getMonthLabel(month: number): string {
   return MONTH_OPTIONS.find((item) => item.value === Number(month))?.label || `Bulan ${month}`;
@@ -91,16 +91,14 @@ function HebConfig() {
 
     try {
       const [jenjangResponse, hebResponses] = await Promise.all([
-        api.get<AvailableJenjangResponse>("/api/config/jenjang/available"),
+        fetchAvailableJenjang(),
         Promise.all(MONTH_OPTIONS.map((month) =>
           api.get<HebResponse>("/api/analytics/heb", {
             params: { month: month.value, year: targetYear },
           })
         )),
       ]);
-      const availableJenjangs = Array.isArray(jenjangResponse.data?.jenjang_list)
-        ? jenjangResponse.data.jenjang_list
-        : [];
+      const availableJenjangs = jenjangResponse.jenjang_list;
 
       const responseRows = hebResponses.flatMap((response, index) => {
         const month = MONTH_OPTIONS[index].value;

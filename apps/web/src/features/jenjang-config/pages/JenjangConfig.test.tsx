@@ -4,6 +4,7 @@ import { MemoryRouter } from '../../../test/TestRouter';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import api from "../../../api";
+import { fetchAvailableJenjang } from "../../../api/jenjangConfig";
 import { AuthContext, type AuthContextValue } from "../../../context/AuthContext";
 import JenjangConfig, {
   cutoffPreview,
@@ -15,6 +16,7 @@ import JenjangConfig, {
 } from "./JenjangConfig";
 
 vi.mock("../../../api", () => ({ default: { get: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
+vi.mock("../../../api/jenjangConfig", () => ({ fetchAvailableJenjang: vi.fn() }));
 
 const admin: AuthContextValue = { user: { id: 1, username: "admin", role: "admin", capabilities: [] }, loading: false, authenticated: true, can: () => true, login: vi.fn(), logout: vi.fn() };
 const staff: AuthContextValue = { ...admin, user: { id: 2, username: "staff", role: "staff", capabilities: [] }, can: () => false };
@@ -24,9 +26,8 @@ let container: HTMLDivElement | null = null;
 let root: Root | null = null;
 
 function mockLoad(config: JenjangConfigPayload = completeConfig, options: AvailableJenjangPayload = available) {
-  vi.mocked(api.get).mockImplementation((path: string) =>
-    Promise.resolve({ data: path.endsWith("/available") ? options : config, status: 200, headers: {} }) as never
-  );
+  vi.mocked(api.get).mockResolvedValue({ data: config, status: 200, headers: {} } as never);
+  vi.mocked(fetchAvailableJenjang).mockResolvedValue(options);
 }
 
 async function renderPage(auth: AuthContextValue = admin): Promise<HTMLDivElement> {
@@ -141,7 +142,8 @@ describe("JenjangConfig", () => {
     const save = Array.from(view.querySelectorAll("button")).find((button) => button.textContent?.includes("Simpan"));
     await click(save);
     expect(api.put).toHaveBeenCalledTimes(1);
-    expect(api.get).toHaveBeenCalledTimes(4);
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(fetchAvailableJenjang).toHaveBeenCalledTimes(2);
     expect(view.textContent).toContain("berhasil disimpan");
   });
 

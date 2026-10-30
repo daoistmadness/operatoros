@@ -17,16 +17,15 @@ describe("legacy page API contracts", () => {
     ["../api/uploadHistory.ts", ['api.get("/api/uploads/history",']],
     ["../features/jenjang-config/pages/JenjangConfig.tsx", [
       '"/api/config/jenjang"',
-      '"/api/config/jenjang/available"',
       'api.put(`/api/config/jenjang/',
       'api.delete(`/api/config/jenjang/',
     ]],
     ["HebConfig.tsx", [
-      '"/api/config/jenjang/available"',
       '"/api/analytics/heb"',
       'api.put(`/api/config/heb/',
       'api.delete(`/api/config/heb/',
     ]],
+    ["../api/jenjangConfig.ts", ['path: "/api/config/jenjang/available"']],
     ["../api/manualAbsence.ts", [
       'path: "/api/config/absence-reasons"',
       'method: "POST"',

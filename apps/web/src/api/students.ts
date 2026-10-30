@@ -1,5 +1,18 @@
 import { apiRequest } from "../lib/api/client";
 import type {
+  RosterImportCommitRequest,
+  RosterImportCommitResponse,
+  RosterImportPreview,
+  StudentUpdateCommitRequest,
+  StudentUpdateCommitResponse,
+  StudentUpdateHistoryResponse,
+  StudentUpdateImport,
+  StudentUpdatePreview,
+  StudentUpdateRollbackPreview,
+  StudentUpdateRollbackRequest,
+  StudentUpdateRollbackResponse,
+} from "@operatoros/contracts/students";
+import type {
   LegacyLinkCandidate,
   LegacyLinkStatus,
   ManagedStudent,
@@ -148,42 +161,42 @@ export async function endEnrollment(id: number, payload: unknown) {
   return (await apiRequest({ path: `/api/student-enrollments/${id}/end`, method: "POST", body: payload })).data;
 }
 
-export async function previewRoster(file: File, owner: string, received: string) {
+export async function previewRoster(file: File, owner: string, received: string): Promise<RosterImportPreview> {
   const form = new FormData(); form.append("file", file); form.append("source_owner", owner); form.append("date_received", received);
-  return (await apiRequest({ path: "/api/student-enrollments/roster-preview", method: "POST", body: form })).data as any;
+  return (await apiRequest<RosterImportPreview>({ path: "/api/student-enrollments/roster-preview", method: "POST", body: form })).data;
 }
 
-export async function commitRoster(payload: unknown) {
-  return (await apiRequest({ path: "/api/student-enrollments/roster-commit", method: "POST", body: payload })).data;
+export async function commitRoster(payload: RosterImportCommitRequest): Promise<RosterImportCommitResponse> {
+  return (await apiRequest<RosterImportCommitResponse>({ path: "/api/student-enrollments/roster-commit", method: "POST", body: payload })).data;
 }
 
-export async function previewStudentUpdate(file: File) {
+export async function previewStudentUpdate(file: File): Promise<StudentUpdatePreview> {
   const form = new FormData(); form.append("file", file);
-  return (await apiRequest({ path: "/api/student-masters/management/update-preview", method: "POST", body: form })).data as any;
+  return (await apiRequest<StudentUpdatePreview>({ path: "/api/student-masters/management/update-preview", method: "POST", body: form })).data;
 }
 
-export async function commitStudentUpdate(batchId: string, payload: unknown) {
-  return (await apiRequest({ path: `/api/student-masters/management/update-commit/${batchId}`, method: "POST", body: payload })).data;
+export async function commitStudentUpdate(batchId: string, payload: StudentUpdateCommitRequest): Promise<StudentUpdateCommitResponse> {
+  return (await apiRequest<StudentUpdateCommitResponse>({ path: `/api/student-masters/management/update-commit/${batchId}`, method: "POST", body: payload })).data;
 }
 
-export async function fetchStudentUpdateHistory() {
-  return (await apiRequest({ path: "/api/student-masters/management/import-history", params: { page_size: 25 } })).data as { items: any[] };
+export async function fetchStudentUpdateHistory(): Promise<StudentUpdateHistoryResponse> {
+  return (await apiRequest<StudentUpdateHistoryResponse>({ path: "/api/student-masters/management/import-history", params: { page_size: 25 } })).data;
 }
 
-export async function fetchStudentUpdateSession(batchId: string) {
-  return (await apiRequest({ path: `/api/student-masters/management/imports/${batchId}` })).data as any;
+export async function fetchStudentUpdateSession(batchId: string): Promise<StudentUpdateImport> {
+  return (await apiRequest<StudentUpdateImport>({ path: `/api/student-masters/management/imports/${batchId}` })).data;
 }
 
 export async function downloadStudentUpdateResult(batchId: string): Promise<Blob> {
   return (await apiRequest<Blob>({ path: `/api/student-masters/management/imports/${batchId}/result.xlsx`, responseType: "blob", expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] })).data;
 }
 
-export async function previewStudentUpdateRollback(sessionId: string) {
-  return (await apiRequest({ path: `/api/student-import-sessions/${sessionId}/rollback-preview`, method: "POST" })).data as any;
+export async function previewStudentUpdateRollback(sessionId: string): Promise<StudentUpdateRollbackPreview> {
+  return (await apiRequest<StudentUpdateRollbackPreview>({ path: `/api/student-import-sessions/${sessionId}/rollback-preview`, method: "POST" })).data;
 }
 
-export async function commitStudentUpdateRollback(sessionId: string, payload: unknown) {
-  return (await apiRequest({ path: `/api/student-import-sessions/${sessionId}/rollback`, method: "POST", body: payload })).data as any;
+export async function commitStudentUpdateRollback(sessionId: string, payload: StudentUpdateRollbackRequest): Promise<StudentUpdateRollbackResponse> {
+  return (await apiRequest<StudentUpdateRollbackResponse>({ path: `/api/student-import-sessions/${sessionId}/rollback`, method: "POST", body: payload })).data;
 }
 
 export async function exportStudentTemplate(): Promise<Blob> {

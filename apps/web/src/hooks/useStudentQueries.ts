@@ -7,6 +7,7 @@ import {
   fetchLegacyLinkStatus, linkLegacyStudent,
   updateIdentityVerification, updateDapodikStatus, uploadIomDocument, updateIomDocument,
 } from "../api/students";
+import type { StudentUpdateCommitRequest } from "@operatoros/contracts/students";
 import { queryKeys } from "../lib/query/queryKeys";
 import { invalidateReadiness } from "../features/readiness";
 import { invalidateEnrollmentQueries } from "../lib/query/enrollmentInvalidation";
@@ -48,7 +49,7 @@ export function useEndEnrollment(studentId: string) { const client = useQueryCli
 export function useRosterPreview() { return useMutation({ mutationFn: ({ file, owner, received }: { file: File; owner: string; received: string }) => previewRoster(file, owner, received) }); }
 export function useRosterCommit() { const client = useQueryClient(); return useMutation({ mutationFn: commitRoster, onSuccess: () => invalidateEnrollmentQueries(client) }); }
 export function useStudentUpdatePreview() { return useMutation({ mutationFn: previewStudentUpdate }); }
-export function useStudentUpdateCommit() { const invalidate = useStudentDomainInvalidation(); return useMutation({ mutationFn: ({ batchId, payload }: { batchId: string; payload: unknown }) => commitStudentUpdate(batchId, payload), onSuccess: invalidate }); }
+export function useStudentUpdateCommit() { const invalidate = useStudentDomainInvalidation(); return useMutation({ mutationFn: ({ batchId, payload }: { batchId: string; payload: StudentUpdateCommitRequest }) => commitStudentUpdate(batchId, payload), onSuccess: invalidate }); }
 export function useStudentTemplateExport() { return useMutation({ mutationFn: exportStudentTemplate }); }
 export function useStudentsCsvExport() { return useMutation({ mutationFn: exportStudentsCsv }); }
 export function useUpdateStudentHealth(id: string) { const invalidate = useStudentDomainInvalidation(id); return useMutation({ mutationFn: (payload: unknown) => updateStudentHealth(id, payload), onSuccess: invalidate }); }
