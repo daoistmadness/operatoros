@@ -2967,15 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "baf48387bf637b26c63f8e955dc7ae49a046f178412a368030224cee60cd8358",
+      "fingerprint": "6faa5c788cd4aeb2d372bcd67a264ebf61168b51522b0f3398a737e24d9cf664",
       "snapshot": {
-        "CHANGELOG.md": "0ba2303c0806b2eea9ef23f8c8a303708496bb3e3059681e1dde7b5a46c3ca28"
+        "CHANGELOG.md": "d363b09fc1883e59b6f642c78b37b7907e109cdb3ef7106d57237af453fe4afd"
       },
-      "head": "c6789054b6b60132a71a0fd835baf4d9eb55b417",
+      "head": "2b240fd0732ae84c0728f4ddcfece84fcfd49079",
       "outcome": "no-change",
-      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
+      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note for PR #341; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at c6789054b6b60132a71a0fd835baf4d9eb55b417"
+        "Changed: CHANGELOG.md at 2b240fd0732ae84c0728f4ddcfece84fcfd49079"
       ]
     },
     "source:COMMANDS.md": {
