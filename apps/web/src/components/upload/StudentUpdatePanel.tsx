@@ -292,4 +292,3 @@ export function StudentUpdatePanel() {
     </div>
   );
 }
-
