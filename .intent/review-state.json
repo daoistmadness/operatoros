@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "f8bb13f9609d38e3df19407001971782d26e2a8795e56491d31c16ab3f21ba0b",
+      "fingerprint": "f461b1a658f91507f342810d3f2003131c52dbec3a4c96d83cb2161dd630b81c",
       "snapshot": {
-        "CHANGELOG.md": "1c1e5d229b3835f48616854c7086110f660d10d07ec89d7b0251b0d189417191"
+        "CHANGELOG.md": "1d5b36ce0bbe35e7acfe315e6fd9c46fefdd62a8ddfa152c8cdce4276396df1d"
       },
-      "head": "9288d1f04d0b3ec245b350bb4d6fe86e77323374",
+      "head": "af701b8c58df3f375c81bbcf1f668ab028d2d351",
       "outcome": "no-change",
-      "reason": "Reviewed .env.example and CHANGELOG.md against apps/api/src/config.ts:79-80 and apps/api/src/app.ts:97-101; this change documents existing upload-size overrides and does not change runtime behavior or agent-skill guidance.",
+      "reason": "Reviewed .env.example and CHANGELOG.md against apps/api/src/config.ts:79-80 and apps/api/src/app.ts:97-101; #347 only identifies this PR in the Unreleased entry, and neither file changes runtime behavior or agent-skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 9288d1f04d0b3ec245b350bb4d6fe86e77323374"
+        "Changed: CHANGELOG.md at af701b8c58df3f375c81bbcf1f668ab028d2d351"
       ]
     },
     "source:COMMANDS.md": {
