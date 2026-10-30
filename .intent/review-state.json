@@ -3,9 +3,9 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "7586148ebf9396671d70edb2edc1ed6c50412985971d785b88a674a62ffa07dc",
+      "fingerprint": "b648bba9431f262989a89cf0246d2acb406cfab1be7014e2480ba5c6e02c4535",
       "snapshot": {
-        ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
+        ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -44,17 +44,20 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
+      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
       "outcome": "no-change",
-      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
+      "reason": "The review signal is conservative because .github/CI.md is mapped into the skill snapshot. This edit clarifies ruleset enforcement only; it changes no Elysia guidance or examples. Skill validation and the package typecheck pass, so no skill guidance update is warranted.",
       "evidence": [
-        "Changed: AGENTS.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
+        "git diff --exit-code origin/main -- packages/agent-skills/skills/elysiajs/SKILL.md packages/agent-skills/docs/elysiajs.md packages/agent-skills/docs/elysiajs/references returned 0.",
+        "bun run skills:validate passed for the registered Elysia skill.",
+        "bun run --filter @operatoros/agent-skills typecheck passed.",
+        "The changed CI documentation contains no Elysia code example; the skill package has no Markdown-example compilation target."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a999af1b9db614b74fb37a50ba9a38e44166586bb06e76ffc5ca1a544b4bfbc6",
+      "fingerprint": "a652eecf20c1bd833ec801e119b2819e1f2c9159eb2e5deba3640f5358d86292",
       "snapshot": {
-        ".github/CI.md": "ce03c0ae0d74fa77543892dca551b943fac321f7de6c9ec94b0d4c02f31c5b2d",
+        ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
         ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
         "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -96,11 +99,13 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
+      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
       "outcome": "no-change",
-      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
+      "reason": "The checked-in planning records already describe preflight as an additional required check. The live ruleset readback confirms the same seven checks and strict status policy. This documentation correction aligns with those decisions and requires no planning update.",
       "evidence": [
-        "Changed: AGENTS.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
+        "git diff --exit-code origin/main -- _artifacts/domain_map.yaml _artifacts/skill_spec.md _artifacts/skill_tree.yaml returned 0.",
+        "_artifacts/skill_spec.md states that preflight became an additional required check.",
+        "Ruleset 24918867 is active on main with strict status checks and the seven required contexts: api, frontend, Select E2E scope, E2E full regression, CodeQL, E2E regression result, and preflight."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2965,15 +2970,16 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "bd05d85a51f771471e2fb86d34e6fcb1771c78a2fe1ccee731044c0594ecca18",
+      "fingerprint": "9761ec9add2dfc3743f5c60d2352ce2d6eac933cad5afbcd7c46115d3800dbc2",
       "snapshot": {
-        "CHANGELOG.md": "3449a9ce47fb56fd5f5f31884044892eddfa8d4a98a9f114be138f33c5aa10bd"
+        "CHANGELOG.md": "8d5938b5d9806681bc400b4671c719ddc44989d86797a9f3807cd7d635c1d5a5"
       },
-      "head": "d3255e71d132bfbdd7139c500b0a2a96f4c6dce6",
+      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
       "outcome": "no-change",
-      "reason": "The Unreleased note records the schema-documentation correction; it does not affect Elysia guidance, skill mappings, or planning records.",
+      "reason": "The Unreleased bullet records the CI documentation correction. It does not change Elysia guidance, skill mappings, or planning records.",
       "evidence": [
-        "Changed: CHANGELOG.md at d3255e71d132bfbdd7139c500b0a2a96f4c6dce6"
+        "The new CHANGELOG.md bullet describes only the seven status checks enforced on main.",
+        "The existing review state uses the same no-change outcome for a documentation-only Unreleased note with no skill or planning impact."
       ]
     },
     "source:COMMANDS.md": {
