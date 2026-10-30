@@ -2967,15 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "00093d44f8c8a41bc39eac05f381ff5ce3e3eee33972f0daab69f814bc11e85e",
+      "fingerprint": "baf48387bf637b26c63f8e955dc7ae49a046f178412a368030224cee60cd8358",
       "snapshot": {
-        "CHANGELOG.md": "1cc2ce4a8affcf47a8c1b9741735003512db5657e2c3cb447720b67e1c8c1d91"
+        "CHANGELOG.md": "0ba2303c0806b2eea9ef23f8c8a303708496bb3e3059681e1dde7b5a46c3ca28"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "c6789054b6b60132a71a0fd835baf4d9eb55b417",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: CHANGELOG.md at c6789054b6b60132a71a0fd835baf4d9eb55b417"
       ]
     },
     "source:COMMANDS.md": {
@@ -8295,6 +8295,18 @@
       "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
       "evidence": [
         "Changed: apps/web/src/pages/AttendanceFollowUpQueue.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+      ]
+    },
+    "source:apps/api/src/domains/academic-analytics.ts": {
+      "fingerprint": "62d29369b54acd4566404135806396ff33175416533cd6b4ccc10fad5c55f998",
+      "snapshot": {
+        "apps/api/src/domains/academic-analytics.ts": "91b339577cd7160700f80a6e1be54cb1fc4e9016a0909a9df68a8dbdcc153fb2"
+      },
+      "head": "c6789054b6b60132a71a0fd835baf4d9eb55b417",
+      "outcome": "no-change",
+      "reason": "This PR consolidates existing academic analytics SQL while preserving routes, DTOs, and metric formulas. CHANGELOG.md records the user-facing release note; the Elysia skill and package source notes remain accurate, so no guidance change is needed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/academic-analytics.ts at c6789054b6b60132a71a0fd835baf4d9eb55b417"
       ]
     }
   }
