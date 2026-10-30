@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Document optional UPP report and student IOM upload-size limits and defaults (#347).
 - Align CI documentation with the seven status checks enforced on `main` (#345).
 - Document configurable session timeout and account lockout settings (#346).
 - Correct the documented SQLite schema head and migration target to S5.4.

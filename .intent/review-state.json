@@ -2970,15 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a62a6895efbc6b1d0c5928f2f9746e8abb2de1657f7432a8ac98c7192dc875f5",
+      "fingerprint": "f461b1a658f91507f342810d3f2003131c52dbec3a4c96d83cb2161dd630b81c",
       "snapshot": {
-        "CHANGELOG.md": "5b477cb7bb08f9b05d5ad724789cabcb12e80ef4b8f2531692fe82b917a9641f"
+        "CHANGELOG.md": "1d5b36ce0bbe35e7acfe315e6fd9c46fefdd62a8ddfa152c8cdce4276396df1d"
       },
-      "head": "b1f77b379344657742288c4840daedb4b9a75d5d",
+      "head": "af701b8c58df3f375c81bbcf1f668ab028d2d351",
       "outcome": "no-change",
-      "reason": "Added the assigned PR number to the Unreleased bullet; no agent-skill source, example, or planning guidance changed.",
+      "reason": "Reviewed .env.example and CHANGELOG.md against apps/api/src/config.ts:79-80 and apps/api/src/app.ts:97-101; #347 only identifies this PR in the Unreleased entry, and neither file changes runtime behavior or agent-skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at b1f77b379344657742288c4840daedb4b9a75d5d"
+        "Changed: CHANGELOG.md at af701b8c58df3f375c81bbcf1f668ab028d2d351"
       ]
     },
     "source:COMMANDS.md": {
@@ -5107,15 +5107,15 @@
       ]
     },
     "source:.env.example": {
-      "fingerprint": "fd4ff39a4722a9a07715aec69214d9ff31ebad0ee0667baef5d566944ae3b6f9",
+      "fingerprint": "18c4de5bd7f84436d520cfba3182af7b6adeb7b6294a7140a31bf9f2ff5b54fb",
       "snapshot": {
-        ".env.example": "be3d48992e017207656fd5de0e04982370470ebd8df4baa034b60a6d0a0f19c8"
+        ".env.example": "1abe3ba844da90f926a80cad0617e933959d8db5873935056496a846b73ee6d4"
       },
-      "head": "46918b9c6d158c5aa247ca685749e3843bb65984",
+      "head": "9288d1f04d0b3ec245b350bb4d6fe86e77323374",
       "outcome": "no-change",
-      "reason": "Corrects root configuration and README descriptions of existing session and lockout environment overrides; no agent skill source, example, or planning guidance changed. Application behavior is unchanged.",
+      "reason": "Reviewed .env.example and CHANGELOG.md against apps/api/src/config.ts:79-80 and apps/api/src/app.ts:97-101; this change documents existing upload-size overrides and does not change runtime behavior or agent-skill guidance.",
       "evidence": [
-        "Changed: .env.example at 46918b9c6d158c5aa247ca685749e3843bb65984"
+        "Changed: .env.example at 9288d1f04d0b3ec245b350bb4d6fe86e77323374"
       ]
     },
     "source:docs/session/2026-10-26-docs-restructure.md": {
