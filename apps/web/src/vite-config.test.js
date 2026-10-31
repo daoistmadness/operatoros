@@ -209,7 +209,7 @@ it('uses a static client-output preview config with all API proxy routes', async
   }
 });
 
-it('rewrites only missing HTML documents and leaves assets and API requests alone', () => {
+it('rewrites missing HTML documents, serves existing assets, and returns plain 404s for missing resources', () => {
   const root = mkdtempSync(path.join(tmpdir(), 'operatoros-spa-preview-'));
   const client = path.join(root, 'build/client');
   mkdirSync(path.join(client, 'assets'), { recursive: true });
@@ -225,16 +225,34 @@ it('rewrites only missing HTML documents and leaves assets and API requests alon
 
     const request = (method, url, accept) => {
       const req = { method, url, headers: { accept } };
-      middleware(req, {}, () => { nextCount += 1; });
-      return req.url;
+      const response = {
+        headers: {},
+        body: undefined,
+        setHeader(name, value) { this.headers[name] = value; },
+        end(body) { this.body = body; },
+      };
+      middleware(req, response, () => { nextCount += 1; });
+      return { url: req.url, response };
     };
 
-    expect(request('GET', '/students/42?tab=active', 'text/html')).toBe('/_shell.html?tab=active');
-    expect(request('GET', '/assets/app.js', 'text/html')).toBe('/assets/app.js');
-    expect(request('GET', '/api/students', 'text/html')).toBe('/api/students');
-    expect(request('POST', '/students/42', 'text/html')).toBe('/students/42');
-    expect(request('GET', '/missing.js', '*/*')).toBe('/missing.js');
-    expect(nextCount).toBe(5);
+    expect(request('GET', '/students/42?tab=active', 'text/html').url).toBe('/_shell.html?tab=active');
+    expect(request('GET', '/assets/app.js', 'text/html').url).toBe('/assets/app.js');
+    expect(request('GET', '/api/students', 'text/html').url).toBe('/api/students');
+    expect(request('POST', '/students/42', 'text/html').url).toBe('/students/42');
+
+    const missingAsset = request('GET', '/assets/missing.js', 'text/html');
+    expect(missingAsset.response.statusCode).toBe(404);
+    expect(missingAsset.response.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+    expect(missingAsset.response.body).toBe('Not Found');
+
+    const headRequest = request('HEAD', '/assets/missing.js', '*/*');
+    expect(headRequest.response.statusCode).toBe(404);
+    expect(headRequest.response.body).toBeUndefined();
+
+    const missingRoute = request('GET', '/students/42', 'application/json');
+    expect(missingRoute.response.statusCode).toBe(404);
+    expect(missingRoute.response.headers['Content-Type']).toBe('text/plain; charset=utf-8');
+    expect(nextCount).toBe(4);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

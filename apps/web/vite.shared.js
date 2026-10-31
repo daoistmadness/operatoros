@@ -85,17 +85,18 @@ export function spaShellFallbackPlugin() {
       const clientDirectory = path.resolve(server.config.root, server.config.build.outDir);
       const protectedPrefixes = ['/api', '/health', '/ready', '/openapi'];
 
-      server.middlewares.use((request, _response, next) => {
+      server.middlewares.use((request, response, next) => {
         if (request.method !== 'GET' && request.method !== 'HEAD') return next();
         const url = new URL(request.url ?? '/', 'http://preview.local');
         if (protectedPrefixes.some((prefix) => url.pathname === prefix || url.pathname.startsWith(`${prefix}/`))) return next();
-        if (!request.headers.accept?.includes('text/html')) return next();
 
         let pathname;
         try {
           pathname = decodeURIComponent(url.pathname);
         } catch {
-          return next();
+          response.statusCode = 404;
+          response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          return response.end(request.method === 'HEAD' ? undefined : 'Not Found');
         }
 
         const file = path.resolve(clientDirectory, `.${pathname}`);
@@ -105,8 +106,15 @@ export function spaShellFallbackPlugin() {
           } catch {}
         }
 
-        request.url = `/_shell.html${url.search}`;
-        next();
+        const isStaticAsset = pathname.startsWith('/assets/') || path.extname(pathname) !== '';
+        if (!isStaticAsset && request.headers.accept?.includes('text/html')) {
+          request.url = `/_shell.html${url.search}`;
+          return next();
+        }
+
+        response.statusCode = 404;
+        response.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        response.end(request.method === 'HEAD' ? undefined : 'Not Found');
       });
     },
   };
