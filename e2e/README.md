@@ -48,7 +48,7 @@ The smoke runner records the native Node path before narrowing `PATH`. It then i
 
 ## 5. Ports and process ownership
 
-Ports are selected at runtime. Port 5173 remains the preferred frontend development port when available, but tests must consume `frontend_url` and `backend_url` from the invocation's `ports.json`; they must not assume fixed ports.
+Ports are selected at runtime. Set `OPERATOROS_E2E_FRONTEND_PORT` or `OPERATOROS_E2E_BACKEND_PORT` to request one free loopback port; the launcher rejects an occupied port. If unset, it selects from its standard ranges. Tests must consume `frontend_url` and `backend_url` from the invocation's `ports.json`.
 
 The launcher writes session identity and selected URLs under the invocation-owned runtime directory. The E2E wrapper copies the ready state to `.runtime/operatoros-e2e/<run-id>/ports.json`, and Playwright reads the frontend URL through `OPERATOROS_E2E_FRONTEND_URL` or `OPERATOROS_E2E_PORTS_FILE`.
 

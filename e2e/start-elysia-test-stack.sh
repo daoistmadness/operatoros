@@ -23,8 +23,8 @@ choose_port() {
   bun "$repo_root/e2e/helpers/choose-port.ts" "$1" "$2"
 }
 
-backend_port="$(choose_port 8090 8199)"
-frontend_port="$(choose_port 5180 5299)"
+backend_port="$(choose_port "${OPERATOROS_E2E_BACKEND_PORT:-8090}" "${OPERATOROS_E2E_BACKEND_PORT:-8199}")"
+frontend_port="$(choose_port "${OPERATOROS_E2E_FRONTEND_PORT:-5180}" "${OPERATOROS_E2E_FRONTEND_PORT:-5299}")"
 web_config="vite.config.js"
 preview_config="vite.preview.config.js"
 if [[ "${OPERATOROS_E2E_REDACT:-false}" == "true" ]]; then
