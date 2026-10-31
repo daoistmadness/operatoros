@@ -1,10 +1,10 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createMemoryHistory, createRouter } from '@tanstack/react-router';
 import { describe, expect, it } from 'vitest';
-import { AuthLoading, AccessDenied } from '../components/auth/RouteGuards';
+import { AuthLoading, AccessDenied, SessionCheckUnavailable } from '../components/auth/RouteGuards';
 import NotFoundPage from '../components/NotFoundPage';
 import type { AuthContextValue } from '../context/AuthContext';
-import { authorizeRoute, isRouteAuthorized, routeAuthorizations } from '../lib/router/access';
+import { authorizeRoute, getRouterContextKey, isRouteAuthorized, routeAuthorizations } from '../lib/router/access';
 import { parseSearch, stringifySearch } from '../lib/router/search';
 import { RouteLoadingFallback } from './RouteLoadingFallback';
 import { routeTree } from '../routeTree.gen';
@@ -73,6 +73,33 @@ describe('file-based route migration', () => {
     expect(isRouteAuthorized('/unknown/path', currentAuth)).toBe(true);
   });
 
+  it('waits for a transient session verification failure instead of redirecting to login', () => {
+    const currentAuth: AuthContextValue = { ...auth(null), sessionVerification: 'unavailable' };
+    expect(authorizeRoute('/students')({
+      context: { auth: currentAuth, setupLoading: false, setupRequired: false },
+      location: { pathname: '/students' },
+    })).toEqual({ waiting: true });
+  });
+
+  it('invalidates route access only when identity, permissions, verification, or setup changes', () => {
+    const initialAuth = auth('admin', ['view_student', 'manage_staff']);
+    const initialKey = getRouterContextKey(initialAuth, false, false);
+    const initialUser = initialAuth.user;
+    if (!initialUser) throw new Error('Expected the admin fixture to have a user.');
+    const renamedAuth: AuthContextValue = {
+      ...initialAuth,
+      user: { ...initialUser, username: 'renamed' },
+    };
+
+    expect(getRouterContextKey(renamedAuth, false, false)).toBe(initialKey);
+    expect(getRouterContextKey({ ...initialAuth, user: { ...initialUser, id: 2 } }, false, false)).not.toBe(initialKey);
+    expect(getRouterContextKey(auth('staff', ['view_student']), false, false)).not.toBe(initialKey);
+    expect(getRouterContextKey(auth('admin', ['view_student']), false, false)).not.toBe(initialKey);
+    expect(getRouterContextKey({ ...initialAuth, sessionVerification: 'unavailable' }, false, false)).not.toBe(initialKey);
+    expect(getRouterContextKey(initialAuth, true, false)).not.toBe(initialKey);
+    expect(getRouterContextKey(initialAuth, false, true)).not.toBe(initialKey);
+  });
+
   it('revalidates active role and capability guards after auth context changes', async () => {
     const roleRouter = createTestRouter('/data-portability', auth('admin', ['*']));
     await roleRouter.load();
@@ -128,6 +155,7 @@ describe('file-based route migration', () => {
 
   it('shows the route loading, denied, and not-found states accessibly', () => {
     expect(renderToStaticMarkup(<AuthLoading />)).toContain('Checking your session');
+    expect(renderToStaticMarkup(<SessionCheckUnavailable retry={() => undefined} />)).toContain('Retry session check');
     expect(renderToStaticMarkup(<AccessDenied />)).toContain('role="alert"');
     expect(renderToStaticMarkup(<NotFoundPage />)).toContain('Page not found');
     expect(renderToStaticMarkup(<RouteLoadingFallback />)).toContain('aria-live="polite"');

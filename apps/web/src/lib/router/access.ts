@@ -12,6 +12,19 @@ export type RouterContext = {
   setupRequired: boolean;
 };
 
+export function getRouterContextKey(auth: AuthContextValue, setupLoading: boolean, setupRequired: boolean): string {
+  return JSON.stringify([
+    auth.loading,
+    auth.authenticated,
+    auth.user?.id ?? null,
+    auth.user?.role ?? null,
+    [...new Set(auth.user?.capabilities ?? [])].sort(),
+    auth.sessionVerification ?? "idle",
+    setupLoading,
+    setupRequired,
+  ]);
+}
+
 export const routeAuthorizations: Partial<Record<string, RouteAuthorization>> = {
   '/': { type: 'authenticated' },
   '/setup': { type: 'authenticated' },
@@ -119,6 +132,9 @@ export function authorizeRoute(path: string) {
   return ({ context, location }: RouteAccessOptions) => {
     if (context.setupLoading || context.setupRequired || context.auth.loading) return { waiting: true };
     if (!context.auth.authenticated) {
+      if (context.auth.sessionVerification === "checking" || context.auth.sessionVerification === "unavailable") {
+        return { waiting: true };
+      }
       throw redirect({ to: '/login', state: { from: location.pathname } });
     }
 

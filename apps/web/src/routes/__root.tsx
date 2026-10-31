@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '../context/AuthContext';
 import { DeploymentModeProvider } from '../context/DeploymentModeContext';
 import { useSetupStatusQuery } from '../hooks/useSetupQueries';
 import { SetupBoundary } from '../components/auth/SetupBoundary';
-import type { RouterContext } from '../lib/router/access';
+import { getRouterContextKey, type RouterContext } from '../lib/router/access';
 import { RouteLoadingFallback } from './RouteLoadingFallback';
 import '../index.css';
 
@@ -38,11 +38,15 @@ function RouterContextBridge({ children }: { children: ReactNode }) {
   const setup = useSetupStatusQuery();
   const setupLoading = setup.isLoading || setup.isError;
   const setupRequired = setup.data?.setup_required === true;
+  const routerContextKey = getRouterContextKey(auth, setupLoading, setupRequired);
 
   useLayoutEffect(() => {
     router.update({ context: { auth, setupLoading, setupRequired } });
-    void router.invalidate();
   }, [router, auth, setupLoading, setupRequired]);
+
+  useLayoutEffect(() => {
+    void router.invalidate();
+  }, [router, routerContextKey]);
 
   return children;
 }

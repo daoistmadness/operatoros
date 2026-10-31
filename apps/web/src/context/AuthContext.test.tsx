@@ -22,8 +22,10 @@ function Probe() {
   const [logoutError, setLogoutError] = useState("");
   return <div>
     <span data-testid="state">{auth.loading ? "loading" : auth.authenticated ? `${auth.user?.username}:${auth.user?.role}` : "anonymous"}</span>
+    <span data-testid="verification">{auth.sessionVerification}</span>
     <button onClick={() => void auth.login("admin", "secret")}>login</button>
     <button onClick={() => { setLogoutError(""); void auth.logout().catch(() => setLogoutError("logout failed")); }}>logout</button>
+    <button onClick={() => void auth.retrySessionVerification?.()}>retry session</button>
     <span data-testid="logout-error">{logoutError}</span>
   </div>;
 }
@@ -43,6 +45,12 @@ async function waitForText(expected: string) {
   expect(container.textContent).toContain(expected);
 }
 
+function clickButton(index: number) {
+  const button = container.querySelectorAll("button").item(index);
+  if (!(button instanceof HTMLButtonElement)) throw new Error(`Missing button ${index}`);
+  button.click();
+}
+
 describe("AuthProvider", () => {
   beforeEach(() => { vi.clearAllMocks(); container = document.createElement("div"); document.body.appendChild(container); root = createRoot(container); });
   afterEach(() => { act(() => root.unmount()); container.remove(); });
@@ -55,13 +63,33 @@ describe("AuthProvider", () => {
   });
 
   it("settles as anonymous when no session exists", async () => {
-    vi.mocked(getCurrentUser).mockRejectedValue(new Error("unauthorized"));
+    vi.mocked(getCurrentUser).mockRejectedValue(new ApiError("Unauthorized", { status: 401 }));
     await renderProvider();
     expect(container.textContent).toContain("anonymous");
+    expect(container.querySelector('[data-testid="verification"]')?.textContent).toBe("idle");
+  });
+
+  it("keeps a transient initial session failure retryable instead of treating it as anonymous", async () => {
+    vi.mocked(getCurrentUser).mockRejectedValue(new ApiError("The server could not be reached.", { kind: "network" }));
+    await renderProvider();
+    expect(container.querySelector('[data-testid="state"]')?.textContent).toBe("anonymous");
+    expect(container.querySelector('[data-testid="verification"]')?.textContent).toBe("unavailable");
+  });
+
+  it("recovers the initial session after retry succeeds", async () => {
+    vi.mocked(getCurrentUser)
+      .mockRejectedValueOnce(new ApiError("The server could not be reached.", { kind: "network" }))
+      .mockResolvedValueOnce(admin);
+    await renderProvider();
+    expect(container.querySelector('[data-testid="verification"]')?.textContent).toBe("unavailable");
+
+    await act(async () => { clickButton(2); });
+    await waitForText("admin:admin");
+    expect(container.querySelector('[data-testid="verification"]')?.textContent).toBe("idle");
   });
 
   it("updates state after login and clears it after logout", async () => {
-    vi.mocked(getCurrentUser).mockRejectedValue(new Error("unauthorized"));
+    vi.mocked(getCurrentUser).mockRejectedValue(new ApiError("Unauthorized", { status: 401 }));
     vi.mocked(login).mockResolvedValue(admin);
     vi.mocked(logout).mockResolvedValue(undefined);
     await renderProvider();
