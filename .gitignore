@@ -70,6 +70,7 @@ backend/test_reset.py
 *.sqlite-journal
 # Build products
 dist/
+!packages/sheetjs-fork/dist/
 
 # Release artifacts
 release/**/*.exe

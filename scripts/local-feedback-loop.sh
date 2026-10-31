@@ -47,6 +47,9 @@ is_documentation_path() {
 
 is_lint_path() {
   case "$1" in
+    packages/sheetjs-fork/*)
+      return 1
+      ;;
     apps/*|packages/*)
       case "$1" in
         *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.mts|*.cts) return 0 ;;
@@ -74,7 +77,7 @@ case "$mode" in
       exit 0
     fi
     printf 'local_feedback_lint=staged (%s files)\n' "${#lint_paths[@]}"
-    bun run eslint --max-warnings=0 "${lint_paths[@]}"
+    bun run eslint --max-warnings=0 --no-warn-ignored "${lint_paths[@]}"
     ;;
   architecture)
     if [[ "$has_source_change" != true ]]; then

@@ -8,7 +8,7 @@ last_reviewed: 2026-10-26
 ## Current implementation
 
 Attendance preview parsing runs in the single Bun API process. ExcelJS reads
-`.xlsx`; the existing `@e965/xlsx` adapter reads legacy `.xls`. Parsing and
+`.xlsx`; the internal `@operatoros/sheetjs-fork` adapter reads legacy `.xls`. Parsing and
 row normalization finish before `createPreview` opens its SQLite transaction.
 That transaction writes only immutable staging rows, in bounded inserts of up
 to 80 rows per statement. Commit remains a separate atomic transaction that

@@ -135,7 +135,7 @@ flowchart TD
 | --- | --- | --- |
 | **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.4`, Node `24.19.0`, hk `2.8.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
-| **Spreadsheet & PDF Engines** | ExcelJS, @e965/xlsx, pdf-lib | ExcelJS `4.4`, `@e965/xlsx` `0.20`, pdf-lib `1.17` |
+| **Spreadsheet & PDF Engines** | ExcelJS, @operatoros/sheetjs-fork, pdf-lib | ExcelJS `4.4`, `@operatoros/sheetjs-fork` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
 | **Frontend Web Client** | React, Vite, React Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19.2.7`, Vite `8.3.4`, React Router `8.5.0`, TanStack Query `5`, TanStack Table `9.3.1`, Tailwind CSS `4`, Chart.js `4` |
 | **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |

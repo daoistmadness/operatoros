@@ -38,4 +38,7 @@ export const architectureFixtures: ArchitectureFixture[] = [
   { name: "Excel rejects UI", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/ui";', expected: "fail" },
   { name: "Excel rejects API", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/api";', expected: "fail" },
   { name: "Excel rejects Elysia", sourcePackage: "@operatoros/excel", source: 'import "elysia";', expected: "fail" },
+  { name: "Excel may consume SheetJS fork", sourcePackage: "@operatoros/excel", source: 'import "@operatoros/sheetjs-fork";', expected: "pass" },
+  { name: "API rejects SheetJS fork", sourcePackage: "@operatoros/api", source: 'import "@operatoros/sheetjs-fork";', expected: "fail" },
+  { name: "web rejects SheetJS fork", sourcePackage: "@operatoros/web", source: 'import "@operatoros/sheetjs-fork";', expected: "fail" },
 ];

@@ -105,14 +105,18 @@
     "packages/excel": {
       "name": "@operatoros/excel",
       "dependencies": {
-        "@e965/xlsx": "0.20.3",
         "@operatoros/contracts": "workspace:*",
+        "@operatoros/sheetjs-fork": "workspace:*",
         "exceljs": "4.4.0",
       },
       "devDependencies": {
         "bun-types": "1.4.0",
         "typescript": "5.9.3",
       },
+    },
+    "packages/sheetjs-fork": {
+      "name": "@operatoros/sheetjs-fork",
+      "version": "0.20.3-operatoros.0",
     },
     "packages/ui": {
       "name": "@operatoros/ui",
@@ -158,8 +162,6 @@
     "@base-ui/utils": ["@base-ui/utils@0.3.2", "", { "dependencies": { "@babel/runtime": "^7.29.2", "@floating-ui/utils": "^0.2.12", "reselect": "^5.2.0", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "@types/react": "^17 || ^18 || ^19", "react": "^17 || ^18 || ^19", "react-dom": "^17 || ^18 || ^19" }, "optionalPeers": ["@types/react"] }, "sha512-oWy1aq/I2GmYjpl4PhEAhzflF8VPGKgZeq0xAWTbfD5KBWyxcN0ZP2+WHSUm/5Z6lVMBDLReLcoXwSYoRc/zNQ=="],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.2.2", "", {}, "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="],
-
-    "@e965/xlsx": ["@e965/xlsx@0.20.3", "", { "bin": { "xlsx": "bin/xlsx.njs" } }, "sha512-703RN/3OdsRD5mtse2HBX7Um7xwaP9tlswEG6svOtjqokXoX7rJdQj7DyabD2I+xk22RgaIIU+R6BHgkpZGB/w=="],
 
     "@elysiajs/openapi": ["@elysiajs/openapi@1.4.15", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-HDtGIrWfFJk6UJS7qbgRmjifbSqnnRGDM3CsU/GVJkxLbEVEkNuQDf+Quh9fGbytSrJ8g4+tX9eVjshYhCH29w=="],
 
@@ -220,6 +222,8 @@
     "@operatoros/db": ["@operatoros/db@workspace:packages/db"],
 
     "@operatoros/excel": ["@operatoros/excel@workspace:packages/excel"],
+
+    "@operatoros/sheetjs-fork": ["@operatoros/sheetjs-fork@workspace:packages/sheetjs-fork"],
 
     "@operatoros/ui": ["@operatoros/ui@workspace:packages/ui"],
 

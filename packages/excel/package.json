@@ -8,8 +8,8 @@
     "benchmark": "bun benchmark.ts"
   },
   "dependencies": {
-    "@e965/xlsx": "0.20.3",
     "@operatoros/contracts": "workspace:*",
+    "@operatoros/sheetjs-fork": "workspace:*",
     "exceljs": "4.4.0"
   },
   "devDependencies": {
