@@ -2960,15 +2960,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "20b55a8a049a238077fb8d17ce0c915cb64f90833c5f2e908eed0d1851964f7f",
+      "fingerprint": "27e45e73a19e394c2e004d1b98823a6010ed433401772ecff6ea129f30584cf1",
       "snapshot": {
-        "CHANGELOG.md": "91aea1e414fa6d5ba292d19e18bff6b070ea8ef5bc6abcc5177baed9047cd46b"
+        "CHANGELOG.md": "544b81d4ea8ee4ac2e1ae6504d067c441db4b341b5afd9f96c8edd4df44f2587"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "356142aa23278744301164be9dd2caad54ee914e",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "These are the required changelog PR-number update and append-only review trail; they add no Elysia backend guidance or library skill content.",
       "evidence": [
-        "Changed: CHANGELOG.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: CHANGELOG.md at 356142aa23278744301164be9dd2caad54ee914e"
       ]
     },
     "source:COMMANDS.md": {
@@ -8572,15 +8572,15 @@
       ]
     },
     "source:docs/session/tanstack-start-migration.tsv": {
-      "fingerprint": "8cb11deb7a3e55c0f2911dcb18e34eb4f5b077d331b2ffcee3ce872380fdbf64",
+      "fingerprint": "7f9949e558c494af14ab93652a89243c8dc2a9274a46684c847154a5837b0789",
       "snapshot": {
-        "docs/session/tanstack-start-migration.tsv": "c8bf8b41778e97af5ae5d8f4c89374dbfe98717c6ce950643f4f30bbbf0e1c62"
+        "docs/session/tanstack-start-migration.tsv": "950f0105cd24e7e30dde3addb512109b5cd235f511a941b551f01c5294c7e7fc"
       },
-      "head": "fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4",
+      "head": "356142aa23278744301164be9dd2caad54ee914e",
       "outcome": "no-change",
-      "reason": "This updates a launcher test and append-only migration evidence; neither changes Elysia implementation nor reusable skill guidance. The fixture now mirrors the web package ESM setting and Start Vite config.",
+      "reason": "These are the required changelog PR-number update and append-only review trail; they add no Elysia backend guidance or library skill content.",
       "evidence": [
-        "Changed: docs/session/tanstack-start-migration.tsv at fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4"
+        "Changed: docs/session/tanstack-start-migration.tsv at 356142aa23278744301164be9dd2caad54ee914e"
       ]
     },
     "source:e2e/README.md": {
