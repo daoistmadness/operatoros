@@ -45,7 +45,7 @@ describe("cookie-session client boundary", () => {
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, unauthorized);
     window.addEventListener(AUTH_FORBIDDEN_EVENT, forbidden);
     vi.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Unauthorized" }), { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { code: "UNAUTHENTICATED", message: "Unauthorized" } }), { status: 401 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Forbidden" }), { status: 403 }));
     await expect(apiRequest({ path: "/api/auth/me" })).rejects.toMatchObject({ status: 401 });
     await expect(apiRequest({ path: "/api/admin/backups" })).rejects.toMatchObject({ status: 403 });
@@ -53,6 +53,27 @@ describe("cookie-session client boundary", () => {
     expect(forbidden).toHaveBeenCalledOnce();
     window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, unauthorized);
     window.removeEventListener(AUTH_FORBIDDEN_EVENT, forbidden);
+  });
+
+  it("parses canonical and legacy API error envelopes through the HTTP client", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(JSON.stringify({ error: { code: "VALIDATION_ERROR", message: "Request failed schema validation." } }), { status: 400 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Invalid academic year" }), { status: 400 }))
+      .mockResolvedValueOnce(new Response("not-json", { status: 400 }));
+
+    await expect(apiRequest({ path: "/api/test/canonical-error" })).rejects.toMatchObject({
+      status: 400,
+      code: "VALIDATION_ERROR",
+      message: "Request failed schema validation.",
+    });
+    await expect(apiRequest({ path: "/api/test/legacy-error" })).rejects.toMatchObject({
+      status: 400,
+      message: "Invalid academic year",
+    });
+    await expect(apiRequest({ path: "/api/test/malformed-error" })).rejects.toMatchObject({
+      status: 400,
+      message: "Permintaan tidak dapat diproses.",
+    });
   });
 
   it("ignores a pending request's 401 after a successful login", async () => {

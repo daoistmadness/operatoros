@@ -52,6 +52,18 @@ describe("typed API error normalization", () => {
       .toBe("Invalid academic year");
   });
 
+  it("parses canonical and legacy API error envelopes defensively", () => {
+    expect(normalizeApiError({
+      status: 400,
+      data: { error: { code: "VALIDATION_ERROR", message: "Request failed schema validation." } },
+    })).toMatchObject({ code: "VALIDATION_ERROR", message: "Request failed schema validation." });
+    expect(normalizeApiError({ status: 400, data: { detail: { code: "INVALID_INPUT", message: "Invalid academic year" } } }))
+      .toMatchObject({ code: "INVALID_INPUT", message: "Invalid academic year" });
+    expect(normalizeApiError({ status: 400, data: { message: "Legacy message" } }).message).toBe("Legacy message");
+    expect(normalizeApiError({ status: 400, data: { error: "malformed", detail: { message: 42 }, message: null } }, "Safe fallback").message)
+      .toBe("Safe fallback");
+  });
+
   it("normalizes network and timeout errors", () => {
     expect(normalizeApiError(new TypeError("Failed to fetch")).kind).toBe("network");
     expect(normalizeApiError(new Error("Request timed out")).kind).toBe("timeout");
