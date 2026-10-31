@@ -3,15 +3,15 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "b648bba9431f262989a89cf0246d2acb406cfab1be7014e2480ba5c6e02c4535",
+      "fingerprint": "d6261d7d94b5b1504bdeb0fa499213620bacfa46d6203657406f7ea36228a34d",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
+        ".github/workflows/ci.yml": "d3aea38dfbbdaf2605a1b0be16965287d8d7cfa224c29842e98bb01a44e63f8d",
+        "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "5f991cab9384cce1e70dc3e2be0c3fc7fed53dfead8d491a5b33edd9d8050405",
-        "docs/architecture/change-safety-golden-path.md": "a4dcb77bc432b558055ded5585b44ecbcca6ffb54bb8321d3aaf8957257fda53",
+        "bun.lock": "3938da314f6bb762c640fdbb8068f65ad863c956683b5bfb6aaa5be69b4e2b57",
+        "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
@@ -44,29 +44,26 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "The review signal is conservative because .github/CI.md is mapped into the skill snapshot. This edit clarifies ruleset enforcement only; it changes no Elysia guidance or examples. Skill validation and the package typecheck pass, so no skill guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "git diff --exit-code origin/main -- packages/agent-skills/skills/elysiajs/SKILL.md packages/agent-skills/docs/elysiajs.md packages/agent-skills/docs/elysiajs/references returned 0.",
-        "bun run skills:validate passed for the registered Elysia skill.",
-        "bun run --filter @operatoros/agent-skills typecheck passed.",
-        "The changed CI documentation contains no Elysia code example; the skill package has no Markdown-example compilation target."
+        "Changed: .github/workflows/ci.yml, AGENTS.md, bun.lock, docs/architecture/change-safety-golden-path.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a652eecf20c1bd833ec801e119b2819e1f2c9159eb2e5deba3640f5358d86292",
+      "fingerprint": "4dbb1be9b687fdad09ebc499a54f4e84cfb7d4c2b35b88579cd0cd32645f3d18",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "1111dc84495b75aee15d179378fede447b2bc90a54c7b5e190474d2fd7796c9e",
-        "AGENTS.md": "c0afe7f83486353328a0438e2b8413aa5d0e0bb6acca9226f25c393555787a47",
+        ".github/workflows/ci.yml": "d3aea38dfbbdaf2605a1b0be16965287d8d7cfa224c29842e98bb01a44e63f8d",
+        "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "5f991cab9384cce1e70dc3e2be0c3fc7fed53dfead8d491a5b33edd9d8050405",
-        "docs/architecture/change-safety-golden-path.md": "a4dcb77bc432b558055ded5585b44ecbcca6ffb54bb8321d3aaf8957257fda53",
+        "bun.lock": "3938da314f6bb762c640fdbb8068f65ad863c956683b5bfb6aaa5be69b4e2b57",
+        "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
@@ -99,13 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "dd27d41a39dd4758e517b61870649e7a3a0dd336",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "The checked-in planning records already describe preflight as an additional required check. The live ruleset readback confirms the same seven checks and strict status policy. This documentation correction aligns with those decisions and requires no planning update.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "git diff --exit-code origin/main -- _artifacts/domain_map.yaml _artifacts/skill_spec.md _artifacts/skill_tree.yaml returned 0.",
-        "_artifacts/skill_spec.md states that preflight became an additional required check.",
-        "Ruleset 24918867 is active on main with strict status checks and the seven required contexts: api, frontend, Select E2E scope, E2E full regression, CodeQL, E2E regression result, and preflight."
+        "Changed: .github/workflows/ci.yml, AGENTS.md, bun.lock, docs/architecture/change-safety-golden-path.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -917,30 +912,27 @@
       ]
     },
     "source:apps/web/src/vite-config.test.js": {
-      "fingerprint": "9600f563f9b11beead641b4508065c987719dbd5b1a3b910501aef74f476f830",
+      "fingerprint": "7e8e97fbfc14281ea28ae446bf293e07388eaadda5335a2910e734aa9062ae88",
       "snapshot": {
-        "apps/web/src/vite-config.test.js": "875079029aee504d73f01cfcd00b1c707de3663440e546cfee1471df042cf884"
+        "apps/web/src/vite-config.test.js": "c5dd8651c86c00cc62a8bc0ffd53e9563c5276e2b4e4fc3864919e5772889e78"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed apps/web/src/vite-config.test.js; it does not change registered Agent Skills or generated skill documentation.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed candidate path apps/web/src/vite-config.test.js.",
-        "No Agent Skills guidance or generated skill documentation is changed."
+        "Changed: apps/web/src/vite-config.test.js at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/vite.config.js": {
-      "fingerprint": "f93f23f3204f62415c22cb9ede080875af8fa3f0449b4b861c2c152acd6a7624",
+      "fingerprint": "08db7779676f082f0d5a51b48e55d5bbeff8b81922ed6799d2a07ef69910432a",
       "snapshot": {
-        "apps/web/vite.config.js": "90bcfe31904bb3c61d2828e57ce33f836736ab340f485cdea650f6df0e674147"
+        "apps/web/vite.config.js": "2635466495c5e34ee9754ac02cc6892bbc2f9a5c26a869e472b530a7365aadf7"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed apps/web/vite.config.js in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/vite.config.js at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/FRONTEND_ARCHITECTURE.md": {
@@ -1346,15 +1338,15 @@
       ]
     },
     "source:apps/web/README.md": {
-      "fingerprint": "e4c454a71fbe432d9d96e20aa6c1fcf4d510c7b28bcdacad927cc686f2a1b8d9",
+      "fingerprint": "204865f505b3b83a5962ce734b44af3ed92564d2f8a5eebf062c259f46ce4592",
       "snapshot": {
-        "apps/web/README.md": "d77340e1b8e9602213182b6fc0b2d8c0594cd6c47180c4f3379086e25722b8b7"
+        "apps/web/README.md": "eae44cdd7b4605c881d8e5c88d1d1eaaed8a92553870539470850f81a14e94e8"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/README.md at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/decisions/BUN_TOOLCHAIN.md": {
@@ -1734,17 +1726,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "0bbeea039987f64d0d9927e5069ca25eff6f5b883655dce40cd348796d706b79",
+      "fingerprint": "563c2b2eca5477a2e70ef43f82150467150f78a8ea54f12d3c6d6a793ad6833d",
       "snapshot": {
-        "docs/README.md": "ddfb7f4fbd8a5e4c50f389d17e1f374672d4b13ad58fa92377392cfb99ba2f84"
+        "docs/README.md": "9f8820c046c9a880381b8e506a728d035972e6738fcb0dc7943b22596811644d"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed docs/README.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -1801,15 +1791,15 @@
       ]
     },
     "source:apps/web/src/App.tsx": {
-      "fingerprint": "6d160b8fcd5498e1f4d8da6f5986c624bef266a6f93d3bc25e791c78ee4b1085",
+      "fingerprint": "cc0d341057b5d1c33940a371a9738c33d68aea9718c86d716da710f37d00aa68",
       "snapshot": {
-        "apps/web/src/App.tsx": "482e1be1e38f2ab669b2e169e16464952e38fa64bf34d1968c8274c23d927a01"
+        "apps/web/src/App.tsx": null
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/App.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/App.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/components/auth/RouteGuards.test.tsx": {
@@ -2970,15 +2960,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "74dd8f6e7bf693c103e00f8c0ab3f1cb79fab306a4c960634b648b0d704dd127",
+      "fingerprint": "20b55a8a049a238077fb8d17ce0c915cb64f90833c5f2e908eed0d1851964f7f",
       "snapshot": {
-        "CHANGELOG.md": "bef615d922a098f438b23e40962da3376fb47d6c9f38fe1a82dfb7dc5761a3b6"
+        "CHANGELOG.md": "91aea1e414fa6d5ba292d19e18bff6b070ea8ef5bc6abcc5177baed9047cd46b"
       },
-      "head": "0d18b461396670ad31aea287dbba72c99a1c5cd9",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed the changelog entry against the verified conflict-retry change and repository release-note rules; no maintainer skill guidance needs updating.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0d18b461396670ad31aea287dbba72c99a1c5cd9"
+        "Changed: CHANGELOG.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:COMMANDS.md": {
@@ -3330,29 +3320,27 @@
       ]
     },
     "source:docs/architecture/frontend-data.md": {
-      "fingerprint": "8a9362696c34b3425e6d623d4592690f2300c134cd448e87d7dcc9cf5cc634a0",
+      "fingerprint": "1c183d590d07eb9ca55464955f00de261913a46e3cbd68e53ceca11524730ec1",
       "snapshot": {
-        "docs/architecture/frontend-data.md": "4b9ad949ed187a1b50a36a151f53f3fbbd17580b967762b55fc8540989ca9b28"
+        "docs/architecture/frontend-data.md": "395dc1c45146b83c2a242fad412aed9d261f197eaf2722f3b54b35ffa71f19cb"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: docs/architecture/frontend-data.md at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: docs/architecture/frontend-data.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/frontend.md": {
-      "fingerprint": "73618436003e6fbb07dcf40d4d853a8e2e19e910087b5b2d7ff3158535130b88",
+      "fingerprint": "dde9b940ad845fa767d2cbbae4dd41acc434371d9c7ebe63d8f999da5abbadea",
       "snapshot": {
-        "docs/architecture/frontend.md": "9634c3e2d5af03898ec0968599fcc62361cfeb8e677e4fa12f06efcde1013239"
+        "docs/architecture/frontend.md": "fc2779fae63ce50ba778ea16cb79caa072a370965eea8751f743fccbc83ff0e1"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed docs/architecture/frontend.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/architecture/frontend.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/module-boundaries.md": {
@@ -3370,17 +3358,15 @@
       ]
     },
     "source:docs/architecture/overview.md": {
-      "fingerprint": "a68a1225aa5dd05af69bc67bc9140cfd743c512b75129e2eb9aac1e4b447db1d",
+      "fingerprint": "57a4817158819ed45c095ce6e60fd9f8a76627e9e4f8c5dcfbeea76e2aa5760d",
       "snapshot": {
-        "docs/architecture/overview.md": "8aa62771809f5d05790524d04b7cae50ecc55596bf72b1714c9664f0fc429466"
+        "docs/architecture/overview.md": "b358ea4d1880c762b87bb3e2b7c0587265fbb9cded9f2baf3fda45387d4cc8d3"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed docs/architecture/overview.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/architecture/overview.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/phase-14-monorepo.md": {
@@ -3398,17 +3384,15 @@
       ]
     },
     "source:docs/architecture/ui-and-routing.md": {
-      "fingerprint": "a2b51efdf26e3679dbce6849ea4c2a6b01d49e288d0d74e1bf1abc83a69c7500",
+      "fingerprint": "c68d51389decbe805315b84aaaba7cdbac1f2e163eea56c84b064385e0cc54dc",
       "snapshot": {
-        "docs/architecture/ui-and-routing.md": "a7f1f7ac7595a05b870d9a83abe1ad12550c5f1dab3ce961e4a77adeb1052a07"
+        "docs/architecture/ui-and-routing.md": "843cec0564f640715a7ee77111a74a21de9ef35dfef7f23fc6beb80b03813212"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed docs/architecture/ui-and-routing.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/architecture/ui-and-routing.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/architecture/ui-styling.md": {
@@ -4050,15 +4034,15 @@
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "d65b728770cba61fcd742d3ded86cf1c6e6f708bc733497869c8dbdecb9e364b",
+      "fingerprint": "fe39568839dd22951ef0227313b064495c411ad33aaf05868491a84b1f63914c",
       "snapshot": {
-        "docs/guides/offline-install.md": "51d7762f38772b37fc379ba3ede2c2017522aee2f12a5373c9712cee8d22fed7"
+        "docs/guides/offline-install.md": "65f0541f5e91bfad7be7a867980435c589e1d4e43993f387c7ae251eeff108b0"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/guides/offline-install.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4862,15 +4846,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "775381b263ce8336a7069d39884da457793b4d84a54468051d1c640b2bdd3762",
+      "fingerprint": "4138f841139984cd621411d3a963522c55f7d29d1204b2b2b9082d550e7a69df",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "9c28205c465e0de850d600ee4b9ac797df7c753ad0a88aae3bc7aaab468f9547"
+        "docs/runbooks/ubuntu-server-deployment.md": "0f0fae3d163fea2fae0f5ac9dccf6bdc00f5fdc120895fe24860d45613dd4521"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -6005,15 +5989,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.tsx": {
-      "fingerprint": "64f402ddf216c797199302a09b15e5d97408da40e3a71500abac55960faeb55e",
+      "fingerprint": "1b6ddeb209ec8b3cba788106d57eafb6552df1d31ffb3fb3d542694e0913a8f7",
       "snapshot": {
-        "apps/web/src/components/AppShell.tsx": "8e242b2329e6e2e8719f82d36c9c7943267da614211571f61c0e3fa2be48fc8b"
+        "apps/web/src/components/AppShell.tsx": "4e6bad09528d92768ad55f4fe11b3ddc3502f2af05d251017b4acf26f91d9286"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/components/AppShell.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/components/AppShell.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/components/NotFoundPage.tsx": {
@@ -6029,15 +6013,15 @@
       ]
     },
     "source:apps/web/src/index.tsx": {
-      "fingerprint": "65423d3cf73fb5dc6d0f7889d0c487c37eaf86969f8f1332ca8907e6917a74e4",
+      "fingerprint": "cc1662b83829c86a012115e2d2405c7a55bd9369feb6ccb7eebd0c6e185d0f1e",
       "snapshot": {
-        "apps/web/src/index.tsx": "2abea7378b68c39f503e33161591cee9649bdc1e306242abdd4051e9eef0a38d"
+        "apps/web/src/index.tsx": null
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/index.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/index.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/lib/attendanceCalendarNavigationGuard.ts": {
@@ -6109,39 +6093,39 @@
       ]
     },
     "source:apps/web/src/routeTree.gen.ts": {
-      "fingerprint": "878c989c6b5c358b344542dc524c44f10ef4d9bbcbe2ade000f162f57d8f2c8a",
+      "fingerprint": "008e50c5ba9626a885cf76d7dfec5a3daef28224323f05cbde8f77ee1ef01e31",
       "snapshot": {
-        "apps/web/src/routeTree.gen.ts": "e35b334980d8e6f5d0dc28a628796750b8557fa433df290de9a70f74fd4fecbb"
+        "apps/web/src/routeTree.gen.ts": "75e8fa52b9ddd91e0a088bb1664f53e600aec560a4bbd56f2d7e045128db25d4"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/routeTree.gen.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/routeTree.gen.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/router.ts": {
-      "fingerprint": "f3f5bbfa0ad1f99d272985bd2de9c72757d5bcefac0d9b5b918938047e2e2e75",
+      "fingerprint": "41cd4fed83bcf1c2f5b48d03593c89b77e72ac7f807feda1f96b74eb24e7f724",
       "snapshot": {
-        "apps/web/src/router.ts": "2c05ed1f0fdfa747a9dac2611b2a77b1b2029a64fca91a74199a90add4bf00b5"
+        "apps/web/src/router.ts": "961241fd650715f8132ec04395e9f29f35b69f7e1545689077ba924b9bcc6cad"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/router.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/router.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/routes/__root.tsx": {
-      "fingerprint": "f2b104a4c75e1ea8228642294f03e1644e77903eade06453437f5e59b84f132c",
+      "fingerprint": "ceee1196135725d19c5907221201ce97e3f61e4f5bcecccc3b998d53a2b92eeb",
       "snapshot": {
-        "apps/web/src/routes/__root.tsx": "7b85cabebc84f107c032aea6a2228e59ac329776a668ed4667dcaf37f632fbab"
+        "apps/web/src/routes/__root.tsx": "eb59ccd95c9e8cdb3a560b00c634a4a701ab6aed0d1d14b0b048fcd6c9be8812"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/routes/__root.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/routes/__root.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/routes/_authenticated.tsx": {
@@ -7085,40 +7069,39 @@
       ]
     },
     "source:scripts/test-scope.ts": {
-      "fingerprint": "c54bf9b9fb67ab1533c379a9d188aace297e510dee0202d791da965e444935f9",
+      "fingerprint": "df691d80945105d59a935f221215710f18b3618d55130cb3a974abdbca48d1ce",
       "snapshot": {
-        "scripts/test-scope.ts": "06b827fcb212f674fa1e39f648603c0b2b49b04c7ab150a3447e212d37c6e848"
+        "scripts/test-scope.ts": "a04aa380f9623af55b667f902a866877704f379bc68c902f486fc0b685922009"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: scripts/test-scope.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: scripts/test-scope.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:scripts/tests/test-scope.test.ts": {
-      "fingerprint": "ff9aa78efb87f93d0aff38952edb9e88ccb8a1111ad0e118c62d3f4abb31d0f0",
+      "fingerprint": "52d95b7944c1c9d29ea62801685487db2d05b946f9ce4ab6e906f9923dec172f",
       "snapshot": {
-        "scripts/tests/test-scope.test.ts": "6ee00f19f2cb53cd5fcd038422eeec3c247956cf4d6fab5b0e29cd10536ca6be"
+        "scripts/tests/test-scope.test.ts": "0e4a1896a9f9497830b77920776fd709afb7e1b324bc146eba5d8be0a48ffdf8"
       },
-      "head": "d2728e50e468b97014ecdddc2b8f52a0ee598efc",
-      "outcome": "out-of-scope",
-      "reason": "The added test executes the preflight fetch step and checks that a zero-before push fetches the event SHA. It changes no product behavior or Elysia task guidance.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "scripts/tests/test-scope.test.ts",
-        ".github/workflows/ci.yml"
+        "Changed: scripts/tests/test-scope.test.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
-      "fingerprint": "9524d88dcbc8808c700db19fadd29f6a6df9f31113e2d2604d93273c5f466b6a",
+      "fingerprint": "1877da3bf9a74704a69418c1696bbfc23d578e4d55b38c53e42810e038e83fb6",
       "snapshot": {
-        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "8cb1170f31c2ba48eca1e4d1af20d6d030f498fcdbd9379d2a203a7f8799beda"
+        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "75020ce4ce6dbbdd239139117dfdb8ae0bf68f27a82926e822ceb6c35299a901"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:scripts/check-pre-push.sh": {
@@ -7933,17 +7916,15 @@
       ]
     },
     "source:docs/reference/frontend-performance-baseline.md": {
-      "fingerprint": "eafb0ec5e1b0c5c69f0e75fdce08d8ed2e233a464dabf9f1c1a48b3a98f3c8a9",
+      "fingerprint": "e7978bf063e74c758fd79d9ff1f5326357b90857f73420f4eb41bdb779c5c61f",
       "snapshot": {
-        "docs/reference/frontend-performance-baseline.md": "d32b5d70d1cddfc37533d03f5c464d46f9cbbb76c7b9082bc7826c68e627209c"
+        "docs/reference/frontend-performance-baseline.md": "b9ba981cfc299853ce10d8dac78bc36c6e44b3e62d59ddfe69bbd678274aa846"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed docs/reference/frontend-performance-baseline.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/reference/frontend-performance-baseline.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:docs/reference/frontend-query-focus-comparison.json": {
@@ -8135,45 +8116,39 @@
       ]
     },
     "source:e2e/start-elysia-test-stack.sh": {
-      "fingerprint": "38ba32a5e46d6e87a81459853c8230dccdcd7506bfadce7543d259c644b68cb6",
+      "fingerprint": "489f90092e77112af62ab2f5888abfa089a8fafa1635a0489b3bef6505e7df33",
       "snapshot": {
-        "e2e/start-elysia-test-stack.sh": "d2b8a4c6304752380c7718a4e12f6cb8414c6459e12987409a410be3ca3f522d"
+        "e2e/start-elysia-test-stack.sh": "21146f7e25e1eec7bfb901c9d3cb0765a51a3341a715db11ab1b387a24c346e6"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed e2e/start-elysia-test-stack.sh in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/start-elysia-test-stack.sh at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:scripts/frontend-bundle-report.mjs": {
-      "fingerprint": "94370395a62ff21e5dad02c2ea13c2933345afad6636ff8d536cd32edf83f2c5",
+      "fingerprint": "4834abd157a99ad6133ec457452ef0f2ccd2a97405849e312cbe97cf6c6a1a31",
       "snapshot": {
-        "scripts/frontend-bundle-report.mjs": "1f3336aad849fa353945b72698e00263f55d54cc06bdaf8785c346c4329079af"
+        "scripts/frontend-bundle-report.mjs": "6d1ec7ca21a692f5b947cbbd4405c78bf773e49c39997f9d584081e1a99821ac"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed scripts/frontend-bundle-report.mjs in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: scripts/frontend-bundle-report.mjs at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:scripts/frontend-bundle-report.test.mjs": {
-      "fingerprint": "177e92efa2af2976d76e7cbafaafb6f98d752969706d461e9577eddcbcc2f283",
+      "fingerprint": "02f4526bae9eee5385040baf89aba87e3339697dd64c05e7345a3349245b815d",
       "snapshot": {
-        "scripts/frontend-bundle-report.test.mjs": "f78bc53d771437fb048cfc113466531daca5a1e2979d8ec99e3950be7513ab13"
+        "scripts/frontend-bundle-report.test.mjs": "a599370b58272a6cc9e9e3fc102dfa38d9e878b622ea50986807d869d545e482"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
-        "Reviewed scripts/frontend-bundle-report.test.mjs in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: scripts/frontend-bundle-report.test.mjs at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     },
     "source:apps/web/src/api/academicConfig.ts": {
@@ -8534,6 +8509,90 @@
       "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
       "evidence": [
         "Changed: apps/api/tests/machine-attendance-preview.test.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
+      ]
+    },
+    "source:apps/web/index.html": {
+      "fingerprint": "7907ac6ef722505e967547a76012aee99c053f48968e7ca88287389424193d37",
+      "snapshot": {
+        "apps/web/index.html": null
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: apps/web/index.html at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:apps/web/vite.preview.config.js": {
+      "fingerprint": "7b1ed7e30088f2c8f418a36e74b8697b9bcb99369d55494bfed27c237a8e12e5",
+      "snapshot": {
+        "apps/web/vite.preview.config.js": "559a74b377d9e7fa3c1d140022fc23c1fd409e8922210b85122ccfa7ae5a586a"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: apps/web/vite.preview.config.js at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:apps/web/vite.redact.preview.config.js": {
+      "fingerprint": "649cf36f45f32ee02cf3d8c3daccde98ad49a974e98c19edf5235477805324c4",
+      "snapshot": {
+        "apps/web/vite.redact.preview.config.js": "35d159798978deb9927a949609ec63adf0e2c2f47718b68fce3ea06f667f2e9c"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: apps/web/vite.redact.preview.config.js at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:apps/web/vite.shared.js": {
+      "fingerprint": "4db74af062307a0c34d214dee3421f1ed13b3cd01b2e3707fe8bb766da5a676d",
+      "snapshot": {
+        "apps/web/vite.shared.js": "e7effc919416640b3f2b184a1761966948d575b84940d9a1ab735d4865b41ff0"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: apps/web/vite.shared.js at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:docs/decisions/tanstack-start-spa.md": {
+      "fingerprint": "accac200f5fefd019e3983adb7c4587df04e0d9b70cfcba528355f085c5103d3",
+      "snapshot": {
+        "docs/decisions/tanstack-start-spa.md": "aef5eda3ae87b6677096021d97b9c21ece439997e418bc37be2c184221157f3e"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: docs/decisions/tanstack-start-spa.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:docs/session/tanstack-start-migration.tsv": {
+      "fingerprint": "87ed41f006a2e5302ab59ea2fa19391f26a0f18508e663d9824291bc552e9cba",
+      "snapshot": {
+        "docs/session/tanstack-start-migration.tsv": "7418dbb2dfede19a8284639e497d4e78f00c194a3be2a5d9f1a72f3d1b77ae09"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "This append-only session row records verification and hook outcomes; it changes no reusable Elysia guidance or skill batch.",
+      "evidence": [
+        "Changed: docs/session/tanstack-start-migration.tsv at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:e2e/README.md": {
+      "fingerprint": "941aa8eb6abca29a7a34f21fce4e0f4d3062c293ed1352ed1afd0ca2d872317e",
+      "snapshot": {
+        "e2e/README.md": "6ba0c0cd08566f9dfd3509f57dd94f4cacf1ee1c82c08e8434a790b9d228e260"
+      },
+      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "outcome": "no-change",
+      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "evidence": [
+        "Changed: e2e/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
       ]
     }
   }
