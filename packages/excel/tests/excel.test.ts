@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import * as XLSX from "@e965/xlsx";
+import { readFileSync } from "node:fs";
 import {
   EXCEL_EXPORT_FORMAT_VERSION,
   addWorksheet,
@@ -42,13 +42,29 @@ describe("@operatoros/excel", () => {
     expect(["=SUM(A1:A2)", "+text", "-text", "@text"].map(safeCellValue)).toEqual(["'=SUM(A1:A2)", "'+text", "'-text", "'@text"]);
   });
 
-  it("preserves date and legacy XLS normalization", () => {
+  it("preserves date and legacy XLS normalization from static fixture", () => {
     expect(parseExcelDate(46188)).toBe("2026-06-15");
-    const sheet = XLSX.utils.aoa_to_sheet([["Date", "Name"], ["15/06/2026", "Andi"]]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, sheet, "Attendance");
-    const bytes = new Uint8Array(XLSX.write(workbook, { bookType: "biff8", type: "buffer" }) as Uint8Array);
-    expect(readLegacyXlsRows(bytes)).toMatchObject({ sheetName: "Attendance", headers: ["Date", "Name"], rows: [["15/06/2026", "Andi"]] });
+    const fixturePath = new URL("./fixtures/legacy-attendance.xls", import.meta.url).pathname;
+    const bytes = readFileSync(fixturePath);
+    const parsed = readLegacyXlsRows(bytes);
+    expect(parsed.sheetName).toBe("Attendance");
+    expect(parsed.headers).toEqual([
+      "No. ID",
+      "Nama",
+      "Tanggal",
+      "Scan Masuk",
+      "Scan Pulang",
+      "Terlambat",
+      "Lembur",
+      "Pengecualian",
+      "week",
+    ]);
+    expect(parsed.rows.length).toBe(6);
+    expect(parsed.rows[0]).toEqual([9001, "Andi", "17/06/2026", "07:30", "16:00", "00:25", null, null, "25"]);
+    expect(parsed.rows[1]?.[1]).toBe("Renée Müller");
+    expect(parsed.rows[1]?.[2]).toBeInstanceOf(Date);
+    expect(parsed.rows[2]?.[1]).toBe("田中太郎");
+    expect(parsed.rows[2]?.[2]).toBe(46188);
   });
 
   it("normalizes XLSX worksheet data without exposing ExcelJS shapes", async () => {

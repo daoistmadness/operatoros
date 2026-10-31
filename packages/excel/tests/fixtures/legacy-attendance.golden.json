@@ -1,0 +1,257 @@
+{
+  "sheetName": "Attendance",
+  "headers": [
+    {
+      "$t": "string",
+      "v": "No. ID"
+    },
+    {
+      "$t": "string",
+      "v": "Nama"
+    },
+    {
+      "$t": "string",
+      "v": "Tanggal"
+    },
+    {
+      "$t": "string",
+      "v": "Scan Masuk"
+    },
+    {
+      "$t": "string",
+      "v": "Scan Pulang"
+    },
+    {
+      "$t": "string",
+      "v": "Terlambat"
+    },
+    {
+      "$t": "string",
+      "v": "Lembur"
+    },
+    {
+      "$t": "string",
+      "v": "Pengecualian"
+    },
+    {
+      "$t": "string",
+      "v": "week"
+    }
+  ],
+  "rows": [
+    [
+      {
+        "$t": "number",
+        "v": 9001
+      },
+      {
+        "$t": "string",
+        "v": "Andi"
+      },
+      {
+        "$t": "string",
+        "v": "17/06/2026"
+      },
+      {
+        "$t": "string",
+        "v": "07:30"
+      },
+      {
+        "$t": "string",
+        "v": "16:00"
+      },
+      {
+        "$t": "string",
+        "v": "00:25"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ],
+    [
+      {
+        "$t": "number",
+        "v": 9002
+      },
+      {
+        "$t": "string",
+        "v": "Renée Müller"
+      },
+      {
+        "$t": "date",
+        "v": "2026-06-17T00:00:00.000Z"
+      },
+      {
+        "$t": "string",
+        "v": "07:35"
+      },
+      {
+        "$t": "string",
+        "v": "16:05"
+      },
+      {
+        "$t": "string",
+        "v": "00:30"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ],
+    [
+      {
+        "$t": "number",
+        "v": 9003
+      },
+      {
+        "$t": "string",
+        "v": "田中太郎"
+      },
+      {
+        "$t": "number",
+        "v": 46188
+      },
+      {
+        "$t": "string",
+        "v": "07:28"
+      },
+      {
+        "$t": "string",
+        "v": "16:01"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ],
+    [
+      {
+        "$t": "number",
+        "v": 9004
+      },
+      {
+        "$t": "string",
+        "v": "Łukasz Šimon"
+      },
+      {
+        "$t": "string",
+        "v": "18/06/2026"
+      },
+      {
+        "$t": "string",
+        "v": "07:40"
+      },
+      {
+        "$t": "string",
+        "v": "16:10"
+      },
+      {
+        "$t": "string",
+        "v": "00:35"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ],
+    [
+      {
+        "$t": "number",
+        "v": 9005
+      },
+      {
+        "$t": "string",
+        "v": "李伟"
+      },
+      {
+        "$t": "string",
+        "v": "19/06/2026"
+      },
+      {
+        "$t": "string",
+        "v": "07:31"
+      },
+      {
+        "$t": "string",
+        "v": "16:02"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ],
+    [
+      {
+        "$t": "number",
+        "v": 9006
+      },
+      {
+        "$t": "string",
+        "v": "Müller-García"
+      },
+      {
+        "$t": "string",
+        "v": "20/06/2026"
+      },
+      {
+        "$t": "string",
+        "v": "07:29"
+      },
+      {
+        "$t": "string",
+        "v": "16:03"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "null"
+      },
+      {
+        "$t": "string",
+        "v": "WFH"
+      },
+      {
+        "$t": "string",
+        "v": "25"
+      }
+    ]
+  ]
+}
