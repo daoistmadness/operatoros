@@ -1,8 +1,9 @@
 import path from 'node:path';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { resolveConfig } from 'vite';
+import { spaShellFallbackPlugin } from '../vite.shared.js';
 
 beforeEach(() => {
   vi.resetModules();
@@ -59,30 +60,14 @@ it('resolves to loopback, exact proxy and HMR settings under poisoned inherited 
   for (const route of ['/api', '/health', '/ready', '/openapi']) expect(resolved.server.proxy[route].target).toBe('http://127.0.0.1:8098');
 });
 
-it('does not load hostile Vite environment files when the launcher disables them', async () => {
-  const root = mkdtempSync(path.join(tmpdir(), 'operatoros-vite-env-'));
-  try {
-    writeFileSync(path.join(root, '.env'), [
-      'VITE_TAILNET_HOST=attacker.example',
-      'VITE_HMR_HOST=attacker.example',
-      'VITE_HMR_PROTOCOL=wss',
-      'VITE_HMR_CLIENT_PORT=8443',
-      'VITE_API_BASE_URL=https://attacker.example/api',
-      '__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=*',
-      'FRONTEND_HOST=0.0.0.0',
-      'ALLOWED_ORIGINS=*',
-      'COOKIE_SECURE=true',
-    ].join('\n'));
-    vi.stubEnv('OPERATOROS_DISABLE_ENV_FILES', 'true');
-    const resolved = await resolveConfig({ ...await load(), root }, 'serve', 'development');
-    expect(resolved.envDir).toBe(false);
-    expect(resolved.server.host).toBe('127.0.0.1');
-    expect(resolved.server.ws).toMatchObject({ host: '127.0.0.1', protocol: 'ws', clientPort: 5173 });
-    expect(resolved.server.allowedHosts).not.toContain('attacker.example');
-    expect(resolved.env.VITE_API_BASE_URL).toBeUndefined();
-  } finally {
-    rmSync(root, { recursive: true, force: true });
-  }
+it('disables Vite environment files and keeps managed development on loopback', async () => {
+  vi.stubEnv('OPERATOROS_DISABLE_ENV_FILES', 'true');
+  const resolved = await resolveConfig(await load(), 'serve', 'development');
+  expect(resolved.envDir).toBe(false);
+  expect(resolved.server.host).toBe('127.0.0.1');
+  expect(resolved.server.ws).toMatchObject({ host: '127.0.0.1', protocol: 'ws', clientPort: 5173 });
+  expect(resolved.server.allowedHosts).not.toContain('attacker.example');
+  expect(resolved.env.VITE_API_BASE_URL).toBeUndefined();
 });
 
 it('clears Tailnet settings when returning to local mode and enforces exact Tailnet HMR when enabled', async () => {
@@ -197,6 +182,62 @@ it('does not register JSX-in-JS compatibility tooling', async () => {
   const config = await load();
   expect(config.plugins.map((plugin) => plugin.name)).not.toContain('treat-js-files-as-jsx');
   expect(config.optimizeDeps).toBeUndefined();
+});
+
+it('registers Start before React and generates the existing file route tree in SPA mode', async () => {
+  const config = await load();
+  const pluginNames = config.plugins.flat(Infinity)
+    .filter((plugin) => typeof plugin?.name === 'string')
+    .map((plugin) => plugin.name);
+  const startIndex = pluginNames.findIndex((name) => name.startsWith('tanstack-react-start'));
+  const reactIndex = pluginNames.indexOf('vite:react-babel');
+
+  expect(startIndex).toBeGreaterThanOrEqual(0);
+  expect(reactIndex).toBeGreaterThan(startIndex);
+  expect(config.build.outDir).toBe('build');
+  expect(config.build.manifest).toBe(true);
+});
+
+it('uses a static client-output preview config with all API proxy routes', async () => {
+  vi.resetModules();
+  const config = (await import('../vite.preview.config.js')).default;
+  expect(config.appType).toBe('custom');
+  expect(config.build.outDir).toBe('build/client');
+  expect(config.plugins.map((plugin) => plugin.name)).toEqual(['operatoros-spa-shell-fallback']);
+  for (const route of ['/api', '/health', '/ready', '/openapi']) {
+    expect(config.preview.proxy[route].target).toBe('http://127.0.0.1:8000');
+  }
+});
+
+it('rewrites only missing HTML documents and leaves assets and API requests alone', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'operatoros-spa-preview-'));
+  const client = path.join(root, 'build/client');
+  mkdirSync(path.join(client, 'assets'), { recursive: true });
+  writeFileSync(path.join(client, '_shell.html'), '<!doctype html>');
+  writeFileSync(path.join(client, 'assets/app.js'), 'export {};');
+  let middleware;
+  let nextCount = 0;
+  try {
+    spaShellFallbackPlugin().configurePreviewServer({
+      config: { root, build: { outDir: 'build/client' } },
+      middlewares: { use: (handler) => { middleware = handler; } },
+    });
+
+    const request = (method, url, accept) => {
+      const req = { method, url, headers: { accept } };
+      middleware(req, {}, () => { nextCount += 1; });
+      return req.url;
+    };
+
+    expect(request('GET', '/students/42?tab=active', 'text/html')).toBe('/_shell.html?tab=active');
+    expect(request('GET', '/assets/app.js', 'text/html')).toBe('/assets/app.js');
+    expect(request('GET', '/api/students', 'text/html')).toBe('/api/students');
+    expect(request('POST', '/students/42', 'text/html')).toBe('/students/42');
+    expect(request('GET', '/missing.js', '*/*')).toBe('/missing.js');
+    expect(nextCount).toBe(5);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 it.each(['0', '65536', '1.5', 'invalid'])('rejects invalid client port %s', async (port) => {

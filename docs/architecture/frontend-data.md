@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-30
+last_reviewed: 2026-10-31
 ---
 
 # Frontend data architecture
@@ -9,7 +9,11 @@ This page defines the current TanStack Query contract for server state. Complex
 editable surfaces such as Grade Matrix keep their drafts local and are not
 mechanically converted into server cache state.
 
-TanStack Query is the frontend server-state foundation. `src/index.tsx` owns the single application provider and `src/lib/query/queryClient.ts` owns both application and isolated test-client factories. Components should keep only UI drafts and selections in local state; API results, request status, and server errors belong in queries.
+TanStack Query is the frontend server-state foundation. The root route in
+`src/routes/__root.tsx` mounts the single application provider after client
+hydration. `src/lib/query/queryClient.ts` owns the application and isolated
+test-client factories. Components should keep only UI drafts and selections in
+local state; API results, request status, and server errors belong in queries.
 
 ## Query keys
 

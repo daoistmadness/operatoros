@@ -26,8 +26,10 @@ choose_port() {
 backend_port="$(choose_port 8090 8199)"
 frontend_port="$(choose_port 5180 5299)"
 web_config="vite.config.js"
+preview_config="vite.preview.config.js"
 if [[ "${OPERATOROS_E2E_REDACT:-false}" == "true" ]]; then
   web_config="vite.redact.config.js"
+  preview_config="vite.redact.preview.config.js"
 elif [[ "${OPERATOROS_E2E_REDACT:-false}" != "false" ]]; then
   printf '%s\n' "OPERATOROS_E2E_REDACT must be true or false." >&2
   exit 2
@@ -75,7 +77,7 @@ backend_pid=$!
 wait_until_ready() {
   local url="$1" pid="$2" log="$3" elapsed=0
   while (( elapsed < 60 )); do
-    if curl --fail --silent --max-time 2 --output /dev/null "$url" 2>/dev/null; then return 0; fi
+    if curl --fail --silent --max-time 2 --header 'Accept: text/html' --output /dev/null "$url" 2>/dev/null; then return 0; fi
     if ! ps -p "$pid" >/dev/null 2>&1; then tail -n 30 "$log" >&2 || true; return 1; fi
     sleep 1
     ((elapsed += 1))
@@ -93,7 +95,7 @@ wait_until_ready "http://127.0.0.1:$backend_port/health" "$backend_pid" "$backen
   else
     bun run build
   fi
-  exec setsid bun run --bun vite preview --config "$web_config" --host 127.0.0.1 --port "$frontend_port" --strictPort
+  exec setsid bun run --bun vite preview --config "$preview_config" --host 127.0.0.1 --port "$frontend_port" --strictPort
 ) >"$frontend_log" 2>&1 &
 frontend_pid=$!
 wait_until_ready "http://127.0.0.1:$frontend_port" "$frontend_pid" "$frontend_log"

@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-31
 ---
 
 # Architecture overview
@@ -20,10 +20,14 @@ and SQLite. PostgreSQL is unsupported; containers are not required.
 | packages/ui | Domain-neutral UI primitives and source-owned shadcn components |
 | packages/excel | Excel infrastructure used by the API |
 
-The browser application uses React 19, Vite 8.3.4, and TanStack Router. The Vite
-plugin builds the route tree from `apps/web/src/routes/`. `apps/web/src/router.ts`
-configures the router, and `apps/web/src/App.tsx` provides auth and setup state
-through router context. The app remains a client-rendered Vite SPA without SSR.
+The browser application uses React 19, Vite 8.3.4, and TanStack Start in SPA
+mode. The Start Vite plugin builds the route tree from `apps/web/src/routes/`;
+`apps/web/src/router.ts` creates a router instance per Start client and
+`apps/web/src/routes/__root.tsx` owns the document shell and browser providers.
+The app remains client-rendered and proxies same-origin API calls to the
+separately supervised Elysia process. See the
+[TanStack Start SPA decision](../decisions/tanstack-start-spa.md) for the
+hosting and ownership boundaries.
 
 ## Request and data flow
 

@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-31
 ---
 
 # Offline install and start
@@ -115,10 +115,13 @@ repository. This sequence uses only local state.
      bun --filter @operatoros/web preview
    ```
 
-   `apps/web` scripts are `build` (`vite build`, output `apps/web/build`) and
-   `preview` (`vite preview`). `vite.config.js` reads `FRONTEND_PORT` (default
-   5173) and `DEV_API_PROXY_TARGET` (default `http://127.0.0.1:${BACKEND_PORT}`);
-   the preview server binds `127.0.0.1` and proxies `/api` to the API. Open
+   `apps/web` builds the TanStack Start SPA into `apps/web/build/client`,
+   including the generated `/_shell.html` and static assets. Its `preview`
+   script uses `vite.preview.config.js` to serve only that client directory,
+   rewrite HTML document requests to the shell, and proxy `/api`, `/health`,
+   `/ready`, and `/openapi` to the existing API. The preview server binds
+   `127.0.0.1`. `FRONTEND_PORT` defaults to 5173 and `DEV_API_PROXY_TARGET`
+   defaults to `http://127.0.0.1:${BACKEND_PORT}`. Open
    `http://127.0.0.1:5173`.
 
 5. Optional verification after sign-in: create a manual backup once

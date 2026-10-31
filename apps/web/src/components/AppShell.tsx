@@ -122,9 +122,10 @@ function AppShellContent() {
   useLayoutEffect(() => {
     if (!verifyingSession) return undefined;
     const previousState = new Map<HTMLElement, { inert: boolean; ariaHidden: string | null }>();
+    const applicationShell = document.querySelector<HTMLElement>('.app-shell');
     const isolateOutsideOverlay = () => {
       for (const child of Array.from(document.body.children)) {
-        if (!(child instanceof HTMLElement) || child === sessionOverlayRef.current) continue;
+        if (!(child instanceof HTMLElement) || child === sessionOverlayRef.current || child === applicationShell) continue;
         if (!previousState.has(child)) {
           previousState.set(child, { inert: child.inert, ariaHidden: child.getAttribute('aria-hidden') });
         }

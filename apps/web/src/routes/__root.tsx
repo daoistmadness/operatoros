@@ -1,8 +1,15 @@
 import { AppLink as Link } from '../components/AppLink';
-import { createRootRouteWithContext, Outlet, useLocation } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
+import { ClientOnly, createRootRouteWithContext, HeadContent, Outlet, Scripts, useLocation, useRouter } from '@tanstack/react-router';
+import { lazy, Suspense, useLayoutEffect, type ReactNode } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '../lib/query/queryClient';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import { DeploymentModeProvider } from '../context/DeploymentModeContext';
+import { useSetupStatusQuery } from '../hooks/useSetupQueries';
 import { SetupBoundary } from '../components/auth/SetupBoundary';
 import type { RouterContext } from '../lib/router/access';
+import { RouteLoadingFallback } from './RouteLoadingFallback';
+import '../index.css';
 
 const TanStackRouterDevtools = import.meta.env.DEV
   ? lazy(() => import('@tanstack/react-router-devtools').then((module) => ({ default: module.TanStackRouterDevtools })))
@@ -25,12 +32,62 @@ function RouterError({ reset }: { reset: () => void }) {
   );
 }
 
+function RouterContextBridge({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const auth = useAuth();
+  const setup = useSetupStatusQuery();
+  const setupLoading = setup.isLoading || setup.isError;
+  const setupRequired = setup.data?.setup_required === true;
+
+  useLayoutEffect(() => {
+    router.update({ context: { auth, setupLoading, setupRequired } });
+    void router.invalidate();
+  }, [router, auth, setupLoading, setupRequired]);
+
+  return children;
+}
+
+function RootComponent() {
+  return (
+    <ClientOnly fallback={<RouteLoadingFallback />}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <DeploymentModeProvider>
+            <RouterContextBridge>
+              <SetupBoundary><Outlet /></SetupBoundary>
+            </RouterContextBridge>
+            <Suspense fallback={null}><TanStackRouterDevtools position="bottom-right" /></Suspense>
+          </DeploymentModeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ClientOnly>
+  );
+}
+
+function RootDocument({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <head><HeadContent /></head>
+      <body>
+        <noscript>You need to enable JavaScript to run OperatorOS.</noscript>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: () => (
-    <>
-      <SetupBoundary><Outlet /></SetupBoundary>
-      <Suspense fallback={null}><TanStackRouterDevtools position="bottom-right" /></Suspense>
-    </>
-  ),
+  head: () => ({
+    meta: [
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'theme-color', content: '#000000' },
+      { name: 'description', content: 'OperatorOS - School Attendance & Grade Analytics' },
+      { title: 'OperatorOS' },
+    ],
+  }),
+  component: RootComponent,
+  shellComponent: RootDocument,
   errorComponent: RouterError,
 });

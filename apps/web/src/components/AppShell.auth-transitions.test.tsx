@@ -189,6 +189,8 @@ describe('protected content during authorization transitions', () => {
     expect(retry).toHaveBeenCalledOnce();
 
     await act(async () => { root.render(renderRouter(router, client, initialAuth)); });
+    expect(container.querySelector('.app-shell')?.hasAttribute('inert')).toBe(false);
+    expect(container.querySelector('.app-shell')?.hasAttribute('aria-hidden')).toBe(false);
     expect(externalDialog.inert).toBe(false);
     expect(externalDialog.hasAttribute('aria-hidden')).toBe(false);
     externalDialog.remove();

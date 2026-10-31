@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-31
 ---
 
 # OperatorOS Change Safety & Feature Golden Path
@@ -45,8 +45,9 @@ Current ownership:
 
 | Area | Authority | Boundary |
 | --- | --- | --- |
-| Browser bootstrap | `apps/web/src/index.tsx` | Creates React root and the single in-memory `QueryClientProvider`. |
-| Application shell | `apps/web/src/App.tsx` | Router, `SetupBoundary`, auth, protected shell, lazy loading, and route error/loading handling. |
+| Browser bootstrap | TanStack Start client entry | Hydrates the Start router in React Strict Mode; no custom client entry is needed. |
+| Application shell | `apps/web/src/routes/__root.tsx` | Start document shell, browser-only Query/auth/deployment providers, `SetupBoundary`, route-context bridge, and route error/loading handling. |
+| Router factory | `apps/web/src/router.ts` | Creates one router per Start client and configures shared URL search parsing. |
 | Route inventory | `apps/web/src/routes/routeDefinitions.tsx` | Reachable route modules and route authorization. |
 | API composition | `apps/api/src/app.ts` | Elysia application, security, database, and domain route composition. |
 | Persistence | `packages/db` | SQLite lifecycle, Drizzle schema, migrations, data paths, and schema manifest. |
@@ -591,11 +592,14 @@ Do not introduce `OperatorOSFramework`, `GenericRuleEngine`, `MutationBus`,
 state-machine framework, or a plugin architecture. Existing services, typed
 registries, TypeBox, TanStack Query, and current tests are enough.
 
-Also do not introduce tRPC, Zod, Better Auth, TanStack Start, TanStack Form,
-Dagger, a frontend rewrite, persisted analytics rollups, cloud sync, Hucre
-migration, command palette, or `nuqs` as part of this program. The React Router
-to TanStack Router migration is authorized; preserve existing route behavior
-and use TypeBox for search validation.
+Also do not introduce tRPC, Zod, Better Auth, TanStack Form, Dagger, a frontend
+rewrite, persisted analytics rollups, cloud sync, Hucre migration, command
+palette, or `nuqs` as part of this program. The accepted
+[TanStack Start SPA decision](../decisions/tanstack-start-spa.md) authorizes
+migrating the current TanStack Router app to Start's SPA mode. Preserve route
+behavior, use TypeBox for search validation, and keep Elysia as the separately
+supervised API behind the existing same-origin HTTP proxy. SSR, Start server
+routes or functions, and in-process Elysia are outside that decision.
 
 ## 24. Documentation and implementation workflow
 

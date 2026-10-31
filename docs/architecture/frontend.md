@@ -1,20 +1,22 @@
 ---
 status: current
-last_reviewed: 2026-10-29
+last_reviewed: 2026-10-31
 ---
 
 # Frontend architecture
 
 The browser application lives in `apps/web` and uses React, Vite, TanStack
-Router, TanStack Query, and the shared OperatorOS UI package. Package versions
-are recorded in the web manifest and root Bun lockfile.
+Start in SPA mode, TanStack Query, and the shared OperatorOS UI package.
+Package versions are recorded in the web manifest and root Bun lockfile.
 
 ## Routing
 
-The Vite plugin generates `src/routeTree.gen.ts` from file routes in
-`src/routes/`. `src/router.ts` configures TanStack Router and the shared search
-parser. `src/App.tsx` provides authentication and setup state through router
-context.
+The Start Vite plugin generates `src/routeTree.gen.ts` from file routes in
+`src/routes/`. `src/router.ts` exports `getRouter()` and the shared search
+parser. Start creates the router; `src/routes/__root.tsx` owns the document
+shell, browser-only providers, setup boundary, and auth/setup context bridge.
+The providers mount after client hydration, so shell generation does not make
+API or session requests.
 
 Authenticated routes use `beforeLoad` guards and render through `AppShell`.
 `AppShell` checks the current path and auth state before it renders protected
@@ -24,6 +26,12 @@ authorization. Pages are lazy-loaded from their file routes.
 The route-tree test compares normalized generated paths with the authorization
 policy keys. A missing `authorizeRoute` policy denies that route. The generated
 `/$` route remains an authenticated fallback for unmatched URLs.
+
+The production build writes static assets and `/_shell.html` under
+`build/client/`. `vite.preview.config.js` omits the Start server plugin, serves
+that directory, gives existing assets and backend proxy paths precedence, and
+rewrites HTML document requests to the shell. The build's server directory is
+not a production request handler.
 
 See [UI and routing](ui-and-routing.md) for search-key behavior and URL policy
 coverage.
