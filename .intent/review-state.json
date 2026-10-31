@@ -1500,15 +1500,15 @@
       ]
     },
     "source:scripts/tests/dev-runtime.test.ts": {
-      "fingerprint": "3460138e2b88fdfaeadc5521720dab8034296b0c4166d7c048d11870dc69e758",
+      "fingerprint": "6225a5f2bf3b26c2a596d79b7888383176f1fc82ab1bc55db1617b6334def3a7",
       "snapshot": {
-        "scripts/tests/dev-runtime.test.ts": "021a05fb30bb434a4592ce4f64912f5fdd25812e14a212e8fb2cd43c571bf0df"
+        "scripts/tests/dev-runtime.test.ts": "17517106e5e7852dfed5e9a25a269bd9f811d8ec8cadc1fec30b7829745413e3"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "This updates a launcher test and append-only migration evidence; neither changes Elysia implementation nor reusable skill guidance. The fixture now mirrors the web package ESM setting and Start Vite config.",
       "evidence": [
-        "Changed: scripts/tests/dev-runtime.test.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: scripts/tests/dev-runtime.test.ts at fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4"
       ]
     },
     "source:scripts/validate-wsl-bun.sh": {
@@ -8572,15 +8572,15 @@
       ]
     },
     "source:docs/session/tanstack-start-migration.tsv": {
-      "fingerprint": "87ed41f006a2e5302ab59ea2fa19391f26a0f18508e663d9824291bc552e9cba",
+      "fingerprint": "8cb11deb7a3e55c0f2911dcb18e34eb4f5b077d331b2ffcee3ce872380fdbf64",
       "snapshot": {
-        "docs/session/tanstack-start-migration.tsv": "7418dbb2dfede19a8284639e497d4e78f00c194a3be2a5d9f1a72f3d1b77ae09"
+        "docs/session/tanstack-start-migration.tsv": "c8bf8b41778e97af5ae5d8f4c89374dbfe98717c6ce950643f4f30bbbf0e1c62"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4",
       "outcome": "no-change",
-      "reason": "This append-only session row records verification and hook outcomes; it changes no reusable Elysia guidance or skill batch.",
+      "reason": "This updates a launcher test and append-only migration evidence; neither changes Elysia implementation nor reusable skill guidance. The fixture now mirrors the web package ESM setting and Start Vite config.",
       "evidence": [
-        "Changed: docs/session/tanstack-start-migration.tsv at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/session/tanstack-start-migration.tsv at fdb38efd8aee00b403c0d5c9802ed4de4d0e5fb4"
       ]
     },
     "source:e2e/README.md": {
