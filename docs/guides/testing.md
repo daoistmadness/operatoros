@@ -122,6 +122,13 @@ because its React Testing Library, happy-dom, and Vite transform setup is
 material to the tests. No Web coverage provider or test-runner migration is
 added without a concrete consumer and reproducibility evidence.
 
+Web tests use Vitest APIs and must run through Vitest. To run the Vite
+configuration tests alone, use
+`cd apps/web && bun run --bun vitest run src/vite-config.test.js`. The web
+package test script uses that same Vitest runner for the full web suite, and CI
+runs the package test script through Turbo; do not invoke those tests with
+`bun test`.
+
 E2E remains serial (`workers: 1`) because one run owns the application stack and
 evidence directory. The launcher creates a unique disposable data root,
 selects runtime ports, polls readiness, records process ownership, and cleans
