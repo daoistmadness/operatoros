@@ -30,6 +30,8 @@ describe("test scope decisions", () => {
     ["apps/api/src/openapi-contract.ts", "BACKEND_API"], ["apps/api/src/health.ts", "BACKEND_UNIT"],
     ["apps/web/src/components/Card.tsx", "FRONTEND_COMPONENT"], ["apps/web/src/features/readiness/index.ts", "FRONTEND_FEATURE"],
     ["apps/web/src/routes/x.tsx", "FRONTEND_ROUTE"], ["apps/web/src/lib/api/client.ts", "FRONTEND_API_CLIENT"],
+    ["apps/web/vite.config.js", "FRONTEND_BUILD_CONFIG"], ["apps/web/vite.preview.config.js", "FRONTEND_BUILD_CONFIG"],
+    ["apps/web/vite.redact.preview.config.js", "FRONTEND_BUILD_CONFIG"], ["apps/web/vite.shared.js", "FRONTEND_BUILD_CONFIG"],
     ["apps/web/src/generated/openapi/schema.ts", "FRONTEND_GENERATED_CONTRACT"], ["packages/db/src/schema.ts", "DATABASE_PACKAGE"],
     ["packages/contracts/src/index.ts", "CONTRACTS_PACKAGE"], ["packages/ui/src/button.tsx", "UI_PACKAGE"],
     ["Makefile", "E2E_INFRASTRUCTURE"], ["e2e/run-smoke.sh", "E2E_INFRASTRUCTURE"],

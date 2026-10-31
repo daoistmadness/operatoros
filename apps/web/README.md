@@ -39,11 +39,9 @@ apps/web/
 │   ├── components/   # Shared UI and navigation
 │   ├── lib/          # API client and helpers
 │   ├── pages/        # Route-level screens
-│   ├── App.tsx       # Provider composition
-│   ├── router.ts     # Router instance and URL search parsing
-│   ├── routes/       # TanStack Router file-based routes
-│   ├── routeTree.gen.ts # Generated route tree
-│   ├── index.tsx
+│   ├── router.ts     # Start router factory and URL search parsing
+│   ├── routes/       # TanStack Start file routes and root document
+│   ├── routeTree.gen.ts # Start-generated route tree
 │   ├── index.css     # Tailwind source
 │   └── vite-env.d.ts
 ├── public/
@@ -81,7 +79,11 @@ requests to Elysia.
 bun run build
 ```
 
-The production bundle is served from `apps/web/build/`.
+The production client assets and SPA shell are emitted to
+`apps/web/build/client/`. The `preview` script uses the static-only
+`vite.preview.config.js` to serve that client output, rewrite document paths to
+`/_shell.html`, and proxy `/api`, `/health`, `/ready`, and `/openapi` to Elysia.
+Start's build-time server output is not used to run the preview host.
 
 ## API Configuration
 - [`src/lib/api/client.ts`](src/lib/api/client.ts) centralizes URL building.
@@ -95,7 +97,14 @@ The production bundle is served from `apps/web/build/`.
 Routes are file-based under [`src/routes/`](src/routes/). Dynamic segments use
 `$id` filenames, route authorization runs in `beforeLoad`, and search params
 are validated with TypeBox. The generated route tree is `src/routeTree.gen.ts`.
-The shell is composed in [`src/App.tsx`](src/App.tsx):
+The root document, browser-only providers, setup boundary, and route context
+bridge live in [`src/routes/__root.tsx`](src/routes/__root.tsx). TanStack Start
+owns router creation through [`src/router.ts`](src/router.ts); its SPA shell
+keeps the existing Elysia API as a separate process and preserves same-origin
+HTTP access. Authenticated routes are children of `_authenticated.tsx` and
+render through `AppShell`.
+
+Routes include:
 - `/` Dashboard
 - `/upload` Data Import & Export workspace
 - `/upload-center` Legacy redirect to Attendance Upload
