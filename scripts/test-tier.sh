@@ -89,7 +89,7 @@ case "$tier" in
         frontend_static
         mapfile -t frontend_tests < <(bun -e '(await Bun.file(process.argv[1]).json()).focused_tests.filter(path=>path.startsWith("src/")).forEach(path=>console.log(path))' "$scope_file")
         if ((${#frontend_tests[@]})); then
-          (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run test "${frontend_tests[@]}")
+          (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run --bun vitest run "${frontend_tests[@]}" && bun test ../../scripts/frontend-bundle-report.test.mjs)
         fi
         if [[ "$frontend_build_required" == yes ]]; then
           (cd "$repo/apps/web" && PATH="$bun_bin:$PATH" bun run build)

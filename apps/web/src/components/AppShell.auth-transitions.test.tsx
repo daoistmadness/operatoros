@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCurrentUser, logout } from '../api/auth';
+import { ApiError } from '../lib/api/errors';
 import { AuthContext, AuthProvider, useAuth, type AuthContextValue } from '../context/AuthContext';
 import { createTestQueryClient } from '../lib/query/queryClient';
 import { queryKeys } from '../lib/query/queryKeys';
@@ -239,7 +240,7 @@ describe('protected content during authorization transitions', () => {
     const logoutStarted = new Promise<void>((resolve) => { markLogoutStarted = resolve; });
     const requestStarted = new Promise<void>((resolve) => { markRequestStarted = resolve; });
     const anonymous = new Promise<void>((resolve) => { markAnonymous = resolve; });
-    vi.mocked(getCurrentUser).mockResolvedValueOnce(initialUser).mockRejectedValue(new Error('unauthorized'));
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(initialUser).mockRejectedValue(new ApiError('Unauthorized', { status: 401 }));
     vi.mocked(logout).mockImplementation(() => {
       markLogoutStarted();
       return logoutResponse;
