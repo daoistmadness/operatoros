@@ -1,4 +1,5 @@
-import * as XLSX from "@e965/xlsx";
+import { createRequire } from "node:module";
+import type * as XLSXTypes from "@operatoros/sheetjs-fork";
 import { normalizeHeader } from "./normalization";
 
 export type LegacyWorksheetRows = {
@@ -8,7 +9,18 @@ export type LegacyWorksheetRows = {
   date1904: boolean;
 };
 
+let _xlsx: typeof XLSXTypes | null = null;
+
+function getXlsx(): typeof XLSXTypes {
+  if (!_xlsx) {
+    const req = typeof require === "function" ? require : createRequire(__filename);
+    _xlsx = req("@operatoros/sheetjs-fork") as typeof XLSXTypes;
+  }
+  return _xlsx;
+}
+
 export function readLegacyXlsRows(buffer: ArrayBuffer | Uint8Array): LegacyWorksheetRows {
+  const XLSX = getXlsx();
   const input = buffer instanceof ArrayBuffer
     ? Buffer.from(buffer)
     : Buffer.from(buffer.buffer, buffer.byteOffset, buffer.byteLength);
@@ -23,6 +35,7 @@ export function readLegacyXlsRows(buffer: ArrayBuffer | Uint8Array): LegacyWorks
 }
 
 export function writeLegacyXlsRows(rows: unknown[][], headers: unknown[], sheetName = "Sheet1"): Uint8Array {
+  const XLSX = getXlsx();
   const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, sheetName);

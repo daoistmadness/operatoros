@@ -46,9 +46,10 @@ const allowedInternal: Record<string, Set<string>> = {
   "@operatoros/web": new Set(["@operatoros/config", "@operatoros/contracts", "@operatoros/ui"]),
   "@operatoros/contracts": new Set(["@operatoros/config"]),
   "@operatoros/db": new Set(["@operatoros/config"]),
-  "@operatoros/excel": new Set(["@operatoros/contracts"]),
+  "@operatoros/excel": new Set(["@operatoros/contracts", "@operatoros/sheetjs-fork"]),
   "@operatoros/ui": new Set(["@operatoros/config"]),
   "@operatoros/config": new Set(),
+  "@operatoros/sheetjs-fork": new Set(),
 };
 
 const forbiddenExternal: Record<string, Set<string>> = {
@@ -59,6 +60,7 @@ const forbiddenExternal: Record<string, Set<string>> = {
   "@operatoros/excel": new Set(["elysia", "drizzle-orm", "react"]),
   "@operatoros/ui": new Set(["elysia", "drizzle-orm"]),
   "@operatoros/config": new Set(),
+  "@operatoros/sheetjs-fork": new Set(),
 };
 
 function readJson(path: string): PackageJson | null {

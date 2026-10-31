@@ -1,0 +1,22 @@
+{
+  "name": "@operatoros/sheetjs-fork",
+  "version": "0.20.3-operatoros.0",
+  "private": true,
+  "description": "Trimmed vendored SheetJS CE for legacy .xls (BIFF8) read path",
+  "license": "Apache-2.0",
+  "main": "./xlsx.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./xlsx.js"
+    }
+  },
+  "files": [
+    "xlsx.js",
+    "dist/cpexcel.js",
+    "types",
+    "UPSTREAM.md",
+    "LICENSE"
+  ]
+}

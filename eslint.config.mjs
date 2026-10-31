@@ -12,6 +12,7 @@ export default [
       "e2e-results/**",
       "scripts/tests/architecture-fixtures/**",
       "**/routeTree.gen.ts",
+      "packages/sheetjs-fork/**",
     ],
   },
   ...workspaceBoundaryConfigs.map(({ files, packageName }) => ({

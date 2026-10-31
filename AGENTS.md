@@ -163,7 +163,7 @@ operations tooling; it is not the production backend.
 - `@operatoros/db` owns Drizzle schema, SQLite lifecycle, and `packages/db/src/data-dir.ts`. Business services, HTTP, backup policy, and scheduling belong in `apps/api/`.
 - `@operatoros/contracts` owns cross-boundary TypeBox DTO schemas/types. Keep HTTP transport in API and database rows in DB. Use explicit internal-to-DTO mappers.
 - `@operatoros/ui` owns domain-neutral primitives and source-owned shadcn components; use Base UI for new primitives. Keep routes, fetching, business forms, and domain rules in web. Existing web Radix components may remain.
-- `@operatoros/excel` owns Excel infrastructure. Server DTOs supply attendance, grades, KKM, and rankings. ExcelJS `4.4.0` owns `.xlsx`; `@e965/xlsx` handles legacy `.xls`. Preserve format parity. Authoritative exports use the API.
+- `@operatoros/excel` owns Excel infrastructure. Server DTOs supply attendance, grades, KKM, and rankings. ExcelJS `4.4.0` owns `.xlsx`; `@operatoros/sheetjs-fork` handles legacy `.xls` (lazy loaded). Preserve format parity. Authoritative exports use the API.
 - Cross-workspace imports use package exports. No deep `@operatoros/*/src`, relative cross-workspace source imports, or `packages/*` imports of `apps/*`. Contracts must not import Elysia, Drizzle, or React. UI must not import DB, contracts, API, Elysia, or Drizzle. API, DB, and contracts must not import UI. Web must not import DB, Excel, or API internals. Run `bun run check:architecture`.
 
 ## Backend skills and conventions
