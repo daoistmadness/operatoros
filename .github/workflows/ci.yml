@@ -125,6 +125,11 @@ jobs:
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
+      - name: Verify minimatch override compatibility
+        working-directory: ${{ github.workspace }}
+        run: |
+          bun scripts/tests/minimatch-override.compatibility.cjs
+          node scripts/tests/minimatch-override.compatibility.cjs
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:

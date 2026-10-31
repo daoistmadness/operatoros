@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Pin affected minimatch dependency paths to the patched release and test their current consumers under Bun and Node.
 - Migrate the web app to TanStack Start SPA mode while preserving the standalone Elysia API and same-origin proxy (#351).
 - Make attendance conflict-retry commits idempotent across exact and concurrent replays without duplicate audit entries (#350).
 - Reject committed attendance-import retries that change the selected rows (#349).

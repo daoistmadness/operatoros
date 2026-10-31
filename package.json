@@ -76,6 +76,31 @@
   "overrides": {
     "exceljs": {
       "uuid": "^11.1.1"
+    },
+    "readdir-glob@1.1.3": {
+      "minimatch": "11.0.1"
+    },
+    "glob@7.2.3": {
+      "minimatch": "11.0.1"
+    },
+    "@redocly/openapi-core@1.34.20": {
+      "minimatch": "11.0.1"
+    },
+    "eslint@10.9.1": {
+      "minimatch": "11.0.1"
+    },
+    "@eslint/config-array@0.23.5": {
+      "minimatch": "11.0.1"
+    },
+    "@typescript-eslint/typescript-estree@8.68.0": {
+      "minimatch": "11.0.1"
+    },
+    "chainsaw@0.1.0": {
+      "traverse": "0.3.9"
     }
+  },
+  "patchedDependencies": {
+    "@redocly/openapi-core@1.34.20": "patches/@redocly%2Fopenapi-core@1.34.20.patch",
+    "glob@7.2.3": "patches/glob@7.2.3.patch"
   }
 }
