@@ -1,17 +1,7 @@
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature as login } from "../../helpers/feature-login";
 import { readFileSync } from "node:fs";
 import { addWorksheet, appendRow, createWorkbook, writeXlsxWorkbook } from "../../../packages/excel/src/index";
-
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
-
-async function login(page: Page): Promise<void> {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
 
 function currentMonth(): string {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit" }).formatToParts(new Date());

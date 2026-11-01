@@ -1,17 +1,8 @@
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature as login } from "../../helpers/feature-login";
 import { readFileSync } from "node:fs";
 
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 const machineFixture = process.env.OPERATOROS_E2E_MACHINE_IMPORT_XLSX!;
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
 
 test("@attendance @machine-preview @critical @release previews scan evidence against calendar rules without Alfa inference", async ({ page }) => {
   await login(page);

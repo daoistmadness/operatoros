@@ -1,7 +1,6 @@
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature as login } from "../../helpers/feature-login";
 
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 const dateAfterDays = (days: number) => {
   const value = new Date();
   value.setUTCDate(value.getUTCDate() + days);
@@ -11,14 +10,6 @@ const daysToNextMonday = (8 - new Date().getUTCDay()) % 7 || 7;
 const targetDate = dateAfterDays(daysToNextMonday);
 const nextDate = dateAfterDays(daysToNextMonday + 1);
 const laterDate = dateAfterDays(daysToNextMonday + 2);
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
 
 test("@lateness @critical canonical cutoff classifies arrivals and drives the tardiness report", async ({ page }) => {
   const browserErrors: string[] = [];

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
@@ -52,4 +53,31 @@ test("@session @auth @critical @release redirects to login after a confirmed 401
   await unauthorized;
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+});
+
+test("@session @auth @release feature session survives a separate session logout", async ({ page, browser }) => {
+  await loginForFeature(page);
+  const origin = new URL(page.url()).origin;
+  const peer = await browser.newContext({ baseURL: origin });
+  const independent = await browser.newContext({ baseURL: origin });
+  try {
+    const peerPage = await peer.newPage();
+    await loginForFeature(peerPage);
+    const sharedCookie = (await page.context().cookies()).find((cookie) => cookie.name === "astyx_session");
+    const peerCookie = (await peer.cookies()).find((cookie) => cookie.name === "astyx_session");
+    expect(Boolean(sharedCookie && peerCookie && sharedCookie.value === peerCookie.value)).toBe(true);
+
+    const independentPage = await independent.newPage();
+    await signIn(independentPage);
+    const independentCookie = (await independent.cookies()).find((cookie) => cookie.name === "astyx_session");
+    expect(Boolean(sharedCookie && independentCookie && sharedCookie.value !== independentCookie.value)).toBe(true);
+    await independentPage.getByRole("button", { name: "Logout" }).click();
+    await expect(independentPage).toHaveURL(/\/login$/);
+    expect((await independent.request.get("/api/auth/me")).status()).toBe(401);
+    expect((await page.request.get("/api/auth/me")).status()).toBe(200);
+    expect((await peer.request.get("/api/auth/me")).status()).toBe(200);
+  } finally {
+    await peer.close();
+    await independent.close();
+  }
 });

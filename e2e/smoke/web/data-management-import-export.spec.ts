@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 import { readFileSync } from "node:fs";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
@@ -46,7 +47,7 @@ test("@data-management @legacy-routes @critical @release consolidates import and
     const expectedInitialAuthProbe = url.pathname === "/api/auth/me" && response.status() === 401;
     if (!expectedInitialAuthProbe) criticalErrors.push(`API ${response.status()}: ${url.pathname}`);
   });
-  await login(page);
+  await loginForFeature(page);
 
   await page.getByRole("link", { name: "Data Import & Export", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
@@ -83,7 +84,7 @@ test("@data-management @legacy-routes @critical @release consolidates import and
 });
 
 test("@data-management @export @critical @release downloads a supported dataset from the canonical workspace", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   const preview = page.waitForResponse((response) => response.url().includes("/api/data-portability/exports/preview") && response.request().method() === "POST" && response.status() === 200);
   await page.goto("/data-portability");
   await expect(page).toHaveURL(/\/upload\?section=export$/);
@@ -99,7 +100,7 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   const criticalErrors: string[] = [];
   page.on("pageerror", (error) => criticalErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) criticalErrors.push(message.text()); });
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/academic-management?tab=allocation");
   await page.locator("#enrollment-jenjang").selectOption({ label: "Primary" });
   await page.locator("#enrollment-program").selectOption({ label: "Primary" });

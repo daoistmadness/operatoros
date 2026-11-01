@@ -1,9 +1,9 @@
 import { mkdirSync } from "node:fs";
+import { loginForFeature as login } from "../../helpers/feature-login";
 import path from "node:path";
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 const classId = 770;
 const attendanceDate = "2026-09-14";
 type SubmittedPayload = { entries: Array<{ student_id: number; status: string; notes?: string; source?: string }> };
@@ -20,14 +20,6 @@ const students = Array.from({ length: 78 }, (_, index) => ({
   pending_correction: false,
   correction_request_id: null,
 }));
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
 
 test("@attendance @correction-identity @release keeps synthetic roster identity visible while editing", async ({ page }) => {
   let submittedEntries: SubmittedPayload["entries"] = [];
