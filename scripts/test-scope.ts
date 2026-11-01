@@ -45,7 +45,7 @@ export function classifyPath(path: string): string[] {
   if (web("src/features/")) return ["FRONTEND_FEATURE"];
   if (web("src/components/") || web("src/pages/")) return ["FRONTEND_COMPONENT"];
   if (web("src/lib/api/") || web("src/api/")) return ["FRONTEND_API_CLIENT"];
-  if (web("") && ["package.json", "package-lock.json", "bun.lock", "vite.config.ts", "vitest.config.ts", "tsconfig.json"].includes(basename(value))) return ["FRONTEND_BUILD_CONFIG", "FRONTEND_TEST_INFRASTRUCTURE"];
+  if (web("") && ["package.json", "package-lock.json", "bun.lock", "vite.config.ts", "vite.config.js", "vite.preview.config.js", "vite.redact.config.js", "vite.redact.preview.config.js", "vite.shared.js", "vitest.config.ts", "tsconfig.json"].includes(basename(value))) return ["FRONTEND_BUILD_CONFIG", "FRONTEND_TEST_INFRASTRUCTURE"];
   if (value.startsWith("backend/src/models/")) return ["BACKEND_MODEL"];
   if (value.startsWith("backend/migrations/") || value.startsWith("backend/src/migrations/") || value.includes("migration") && value.startsWith("backend/src/core/")) return ["BACKEND_MIGRATION"];
   if (["backend/src/main.py", "backend/src/core/database.py", "backend/src/core/schema_guard.py", "backend/src/core/schema_parity.py"].includes(value)) return ["BACKEND_BOOTSTRAP"];

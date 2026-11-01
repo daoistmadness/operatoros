@@ -17,13 +17,26 @@ vi.mock("../api/uppReports", () => ({
   uploadUppReport: vi.fn(),
 }));
 
-const now = "2026-10-27T00:00:00.000Z";
+function monthInJakarta(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit" }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  if (!year || !month) throw new Error("Could not resolve the synthetic report month.");
+  return `${year}-${month}`;
+}
+
+const currentMonth = monthInJakarta(new Date());
+const currentMonthYear = Number(currentMonth.slice(0, 4));
+const currentMonthNumber = Number(currentMonth.slice(5, 7));
+const month = monthInJakarta(new Date(Date.UTC(currentMonthYear, currentMonthNumber - 2, 1)));
+const now = new Date().toISOString();
 const report: UppReportSummaryDto = {
-  id: null, school_unit_id: 8, school_unit_name: "Synthetic Unit", month: "2026-10",
+  id: null, school_unit_id: 8, school_unit_name: "Synthetic Unit", month,
   file_name: null, file_size_bytes: null, version_id: null, uploaded_at: null, uploaded_by: null,
   submission_status: "NOT_UPLOADED", submitted_at: null, submitted_by: null, submission_notes: null, updated_at: null,
 };
-const list: UppReportListResponseDto = { month: "2026-10", items: [report] };
+const currentList: UppReportListResponseDto = { month: currentMonth, items: [{ ...report, month: currentMonth }] };
+const list: UppReportListResponseDto = { month, items: [report] };
 const queryClient = createTestQueryClient();
 let container: HTMLDivElement;
 let root: Root;
@@ -35,7 +48,10 @@ beforeEach(() => {
   queryClient.clear();
   const uploaded = { ...report, id: 10, version_id: 40, file_name: "monthly.xlsx", file_size_bytes: 30, uploaded_at: now, uploaded_by: "synthetic-admin", submission_status: "UPLOADED" as const, updated_at: now };
   const ready = { ...uploaded, submission_status: "READY_FOR_SUBMISSION" as const };
-  vi.mocked(api.fetchUppReports).mockResolvedValueOnce(list).mockResolvedValue({ month: list.month, items: [uploaded] });
+  vi.mocked(api.fetchUppReports)
+    .mockResolvedValueOnce(currentList)
+    .mockResolvedValueOnce(list)
+    .mockResolvedValue({ month: list.month, items: [uploaded] });
   vi.mocked(api.uploadUppReport).mockResolvedValue(uploaded);
   vi.mocked(api.changeUppReportStatus).mockResolvedValue(ready);
 });
@@ -56,7 +72,7 @@ describe("Monthly UPP Reports page", () => {
     expect(container.textContent).toContain("0 of 1 school units");
     const monthInput = container.querySelector<HTMLInputElement>("#upp-month");
     if (!monthInput) throw new Error("Reporting month input is missing.");
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(monthInput, "2026-10");
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(monthInput, month);
     await act(async () => monthInput.dispatchEvent(new Event("change", { bubbles: true })));
     await flush();
 
@@ -69,7 +85,7 @@ describe("Monthly UPP Reports page", () => {
     if (!upload) throw new Error("Upload action is missing.");
     await act(async () => upload.click());
     await flush();
-    expect(api.uploadUppReport).toHaveBeenCalledWith(8, "2026-10", file, "");
+    expect(api.uploadUppReport).toHaveBeenCalledWith(8, month, file, "");
     await flush();
     const readyForSubmission = Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Ready for submission"));
     if (!readyForSubmission) throw new Error("Submission status action is missing.");

@@ -1,18 +1,9 @@
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature as login } from "../../helpers/feature-login";
 
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 const holiday = "2026-08-03";
 const futureExpectedDate = "2027-06-28";
 const pastExpectedDate = "2026-08-10";
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
 
 test("@attendance @calendar @critical @release configures expectation and surfaces it in Daily Attendance", async ({ page }) => {
   const browserErrors: string[] = [];

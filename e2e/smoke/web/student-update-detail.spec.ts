@@ -1,18 +1,12 @@
 import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 import { addWorksheet, appendRow, createWorkbook, loadXlsxWorkbook, writeXlsxWorkbook } from "../../../packages/excel/src/index";
-
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 
 test("@student-update @critical reviews exact students and keeps the result after commit", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) errors.push(message.text()); });
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
+  await loginForFeature(page);
 
   const prefix = `E2E Update ${Date.now()}`;
   const names = Array.from({ length: 10 }, (_, index) => `${prefix} Student ${String(index + 1).padStart(2, "0")}`);

@@ -1,17 +1,7 @@
 import { readFileSync } from "node:fs";
+import { loginForFeature as login } from "../../helpers/feature-login";
 import ExcelJS from "../../../packages/excel/node_modules/exceljs/excel.js";
-import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
-
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
-
-async function login(page: Page) {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
-}
+import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
 
 test("@management @attendance @critical @release exports canonical Term 1 attendance and lateness", async ({ page }) => {
   const browserErrors: string[] = [];

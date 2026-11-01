@@ -101,15 +101,18 @@ function extractPayload(error: unknown): {
   return { status, data, headers, message: error.message };
 }
 
-function payloadMessage(data: unknown): unknown {
+export function getApiErrorPayloadMessage(data: unknown): string | null {
   if (!isRecord(data)) return null;
+  if (isRecord(data.error) && typeof data.error.message === "string") return data.error.message;
   if (typeof data.detail === "string") return data.detail;
+  if (isRecord(data.detail) && typeof data.detail.message === "string") return data.detail.message;
   if (typeof data.message === "string") return data.message;
   return null;
 }
 
 function payloadCode(data: unknown): string | null {
   if (!isRecord(data)) return null;
+  if (isRecord(data.error) && typeof data.error.code === "string") return sanitizeText(data.error.code, "").slice(0, 80) || null;
   if (isRecord(data.detail) && typeof data.detail.code === "string") return sanitizeText(data.detail.code, "").slice(0, 80) || null;
   return typeof data.code === "string" ? sanitizeText(data.code, "").slice(0, 80) || null : null;
 }
@@ -191,7 +194,7 @@ export function normalizeApiError(error: unknown, fallbackMessage = SAFE_FALLBAC
   }
 
   const safeDefault = SAFE_STATUS_MESSAGES[kind] ?? fallbackMessage;
-  const detail = payloadMessage(data);
+  const detail = getApiErrorPayloadMessage(data);
   const userMessage = kind === "server" || kind === "authentication" || kind === "authorization" || kind === "not_found"
     ? safeDefault
     : sanitizeText(detail ?? message, safeDefault);

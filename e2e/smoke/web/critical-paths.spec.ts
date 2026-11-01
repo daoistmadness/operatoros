@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
 const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
@@ -63,7 +64,7 @@ test("@auth @readiness @fresh-install @release admin login exposes a healthy das
 });
 
 test("@analytics @release dashboard filters use the selected period", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   const refresh = page.waitForResponse(response => {
     if (!response.url().includes("/api/config/absence-reasons/summary")) return false;
     const url = new URL(response.url());
@@ -78,7 +79,7 @@ test("@analytics @release dashboard filters use the selected period", async ({ p
 });
 
 test("@configuration @release academic hierarchy reaches candidates without enrollment mutation", async ({ page, request }) => {
-  await login(page);
+  await loginForFeature(page);
   const enrollmentBefore = await enrollmentFingerprint(page);
   const before = await request.get("/api/academic-masters/academic-years");
   expect(before.status()).toBe(401);
@@ -97,7 +98,7 @@ test("@configuration @release academic hierarchy reaches candidates without enro
 });
 
 test("@configuration @release progression management generates a responsive non-mutating preview", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   const enrollmentBefore = await enrollmentFingerprint(page);
   await page.goto("/academic-management");
   await page.getByRole("button", { name: "Progression" }).click();
@@ -113,7 +114,7 @@ test("@configuration @release progression management generates a responsive non-
 });
 
 test("@attendance @corrections @release attendance review filters disposable attendance", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/attendance-review");
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
   await page.getByRole("combobox", { name: "Class" }).selectOption({ label: "Primary 1A" });
@@ -124,7 +125,7 @@ test("@attendance @corrections @release attendance review filters disposable att
 });
 
 test("@attendance @correction-review @critical @release creates and reviews a canonical correction", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   const date = localDate();
   await page.goto(`/attendance-review?academic_year_id=1&date=${date}`);
   await expect(page.getByRole("heading", { name: "Attendance Manual Review" })).toBeVisible();
@@ -154,7 +155,7 @@ test("@attendance @correction-review @critical @release creates and reviews a ca
 });
 
 test("@operator-queue @release student management creates edits and links a synthetic canonical profile", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/students");
   await expect(page.getByRole("heading", { name: "Student Management" })).toBeVisible();
   await page.getByRole("button", { name: "Add student" }).click();

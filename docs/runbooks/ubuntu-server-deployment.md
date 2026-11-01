@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-10-26
+last_reviewed: 2026-10-31
 ---
 
 # Ubuntu server deployment and supervision (OperatorOS API)
@@ -148,9 +148,9 @@ operational database stays `20260725_s43` until a separately authorized migratio
 
 ```bash
 cd /opt/operatoros
-bun --filter @operatoros/web build                 # -> apps/web/build
+bun --filter @operatoros/web build                 # -> apps/web/build/client
 FRONTEND_PORT=5173 BACKEND_PORT=8090 DEV_API_PROXY_TARGET=http://127.0.0.1:8090 \
-  bun --filter @operatoros/web preview             # serves build/ with /api proxy
+  bun --filter @operatoros/web preview             # serves build/client/ with SPA shell and API proxy
 ```
 
 Open `http://127.0.0.1:5173` in a browser on the host. Create the first

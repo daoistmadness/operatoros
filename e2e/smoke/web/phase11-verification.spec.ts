@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 import { readFileSync, statSync } from "node:fs";
 
 const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
@@ -66,7 +67,7 @@ test("@phase11 @auth logout clears the browser session after refresh", async ({ 
 });
 
 test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/grades");
   await expect(page.getByRole("heading", { name: "Dynamic normalized grade matrix" })).toBeVisible();
   await page.getByLabel("New assessment label").fill("E2E Term 1 Assessment");
@@ -90,7 +91,7 @@ test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ pa
 });
 
 test("@phase11 @imports machine attendance workbook validates and applies through Data Import & Export", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   const cutoff = await page.request.get("/api/config/jenjang");
   expect(cutoff.status()).toBe(200);
   expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
@@ -128,7 +129,7 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
 });
 
 test("@phase11 @reports monthly reports export a non-empty workbook", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/reports/monthly");
   await expect(page).toHaveURL(/\/reports\?view=monthly$/);
   await expect(page.getByRole("heading", { name: "Monthly Report", exact: true })).toBeVisible();
@@ -138,7 +139,7 @@ test("@phase11 @reports monthly reports export a non-empty workbook", async ({ p
 });
 
 test("@phase11 @safety backup creation, download, and read-only restore preflight work", async ({ page }) => {
-  await login(page);
+  await loginForFeature(page);
   await page.goto("/settings/backups");
   await expect(page.getByRole("heading", { name: "Backup & Recovery" })).toBeVisible();
   await page.getByRole("button", { name: "Create verified backup" }).click();

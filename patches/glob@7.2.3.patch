@@ -1,0 +1,44 @@
+diff --git a/glob.js b/glob.js
+index 37a4d7e60775a381e843d26bebe568270e9c4388..ed71b6274bfb1a87cb23fa12f731a4da2345c86a 100644
+--- a/glob.js
++++ b/glob.js
+@@ -385 +385,4 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
+-  var rawGlob = pn._glob
++  var rawGlob = pn._glob === undefined ? pn.pattern : pn._glob
++  var matcher = typeof pn.pattern === 'string' && typeof pn.match !== 'function'
++    ? new Minimatch(pn.pattern, this.minimatch.options)
++    : null
+@@ -391,9 +394,9 @@ Glob.prototype._processReaddir2 = function (prefix, read, abs, remain, index, in
+     if (e.charAt(0) !== '.' || dotOk) {
+       var m
+       if (negate && !prefix) {
+-        m = !e.match(pn)
++        m = !(matcher ? matcher.match(e) : e.match(pn))
+       } else {
+-        m = e.match(pn)
++        m = matcher ? matcher.match(e) : e.match(pn)
+       }
+       if (m)
+         matchedEntries.push(e)
+diff --git a/sync.js b/sync.js
+index 2c4f480192d28d3aabc2a7697b6352131ff3c339..9ec99fec13a0411795c0f3449f797f7e5225396c 100644
+--- a/sync.js
++++ b/sync.js
+@@ -147 +147,4 @@ GlobSync.prototype._processReaddir = function (prefix, read, abs, remain, index,
+-  var rawGlob = pn._glob
++  var rawGlob = pn._glob === undefined ? pn.pattern : pn._glob
++  var matcher = typeof pn.pattern === 'string' && typeof pn.match !== 'function'
++    ? new Minimatch(pn.pattern, this.minimatch.options)
++    : null
+@@ -153,9 +156,9 @@ GlobSync.prototype._processReaddir = function (prefix, read, abs, remain, index,
+     if (e.charAt(0) !== '.' || dotOk) {
+       var m
+       if (negate && !prefix) {
+-        m = !e.match(pn)
++        m = !(matcher ? matcher.match(e) : e.match(pn))
+       } else {
+-        m = e.match(pn)
++        m = matcher ? matcher.match(e) : e.match(pn)
+       }
+       if (m)
+         matchedEntries.push(e)

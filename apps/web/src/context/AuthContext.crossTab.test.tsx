@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "./AuthContext";
 import { AUTH_UNAUTHORIZED_EVENT, apiRequest } from "../lib/api/client";
 import { getCurrentUser } from "../api/auth";
+import { ApiError } from "../lib/api/errors";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
 import { createTestQueryClient } from "../lib/query/queryClient";
 
@@ -19,7 +20,7 @@ const mock = vi.hoisted(() => {
 vi.mock("../api/auth", () => ({
   getCurrentUser: vi.fn(async () => {
     if (mock.nextUserResponse) return mock.nextUserResponse;
-    if (!mock.session.current) throw new Error("unauthorized");
+    if (!mock.session.current) throw new ApiError("Unauthorized", { status: 401 });
     return mock.session.current;
   }),
   login: vi.fn(async (username: string) => {

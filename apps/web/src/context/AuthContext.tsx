@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { AuthUser } from "../api/auth";
 import { getCurrentUser } from "../api/auth";
 import { advanceAuthSessionEpoch, AUTH_FORBIDDEN_EVENT, AUTH_UNAUTHORIZED_EVENT } from "../lib/api/client";
+import { isApiError } from "../lib/api/errors";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser, useLoginMutation, useLogoutMutation } from "../hooks/useAuthQueries";
 import { createAuthSessionSync } from "../lib/auth/sessionSync";
@@ -40,6 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionVerification, setSessionVerification] = useState<"idle" | "checking" | "unavailable">("idle");
   const user = currentUser.data ?? null;
   const loading = currentUser.isLoading && !currentUser.isError;
+  const initialSessionUnavailable = !user
+    && currentUser.isError
+    && !(isApiError(currentUser.error) && currentUser.error.status === 401);
+  const currentSessionVerification = sessionVerification === "idle" && initialSessionUnavailable
+    ? "unavailable"
+    : sessionVerification;
 
   const invalidateRevalidation = useCallback(() => {
     revalidationSequence.current += 1;
@@ -192,8 +199,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, authenticated: user !== null, can, login, logout, sessionVerification, retrySessionVerification }),
-    [user, loading, can, login, logout, sessionVerification, retrySessionVerification],
+    () => ({ user, loading, authenticated: user !== null, can, login, logout, sessionVerification: currentSessionVerification, retrySessionVerification }),
+    [user, loading, can, login, logout, currentSessionVerification, retrySessionVerification],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

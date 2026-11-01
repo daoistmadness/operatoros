@@ -2,7 +2,7 @@
 // HTTP API client — configurable base URL, no Portless domain mapping.
 // Tech Stack: Vite / React 19
 
-import { ApiError, normalizeApiError, type ApiHeaders } from "./errors";
+import { ApiError, getApiErrorPayloadMessage, normalizeApiError, type ApiHeaders } from "./errors";
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const EXCEL_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -154,22 +154,8 @@ async function parseErrorResponse(response: Response, responseType: 'json' | 'bl
 }
 
 function getErrorMessage(status: number, data: unknown): string {
-  if (data && typeof data === 'object') {
-    const payload = data as Record<string, unknown>;
-    if (typeof payload.detail === 'string') {
-      return payload.detail;
-    }
-
-    if (payload.detail && typeof payload.detail === 'object' && typeof (payload.detail as Record<string, unknown>).message === 'string') {
-      return String((payload.detail as Record<string, unknown>).message);
-    }
-
-    if (typeof payload.message === 'string') {
-      return payload.message;
-    }
-  }
-
-  return status >= 500 ? 'Terjadi gangguan pada server.' : 'Permintaan tidak dapat diproses.';
+  return getApiErrorPayloadMessage(data)
+    ?? (status >= 500 ? 'Terjadi gangguan pada server.' : 'Permintaan tidak dapat diproses.');
 }
 
 function validateBlobResponse(blob: Blob, headers: ApiHeaders, expectedBlobTypes: string[]): Blob {

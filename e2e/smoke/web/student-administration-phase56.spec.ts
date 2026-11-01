@@ -1,10 +1,8 @@
 import { expect, test } from "../../../apps/web/node_modules/@playwright/test";
+import { loginForFeature } from "../../helpers/feature-login";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PDFDocument } from "../../../apps/api/node_modules/pdf-lib";
-
-const username = process.env.OPERATOROS_E2E_ADMIN_USERNAME!;
-const password = process.env.OPERATOROS_E2E_ADMIN_PASSWORD!;
 
 async function pdf(content: string): Promise<Buffer> {
   const document = await PDFDocument.create();
@@ -13,11 +11,7 @@ async function pdf(content: string): Promise<Buffer> {
 }
 
 test("@student-admin @critical verifies identity, DAPODIK, IOM archive, dashboard, and resolved queue tasks", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "System Analytics" })).toBeVisible();
+  await loginForFeature(page);
 
   const name = `E2E Admin Student ${Date.now()}`;
   const created = await page.request.post("/api/student-masters", {
@@ -142,10 +136,7 @@ test("@dashboard @critical shows and acknowledges the annual BOSP reminder", asy
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(reminder()) });
   });
 
-  await page.goto("/login");
-  await page.getByRole("textbox", { name: "Username required", exact: true }).fill(username);
-  await page.getByRole("textbox", { name: "Password required", exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await loginForFeature(page);
 
   const reminderHeading = page.getByRole("heading", { name: "Pengingat Tahunan Cut-off BOSP 2027" });
   await expect(reminderHeading).toBeVisible();

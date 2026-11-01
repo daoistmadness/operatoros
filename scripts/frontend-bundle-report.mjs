@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const buildDirectory = join(repositoryRoot, "apps/web/build");
+const buildDirectory = join(repositoryRoot, "apps/web/build/client");
 const manifestPath = join(buildDirectory, ".vite/manifest.json");
 
 export const ROUTE_CHUNK_BUDGET = {
@@ -49,7 +49,7 @@ export function createBundleReport(manifest, readAsset) {
   }
 
   const routeEntries = Object.entries(manifest)
-    .filter(([key, chunk]) => key.startsWith("src/pages/") && chunk.isDynamicEntry && chunk.file.endsWith(".js"))
+    .filter(([key, chunk]) => key.startsWith("src/routes/") && chunk.isDynamicEntry && chunk.file.endsWith(".js"))
     .map(([key, chunk]) => {
       const entrySize = javascriptFiles.get(chunk.file);
       if (!entrySize) throw new Error(`Missing route entry asset: ${chunk.file}`);
@@ -72,7 +72,7 @@ export function createBundleReport(manifest, readAsset) {
     })
     .sort((left, right) => right.gzipBytes - left.gzipBytes || left.source.localeCompare(right.source));
 
-  if (routeEntries.length === 0) throw new Error("Vite manifest contains no dynamic page entries under src/pages/.");
+  if (routeEntries.length === 0) throw new Error("Vite client manifest contains no dynamic route entries under src/routes/.");
 
   return {
     totalJavaScript: sumSizes(javascriptFiles),

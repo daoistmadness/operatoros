@@ -2,12 +2,12 @@ import { expect, test } from "bun:test";
 import { createBundleReport, findRouteBudgetViolations } from "./frontend-bundle-report.mjs";
 
 const manifest = {
-  "src/pages/ManagementAnalytics.tsx": {
+  "src/routes/_authenticated/analytics.tsx?tsr-split=component": {
     file: "assets/ManagementAnalytics.js",
     isDynamicEntry: true,
     imports: ["src/shared.js"],
   },
-  "src/pages/UploadCenter.tsx": {
+  "src/routes/_authenticated/upload-center.tsx?tsr-split=component": {
     file: "assets/UploadCenter.js",
     isDynamicEntry: true,
     imports: ["src/shared.js"],
@@ -33,7 +33,7 @@ const assets = new Map([
 
 test("reports page entry bytes and a deduplicated static import closure", () => {
   const report = createBundleReport(manifest, (file) => assets.get(file));
-  const management = report.routeEntries.find(({ source }) => source === "src/pages/ManagementAnalytics.tsx");
+  const management = report.routeEntries.find(({ source }) => source === "src/routes/_authenticated/analytics.tsx?tsr-split=component");
 
   expect(report.routeEntries).toHaveLength(2);
   expect(management?.rawBytes).toBe(Buffer.byteLength("management"));
@@ -43,8 +43,8 @@ test("reports page entry bytes and a deduplicated static import closure", () => 
 
 test("checks raw and gzip page entry limits", () => {
   const oversized = [
-    { source: "src/pages/LargeRawPage.tsx", rawBytes: 160_001, gzipBytes: 20_000 },
-    { source: "src/pages/LargeGzipPage.tsx", rawBytes: 40_000, gzipBytes: 40_001 },
+    { source: "src/routes/LargeRawRoute.tsx?tsr-split=component", rawBytes: 160_001, gzipBytes: 20_000 },
+    { source: "src/routes/LargeGzipRoute.tsx?tsr-split=component", rawBytes: 40_000, gzipBytes: 40_001 },
   ];
   expect(findRouteBudgetViolations(oversized, { rawBytes: 160_000, gzipBytes: 40_000 })).toEqual(oversized);
 });

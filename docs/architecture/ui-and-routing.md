@@ -1,14 +1,16 @@
 ---
 status: current
-last_reviewed: 2026-10-29
+last_reviewed: 2026-10-31
 ---
 
 # UI and routing
 
-The browser shell is implemented in `apps/web/src/App.tsx`. The Vite SPA uses
-TanStack Router file-based routes under `apps/web/src/routes/`; Vite generates
-`src/routeTree.gen.ts`. `src/router.ts` creates the router, and `src/index.tsx`
-provides auth state through router context. Authenticated routes are children of
+The browser app uses TanStack Start in SPA mode with Vite as the development and
+static preview host. Start generates `src/routeTree.gen.ts` from file-based
+routes under `apps/web/src/routes/`, and `src/router.ts` exports the `getRouter`
+factory Start calls. `src/routes/__root.tsx` provides the document shell,
+browser-only Query/auth/deployment providers, setup boundary, route-context
+bridge, and route error UI. Authenticated routes are children of
 `_authenticated.tsx`, which renders `AppShell` and enforces route authorization
 in `beforeLoad`.
 
@@ -66,8 +68,13 @@ Existing page headings remain the only visible `<h1>` and can include
 record-specific names. Routes without a registry entry keep the generic
 OperatorOS document title and do not gain a synthetic breadcrumb.
 
-The app remains a browser-rendered Vite SPA. It does not use TanStack Start, SSR,
-or a hydration entry.
+The production client output lives in `apps/web/build/client/`. The static
+preview config serves existing assets first, rewrites HTML document requests
+to `/_shell.html`, and proxies `/api`, `/health`, `/ready`, and `/openapi` to the
+standalone Elysia API. The generated Start server output is used only while
+building and prerendering the shell; preview and deployment do not run it. The
+accepted [TanStack Start SPA decision](../decisions/tanstack-start-spa.md)
+does not authorize SSR, Start server routes, or server functions.
 
 ## Authorization and page state
 

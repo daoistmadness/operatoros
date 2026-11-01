@@ -1,14 +1,14 @@
 ---
 status: current
-last_reviewed: 2026-10-29
+last_reviewed: 2026-10-31
 ---
 
 # Frontend performance baseline
 
-This page records the PR-01 local performance baseline for the React 19, Vite,
-and TanStack Router application, plus PR-02 and PR-08 follow-up comparisons.
-Each result identifies its measured scope; the local samples are not field
-percentiles.
+This page records the historical PR-01 local performance baseline for the
+React 19, Vite, and TanStack Router application, plus PR-02 and PR-08 follow-up
+comparisons and the later Start client-build baseline. Each result identifies
+its measured scope; the local samples are not field percentiles.
 
 ## Verified URL behavior
 
@@ -128,12 +128,29 @@ available independently. The existing Management Analytics E2E journey checks
 that the chart chunk has not loaded before scrolling to the table/chart area,
 then verifies the chart, legend, tooltip, and responsive layout.
 
-The production analyzer enforces a direct-entry budget of 160,000 raw bytes and
-40,000 gzip bytes for each of 48 `src/pages/*.tsx` route entries. The largest
-current page entry is Upload Center at 142,131 raw and 32,615 gzip bytes. These
-budgets apply to page entry chunks, not their shared static closures or lazy
-feature chunks. `bun --filter @operatoros/web build` runs the budget check;
-`bun --filter @operatoros/web analyze:bundle` prints the full manifest report.
+The PR-08 analyzer enforced a direct-entry budget of 160,000 raw bytes and
+40,000 gzip bytes for 48 `src/pages/*.tsx` entries. The largest entry then was
+Upload Center at 142,131 raw and 32,615 gzip bytes. Those counts and entry
+identities describe the historical Router build.
+
+### TanStack Start client build baseline
+
+The Start SPA build was measured on 2026-10-31 with Bun 1.4.4, Vite 8.3.4, and
+the locked TanStack Start version. The client manifest contains 54 dynamic
+route-component entries under `src/routes/`. The largest direct entry is the
+authenticated layout at 26,660 raw bytes and 8,529 gzip bytes. The client
+output contains 208 JavaScript files, totaling 2,226,080 raw bytes and 675,086
+bytes in the independent gzip sum. The existing per-route budget remains
+160,000 raw bytes and 40,000 gzip bytes; it applies to direct route chunks, not
+their static closure or lazy feature chunks.
+
+Start emits the shell and browser assets in `apps/web/build/client/`. The build
+also creates `apps/web/build/server/` for shell prerendering; the static
+`vite.preview.config.js` serves only the client directory. These totals are
+not directly comparable with the prior Router build because Start changes the
+manifest and entry boundaries. `bun --filter @operatoros/web build` runs the
+route budget check; `bun --filter @operatoros/web analyze:bundle` prints the
+full client manifest report.
 
 This change splits code rather than deleting it: total emitted JavaScript grew
 by 781 raw bytes and 835 bytes in the independent gzip sum. The result is a

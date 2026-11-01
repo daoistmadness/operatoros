@@ -125,6 +125,11 @@ jobs:
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts
+      - name: Verify minimatch override compatibility
+        working-directory: ${{ github.workspace }}
+        run: |
+          bun scripts/tests/minimatch-override.compatibility.cjs
+          node scripts/tests/minimatch-override.compatibility.cjs
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
@@ -137,6 +142,9 @@ jobs:
           bun run turbo:check
           elapsed=$(( $(date +%s) - started_at ))
           echo "turbo_check_elapsed_seconds=$elapsed" >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify the generated Start route tree is current
+        working-directory: ${{ github.workspace }}
+        run: git diff --exit-code -- apps/web/src/routeTree.gen.ts
       - name: Typecheck development launcher
         working-directory: ${{ github.workspace }}
         run: bun run typecheck:launcher
