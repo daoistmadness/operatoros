@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "d6261d7d94b5b1504bdeb0fa499213620bacfa46d6203657406f7ea36228a34d",
+      "fingerprint": "43af749b1b779fe35c1b8619c99527ed0412bc7278fa9ed95c448350ee5d8400",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "d3aea38dfbbdaf2605a1b0be16965287d8d7cfa224c29842e98bb01a44e63f8d",
+        ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
         "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "3938da314f6bb762c640fdbb8068f65ad863c956683b5bfb6aaa5be69b4e2b57",
+        "bun.lock": "c967fea63b0e29633fd6b2d1c3250fde711ccff4c8a241310506e247f7883728",
         "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
+        "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "69207e38c6c35f1f4dc2ab6742c35a621a5c9b50a94d6deea0ea0c19680c6816",
+        "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,30 +44,30 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, AGENTS.md, bun.lock, docs/architecture/change-safety-golden-path.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: .github/workflows/ci.yml, bun.lock, docs/guides/testing.md, package.json at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "4dbb1be9b687fdad09ebc499a54f4e84cfb7d4c2b35b88579cd0cd32645f3d18",
+      "fingerprint": "7716d47c80bab2131299f2e0d4aa3c92a637114414ef542aaea473ef30e2e26f",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "d3aea38dfbbdaf2605a1b0be16965287d8d7cfa224c29842e98bb01a44e63f8d",
+        ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
         "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "3938da314f6bb762c640fdbb8068f65ad863c956683b5bfb6aaa5be69b4e2b57",
+        "bun.lock": "c967fea63b0e29633fd6b2d1c3250fde711ccff4c8a241310506e247f7883728",
         "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "296cb0c14d861a19cba5186e1346dd24828e0e8c20b158a6296ef69cf6c38997",
+        "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
-        "package.json": "69207e38c6c35f1f4dc2ab6742c35a621a5c9b50a94d6deea0ea0c19680c6816",
+        "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, AGENTS.md, bun.lock, docs/architecture/change-safety-golden-path.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: .github/workflows/ci.yml, bun.lock, docs/guides/testing.md, package.json at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -838,15 +838,15 @@
       ]
     },
     "source:e2e/smoke/web/phase11-verification.spec.ts": {
-      "fingerprint": "fb643d1109da909c89122256d9625ae4d6ee60d16197b67db180f0917899777f",
+      "fingerprint": "7e8b1450a4ec8c2d85f00525c543778ebc25681a4f5cd2f2c433c6613d9364a7",
       "snapshot": {
-        "e2e/smoke/web/phase11-verification.spec.ts": "190d41f3c6e4061e4fe41dbd3323dd0dba2c0dbf8afc120b89092f2b35a08f81"
+        "e2e/smoke/web/phase11-verification.spec.ts": "247f8f0f929129a4f8b6950de18b9d59853e6f422f1376b4ff8378566c84ad16"
       },
-      "head": "872c8e1e3dd0edc08f7852a76279fca4f449ffec",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "The only changed path is an E2E assertion that waits for GradeMatrix's existing save completion state; it does not change agent-skill guidance.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/phase11-verification.spec.ts at 872c8e1e3dd0edc08f7852a76279fca4f449ffec"
+        "Changed: e2e/smoke/web/phase11-verification.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/api/src/security/backup-crypto.ts": {
@@ -950,31 +950,27 @@
       ]
     },
     "source:apps/web/src/context/AuthContext.crossTab.test.tsx": {
-      "fingerprint": "de171031ccba838b6df036912655c952cf97a0f87e623d82dd7876c7d6d5296a",
+      "fingerprint": "f615b19f8eef236e2b1b5f4b539327370ef8d9e002ca71b7fc6965c923b9a4e1",
       "snapshot": {
-        "apps/web/src/context/AuthContext.crossTab.test.tsx": "b174743f3b3d7af7b132c4dfd9355849d98d76675582fc851146916ec87f3e3e"
+        "apps/web/src/context/AuthContext.crossTab.test.tsx": "98d8efe90ead38a433ca0f704b4d377f91147dd77a21154a82509f6803d582e9"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/context/AuthContext.crossTab.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/context/AuthContext.crossTab.test.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/context/AuthContext.tsx": {
-      "fingerprint": "80855ebbb5e2c6717fef2e0c6bf865473b36d4e81e71952e2ebb81353b678b3d",
+      "fingerprint": "de5966a1b28deac205507d81d517292dc9ce361f8c7d60b8481ed31b97998805",
       "snapshot": {
-        "apps/web/src/context/AuthContext.tsx": "55ee281a949f192c08bb01e1d7484cf7933e984cdbbafe4586cb5bd921896486"
+        "apps/web/src/context/AuthContext.tsx": "65d0f6409322b3da977b5c32d3ea151421946ce5926a3729448a9dd0c85cb94f"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/context/AuthContext.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/context/AuthContext.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/hooks/useAuthQueries.ts": {
@@ -1096,15 +1092,15 @@
       ]
     },
     "source:apps/web/src/context/AuthContext.test.tsx": {
-      "fingerprint": "1fc4bcc9bf56908a225312f7762b5b8fa0957858a890d3af0e4ce8079401baab",
+      "fingerprint": "5ce5877388f49588b5654c73ae6c381bed417e277ceb27ab5e4e0730951fb365",
       "snapshot": {
-        "apps/web/src/context/AuthContext.test.tsx": "0ad8f57ea87c32af3a0f9c51c50ffc52163e4fefdf71910ab0a5908102f63180"
+        "apps/web/src/context/AuthContext.test.tsx": "177a8e2b5742f64319f6c32b2fcb512d46ae54b2a08a9dadd4785ae0d387c23c"
       },
-      "head": "50ac8351c0d8cf74b5960cb085151897aa5e015b",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Logout failure handling changes application behavior and tests only; no library skill guidance changed.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/context/AuthContext.test.tsx at 50ac8351c0d8cf74b5960cb085151897aa5e015b"
+        "Changed: apps/web/src/context/AuthContext.test.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:docs/analytics/ANALYTICS_ARCHITECTURE.md": {
@@ -1162,17 +1158,15 @@
       ]
     },
     "source:apps/web/src/lib/api/auth-security.test.ts": {
-      "fingerprint": "15550168a4511f13c3b37dbd0136c74c735871ffd27c70527630b9e7715d068f",
+      "fingerprint": "21c9e5d5f6af3f8ce8257503da80710b0deb4da3a6bf06c9f70c1e7e9e547fd2",
       "snapshot": {
-        "apps/web/src/lib/api/auth-security.test.ts": "87b3ee12819b432dd5fd3d024566f4183ef85a831951d3a62e67e880d926edab"
+        "apps/web/src/lib/api/auth-security.test.ts": "27f41ea6d7df51ec76a23d966b01fc1e55409e8ac0a461722bec99dafe3e548b"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/lib/api/auth-security.test.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/api/auth-security.test.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/lib/api/client.d.ts": {
@@ -1188,17 +1182,15 @@
       ]
     },
     "source:apps/web/src/lib/api/client.ts": {
-      "fingerprint": "acdb25a64b86ef2acb7738c05a6361a32d75c1e33800d4b9a21902115445bfd1",
+      "fingerprint": "59f544646c6e9e964b4d31bb5a00f8820f6d380e70da516621cc49c803ff4c0c",
       "snapshot": {
-        "apps/web/src/lib/api/client.ts": "e4ade996a8f1a6a1ca2ca61d4eba57b52036fb3ec525f08be83d8497569be9a9"
+        "apps/web/src/lib/api/client.ts": "4092141606331d29fc35c950049180dbd95d1a5163d2eda4b95a7b4f5fea064f"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/lib/api/client.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/api/client.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/postcss.config.mjs": {
@@ -1815,15 +1807,15 @@
       ]
     },
     "source:apps/web/src/components/auth/RouteGuards.tsx": {
-      "fingerprint": "954ef3d5b2a7db92714e231931047677293a5719f94781dc7ad39005dcc42395",
+      "fingerprint": "f6081a5ba847ed84f1ff351b87dac27bb29b8966658b69dbabe57267c0e59820",
       "snapshot": {
-        "apps/web/src/components/auth/RouteGuards.tsx": "b6d82390626eafcc34ac7373fe17fbb73d6beed135b337ba9c53bded6adb6cd1"
+        "apps/web/src/components/auth/RouteGuards.tsx": "908f05172da59982da4b47459c115704f588faf387bc66053d2583473f4a304b"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/components/auth/RouteGuards.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/components/auth/RouteGuards.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/components/auth/SetupBoundary.test.tsx": {
@@ -2960,15 +2952,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "27e45e73a19e394c2e004d1b98823a6010ed433401772ecff6ea129f30584cf1",
+      "fingerprint": "408be97ed34987bb6e659b321b0434694c0539e7e5d7a9dbe409e5d218d613ef",
       "snapshot": {
-        "CHANGELOG.md": "544b81d4ea8ee4ac2e1ae6504d067c441db4b341b5afd9f96c8edd4df44f2587"
+        "CHANGELOG.md": "b4ba69aee83a951647c0734e80249f890482182d5a76517afa12ded5dedf1937"
       },
-      "head": "356142aa23278744301164be9dd2caad54ee914e",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "These are the required changelog PR-number update and append-only review trail; they add no Elysia backend guidance or library skill content.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 356142aa23278744301164be9dd2caad54ee914e"
+        "Changed: CHANGELOG.md at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:COMMANDS.md": {
@@ -5515,15 +5507,15 @@
       ]
     },
     "source:e2e/smoke/web/staff-monthly-activities.spec.ts": {
-      "fingerprint": "d7b7f6c4484d6257823b71ee0af758e88c7b3262fea0b35cb74c32d3da125b5b",
+      "fingerprint": "ab83d0f7ababa78ec042eb9533406e9b1edb0a5976a42e17bb0ddc0057be7ba5",
       "snapshot": {
-        "e2e/smoke/web/staff-monthly-activities.spec.ts": "07efad06bde64463beba18ee7388edb417e8ddb32a9d2d962b7f3a1ec7516dd7"
+        "e2e/smoke/web/staff-monthly-activities.spec.ts": "2f113028abf6be9411ef95b45f763b3c3c18b9078d446edb67aed0588c36ec5b"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:packages/contracts/src/staff-monthly-activity.ts": {
@@ -5629,27 +5621,27 @@
       ]
     },
     "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
-      "fingerprint": "e94acc14baecc40f2ab5334e4e77c3c379ccf03caa3b027aa1adccd5f1c532af",
+      "fingerprint": "81f074ca7ddb1b0fddc153e1a0c1c8ba828a1ce81e0039596f7872807c27fc92",
       "snapshot": {
-        "e2e/smoke/web/analytics-phase-a.spec.ts": "ac67a344bfbe631f5d1ba9abe4f4cbf6f242f73f3882d52cce7d5d93e94da473"
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "5328e31a56c656f8bb3b6ab83f4f2a11f1f9ab00fe80dcd51ea542924835b9c7"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/upp-reports.spec.ts": {
-      "fingerprint": "03cc9f35a834f9597a9fc11615f1f3071d10816c981bc7aa48825a284d84e305",
+      "fingerprint": "c0052fe6b3ad875fb7e028f3b5f54af6293e1efdc3e5e87d42727658ab833d58",
       "snapshot": {
-        "e2e/smoke/web/upp-reports.spec.ts": "af2c0803c890cd8ecd7da88f9959e9efeff4223b3da604c8f3c167fccf93c1a8"
+        "e2e/smoke/web/upp-reports.spec.ts": "e333a3f40fd96e16a8e4beb835c0cbe5d8dda5e2e425a44845392dc2c407a7b7"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/upp-reports.spec.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:packages/contracts/src/admin-dashboard.ts": {
@@ -5749,15 +5741,15 @@
       ]
     },
     "source:apps/web/src/pages/UppReports.test.tsx": {
-      "fingerprint": "425f964b19cd6f19192b504d9fb9054cfced747842e6ce66bce3a4ad0490d3c1",
+      "fingerprint": "952f25806b4f0465f9d0496af492424118babe5edee15e7d31a2265f3880cd70",
       "snapshot": {
-        "apps/web/src/pages/UppReports.test.tsx": "6b6733fc2a98abc983d35c20c689c9e6fc82cb6a35683f1dffbf0b8216925755"
+        "apps/web/src/pages/UppReports.test.tsx": "64fee8351facff7b81707b24b79d8885a92fff34d128847e92b0d942134b0e70"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/pages/UppReports.test.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: apps/web/src/pages/UppReports.test.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/pages/UppReports.tsx": {
@@ -5857,15 +5849,15 @@
       ]
     },
     "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
-      "fingerprint": "9ce69ca5e96a4b740635d8a7f171c9be7cb52ac40c1c329e19dc9e9706dea506",
+      "fingerprint": "a539c8fca3bc94060f8b9378ddac83f20b764e4301217ab6f0bf0fddd09fa6fa",
       "snapshot": {
-        "e2e/smoke/web/student-administration-phase56.spec.ts": "4a06c9230ac3636b8d0bee332c69f7c85662de1a1e7d62ca8bf7d42345e5becf"
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "9ae810e7526f5364ffa7cc3e26c815efbae872ffdc55eca28d89333bdd35e338"
       },
-      "head": "1e5e34f7cb663bcc5dc09758a6e99d136f055e0f",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "These API and browser tests do not change agent skill guidance.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 1e5e34f7cb663bcc5dc09758a6e99d136f055e0f"
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:packages/db/src/s54-migration.sql": {
@@ -6051,17 +6043,15 @@
       ]
     },
     "source:apps/web/src/lib/router/access.ts": {
-      "fingerprint": "0e0a4e9c34d9a1ee8a3a86c8dd802b77716ae07f1c5fcd47d5320cc3b3492f87",
+      "fingerprint": "76c277499c0ce01e09aa6f1a91bdc2a169acf77297302e188f08bf149a335f6f",
       "snapshot": {
-        "apps/web/src/lib/router/access.ts": "cc0c3dcee0965a6e551863ec3e6e8e9daa0df3411f9e33b6b0cf4e31cb6a5e75"
+        "apps/web/src/lib/router/access.ts": "149cb3082bebd2e5d11d8af202efe1142c9fc22d5d5938078977d4cd8128b1d4"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/lib/router/access.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/router/access.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/lib/router/search.test.tsx": {
@@ -6117,27 +6107,27 @@
       ]
     },
     "source:apps/web/src/routes/__root.tsx": {
-      "fingerprint": "ceee1196135725d19c5907221201ce97e3f61e4f5bcecccc3b998d53a2b92eeb",
+      "fingerprint": "09d09bb5c70d126fe52d804f60c8ba58bdcd26f5ce07e247d7757e6a8bfeabff",
       "snapshot": {
-        "apps/web/src/routes/__root.tsx": "eb59ccd95c9e8cdb3a560b00c634a4a701ab6aed0d1d14b0b048fcd6c9be8812"
+        "apps/web/src/routes/__root.tsx": "08d15e29cb7fdb53af7254ab9dd8b4e0dfec4ea4888ec035a9c873a7a1e7f6dc"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/routes/__root.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: apps/web/src/routes/__root.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/routes/_authenticated.tsx": {
-      "fingerprint": "2403f784922a76a7de61c53009663ae93cd19e519cafc8bc4a84759b908e9755",
+      "fingerprint": "a28eb256e63fb0e8a609fbf784e163255626a8472cb0b1228f777cf239a418e4",
       "snapshot": {
-        "apps/web/src/routes/_authenticated.tsx": "56e2bfef2b2239b8f5f366ce4238cb0df8cda4562bda14b7e2881d0510f50070"
+        "apps/web/src/routes/_authenticated.tsx": "e17e396f761c53148536205f1906348e003276f196c52158580ac907a1cfdcc5"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/routes/_authenticated.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/routes/_authenticated.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/routes/_authenticated/$.tsx": {
@@ -6981,17 +6971,15 @@
       ]
     },
     "source:apps/web/src/routes/routeTree.test.tsx": {
-      "fingerprint": "a6885396eaaf715755079448791a6ac5248191af692778ea5c27e731ed3cad97",
+      "fingerprint": "82d411596b62047a97b267c166228ba9498d8cec652ce907d6b3e604477ff5e6",
       "snapshot": {
-        "apps/web/src/routes/routeTree.test.tsx": "42da55e270ff3876d5975b05de030dbaa11287d2de8fd88d8b34933c5aa5d3ba"
+        "apps/web/src/routes/routeTree.test.tsx": "00da2693ddf2bb72e9da22b2ae22d964700efd248695f9b8554d9a68f6c6a97c"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed apps/web/src/routes/routeTree.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/routes/routeTree.test.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/web/src/test/TestRouter.tsx": {
@@ -7007,41 +6995,39 @@
       ]
     },
     "source:e2e/smoke/web/attendance-calendar.spec.ts": {
-      "fingerprint": "cdcc08e6a9c9bbdefb54d68fc2e2fc0775a6688ed39538b3bcb633a54ff14481",
+      "fingerprint": "f06fc87753cac6280f3b8766c8ef1ad5eaa4a206b51128d392a582ff245bec2a",
       "snapshot": {
-        "e2e/smoke/web/attendance-calendar.spec.ts": "4b787686ea6628a26ce9f1680e831da19b8f3ab7ed1773ed418261112aded9a1"
+        "e2e/smoke/web/attendance-calendar.spec.ts": "b4af71e2f57d5b5772e171b737dcd402026c032337ff524d7eb9411536f8f3d3"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/attendance-calendar.spec.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: e2e/smoke/web/attendance-calendar.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/data-management-import-export.spec.ts": {
-      "fingerprint": "88478e2d0b3acdae7836a377140183c0b482b907b2a6902c8ec3e8dcd40629c9",
+      "fingerprint": "bcbeae2fbb611ffdefbfd750856c0cf403ddc278914fe08070b850bf0ebe716b",
       "snapshot": {
-        "e2e/smoke/web/data-management-import-export.spec.ts": "958c351ef6bbb94ae4cca24f90d478f49e18ea2ee97a59f3832c13b6e76e680a"
+        "e2e/smoke/web/data-management-import-export.spec.ts": "4b43446129cfd86bd77282111d552bc8091adb97f9dcb1a4bf7290ab938d1d96"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed e2e/smoke/web/data-management-import-export.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/student-360-overview.spec.ts": {
-      "fingerprint": "6fb2415ee92f592db60be55a4574108e10464f2585ed32bd800d32a95c2d59c4",
+      "fingerprint": "ee014530c8f4f254080157306242100ce87731635334c5d551dc62eecbff155a",
       "snapshot": {
-        "e2e/smoke/web/student-360-overview.spec.ts": "4de6736c76ebd9f4c0fd6b9d73b924807d14a3c913c3f7b66d9205a2f1397656"
+        "e2e/smoke/web/student-360-overview.spec.ts": "e3987ac8ccb4fbdb9a71d7a3ef389f25f3ac6ed5a66c82ebc4ca634c17aecccf"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-360-overview.spec.ts at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: e2e/smoke/web/student-360-overview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:eslint.config.mjs": {
@@ -7093,15 +7079,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
-      "fingerprint": "1877da3bf9a74704a69418c1696bbfc23d578e4d55b38c53e42810e038e83fb6",
+      "fingerprint": "14d8917f5bc65d2ed2a5b9af45d3f87406288c1eed66256a2c97efe66abd8edc",
       "snapshot": {
-        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "75020ce4ce6dbbdd239139117dfdb8ae0bf68f27a82926e822ceb6c35299a901"
+        "apps/web/src/components/AppShell.auth-transitions.test.tsx": "cc1c76ca4112cee8b1a4d13992c8e8c06a6b19a81aa6ae492663a18c7cbf1bb8"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: apps/web/src/components/AppShell.auth-transitions.test.tsx at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:scripts/check-pre-push.sh": {
@@ -7998,31 +7984,27 @@
       ]
     },
     "source:e2e/smoke/web/attendance-followup-table.spec.ts": {
-      "fingerprint": "20c6ae33b3dfedf8716a23c72e4aa93dc1d0b4684b6d506b41764fac94e64e9d",
+      "fingerprint": "e61301e78460b30c516a4fca4fc62fd2212a9c7166e637cdc41502df314b2eb0",
       "snapshot": {
-        "e2e/smoke/web/attendance-followup-table.spec.ts": "1e243c661717fa8791c2fd9285fa7cb87909e42f43852eafe058993f3224bcbf"
+        "e2e/smoke/web/attendance-followup-table.spec.ts": "092ac6764a59575893190e5cf75e8ecd4e5eba7db9629ae509c32ed756f2c3ca"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed e2e/smoke/web/attendance-followup-table.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/attendance-followup-table.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/class-attendance-identity-visibility.spec.ts": {
-      "fingerprint": "d5aa078b1e5aaba1fe34febe016ec97732616ded96afc4837fbe0f6f247bf4b3",
+      "fingerprint": "90bda23488ebefc75896b9a8e5b77831867e7aea005c9a2c26294c2b000663e1",
       "snapshot": {
-        "e2e/smoke/web/class-attendance-identity-visibility.spec.ts": "eea5ff3c33d87b5f79e3c1e0e1c80a10aa06fd9827c26ec9521dc63d16c81bda"
+        "e2e/smoke/web/class-attendance-identity-visibility.spec.ts": "a8136061e8c1a62626a2be8ae911ca4f0e031526c9b4adf59050076137543026"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed e2e/smoke/web/class-attendance-identity-visibility.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/class-attendance-identity-visibility.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/frontend-performance-baseline.spec.ts": {
@@ -8038,29 +8020,27 @@
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
-      "fingerprint": "fcd6494474b5252723110fb08c5b44ca4d2bb93a662f5e2b2486146983ab8ed3",
+      "fingerprint": "c2890c73ec68fa10670e0f675c220e01d3a88ece754bb0462c6a54eafa90bf68",
       "snapshot": {
-        "e2e/smoke/web/management-analytics-overview.spec.ts": "cd3ab6f85c1ab0db8c711b4de6c33f7175141afbb285b11e1b7c15f79b9ace3e"
+        "e2e/smoke/web/management-analytics-overview.spec.ts": "f46f1f14415b8b7f1794b05dd45de7422375d2ab301b6779c8a20584643a7b31"
       },
-      "head": "6615ea8c1291ffe43e7c2b4ad4ee2ee5046f55f8",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "This E2E spec now waits for the chart’s responsive containment condition after resizing; it changes no backend guidance or Elysia behavior. The focused Chromium smoke, including disposable reset checks, passed.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at 6615ea8c1291ffe43e7c2b4ad4ee2ee5046f55f8"
+        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/navigation-command-search.spec.ts": {
-      "fingerprint": "e07e3e94ad298cf9af8bf7555484c7a7a4d0a2218fd4b27374b1b03e41859103",
+      "fingerprint": "f83e66a81f0ae269aab5d6bdde70728283be51f9927e250cd8b0bc758cac9ea9",
       "snapshot": {
-        "e2e/smoke/web/navigation-command-search.spec.ts": "0e1abd78db73a25f3bec57340b3f69f805b86342c829b690f186ab604949e07a"
+        "e2e/smoke/web/navigation-command-search.spec.ts": "23a71f921661c881a4ebe63959243f2aaee7821be8c443d11c3d744196d71ef3"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed e2e/smoke/web/navigation-command-search.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/navigation-command-search.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/query-focus-revalidation.spec.ts": {
@@ -8090,29 +8070,27 @@
       ]
     },
     "source:e2e/smoke/web/responsive-review.spec.ts": {
-      "fingerprint": "33b49524a1fdaec3f286b4a450823b2a4799c016917800aa3be8d80c13804084",
+      "fingerprint": "940ed2a4f27d192ef44fd5d5a67cedf59b28ad50d6d99d0fa60ff09c61f2e968",
       "snapshot": {
-        "e2e/smoke/web/responsive-review.spec.ts": "bd6387b055ac13b1ce454da80281b730512bdd773a7838861b5746b394fc327f"
+        "e2e/smoke/web/responsive-review.spec.ts": "7368512c92daf271a44c06171b2664d8387e6fc66d6a750dccdcf7cf841abe2d"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Reviewed e2e/smoke/web/responsive-review.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/responsive-review.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/smoke/web/ui-preferences.spec.ts": {
-      "fingerprint": "3fb2e82adbc79e405c93a38142f447382176cc224ab617dccc41de944b0af2d5",
+      "fingerprint": "e42909c589b480f5b447d86af420b3ce511edd6ec7fd1e1ee10939329d8c5460",
       "snapshot": {
-        "e2e/smoke/web/ui-preferences.spec.ts": "dd41ce1675146eaf3a4915a300116083cc21261d72da0136d6ef76936b3cb713"
+        "e2e/smoke/web/ui-preferences.spec.ts": "5779be38d47bc7d34e2123001f0f8a196ec49a63641ee25d103bc3809650ecc7"
       },
-      "head": "4f1950c9feddd187b87d1fa3ba26586ffb2d2669",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "This React chart constraint and drawer animation assertion are frontend-only. The registered Elysia backend guidance and planning records remain accurate and do not define frontend layout behavior; the focused Chromium smoke tests pass.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/ui-preferences.spec.ts at 4f1950c9feddd187b87d1fa3ba26586ffb2d2669"
+        "Changed: e2e/smoke/web/ui-preferences.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:e2e/start-elysia-test-stack.sh": {
@@ -8476,15 +8454,15 @@
       ]
     },
     "source:scripts/test-tier.sh": {
-      "fingerprint": "b4023ce16a02a78ccf80a1c5f538db9cc80973e460f7965c9306a3234fbcb4fd",
+      "fingerprint": "bdc031aba905724874c6ff4c50c60c5ad898a8bcf4454e20b419de0124665b3a",
       "snapshot": {
-        "scripts/test-tier.sh": "26eb1ecd646ed47ffc3721041ef9eccf1f3044ab31a04ef12c34e2b173572e4c"
+        "scripts/test-tier.sh": "8f4d1614c620d16a53b67233ffbb620068f97004c9ae8033bcf05596c2e9a15b"
       },
-      "head": "b9f743615e4636dac0f045d6ecac38e26f73a963",
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
       "outcome": "no-change",
-      "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
-        "Changed: scripts/test-tier.sh at b9f743615e4636dac0f045d6ecac38e26f73a963"
+        "Changed: scripts/test-tier.sh at df94b6c1760669c8a67f318abcca050625081157"
       ]
     },
     "source:apps/api/src/domains/upload-conflicts.ts": {
@@ -8593,6 +8571,318 @@
       "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
       "evidence": [
         "Changed: e2e/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+      ]
+    },
+    "source:apps/web/src/lib/api/errors.test.ts": {
+      "fingerprint": "4cd7b12f9dcf07b58ca8a42dc9aa6ac56e959640b96c229577adb4412aedf18d",
+      "snapshot": {
+        "apps/web/src/lib/api/errors.test.ts": "3d0788fdc65329c3c9c7da00a72cf72372e1971553b12f202436ff9d2b167219"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/errors.test.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:apps/web/src/lib/api/errors.ts": {
+      "fingerprint": "b7a976d81282d010c45c4a61ca90c5edd077c708f7dc5e1ace342f24f7574868",
+      "snapshot": {
+        "apps/web/src/lib/api/errors.ts": "49575017ee4e53af51eeaaf89b5aba242f5d73394e12d09ac878409f7a4ec772"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: apps/web/src/lib/api/errors.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/helpers/feature-login.ts": {
+      "fingerprint": "452e7fc1b523e77b3499fe2b055ead818790b5c9dc4251af0b1fd700230d35c6",
+      "snapshot": {
+        "e2e/helpers/feature-login.ts": "3da5548fe690c8fda3018f7e7559c905d5471cff126825baeb6a5569a952b6d8"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/helpers/feature-login.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/academic-analytics.spec.ts": {
+      "fingerprint": "90f683b2adf8705da62c873ab264a6a071e31d66058880dba3b8584a7b6274cb",
+      "snapshot": {
+        "e2e/smoke/web/academic-analytics.spec.ts": "655940e200603bc6442690fa0b7127ca2f56e53442e69d530e851bd6b0f80d23"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/academic-analytics.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/assessment-operations.spec.ts": {
+      "fingerprint": "43e2683b95212867f65b2a9509463a2f1bcb2c4ac84ccaca1698e95049ed382a",
+      "snapshot": {
+        "e2e/smoke/web/assessment-operations.spec.ts": "f3057f27dbea27e2b581bf57e6faf0cb6bf144b0f0152cda4dd90c79d7425cf6"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/assessment-operations.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/attendance-analytics.spec.ts": {
+      "fingerprint": "31743590a01f9fdd4b7550e3a60015c537d2e341bfba08b62f72fdf5eb45f183",
+      "snapshot": {
+        "e2e/smoke/web/attendance-analytics.spec.ts": "56dcb52f2034b8ab181d46a237b4035666ab3fa598d0a8bed2e3e49d9323e768"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/attendance-analytics.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/attendance-machine-preview.spec.ts": {
+      "fingerprint": "c683f7dbde815d0b417cb0eb96b0c3dce0a102b1828e2ec42359bb5b9c1ab942",
+      "snapshot": {
+        "e2e/smoke/web/attendance-machine-preview.spec.ts": "c4839df15c7404c079c0bf0f21723230b023e6b5c397b5b663703c93bef080d5"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/attendance-machine-preview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/attendance-reconciliation.spec.ts": {
+      "fingerprint": "c1cb4effc68ab44e196e5a5f4a7adea7cfce37805e8545616f397cdb8d9dca9f",
+      "snapshot": {
+        "e2e/smoke/web/attendance-reconciliation.spec.ts": "b55d1034c0dd55f6883dd3e7591d1b95a12e699cbc08cdbd494da437af39a45a"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/attendance-reconciliation.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/class-360-overview.spec.ts": {
+      "fingerprint": "9f85fe87a5ddaa0cfc32789ab68b5e79da425bd99343d4ef97a93a55a884069f",
+      "snapshot": {
+        "e2e/smoke/web/class-360-overview.spec.ts": "70cd5ab5a34685ff062514626025b9b48305a235dbf06fcd43d8ec764d474f0b"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/class-360-overview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/critical-paths.spec.ts": {
+      "fingerprint": "c0cd8a756e633d2d5b74da7c30c5fd50a5362514e7d437f88c0f5177ae683432",
+      "snapshot": {
+        "e2e/smoke/web/critical-paths.spec.ts": "801d82068893b11b0351844d3b01642e5991261b4cb014847e7ac16000b7f6c6"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/critical-paths.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/daily-attendance-operations.spec.ts": {
+      "fingerprint": "fa53edd6881c0b7961c5801ce855a85b7472709ce90473dc6413449881914342",
+      "snapshot": {
+        "e2e/smoke/web/daily-attendance-operations.spec.ts": "ccabcea6085c26ebc1b2fd70cad5b880e3a2ace33a183a14895ba1d3f8d4b10a"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/daily-attendance-operations.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/data-quality-resolution.spec.ts": {
+      "fingerprint": "da350150f7901f7caba994218fdfa3f50fe63005d9b5377f6978a46c6a830808",
+      "snapshot": {
+        "e2e/smoke/web/data-quality-resolution.spec.ts": "93f9de194f60420764b2b7273952b158a9853fa43e276ce5f2efce3041062a0e"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/data-quality-resolution.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/dialog-and-print.spec.ts": {
+      "fingerprint": "a59ecc00b16d323798fd28658741fc073678c0daa59559fd536bf0c92fb9c410",
+      "snapshot": {
+        "e2e/smoke/web/dialog-and-print.spec.ts": "f99aa2944bfa47808dbdf1868901f76e399980e0c6a6140c325d7bdc2730b8c0"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/dialog-and-print.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/employee-management.spec.ts": {
+      "fingerprint": "5517ea492712623f55f13ebec8d0db8e6353f7536f39d741be863a96bd08e610",
+      "snapshot": {
+        "e2e/smoke/web/employee-management.spec.ts": "68405c205bf1a2fdf10ee367c88e361e41c2edf2d6e17e4990de6eb8e303abb1"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/employee-management.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/management-review-attendance-export.spec.ts": {
+      "fingerprint": "d44511f602cef60018d6c011fe36845c0ca15cb9a2c55887c83c6d8c95bb3051",
+      "snapshot": {
+        "e2e/smoke/web/management-review-attendance-export.spec.ts": "4ba10f4010453c3d6f556396b1d12326b607926c9a29bcd10c7105d42ffe2e9b"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/management-review-attendance-export.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/manual-absence-reporting.spec.ts": {
+      "fingerprint": "b32b5ae12d866fdbb1b14a5f57e1a1139a3aa872fe04047f8fc844d4ca4eae8f",
+      "snapshot": {
+        "e2e/smoke/web/manual-absence-reporting.spec.ts": "326dc09d4c59ac553efc9fa0841c1034f3acce9a8f9349b286bb80bf555241b5"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/manual-absence-reporting.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/manual-absence-save-state.spec.ts": {
+      "fingerprint": "e239b019d9a0d013a30d8655763d6a16f26c2ae1623be97f7e5109ebe071b5c5",
+      "snapshot": {
+        "e2e/smoke/web/manual-absence-save-state.spec.ts": "f3c5ce9a8e671058ea2932d2cd20f03e2b942b58f2f77437647e972b4c483f08"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/manual-absence-save-state.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/session-verification-retry.spec.ts": {
+      "fingerprint": "5925b55829c7ac7e9fc305edf3445ae77f22049426e7add1ed6d83f7c8a24281",
+      "snapshot": {
+        "e2e/smoke/web/session-verification-retry.spec.ts": "72bdc0a180c61ac009470ca98b723fdb317a177cd6cd3f2cc8c5c26d242c7b15"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/session-verification-retry.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/student-indicator-insights.spec.ts": {
+      "fingerprint": "72badd81c6dcc6330d15f6aa426a2e7ad6ca03f8bc6c3d7cd202148aebb4ef5a",
+      "snapshot": {
+        "e2e/smoke/web/student-indicator-insights.spec.ts": "868c17a41df53456e495ac67d38f1da9261dbbf3fb299c4a69d2d6729cdbe1d1"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/student-indicator-insights.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/student-trend-insights.spec.ts": {
+      "fingerprint": "0d2981c0e1c244ae8a50ae2970e0c82fbcbbd368c9d9a688e4cc9def18452d1e",
+      "snapshot": {
+        "e2e/smoke/web/student-trend-insights.spec.ts": "4fca590287dacb14486533366d9569bd115a6ea4243574252117519fb79de03c"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/student-trend-insights.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/student-update-detail.spec.ts": {
+      "fingerprint": "3c943cd0f2795aba665768f1e3d266e3f57c4416a4a96cd50724012da9a44c4d",
+      "snapshot": {
+        "e2e/smoke/web/student-update-detail.spec.ts": "127ee491c3aa2ba2fa9a460a2a65c72f9070bd101fcbfa81748a4b1d9bb1e227"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/student-update-detail.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/term-lateness.spec.ts": {
+      "fingerprint": "ead8c2e7fbfc62d17547a663fa93f88b8300e2db9d3a92797093a3c62de9a194",
+      "snapshot": {
+        "e2e/smoke/web/term-lateness.spec.ts": "cdc40e572d1ff0e1d5214f1cc6d15013d1ec61950ee70229d1ec7e4185142da9"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/term-lateness.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:e2e/smoke/web/upload-conflict-regression.spec.ts": {
+      "fingerprint": "60f3036347fb6c7a0ee9c7233e9f1eb1ca27f955f0e8f229a7a7bb362f27ae51",
+      "snapshot": {
+        "e2e/smoke/web/upload-conflict-regression.spec.ts": "b7c8b16f804eab7f007c3b2b85347614769b5b6533b2262bcdaf4cf1ebf91957"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: e2e/smoke/web/upload-conflict-regression.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:patches/@redocly%2Fopenapi-core@1.34.20.patch": {
+      "fingerprint": "bcd3a7c3e185a09c54edd42379f71affc30868c413ba64a10f7da16bc9843647",
+      "snapshot": {
+        "patches/@redocly%2Fopenapi-core@1.34.20.patch": "2ce4959e1555cddcaa3ace4fa90cf5c75c71412b92b632497c2344ea137ebef1"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: patches/@redocly%2Fopenapi-core@1.34.20.patch at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:patches/glob@7.2.3.patch": {
+      "fingerprint": "77e2ca055e12e34bee947b179ecc301708407c329810b1e21536609f6e345340",
+      "snapshot": {
+        "patches/glob@7.2.3.patch": "889c4cac51722eb7f204de0e5a689778f56fd2c357810f327d3d7cb90b3cd64a"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: patches/glob@7.2.3.patch at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:scripts/tests/minimatch-override.compatibility.cjs": {
+      "fingerprint": "c81b23b759447bf1cea341f4e4a61467009a1bae5d595ccb3fb10530ff5f362e",
+      "snapshot": {
+        "scripts/tests/minimatch-override.compatibility.cjs": "519fe0709a42360527a3b043eaddf259064a6b088d0e72d7fdc81d257a846204"
+      },
+      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "outcome": "no-change",
+      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "evidence": [
+        "Changed: scripts/tests/minimatch-override.compatibility.cjs at df94b6c1760669c8a67f318abcca050625081157"
       ]
     }
   }
