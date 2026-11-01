@@ -3,14 +3,14 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "43af749b1b779fe35c1b8619c99527ed0412bc7278fa9ed95c448350ee5d8400",
+      "fingerprint": "a8c6963be97dd918c81e933fc9d9b939036c306e0007e0207e25a476e053dccc",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
         ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
-        "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
+        "AGENTS.md": "9b01e36c40454d5f445b29702e1e2e78dfe7367b2104891781eb191b842f8d54",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "c967fea63b0e29633fd6b2d1c3250fde711ccff4c8a241310506e247f7883728",
+        "bun.lock": "8fcd8648c30da0c64dcd04f6f41035b87cb5ccc4ab960295044573af211fbfff",
         "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
@@ -44,25 +44,25 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, bun.lock, docs/guides/testing.md, package.json at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: AGENTS.md, bun.lock at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "7716d47c80bab2131299f2e0d4aa3c92a637114414ef542aaea473ef30e2e26f",
+      "fingerprint": "2ef2e07c0083e9631be73cc152c0e111f4a56e8ebdb102816bf618e9c4b6d127",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
         ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
-        "AGENTS.md": "99debcbd37ff3afb5ddef0485852f84846796237a7dc5c7ea94dd3f260af242d",
+        "AGENTS.md": "9b01e36c40454d5f445b29702e1e2e78dfe7367b2104891781eb191b842f8d54",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
-        "bun.lock": "c967fea63b0e29633fd6b2d1c3250fde711ccff4c8a241310506e247f7883728",
+        "bun.lock": "8fcd8648c30da0c64dcd04f6f41035b87cb5ccc4ab960295044573af211fbfff",
         "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, bun.lock, docs/guides/testing.md, package.json at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: AGENTS.md, bun.lock at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -587,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "86a805d0d612772a83812feac486f51b43151a958aefa434fc4afcf59d015e2c",
+      "fingerprint": "796f8afe99b1d8b19f9b054e82b0ef4e49192698d0c9db52d63ac8818686367f",
       "snapshot": {
-        "README.md": "c34acc4f5c5dd81cb3063de49c1dbaecce4884eaa1eeb601be1f2526f108a564"
+        "README.md": "a74b8a79b12c97234af8890bb4c5d342ca890a3c32a93292d389c8ff6b3657c7"
       },
-      "head": "46918b9c6d158c5aa247ca685749e3843bb65984",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Corrects root configuration and README descriptions of existing session and lockout environment overrides; no agent skill source, example, or planning guidance changed. Application behavior is unchanged.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: README.md at 46918b9c6d158c5aa247ca685749e3843bb65984"
+        "Changed: README.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1388,11 +1388,11 @@
       "snapshot": {
         "docs/deployment/systemd/operatoros-api.service": "49640e95f77c8baf756d8802949b6856f0aaae511ed166d5df16dcb19ab594d1"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
+      "head": "151459de8c499de68cb78f26232178bf41e40349",
       "outcome": "no-change",
-      "reason": "Reviewed the docs, checker, and fixture changes against current source and configuration; none changes Elysia skill guidance.",
+      "reason": "Isolate subprocess timezone to Asia/Jakarta for deterministic golden snapshot comparison across environments",
       "evidence": [
-        "Changed: docs/deployment/systemd/operatoros-api.service at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Changed: docs/deployment/systemd/operatoros-api.service at 151459de8c499de68cb78f26232178bf41e40349"
       ]
     },
     "source:mise.lock": {
@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "563c2b2eca5477a2e70ef43f82150467150f78a8ea54f12d3c6d6a793ad6833d",
+      "fingerprint": "67c03f107566e0eff2e2a37f88ce696ae5cba27c26dbe432d8bb284e4e5c2dba",
       "snapshot": {
-        "docs/README.md": "9f8820c046c9a880381b8e506a728d035972e6738fcb0dc7943b22596811644d"
+        "docs/README.md": "0c2fdb5918dd517ab779d8d89c8b4d553723a1f969b7b3e3a04d1f690379cebc"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: docs/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/README.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2952,15 +2952,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "408be97ed34987bb6e659b321b0434694c0539e7e5d7a9dbe409e5d218d613ef",
+      "fingerprint": "435ad4295ead66e2b669ecc3a0ae3b7aa9c4523b0a32e26ec46708b944af0257",
       "snapshot": {
-        "CHANGELOG.md": "b4ba69aee83a951647c0734e80249f890482182d5a76517afa12ded5dedf1937"
+        "CHANGELOG.md": "e53e366a62312fd1a8d6675af55f9b98eb3d8431726ffd7e491a567c477af987"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Record PR 352 changelog entry",
       "evidence": [
-        "Changed: CHANGELOG.md at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: CHANGELOG.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:COMMANDS.md": {
@@ -3284,17 +3284,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "fd05c089c61e561b9487b57aed5a0f2e53517d49fe4d4c0a20d778c5adcc0fb6",
+      "fingerprint": "5e3c6b5e38d732f3a61a8469124c764a8f1ab8ccfcdb6db4ec6a933a648c665b",
       "snapshot": {
-        "docs/architecture/excel.md": "437e617c4e57aaed3e53dfffe19e54aca6d775bc2e7795653c277fbb97aee80b"
+        "docs/architecture/excel.md": "21df9fe8a2a387f0f50a5dc42d41380fedff03738bf9ecb3e744467ae9c212fe"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/architecture/excel.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -3484,17 +3482,15 @@
       ]
     },
     "source:docs/decisions/ingestion-dependency-strategy.md": {
-      "fingerprint": "96a0014b9346b08c49a44e0a75e08176b94a89682061b506f91d0262688c4d36",
+      "fingerprint": "40248cc25387f5204682365c69655b958e93ca864131de3de23b166aea788bfc",
       "snapshot": {
-        "docs/decisions/ingestion-dependency-strategy.md": "b768268cb7e57fade50a956b83a3404dec6078527d0e7f981a6b0f27d50414ce"
+        "docs/decisions/ingestion-dependency-strategy.md": "1d942913e5ca669200ff0d88ceed68a12fca51dd5d17c1eb13d9fedf084f4ec9"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/decisions/ingestion-dependency-strategy.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:docs/decisions/persistent-development-database.md": {
@@ -7031,27 +7027,27 @@
       ]
     },
     "source:eslint.config.mjs": {
-      "fingerprint": "b82db1c0c8e1f9024de0da0614bb4477fe06a7b2a9e15152d19711cf12ceb756",
+      "fingerprint": "6b1a7732f2675a7b420924765fceced38614f4c38473916ae027f520841889c7",
       "snapshot": {
-        "eslint.config.mjs": "a58740969f3bc25aac6d48f20a3245f45c45b38ded9fb093595a1b7e2afcc6aa"
+        "eslint.config.mjs": "c010f22bb61bf009838767e9798f4bd0e821cbabe97b5b9131b2855cfd5b7bde"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: eslint.config.mjs at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: eslint.config.mjs at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:scripts/local-feedback-loop.sh": {
-      "fingerprint": "59eeda35335a0f3c0d7b108f105247c3ebecf8aa79d815aa7d563328f65eb9b5",
+      "fingerprint": "46408c38194ce6c7dab297592ec236fb1d2fc0f22d245865760ccba35c15bd04",
       "snapshot": {
-        "scripts/local-feedback-loop.sh": "b280647d1fe1d4673001280eef0343f276450cce76c4dd7e1d7787d5ab8edd4d"
+        "scripts/local-feedback-loop.sh": "7d08c4fc83ba8d6586d9b3cfce68b1bd118e0290b7d003762dcf55b0dd21a2cb"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Changed: scripts/local-feedback-loop.sh at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: scripts/local-feedback-loop.sh at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:scripts/test-scope.ts": {
@@ -7166,17 +7162,15 @@
       ]
     },
     "source:.gitignore": {
-      "fingerprint": "d09cb394d4e563421d3711c458de865df19b995b48df343aeb135c281fa1b3eb",
+      "fingerprint": "cd2512d8e1b816be481e4691ea689103cdd0c181a54573f9ec812c39fdcb4d9f",
       "snapshot": {
-        ".gitignore": "5c52d5e29e4a66ad93bf1ff0434a0edd39809154bf8886a2558f89f2f23373fe"
+        ".gitignore": "ed05f7be4098a3f431b304aea48a1e1c5ba06844f54d1b8646bf464645d90d20"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
       "evidence": [
-        "Reviewed .gitignore in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: .gitignore at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
       ]
     },
     "source:apps/api/src/security/http.ts": {
@@ -8883,6 +8877,546 @@
       "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
       "evidence": [
         "Changed: scripts/tests/minimatch-override.compatibility.cjs at df94b6c1760669c8a67f318abcca050625081157"
+      ]
+    },
+    "source:.mcp.json": {
+      "fingerprint": "6da4c389921d447b655dd2db0cfde848a8bc4a5b90d187e51d0e833eca07cda9",
+      "snapshot": {
+        ".mcp.json": "0ff3e41cd85b9572837632889e53a7cf28f6c3b1a834cecc4a7c1a4d8f795128"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: .mcp.json at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:.operatoros-quota-health.json": {
+      "fingerprint": "408de38583d18b522699834c0ddbf30e02e79312f544e30129b0fdcaf77e2bb5",
+      "snapshot": {
+        ".operatoros-quota-health.json": "124b6b56d95c3a47745c5bd237f218963843376deb257ab8f86e2be1582c76f9"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: .operatoros-quota-health.json at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:absen sd januari - maret.xls (1).xlsx": {
+      "fingerprint": "919c95941dd18a726acfbc903826e9f65f32d752b3753421cb6efa2c2a3604cd",
+      "snapshot": {
+        "absen sd januari - maret.xls (1).xlsx": "6dea9cb0bef61d8f8f14b919af6bdc66c602ce29057bcff7e437975c5ce01d42"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: absen sd januari - maret.xls (1).xlsx at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:apps/api/tests/fixtures/test-dir.ts": {
+      "fingerprint": "d51953611b68fce07a72a601046013cfef06ccbee1b88ecf56b52d068aa67428",
+      "snapshot": {
+        "apps/api/tests/fixtures/test-dir.ts": "a7b7e821dd40abbec26ec304b16928e14dfaadc815f80040e537787ca6363398"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: apps/api/tests/fixtures/test-dir.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:docs/decisions/sheetjs-vendored-fork.md": {
+      "fingerprint": "41557adb30c61c19ca6e274796b86bc806fa66feb6bd075d91be0c9aa4a190bb",
+      "snapshot": {
+        "docs/decisions/sheetjs-vendored-fork.md": "da8a078a8c30335840e46bd627ffd884164d0b0e388731619c9259e9ac122129"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: docs/decisions/sheetjs-vendored-fork.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:docs/migration/ts-backend/golden/tools/generate_xls_fixture.ts": {
+      "fingerprint": "5a6a739679dd8faa385c3fd104b03789358e090339ed868863ec6b45928416bc",
+      "snapshot": {
+        "docs/migration/ts-backend/golden/tools/generate_xls_fixture.ts": null
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: docs/migration/ts-backend/golden/tools/generate_xls_fixture.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:lateness_executive_dashboard.xlsx": {
+      "fingerprint": "e8332aec301116038a5a88610f01defafc8650936fce4c9a2e57191c8784586c",
+      "snapshot": {
+        "lateness_executive_dashboard.xlsx": "1b1ed87661e264330fa0f262c90a14aecff210b6e2bfd24f7e18d11bb12d8c48"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: lateness_executive_dashboard.xlsx at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/db/tests/migration-lock-concurrency.test.ts": {
+      "fingerprint": "80d90d2daf271f50ddddc64caccfc0f60024eefd91ec767081dedfa4108ada7a",
+      "snapshot": {
+        "packages/db/tests/migration-lock-concurrency.test.ts": "d692e7e076d423c5c1fe60f222a1a963e28d762d856deea014ce47c875ca4a28"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/db/tests/migration-lock-concurrency.test.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/excel/src/legacy.ts": {
+      "fingerprint": "49a959f0bb4a8c5dc09ab53b438ce18fa541893a743376530c7f797713582d5b",
+      "snapshot": {
+        "packages/excel/src/legacy.ts": "7b942154f4f2ea8c10ff023f21cac151477ccf2bcdf11fd19601c517a3ec596e"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: packages/excel/src/legacy.ts at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:packages/excel/tests/excel.test.ts": {
+      "fingerprint": "dc19e657d1d4d05d02a497390e0c80c6fadf7de300b3abf672b1a69cabc3fb3f",
+      "snapshot": {
+        "packages/excel/tests/excel.test.ts": "a6b84c4dd14d05f9eee35443473c2b58f014aa5128a8013e125ab3fd448a6b37"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/excel/tests/excel.test.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/excel/tests/fixtures/PROVENANCE.md": {
+      "fingerprint": "6678750d3cd632c01346499cf988b882921b7695cf48cc8f1b721fec6f5ca9d4",
+      "snapshot": {
+        "packages/excel/tests/fixtures/PROVENANCE.md": "f795c2e6085a9c987694191f27bcd5217095032c4f17f8c3d7eea4379a7bc466"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/excel/tests/fixtures/PROVENANCE.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/excel/tests/fixtures/legacy-attendance.golden.json": {
+      "fingerprint": "13e872d90dfc0b88b25c2233c3abe27a866f72f527689ec3e849c015adac395e",
+      "snapshot": {
+        "packages/excel/tests/fixtures/legacy-attendance.golden.json": "0c9b2e1de146e5edcae9713997c75a6bc4e9306e0881aa0a81e6bc22c8714b52"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/excel/tests/fixtures/legacy-attendance.golden.json at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/excel/tests/fixtures/legacy-attendance.xls": {
+      "fingerprint": "969a2b1844fede14475a11be81bad1b8e1192737d3f64d339748870f0eed9bc1",
+      "snapshot": {
+        "packages/excel/tests/fixtures/legacy-attendance.xls": "b33a9152fe849176da758202aeb613c205b19394977bee1154e21a9d433c03d7"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/excel/tests/fixtures/legacy-attendance.xls at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/excel/tests/lazy-loading.test.ts": {
+      "fingerprint": "99bc887c88c041e970852e10e82f711d961faf798bd5cd276cb5966b27ae418a",
+      "snapshot": {
+        "packages/excel/tests/lazy-loading.test.ts": "b87488cbe541ff2e69e6461ca5f10ccda3f33a4c646f9ccf38179618be921816"
+      },
+      "head": "151459de8c499de68cb78f26232178bf41e40349",
+      "outcome": "no-change",
+      "reason": "Isolate subprocess timezone to Asia/Jakarta for deterministic golden snapshot comparison across environments",
+      "evidence": [
+        "Changed: packages/excel/tests/lazy-loading.test.ts at 151459de8c499de68cb78f26232178bf41e40349"
+      ]
+    },
+    "source:packages/sheetjs-fork/LICENSE": {
+      "fingerprint": "ff891e09d007f9e4af007a1a544e862d6a4204a2d8934cc9f2597dddeddb59c6",
+      "snapshot": {
+        "packages/sheetjs-fork/LICENSE": "4d2a38ac35cda06a555c84074a819d413339cd3691b822cae50f8f322fe01f64"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/sheetjs-fork/LICENSE at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/sheetjs-fork/UPSTREAM.md": {
+      "fingerprint": "2bd730882ede325142a40c13f8ee0bd22d3fec59b6a3859447a689c38988b21a",
+      "snapshot": {
+        "packages/sheetjs-fork/UPSTREAM.md": "317aeb429cfbf13738ff95aaa93d0177d6773e3cae4658c23138b0e297f23b72"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/sheetjs-fork/UPSTREAM.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/sheetjs-fork/dist/cpexcel.js": {
+      "fingerprint": "d6d321fe8657d2913f038c9b02ee73f6e0b4755d81b5e132d0ba44b1b8dd26be",
+      "snapshot": {
+        "packages/sheetjs-fork/dist/cpexcel.js": "5f0cc8cc3c764e924a2877f32dcd93709756d0b6c26d2471bfd911ce6f8e81c2"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/sheetjs-fork/dist/cpexcel.js at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/sheetjs-fork/types/index.d.ts": {
+      "fingerprint": "085597d278b98fa8edab7eb813549b56b50ece3e2f314063ffdfd7967a778f03",
+      "snapshot": {
+        "packages/sheetjs-fork/types/index.d.ts": "191e4e6aceae3602aa3a1e9a6bc0e98821d6d5fb787e2bc16e250439482bddb6"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/sheetjs-fork/types/index.d.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:packages/sheetjs-fork/xlsx.js": {
+      "fingerprint": "d802b61ddfe6e91a8ddbf2e9dc8876758339fcd173391bcdda6515b0655ba00c",
+      "snapshot": {
+        "packages/sheetjs-fork/xlsx.js": "fd159f1e2d694e12cd0709c1ec1b63c6e1f045d2c4ce857a346f9b965798cbfa"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: packages/sheetjs-fork/xlsx.js at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:primary_lateness_executive_dashboard.xlsx": {
+      "fingerprint": "40221f4b31f06afb8a00b8f0f9e0451b39e5eded2774bdbdbb8ba984ef8f0c2b",
+      "snapshot": {
+        "primary_lateness_executive_dashboard.xlsx": "7473d730d797b924219c37ca91458026e6a12d2f464e6bdb4485f6d5aa662163"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: primary_lateness_executive_dashboard.xlsx at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/check-architecture.ts": {
+      "fingerprint": "36da1c3c4b8d2296789cd2d1da245917f52a8a51ab8d5e1f1a0b801b8ced335e",
+      "snapshot": {
+        "scripts/check-architecture.ts": "c9ef22bcc2263fd1641dba35cd950b27788aa6c65e9e9ed258a5631189975582"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/check-architecture.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tests/architecture-fixtures.ts": {
+      "fingerprint": "652aad17bc5f9aabd98254c2861cd0ad406f30859dce5b27937e6bd577a8dabb",
+      "snapshot": {
+        "scripts/tests/architecture-fixtures.ts": "5e1c7e3c88bcc5a87a9b08840fd6f25e96b9798bb9b63342f35bc2ad9d52e068"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tests/architecture-fixtures.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tmp-lifecycle/ci-preflight.sh": {
+      "fingerprint": "a7e33bd26f867074fcf978087e716f829bd7a09a53f3bec81ab4791a3caecd3c",
+      "snapshot": {
+        "scripts/tmp-lifecycle/ci-preflight.sh": "ceca8a54ed0569dee8ceb9c9fd1f0fa6dc98edea40e68f7a979fb33175cad2bc"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tmp-lifecycle/ci-preflight.sh at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tmp-lifecycle/cli.ts": {
+      "fingerprint": "cfa3549ca19bc747f6bb5eb573b64fa151f5727a8be7c0c100ca30204b612ff3",
+      "snapshot": {
+        "scripts/tmp-lifecycle/cli.ts": "4fed1a73bf3adcc9480dd9638746fc72586e104c5191edbd64eaa0fa62438a31"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tmp-lifecycle/cli.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tmp-lifecycle/inspector.ts": {
+      "fingerprint": "22f7ee4ca5e3ca3a5fc13e3557e35907ac6bf28b6bc02e3d6d7ef457d2a67f03",
+      "snapshot": {
+        "scripts/tmp-lifecycle/inspector.ts": "c3b56803df6e030d9b99adf70b8cbdc09ac657e6d488a25be4e52a17d7eb7145"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tmp-lifecycle/inspector.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tmp-lifecycle/quota.ts": {
+      "fingerprint": "9ee9fa5a9aa21277bd46014a3659608f725c2dee2bf95ff3339ec66f0d4b09bf",
+      "snapshot": {
+        "scripts/tmp-lifecycle/quota.ts": "4fad5d8ebc6c3dc261bd9b2f86f94f8adfef494a157d7759fa4ba1a468a4f0ea"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tmp-lifecycle/quota.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:scripts/tmp-lifecycle/types.ts": {
+      "fingerprint": "50787fb31858ee6f986a116acba4063f958650995cf4aa5067845357d62eb569",
+      "snapshot": {
+        "scripts/tmp-lifecycle/types.ts": "8189be8382e3bd71850ff70093981e34c3e8e4629392b0ee134be0cd66baf804"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: scripts/tmp-lifecycle/types.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:skills-lock.json": {
+      "fingerprint": "e7a3486a01b97623f498375d7d5aaa9f85b2d5ce1505d50092f45a2b38b85a4e",
+      "snapshot": {
+        "skills-lock.json": "c0b161e88bafa15be637e03c7e51099eae729baeb229c887a4236dff4296ed9e"
+      },
+      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "outcome": "no-change",
+      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "evidence": [
+        "Changed: skills-lock.json at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+      ]
+    },
+    "source:deployment/loop49-final-report.md": {
+      "fingerprint": "377cf33b9e5e99270fe364adfc9e7d2cf5f0b8efbe7e91fea7ba28146159c61c",
+      "snapshot": {
+        "deployment/loop49-final-report.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-final-report.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-infrastructure-baseline.md": {
+      "fingerprint": "c35b27b8d583b13ce903badbc9531a3630bc7a27bb6c9588e9f7e961e008a5c0",
+      "snapshot": {
+        "deployment/loop49-infrastructure-baseline.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-infrastructure-baseline.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-owner-authorization-matrix.md": {
+      "fingerprint": "5579e28339d3eeffc69f43577a4ac681c17dc430bb4685dd99644f1804bc70b1",
+      "snapshot": {
+        "deployment/loop49-owner-authorization-matrix.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-owner-authorization-matrix.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-quadlet-hardening-review.md": {
+      "fingerprint": "d35b93c4065b27ba976eec71428de386cbf6fd4f1a5056f542fd851010a7bb83",
+      "snapshot": {
+        "deployment/loop49-quadlet-hardening-review.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-quadlet-hardening-review.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-reboot-recovery-plan.md": {
+      "fingerprint": "146cceba99c11f43a4a108a8423fac16e94d371e8ee1b088b087a55967a1d5d4",
+      "snapshot": {
+        "deployment/loop49-reboot-recovery-plan.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-reboot-recovery-plan.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-records.sha256": {
+      "fingerprint": "b2393db19affb00b9db4041807be1b855a38f31c02d2c00f8260618f5b608f63",
+      "snapshot": {
+        "deployment/loop49-records.sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-records.sha256 at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-recovery-credential-gates.md": {
+      "fingerprint": "e846b9be3cfadfcb87b835d38eee195e937a6e24b58eaabcfbfa2b67de3b6819",
+      "snapshot": {
+        "deployment/loop49-recovery-credential-gates.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-recovery-credential-gates.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-release-rollback-plan.md": {
+      "fingerprint": "7fd5985eae6413d5f7a408524039a45edec110c15022fb0ef3e1218bb0db6d88",
+      "snapshot": {
+        "deployment/loop49-release-rollback-plan.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-release-rollback-plan.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/loop49-tailnet-serve-plan.md": {
+      "fingerprint": "da0433bb458273d81a0c6dcc62abea17aadf2b37bca7b90cedf162ccea332627",
+      "snapshot": {
+        "deployment/loop49-tailnet-serve-plan.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/loop49-tailnet-serve-plan.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/systemd/operatoros-api.service": {
+      "fingerprint": "1346a954c7523743f3e82dcf2804746951344c44502337c5cb05e6556c43b1a2",
+      "snapshot": {
+        "deployment/systemd/operatoros-api.service": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/systemd/operatoros-api.service at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:deployment/tmp-lifecycle-report.md": {
+      "fingerprint": "6af19801bf6579be182ec227a89ea8e9211beff0efb69639672250cc86e6582b",
+      "snapshot": {
+        "deployment/tmp-lifecycle-report.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: deployment/tmp-lifecycle-report.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/ARCHITECTURE.md": {
+      "fingerprint": "ddb2aeaea20d0cddba4849caabbecf89c53c0bcb72633405ce270c897d24fd97",
+      "snapshot": {
+        "project-sources/ARCHITECTURE.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/ARCHITECTURE.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/DATABASE_AND_DOMAIN.md": {
+      "fingerprint": "fc9b093da8384720398998f03ca5c3cf382cbe74c8a1317a3e58a993fa0fa589",
+      "snapshot": {
+        "project-sources/DATABASE_AND_DOMAIN.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/DATABASE_AND_DOMAIN.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/PROJECT_OVERVIEW.md": {
+      "fingerprint": "704714f6e5a47c14eac8ee2d72b138caf5d73a8217cf3524c4560c5f21bbb808",
+      "snapshot": {
+        "project-sources/PROJECT_OVERVIEW.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/PROJECT_OVERVIEW.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/PROJECT_STATUS.md": {
+      "fingerprint": "d1e4aebc04d87412e0502439d97f4dd62faecac78b825aa746981b992aa363a1",
+      "snapshot": {
+        "project-sources/PROJECT_STATUS.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/PROJECT_STATUS.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/SECURITY_AND_OPERATIONS.md": {
+      "fingerprint": "50adae201568fc49cd86e225fa8cc1d79aca1bdd56b2bbccc99e3d8fb4a7de39",
+      "snapshot": {
+        "project-sources/SECURITY_AND_OPERATIONS.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/SECURITY_AND_OPERATIONS.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:project-sources/TESTS_AND_ACCEPTANCE.md": {
+      "fingerprint": "f8a8f7c61bb67adb6fbd37c50ca37c0186818b7bf5b47cb04c956f63ee57e3e0",
+      "snapshot": {
+        "project-sources/TESTS_AND_ACCEPTANCE.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "outcome": "no-change",
+      "reason": "Update lazy loader and test path resolution",
+      "evidence": [
+        "Changed: project-sources/TESTS_AND_ACCEPTANCE.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
       ]
     }
   }

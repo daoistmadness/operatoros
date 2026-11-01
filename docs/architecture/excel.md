@@ -13,7 +13,7 @@ last_reviewed: 2026-10-26
 The package owns workbook creation and reading, ExcelJS wrappers, legacy `.xls`
 adaptation, cell normalization, safe sheet names, safe filenames, styles, and
 export metadata. It may depend on `@operatoros/contracts`, ExcelJS `4.4.0`,
-and the existing `@e965/xlsx` `.xls` adapter.
+and the internal `@operatoros/sheetjs-fork` `.xls` adapter.
 
 The package does not own HTTP transport, authorization, database access,
 React state, Chart.js state, or attendance, grade, KKM, ranking, or analytics
@@ -38,7 +38,7 @@ uploaded file -> format adapter -> normalized worksheet rows
               -> API domain mapper -> validated domain operation
 ```
 
-ExcelJS reads `.xlsx` files. The existing `@e965/xlsx` adapter reads legacy
+ExcelJS reads `.xlsx` files. The internal `@operatoros/sheetjs-fork` adapter reads legacy
 BIFF8 `.xls` files. The API keeps filename, multipart, permission, and domain
 validation rules. Both formats retain their accepted fixture behavior.
 

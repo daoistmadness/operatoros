@@ -78,6 +78,7 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Documentation system](decisions/documentation-system.md).
 - [Git history data remediation](decisions/git-history-data-remediation.md) — Deprecated.
 - [Ingestion dependency strategy](decisions/ingestion-dependency-strategy.md).
+- [Vendored SheetJS fork and lazy legacy loading](decisions/sheetjs-vendored-fork.md).
 - [Persistent development database](decisions/persistent-development-database.md).
 - [TanStack Start SPA migration](decisions/tanstack-start-spa.md).
 - [TanStack Redact research](decisions/tanstack-redact-research.md).
