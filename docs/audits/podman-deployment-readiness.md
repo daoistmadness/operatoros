@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-02
+last_reviewed: 2026-11-03
 ---
 
 # Podman deployment readiness audit
@@ -36,6 +36,58 @@ Quadlet with systemd. A production API image, Quadlet template, Caddyfile, and
 local synthetic validation harness now exist in this worktree. The target
 remains a proposal until independent review and an authorized Ubuntu rehearsal
 pass.
+
+## C6 status at 2026-11-03
+
+This section supersedes earlier release and artifact status tables for the
+local branch `codex/c5-restore-preflight-hardening` at commit
+`9a762658f6bb8c23dd72c7f17667a010becac29e` (C6). C5 restore-preflight
+hardening is its parent. The C6 application worktree was clean before this
+documentation-only update. The branch is local and has not been pushed or
+independently reviewed.
+
+### Current validation results
+
+| Check | C6 result | Acceptance status |
+| --- | --- | --- |
+| Focused restore and database tests | 27 passed, 0 failed, 218 assertions, 42.06s with `TMPDIR=/dev/shm` | Local diagnostic pass. Not qualified-runner evidence. |
+| UPP report tests | `bun test apps/api/tests/upp-reports.test.ts` passed 2 tests and 33 assertions in 5.54s | Test discovery and report behavior verified locally on C6. |
+| Exact-range fast tier | `TMPDIR=/dev/shm TEST_BASE_REVISION=8d0387e9... TEST_HEAD_REVISION=HEAD mise run test:fast` passed in 37s for the C5-to-C6 range | Local pass. Does not replace `check:full`. |
+| Canonical full check | Two C6 attempts exited 2. The tmpfs `/tmp` attempt reported 320 passed and 113 failed, including 225 SQLite I/O errors. A disk-backed private `/tmp` attempt stalled in ext4 journal waits and exceeded existing 30-second migration-test limits before the agent stopped its own process. | Failed locally and not verified on a qualified runner. Do not accept either attempt as a release pass. |
+| Exact 300-second smoke | The disk-backed attempt exited 2 before browser tests after one backend progression test timed out and database cleanup reported a lock. The tmpfs diagnostic exited 0 in 233 seconds with 67 browser tests passed, 2 opt-in measurement tests skipped, and 8 API tests passed. | Not verified on a qualified runner. The tmpfs run is diagnostic only. |
+| Podman integration | `scripts/podman-local-deploy.sh` completed with `PODMAN_LOCAL_VALIDATION=PASS` against the clean C6 source snapshot and synthetic data. | Local integration pass. User-systemd activation, reboot recovery, and Ubuntu 24.04 remain unverified. |
+| API image and static client | The C6 API image and SPA archive were built from the clean C6 Git tree. The local image ID, local manifest digest, archive checksums, and source manifest are in the private C6 receipt. | Local provenance only. No registry digest, production signature, or independent provenance review exists. |
+| Image scan and SBOM | The pinned Trivy scan reported zero findings among the visible Alpine and Node packages. Its 131-component SBOM does not list Bun or its statically linked SQLite. | Incomplete inventory. It does not clear the SQLite vulnerability. |
+| Runtime SQLite probe | The immutable local image reports Bun 1.4.4, SQLite 3.53.4, and FTS5 enabled. | CVE-2026-119373 remains present. C5 restore checks mitigate the reviewed preflight path but do not patch SQLite. |
+| Date-domain inventory | All 16 identified school-date defect rows have code changes in the C2 ancestry, with 0 deferred rows. | Product/domain and browser acceptance remain pending. |
+
+The available runner is Ubuntu 26.04.1, not the target Ubuntu 24.04 environment.
+Its `/tmp` is tmpfs, and the disk-backed diagnostic stalled during SQLite
+write-heavy tests. No current C6 `check:full` or smoke run qualifies for release
+acceptance. The two browser tests skipped above are opt-in measurements gated
+by `OPERATOROS_E2E_FRONTEND_BASELINE=true` and
+`OPERATOROS_E2E_QUERY_FOCUS=true`; the smoke run records them as skipped, not
+passed.
+
+### Open blocker register
+
+| Priority | Blocker and evidence | Owner | Required closure |
+| --- | --- | --- | --- |
+| P0 | `mise run check:full` has no passing C6 run. Local attempts failed under tmpfs and stalled on the disk-backed path. | Release-runner owner not assigned | Qualify a normally provisioned runner with disk-backed temporary storage and adequate SQLite/WAL capacity. Run the exact command against the frozen application source and retain logs and resource data. |
+| P0 | No qualified C6 E2E sample exists. One disk-backed smoke failed before browser tests; one tmpfs diagnostic passed in 233s. | Browser E2E and release-runner owners not assigned | Run at least three consecutive `timeout 300 make e2e-smoke` samples on the qualified runner. Preserve the 300-second limit and all assertions. |
+| P0 | The C6 image contains Bun 1.4.4 with SQLite 3.53.4 and FTS5. [OSV CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373) affects SQLite before 3.54.0. The source search found no FTS5 DDL or SQL `MATCH` path in API or database source, but this is not independent reachability approval. | Security risk owner not assigned | Use a supported fixed runtime and verify its embedded SQLite version, or obtain a named, time-limited exception with compensating controls and reassessment date. Complete independent security review. |
+| P0 | The Trivy SBOM omits the statically linked Bun SQLite component. No registry-resolvable digest or production signing identity exists. | Release and signing owners not assigned | Produce a complete runtime inventory, bind scan and SBOM to the exact image, and approve a signing and immutable registry promotion policy. |
+| P1 | C6 date fixes have no independent product/domain or browser acceptance across the 16 inventory rows. | Product/domain and browser reviewers not assigned | Review each row and its API/browser evidence. Record accepted behavior and findings against the exact candidate. |
+| P1 | Runtime/data-integrity and operations reviews are pending. The local Podman harness did not exercise a user systemd manager, host reboot, or Ubuntu 24.04. | Runtime/data and operations reviewers not assigned | Independently review storage, backup/restore, service lifecycle, recovery, and host compatibility evidence. |
+| P0 | No specific disposable Ubuntu host or host-change authorization is recorded. | Host owner and final Gate 1 approver not identified | Identify the host and administrator, approve network and backup policy, name reviewers, and authorize the exact changes and reboot before execution. |
+| P0 | No production target, production approval, or protected S4.3 migration authorization exists. | Production owner and approver not identified | Complete a separate production readiness review and record explicit authorization. Keep protected S4.3 access and migration out of scope until separately approved. |
+
+**Current decision: NO-GO.** C6 is a locally reviewable candidate with useful
+synthetic Podman and focused-test evidence. Release acceptance, security
+acceptance, Ubuntu rehearsal, and production deployment are not approved.
+Earlier image scans, tests, and artifacts remain evidence only for their
+recorded source revisions. The private C6 receipt contains raw logs, artifact
+identifiers, and checksums; it is not a public or signed release record.
 
 ## Candidate source inventory
 
