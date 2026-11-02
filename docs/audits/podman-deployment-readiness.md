@@ -268,8 +268,10 @@ loopback-only registry push/pull and an ephemeral Ed25519 test-manifest
 signature were performed afterward; the versioned evidence bundle above
 contains the registry digest, signed provenance record, public test key,
 archives, scan, SBOM, and checksums. No external registry promotion or
-production signing was performed. The record is local/synthetic and the
-worktree remains uncommitted.
+production signing was performed. The record describes a local/synthetic
+pre-freeze snapshot. That worktree has since been frozen as application
+candidate `9def1f2199558d087a2866f809fc76b1a873a408`; the later candidate image
+build and its status are recorded below.
 
 After the earlier audit added `Pull=never`, removed the explicit rootless
 `network-online.target` dependency, denied dotfile routes, and added a present
@@ -281,9 +283,9 @@ startup are not proven by this local check.
 
 ## Fresh image scan, SBOM, and provenance
 
-### Current Alpine API image
+### Earlier Alpine API image (pre-freeze scan)
 
-Trivy 0.76.1 scanned the current local API image using the pinned scanner
+Trivy 0.76.1 scanned the pre-freeze local API image using the pinned scanner
 image `ghcr.io/aquasecurity/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c`
 and vulnerability metadata refreshed on 2026-11-01. The image is Alpine
 3.24.3, built from the digest-pinned official Bun 1.4.4 Alpine base, with
@@ -299,7 +301,9 @@ local test manifest are preserved outside Git under
 `/var/tmp/operatoros-security-remediation-20261101/final-image-reports/`. The
 latest scan, SBOM, release manifest, test signature, archive, and source
 manifests are versioned together there.
-The exact source tree was dirty relative to baseline commit
+This scan/SBOM pair is not evidence for the later frozen API image; the
+candidate image has no current Trivy report or SBOM in this environment.
+The exact source tree for that earlier scan was dirty relative to baseline commit
 `6070cbb7fee48b937596944da3694d39105cd3ee`; the external source manifest
 includes tracked and non-ignored untracked files, and the browser artifact has
 a separate 214-file hash manifest. These are local synthetic validation
