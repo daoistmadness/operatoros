@@ -1,3 +1,5 @@
+import { schoolLocalDate } from "./school-date";
+
 export interface DefaultMonthInput {
   academicYearStart?: string | null;
   academicYearEnd?: string | null;
@@ -14,16 +16,14 @@ export function selectReportFilterDefaults(filters: import("../api/reports").Rep
   };
 }
 
-const monthValue = (date: Date) => `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+const monthValue = (date: Date) => schoolLocalDate(date).slice(0, 7);
 
 export function selectDefaultReportMonth({ academicYearStart, academicYearEnd, currentDate, availableMonths }: DefaultMonthInput): string {
   if (!academicYearStart || !academicYearEnd || !availableMonths.length) return "";
-  const start = new Date(`${academicYearStart}T00:00:00Z`);
-  const end = new Date(`${academicYearEnd}T23:59:59Z`);
-  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) return "";
+  const currentDateValue = schoolLocalDate(currentDate);
   const current = monthValue(currentDate);
-  if (currentDate >= start && currentDate <= end && availableMonths.includes(current)) return current;
-  if (currentDate < start) return availableMonths[0] || "";
+  if (currentDateValue >= academicYearStart && currentDateValue <= academicYearEnd && availableMonths.includes(current)) return current;
+  if (currentDateValue < academicYearStart) return availableMonths[0] || "";
   return availableMonths[availableMonths.length - 1] || "";
 }
 

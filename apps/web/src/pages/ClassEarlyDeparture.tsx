@@ -6,6 +6,7 @@ import {
   getClassDateDepartures, recordDepartureExcuse, revokeDepartureExcuse, getDepartureHistory, DepartureResolutionItem
 } from '../api/earlyDeparture';
 import { fetchAssignedClasses } from '../api/teacherClassAssignments';
+import { schoolLocalDate } from '../lib/school-date';
 
 const EXCUSE_REASON_CODES = [
   { code: 'MEDICAL', label: 'Alasan Medis / Sakit (Medical)' },
@@ -18,7 +19,7 @@ const EXCUSE_REASON_CODES = [
 export function ClassEarlyDeparture() {
   const [assignedClasses, setAssignedClasses] = useState<{ class_id: string; class_name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(schoolLocalDate());
   const [departures, setDepartures] = useState<DepartureResolutionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

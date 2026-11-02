@@ -7,6 +7,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mkdtempSync, rmSync } from "node:fs";
+import { dueState } from "../src/domains/operator";
 
 const secret = "synthetic-phase6-cookie-secret-32-chars-long";
 
@@ -147,6 +148,13 @@ async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z", includ
 }
 
 describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
+  it("classifies date-only and timestamp deadlines by the Jakarta school date", () => {
+    const now = new Date("2026-11-01T17:00:00.000Z");
+    expect(dueState("2026-11-02", "OPEN", now)).toBe("DUE_TODAY");
+    expect(dueState("2026-11-01", "OPEN", now)).toBe("OVERDUE");
+    expect(dueState("2026-11-01T18:00:00.000Z", "OPEN", now)).toBe("DUE_TODAY");
+  });
+
   it("counts eligible PTK as pending and exposes generation work before a month is generated", async () => {
     const { dir, handle, db, app, adminCookie, unitId, currentYear, currentMonth } = await createTestContext("2026-08-01T12:00:00.000Z", false);
     try {

@@ -21,10 +21,11 @@ import { EmptyState, ErrorState, LoadingState } from "../components/common/state
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { useAuth } from "../context/AuthContext";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 
 const features = tableFeatures({ rowPaginationFeature, columnVisibilityFeature });
 const column = createColumnHelper<typeof features, ManagedStudent>();
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => schoolLocalDate();
 
 function saveBlob(blob: Blob, filename: string) {
   const href = URL.createObjectURL(blob);

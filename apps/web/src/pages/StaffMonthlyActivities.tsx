@@ -15,6 +15,7 @@ import { NativeSelect } from "../components/ui/native-select";
 import { useAuth } from "../context/AuthContext";
 import { getPageApiError, isApiError } from "../lib/api/errors";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 
 const statusOptions: Array<{ value: "ALL" | StaffMonthlyActivityStatusDto; label: string }> = [
   { value: "ALL", label: "All statuses" },
@@ -24,13 +25,7 @@ const statusOptions: Array<{ value: "ALL" | StaffMonthlyActivityStatusDto; label
   { value: "NOT_APPLICABLE", label: "Not applicable" },
 ];
 
-function jakartaDate(date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
-  const part = (name: string) => parts.find((item) => item.type === name)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
-function currentMonth(): string { return jakartaDate().slice(0, 7); }
+function currentMonth(): string { return schoolLocalDate().slice(0, 7); }
 
 function offsetMonth(month: string, offset: number): string {
   const [year, monthNumber] = month.split("-").map(Number);
@@ -62,7 +57,7 @@ function ActivityHistory({ activityId }: { activityId: number }) {
 function ActivityRow({ item, editable }: { item: StaffMonthlyActivityItemDto; editable: boolean }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState(item.status);
-  const [confirmationDate, setConfirmationDate] = useState(item.confirmation_date ?? jakartaDate());
+  const [confirmationDate, setConfirmationDate] = useState(item.confirmation_date ?? schoolLocalDate());
   const [notes, setNotes] = useState(item.processing_notes ?? "");
   const [reason, setReason] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -84,7 +79,7 @@ function ActivityRow({ item, editable }: { item: StaffMonthlyActivityItemDto; ed
   });
   useEffect(() => {
     setStatus(item.status);
-    setConfirmationDate(item.confirmation_date ?? jakartaDate());
+    setConfirmationDate(item.confirmation_date ?? schoolLocalDate());
     setNotes(item.processing_notes ?? "");
     setReason("");
   }, [item.version, item.status, item.confirmation_date, item.processing_notes]);

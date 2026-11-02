@@ -12,8 +12,9 @@ import { useAuth } from "../context/AuthContext";
 import { useAnalyticsFiltersQuery } from "../hooks/useAnalyticsQueries";
 import { useAttendanceAnalyticsOptionsQuery } from "../hooks/useAttendanceAnalyticsQueries";
 import { useDailyAttendanceQuery } from "../hooks/useDailyAttendanceQuery";
+import { schoolLocalDate } from "../lib/school-date";
 
-const isoToday = () => new Date().toISOString().slice(0, 10);
+const isoToday = () => schoolLocalDate();
 const number = (value: number) => value.toLocaleString();
 
 function shiftDate(value: string, days: number): string {

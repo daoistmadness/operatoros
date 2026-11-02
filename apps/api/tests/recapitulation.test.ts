@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { loadXlsxWorkbook } from "@operatoros/excel";
@@ -17,18 +19,19 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function setup(label: string) {
-  const path = `/tmp/operatoros-recap-${label}-${process.pid}-${Date.now()}.db`;
+async function setup(label: string, clock: () => Date = () => new Date()) {
+  const directory = mkdtempSync(join(tmpdir(), `operatoros-recap-${label}-${process.pid}-`));
+  const path = join(directory, "operatoros.sqlite");
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-recap-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, clock, auth: { authCookieSecret: secret, auditDir: join(directory, "audit") } });
   const admin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   const staff = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
   return {
     path, database, app,
     admin: { cookie: cookie(admin) },
     staff: { cookie: cookie(staff) },
-    cleanup: () => { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); },
+    cleanup: () => { database.close(); rmSync(directory, { recursive: true, force: true }); },
   };
 }
 
@@ -79,6 +82,25 @@ describe("data recapitulation analytics", () => {
       expect(keys).toContain("12-13"); // 2013 births against current reference date
       expect(keys).toContain("Unknown");
       expect(JSON.stringify(body)).not.toContain("2013-05-01");
+    } finally {
+      value.cleanup();
+    }
+  }, 30000);
+
+  it("calculates ages using the Jakarta school date at midnight", async () => {
+    const value = await setup("jakarta-age", () => new Date("2026-11-01T17:00:00.000Z"));
+    try {
+      value.database.client.run("UPDATE student_masters SET birth_date = '2012-11-02'");
+      const student = value.database.client.query("SELECT id FROM student_masters LIMIT 1").get() as { id: string };
+      const profile = await value.app.handle(new Request(`http://local/api/student-masters/${student.id}/profile`, { headers: { cookie: value.admin.cookie } }));
+      expect(profile.status).toBe(200);
+      expect((await profile.json() as any).age_years).toBe(14);
+      const management = await value.app.handle(new Request("http://local/api/student-masters/management/list", { headers: { cookie: value.admin.cookie } }));
+      expect((await management.json() as any).items).toEqual(expect.arrayContaining([expect.objectContaining({ id: student.id, age_years: 14 })]));
+
+      const recap = await value.app.handle(new Request("http://local/api/analytics/recapitulation/students?dimension=age", { headers: { cookie: value.admin.cookie } }));
+      expect(recap.status).toBe(200);
+      expect((await recap.json() as any).rows).toEqual(expect.arrayContaining([expect.objectContaining({ key: "14-15", count: 4 })]));
     } finally {
       value.cleanup();
     }

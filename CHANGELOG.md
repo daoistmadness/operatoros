@@ -6,6 +6,7 @@ Notable user-facing changes are recorded here.
 
 - Add a rootless Podman API image, Quadlet/Caddy configuration, source-tree provenance checks, and a synthetic local deployment harness.
 - Keep the dashboard heading available during analytics loading and synchronize E2E checks on relevant page readiness.
+- Use the Asia/Jakarta school date for effective-date checks, age and tenure calculations, report defaults, and due status.
 
 - Vendor trimmed SheetJS fork and implement lazy legacy XLS parsing in @operatoros/excel (#352).
 - Pin affected minimatch dependency paths to the patched release and test their current consumers under Bun and Node.

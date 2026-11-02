@@ -26,6 +26,7 @@ import {
   previewImport,
 } from '../api/dataPortability';
 import { AppLink as Link } from '../components/AppLink';
+import { schoolLocalDate } from '../lib/school-date';
 
 export default function DataPortability({ initialLoading = true, embedded = false }: { initialLoading?: boolean; embedded?: boolean }) {
   const [activeTab, setActiveTab] = useState<'export' | 'import' | 'templates' | 'history'>('export');
@@ -129,7 +130,7 @@ export default function DataPortability({ initialLoading = true, embedded = fals
       });
 
       const ext = exportFormat === 'csv_bundle' ? 'zip' : 'csv';
-      const filename = `${selectedExportDataset}_${new Date().toISOString().slice(0, 10)}.${ext}`;
+      const filename = `${selectedExportDataset}_${schoolLocalDate()}.${ext}`;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

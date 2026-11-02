@@ -11,6 +11,7 @@ import { studentQuality, studentQualityIssueCounts } from "./data-quality";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -36,11 +37,12 @@ function fail(set: any, status: number, detail: string): { detail: string } {
 
 function assignedClass(context: AuthContext, user: { id: number; role: string }, classId: number, academicYearId: number): boolean {
   if (user.role === "admin") return true;
+  const today = schoolLocalDate(context.now?.() ?? new Date());
   return Boolean(row(context, `SELECT id FROM teacher_class_assignments
     WHERE user_id = ? AND academic_class_id = ? AND academic_year_id = ? AND active = 1
-      AND (effective_from IS NULL OR effective_from <= date('now'))
-      AND (effective_to IS NULL OR effective_to >= date('now'))
-    LIMIT 1`, [user.id, classId, academicYearId]));
+      AND (effective_from IS NULL OR effective_from <= ?)
+      AND (effective_to IS NULL OR effective_to >= ?)
+    LIMIT 1`, [user.id, classId, academicYearId, today, today]));
 }
 
 function classRoster(context: AuthContext, classId: number, academicYearId: number, search: string): Row[] {

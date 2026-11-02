@@ -15,12 +15,9 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 
 const EDUCATION_LEVELS = ["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"];
-
-function schoolToday(): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-}
 
 function FieldValue({ label, value }: { label: string; value: unknown }) {
   const display = value === null || value === undefined || value === "" ? "—" : String(value);
@@ -48,12 +45,12 @@ export default function StaffDetail() {
   const jenjangs = useQuery({ queryKey: queryKeys.academicMasters.jenjangs, queryFn: fetchJenjangOptions });
   const [selectedJenjangs, setSelectedJenjangs] = useState<number[]>([]);
   const [employmentStatus, setEmploymentStatus] = useState<"ACTIVE" | "FORMER">("ACTIVE");
-  const [effectiveDate, setEffectiveDate] = useState(schoolToday);
+  const [effectiveDate, setEffectiveDate] = useState(schoolLocalDate);
   const [education, setEducation] = useState<Partial<EducationRecord>>({ education_level: "S1" });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<EducationRecord | null>(null);
   const [assignmentUnitId, setAssignmentUnitId] = useState("");
-  const [assignmentStartDate, setAssignmentStartDate] = useState(schoolToday);
+  const [assignmentStartDate, setAssignmentStartDate] = useState(schoolLocalDate);
   const [assignmentPtk, setAssignmentPtk] = useState<"APPLICABLE" | "NOT_APPLICABLE" | "UNKNOWN">("UNKNOWN");
   const [assignmentReason, setAssignmentReason] = useState("");
   const [closeDrafts, setCloseDrafts] = useState<Record<number, { effective_to: string; reason: string }>>({});
@@ -103,8 +100,8 @@ export default function StaffDetail() {
       <Card><CardHeader><CardTitle>School unit assignments</CardTitle><p className="text-sm text-muted-foreground">Unit history is dated separately from jenjang and employment status.</p></CardHeader><CardContent className="space-y-4">
         {schoolUnits.isPending ? <LoadingState title="Loading school units" /> : schoolUnits.isError ? <p role="alert" className="text-sm text-rose-700">School units could not be loaded.</p> : null}
         {member.school_unit_assignments.length ? <div className="space-y-3">{member.school_unit_assignments.map((assignment) => {
-          const draft = closeDrafts[assignment.id] ?? { effective_to: schoolToday(), reason: "" };
-          const upcoming = assignment.effective_from > schoolToday();
+          const draft = closeDrafts[assignment.id] ?? { effective_to: schoolLocalDate(), reason: "" };
+          const upcoming = assignment.effective_from > schoolLocalDate();
           const cancelling = cancelAssignmentMutation.isPending && cancelAssignmentMutation.variables?.assignmentId === assignment.id;
           const closing = closeAssignmentMutation.isPending && closeAssignmentMutation.variables?.assignmentId === assignment.id;
           return <div key={assignment.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-center gap-2"><p className="font-black">{assignment.school_unit_name}</p>{upcoming && <Badge variant="secondary">Upcoming</Badge>}<Badge variant={assignment.school_unit_status === "ACTIVE" ? "success" : "secondary"}>{assignment.school_unit_status}</Badge><Badge variant={assignment.ptk_applicability === "APPLICABLE" ? "information" : assignment.ptk_applicability === "UNKNOWN" ? "warning" : "secondary"}>PTK {assignment.ptk_applicability.replaceAll("_", " ")}</Badge></div><p className="mt-1 text-sm text-muted-foreground">{assignment.effective_from} through {assignment.effective_to ?? "Open"}</p><p className="mt-1 text-sm">Reason: {assignment.reason}</p>{can("manage_staff") && assignment.effective_to === null && (upcoming ? <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]"><div><Label htmlFor={`assignment-cancel-reason-${assignment.id}`}>Cancellation reason</Label><Input id={`assignment-cancel-reason-${assignment.id}`} value={cancelReasons[assignment.id] ?? ""} onChange={(event) => setCancelReasons((current) => ({ ...current, [assignment.id]: event.target.value }))} disabled={cancelling} /></div><Button className="self-end" variant="outline" onClick={() => cancelAssignmentMutation.mutate({ assignmentId: assignment.id, reason: cancelReasons[assignment.id] ?? "" })} disabled={cancelAssignmentMutation.isPending || !(cancelReasons[assignment.id] ?? "").trim()}>{cancelling ? "Saving…" : "Cancel assignment"}</Button></div> : <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]"><div><Label htmlFor={`assignment-close-date-${assignment.id}`}>Effective through</Label><Input id={`assignment-close-date-${assignment.id}`} type="date" min={assignment.effective_from} value={draft.effective_to} onChange={(event) => setCloseDrafts((current) => ({ ...current, [assignment.id]: { ...draft, effective_to: event.target.value } }))} disabled={closing} /></div><div><Label htmlFor={`assignment-close-reason-${assignment.id}`}>Close reason</Label><Input id={`assignment-close-reason-${assignment.id}`} value={draft.reason} onChange={(event) => setCloseDrafts((current) => ({ ...current, [assignment.id]: { ...draft, reason: event.target.value } }))} disabled={closing} /></div><Button className="self-end" variant="outline" onClick={() => closeAssignmentMutation.mutate({ assignmentId: assignment.id, body: draft })} disabled={closeAssignmentMutation.isPending || !draft.effective_to || !draft.reason.trim()}>{closing ? "Saving…" : "Close assignment"}</Button></div>)}</div>;

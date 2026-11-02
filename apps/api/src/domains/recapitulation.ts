@@ -12,6 +12,7 @@ import {
   type StudentRecapResponse,
 } from "@operatoros/contracts/analytics";
 import { actor } from "./core";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 import type { AuthContext } from "../auth/service";
 
 type Row = Record<string, any>;
@@ -119,10 +120,12 @@ function studentRows(context: AuthContext, scope: StudentScope): Row[] {
 
 function ageBand(birthDate: unknown, reference: string): string {
   if (!birthDate) return "Unknown";
-  const birth = new Date(String(birthDate));
-  if (Number.isNaN(birth.getTime())) return "Unknown";
-  const referenceTime = new Date(`${reference}T00:00:00Z`).getTime();
-  let age = referenceTime === 0 ? 0 : Math.floor((referenceTime - birth.getTime()) / (365.2425 * 24 * 3600 * 1000));
+  const birthValue = String(birthDate);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthValue)) return "Unknown";
+  const birth = new Date(`${birthValue}T00:00:00Z`);
+  if (Number.isNaN(birth.getTime()) || birth.toISOString().slice(0, 10) !== birthValue) return "Unknown";
+  let age = Number(reference.slice(0, 4)) - Number(birthValue.slice(0, 4));
+  if (reference.slice(5) < birthValue.slice(5)) age--;
   if (age < 0) age = 0;
   return AGE_BANDS.find((band) => age >= band.min && age <= band.max)?.label ?? "16+";
 }
@@ -209,7 +212,7 @@ export function studentRecapitulation(context: AuthContext, query: Row): Student
   const scope = studentScope(context, query);
   const dimension = STUDENT_DIMENSIONS.includes(query.dimension) ? (query.dimension as StudentRecapDimension) : "gender";
   const values = studentRows(context, scope);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = schoolLocalDate(context.now?.() ?? new Date());
   const counts = new Map<string, number>();
   let unknownCount = 0;
   for (const value of values) {
@@ -298,7 +301,7 @@ export function recapitulationRoutes(app: any, context: AuthContext): void {
     if (!user) return { detail: "Insufficient permissions" };
     const scope = studentScope(context, ctx.query);
     const values = studentRows(context, scope);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = schoolLocalDate(context.now?.() ?? new Date());
     const workbook = createWorkbook({ exportType: "student-recapitulation" });
     const summarySheet = addWorksheet(workbook, "Summary");
     appendRow(summarySheet, ["Metric", "Value"]);

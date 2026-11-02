@@ -7,6 +7,7 @@ import { PageHeader } from "../components/common/page-header";
 import { LoadingState, EmptyState } from "../components/common/state-message";
 import { getPageApiError } from "../lib/api/errors";
 import { Card } from "../components/ui/card";
+import { schoolLocalDate } from "../lib/school-date";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "Januari" },
@@ -73,9 +74,9 @@ function getHebMutationError(error: unknown, fallback: string): string {
 }
 
 function HebConfig() {
-  const today = new Date();
-  const [yearInput, setYearInput] = useState(String(today.getFullYear()));
-  const [activeYear, setActiveYear] = useState(today.getFullYear());
+  const currentYear = Number(schoolLocalDate().slice(0, 4));
+  const [yearInput, setYearInput] = useState(String(currentYear));
+  const [activeYear, setActiveYear] = useState(currentYear);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [rows, setRows] = useState<HebRow[]>([]);

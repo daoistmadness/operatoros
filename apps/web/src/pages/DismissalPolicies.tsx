@@ -6,6 +6,7 @@ import {
   getDeparturePolicies, createDeparturePolicy, deactivateDeparturePolicy, DismissalPolicyItem
 } from '../api/earlyDeparture';
 import { fetchJenjangs } from '../api/enrollment';
+import { schoolLocalDate } from '../lib/school-date';
 
 const WEEKDAYS = [
   'Senin (Monday)',
@@ -29,7 +30,7 @@ export function DismissalPolicies() {
   const [weekday, setWeekday] = useState(0); // 0=Mon
   const [dismissalTime, setDismissalTime] = useState('14:00');
   const [gracePeriod, setGracePeriod] = useState(15);
-  const [effectiveFrom, setEffectiveFrom] = useState(new Date().toISOString().split('T')[0]);
+  const [effectiveFrom, setEffectiveFrom] = useState(schoolLocalDate());
   const [effectiveTo, setEffectiveTo] = useState('');
   const [changeReason, setChangeReason] = useState('Kebijakan Jam Pulang Sekolah');
   const [submitting, setSubmitting] = useState(false);

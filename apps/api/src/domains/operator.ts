@@ -21,15 +21,16 @@ function parseJson(value: unknown): Row {
   try { return JSON.parse(String(value)) as Row; } catch { return {}; }
 }
 
-function dueState(dueAt: string | null, status: string | null): string {
+export function dueState(dueAt: string | null, status: string | null, now: Date): string {
   if (["RESOLVED", "DISMISSED", "APPROVED", "REJECTED", "CANCELLED", "COMPLETED", "SYNCHRONIZED", "VERIFIED", "SUBMITTED"].includes(String(status))) return "COMPLETED";
   if (!dueAt) return "NO_DUE_DATE";
-  const due = Date.parse(dueAt.includes("T") ? dueAt : `${dueAt.replace(" ", "T")}Z`);
+  const value = dueAt.trim();
+  const due = Date.parse(value.includes("T") ? value : `${value.replace(" ", "T")}Z`);
   if (Number.isNaN(due)) return "OVERDUE";
-  const now = new Date();
-  const dueDate = new Date(due); const today = now.toISOString().slice(0, 10);
-  if (dueDate.toISOString().slice(0, 10) === today) return "DUE_TODAY";
-  return due < Date.now() ? "OVERDUE" : "DUE_LATER";
+  const dueDate = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : schoolLocalDate(new Date(due));
+  const today = schoolLocalDate(now);
+  if (dueDate === today) return "DUE_TODAY";
+  return dueDate < today ? "OVERDUE" : "DUE_LATER";
 }
 
 function itemDueOrder(value: string): number {
@@ -254,7 +255,7 @@ export function workQueue(context: AuthContext, user: Row): Row[] {
       class_reference: value.class_name ?? null, jenjang_reference: value.jenjang_name ?? null,
       event_date: value.exception_date, title: `Follow-Up: ${String(value.exception_kind).replaceAll("_", " ").replace(/\b\w/g, (item) => item.toUpperCase())}`,
       evidence_summary: parseJson(value.source_snapshot).summary ?? "Kasus follow-up kehadiran.", workflow_status: value.status,
-      priority: value.priority, due_at: value.due_at, derived_due_state: dueState(value.due_at, value.status),
+      priority: value.priority, due_at: value.due_at, derived_due_state: dueState(value.due_at, value.status, context.now?.() ?? new Date()),
       available_actions: ["view_detail", "add_note", "update_status", "set_due_date"], source_route: `/attendance/followups?case_id=${value.id}`,
       last_activity_timestamp: value.updated_at, metadata: { id: value.id, version: Number(value.version), assigned_to_user_id: value.assigned_to_user_id },
     });

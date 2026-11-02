@@ -695,7 +695,7 @@ rehearsal.
 | Obtain a supported Bun runtime that contains SQLite 3.54.0 or later, or an explicit time-bounded security disposition for CVE-2026-119373 | Named security risk owner and runtime reviewer; names pending | Image promotion and Ubuntu rehearsal |
 | Reduce E2E smoke below the preferred 240-second target or formally accept the measured margin; keep 300-second gate and all assertions | Web E2E and runtime reviewers | Release reliability acceptance |
 | Qualify a normally provisioned, disk-backed release temporary filesystem and capture peak SQLite/WAL usage, capacity, quota, and resource telemetry | Release engineering; named owner pending | Canonical release and E2E acceptance |
-| Verify whether `JenjangConfig` effective dates and API backdate validation use the school-local calendar date at Jakarta midnight | Product/domain owner and browser E2E reviewer; names pending | Cutoff-policy behavioral acceptance |
+| Independently accept Jakarta school-day behavior for effective dates, age/tenure, report periods, overdue status, imports, and browser defaults; name the product/domain and browser reviewers | Product/domain owner and browser E2E reviewer; names pending | Timezone finding closure and C2 promotion |
 | Independent review of Containerfile, Quadlet, Caddy, SQLite boundaries, scan/SBOM, and backup/restore evidence | Runtime/data-integrity, security, operations, browser E2E reviewers; names pending | Podman ADR acceptance |
 | Approved production registry, immutable retention, signer identity, provenance and attestation policy | Release/security owners; names pending | Production artifact promotion |
 | Decide how to handle non-deterministic _shell.html: promote one exact checksum or pursue an upstream-compatible fix | Release engineering and architecture reviewers | Reproducible rebuild claim |
@@ -715,6 +715,7 @@ rehearsal.
 | Full and production dependency audits | **PASS** | bun run security:audit passed for 635 packages; bun audit --production passed for 430 packages. |
 | TanStack Start SPA build and generated routes | **PASS** | Production build passed and route-tree freshness check had no diff. |
 | Canonical full application check | **NOT VERIFIED on a qualified runner** | A pre-freeze run exited 0 on source manifest `b1e2248a…` under the tmpfs `/tmp` workaround with the host root full. It is diagnostic evidence, not candidate release acceptance. |
+| Jakarta date-boundary correction | **IMPLEMENTED IN C2; DOMAIN REVIEW AND RELEASE VALIDATION PENDING** | The inventory below has 16 rows classified as defects; all 16 have corresponding code changes in C2, with 0 intentionally deferred. This is implementation status, not independent product/domain acceptance. Full release checks and artifact rebuild remain outstanding. |
 | Exact 300-second local E2E smoke | **NOT VERIFIED as acceptance evidence** | Prior samples passed, but they ran on the full host without controlled cold-cache/resource telemetry. Rerun repeatedly on the qualified disk-backed runner; retain the 300-second limit and both opt-in skips. |
 | Local Podman synthetic integration | **PASS on a prior source snapshot; current full harness NOT VERIFIED** | Earlier integration passed API, auth/CSRF, Caddy SPA/dotfile, lock exclusion, persistence/WAL, Excel, and encrypted backup/isolated restore checks. Current candidate image provenance and a hardened runtime probe passed, but the complete harness was not rerun. No user systemd service or reboot was exercised. |
 | Current candidate API image build/provenance | **PASS (local review artifact)** | Image ID `sha256:9459588f…`; labels and in-image provenance match commit `9def1f21…` and source manifest `e637f7b9…`. OCI archive SHA-256 `404afb8a…`; a clean isolated import retained the image ID and source labels. No registry digest or promotion. |
@@ -804,21 +805,78 @@ timing rows above.
   confirm quota and free space, and run the canonical command without a mount
   substitution. There is no evidence-based fixed byte threshold yet.
 
-### Application date review finding
+### Application school-date inventory
 
-The E2E fixture was corrected to generate dates in local time because its
-synthetic attendance rows use local calendar dates. Separately, the application
-page `apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx` initializes
-and resets the `effective_from` date input with
-`new Date().toISOString().slice(0, 10)`, which is a UTC date. The API's
-backdating check in `apps/api/src/domains/config.ts` also uses a UTC date. The
-repository defines `Asia/Jakarta` as the school timezone in
-`apps/api/src/domains/attendance-submission-deadline.ts` and its attendance
-date contracts. The browser reviewer must verify the displayed default and
-submission behavior around Jakarta midnight independently of the test fixture.
-Do not close this finding based only on the test's UTC-to-local correction;
-whether configuration effective dates must follow the school-local date needs
-an explicit domain decision. **P1 review finding; not resolved by this audit.**
+This inventory was re-run against the API, database, and browser source. The
+fixed items below are changes in C2's source diff; they are not present in the
+frozen `9def1f2` candidate or in artifacts built from it. The defect/fix count
+is **16 classified defect rows, 16 implemented in C2, 0 deferred**. Each row
+groups related call sites by one business-date behavior; it is not a count of
+individual references or tests. For actual “today,” current-period,
+eligibility, age, and effective-date decisions, the school calendar is
+`Asia/Jakarta`, already defined by
+`apps/api/src/domains/attendance-submission-deadline.ts:18`.
+
+The implementation owner is the current engineering change. No human product
+or domain owner has been named for acceptance; those decisions remain pending.
+The table therefore distinguishes code changes from acceptance rather than
+claiming that a self-review closes a domain rule.
+
+| Source location | Date value and type | Classification | Owner | Decision |
+| --- | --- | --- | --- | --- |
+| `apps/api/src/domains/config.ts:128`; `apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx:144,189,200` | Cutoff policy `effective_from`; date-only | Confirmed defect, fixed in C2 | Engineering change; product/domain approver **PENDING** | Default and backdate check now use the Jakarta school date. Require reviewer confirmation of effective-date policy. |
+| `apps/api/src/domains/class-overview.ts:40` | Teacher assignment `effective_from` / `effective_to` compared with current day; date-only | Confirmed defect, fixed in C2 | Engineering change; academic operations approver **PENDING** | Current class access now evaluates assignment effectiveness on the Jakarta school date. |
+| `apps/api/src/domains/core.ts:102,194,214,467,474`; `apps/api/src/domains/recapitulation.ts:215,304` | Student birth date and age as-of date; date-only | Confirmed defect, fixed in C2 | Engineering change; student administration approver **PENDING** | Age and age-band calculations now use the Jakarta as-of date, including profiles and recapitulation. |
+| `apps/api/src/domains/staff-metrics.ts:11,18,46`; `apps/api/src/domains/employee-management.ts:32,57,269,297,337,342,365,377,428,494,501`; `apps/api/src/domains/core.ts:532,546,566,573,576` | Birth, employment start/end, assignment and reporting as-of dates; date-only | Presumed defects confirmed and fixed in C2 | Engineering change; HR/domain approver **PENDING** | Validation, age, tenure, current status, assignments, filters, and exports now share the Jakarta school date. |
+| `apps/api/src/domains/staff-import.ts:155,198,199,321`; `apps/api/src/domains/employee-management.ts:458` | Birth and employment dates in XLSX imports versus “today”; date-only | Confirmed defect, fixed in C2 | Engineering change; HR/import approver **PENDING** | Future-date validation and import preview receive the Jakarta school date. Excel serial decoding remains UTC calendar conversion, not timezone interpretation. |
+| `apps/api/src/domains/student-update.ts:102,106,107`; `apps/api/src/domains/student-update-rollback.ts:48,70,80`; `apps/api/src/domains/student-import-sessions.ts:111,143,146` | Device identity and enrollment effective/end dates; date-only | Confirmed defect, fixed in C2 | Engineering change; student administration approver **PENDING** | Dates written by update and compensating rollback actions now use the Jakarta school date. |
+| `apps/api/src/domains/data-portability.ts:388`; `apps/api/src/domains/upload-conflicts.ts:162`; `apps/api/src/domains/core.ts:442,443,497` | New or recovered device identity effective date; date-only | Confirmed defect, fixed in C2 | Engineering change; student/import approver **PENDING** | Missing source effective dates now fall back to the Jakarta school date; an existing attendance date remains authoritative when present. |
+| `apps/api/src/domains/student-overview.ts:27,30,64`; `apps/api/src/domains/student-update-rollback.ts:48`; `apps/api/src/domains/student-import-sessions.ts:111` | Enrollment window and rollback “today”; date-only | Confirmed defect, fixed in C2 | Engineering change; student administration approver **PENDING** | Overview and rollback use one school-day value for the operation. |
+| `apps/api/src/domains/reports.ts:492,499,632,1134`; `apps/web/src/lib/defaultReportMonth.ts:10,19,23` | Current report month and “today” filters; date-only | Confirmed defect, fixed in C2 | Engineering change; reporting owner **PENDING** | Report defaults, academic-year selection, and overdue follow-up comparisons now use the Jakarta calendar. |
+| `apps/api/src/domains/operator.ts:30-33,95-101,323-325,474,572` | `due_at` may be a date-only value or an instant; dashboard period is date-only | Confirmed defect, fixed in C2 | Engineering change; operations/product approver **PENDING** | Date-only due values compare directly with the school day; timestamp deadlines are converted to the school date; dashboard periods use the Jakarta month/year. |
+| `apps/api/src/domains/reports.ts:1142`; `apps/api/src/domains/interventions.ts:19,51,56,67` | Intervention `follow_up_date`; date-only | Confirmed defect, fixed in C2 | Engineering change; intervention owner **PENDING** | The stored date remains a calendar date; the overdue predicate now compares it with the Jakarta school date. `resolved_at` remains an instant. |
+| `apps/api/src/domains/upload-history.ts:14,325-333` | Synthetic sample attendance date and weekday; date-only | Confirmed defect, fixed in C2 | Engineering change; upload owner **PENDING** | Sample rows now derive date and weekday from the same Jakarta school day. |
+| `apps/web/src/components/enrollment/EnrollmentPanel.tsx:88,289`; `apps/web/src/components/upload/RosterImportPanel.tsx:22`; `apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx:88`; `apps/web/src/pages/AttendanceCorrections.tsx:72`; `apps/web/src/pages/AttendanceReview.tsx:85`; `apps/web/src/pages/CanonicalStudentProfile.tsx:24,512`; `apps/web/src/pages/ClassAttendanceEntry.tsx:146`; `apps/web/src/pages/ClassEarlyDeparture.tsx:22`; `apps/web/src/pages/DailyAttendanceOperations.tsx:17`; `apps/web/src/pages/DismissalPolicies.tsx:33`; `apps/web/src/pages/StudentManagement.tsx:28`; `apps/web/src/pages/StaffDetail.tsx:48,53,103-104` | Form defaults, effective dates and import fallback; date-only | Confirmed defects, fixed in C2 | Engineering change; browser/domain reviewers **PENDING** | Defaults now use the shared browser `schoolLocalDate()` helper. Date-only navigation arithmetic remains UTC arithmetic over ISO date strings. |
+| `apps/web/src/pages/Dashboard.tsx:85`; `apps/web/src/pages/AbsenceReasons.tsx:37`; `apps/web/src/pages/TardinessReport.tsx:242`; `apps/web/src/pages/StaffAnalytics.tsx:37,48`; `apps/web/src/pages/StaffMonthlyActivities.tsx:28,60,82`; `apps/web/src/pages/UppReports.tsx:19`; `apps/web/src/pages/ManagementReviewStudentProfile.tsx:46`; `apps/web/src/pages/HebConfig.tsx:77` | Current month/year, as-of date and report-period selection; date-only | Confirmed defects, fixed in C2 | Engineering change; reporting/browser reviewers **PENDING** | Current periods and as-of defaults now use the shared Jakarta date. Month-offset and month-end helpers use UTC only to do timezone-neutral calendar arithmetic. |
+| `apps/web/src/components/ChartMonthly.tsx:33-36,68,85-86` | Analytics month key rendered as a month label; date-only | Confirmed display defect, fixed in C2 | Engineering change; browser/analytics reviewer **PENDING** | The label formatter now fixes the formatting timezone to UTC after constructing a UTC calendar date, so a browser west of UTC cannot display the prior month. |
+| `apps/web/src/pages/DataPortability.tsx:133`; `apps/web/src/pages/StaffManagement.tsx:63` | Export filename date; date-only label | Confirmed defect, fixed in C2 | Engineering change; browser reviewer **PENDING** | Filename labels now match the school date, not the browser/UTC date. |
+| `apps/api/src/domains/attendance.ts:68`; `apps/api/src/domains/attendance-calendar.ts:53`; `apps/api/src/domains/attendance-analytics.ts:87`; `apps/api/src/domains/class-overview.ts:30`; `apps/api/src/domains/daily-attendance.ts:27`; `apps/api/src/domains/early-departure.ts:16`; `apps/api/src/domains/management-overview.ts:26`; `apps/api/src/domains/reports.ts:958`; `apps/api/src/domains/employee-management.ts:30`; `apps/api/src/domains/core.ts:518`; `apps/api/src/analytics/queries.ts:61`; `apps/api/src/analytics/risk-threshold-validation.ts:133`; `packages/db/src/migrate-existing.ts:32` | Validate a supplied `YYYY-MM-DD` by UTC-midnight round-trip; date-only | Correct UTC use; no defect | Engineering review; domain owner N/A | These operations validate calendar syntax/validity only; they do not decide which day is “today” or convert a date to a local date. |
+| `apps/api/src/domains/attendance-calendar.ts:152-155`; `apps/api/src/domains/attendance-reconciliation.ts:57,190`; `apps/api/src/domains/term-attendance.ts:140`; `apps/api/src/domains/term-lateness.ts:239`; `apps/api/src/domains/attendance-analytics.ts:180-184`; `apps/api/src/analytics/queries.ts:240-254`; `apps/api/src/domains/reports.ts:87,104,310`; `apps/api/src/domains/operator.ts:101,474`; `apps/api/src/domains/staff-monthly-activities.ts:61`; `apps/api/src/domains/config.ts:252`; `packages/db/src/migrate-existing.ts:177` | Iterate dates/months or calculate month end from date-only values | Correct UTC use; no defect | Engineering review; domain owner N/A | UTC is used here for stable arithmetic over ISO calendar dates and month numbers, avoiding host timezone/DST shifts. Current-period inputs are now derived from Jakarta first. |
+| `apps/api/src/domains/student-update.ts:34`; `packages/excel/src/normalization.ts:20-24`; `apps/api/src/domains/staff-import.ts:70` | Excel workbook date cell to date-only string | Correct UTC use; no defect | Excel package owner; N/A | Excel dates are decoded from their UTC calendar fields/serial day; this does not infer the current school date. Pending browser/domain reviewers should confirm workbook fixtures preserve the intended date. |
+| `apps/api/src/domains/core.ts:433`; `apps/api/src/domains/interventions.ts:51,56,67`; `apps/api/src/domains/employee-management.ts:297,337,342,377` | Caller-supplied enrollment, identity, follow-up, employment and status effective dates; date-only | Correct explicit-input handling; no implicit “today” defect | Domain owners pending where semantics require acceptance | These values are already supplied as calendar dates. The current-day comparisons/defaults that surround them now use the school date; the submitted date itself must not be shifted through UTC. |
+| `apps/api/src/domains/attendance-followups.ts:27,60,72,138,163,181-182`; `apps/api/src/domains/operator.ts:258`; `apps/api/src/domains/safety.ts:1007,1011,1041`; `apps/api/src/auth/service.ts:110,114,148`; `packages/db/src/bootstrap.ts:85` | `created_at`, `updated_at`, `resolved_at`, session/backup expiry, scheduler `next_run_at`; instant | Correct UTC use; no defect | Runtime/security owners; N/A | These represent instants, expiry durations, audit times or explicitly UTC scheduler fields. The operator converts instant `due_at` to Jakarta only when deriving a school-day overdue state. |
+
+#### Inventory conclusion and acceptance
+
+No current `CURRENT_DATE` or SQLite `date('now')` business-day expression was
+found in API or DB source. UTC date-only validators, calendar iterators, Excel
+serial conversion, timestamps, and the scheduler's explicitly named UTC fields
+were retained for the reasons in the table. All identified default/current-day
+business decisions in the API and browser were changed to use `Asia/Jakarta`.
+
+The application fix is not independently accepted yet. The source diff is
+frozen as C2, but full release checks have not run on this source and the
+required human product/domain owners and browser reviewer have not been named.
+Review the complete source diff and inventory before promotion. Rebuild all
+artifacts from C2; previous `9def1f2` artifacts do not contain these changes.
+
+#### Current worktree checks (not release acceptance)
+
+The code checks below ran against the candidate source tree before it was
+committed as C2. Changes made after those checks and before commit are limited
+to this audit and changelog; the tested application source is byte-identical to
+C2. These focused checks do not substitute for the canonical release gate.
+
+| Command | Result | Scope/limitation |
+| --- | --- | --- |
+| `TMPDIR=/dev/shm bun test apps/api/tests/attendance.test.ts apps/api/tests/class-overview.test.ts apps/api/tests/operator-phase6.test.ts apps/api/tests/recapitulation.test.ts apps/api/tests/reports.test.ts apps/api/tests/staff-management.test.ts apps/api/tests/student-update.test.ts apps/api/tests/data-portability.test.ts apps/api/tests/core.test.ts` | **PASS: 76 tests, 0 failures; 66.19s** | Synthetic API fixtures only. SQLite temp files were placed on tmpfs; this is diagnostic evidence, not disk-backed release-runner qualification. |
+| `bun run typecheck` | **PASS** | Workspace TypeScript typechecks, including API and web. |
+| `TMPDIR=/dev/shm bun run turbo:check --filter=@operatoros/web --force` | **PASS: 7 tasks; 126 web test files / 593 tests; bundle-report 2/2; production build passed; 68.314s** | Full web package graph ran, but temporary/build output used `/dev/shm`; not a qualified release-runner result. |
+| `TZ=America/Los_Angeles TMPDIR=/dev/shm bun run --bun vitest run src/lib/school-date.test.ts src/lib/defaultReportMonth.test.ts src/components/ChartMonthly.test.tsx src/pages/StaffMonthlyActivities.test.tsx` (from `apps/web`) | **PASS: 4 files / 10 tests** | Confirms Jakarta date-boundary logic and month labels under a browser timezone west of UTC. |
+| `bun run check:architecture` | **PASS: 3,796 source edges; 71 manifest dependencies; 0 exceptions** | Candidate source tree. |
+| `bun .github/scripts/check-markdown-links.ts`; `bun .github/scripts/check-markdown-organization.ts`; `bun .github/scripts/check-current-developer-docs.ts`; `git diff --check` | **PASS before C2 freeze** | Documentation/source tree at the time of the recorded check; rerun after the final audit edit. |
+| `bun run turbo:check --filter=@operatoros/web --force` without a `TMPDIR` override | **FAIL: EDQUOT** | Vitest could not write temp data on the constrained `/tmp`; 125 suites failed before running assertions. The rerun above passed after using `/dev/shm`. This environment failure does not count as application test failures or release acceptance. |
+| `mise run check:full`; repeated `timeout 300 make e2e-smoke`; current-image security scan and SBOM; full Podman integration harness | **NOT RUN on this source** | The host root is full and the earlier PASS used a tmpfs-backed `/tmp`. These require a qualified disk-backed runner and a frozen C2. |
 
 ### Source inventory and provenance boundary
 
@@ -868,10 +926,26 @@ blocked pending a fixed runtime or approved time-bounded exception.
 
 ### Owner and review status
 
-Names remain unassigned for the release-runner profile, browser E2E review,
-security/CVE disposition, runtime and data-integrity review, operations/recovery,
-and production signing/provenance. The proposed production signing path is
-keyless Cosign/Sigstore from protected GitHub Actions OIDC, verified against
+No independent reviewer is currently assigned. Read-only GitHub inspection on
+2026-11-02 found one repository collaborator (`daoistmadness`), no organization
+teams, and no submitted reviews on merged PRs #351 or #352. The available
+account is the author/maintainer and cannot self-approve this work. Therefore
+there is no evidence-based independent candidate list to name; the repository
+owner must nominate reviewers. Proposed target dates below are scheduling
+recommendations only, not assignments or approvals:
+
+| Review/ownership role | Independent candidate | Proposed target |
+| --- | --- | --- |
+| Product/domain acceptance of school-date semantics | **PENDING nomination** | 2026-11-05 |
+| Date-domain review of all 16 defect rows and UTC-correct classifications | **PENDING nomination** | 2026-11-05 |
+| Browser E2E and chart rendering review | **PENDING nomination** | 2026-11-05 |
+| Security review and SQLite CVE disposition | **PENDING nomination** | 2026-11-06 |
+| Runtime and SQLite/data-integrity review | **PENDING nomination** | 2026-11-06 |
+| Operations, backup, restore, and rollback review | **PENDING nomination** | 2026-11-06 |
+| Release-runner qualification owner | **PENDING nomination** | 2026-11-04 |
+| Production signing/provenance owner | **PENDING nomination** | 2026-11-06 |
+
+The proposed production signing path is keyless Cosign/Sigstore from protected GitHub Actions OIDC, verified against
 the exact issuer, repository, workflow, and ref, with deployment pinned to a
 registry-resolvable digest. This is a proposal only; registry, workflow,
 retention, and owner decisions are still pending. SPA `_shell.html` remains

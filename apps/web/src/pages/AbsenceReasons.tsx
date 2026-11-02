@@ -22,6 +22,7 @@ import { getPageApiError, isApiError } from "../lib/api/errors";
 import { PageHeader } from "../components/common/page-header";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { schoolLocalDate } from "../lib/school-date";
 
 type EntryMode = "TOTALS_ONLY" | "PER_STUDENT";
 type Reasons = { sakit: string; izin: string; alfa: string };
@@ -33,7 +34,7 @@ type ManualStudentRow = Omit<ManualAbsenceStudentTotalsResponse["students"][numb
 type LegacyRow = LegacyAbsenceReasonsResponse["rows"][number];
 
 function monthKey(date = new Date()) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  return schoolLocalDate(date).slice(0, 7);
 }
 
 function manualRows(value: ManualAbsenceMonthlyResponse): ManualClassRow[] {

@@ -275,6 +275,8 @@ describe("employee master data", () => {
       const updated = await value.app.handle(jsonRequest("PATCH", `/api/staff/${createdProfile.id}`, value.admin, { job_title_raw: "Boundary Teacher", expected_updated_at: createdProfile.updated_at }));
       expect(updated.status).toBe(200);
       expect(await updated.json()).toMatchObject({ service_years: 6, service_months: 0 });
+      const history = await value.app.handle(jsonRequest("GET", `/api/staff/${createdProfile.id}/history`, value.admin));
+      expect(await history.json()).toEqual(expect.arrayContaining([expect.objectContaining({ action: "EMPLOYMENT_HISTORY", effective_date: "2026-10-27" })]));
       const directory = await value.app.handle(jsonRequest("GET", "/api/staff", value.admin));
       expect(await directory.json()).toMatchObject({ items: [{ id: createdProfile.id, service_years: 6, service_months: 0 }] });
       const csv = await value.app.handle(jsonRequest("GET", "/api/staff/export", value.admin));
@@ -295,6 +297,14 @@ describe("employee master data", () => {
       const analytics = await value.app.handle(jsonRequest("GET", "/api/staff/analytics/summary", value.admin));
       expect(analytics.status).toBe(200);
       expect(await analytics.json()).toMatchObject({ as_of_date: "2026-10-27" });
+      const importRow = employeeRow("TEST-IMPORT-JAKARTA");
+      importRow[7] = new Date("2026-10-27T00:00:00.000Z");
+      importRow[10] = new Date("2026-10-27T00:00:00.000Z");
+      const imported = await preview(value.app, value.admin, await employeeWorkbook([importRow]));
+      expect(imported.status).toBe(200);
+      const importIssues = (await imported.json() as any).rows[0].issues;
+      expect(importIssues).not.toContainEqual(expect.objectContaining({ code: "FUTURE_BIRTH_DATE" }));
+      expect(importIssues).not.toContainEqual(expect.objectContaining({ code: "FUTURE_START_DATE" }));
       const status = await value.app.handle(jsonRequest("POST", `/api/staff/${staff.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: "2026-10-27" }));
       expect(status.status).toBe(200);
       expect(await status.json()).toMatchObject({ staff_id: staff.id, employment_status: "FORMER", employment_end_date: "2026-10-27", effective_date: "2026-10-27" });

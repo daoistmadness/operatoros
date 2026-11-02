@@ -30,6 +30,12 @@ type ChartMonthlyProps = {
   data: MonthlyLateEntry[];
 };
 
+export function monthLabel(month: string): string {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year!, monthNumber! - 1, 1));
+  return date.toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
+}
+
 function ChartMonthly({ data }: ChartMonthlyProps) {
   const options = useMemo<ChartOptions<'bar'>>(() => ({
     responsive: true,
@@ -59,10 +65,7 @@ function ChartMonthly({ data }: ChartMonthlyProps) {
   }), []);
 
   const chartData = useMemo<ChartData<'bar', number[], string>>(() => ({
-    labels: data.map((d) => {
-      const date = new Date(d.month);
-      return date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-    }),
+    labels: data.map((d) => monthLabel(d.month)),
     datasets: [
       {
         label: "Late Entries",
@@ -80,8 +83,7 @@ function ChartMonthly({ data }: ChartMonthlyProps) {
         Monthly late entries bar chart showing late count per month.
       </figcaption>
       <div role="img" aria-label={`Monthly late entries chart: ${data.map(d => {
-        const date = new Date(d.month);
-        return `${date.toLocaleDateString("en-US", { month: "short", year: "2-digit" })}: ${d.late_count} late`;
+        return `${monthLabel(d.month)}: ${d.late_count} late`;
       }).join(", ")}`}>
         <Bar options={options} data={chartData} />
       </div>

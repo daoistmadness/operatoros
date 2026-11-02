@@ -5,6 +5,7 @@ import type { AuthContext } from "../auth/service";
 import { inTransaction } from "@operatoros/db";
 import { restoreStudentUpdate, studentUpdateState } from "./student-update-rollback";
 import { setStudentMasterStatus } from "./student-master-status";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 import { StudentUpdateRollbackPreviewSchema, StudentUpdateRollbackRequestSchema, StudentUpdateRollbackResponseSchema } from "@operatoros/contracts/students";
 
 type Row = Record<string, any>;
@@ -107,6 +108,7 @@ function appendCompensation(context: AuthContext, session: Row, user: Row, actio
 }
 
 function commitRollback(context: AuthContext, session: Row, user: Row, body: Row, set: any): Row {
+  const today = schoolLocalDate(context.now?.() ?? new Date());
   const token = String(body.idempotency_token);
   if (session.idempotency_key === `ROLLBACK:${token}`) return { session_id: session.id, session_reference: session.session_uuid, rollback_state: session.rollback_state, status: "COMPLETED", idempotent_replay: true, message: "Rollback request was previously processed idempotently." };
   if (session.provenance_status === "LEGACY_PROVENANCE_UNAVAILABLE") return fail(set, 409, "Historical import session marked LEGACY_PROVENANCE_UNAVAILABLE cannot be rolled back.");
@@ -138,10 +140,10 @@ function commitRollback(context: AuthContext, session: Row, user: Row, body: Row
           if (student && before) { const after = parse(action.after_state) ?? {}; const id = appendCompensation(context, session, user, action, "COMPENSATE_UPDATE_STUDENT_PROFILE", "STUDENT_MASTER", String(student.id), after, before, "RESTORE_PROFILE"); const updates = ["full_name", "gender", "birth_place", "birth_date"].filter((field) => before[field] !== undefined); if (updates.length) context.database.client.run(`UPDATE student_masters SET ${updates.map((field) => `${field} = ?`).join(", ")}, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...updates.map((field) => before[field]), user.username, student.id]); compensated++; compensationActions.push(id); }
         } else if (["ADD_DEVICE_IDENTITY", "REPLACE_DEVICE_IDENTITY"].includes(action.action_type)) {
           const device = row(context, "SELECT * FROM student_device_identities WHERE id = ?", [action.entity_id]);
-          if (device && Number(device.is_active) === 1) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "DEVICE_IDENTITY", String(device.id), { is_active: true }, { is_active: false }, "RETIRE_DEVICE"); context.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = CURRENT_DATE WHERE id = ?", [device.id]); compensated++; compensationActions.push(id); }
+          if (device && Number(device.is_active) === 1) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "DEVICE_IDENTITY", String(device.id), { is_active: true }, { is_active: false }, "RETIRE_DEVICE"); context.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = ? WHERE id = ?", [today, device.id]); compensated++; compensationActions.push(id); }
         } else if (["CREATE_ENROLLMENT", "TRANSFER_ENROLLMENT"].includes(action.action_type)) {
           const enrollment = row(context, "SELECT * FROM student_enrollments WHERE id = ?", [action.entity_id]);
-          if (enrollment && enrollment.lifecycle_state === "ACTIVE" && enrollment.effective_to == null) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "STUDENT_ENROLLMENT", String(enrollment.id), { lifecycle_state: enrollment.lifecycle_state, effective_to: enrollment.effective_to }, { lifecycle_state: "ENDED", effective_to: new Date().toISOString().slice(0, 10) }, "DEACTIVATE_ENROLLMENT"); context.database.client.run("UPDATE student_enrollments SET effective_to = CURRENT_DATE, lifecycle_state = 'ENDED', lifecycle_effective_date = CURRENT_DATE, lifecycle_reason_code = 'ROLLBACK', lifecycle_reason = ?, class_assigned = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [body.reason, enrollment.id]); compensated++; compensationActions.push(id); }
+          if (enrollment && enrollment.lifecycle_state === "ACTIVE" && enrollment.effective_to == null) { const id = appendCompensation(context, session, user, action, `COMPENSATE_${action.action_type}`, "STUDENT_ENROLLMENT", String(enrollment.id), { lifecycle_state: enrollment.lifecycle_state, effective_to: enrollment.effective_to }, { lifecycle_state: "ENDED", effective_to: today }, "DEACTIVATE_ENROLLMENT"); context.database.client.run("UPDATE student_enrollments SET effective_to = ?, lifecycle_state = 'ENDED', lifecycle_effective_date = ?, lifecycle_reason_code = 'ROLLBACK', lifecycle_reason = ?, class_assigned = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [today, today, body.reason, enrollment.id]); compensated++; compensationActions.push(id); }
         }
       }
       const rollbackState = blocked === 0 ? "APPLIED" : "PARTIALLY_BLOCKED"; context.database.client.run("UPDATE student_import_sessions SET rollback_state = ?, rollback_requested_at = CURRENT_TIMESTAMP, rollback_completed_at = CURRENT_TIMESTAMP, idempotency_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [rollbackState, `ROLLBACK:${token}`, session.id]); audit(context, user, session, "ROLLBACK_COMMIT", { compensated_actions: compensated, blocked_actions: blocked, rollback_state: rollbackState, idempotency_token: token }, String(body.reason));
