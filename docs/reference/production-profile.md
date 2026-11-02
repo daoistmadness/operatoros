@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-01
 ---
 
 # Production origin and cookie profile
@@ -94,35 +94,32 @@ The profile is enforced by the API test suite. Relevant tests by name:
   from the canonical root"; "fails fast when DATABASE_URL disagrees with the
   canonical root"; "two apps use their own config values".
 
-## Deployment-specific Podman inspection
+## Podman deployment status
 
-Podman is not required by the supported runtime, and this repository does not
-define an OperatorOS Podman or Quadlet deployment. Treat Podman commands as
-deployment-specific inspection examples, not as proof of a supported runtime
-or of the configuration on a particular host. Verify the host identity,
-service account, container names, image digests, network, endpoints, TLS route,
-log source, and backup-status source against the approved deployment inventory
-before inspection. Do not guess a port, hostname, unit, or container name.
+A single-host Podman deployment is proposed in
+[the Podman deployment decision](../decisions/podman-deployment.md). It is not
+supported or approved until production image and Quadlet inputs exist and an
+authorized Ubuntu rehearsal passes. The current rootless Podman workflow is for
+local development only.
 
-For an authorized, non-invasive review, use the designated rootless account to
-list container names, states, and published ports; inspect only explicitly
-selected metadata fields; and compare observed listeners and routes with the
-approved exposure plan. A read-only `GET` to the verified health URL may confirm
-service response; the direct OperatorOS API `/health` contract is HTTP 200 with
-`{"status":"ok"}`. This does not establish host-firewall or upstream
-reachability. Inspect TLS certificate subject, issuer, validity, and fingerprint
-without exporting private keys. If logs are needed, review only a bounded time
-window locally and sanitize before recording. Read backup-status metadata only
-through the verified status mechanism; do not initiate a backup.
+For a later approved deployment, use the designated rootless account to inspect
+the approved Podman services. Treat observed host values as facts only after
+checking the host inventory and release record.
 
-Do not run a health-check trigger, login or other state-changing request, copy,
-hash, snapshot, or run integrity checks on a production database, restart a
-container, or perform a backup/restore drill without separate authorization for
-that exact operation. Never place credentials, cookies, student data, database
-material, or unredacted logs in evidence. Record only sanitized results and
-SHA-256 hashes of permitted evidence artifacts. These checks do not qualify a
-Podman deployment or replace the repository's supported local Bun/Elysia
-runtime.
+For an authorized, non-invasive review, list container names, states, and
+published ports. Inspect only explicitly selected metadata fields. Compare
+observed listeners and routes with the approved exposure plan. A read-only
+`GET` to a verified health URL may confirm service response; the direct API
+`/health` contract is HTTP 200 with `{"status":"ok"}`. This does not establish
+host-firewall or upstream reachability. Inspect TLS certificate subject,
+issuer, validity, and fingerprint without exporting private keys. Review only a
+bounded log window and sanitize it before recording.
+
+Do not trigger a health check, log in, or send another state-changing request
+without approval for that operation. Do not copy, hash, snapshot, or run
+integrity checks on a production database. Never place credentials, cookies,
+student data, database material, or unredacted logs in evidence. Record only
+sanitized results and SHA-256 hashes of permitted evidence artifacts.
 
 ## Related
 

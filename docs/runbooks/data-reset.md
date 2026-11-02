@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-01
 ---
 
 # Granular school data reset
@@ -21,7 +21,7 @@ schema metadata, or backup files.
 
 ## Dependency map
 
-The listed order follows current S5.1 SQLite foreign keys where defined, plus
+The listed order follows current S5.4 SQLite foreign keys where defined, plus
 explicit domain links and append-only guards. Reset code deletes every listed
 table explicitly; it does not rely on cascading deletes. Attendance Calendar
 rules and exceptions are configuration. Attendance and Student resets preserve

@@ -27,7 +27,7 @@ OperatorOS has one local blocking smoke suite and one guarded full suite. The sm
 
 `make e2e-smoke` performs these steps:
 
-1. Creates a unique invocation workspace under a temporary `/tmp/operatoros-e2e.*` root.
+1. Creates a unique invocation workspace under a temporary `operatoros-e2e.*` root in `${TMPDIR:-/tmp}`.
 2. Selects an absolute SQLite path inside that workspace.
 3. Rejects any database path outside the disposable E2E root or equal to the protected operational path before opening a database.
 4. Initializes a fresh database with the current schema and approved baseline ledger.
@@ -57,7 +57,7 @@ Never kill an unknown process merely because it owns a preferred port. Cleanup a
 ## 6. Database isolation
 
 - Never use `backend/attendance.db` or any database under `backend/.local-dev/` as an E2E fixture.
-- Every smoke run uses a new absolute path under `/tmp/operatoros-e2e.*/<run-id>/state/`.
+- Every smoke run uses a new absolute path under `${TMPDIR:-/tmp}/operatoros-e2e.*/<run-id>/state/`.
 - The runner performs a lexical path check before database initialization and rejects a path outside the E2E runtime root or equal to `backend/attendance.db`.
 - Fixtures are generated from the current schema and deterministic synthetic data; no production database, export, student identity, or enrollment is copied.
 - The intentional seeded enrollment is separated from new rows with a deterministic ordered-row fingerprint. Preview-only Class Allocation must leave that fingerprint unchanged.
@@ -96,7 +96,7 @@ the API security suite.
 
 ## 9. Generated directories
 
-- The temporary `/tmp/operatoros-e2e.*` root contains per-invocation database, runtime state, backups, session identity, and selected ports. The smoke runner removes it on exit.
+- The temporary `${TMPDIR:-/tmp}/operatoros-e2e.*` root contains per-invocation database, runtime state, backups, session identity, and selected ports. The smoke runner removes it on exit.
 - `e2e-results/` contains summaries, logs, JUnit XML, Playwright screenshots, and traces.
 
 These paths are generated evidence and must not be committed.

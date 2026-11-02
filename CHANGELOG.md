@@ -4,6 +4,9 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Add a rootless Podman API image, Quadlet/Caddy configuration, source-tree provenance checks, and a synthetic local deployment harness.
+- Keep the dashboard heading available during analytics loading and synchronize E2E checks on relevant page readiness.
+
 - Vendor trimmed SheetJS fork and implement lazy legacy XLS parsing in @operatoros/excel (#352).
 - Pin affected minimatch dependency paths to the patched release and test their current consumers under Bun and Node.
 - Migrate the web app to TanStack Start SPA mode while preserving the standalone Elysia API and same-origin proxy (#351).

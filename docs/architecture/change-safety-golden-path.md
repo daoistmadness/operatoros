@@ -594,12 +594,12 @@ registries, TypeBox, TanStack Query, and current tests are enough.
 
 Also do not introduce tRPC, Zod, Better Auth, TanStack Form, Dagger, a frontend
 rewrite, persisted analytics rollups, cloud sync, Hucre migration, command
-palette, or `nuqs` as part of this program. The accepted
-[TanStack Start SPA decision](../decisions/tanstack-start-spa.md) authorizes
-migrating the current TanStack Router app to Start's SPA mode. Preserve route
-behavior, use TypeBox for search validation, and keep Elysia as the separately
-supervised API behind the existing same-origin HTTP proxy. SSR, Start server
-routes or functions, and in-process Elysia are outside that decision.
+palette, or `nuqs` as part of this program. PR #351 completed the migration
+authorized by the [TanStack Start SPA decision](../decisions/tanstack-start-spa.md).
+The current web app uses Start in SPA mode. Preserve route behavior, use TypeBox
+for search validation, and keep Elysia as the separately supervised API behind
+the same-origin HTTP proxy. SSR, Start server routes or functions, and
+in-process Elysia are outside that decision.
 
 ## 24. Documentation and implementation workflow
 

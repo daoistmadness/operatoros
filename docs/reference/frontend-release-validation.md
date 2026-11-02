@@ -1,9 +1,13 @@
 ---
-status: current
-last_reviewed: 2026-10-29
+status: deprecated
+last_reviewed: 2026-11-01
 ---
 
 # Frontend release validation
+
+Historical TanStack Router-era validation record. Its metrics, route counts,
+and artifact do not verify the merged TanStack Start tree. Use the current
+release workflow and a newly generated artifact for release decisions.
 
 ## Release status
 

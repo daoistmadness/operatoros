@@ -92,6 +92,7 @@ export default function Dashboard() {
   const yearNumber = Number(selectedYear);
   const dashboardQuery = useDashboardSnapshotQuery(monthNumber, yearNumber);
   const snapshot = dashboardQuery.data;
+  const pageHeader = <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />;
   const monthlyData = snapshot?.monthlyData ?? [];
   const classData = snapshot?.classData ?? [];
   const offenders = snapshot?.offenders ?? [];
@@ -121,11 +122,21 @@ export default function Dashboard() {
   };
 
   if (dashboardQuery.isPending && !snapshot) {
-    return <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />;
+    return (
+      <div aria-busy="true" className="space-y-8 pb-16">
+        {pageHeader}
+        <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />
+      </div>
+    );
   }
   if (dashboardQuery.isError && !snapshot) {
     const message = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : "Dashboard analytics could not be loaded.";
-    return <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={message}><Button className="mt-4" onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>;
+    return (
+      <div aria-busy="false" className="space-y-8 pb-16">
+        {pageHeader}
+        <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={message}><Button className="mt-4" onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>
+      </div>
+    );
   }
 
   const absenceTotals = normalizeAbsenceTotals(absenceSummary);
@@ -137,7 +148,7 @@ export default function Dashboard() {
   return (
     <div aria-busy={dashboardQuery.isFetching} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
-      <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />
+      {pageHeader}
       {dashboardQuery.isFetching && snapshot && <p role="status" className="text-sm font-semibold text-muted-foreground">Updating dashboard data…</p>}
       {dashboardQuery.isError && snapshot && <ErrorState title="Dashboard refresh failed" description="Showing the last successful dashboard result."><Button onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>}
       <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />

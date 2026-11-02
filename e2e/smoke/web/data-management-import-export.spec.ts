@@ -47,7 +47,7 @@ test("@data-management @legacy-routes @critical @release consolidates import and
     const expectedInitialAuthProbe = url.pathname === "/api/auth/me" && response.status() === 401;
     if (!expectedInitialAuthProbe) criticalErrors.push(`API ${response.status()}: ${url.pathname}`);
   });
-  await loginForFeature(page);
+  await loginForFeature(page, { home: true });
 
   await page.getByRole("link", { name: "Data Import & Export", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
@@ -101,11 +101,15 @@ test("@data-management @roster @critical @release previews a synthetic roster wo
   page.on("pageerror", (error) => criticalErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().startsWith("Failed to load resource:")) criticalErrors.push(message.text()); });
   await loginForFeature(page);
+  const subjectMetadata = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/grades/subjects");
   await page.goto("/academic-management?tab=allocation");
   await page.locator("#enrollment-jenjang").selectOption({ label: "Primary" });
   await page.locator("#enrollment-program").selectOption({ label: "Primary" });
   await page.locator("#enrollment-grade").selectOption({ label: "P1" });
   await expect(page.locator("#enrollment-class option")).toContainText(["Select a class...", "P1A", "P1B"]);
+  expect((await subjectMetadata).status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "Master students not enrolled" })).toBeVisible();
+  await expect(page.getByText("Enrollment failure", { exact: true })).toHaveCount(0);
   await page.goto("/upload?section=roster");
   await expect(page.getByRole("tab", { name: "Student Roster Upload" })).toHaveAttribute("data-state", "active");
   await expect(page.getByRole("heading", { name: "Accepted Classes" })).toBeVisible();

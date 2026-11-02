@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-02
 ---
 
 # Test strategy
@@ -57,10 +57,23 @@ with synthetic path strings; no tier reads, hashes, snapshots, or copies the
 protected S4.3 database.
 
 Turbo tasks run with a strict environment. `TMPDIR` is passed through so test
-helpers that use Node's `tmpdir()` follow the caller's value. Before running
-tests, ensure that path exists, is writable, and has enough available space and
-applicable quota. Backup-retention API fixtures create private roots there and
-remove only those roots.
+helpers that use Node's `tmpdir()` and the E2E launcher follow the caller's
+value. Before running tests, ensure that path exists, is writable, and has
+enough available space and applicable quota. Backup-retention API fixtures
+create private roots there and remove only those roots.
+
+Release-runner qualification is separate from local diagnostics. The canonical
+release gate must run unmodified on a normally provisioned, disk-backed
+temporary filesystem with enough measured capacity for SQLite databases, WAL
+growth, test fixtures, and cleanup artifacts. Record its filesystem type,
+available space, quota, and peak temporary usage. A mount-namespace workaround
+that overlays `/tmp` with tmpfs can help diagnose a host-path failure, but it is
+not release evidence: different durability and I/O behavior can change SQLite
+and timing results. The release engineering owner must approve the runner
+profile and assign a named owner before using it as acceptance evidence; the
+owner is currently unassigned. A full or quota-exhausted host filesystem is a
+separate failure condition and invalidates performance samples even when a
+test command exits successfully.
 
 Historical orchestration evidence remains in Git history.
 
@@ -71,7 +84,7 @@ service unit, or remote E2E command is defined by this repository. Before using
 one, verify the VM host key against a separately trusted inventory, confirm the
 authorized account and test scope, and match the deployed commit and artifact
 SHA-256 to the approved release receipt. Confirm the service configuration and
-data path point to a disposable synthetic S5.1 database, with no protected or
+data path point to a disposable synthetic S5.4 database, with no protected or
 production database mounted. Obtain an approved restart window before any
 service restart.
 
@@ -79,7 +92,7 @@ Within that verified scope, tests may cover read-only health, authentication
 and logout using a synthetic account, browser E2E, security tests, SQLite
 bootstrap/validation, and restore of a synthetic fixture to a separate
 disposable destination. A disposable fresh database should report
-`BOOTSTRAPPED 20261027_s51` and `VALID 20261027_s51`. Never restore an
+`BOOTSTRAPPED 20261027_s54` and `VALID 20261027_s54`. Never restore an
 operational snapshot to staging or use real student data. Do not infer a remote
 test command from the local suite: `make e2e-smoke` creates and owns its own
 local stack, temporary database, credentials, ports, and cleanup; it is not a

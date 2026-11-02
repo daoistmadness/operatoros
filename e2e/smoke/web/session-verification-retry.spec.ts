@@ -15,6 +15,7 @@ async function signIn(page: Page) {
 test("@session @auth @critical @release preserves a protected deep link through a transient session check and retry", async ({ page }) => {
   await signIn(page);
   await page.goto("/attendance/calendar");
+  await expect(page.getByRole("heading", { name: "Attendance Calendar" })).toBeVisible();
 
   let allowRecovery = false;
   let failedChecks = 0;
@@ -56,8 +57,8 @@ test("@session @auth @critical @release redirects to login after a confirmed 401
 });
 
 test("@session @auth @release feature session survives a separate session logout", async ({ page, browser }) => {
-  await loginForFeature(page);
-  const origin = new URL(page.url()).origin;
+  await loginForFeature(page, { home: true });
+  const origin = process.env.OPERATOROS_E2E_FRONTEND_URL!;
   const peer = await browser.newContext({ baseURL: origin });
   const independent = await browser.newContext({ baseURL: origin });
   try {

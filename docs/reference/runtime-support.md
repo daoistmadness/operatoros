@@ -1,48 +1,52 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-01
 ---
 
 # Platform portability
 
-## Decision
+## Runtime support
 
-`SQLITE_ONLY_SUPPORTED`. OperatorOS is a local SQLite application.
-PostgreSQL is not a supported runtime. A non-SQLite `DATABASE_URL` fails at
-database open or configuration validation; the application does not read legacy
-`POSTGRES_*` variables. Configuration errors can include the configured database
-string, so never embed credentials in `DATABASE_URL`. The supported runtime is a
-local Elysia backend with the React frontend in a browser. The Python/FastAPI
-backend is not a runtime dependency. The Tauri desktop shell is removed. A container runtime is not
-required. The repository includes an optional rootless Podman launcher for
-local development; it does not provide a Docker/Compose or hosted container
-deployment.
+`SQLITE_ONLY_SUPPORTED` remains the application data contract. OperatorOS uses
+file-backed SQLite; PostgreSQL is unsupported. A non-SQLite `DATABASE_URL`
+fails configuration or database validation. The application does not read
+legacy `POSTGRES_*` variables. The Python/FastAPI backend is not a runtime
+dependency, and the Tauri desktop shell has been removed.
 
-The current deployment labels are:
+Local development runs the Elysia API and React browser app on native Linux.
+The repository also has an optional rootless Podman development launcher. Neither
+workflow establishes production container support.
+
+A single-host Podman deployment is proposed in
+[the Podman deployment decision](../decisions/podman-deployment.md). It remains
+unsupported. A draft production image and service configuration exist locally,
+but they are uncommitted and unreviewed. Deployment requires architecture
+acceptance and a successful authorized Ubuntu rehearsal.
+
+Current application labels:
 
 - `SQLITE_ONLY_SUPPORTED`
 - `LOCAL_BROWSER_RUNTIME`
 - `POSTGRESQL_NOT_SUPPORTED`
-- `CONTAINER_RUNTIME_NOT_REQUIRED`
+- `CONTAINER_RUNTIME_NOT_REQUIRED` for current local development
 
 ## Database contract
 
-SQLite must preserve the established business outcomes: fresh bootstrap
-installs the S4.7 base and applies the S4.8, S4.9, S5.0, and S5.1 extensions; migration-ledger ordering
-is idempotent; constraints and append-only audit behavior hold; duplicate
-attendance/upload handling rolls back atomically; and analytics remain
-deterministic.
+Fresh bootstrap installs the S4.7 base, then applies S4.8 employee, S4.9
+school-unit, S5.0 monthly PTK, S5.1 UPP archive, S5.2 student administration,
+S5.3 student identity verification, and S5.4 BOSP reminder extensions. The
+current schema head is `20261027_s54`, defined by
+`packages/db/src/manifest.ts`.
 
-The connection layer enables foreign keys (`PRAGMA foreign_keys = ON`) and uses
-`BEGIN IMMEDIATE` for write transactions. It does not configure WAL; freshly
-bootstrapped databases use SQLite's default rollback journal, while an existing
-database may still be in WAL mode. Drizzle is the application data layer.
+The connection layer enables `PRAGMA foreign_keys = ON` and uses `BEGIN
+IMMEDIATE` for write transactions. It does not configure WAL. Fresh databases
+use SQLite's default rollback journal; an existing database may use WAL.
+Drizzle is the application data layer.
 
-Existing databases are never migrated by ordinary startup. The current
-application schema head is S5.1 (`20261027_s51`); the protected operational
-database remains S4.3 (`20260725_s43`) until a separately authorized migration,
-and it is never a test target.
+Ordinary startup validates existing databases and never migrates them. The
+protected operational database remains S4.3 (`20260725_s43`) until a separately
+authorized migration. It is never a test target.
 
-Historical PostgreSQL migrations and the PR #35 evaluation documents remain
-audit evidence only. They do not establish current deployment or compatibility
+Historical PostgreSQL migrations and the PR #35 evaluation documents are audit
+evidence only. They do not establish current deployment or compatibility
 support.

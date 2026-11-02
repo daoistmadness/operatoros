@@ -46,9 +46,9 @@ Dated session logs and the reusable session template are exempt from the index.
 - [CI performance](reference/ci-performance.md).
 - [Dependency audit exceptions](reference/dependency-audit-exceptions.md).
 - [Employee management](reference/employee-management.md).
-- [Frontend performance baseline](reference/frontend-performance-baseline.md).
-- [Frontend release validation](reference/frontend-release-validation.md).
-- [Frontend release validation samples](reference/frontend-release-validation-samples.json).
+- [Frontend performance baseline](reference/frontend-performance-baseline.md) — Deprecated historical Router measurements; not a current Start release benchmark.
+- [Frontend release validation](reference/frontend-release-validation.md) — Deprecated Router-era release evidence.
+- [Frontend release validation samples](reference/frontend-release-validation-samples.json) — Historical Router-era data.
 - [TanStack Redact comparison samples](reference/tanstack-redact-comparison-samples.json).
 - [First-Run Administrator Threat Model](reference/first-run-admin-threat-model.md).
 - [Migration golden fixtures](reference/golden-fixtures.md) — Deprecated.
@@ -81,7 +81,8 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Vendored SheetJS fork and lazy legacy loading](decisions/sheetjs-vendored-fork.md).
 - [Persistent development database](decisions/persistent-development-database.md).
 - [TanStack Start SPA migration](decisions/tanstack-start-spa.md).
-- [TanStack Redact research](decisions/tanstack-redact-research.md).
+- [Podman single-host deployment proposal](decisions/podman-deployment.md) — Draft; not yet accepted.
+- [TanStack Redact research](decisions/tanstack-redact-research.md) — Historical pre-Start measurements; the no-adoption decision remains.
 - [Report artifact preservation](decisions/report-artifact-preservation.md) — Draft.
 - [SQLite-only local runtime](decisions/sqlite-only-runtime.md).
 - [ADR: Tauri v2 Desktop Architecture](decisions/tauri-desktop-architecture.md) — Deprecated.
@@ -94,11 +95,12 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Audit log rotation and retention](runbooks/log-rotation.md) — Draft.
 - [Elysia Runtime Operations](runbooks/runtime-operations.md).
 - [Secret rotation runbook](runbooks/secret-rotation.md).
-- [Ubuntu server deployment and supervision (OperatorOS API)](runbooks/ubuntu-server-deployment.md) — Draft.
+- [Ubuntu server deployment runbook](runbooks/ubuntu-server-deployment.md) — Draft; local Podman implementation tested, Ubuntu rehearsal pending.
 
 ## Audits
 
-- [Dependency optimization audit](audits/dependency-optimization.md).
+- [Podman deployment readiness audit](audits/podman-deployment-readiness.md) — Current audit of merged main and deployment gates.
+- [Dependency optimization audit](audits/dependency-optimization.md) — Deprecated pre-Start Router comparison.
 
 ## Session logs
 

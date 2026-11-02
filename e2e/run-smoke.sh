@@ -35,10 +35,11 @@ stack_stopped=false
 cleanup() {
   local exit_status=$?
   trap - EXIT INT TERM
-  operatoros_e2e_cleanup "$runtime_root" "$stack_started" "$stack_stopped" cleanup_stack || printf '%s\n' "E2E cleanup completed with a task-stack error; temporary root removal was still attempted." >&2
+  operatoros_e2e_cleanup "$runtime_root" "$stack_started" "$stack_stopped" cleanup_stack "$runtime_parent" || printf '%s\n' "E2E cleanup completed with a task-stack error; temporary root removal was still attempted." >&2
   exit "$exit_status"
 }
-runtime_root="$(mktemp -d /tmp/operatoros-e2e.XXXXXX)"
+runtime_parent="$(cd -- "${TMPDIR:-/tmp}" && pwd -P)"
+runtime_root="$(mktemp -d "$runtime_parent/operatoros-e2e.XXXXXX")"
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
@@ -60,6 +61,7 @@ export LOGIN_RATE_LIMIT_PER_ACCOUNT="${LOGIN_RATE_LIMIT_PER_ACCOUNT:-1000}"
 export LOGIN_RATE_LIMIT_GLOBAL="${LOGIN_RATE_LIMIT_GLOBAL:-1000}"
 export OPERATOROS_E2E_DATABASE="$database"
 export OPERATOROS_DATA_DIR="$workspace/state"
+export OPERATOROS_E2E_STORAGE_STATE="$workspace/state/feature-auth.json"
 export BACKUP_DIR="$workspace/state/backups"
 # This runner owns a disposable SQLite data root and synthetic admin account.
 export ENABLE_DESTRUCTIVE_OPERATIONS=true

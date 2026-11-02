@@ -95,11 +95,21 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
   const cutoff = await page.request.get("/api/config/jenjang");
   expect(cutoff.status()).toBe(200);
   expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
-  await page.evaluate(async () => {
-    const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
-    for (const date of ["2026-12-14", "2026-12-15"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
-  });
+  const origin = process.env.OPERATOROS_E2E_FRONTEND_URL!;
+  for (const weekday of [1, 2, 6]) {
+    const response = await page.request.put(`${origin}/api/attendance/calendar/weekday`, {
+      headers: { origin },
+      data: { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" },
+    });
+    expect(response.status()).toBe(200);
+  }
+  for (const date of ["2026-12-14", "2026-12-15"]) {
+    const response = await page.request.put(`${origin}/api/attendance/calendar/exception`, {
+      headers: { origin },
+      data: { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" },
+    });
+    expect(response.status()).toBe(200);
+  }
   await page.goto("/upload");
   await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   // The canonical machine workflow accepts .xlsx only; .xls is refused by server-side validation.

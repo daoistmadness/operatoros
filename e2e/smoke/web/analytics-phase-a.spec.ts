@@ -16,6 +16,31 @@ test("@analytics @critical attendance views share one destination and reuse repo
   });
 
   await login(page);
+  let releaseMonthlyRequest!: () => void;
+  let notifyMonthlyRequest!: () => void;
+  const monthlyRequestGate = new Promise<void>((resolve) => { releaseMonthlyRequest = resolve; });
+  const monthlyRequestStarted = new Promise<void>((resolve) => { notifyMonthlyRequest = resolve; });
+  const monthlyAnalyticsUrl = (url: URL) => url.pathname === "/api/analytics/monthly";
+  await page.route(monthlyAnalyticsUrl, async (route) => {
+    notifyMonthlyRequest();
+    await monthlyRequestGate;
+    await route.continue();
+  });
+
+  try {
+    await page.goto("/");
+    await monthlyRequestStarted;
+    const dashboardHeading = page.getByRole("heading", { name: "System Analytics", exact: true });
+    await expect(dashboardHeading).toBeVisible();
+    const dashboard = dashboardHeading.locator("xpath=ancestor::div[@aria-busy][1]");
+    await expect(dashboard).toHaveAttribute("aria-busy", "true");
+    releaseMonthlyRequest();
+    await expect(dashboard).toHaveAttribute("aria-busy", "false");
+  } finally {
+    releaseMonthlyRequest();
+    await page.unroute(monthlyAnalyticsUrl);
+  }
+
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
   await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(8);
   await expect(navigation.getByRole("link", { name: "Attendance", exact: true })).toHaveAttribute("href", "/analytics/attendance");
@@ -67,14 +92,18 @@ test("@analytics @critical attendance views share one destination and reuse repo
   }
 
   reportFilterRequests.length = 0;
+  const reportFiltersResponse = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === "/api/reports/filters" && response.status() === 200,
+  );
   await page.goto("/analytics/attendance?view=report");
   await expect(page.getByRole("heading", { name: "Laporan Kehadiran", exact: true })).toBeVisible();
-  await page.waitForLoadState("networkidle");
+  await reportFiltersResponse;
+  await expect(page.getByRole("button", { name: "Buat Laporan" })).toBeEnabled();
   const attendanceFilterRequests = reportFilterRequests.length;
   expect(attendanceFilterRequests).toBeGreaterThan(0);
   await page.getByRole("tab", { name: "Recap", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Rekap Absensi", exact: true })).toBeVisible();
-  await page.waitForLoadState("networkidle");
+  await expect(page.getByRole("button", { name: "Buat Laporan" })).toBeEnabled();
   expect(reportFilterRequests).toHaveLength(attendanceFilterRequests);
 
   reportFilterRequests.length = 0;
@@ -98,7 +127,6 @@ test("@analytics @critical attendance views share one destination and reuse repo
   await expect(page.getByRole("heading", { name: "Annual Report", exact: true })).toHaveCount(0);
   const monthSelect = page.getByLabel("Month", { exact: true });
   await expect(monthSelect).toHaveValue(/2026-\d{2}/);
-  await page.waitForLoadState("networkidle");
   const requestsBeforeNavigation = reportFilterRequests.length;
   expect(requestsBeforeNavigation).toBeGreaterThan(0);
   await page.getByRole("button", { name: "Generate Report" }).click();
@@ -149,7 +177,6 @@ test("@analytics @critical attendance views share one destination and reuse repo
     await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
   }
 
-  await page.waitForLoadState("networkidle");
   expect(browserErrors).toEqual([]);
 });
 

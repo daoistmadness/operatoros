@@ -3,7 +3,7 @@ import { loginForFeature as login } from "../../helpers/feature-login";
 
 test("@ui-preferences @release restores the safe sidebar preference and keeps the mobile drawer expanded", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await login(page);
+  await login(page, { home: true });
 
   const sidebar = page.locator("#navigation-drawer");
   await sidebar.getByRole("button", { name: "Collapse sidebar" }).click();

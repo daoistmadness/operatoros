@@ -5,6 +5,11 @@ last_reviewed: 2026-10-29
 
 # TanStack Redact research
 
+This study predates the TanStack Start migration. OperatorOS now uses Start in
+SPA mode while React remains the production renderer. The Redact decision still
+stands, but the route counts and bundle measurements below do not describe the
+current Start release.
+
 ## Decision
 
 Keep React 19 as OperatorOS's production renderer. Do not adopt TanStack Redact

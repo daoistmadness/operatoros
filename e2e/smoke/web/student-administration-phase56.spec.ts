@@ -15,7 +15,7 @@ test("@student-admin @critical verifies identity, DAPODIK, IOM archive, dashboar
 
   const name = `E2E Admin Student ${Date.now()}`;
   const created = await page.request.post("/api/student-masters", {
-    headers: { origin: new URL(page.url()).origin },
+    headers: { origin: process.env.OPERATOROS_E2E_FRONTEND_URL! },
     data: {
       identity: { full_name: name, nik: `SYNTHETIC-NIK-${Date.now()}`, kk: `SYNTHETIC-KK-${Date.now()}` },
       document_status: { family_card_received: true },
@@ -136,7 +136,7 @@ test("@dashboard @critical shows and acknowledges the annual BOSP reminder", asy
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(reminder()) });
   });
 
-  await loginForFeature(page);
+  await loginForFeature(page, { home: true });
 
   const reminderHeading = page.getByRole("heading", { name: "Pengingat Tahunan Cut-off BOSP 2027" });
   await expect(reminderHeading).toBeVisible();
