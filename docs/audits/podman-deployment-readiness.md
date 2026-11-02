@@ -67,7 +67,10 @@ write-heavy tests. No current C6 `check:full` or smoke run qualifies for release
 acceptance. The two browser tests skipped above are opt-in measurements gated
 by `OPERATOROS_E2E_FRONTEND_BASELINE=true` and
 `OPERATOROS_E2E_QUERY_FOCUS=true`; the smoke run records them as skipped, not
-passed.
+passed. A separate CycloneDX 1.7 supplement records the Bun and SQLite
+components reported by the C6 runtime probe and links SQLite as statically
+included by Bun. It preserves the original Trivy SBOM and does not provide
+vulnerability-scan coverage for the embedded SQLite code.
 
 ### Open blocker register
 
@@ -76,7 +79,7 @@ passed.
 | P0 | `mise run check:full` has no passing C6 run. Local attempts failed under tmpfs and stalled on the disk-backed path. | Release-runner owner not assigned | Qualify a normally provisioned runner with disk-backed temporary storage and adequate SQLite/WAL capacity. Run the exact command against the frozen application source and retain logs and resource data. |
 | P0 | No qualified C6 E2E sample exists. One disk-backed smoke failed before browser tests; one tmpfs diagnostic passed in 233s. | Browser E2E and release-runner owners not assigned | Run at least three consecutive `timeout 300 make e2e-smoke` samples on the qualified runner. Preserve the 300-second limit and all assertions. |
 | P0 | The C6 image contains Bun 1.4.4 with SQLite 3.53.4 and FTS5. [OSV CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373) affects SQLite before 3.54.0. The source search found no FTS5 DDL or SQL `MATCH` path in API or database source, but this is not independent reachability approval. | Security risk owner not assigned | Use a supported fixed runtime and verify its embedded SQLite version, or obtain a named, time-limited exception with compensating controls and reassessment date. Complete independent security review. |
-| P0 | The Trivy SBOM omits the statically linked Bun SQLite component. No registry-resolvable digest or production signing identity exists. | Release and signing owners not assigned | Produce a complete runtime inventory, bind scan and SBOM to the exact image, and approve a signing and immutable registry promotion policy. |
+| P0 | The Trivy SBOM omits the statically linked Bun SQLite component. A separate C6 CycloneDX supplement records the runtime versions but does not scan embedded code. No registry-resolvable digest or production signing identity exists. | Security and release-signing owners not assigned | Review the supplemented inventory, scan the exact image with coverage for embedded runtime components, and approve an immutable registry and signing policy. |
 | P1 | C6 date fixes have no independent product/domain or browser acceptance across the 16 inventory rows. | Product/domain and browser reviewers not assigned | Review each row and its API/browser evidence. Record accepted behavior and findings against the exact candidate. |
 | P1 | Runtime/data-integrity and operations reviews are pending. The local Podman harness did not exercise a user systemd manager, host reboot, or Ubuntu 24.04. | Runtime/data and operations reviewers not assigned | Independently review storage, backup/restore, service lifecycle, recovery, and host compatibility evidence. |
 | P0 | No specific disposable Ubuntu host or host-change authorization is recorded. | Host owner and final Gate 1 approver not identified | Identify the host and administrator, approve network and backup policy, name reviewers, and authorize the exact changes and reboot before execution. |
