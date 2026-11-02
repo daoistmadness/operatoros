@@ -29,12 +29,12 @@ function source(path: string, variant: "A" | "B" = "A"): Database {
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(s46Sql);
   if (variant === "B") {
-    const baseObjectCount = (db.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations'").get() as { count: number }).count;
+    const baseObjectCount = (db.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations')").get() as { count: number }).count;
     const target = new Database(":memory:");
     try {
       target.exec(s47Sql);
       const allowed = new Set(variantB.targetObjects);
-      const additions = target.query("SELECT type,name,sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations' ORDER BY rowid").all() as { type: string; name: string; sql: string | null }[];
+      const additions = target.query("SELECT type,name,sql FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations') ORDER BY rowid").all() as { type: string; name: string; sql: string | null }[];
       const selected = additions.filter((object) => allowed.has(object.name));
       expect(selected).toHaveLength(43);
       expect(new Set(selected.map((object) => object.name))).toEqual(allowed);
@@ -42,7 +42,7 @@ function source(path: string, variant: "A" | "B" = "A"): Database {
         expect(object.sql).not.toBeNull();
         db.exec(object.sql!);
       }
-      expect((db.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations'").get() as { count: number }).count).toBe(baseObjectCount + 43);
+      expect((db.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations')").get() as { count: number }).count).toBe(baseObjectCount + 43);
     } finally { target.close(); }
   }
   const fingerprint = legacySchemaFingerprint(db);
@@ -152,14 +152,15 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     expect(migrateExistingDatabase(path)).toBe("MIGRATED");
   }));
 
-  it("rejects S4.8 ledgers with extra or missing columns before migration", () => {
-    for (const shape of ["extra", "missing"] as const) withDatabases((_, path) => {
+  it("rejects S4.8 ledgers with extra, hidden generated, or missing columns before migration", () => {
+    for (const shape of ["extra", "generated", "missing"] as const) withDatabases((_, path) => {
       const db = new Database(path, { create: true });
       db.exec("PRAGMA foreign_keys=ON");
       db.exec(s47Sql);
       db.exec(s48Sql);
       db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
       if (shape === "extra") db.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT");
+      else if (shape === "generated") db.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN generated_extra TEXT GENERATED ALWAYS AS (version) VIRTUAL");
       else {
         const ledger = db.query("SELECT version,predecessor,schema_fingerprint,protected_fingerprints,approved_by FROM operatoros_schema_migrations").get() as Record<string, string>;
         db.exec("DROP TABLE operatoros_schema_migrations");

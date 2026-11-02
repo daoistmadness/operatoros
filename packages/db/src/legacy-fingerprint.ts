@@ -15,7 +15,7 @@ function legacyString(value: string): string {
 export function legacySchemaFingerprint(client: Database): string {
   const objects = client.query(
     "SELECT type, name, tbl_name, COALESCE(sql, '') AS sql FROM sqlite_master " +
-    "WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations' ORDER BY type, name",
+    "WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations') ORDER BY type, name",
   ).all() as ObjectRow[];
   const representation = `[${objects.map((object) =>
     `(${[object.type, object.name, object.tbl_name, object.sql].map(legacyString).join(", ")})`,

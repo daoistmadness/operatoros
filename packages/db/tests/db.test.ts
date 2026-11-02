@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
-import { assertDatabasePath, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, validateDatabase } from "../src/index";
+import { assertDatabasePath, assertOrdinarySchemaObjects, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, schemaFingerprint, validateDatabase } from "../src/index";
 import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
@@ -62,7 +62,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   });
 
   function buildValidSchema(client: Database, ledgerRows: [string, string, string][]): void {
-    client.run("CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, schema_fingerprint TEXT, applied_at TEXT)");
+    client.run("CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, predecessor TEXT, schema_fingerprint TEXT NOT NULL, protected_fingerprints TEXT NOT NULL, approved_by TEXT NOT NULL, applied_at TEXT NOT NULL)");
     for (const table of REQUIRED_TABLES) {
       if (table === "operatoros_schema_migrations") continue;
       client.run(`CREATE TABLE "${table}" (id INTEGER)`);
@@ -71,7 +71,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
       client.run(`CREATE TRIGGER "${trigger}" BEFORE UPDATE ON operatoros_schema_migrations BEGIN SELECT RAISE(ABORT, 'append-only'); END`);
     }
     for (const [version, fingerprint, appliedAt] of ledgerRows) {
-      client.run("INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?)", [version, fingerprint, appliedAt]);
+      client.run("INSERT INTO operatoros_schema_migrations VALUES (?, NULL, ?, '{}', 'test', ?)", [version, fingerprint, appliedAt]);
     }
   }
 
@@ -91,6 +91,26 @@ describe("@operatoros/db existing-schema validation authority", () => {
       [CURRENT_SCHEMA_VERSION, "20260724_s42", CURRENT_SCHEMA_FINGERPRINT, "2026-08-29T10:11:16.338250+00:00"]);
     try {
       expect(validateDatabase(client)).toBeUndefined();
+      expect(schemaFingerprint(client)).toBe(CURRENT_SCHEMA_FINGERPRINT);
+      client.run("CREATE TRIGGER sqlitez_extra AFTER UPDATE ON users BEGIN SELECT 1; END");
+      expect(schemaFingerprint(client)).not.toBe(CURRENT_SCHEMA_FINGERPRINT);
+      client.run("DROP TRIGGER sqlitez_extra");
+      client.run("CREATE TRIGGER operatoros_schema_migrations AFTER UPDATE ON users BEGIN SELECT 1; END");
+      expect(schemaFingerprint(client)).not.toBe(CURRENT_SCHEMA_FINGERPRINT);
+      client.run("DROP TRIGGER operatoros_schema_migrations");
+      client.run("ALTER TABLE operatoros_schema_migrations ADD COLUMN generated_extra TEXT GENERATED ALWAYS AS (version) VIRTUAL");
+      expect(() => validateDatabase(client)).toThrow("migration ledger layout differs");
+    } finally {
+      client.close();
+    }
+  });
+
+  it("rejects virtual and shadow objects before reading snapshot tables", () => {
+    const client = new Database(":memory:");
+    try {
+      client.run("CREATE VIRTUAL TABLE synthetic_fts USING fts5(content)");
+      expect(() => assertOrdinarySchemaObjects(client)).toThrow("DATABASE_SCHEMA_INVALID");
+      expect(() => validateDatabase(client)).toThrow("DATABASE_SCHEMA_INVALID");
     } finally {
       client.close();
     }

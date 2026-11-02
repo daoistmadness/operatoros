@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
+import { schoolLocalDate } from "../src/domains/attendance-submission-deadline";
 import { eligibleStaffBySchoolUnitForMonth } from "../src/domains/staff-school-units";
 
 const secret = "synthetic-staff-test-cookie-secret-32";
@@ -94,7 +95,7 @@ describe("employee master data", () => {
       const updated = await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { job_title_raw: "Synthetic Lead", expected_updated_at: profile.updated_at }));
       expect(updated.status).toBe(200);
       expect((await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { full_name: "Stale overwrite", expected_updated_at: profile.updated_at }))).status).toBe(409);
-      const statusDate = new Date().toISOString().slice(0, 10);
+      const statusDate = schoolLocalDate(new Date());
       const status = await value.app.handle(jsonRequest("POST", `/api/staff/${profile.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: statusDate }));
       expect(status.status).toBe(200);
       expect((await status.json() as { employment_end_date: string }).employment_end_date).toBe(statusDate);

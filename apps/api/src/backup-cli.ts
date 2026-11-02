@@ -6,7 +6,7 @@ import { syncDirectory, syncFile } from "./domains/durable-files";
 import { pathToFileURL } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
 import { Database, constants } from "bun:sqlite";
-import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase, validateMigrationSource } from "@operatoros/db";
+import { assertOrdinarySchemaObjects, compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase, validateMigrationSource } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile } from "./security/backup-crypto";
@@ -90,7 +90,13 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, pl
       if (statSync(databasePath).size !== manifest.sqlite_file_size_bytes || attachments.length !== manifest.report_attachment_count) throw new Error("BACKUP_PAYLOAD_INVALID");
     } else if (isBackupPayload(plaintextPath)) throw new Error("BACKUP_PAYLOAD_METADATA_INVALID");
     const snapshot = new Database(databasePath, { readonly: true });
-    try { if (!backupAttachmentsMatch(snapshot, attachments)) throw new Error("BACKUP_ATTACHMENTS_INVALID"); }
+    try {
+      assertOrdinarySchemaObjects(snapshot);
+      validateMigrationSource(snapshot);
+      const actualSchemaVersion = snapshotSchemaVersion(snapshot);
+      if (actualSchemaVersion !== manifest.schema_version) throw new Error("BACKUP_VERIFICATION_FAILED");
+      if (!backupAttachmentsMatch(snapshot, attachments)) throw new Error("BACKUP_ATTACHMENTS_INVALID");
+    }
     finally { snapshot.close(); }
     return { schemaVersion: manifest.schema_version, createdAt: manifest.created_at, databasePath, attachments };
   } catch (error) {
