@@ -90,7 +90,7 @@ Rootful Podman is not the default. It can simplify host networking, but gives th
 
 Build the API image and static client from the same reviewed source commit. Pin the API image by immutable OCI digest. Record the source commit, build tool versions, base image digest, lockfile checksum, image digest, static archive checksum, and build attestations in one release record.
 
-The repository now has a separate production API Containerfile and Quadlet template under `deploy/podman/`, plus a host Caddyfile and a local synthetic validation harness. Do not reuse the development image. Local checks use a digest-pinned Bun 1.4.4 Alpine Linux/amd64 base and exact `apk` versions for `flock` and `lsof`. Fresh Trivy OS and Node package scans report zero findings, but the Bun binary's embedded SQLite remains affected by CVE-2026-119373. The target Ubuntu package candidates, production registry/signer, and host installation procedure are not yet verified.
+The repository now has a separate production API Containerfile and Quadlet template under `deploy/podman/`, plus a host Caddyfile and a local synthetic validation harness. Do not reuse the development image. Local checks use a digest-pinned Bun 1.4.4 Alpine Linux/amd64 base and exact `apk` versions for `flock` and `lsof`. A Trivy scan of an earlier image reported zero Alpine OS and Node package findings, but it did not inventory Bun's embedded SQLite, which remains affected by CVE-2026-119373. C2 has not been scanned. The target Ubuntu package candidates, production registry/signer, and host installation procedure are not yet verified.
 
 The API image records the source revision, dirty-tree state, and source-manifest
 SHA-256 in OCI labels and `/usr/share/operatoros/build-provenance`. The local
