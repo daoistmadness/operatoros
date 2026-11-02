@@ -7,7 +7,7 @@ last_reviewed: 2026-11-02
 
 ## Status
 
-**Proposal only; local implementation exists. Rehearsal remains NO-GO.** This document recommends a target architecture for review. It does not authorize changes to an EC2 host, production systems, secrets, or data. The current Alpine package scan is clean, but Bun 1.4.4 embeds SQLite 3.53.4 with a remaining FTS5 CVE. The full local release gate and three exact-budget smoke runs passed; preferred E2E headroom, approved production provenance, independent review, and Ubuntu host rehearsal remain open.
+**Proposal only; local implementation exists. Rehearsal remains NO-GO.** This document recommends a target architecture for review. It does not authorize changes to an EC2 host, production systems, secrets, or data. An earlier image scan found no Alpine package findings, but it did not cover Bun's embedded SQLite 3.53.4 or the unresolved FTS5 CVE. C2 has not been scanned. Earlier test records apply to other source snapshots and constrained environments. Some passed, while other release and E2E runs failed or timed out. None establishes release acceptance for C2. C2 still needs qualified-runner validation, current image artifacts and scans, independent review, and an authorized Ubuntu rehearsal.
 
 Application baseline: `6070cbb7fee48b937596944da3694d39105cd3ee`, with TanStack Start in SPA mode and Elysia as a separate API process.
 
@@ -175,14 +175,21 @@ byte-for-byte reproducible. Build once from a reviewed tree, record the exact
 artifact checksum and toolchain provenance, and promote that exact artifact
 without rebuilding it.
 
-Three exact `timeout 300 make e2e-smoke` runs passed in 257.65s, 259.19s, and
-262.21s, with all 67 browser tests passing, two intentional skips, and API
-tests 8/8. The 300-second release gate passes; the preferred sub-240-second
-target remains unmet. The latest canonical `mise run check:full` passed in
-1,372 seconds, including the 274-second browser smoke and 3/3 setup-readiness
-tests. These results apply to the uncommitted worktree, not to the
-baseline commit alone. No external image promotion, EC2 change, or production
-deployment occurred.
+Older records include three `timeout 300 make e2e-smoke` passes at 257.65s,
+259.19s, and 262.21s, with 67 browser tests passing, two intentional skips,
+and API tests 8/8. Other recorded runs timed out or were terminated at the
+300-second limit; a focused E2E run also failed the disposable-data-reset
+check. These runs used earlier source snapshots and constrained environments,
+so they do not establish C2 acceptance or a qualified timing baseline.
+
+The `check:full` records also differ. The run logged against `6070cbb7` failed
+with 420 passing tests and three attendance-reconciliation timeouts. A separate
+pre-freeze run exited 0 in 1,372 seconds against source manifest `b1e2248a…`,
+but only in a private mount namespace with tmpfs-backed `/tmp` while the host
+root filesystem was full. Neither result is release acceptance for C2. No
+canonical `mise run check:full` or 300-second smoke run has been accepted on C2
+using a qualified disk-backed runner. No external image promotion, EC2 change,
+or production deployment occurred.
 
 ## Rollback
 
