@@ -858,3 +858,52 @@ loading/error states, and ordinary feature specs reuse a synthetic session.
 The browser reviewer must review those as behavior changes, along with the
 session-revocation, expiry, cross-tab, and permission-change tests that retain
 independent login flows. Independent review is still **PENDING**.
+
+### Frozen review-candidate artifacts
+
+The first isolated review commit is
+`0d2c8adf16284a6c909f73d513a8a654ee970c90`. The current application/image
+candidate is its documentation-only successor
+`9def1f2199558d087a2866f809fc76b1a873a408` (tree
+`3713aa36f2142d887bec3ef9b38098abc897b36e`). The full source-file manifest is
+stored at `/var/tmp/operatoros-podman-review-9def1f2/source-file-manifest.json`
+with SHA-256
+`e637f7b90e971089b8b0d91035a7795f9305d32a7519aabbed124cd801790023`.
+Evidence receipt:
+`/var/tmp/operatoros-podman-review-9def1f2/review-candidate-receipt.json`.
+
+- The current TanStack Start SPA client was rebuilt from that candidate. Its
+  archive is `/var/tmp/operatoros-podman-review-9def1f2/operatoros-web-client.tar.gz`
+  with SHA-256
+  `5bf01b4daf23cf8e7c2fbe6bdd1193e7efc0bfbcb7317cefa729dd57480c1c0e`.
+  The detached client file manifest passed checksum validation and extraction
+  comparison. A repeat build changed only `_shell.html`, confirming that the
+  exact archive is pinned but its content is not deterministic.
+- The API image built successfully in a separate rootless VFS store with
+  `BUILDAH_LAYERS=false`; its OCI labels and in-image provenance contain the
+  candidate commit and source-manifest hash. Image ID:
+  `sha256:9459588fb24f4b2c114675ae0bad4c6b399a13477de7f271f20bf1158a033113`.
+  Local build manifest digest:
+  `sha256:dfb32dcf8451b4e7ddf297d92e710dc302147a2755817de0f8bfdc7699acf3b9`.
+  OCI archive SHA-256:
+  `404afb8a9a984dcbbdf1085987f052ed0b66835d2853328717d42011f6addd28`.
+- The OCI archive loaded in a separate clean VFS store with the same image ID
+  and source labels, but a different local manifest digest
+  (`sha256:21661eee76d85c66eb0b0f50dcb6bd059542f1afa5598fc8ac4f8404af308168`).
+  This is archive transport verification, not a registry-resolvable digest or
+  promotion.
+- A hardened rootless, read-only, no-network runtime probe ran as UID 10000
+  and reported Bun 1.4.4, SQLite 3.53.4, and `ENABLE_FTS5`. Thus the known
+  CVE-2026-119373 blocker is present in the candidate image.
+- The first layered image-build attempt exhausted the `/dev/shm` quota before
+  producing an image. The successful retry disabled intermediate layers and
+  used the exact commit. The default Podman graphroot and existing containers
+  were not touched.
+- Trivy, Syft, Grype, and Cosign are unavailable in this environment. No
+  candidate-image vulnerability scan, SBOM, signature, external registry
+  digest, or production provenance statement was generated. The current
+  candidate's full Podman integration harness was not rerun after image build.
+
+The canonical full release check and acceptance E2E remain **NOT VERIFIED** on
+a qualified disk-backed runner. The successful app build and image provenance
+do not close those gates or authorize deployment.
