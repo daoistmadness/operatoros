@@ -3,6 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "$0")/.." && pwd -P)"
 teardown="$repo_root/scripts/podman-local-teardown.sh"
+bun_source_tool="$repo_root/scripts/podman-source-manifest.mjs"
 bun_bin="$(command -v bun || true)"
 caddy_image="docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5"
 
@@ -12,71 +13,31 @@ done
 [[ -x "$bun_bin" ]] || { printf 'Native Bun is required to seed only the synthetic validation database.\n' >&2; exit 2; }
 [[ "$(readlink -f "$bun_bin")" != /mnt/* ]] || { printf 'Refusing a non-native Bun path.\n' >&2; exit 2; }
 
-source_sha="$(git -C "$repo_root" rev-parse HEAD)"
-if [[ -n "$(git -C "$repo_root" status --porcelain -- apps/api/src packages/contracts/src packages/db/src packages/excel/src packages/sheetjs-fork openapi/operatoros.openapi.json package.json bun.lock)" ]]; then
-  printf 'Production application inputs are modified; build must use a reviewed source revision.\n' >&2
+"$bun_bin" "$bun_source_tool" assert-clean "$repo_root" || {
+  printf 'Local Podman validation requires a clean committed source worktree, including no untracked files.\n' >&2
   exit 2
-fi
+}
+source_sha="$(git -C "$repo_root" rev-parse HEAD)"
 
 workspace="$(mktemp -d /var/tmp/operatoros-podman-local.XXXXXX)"
 chmod 0700 "$workspace"
 run_id="${workspace##*/}"
+source_root="$workspace/source"
 source_file_manifest="$workspace/source-file-manifest.json"
-python3 - "$repo_root" "$source_file_manifest" <<'PY'
-import hashlib
-import json
-import os
-import stat
-import subprocess
-import sys
-
-root, output = sys.argv[1:]
-paths = subprocess.check_output(
-    ["git", "-C", root, "ls-files", "-c", "-o", "--exclude-standard", "-z"]
-).split(b"\0")
-entries = []
-for raw_path in paths:
-    if not raw_path:
-        continue
-    relative = os.fsdecode(raw_path)
-    absolute = os.path.join(root, relative)
-    metadata = os.lstat(absolute)
-    if stat.S_ISLNK(metadata.st_mode):
-        kind = "symlink"
-        content = os.fsencode(os.readlink(absolute))
-    elif stat.S_ISREG(metadata.st_mode):
-        kind = "file"
-        with open(absolute, "rb") as source:
-            content = source.read()
-    else:
-        continue
-    entries.append({
-        "path": relative,
-        "kind": kind,
-        "mode": stat.S_IMODE(metadata.st_mode),
-        "size": len(content),
-        "sha256": hashlib.sha256(content).hexdigest(),
-    })
-entries.sort(key=lambda entry: entry["path"])
-with open(output, "w", encoding="utf-8") as destination:
-    json.dump({"files": entries}, destination, indent=2, sort_keys=True)
-    destination.write("\n")
-PY
-source_tree_sha256="$(sha256sum "$source_file_manifest" | awk '{print $1}')"
-if [[ -n "$(git -C "$repo_root" status --porcelain --untracked-files=all)" ]]; then
-  source_dirty=true
-else
-  source_dirty=false
-fi
-chmod 0600 "$source_file_manifest"
 printf '%s' "$run_id" >"$workspace/.operatoros-podman-local"
 chmod 0600 "$workspace/.operatoros-podman-local"
 cleanup_done=false
+source_worktree_added=false
 on_exit() {
   status=$?
   trap - EXIT
   if [[ "$cleanup_done" != true ]]; then
     "$teardown" "$workspace" >/dev/null 2>&1 || true
+  fi
+  if [[ "$source_worktree_added" == true ]]; then
+    git -C "$repo_root" worktree remove --force "$source_root" >/dev/null 2>&1 || {
+      printf 'Warning: remove the temporary committed source worktree manually: %s\n' "$source_root" >&2
+    }
   fi
   if [[ $status -ne 0 ]]; then
     printf 'Local Podman validation failed; synthetic evidence retained at %s\n' "$workspace" >&2
@@ -87,6 +48,22 @@ trap on_exit EXIT
 
 mkdir -p "$workspace/state" "$workspace/backup-source/backups" "$workspace/restore-target" "$workspace/static/client" "$workspace/quadlet-xdg/containers/systemd" "$workspace/home"
 chmod 0700 "$workspace/state" "$workspace/backup-source" "$workspace/backup-source/backups" "$workspace/restore-target"
+git -C "$repo_root" worktree add --detach "$source_root" "$source_sha"
+source_worktree_added=true
+"$bun_bin" "$bun_source_tool" write-manifest "$source_root" "$source_file_manifest"
+source_tree_sha256="$(sha256sum "$source_file_manifest" | awk '{print $1}')"
+source_tree_id="$(git -C "$source_root" rev-parse 'HEAD^{tree}')"
+[[ "$source_tree_id" == "$(git -C "$repo_root" rev-parse 'HEAD^{tree}')" ]] || {
+  printf 'Temporary source worktree does not match the selected commit tree.\n' >&2
+  exit 1
+}
+source_dirty=false
+chmod 0600 "$source_file_manifest"
+(
+  cd "$source_root"
+  PATH="$(dirname "$bun_bin"):$PATH" "$bun_bin" install --frozen-lockfile
+) 2>&1 | tee "$workspace/frozen-install.log"
+"$bun_bin" "$bun_source_tool" assert-clean "$source_root"
 
 free_loopback_port() {
   python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()'
@@ -101,29 +78,39 @@ run_label="io.operatoros.podman-local-run=$run_id"
 image_tag="localhost/operatoros-api:local-$run_id"
 static_root="$workspace/static/client"
 
-if [[ ! -f "$repo_root/apps/web/build/client/_shell.html" ]]; then
-  (cd "$repo_root/apps/web" && bun run build)
-fi
-git -C "$repo_root" diff --exit-code -- apps/web/src/routeTree.gen.ts
-unexpected_client_file="$(find "$repo_root/apps/web/build/client" -mindepth 1 -maxdepth 1 ! -name _shell.html ! -name assets ! -name .vite ! -name index.html ! -name desktop-failure.css ! -name desktop-failure.js -print -quit)"
-[[ -z "$unexpected_client_file" && -f "$repo_root/apps/web/build/client/_shell.html" && -d "$repo_root/apps/web/build/client/assets" ]] || {
+(
+  cd "$source_root/apps/web"
+  env -i HOME="$workspace/home" PATH="$(dirname "$bun_bin"):/usr/bin:/bin" TMPDIR="$workspace" \
+    OPERATOROS_DISABLE_ENV_FILES=true VITE_API_BASE_URL= TZ=UTC \
+    "$bun_bin" run build
+) 2>&1 | tee "$workspace/spa-build.log"
+git -C "$source_root" diff --exit-code -- apps/web/src/routeTree.gen.ts
+"$bun_bin" "$bun_source_tool" assert-clean "$source_root"
+unexpected_client_file="$(find "$source_root/apps/web/build/client" -mindepth 1 -maxdepth 1 ! -name _shell.html ! -name assets ! -name .vite ! -name index.html ! -name desktop-failure.css ! -name desktop-failure.js -print -quit)"
+[[ -z "$unexpected_client_file" && -f "$source_root/apps/web/build/client/_shell.html" && -d "$source_root/apps/web/build/client/assets" ]] || {
   printf 'Static client staging contains unexpected or missing build output.\n' >&2
   exit 1
 }
 for name in _shell.html index.html desktop-failure.css desktop-failure.js; do
-  [[ ! -f "$repo_root/apps/web/build/client/$name" ]] || cp "$repo_root/apps/web/build/client/$name" "$static_root/$name"
+  [[ ! -f "$source_root/apps/web/build/client/$name" ]] || cp "$source_root/apps/web/build/client/$name" "$static_root/$name"
 done
-cp -a "$repo_root/apps/web/build/client/assets" "$static_root/assets"
+cp -a "$source_root/apps/web/build/client/assets" "$static_root/assets"
 
-bun run security:audit | tee "$workspace/dependency-audit-full.log"
-bun audit --production | tee "$workspace/dependency-audit-production.log"
+(
+  cd "$source_root"
+  PATH="$(dirname "$bun_bin"):$PATH" "$bun_bin" run security:audit
+) 2>&1 | tee "$workspace/dependency-audit-full.log"
+(
+  cd "$source_root"
+  PATH="$(dirname "$bun_bin"):$PATH" "$bun_bin" audit --production
+) 2>&1 | tee "$workspace/dependency-audit-production.log"
 
-podman build --platform linux/amd64 --file "$repo_root/deploy/podman/Containerfile.api" \
-  --ignorefile "$repo_root/deploy/podman/.containerignore" \
+podman build --platform linux/amd64 --file "$source_root/deploy/podman/Containerfile.api" \
+  --ignorefile "$source_root/deploy/podman/.containerignore" \
   --build-arg "VCS_REF=$source_sha" \
   --build-arg "SOURCE_TREE_SHA256=$source_tree_sha256" \
   --build-arg "SOURCE_DIRTY=$source_dirty" \
-  --tag "$image_tag" "$repo_root" \
+  --tag "$image_tag" "$source_root" \
   2>&1 | tee "$workspace/container-build.log"
 image_id="$(podman image inspect --format '{{.Id}}' "$image_tag")"
 image_digest="$(podman image inspect --format '{{.Digest}}' "$image_tag")"
@@ -167,7 +154,7 @@ podman run --rm --workdir /app/apps/api --entrypoint bun "$image_tag" -e '
 ' | tee "$workspace/excel-image-smoke.log"
 
 quadlet="$workspace/quadlet-xdg/containers/systemd/operatoros-api.container"
-"$repo_root/scripts/render-operatoros-quadlet.sh" "localhost/operatoros-api@$image_digest" "$quadlet"
+"$source_root/scripts/render-operatoros-quadlet.sh" "localhost/operatoros-api@$image_digest" "$quadlet"
 XDG_CONFIG_HOME="$workspace/quadlet-xdg" HOME="$workspace/home" /usr/libexec/podman/quadlet -user -dryrun >"$workspace/quadlet-generator.log" 2>&1 || {
   cat "$workspace/quadlet-generator.log" >&2
   exit 1
@@ -200,12 +187,12 @@ EOF
 chmod 0600 "$workspace/api.env"
 
 export OPERATOROS_DATA_DIR="$workspace/state"
-bun "$repo_root/packages/db/src/db-cli.ts" bootstrap --data-dir "$workspace/state" | tee "$workspace/database-bootstrap.log"
+"$bun_bin" "$source_root/packages/db/src/db-cli.ts" bootstrap --data-dir "$workspace/state" | tee "$workspace/database-bootstrap.log"
 OPERATOROS_E2E_ADMIN_USERNAME="$admin_username" OPERATOROS_E2E_ADMIN_PASSWORD="$admin_password" \
-  bun "$repo_root/e2e/helpers/seed-test-database.ts" --database "$workspace/state/operatoros.sqlite" --runtime-root "$workspace" \
+  "$bun_bin" "$source_root/e2e/helpers/seed-test-database.ts" --database "$workspace/state/operatoros.sqlite" --runtime-root "$workspace" \
   | tee "$workspace/database-seed.log"
 unset OPERATOROS_DATA_DIR
-wal_mode="$(bun -e 'import { Database } from "bun:sqlite"; const db = new Database(process.argv[1]); db.exec("PRAGMA journal_mode=WAL"); const mode = String(db.query("PRAGMA journal_mode").get()?.journal_mode); db.close(); if (mode !== "wal") process.exit(1); console.log(mode)' "$workspace/state/operatoros.sqlite")"
+wal_mode="$("$bun_bin" -e 'import { Database } from "bun:sqlite"; const db = new Database(process.argv[1]); db.exec("PRAGMA journal_mode=WAL"); const mode = String(db.query("PRAGMA journal_mode").get()?.journal_mode); db.close(); if (mode !== "wal") process.exit(1); console.log(mode)' "$workspace/state/operatoros.sqlite")"
 printf '%s\n' "$wal_mode" >"$workspace/database-journal-mode.txt"
 
 start_api() {
@@ -240,7 +227,7 @@ wait_ready() {
 assert_json_user() {
   json_file="$1"
   expected_user="$2"
-  bun -e 'const v = await Bun.file(process.argv[1]).json(); if (v.username !== process.argv[2]) process.exit(1)' "$json_file" "$expected_user"
+  "$bun_bin" -e 'const v = await Bun.file(process.argv[1]).json(); if (v.username !== process.argv[2]) process.exit(1)' "$json_file" "$expected_user"
 }
 
 start_api
@@ -268,7 +255,7 @@ stat -c '%a %u:%g %n' "$workspace/state/operatoros.sqlite" >"$workspace/host-dat
 caddyfile="$workspace/Caddyfile"
 sed -e "s|127.0.0.1:8088|127.0.0.1:$web_port|g" \
   -e "s|127.0.0.1:8090|127.0.0.1:$api_port|g" \
-  "$repo_root/deploy/podman/Caddyfile" >"$caddyfile"
+  "$source_root/deploy/podman/Caddyfile" >"$caddyfile"
 podman run --rm --network host --userns keep-id:uid=1000,gid=1000 --user 1000:1000 --read-only \
   --tmpfs /data:rw,mode=1777 --tmpfs /config:rw,mode=1777 --tmpfs /tmp:rw,mode=1777 \
   --cap-drop all --cap-add net_bind_service --security-opt no-new-privileges \
@@ -336,7 +323,7 @@ assert_json_user "$workspace/auth-after-container-recreation.json" "$admin_usern
 
 [[ "$(curl --silent --show-error --output "$workspace/backup-response.json" --write-out '%{http_code}' \
   --request POST --cookie "$cookiejar" -H "Origin: $origin" "$origin/api/admin/backups")" == 200 ]]
-backup_filename="$(bun -e 'const v = await Bun.file(process.argv[1]).json(); if (v.encrypted !== true || typeof v.filename !== "string") process.exit(1); console.log(v.filename)' "$workspace/backup-response.json")"
+backup_filename="$("$bun_bin" -e 'const v = await Bun.file(process.argv[1]).json(); if (v.encrypted !== true || typeof v.filename !== "string") process.exit(1); console.log(v.filename)' "$workspace/backup-response.json")"
 cp "$workspace/state/backups/$backup_filename" "$workspace/backup-source/backups/"
 cp "$workspace/state/backups/$backup_filename.meta.json" "$workspace/backup-source/backups/"
 chmod 0600 "$workspace/backup-source/backups/"*
@@ -381,28 +368,29 @@ grep -Fxq "127.0.0.1:$web_port" "$workspace/listeners.txt"
 podman logs "$caddy_name" >"$workspace/caddy.log" 2>&1
 podman logs "operatoros-restore-api-$run_id" >"$workspace/api.log" 2>&1
 
-tar --sort=name --mtime="@$(git -C "$repo_root" show -s --format=%ct "$source_sha")" \
+tar --sort=name --mtime="@$(git -C "$source_root" show -s --format=%ct "$source_sha")" \
   --pax-option=delete=atime,delete=ctime \
   --owner=0 --group=0 --numeric-owner --format=posix -cf - -C "$static_root" . \
   | gzip -n >"$workspace/operatoros-web-client.tar.gz"
 tar -tzf "$workspace/operatoros-web-client.tar.gz" >"$workspace/static-archive-contents.txt"
 static_sha="$(sha256sum "$workspace/operatoros-web-client.tar.gz" | awk '{print $1}')"
 printf '%s  operatoros-web-client.tar.gz\n' "$static_sha" >"$workspace/operatoros-web-client.tar.gz.sha256"
-containerfile_sha="$(sha256sum "$repo_root/deploy/podman/Containerfile.api" | awk '{print $1}')"
-caddyfile_sha="$(sha256sum "$repo_root/deploy/podman/Caddyfile" | awk '{print $1}')"
-bun_lock_sha="$(sha256sum "$repo_root/bun.lock" | awk '{print $1}')"
-mise_lock_sha="$(sha256sum "$repo_root/mise.lock" | awk '{print $1}')"
+containerfile_sha="$(sha256sum "$source_root/deploy/podman/Containerfile.api" | awk '{print $1}')"
+caddyfile_sha="$(sha256sum "$source_root/deploy/podman/Caddyfile" | awk '{print $1}')"
+bun_lock_sha="$(sha256sum "$source_root/bun.lock" | awk '{print $1}')"
+mise_lock_sha="$(sha256sum "$source_root/mise.lock" | awk '{print $1}')"
 podman_version="$(podman version --format '{{.Client.Version}}')"
-bun_version="$(bun --version)"
+bun_version="$("$bun_bin" --version)"
 cat >"$workspace/local-release-record.json" <<EOF
 {
   "status": "local synthetic validation; not a production release",
   "source_commit": "$source_sha",
+  "source_git_tree": "$source_tree_id",
   "source_tree_sha256": "$source_tree_sha256",
   "source_tree_manifest": "source-file-manifest.json",
   "source_tree_dirty": $source_dirty,
   "source_application_inputs_clean": true,
-  "working_tree_configuration": "uncommitted",
+  "working_tree_configuration": "clean detached worktree at source_commit; API and SPA built from this worktree",
   "podman_version": "$podman_version",
   "bun_version": "$bun_version",
   "platform": "linux/amd64",
@@ -429,7 +417,7 @@ cat >"$workspace/local-release-record.json" <<EOF
   "caddy_validation_image_digest": "sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5",
   "caddyfile_sha256": "$caddyfile_sha",
   "static_client_archive_sha256": "$static_sha",
-  "quadlet_template_sha256": "$(sha256sum "$repo_root/deploy/podman/operatoros-api.container.in" | awk '{print $1}')",
+  "quadlet_template_sha256": "$(sha256sum "$source_root/deploy/podman/operatoros-api.container.in" | awk '{print $1}')",
   "release_scope": "synthetic data, loopback-only local test",
   "restore_to_application_usable_seconds": $restore_elapsed_seconds,
   "systemd_user_service_and_reboot": "not exercised"
@@ -439,6 +427,8 @@ chmod 0600 "$workspace/local-release-record.json"
 
 "$teardown" "$workspace"
 cleanup_done=true
+git -C "$repo_root" worktree remove --force "$source_root"
+source_worktree_added=false
 rm -f -- "$workspace/api.env" "$workspace/cookies.txt" "$workspace/restored-cookies.txt"
 printf 'PODMAN_LOCAL_VALIDATION=PASS\n'
 printf 'Synthetic workspace: %s\n' "$workspace"

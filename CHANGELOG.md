@@ -8,6 +8,7 @@ Notable user-facing changes are recorded here.
 - Keep the dashboard heading available during analytics loading and synchronize E2E checks on relevant page readiness.
 - Use the Asia/Jakarta school date for effective-date checks, age and tenure calculations, report defaults, and due status.
 - Reject non-standard SQLite schema objects in restore and migration preflight before reading database rows.
+- Build local Podman validation artifacts from a clean committed source snapshot with canonical Git file modes.
 
 - Vendor trimmed SheetJS fork and implement lazy legacy XLS parsing in @operatoros/excel (#352).
 - Pin affected minimatch dependency paths to the patched release and test their current consumers under Bun and Node.
