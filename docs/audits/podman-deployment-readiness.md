@@ -319,11 +319,28 @@ SQLite, so installing or updating Alpine's SQLite package cannot patch
 Bun v1.4.4 was the latest stable release observed at audit time, released
 2026-10-22 before the CVE publication on 2026-10-30
 ([official Bun releases](https://github.com/oven-sh/bun/releases)). No
-patched supported Bun release was available during this audit. The security
-gate remains **FAIL / BLOCKED** pending a supported Bun release with SQLite
-3.54.0 or newer, a separately reviewed compatible runtime remediation, or a
-time-bounded decision by an authorized security risk owner. No exception has
-been granted.
+patched supported Bun release was available during this audit. The subsequent
+runtime probe of the exact candidate image again reported SQLite 3.53.4 with
+FTS5 enabled. The security gate remains **FAIL / BLOCKED**. The viable
+resolution paths are:
+
+1. Adopt a supported Bun release after verifying its embedded SQLite version
+   and compile options. The previously checked stable and canary binaries both
+   reported 3.53.4, so neither resolves the finding.
+2. Evaluate a maintained Bun build linked against SQLite 3.54.0 or later.
+   This needs a reproducible build, support/maintenance owner, security scan,
+   and full runtime regression; no such build has been produced.
+3. Evaluate a system-linked SQLite driver such as `better-sqlite3` only as a
+   separate runtime change. It changes the native dependency and transaction
+   integration and requires application, migration, backup, and Excel/API
+   regression evidence; it is not a small dependency override.
+4. Request a time-bounded security exception only after an independent
+   reviewer traces every SQL and restored-database path and answers whether
+   an untrusted value can reach the vulnerable FTS5 parser. Current source
+   search found no direct `MATCH` query or FTS5 DDL, but that is not yet a
+   proof that every restored schema/trigger path is unreachable. Any exception
+   needs a named owner, residual-risk statement, compensating controls,
+   expiry/reassessment date, and removal trigger. **No exception is approved.**
 
 The fresh Debian scan also surfaced CVE-2026-119586 against the old
 `libsqlite3-0` package. That advisory concerns the `sqlite3` command-line
@@ -437,11 +454,13 @@ keeps the next dependent milestone blocked.
 
 ### 1. Verify merged-main health and close CI failures
 
-**Status: PASS for merged-main health and local release checks.** The current
-canonical `mise run check:full` exited 0 and three exact `timeout 300
-make e2e-smoke` runs passed. The preferred sub-240-second timing target was
-not met, and the full-release GitHub job remains skipped in the recorded CI
-run; these limitations are carried forward below.
+**Status: BLOCKED for release acceptance; merged-main health is verified.** The
+recorded base commit's CI/CodeQL passed, but the full-release GitHub job was
+skipped. Earlier local full-check and E2E commands exited 0 only on the full
+host with a tmpfs-backed `/tmp` workaround and a different source manifest.
+Those results are diagnostic, not acceptance evidence. The frozen candidate's
+full check and 300-second smoke have not passed on a normally provisioned,
+disk-backed runner.
 
 - **Objective/scope:** Freeze the source reference and establish current checks.
 - **Tasks/dependencies:** Verify `origin/main`, PR ancestry, required CI and
@@ -533,11 +552,12 @@ package behavior remain unverified.
 
 ### 5. Build merged-tree production release artifacts
 
-**Status: LOCAL CANDIDATE GENERATED.** Local API image identity was verified
-through a loopback registry push and clean consumer pull by the resulting
-registry digest. Two controlled SPA builds differed only in `_shell.html`'s
-root-match timestamp. The source configuration is uncommitted; these artifacts
-are not a release candidate.
+**Status: REVIEW ARTIFACTS GENERATED; release blocked.** The exact application
+candidate `9def1f2199558d087a2866f809fc76b1a873a408` produced a static SPA
+archive and an API image with matching source labels. An OCI archive imported
+into a clean isolated VFS store with the same image ID. The SPA remains
+non-deterministic in `_shell.html`; no registry digest or production signature
+exists, and the artifacts are not promotable.
 
 - **Objective/scope:** Produce paired API image and SPA static artifact.
 - **Tasks/dependencies:** Build from one reviewed commit; exclude Start server
@@ -692,8 +712,10 @@ rehearsal.
 | TanStack Start SPA build and generated routes | **PASS** | Production build passed and route-tree freshness check had no diff. |
 | Canonical full application check | **NOT VERIFIED on a qualified runner** | A pre-freeze run exited 0 on source manifest `b1e2248a…` under the tmpfs `/tmp` workaround with the host root full. It is diagnostic evidence, not candidate release acceptance. |
 | Exact 300-second local E2E smoke | **NOT VERIFIED as acceptance evidence** | Prior samples passed, but they ran on the full host without controlled cold-cache/resource telemetry. Rerun repeatedly on the qualified disk-backed runner; retain the 300-second limit and both opt-in skips. |
-| Local Podman synthetic integration | **PASS on a prior source snapshot; current candidate NOT VERIFIED** | Earlier integration passed API, auth/CSRF, Caddy SPA/dotfile, lock exclusion, persistence/WAL, Excel, and encrypted backup/isolated restore checks. Its image used a different source manifest; current candidate image was not rebuilt. No user systemd service or reboot was exercised. |
-| Alpine OS/Node/secret scan | **PASS on a prior image; scanner scope only** | The Trivy report had 0 OS, 0 Node package, and 0 secret findings for the earlier image; its 131-component CycloneDX SBOM omits Bun's statically linked SQLite. The current candidate image was not rebuilt or rescanned. |
+| Local Podman synthetic integration | **PASS on a prior source snapshot; current full harness NOT VERIFIED** | Earlier integration passed API, auth/CSRF, Caddy SPA/dotfile, lock exclusion, persistence/WAL, Excel, and encrypted backup/isolated restore checks. Current candidate image provenance and a hardened runtime probe passed, but the complete harness was not rerun. No user systemd service or reboot was exercised. |
+| Current candidate API image build/provenance | **PASS (local review artifact)** | Image ID `sha256:9459588f…`; labels and in-image provenance match commit `9def1f21…` and source manifest `e637f7b9…`. OCI archive SHA-256 `404afb8a…`; a clean isolated import retained the image ID and source labels. No registry digest or promotion. |
+| Alpine OS/Node/secret scan | **PASS on a prior image; current candidate NOT SCANNED** | Earlier Trivy report had 0 OS, 0 Node package, and 0 secret findings; its 131-component CycloneDX SBOM omits Bun's statically linked SQLite. No scanner was available for the current candidate image. |
+| Candidate image SBOM and vulnerability scan | **NOT VERIFIED** | Trivy, Syft, Grype, and Cosign were unavailable; no current-candidate SBOM or scan report was produced. |
 | Container runtime security | **FAIL / BLOCKED** | Bun 1.4.4 embeds SQLite 3.53.4 with FTS5; CVE-2026-119373 remains in the shipped process. No exception is approved. |
 | Local registry digest and clean consumer | **PASS on prior image (non-production test)** | Loopback registry digest pull into a new rootless VFS store retained the same image ID; runtime reported Bun 1.4.4 / SQLite 3.53.4. This validates the earlier transport test only, not the current candidate image or external promotion. |
 | Test manifest signature | **PASS (ephemeral test identity only)** | Detached Ed25519 signature verified locally. No production key or signer policy was used. |
