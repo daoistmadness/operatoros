@@ -7402,17 +7402,15 @@
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": {
-      "fingerprint": "0c9d94831b7e3dfdcd848d363ba69d33df174bc695147bb28481d4d180fe08ce",
+      "fingerprint": "08b195f64872ca98a412bea86a9f3cf584f8e9223d8ba69708eac5651b68c8e7",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "005f6b8aae51de1c97b09a8fe2e34320121403a536bea71231108b1fc2fc2c0c"
+        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "70e6fb0ef591cc19c9e24511ffcb6f4e858b9203d0ae4cdb875ec8514fcb891e"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "f41d9000d619472a0ae61392fc176b6fab1c5239",
+      "outcome": "no-change",
+      "reason": "Updated the synthetic navigation search test to provide its opener after the callback ref attaches, matching production state and avoiding a render timing dependency. No Elysia skill source or guidance changed.",
       "evidence": [
-        "Reviewed apps/web/src/components/navigation/NavigationCommandSearch.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at f41d9000d619472a0ae61392fc176b6fab1c5239"
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.tsx": {

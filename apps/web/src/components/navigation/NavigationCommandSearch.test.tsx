@@ -25,10 +25,10 @@ function CurrentPath() {
 
 function SearchHarness({ canSelect = () => true }: { canSelect?: (item: NavigationItem) => boolean }) {
   const [open, setOpen] = useState(true);
-  const returnFocusRef = useRef<HTMLButtonElement>(null);
+  const [returnFocusTarget, setReturnFocusTarget] = useState<HTMLButtonElement | null>(null);
   return (
     <MemoryRouter>
-      <button ref={returnFocusRef} type="button" id="return-focus">Open search</button>
+      <button ref={setReturnFocusTarget} type="button" id="return-focus">Open search</button>
       <button type="button" onClick={() => setOpen(false)}>Close search state</button>
       <CurrentPath />
       <NavigationCommandSearch
@@ -36,7 +36,7 @@ function SearchHarness({ canSelect = () => true }: { canSelect?: (item: Navigati
         onOpenChange={setOpen}
         groups={groups}
         pathname="/"
-        returnFocusTarget={returnFocusRef.current}
+        returnFocusTarget={returnFocusTarget}
         sessionVerificationActive={false}
         canSelect={canSelect}
         onCommittedNavigation={vi.fn()}
