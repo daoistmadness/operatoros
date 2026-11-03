@@ -9860,15 +9860,15 @@
       ]
     },
     "source:scripts/tests/podman-source-manifest.test.ts": {
-      "fingerprint": "6a10a9f264637c463737fb439f4f156a3e3737145225e1e0ed1607333492b2b9",
+      "fingerprint": "481f13758046fdca43e8fe93c1637706a2da57d83c52637148db517720e3b378",
       "snapshot": {
-        "scripts/tests/podman-source-manifest.test.ts": "007f8f3416603bf415f52299732aa081a60ae106e6700ce305da891024c2cf0e"
+        "scripts/tests/podman-source-manifest.test.ts": "a465f54780af8ef6c24a347627ea402f87f680d2c101fbc4c6bfd83f235d03f7"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "786fe45b576d1b23ebb77ab83dc639c39c3e60ba",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Changed only the synthetic Git test helper to clear inherited repository context for nested fixture repositories. The change does not alter Elysia implementation guidance or skill planning artifacts.",
       "evidence": [
-        "Changed: scripts/tests/podman-source-manifest.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: scripts/tests/podman-source-manifest.test.ts at 786fe45b576d1b23ebb77ab83dc639c39c3e60ba"
       ]
     }
   }

@@ -5,19 +5,50 @@ import { execFileSync } from "node:child_process";
 import { describe, expect, it } from "bun:test";
 import { assertCleanWorktree, createSourceManifest } from "../podman-source-manifest.mjs";
 
-function git(root: string, ...args: string[]): string {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+const gitLocalEnvironment = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe", stderr: "pipe" });
+if (gitLocalEnvironment.exitCode !== 0) throw new Error("Git local environment discovery failed");
+const gitLocalEnvironmentNames = gitLocalEnvironment.stdout.toString().trim().split("\n");
+
+function git(root: string, args: string[], inheritedEnvironment = process.env): string {
+  const environment = { ...inheritedEnvironment };
+  for (const name of gitLocalEnvironmentNames) delete environment[name];
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", env: environment }).trim();
 }
 
 function createRepo(): string {
   const root = mkdtempSync(join(tmpdir(), "operatoros-source-manifest-test-"));
-  git(root, "init", "--quiet", "-b", "main");
-  git(root, "config", "user.name", "Synthetic Test");
-  git(root, "config", "user.email", "synthetic@example.test");
+  git(root, ["init", "--quiet", "-b", "main"]);
+  git(root, ["config", "user.name", "Synthetic Test"]);
+  git(root, ["config", "user.email", "synthetic@example.test"]);
   return root;
 }
 
 describe("Podman source manifest", () => {
+  it("keeps synthetic Git commands in their target repo under inherited hook state", () => {
+    const target = createRepo();
+    const outer = createRepo();
+    try {
+      writeFileSync(join(target, "source.txt"), "synthetic source\n");
+      const hookEnvironment = {
+        ...process.env,
+        GIT_DIR: join(outer, ".git"),
+        GIT_WORK_TREE: outer,
+        GIT_COMMON_DIR: join(outer, ".git"),
+        GIT_INDEX_FILE: join(outer, ".git", "index"),
+        GIT_PREFIX: "",
+      };
+
+      git(target, ["add", "source.txt"], hookEnvironment);
+      git(target, ["commit", "--quiet", "-m", "synthetic source"], hookEnvironment);
+
+      expect(git(target, ["rev-parse", "--show-toplevel"], hookEnvironment)).toBe(target);
+      expect(git(outer, ["status", "--porcelain"], hookEnvironment)).toBe("");
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+      rmSync(outer, { recursive: true, force: true });
+    }
+  });
+
   it("uses committed file content and Git modes rather than host checkout permissions", () => {
     const root = createRepo();
     try {
@@ -27,12 +58,12 @@ describe("Podman source manifest", () => {
       writeFileSync(join(root, "run.sh"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
       symlinkSync("plain.txt", join(root, "alias.txt"));
       writeFileSync(join(root, "build", "stale.txt"), "ignored output\n");
-      git(root, "add", ".");
-      git(root, "commit", "--quiet", "-m", "synthetic source");
-      const commit = git(root, "rev-parse", "HEAD");
-      const tree = git(root, "rev-parse", "HEAD^{tree}");
+      git(root, ["add", "."]);
+      git(root, ["commit", "--quiet", "-m", "synthetic source"]);
+      const commit = git(root, ["rev-parse", "HEAD"]);
+      const tree = git(root, ["rev-parse", "HEAD^{tree}"]);
 
-      git(root, "config", "core.filemode", "false");
+      git(root, ["config", "core.filemode", "false"]);
       chmodSync(join(root, "plain.txt"), 0o664);
       chmodSync(join(root, "run.sh"), 0o775);
 
@@ -58,8 +89,8 @@ describe("Podman source manifest", () => {
     const root = createRepo();
     try {
       writeFileSync(join(root, "source.txt"), "committed\n");
-      git(root, "add", "source.txt");
-      git(root, "commit", "--quiet", "-m", "synthetic source");
+      git(root, ["add", "source.txt"]);
+      git(root, ["commit", "--quiet", "-m", "synthetic source"]);
       expect(() => assertCleanWorktree(root)).not.toThrow();
 
       writeFileSync(join(root, "source.txt"), "modified\n");
