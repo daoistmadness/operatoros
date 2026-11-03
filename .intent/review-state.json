@@ -9860,15 +9860,15 @@
       ]
     },
     "source:scripts/tests/podman-source-manifest.test.ts": {
-      "fingerprint": "481f13758046fdca43e8fe93c1637706a2da57d83c52637148db517720e3b378",
+      "fingerprint": "b841f909c725b1d48f2d18aeb9396b935e579b9a68ec101b4bcaf121e6c811f3",
       "snapshot": {
-        "scripts/tests/podman-source-manifest.test.ts": "a465f54780af8ef6c24a347627ea402f87f680d2c101fbc4c6bfd83f235d03f7"
+        "scripts/tests/podman-source-manifest.test.ts": "9b09277845efcfa0c66f60560498d69f57b38b405a728861eeadd15286afedcd"
       },
-      "head": "786fe45b576d1b23ebb77ab83dc639c39c3e60ba",
+      "head": "0bd3643c941cefc3a9f8b8d71e1c1cd99e56eb84",
       "outcome": "no-change",
-      "reason": "Changed only the synthetic Git test helper to clear inherited repository context for nested fixture repositories. The change does not alter Elysia implementation guidance or skill planning artifacts.",
+      "reason": "Changed only the synthetic Git test helper to clear inherited repository context while running fixture and manifest assertions. This does not change Elysia guidance or skill planning artifacts.",
       "evidence": [
-        "Changed: scripts/tests/podman-source-manifest.test.ts at 786fe45b576d1b23ebb77ab83dc639c39c3e60ba"
+        "Changed: scripts/tests/podman-source-manifest.test.ts at 0bd3643c941cefc3a9f8b8d71e1c1cd99e56eb84"
       ]
     }
   }

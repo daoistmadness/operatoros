@@ -15,6 +15,23 @@ function git(root: string, args: string[], inheritedEnvironment = process.env): 
   return execFileSync("git", args, { cwd: root, encoding: "utf8", env: environment }).trim();
 }
 
+function withGitRepositoryEnvironmentCleared<T>(run: () => T): T {
+  const inherited = new Map<string, string | undefined>();
+  for (const name of gitLocalEnvironmentNames) {
+    inherited.set(name, process.env[name]);
+    delete process.env[name];
+  }
+
+  try {
+    return run();
+  } finally {
+    for (const [name, value] of inherited) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+}
+
 function createRepo(): string {
   const root = mkdtempSync(join(tmpdir(), "operatoros-source-manifest-test-"));
   git(root, ["init", "--quiet", "-b", "main"]);
@@ -67,7 +84,7 @@ describe("Podman source manifest", () => {
       chmodSync(join(root, "plain.txt"), 0o664);
       chmodSync(join(root, "run.sh"), 0o775);
 
-      const manifest = createSourceManifest(root);
+      const manifest = withGitRepositoryEnvironmentCleared(() => createSourceManifest(root));
       expect(manifest.commit).toBe(commit);
       expect(manifest.tree).toBe(tree);
       expect(manifest.files).toEqual([
@@ -79,7 +96,7 @@ describe("Podman source manifest", () => {
       expect(manifest.files.some((entry) => entry.path === "build/stale.txt")).toBe(false);
       expect(readFileSync(join(root, "plain.txt"), "utf8")).toBe("committed content\n");
       chmodSync(join(root, "run.sh"), 0o644);
-      expect(() => createSourceManifest(root)).toThrow("executable bit differs");
+      expect(() => withGitRepositoryEnvironmentCleared(() => createSourceManifest(root))).toThrow("executable bit differs");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -91,13 +108,13 @@ describe("Podman source manifest", () => {
       writeFileSync(join(root, "source.txt"), "committed\n");
       git(root, ["add", "source.txt"]);
       git(root, ["commit", "--quiet", "-m", "synthetic source"]);
-      expect(() => assertCleanWorktree(root)).not.toThrow();
+      expect(() => withGitRepositoryEnvironmentCleared(() => assertCleanWorktree(root))).not.toThrow();
 
       writeFileSync(join(root, "source.txt"), "modified\n");
-      expect(() => assertCleanWorktree(root)).toThrow("must be clean");
+      expect(() => withGitRepositoryEnvironmentCleared(() => assertCleanWorktree(root))).toThrow("must be clean");
       writeFileSync(join(root, "source.txt"), "committed\n");
       writeFileSync(join(root, "untracked.ts"), "untracked source\n");
-      expect(() => createSourceManifest(root)).toThrow("must be clean");
+      expect(() => withGitRepositoryEnvironmentCleared(() => createSourceManifest(root))).toThrow("must be clean");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
