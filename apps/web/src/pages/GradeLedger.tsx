@@ -1,4 +1,4 @@
-import React, { Component, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
 import { AlertTriangle, BookOpenCheck, Database, GraduationCap, RefreshCw, ShieldCheck } from "lucide-react";
@@ -22,6 +22,12 @@ function getErrorMessage(error: unknown): string {
 function queryNumber(value: string | null): number | null {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+interface GradeLedgerScope {
+  academicYearId: number | null;
+  jenjangId: number;
+  assessmentSessionId: number | null;
 }
 
 async function fetchLedgerRows(academicYearId: number, jenjangId: number, assessmentSessionId: number): Promise<GradeMatrixEnrollment[]> {
@@ -110,6 +116,17 @@ function GradeLedgerContent() {
   const [componentError, setComponentError] = useState("");
   const [error, setError] = useState<string>("");
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const ledgerRequestSequence = useRef(0);
+  const selectedLedgerScope = useRef<GradeLedgerScope | null>(null);
+
+  useLayoutEffect(() => {
+    selectedLedgerScope.current = {
+      academicYearId: selectedAcademicYearId,
+      jenjangId,
+      assessmentSessionId: selectedAssessmentSessionId,
+    };
+    ledgerRequestSequence.current += 1;
+  }, [jenjangId, selectedAcademicYearId, selectedAssessmentSessionId]);
 
   const selectedAcademicYear = useMemo(
     () => academicYears.find((year) => year.id === selectedAcademicYearId) ?? null,
@@ -211,6 +228,24 @@ function GradeLedgerContent() {
   }, [requestedSubjectId]);
 
   const loadLedgerData = useCallback(async () => {
+    const requestScope: GradeLedgerScope = {
+      academicYearId: selectedAcademicYearId,
+      jenjangId,
+      assessmentSessionId: selectedAssessmentSessionId,
+    };
+    const isSelectedScope = () => {
+      const selectedScope = selectedLedgerScope.current;
+      return selectedScope?.academicYearId === requestScope.academicYearId
+        && selectedScope.jenjangId === requestScope.jenjangId
+        && selectedScope.assessmentSessionId === requestScope.assessmentSessionId;
+    };
+    if (!isSelectedScope()) return;
+
+    const requestSequence = ++ledgerRequestSequence.current;
+    const isCurrentRequest = () => {
+      return requestSequence === ledgerRequestSequence.current && isSelectedScope();
+    };
+
     if (!selectedAcademicYearId || selectedAssessmentSessionId === null || !jenjangId) {
       setLedgerRows([]);
       setIsLoading(false);
@@ -222,13 +257,15 @@ function GradeLedgerContent() {
 
     try {
       const ledgerPayload = await fetchLedgerRows(selectedAcademicYearId, jenjangId, selectedAssessmentSessionId);
+      if (!isCurrentRequest()) return;
       setLedgerRows(ledgerPayload);
     } catch (loadError) {
+      if (!isCurrentRequest()) return;
       console.error("Grade Ledger matrix failure", loadError);
       setError(getErrorMessage(loadError));
       setLedgerRows([]);
     } finally {
-      setIsLoading(false);
+      if (isCurrentRequest()) setIsLoading(false);
     }
   }, [jenjangId, selectedAcademicYearId, selectedAssessmentSessionId]);
 
