@@ -128,6 +128,25 @@ jobs:
       - name: Release bundle rejection and workflow policy tests
         working-directory: ${{ github.workspace }}
         run: python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
+      - name: Pinned Trivy OCI compatibility regression
+        working-directory: ${{ github.workspace }}
+        env:
+          SCANNER_TEST_OUTPUT: ${{ runner.temp }}/operatoros-scanner-compat
+        run: python3 scripts/tests/check_trivy_oci.py
+      - name: Retain scanner compatibility failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: scanner-compatibility-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/operatoros-scanner-compat/before.log
+            ${{ runner.temp }}/operatoros-scanner-compat/reports/*.json
+            ${{ runner.temp }}/operatoros-scanner-compat/reports/*.log
+            ${{ runner.temp }}/operatoros-scanner-compat/reports/*.txt
+            ${{ runner.temp }}/operatoros-scanner-compat/bad-reports/*.json
+            ${{ runner.temp }}/operatoros-scanner-compat/bad-reports/*.txt
+          if-no-files-found: warn
+          retention-days: 7
       - name: Verify minimatch override compatibility
         working-directory: ${{ github.workspace }}
         run: |
@@ -421,6 +440,18 @@ jobs:
             ${{ runner.temp }}/operatoros-release.tar.sha256
           if-no-files-found: error
           retention-days: 90
+
+      - name: Retain build and scan failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-release-diagnostics-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/release-diagnostics/*.json
+            ${{ runner.temp }}/release-diagnostics/*.log
+            ${{ runner.temp }}/release-diagnostics/*.txt
+          if-no-files-found: warn
+          retention-days: 7
 
 
   changes:

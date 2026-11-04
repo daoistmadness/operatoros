@@ -39,7 +39,12 @@ def members(archive):
 
 def image_metadata(data, sha):
     with tarfile.open(fileobj=io.BytesIO(data)) as archive:
-        blobs = members(archive)
+        return layout_metadata(members(archive), sha)
+
+
+def layout_metadata(blobs, sha):
+    if json.loads(blobs['oci-layout']) != {'imageLayoutVersion': '1.0.0'}:
+        raise ValueError('invalid OCI layout version')
     def blob(descriptor):
         value = descriptor['digest']
         if not re.fullmatch(r'sha256:[0-9a-f]{64}', value):
@@ -49,10 +54,12 @@ def image_metadata(data, sha):
             raise ValueError('OCI content digest/size mismatch')
         return content
     index = json.loads(blobs['index.json'])
-    if len(index['manifests']) != 1:
+    if index.get('schemaVersion') != 2 or len(index['manifests']) != 1:
         raise ValueError('expected one amd64 image')
     descriptor = index['manifests'][0]
     manifest = json.loads(blob(descriptor))
+    if manifest.get('schemaVersion') != 2:
+        raise ValueError('invalid OCI manifest schema')
     config = json.loads(blob(manifest['config']))
     for layer in manifest['layers']:
         blob(layer)
@@ -62,6 +69,58 @@ def image_metadata(data, sha):
     if (config['architecture'], config['os']) != ('amd64', 'linux') or labels['org.opencontainers.image.revision'] != sha or labels['org.operatoros.source.dirty'] != 'false':
         raise ValueError('API image source/platform mismatch')
     return {'manifest_digest': descriptor['digest'], 'image_id': manifest['config']['digest'], 'source_tree_sha256': labels['org.operatoros.source.tree-sha256'], 'platform': 'linux/amd64'}
+
+
+
+def logged(command, path, **kwargs):
+    with open(path, 'w') as output:
+        result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, **kwargs)
+    print(Path(path).read_text(errors='replace'), flush=True)
+    result.check_returncode()
+
+
+def security_reports(reports, expected_image):
+    scan = json.loads((reports / 'scan.json').read_bytes())
+    sbom = json.loads((reports / 'sbom.cdx.json').read_bytes())
+    if not isinstance(scan.get('Results'), list) or scan.get('Metadata', {}).get('ImageID') != expected_image['image_id']:
+        raise ValueError('scan report image identity/results mismatch')
+    properties = sbom.get('metadata', {}).get('component', {}).get('properties', [])
+    image_ids = [p.get('value') for p in properties if p.get('name') == 'aquasecurity:trivy:ImageID']
+    if sbom.get('bomFormat') != 'CycloneDX' or not isinstance(sbom.get('components'), list) or image_ids != [expected_image['image_id']]:
+        raise ValueError('invalid CycloneDX report')
+
+
+def scan_image(archive_path, sha, layout, reports, engine):
+    reports.mkdir(parents=True, exist_ok=True)
+    try:
+        data = archive_path.read_bytes()
+        metadata = {'archive_sha256': digest(data), 'archive_size_bytes': len(data), 'source_commit': sha, 'scanner': SCANNER}
+        (reports / 'archive.json').write_text(json.dumps(metadata, indent=2) + '\n')
+        with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+            blobs = members(archive)
+        expected_image = layout_metadata(blobs, sha)
+        layout.mkdir()
+        for name, content in blobs.items():
+            if name not in ('index.json', 'oci-layout') and not re.fullmatch(r'blobs/sha256/[0-9a-f]{64}', name):
+                raise ValueError('unexpected OCI layout member: ' + name)
+            target = layout / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open('xb') as output:
+                output.write(content)
+        # Scan only the validated, read-only layout; both reports use these exact blobs.
+        metadata['image'] = expected_image
+        (reports / 'archive.json').write_text(json.dumps(metadata, indent=2) + '\n')
+        logged([engine, 'run', '--rm', SCANNER, '--version'], reports / 'trivy-version.txt')
+        for fmt, filename in [('json', 'scan.json'), ('cyclonedx', 'sbom.cdx.json')]:
+            logged([engine, 'run', '--rm', '-v', str(layout) + ':/image:ro', '-v', str(reports) + ':/reports', SCANNER, 'image', '--input', '/image', '--scanners', 'vuln', '--format', fmt, '--output', '/reports/' + filename], reports / (filename + '.log'))
+        security_reports(reports, expected_image)
+        extracted = {name: (layout / name).read_bytes() for name in blobs}
+        if extracted != blobs or digest(archive_path.read_bytes()) != metadata['archive_sha256']:
+            raise ValueError('scan input changed during scanning')
+        return expected_image
+    except Exception as error:
+        (reports / 'scan-error.txt').write_text(str(error) + '\n')
+        raise
 
 
 def validate(files, sha):
@@ -119,12 +178,24 @@ def build(output, engine):
     run('bun', 'scripts/podman-source-manifest.mjs', 'assert-clean', '.')
     output = Path(output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
+    diagnostics = output.parent / 'release-diagnostics'
+    diagnostics.mkdir(exist_ok=True)
+    try:
+        tools = {tool: run(tool, '--version') for tool in ('bun', 'node', 'mise', engine)}
+        (diagnostics / 'context.json').write_text(json.dumps({'source_commit': sha, 'tools': tools, 'scanner': SCANNER}, indent=2) + '\n')
+        build_artifacts(output, engine, sha, diagnostics, tools)
+    except Exception as error:
+        (diagnostics / 'build-error.txt').write_text(str(error) + '\n')
+        raise
+
+
+def build_artifacts(output, engine, sha, diagnostics, tools):
     with tempfile.TemporaryDirectory(prefix='operatoros-release-') as temp:
         work = Path(temp)
         run('bun', 'scripts/podman-source-manifest.mjs', 'write-manifest', '.', str(work / 'source.json'))
         source_hash = digest((work / 'source.json').read_bytes())
         env = dict(os.environ, OPERATOROS_DISABLE_ENV_FILES='true', VITE_API_BASE_URL='', TZ='UTC')
-        subprocess.run(['bun', 'run', 'build'], cwd='apps/web', env=env, check=True)
+        logged(['bun', 'run', 'build'], diagnostics / 'spa-build.log', cwd='apps/web', env=env)
         run('git', 'diff', '--exit-code', '--', 'apps/web/src/routeTree.gen.ts')
         run('bun', 'scripts/podman-source-manifest.mjs', 'assert-clean', '.')
         epoch = int(run('git', 'show', '-s', '--format=%ct', 'HEAD'))
@@ -139,12 +210,13 @@ def build(output, engine):
         command = [engine, 'build', '--platform', 'linux/amd64', '-f', 'deploy/podman/Containerfile.api', '--build-arg', 'VCS_REF=' + sha, '--build-arg', 'SOURCE_TREE_SHA256=' + source_hash, '--build-arg', 'SOURCE_DIRTY=false', '-t', image, '.']
         if engine == 'podman':
             command[2:2] = ['--ignorefile', 'deploy/podman/.containerignore']
-        subprocess.run(command, check=True)
-        subprocess.run([engine, 'save', '--format', 'oci-archive', '-o', str(work / 'operatoros-api.oci.tar'), image], check=True)
-        for fmt, filename in [('cyclonedx', 'sbom.cdx.json'), ('json', 'scan.json')]:
-            subprocess.run([engine, 'run', '--rm', '-v', str(work) + ':/out', SCANNER, 'image', '--input', '/out/operatoros-api.oci.tar', '--scanners', 'vuln', '--format', fmt, '--output', '/out/' + filename], check=True)
+        logged(command, diagnostics / 'api-build.log')
+        logged([engine, 'save', '--format', 'oci-archive', '-o', str(work / 'operatoros-api.oci.tar'), image], diagnostics / 'oci-export.log')
+        scan_image(work / 'operatoros-api.oci.tar', sha, work / 'oci-layout', diagnostics, engine)
+        for filename in ('scan.json', 'sbom.cdx.json'):
+            (work / filename).write_bytes((diagnostics / filename).read_bytes())
         files = {name: (work / name).read_bytes() for name in FILES - {'manifest.json', 'SHA256SUMS'}}
-        manifest = {'schema_version': 1, 'repository': REPO, 'source_commit': sha, 'source_ref': 'refs/heads/main', 'workflow': WORKFLOW, 'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'tools': {tool: run(tool, '--version') for tool in ('bun', 'node', 'mise', engine)}, 'lockfiles': {name: digest(Path(name).read_bytes()) for name in ('bun.lock', 'mise.lock')}, 'scanner': SCANNER, 'image': image_metadata(files['operatoros-api.oci.tar'], sha), 'artifacts': {name: digest(data) for name, data in files.items()}, 'security_scope': 'Trivy inventory; embedded Bun SQLite requires separate assessment'}
+        manifest = {'schema_version': 1, 'repository': REPO, 'source_commit': sha, 'source_ref': 'refs/heads/main', 'workflow': WORKFLOW, 'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'tools': tools, 'lockfiles': {name: digest(Path(name).read_bytes()) for name in ('bun.lock', 'mise.lock')}, 'scanner': SCANNER, 'image': image_metadata(files['operatoros-api.oci.tar'], sha), 'artifacts': {name: digest(data) for name, data in files.items()}, 'security_scope': 'Trivy inventory; embedded Bun SQLite requires separate assessment'}
         files['manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode()
         files['SHA256SUMS'] = ''.join(f'{digest(files[name])}  {name}\n' for name in sorted(files)).encode()
         validate(files, sha)
