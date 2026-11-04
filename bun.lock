@@ -58,12 +58,10 @@
         "@unovis/ts": "1.7.1",
         "chart.js": "4.5.1",
         "class-variance-authority": "0.7.1",
-        "clsx": "2.1.1",
         "lucide-react": "0.471.2",
         "react": "19.2.7",
         "react-chartjs-2": "5.3.1",
         "react-dom": "19.2.7",
-        "tailwind-merge": "2.6.1",
       },
       "devDependencies": {
         "@playwright/test": "1.61.1",
@@ -126,7 +124,7 @@
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
         "lucide-react": "0.471.2",
-        "tailwind-merge": "2.6.1",
+        "tailwind-merge": "3.5.0",
       },
       "devDependencies": {
         "@types/react": "19.2.17",
@@ -1348,7 +1346,7 @@
 
     "supports-preserve-symlinks-flag": ["supports-preserve-symlinks-flag@1.0.0", "", {}, "sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w=="],
 
-    "tailwind-merge": ["tailwind-merge@2.6.1", "", {}, "sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ=="],
+    "tailwind-merge": ["tailwind-merge@3.5.0", "", {}, "sha512-I8K9wewnVDkL1NTGoqWmVEIlUcB9gFriAEkXkfCjX5ib8ezGxtR3xD7iZIxrfArjEsH7F1CHD4RFUtxefdqV/A=="],
 
     "tailwindcss": ["tailwindcss@4.2.2", "", {}, "sha512-KWBIxs1Xb6NoLdMVqhbhgwZf2PGBpPEiwOqgI4pFIYbNTfBXiKYyWoTsXgBQ9WFg/OlhnvHaY+AEpW7wSmFo2Q=="],
 
