@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "64bd96cadd3029e1b0313cf6205f7e44a6bd21466d29fd4c3b6ccb2351934810",
+      "fingerprint": "4f161d3fb0b906f250c9f0ebbadaaba8ce99b344c3e2b6758097da80b533cdd5",
       "snapshot": {
-        "CHANGELOG.md": "917b89ad473e34d995c53f7d38440231cd6f5a196156222424c53c52645d8c56"
+        "CHANGELOG.md": "164da3ebfbee969f134c09ef234c1d825cacc73ea419111c38be3760f678f8f4"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "d197453d206c2679cec1f9936a038d5d7fd0cd75",
       "outcome": "no-change",
-      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
+      "reason": "Attach assigned PR #355 to the release-bundle changelog entry; documentation-only identifier change, no skill or planning guidance impact. Bundle rejection/policy tests and documentation checks already passed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: CHANGELOG.md at d197453d206c2679cec1f9936a038d5d7fd0cd75"
       ]
     },
     "source:COMMANDS.md": {
