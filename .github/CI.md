@@ -67,3 +67,9 @@ from the event SHA, attests the bundle, tests an isolated consumer, and retains
 it for 90 days. No scheduled, push, or PR event publishes a bundle. See the
 [release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
 security limitations, helper adoption, and CI rollback.
+
+The API job also runs the pinned Trivy OCI-layout compatibility test on a
+synthetic image in an isolated rootless store. It creates no release bundle.
+Failed compatibility or release build/scan steps retain only allowlisted
+non-sensitive JSON/log/text diagnostics for seven days; scanner failures remain
+blocking. Both scanner report identities must match the exported image config.

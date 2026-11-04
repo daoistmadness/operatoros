@@ -81,8 +81,27 @@ pipeline proves provenance for the retained bytes, not byte-identical rebuilds.
 
 ## Security evidence
 
-A digest-pinned Trivy image scans the exported OCI archive and produces CycloneDX
-and JSON reports. Scan findings remain visible; producing a report does not
+The pinned Trivy 0.76.1 image cannot consume Podman's OCI tar directly. The
+builder verifies the archive's OCI layout version, single-image manifest,
+config/layer hashes, platform and source labels before extracting only OCI
+layout files into an isolated temporary directory. Trivy scans that directory
+through a read-only mount. JSON and CycloneDX must each identify the archive's
+same config ID, and the layout/archive bytes must remain unchanged after scans.
+Missing, malformed or mismatched reports and scanner errors fail packaging.
+The release OCI archive and static SPA formats are unchanged.
+
+Run the real scanner compatibility test with
+`python3 scripts/tests/check_trivy_oci.py`. It uses a separate rootless Podman
+store and a tiny synthetic Alpine OCI fixture. It reproduces tar-input failure,
+requires successful directory scans in both formats, and rejects an invalid
+archive. PR/push CI runs this test without creating or attesting a release bundle.
+The fixture is an inventory test, not application runtime or release evidence.
+
+Build/scan failure uploads only non-sensitive JSON/log/text diagnostics for seven
+days: source/tool context, scanner version/error, archive size/hash/image identity,
+build/export logs, and available scan reports. Raw OCI/SPA archives, credentials,
+consumer environment files and databases are excluded. An incomplete bundle is
+never uploaded as a release. Full bundle retention remains 90 days. Scan findings remain visible; producing a report does not
 approve security risk. Trivy may omit libraries statically linked into Bun.
 Bun 1.4.4's embedded SQLite/FTS5 finding remains a separate security assessment;
 the new bundle is not production authorization or a security exception.

@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "2841a0a24355675b4fc3d6154ec32df26e11fa8b1b390c5d5cb5d644880f917c",
+      "fingerprint": "d146e30c4df9cabee35f2f4b0daa9129e3125a579aadca7653739a638d028c8e",
       "snapshot": {
-        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
-        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
+        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
+        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "ec845acb676699b6ba92ee75069bdbe24e4c438e",
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
       "outcome": "no-change",
-      "reason": "Reviewed the dependency change at ec845acb676699b6ba92ee75069bdbe24e4c438e. It changes Tailwind class merging only in apps/web and packages/ui; the Elysia skill's backend version, routes, runtime, and development task did not change. The new audit and regression cases describe this scoped dependency work, not a reusable Elysia skill task. The existing planning records explicitly limit coverage to the Elysia backend and remain accurate, so no skill or planning edits are needed.",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
-        "Changed: bun.lock at ec845acb676699b6ba92ee75069bdbe24e4c438e"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "5a692e446c9772ec16125c581ffbd0c26c90e66828dda1bfe259f163e2c0a7c8",
+      "fingerprint": "54f93bce23095f38e0d427937a19dc44ffcfffa600e4d44ca4187a8229127b7f",
       "snapshot": {
-        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
-        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
+        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
+        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "ec845acb676699b6ba92ee75069bdbe24e4c438e",
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
       "outcome": "no-change",
-      "reason": "Reviewed the dependency change at ec845acb676699b6ba92ee75069bdbe24e4c438e. It changes Tailwind class merging only in apps/web and packages/ui; the Elysia skill's backend version, routes, runtime, and development task did not change. The new audit and regression cases describe this scoped dependency work, not a reusable Elysia skill task. The existing planning records explicitly limit coverage to the Elysia backend and remain accurate, so no skill or planning edits are needed.",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
-        "Changed: bun.lock at ec845acb676699b6ba92ee75069bdbe24e4c438e"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c6a411b3648ac4ee4b9248625e40b4a82e48dbd18aa71289f51cb5b635171ee7",
+      "fingerprint": "ffbd004ceeed98d9adf834cfafffa0e33577abef61e3b9d3dbe1ea0fe882663d",
       "snapshot": {
-        "CHANGELOG.md": "7e2ad0abed2c7793b2831357b19f0fa4d219b17fca37accb7a6a33bed85adf39"
+        "CHANGELOG.md": "26fb122d5905e57bad0746e86a71106ac766372f8d370680ee52e2ba89a53ec4"
       },
-      "head": "42736a7098a36fe75aa243b873c59123e1fa959e",
+      "head": "6925210739b979098467ef814c86ec9945ab4476",
       "outcome": "no-change",
-      "reason": "Reviewed changelog identifier update at 42736a7098a36fe75aa243b873c59123e1fa959e: added the assigned PR #357 to the existing Unreleased dependency bullet. This is documentation metadata only; it does not change backend behavior or Elysia guidance, and the existing planning records remain accurate.",
+      "reason": "Updating the scanner changelog attribution to the successor PR number is release metadata only; it does not change Elysia behavior or agent skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 42736a7098a36fe75aa243b873c59123e1fa959e"
+        "Changed: CHANGELOG.md at 6925210739b979098467ef814c86ec9945ab4476"
       ]
     },
     "source:COMMANDS.md": {
@@ -9927,27 +9927,27 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "b32f12bca8ee187a8e34a4c423c31644f03eb1a0e7437dbeff93a6a47d301d8c",
+      "fingerprint": "49a5b8db79bdd7d5d1009daba1b3d2e4d537a6f36788c26e1f7f46cf3cbf2c53",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "efb86b60595f7c7b7d0139a398f241b357ba586c5fa580c976cc99d3c0c2b358"
+        "docs/runbooks/release-bundles.md": "5beb47efad750d9c9ef159de4f013dc0b317a2cbb6106cc92eeb22f3b0a0a1e6"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
       "outcome": "no-change",
-      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: docs/runbooks/release-bundles.md at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     },
     "source:scripts/release-bundle.py": {
-      "fingerprint": "7ba7af022a3259d11eb64a11c7cc05780c523c5bbb8c2e0bc76f8146be339b44",
+      "fingerprint": "db3785fb9d8834c0090faf03c4222d62230da1be3a0fdaaf3b613bca167be532",
       "snapshot": {
-        "scripts/release-bundle.py": "651f69c45ddccd716bb47aef5976ff9994d9b79b17079e4df98326353d3aafd2"
+        "scripts/release-bundle.py": "9b173a1cbff91e706047750f3072e913f137b3fef29bc82177053b5f8295225d"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
       "outcome": "no-change",
-      "reason": "Artifact build logs now remain visible in CI; nine bundle verification and workflow policy tests pass. These CI/scripts/docs-only changes do not affect the Elysia skill or its existing planning records; no source API, dependency, auth or schema changes. Live attestation and image-consumer execution remain unverified until authorized main dispatch.",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
-        "Changed: scripts/release-bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/release-bundle.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     },
     "source:scripts/test-release-consumer.sh": {
@@ -9963,15 +9963,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "6c2ee4f0c418e5c450014fbcc5b1d2deb80f01d629cd6352aeb781bbfd35ec23",
+      "fingerprint": "efb76e3c34e593d9ed9e11ca4f5a29c287b4368cc25b685605a0e43cf80b350e",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "77cffe407816dc6dc3e4a8559c7deba9bb0c6196522dc1ae907fa937a25b997b"
+        "scripts/tests/test_release_bundle.py": "0d10726be41970f392e6f860b593eef647d6d28b534436243decc77ee799b17e"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
       "outcome": "no-change",
-      "reason": "Release-bundle implementation validates source-bound OCI and static archives and GitHub workflow provenance; tests passed including archive corruption and mismatched identities. No Elysia library behavior, source mapping, or skill/planning guidance changes are needed. Main-only end-to-end publication is intentionally not run.",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/tests/test_release_bundle.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10020,6 +10020,18 @@
       "reason": "Reviewed the dependency change at ec845acb676699b6ba92ee75069bdbe24e4c438e. It changes Tailwind class merging only in apps/web and packages/ui; the Elysia skill's backend version, routes, runtime, and development task did not change. The new audit and regression cases describe this scoped dependency work, not a reusable Elysia skill task. The existing planning records explicitly limit coverage to the Elysia backend and remain accurate, so no skill or planning edits are needed.",
       "evidence": [
         "Changed: packages/ui/src/lib/utils.test.ts at ec845acb676699b6ba92ee75069bdbe24e4c438e"
+      ]
+    },
+    "source:scripts/tests/check_trivy_oci.py": {
+      "fingerprint": "9c8a95005c3aadfbdf6c08fbf99558bf09409380cc8b503376f1afaf2eb2ad8d",
+      "snapshot": {
+        "scripts/tests/check_trivy_oci.py": "a2595312916cdb700582c45eab0dd75a5481011f7f51f8f543e0f15a6c9bdf5c"
+      },
+      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "outcome": "no-change",
+      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "evidence": [
+        "Changed: scripts/tests/check_trivy_oci.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
       ]
     }
   }
