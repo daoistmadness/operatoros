@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Align class conflict resolution with Tailwind CSS 4 and share the class utility between the web app and UI package.
 - Build checksummed, attested API and static SPA release bundles through manual main-only CI, with verification before container import (#355).
 
 - Add unified `./scripts/dev`, `./scripts/check`, `./scripts/doctor`, and `./scripts/stop` commands with Git worktree-integrity diagnostics, protected-listener preflight guidance, and verified session shutdown.

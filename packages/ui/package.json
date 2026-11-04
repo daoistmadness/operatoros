@@ -16,7 +16,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "0.471.2",
-    "tailwind-merge": "2.6.1"
+    "tailwind-merge": "3.5.0"
   },
   "peerDependencies": {
     "react": ">=19 <20",
