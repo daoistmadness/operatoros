@@ -587,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "ca26923e6eb815dc32b3fb181fdf11a1fa13dc6fad6c6a058b303e3aeb661353",
+      "fingerprint": "6805b5f7ffcac06aa146526f1ab72ae870bf24e02559a33c618f8699e3e93f7a",
       "snapshot": {
-        "README.md": "b45057696641454c7b6e40a6c975ee694241e96921fc96c3f16525cfac096dae"
+        "README.md": "201f19b56a06ef5fabebb39351a5da23a6bc1760eea2543b7c6d99a4d8caad17"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
       "evidence": [
-        "Changed: README.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: README.md at 56744b4f294f7e5b6e27d0889e35159659e84540"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1744,16 +1744,15 @@
       ]
     },
     "source:scripts/operatoros-dev-runtime.ts": {
-      "fingerprint": "06023320a34c5f51a3fd4366178e28547efca22a3e3ddc6cec3b0a9cf82532c0",
+      "fingerprint": "df66286d6c7a7b64898d12bda7c7762872cf30ab68139a15430ad8895ffb628d",
       "snapshot": {
-        "scripts/operatoros-dev-runtime.ts": "313a4b02c7388b3d5a31247239b6bcc3b9cc7007c156b1634878f8983a092d8a"
+        "scripts/operatoros-dev-runtime.ts": "c0b22da089fd10bf2e1e2c1b97bf22472e2f9bdaa68ee45a79006fa81aa68c6b"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
       "outcome": "no-change",
-      "reason": "Reviewed scripts/operatoros-dev-runtime.ts; it does not change registered Agent Skills or generated skill documentation.",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
       "evidence": [
-        "Reviewed candidate path scripts/operatoros-dev-runtime.ts.",
-        "No Agent Skills guidance or generated skill documentation is changed."
+        "Changed: scripts/operatoros-dev-runtime.ts at 56744b4f294f7e5b6e27d0889e35159659e84540"
       ]
     },
     "source:start-dev.sh": {
@@ -2946,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "5ba11f505b33ebda6434d08bec7e5a055b818c452d997c1d9442fba1ea4362ed",
+      "fingerprint": "9ac6f2019e0f2b5e2b24b419afbe899a59f88205b9c739b0804ac1b269ac3419",
       "snapshot": {
-        "CHANGELOG.md": "9f0e4cf31d4e63acb079d10b36b8c1c924de23eda1748f7fa5b06be343f2c277"
+        "CHANGELOG.md": "9e358772ccd52825d6c4c92cdf86cfbdd71f896a2e95fe9ba3c758f778b507f2"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "0922b099b7a6d5ebde61c545dc29e09b0cfa351c",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Changelog entry for dev tooling only; no guidance change.",
       "evidence": [
-        "Changed: CHANGELOG.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: CHANGELOG.md at 0922b099b7a6d5ebde61c545dc29e09b0cfa351c"
       ]
     },
     "source:COMMANDS.md": {
@@ -9867,6 +9866,66 @@
       "reason": "Changed only the synthetic Git test helper to clear inherited repository context while running fixture and manifest assertions. This does not change Elysia guidance or skill planning artifacts.",
       "evidence": [
         "Changed: scripts/tests/podman-source-manifest.test.ts at 0bd3643c941cefc3a9f8b8d71e1c1cd99e56eb84"
+      ]
+    },
+    "source:scripts/check": {
+      "fingerprint": "9d21126bc623e2de174877dc5ace73e1f3da2cc5adf9f0e0aa10a3e96fa99293",
+      "snapshot": {
+        "scripts/check": "41278fed7a68022bc460d42decbc56d96ebbec6b2bedad9702737440420eef7c"
+      },
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "outcome": "no-change",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "evidence": [
+        "Changed: scripts/check at 56744b4f294f7e5b6e27d0889e35159659e84540"
+      ]
+    },
+    "source:scripts/dev": {
+      "fingerprint": "19db76d67a993ee85831067cc61631f64111a82e356d6ddcc188da126da9fa72",
+      "snapshot": {
+        "scripts/dev": "45707aaf048db81f0a94f20b7fa47bb652942ee4023b50d06cd6a8944bc7212f"
+      },
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "outcome": "no-change",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "evidence": [
+        "Changed: scripts/dev at 56744b4f294f7e5b6e27d0889e35159659e84540"
+      ]
+    },
+    "source:scripts/doctor": {
+      "fingerprint": "cbe0a22c2b23f102af03c997066447ea1df2dfae7618853c214e160c19616783",
+      "snapshot": {
+        "scripts/doctor": "2f9cd0e1b852215043446ad1cd8064570820bf54149b6f43be6fdecf2acff8f1"
+      },
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "outcome": "no-change",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "evidence": [
+        "Changed: scripts/doctor at 56744b4f294f7e5b6e27d0889e35159659e84540"
+      ]
+    },
+    "source:scripts/stop": {
+      "fingerprint": "517fd2857ea11dc0fec50adecc3ab89d6170c04546d48fd6f97e9262a0f97349",
+      "snapshot": {
+        "scripts/stop": "0d4f101620ff69ba769966fbd59cea646ab94423bd9f856bac2e91234ad349cc"
+      },
+      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "outcome": "no-change",
+      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "evidence": [
+        "Changed: scripts/stop at 56744b4f294f7e5b6e27d0889e35159659e84540"
+      ]
+    },
+    "source:scripts/tests/dev-scripts.test.ts": {
+      "fingerprint": "a83217c8beae3cb927f38e9fbac27ead9f9979c3ede6edd0b364f2764664bbc7",
+      "snapshot": {
+        "scripts/tests/dev-scripts.test.ts": "3908868821f784cf681719a860f891ed5a2af1d9fcee3f0748aa55d57afa9b45"
+      },
+      "head": "287a6fad337599c1ee675f21af32e2a4a95cd476",
+      "outcome": "no-change",
+      "reason": "Additional dev-script regression tests only; no guidance change.",
+      "evidence": [
+        "Changed: scripts/tests/dev-scripts.test.ts at 287a6fad337599c1ee675f21af32e2a4a95cd476"
       ]
     }
   }

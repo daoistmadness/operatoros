@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+# OperatorOS developer diagnostics.
+#
+# Git-integrity checks run first so a misdirected checkout fails loudly and
+# early; normal uncommitted work is allowed and only reported. The existing
+# toolchain/prerequisite/development-database doctor (`mise run doctor`) then
+# runs unchanged.
+#
+# Usage:
+#   ./scripts/doctor              # Git integrity + ports + full toolchain doctor
+#   ./scripts/doctor --git-only   # Git integrity checks only (used by tests)
+set -Eeuo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+GIT_ONLY=0
+for argument in "$@"; do
+  case "$argument" in
+    --git-only) GIT_ONLY=1 ;;
+    --help|-h)
+      printf '%s\n' 'Usage: ./scripts/doctor [--git-only]' '' \
+        'Verifies Git repository mapping, index/HEAD agreement, working-tree state,' \
+        'development ports, and the pinned toolchain plus development database.'
+      exit 0
+      ;;
+    *)
+      printf 'Unknown argument: %s\n' "$argument" >&2
+      exit 2
+      ;;
+  esac
+done
+
+fail() {
+  local code="$1" message="$2" next="$3"
+  printf '\nFAIL: %s\n  %s\nNext: %s\n' "$code" "$message" "$next" >&2
+  exit 1
+}
+
+# 1. Environment overrides can silently redirect Git away from this checkout.
+while IFS= read -r name; do
+  [[ -n "$name" ]] || continue
+  if [[ -n "${!name-}" ]]; then
+    fail "GIT_ENVIRONMENT_OVERRIDE" \
+      "$name is set in this shell and can redirect Git to a different repository or work tree." \
+      "unset $name and re-run ./scripts/doctor"
+  fi
+done < <(git rev-parse --local-env-vars 2>/dev/null || true)
+
+# 2. A stray core.worktree makes Git read another checkout (the Phase 0 defect).
+configured_worktree="$(git -C "$ROOT" config --local --get core.worktree 2>/dev/null || true)"
+if [[ -n "$configured_worktree" ]]; then
+  fail "GIT_CORE_WORKTREE_SET" \
+    "core.worktree is set to '$configured_worktree'; Git commands in $ROOT may read and modify a different checkout." \
+    "git config --local --unset core.worktree"
+fi
+
+# 3. The checkout must resolve to itself.
+[[ -e "$ROOT/.git" ]] || fail "GIT_CHECKOUT_INVALID" \
+  "$ROOT is not a Git checkout." \
+  "run ./scripts/doctor from a repository checkout"
+
+toplevel="$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+[[ -n "$toplevel" ]] || fail "GIT_TOPLEVEL_UNAVAILABLE" \
+  "Git cannot resolve a working tree for $ROOT." \
+  "inspect $ROOT/.git and run git status"
+toplevel="$(cd -- "$toplevel" && pwd -P)"
+[[ "$toplevel" == "$ROOT" ]] || fail "GIT_TOPLEVEL_MISMATCH" \
+  "Git resolved this checkout to '$toplevel' instead of '$ROOT'." \
+  "git config --local --unset core.worktree; unset GIT_DIR GIT_WORK_TREE"
+
+git -C "$ROOT" rev-parse --absolute-git-dir >/dev/null 2>&1 || fail "GIT_DIR_UNREADABLE" \
+  "The Git directory cannot be resolved." \
+  "inspect $ROOT/.git and restore the checkout"
+
+# 4. HEAD and index must be readable and agree with each other.
+head_sha="$(git -C "$ROOT" rev-parse --verify HEAD 2>/dev/null || true)"
+[[ -n "$head_sha" ]] || fail "GIT_HEAD_UNAVAILABLE" \
+  "HEAD does not resolve to a commit." \
+  "git -C $ROOT status; git -C $ROOT rev-parse HEAD"
+
+set +e
+git -C "$ROOT" diff-index --quiet HEAD -- >/dev/null 2>&1
+index_status=$?
+set -e
+if (( index_status > 1 )); then
+  fail "GIT_INDEX_UNREADABLE" \
+    "The index cannot be compared with HEAD (exit $index_status)." \
+    "git -C $ROOT status; remove stale index.lock only if no Git process is running"
+fi
+
+# 5. Report state. Uncommitted work is normal during development and must not fail.
+branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || printf 'DETACHED')"
+tracked_changes="$(git -C "$ROOT" diff-index --name-only HEAD -- 2>/dev/null | wc -l | tr -d ' ')"
+untracked_files="$(git -C "$ROOT" ls-files --others --exclude-standard 2>/dev/null | wc -l | tr -d ' ')"
+origin_main="$(git -C "$ROOT" rev-parse --verify 'origin/main^{commit}' 2>/dev/null || true)"
+
+printf 'PASS: git integrity (checkout=%s branch=%s head=%s)\n' "$ROOT" "$branch" "${head_sha:0:12}"
+printf 'INFO: uncommitted work allowed (tracked changes=%s untracked files=%s)\n' "$tracked_changes" "$untracked_files"
+
+if [[ -n "$origin_main" ]]; then
+  read -r behind ahead < <(git -C "$ROOT" rev-list --left-right --count "origin/main...HEAD" 2>/dev/null || printf '0 0')
+  if [[ "$branch" == "main" && "$head_sha" != "$origin_main" ]]; then
+    printf 'WARN: main is not at origin/main (behind=%s ahead=%s); run: git fetch origin main\n' "$behind" "$ahead"
+  fi
+else
+  printf 'WARN: origin/main is unavailable locally; run: git fetch origin main\n'
+fi
+
+if (( GIT_ONLY == 1 )); then
+  printf 'PASS: git-only diagnostics\n'
+  exit 0
+fi
+
+# 6. Report development port availability without terminating anyone.
+port_owner() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN -Fpc 2>/dev/null |
+    awk '/^p/{pid=substr($0,2)} /^c/{cmd=substr($0,2)} END{if(pid!="")printf "%s %s", pid, cmd}'
+}
+
+if command -v lsof >/dev/null 2>&1; then
+  for spec in "FRONTEND_PORT:5173:frontend" "BACKEND_PORT:8000:backend"; do
+    variable="${spec%%:*}"
+    rest="${spec#*:}"
+    default_port="${rest%%:*}"
+    role="${rest##*:}"
+    port="${!variable:-$default_port}"
+    owner="$(port_owner "$port")"
+    if [[ -n "$owner" ]]; then
+      printf 'WARN: %s port %s is in use by pid %s; protected listeners are never terminated automatically.\n' \
+        "$role" "$port" "$owner"
+      printf '      Use ./scripts/dev --auto-port, or set %s explicitly.\n' "$variable"
+    else
+      printf 'PASS: %s port %s is available\n' "$role" "$port"
+    fi
+  done
+else
+  printf 'INFO: lsof unavailable; skipping development port diagnostics\n'
+fi
+
+# 7. Existing toolchain/prerequisite/development-database doctor.
+command -v mise >/dev/null 2>&1 || fail "MISE_UNAVAILABLE" \
+  "mise is not on PATH." \
+  "install mise >= 2024.1.0, then run: mise install"
+
+cd "$ROOT"
+exec mise run doctor

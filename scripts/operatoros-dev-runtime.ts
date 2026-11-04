@@ -418,6 +418,7 @@ async function main(): Promise<void> {
         ? `Port ${port} is in use by a non-OperatorOS process. No process was terminated.`
         : `Port ${port} has a protected listener (${item.ownership_decision}). No process was terminated.${item.candidate_repository ? ` Running checkout: ${item.candidate_repository}. Use ./start-dev.sh --auto-port or ./stop-dev.sh there.` : ""}`)
         + (item.pid ? `\nPID: ${item.pid}` : "")
+        + `\nNext: free port ${port} yourself, or run ./scripts/dev --auto-port to select a free port.`
         + (flag("verbose") ? `\n${JSON.stringify(item)}` : ""));
       process.exitCode = 3; return;
     }
