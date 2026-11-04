@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "5ba11f505b33ebda6434d08bec7e5a055b818c452d997c1d9442fba1ea4362ed",
+      "fingerprint": "9ac6f2019e0f2b5e2b24b419afbe899a59f88205b9c739b0804ac1b269ac3419",
       "snapshot": {
-        "CHANGELOG.md": "9f0e4cf31d4e63acb079d10b36b8c1c924de23eda1748f7fa5b06be343f2c277"
+        "CHANGELOG.md": "9e358772ccd52825d6c4c92cdf86cfbdd71f896a2e95fe9ba3c758f778b507f2"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "0922b099b7a6d5ebde61c545dc29e09b0cfa351c",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Changelog entry for dev tooling only; no guidance change.",
       "evidence": [
-        "Changed: CHANGELOG.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: CHANGELOG.md at 0922b099b7a6d5ebde61c545dc29e09b0cfa351c"
       ]
     },
     "source:COMMANDS.md": {
