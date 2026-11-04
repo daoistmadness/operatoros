@@ -18,8 +18,9 @@ static import scan alone.
 
 The earlier [dependency optimization audit](dependency-optimization.md) is
 deprecated because its route and bundle baseline predates the merged TanStack
-Start migration. PR #337's dependency cleanup is already merged. No open
-dependency migration PR was found; PR #356 is unrelated and was left untouched.
+Start migration. PR #337's dependency cleanup is already merged. At audit
+start, no other dependency migration PR was open; PR #356 is unrelated and was
+left untouched. This audit's changes are tracked in PR #357.
 
 ## Workspace inventory
 
