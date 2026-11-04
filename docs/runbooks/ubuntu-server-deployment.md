@@ -5,6 +5,17 @@ last_reviewed: 2026-11-01
 
 # Ubuntu server deployment runbook
 
+## Current synthetic host
+
+The existing synthetic host runs both Elysia API and Caddy in separate rootless
+Podman containers supervised by user Quadlet services. Caddy serves the static
+SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
+access remains loopback/private. The existing manual helper consumes verified
+archives without rebuilding on the host. This differs from the future host-Caddy
+proposal below. Production topology and public ingress/TLS remain unresolved.
+See [CI release bundles](../runbooks/release-bundles.md) for the proposed artifact
+handoff and the reviewed helper-adoption boundary.
+
 ## Status and scope
 
 This remains a draft procedure for a single Ubuntu host. It follows the proposed [Podman deployment architecture](../decisions/podman-deployment.md). Local rootless Podman validation passed on Ubuntu 26.04.1 with synthetic data. This does not approve or validate an EC2/Ubuntu 24.04 host or production deployment.

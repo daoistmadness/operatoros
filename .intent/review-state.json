@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "44bc14b45b34ef821788cc2637bc22e7f0240142409fd3be5403c390ca499437",
+      "fingerprint": "47292ff6cb09b558f2593e31ecbe2d5928f39abd3d50fb4cda0847b54db85404",
       "snapshot": {
-        ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "7dc6a1434a4f0a3adbe8db808706a4b1beafa63c02705a633e807819631de5dc",
+        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
+        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, AGENTS.md, docs/architecture/change-safety-golden-path.md, docs/guides/testing.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "ed18d88a090a7114bd29be090e36ec1c61e112e47c10ee7d4b5154410e706621",
+      "fingerprint": "d6cfa4e21e38f532c65d1f5ff15868c847083c9f5dbc25377a6b95512e8bb178",
       "snapshot": {
-        ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "7dc6a1434a4f0a3adbe8db808706a4b1beafa63c02705a633e807819631de5dc",
+        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
+        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, AGENTS.md, docs/architecture/change-safety-golden-path.md, docs/guides/testing.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "a67b5ba8e444136eb860c22d91811f2081bc7d645605e123f69a6f933196d5a4",
+      "fingerprint": "69fa838d75808a683a39bb93badc7d2b0efd7e4d2a2d2ecacf3d65a35f46ef3b",
       "snapshot": {
-        "docs/README.md": "061016d2524b89ae7a1431b072cd97c364495b2bef42b1ad9f45dea73c3fba45"
+        "docs/README.md": "74af67ae6ca562ede514ff18ddce67594f181ad1999e9889213b6647897292ee"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
       "evidence": [
-        "Changed: docs/README.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/README.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9ac6f2019e0f2b5e2b24b419afbe899a59f88205b9c739b0804ac1b269ac3419",
+      "fingerprint": "4f161d3fb0b906f250c9f0ebbadaaba8ce99b344c3e2b6758097da80b533cdd5",
       "snapshot": {
-        "CHANGELOG.md": "9e358772ccd52825d6c4c92cdf86cfbdd71f896a2e95fe9ba3c758f778b507f2"
+        "CHANGELOG.md": "164da3ebfbee969f134c09ef234c1d825cacc73ea419111c38be3760f678f8f4"
       },
-      "head": "0922b099b7a6d5ebde61c545dc29e09b0cfa351c",
+      "head": "d197453d206c2679cec1f9936a038d5d7fd0cd75",
       "outcome": "no-change",
-      "reason": "Changelog entry for dev tooling only; no guidance change.",
+      "reason": "Attach assigned PR #355 to the release-bundle changelog entry; documentation-only identifier change, no skill or planning guidance impact. Bundle rejection/policy tests and documentation checks already passed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0922b099b7a6d5ebde61c545dc29e09b0cfa351c"
+        "Changed: CHANGELOG.md at d197453d206c2679cec1f9936a038d5d7fd0cd75"
       ]
     },
     "source:COMMANDS.md": {
@@ -4825,15 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "b43639738670443283d82946099a2b8274df63f9eb72aa761b843e1087e69288",
+      "fingerprint": "e97297f111ef625557768fba0a6e18df5985c1a351f218cd9facc785bb14f9c2",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "b3c1ebee31d70ba4faf71aaae0200c376ed2966de30378a63c0dd28e51219ccc"
+        "docs/runbooks/ubuntu-server-deployment.md": "9414714693a1ffe49cb62efa340be81a851fadc525ea3c5114186633b9e65831"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9749,15 +9749,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "27e4c4b10f59b3cf5947da4f49d6b1d52a3d38a79c5afd74a7112fcc0f8e6e70",
+      "fingerprint": "91c2fbdb99305a511a7f824ca7a9045ac62e192f472bc97fc3f66fc0b4f72f4f",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "2901b1c31c8a38df34f918a6d812ce43790d4658fce5d00724fad034e465b389"
+        "docs/decisions/podman-deployment.md": "6e229bc288595d68b1d988ff170aaa34f9ce35c60792f3fe58dbd530ebe6bf95"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/decisions/podman-deployment.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9869,15 +9869,15 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "9d21126bc623e2de174877dc5ace73e1f3da2cc5adf9f0e0aa10a3e96fa99293",
+      "fingerprint": "4af22712642decefacd618668946b6daafce642cf03894e960999f63291468bf",
       "snapshot": {
-        "scripts/check": "41278fed7a68022bc460d42decbc56d96ebbec6b2bedad9702737440420eef7c"
+        "scripts/check": "0505c9dfb54dec4646df4ad317bb8934c46cdda28a249f2a134e506e7cce88d3"
       },
-      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
       "outcome": "no-change",
-      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
       "evidence": [
-        "Changed: scripts/check at 56744b4f294f7e5b6e27d0889e35159659e84540"
+        "Changed: scripts/check at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     },
     "source:scripts/dev": {
@@ -9926,6 +9926,54 @@
       "reason": "Additional dev-script regression tests only; no guidance change.",
       "evidence": [
         "Changed: scripts/tests/dev-scripts.test.ts at 287a6fad337599c1ee675f21af32e2a4a95cd476"
+      ]
+    },
+    "source:docs/runbooks/release-bundles.md": {
+      "fingerprint": "b32f12bca8ee187a8e34a4c423c31644f03eb1a0e7437dbeff93a6a47d301d8c",
+      "snapshot": {
+        "docs/runbooks/release-bundles.md": "efb86b60595f7c7b7d0139a398f241b357ba586c5fa580c976cc99d3c0c2b358"
+      },
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "outcome": "no-change",
+      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "evidence": [
+        "Changed: docs/runbooks/release-bundles.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
+      ]
+    },
+    "source:scripts/release-bundle.py": {
+      "fingerprint": "7ba7af022a3259d11eb64a11c7cc05780c523c5bbb8c2e0bc76f8146be339b44",
+      "snapshot": {
+        "scripts/release-bundle.py": "651f69c45ddccd716bb47aef5976ff9994d9b79b17079e4df98326353d3aafd2"
+      },
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "outcome": "no-change",
+      "reason": "Artifact build logs now remain visible in CI; nine bundle verification and workflow policy tests pass. These CI/scripts/docs-only changes do not affect the Elysia skill or its existing planning records; no source API, dependency, auth or schema changes. Live attestation and image-consumer execution remain unverified until authorized main dispatch.",
+      "evidence": [
+        "Changed: scripts/release-bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
+      ]
+    },
+    "source:scripts/test-release-consumer.sh": {
+      "fingerprint": "3ac9b68f2663c046e34355446a341e8c68eda173b07fb2dd5fb04beafa726580",
+      "snapshot": {
+        "scripts/test-release-consumer.sh": "8bc61c1308c39166198ab9f83ba004567484d5d1c5630eafae0246cb933eae53"
+      },
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "outcome": "no-change",
+      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "evidence": [
+        "Changed: scripts/test-release-consumer.sh at 1b8bf39a1adf462acb52d280191889f470ea551b"
+      ]
+    },
+    "source:scripts/tests/test_release_bundle.py": {
+      "fingerprint": "6c2ee4f0c418e5c450014fbcc5b1d2deb80f01d629cd6352aeb781bbfd35ec23",
+      "snapshot": {
+        "scripts/tests/test_release_bundle.py": "77cffe407816dc6dc3e4a8559c7deba9bb0c6196522dc1ae907fa937a25b997b"
+      },
+      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "outcome": "no-change",
+      "reason": "Release-bundle implementation validates source-bound OCI and static archives and GitHub workflow provenance; tests passed including archive corruption and mismatched identities. No Elysia library behavior, source mapping, or skill/planning guidance changes are needed. Main-only end-to-end publication is intentionally not run.",
+      "evidence": [
+        "Changed: scripts/tests/test_release_bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
       ]
     }
   }

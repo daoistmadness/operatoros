@@ -125,6 +125,9 @@ jobs:
       - name: Test active Bun tooling
         working-directory: ${{ github.workspace }}
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts scripts/tests/podman-source-manifest.test.ts
+      - name: Release bundle rejection and workflow policy tests
+        working-directory: ${{ github.workspace }}
+        run: python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
       - name: Verify minimatch override compatibility
         working-directory: ${{ github.workspace }}
         run: |
@@ -304,6 +307,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - name: Set up locked toolchain and dependencies
         uses: ./.github/actions/setup-bun
       - name: Fetch main for doctor validation
@@ -364,6 +370,58 @@ jobs:
             e2e-results/playwright/
           if-no-files-found: warn
           retention-days: 7
+
+
+  release-bundle:
+    name: Manual release bundle
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: [release, result]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    concurrency:
+      group: operatoros-release-bundle
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out the validated source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Install container build tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+      - name: Build and inspect release artifacts
+        env:
+          RELEASE_OUTPUT: ${{ runner.temp }}/operatoros-release.tar
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 scripts/release-bundle.py build "$RELEASE_OUTPUT"
+      - name: Attest the complete release bundle
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ runner.temp }}/operatoros-release.tar
+      - name: Verify provenance and start an isolated consumer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_OUTPUT: ${{ runner.temp }}/operatoros-release.tar
+        run: bash scripts/test-release-consumer.sh "$RELEASE_OUTPUT" "$GITHUB_SHA"
+      - name: Retain immutable release bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-release-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/operatoros-release.tar
+            ${{ runner.temp }}/operatoros-release.tar.sha256
+          if-no-files-found: error
+          retention-days: 90
+
 
   changes:
     if: github.event_name != 'schedule'

@@ -34,3 +34,5 @@ mise exec -- bun test \
   scripts/tests/readiness-seeder.test.ts \
   scripts/tests/podman-source-manifest.test.ts \
   scripts/tests/dev-scripts.test.ts
+
+python3 -m unittest discover -s scripts/tests -p test_release_bundle.py

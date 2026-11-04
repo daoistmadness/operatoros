@@ -89,6 +89,8 @@ Dated session logs and the reusable session template are exempt from the index.
 
 ## Runbooks
 
+- [CI release bundles](runbooks/release-bundles.md).
+
 - [Backup and Restore Security](runbooks/backup-restore.md).
 - [Granular school data reset](runbooks/data-reset.md).
 - [Database operations](runbooks/database-operations.md).

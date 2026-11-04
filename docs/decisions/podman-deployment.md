@@ -5,6 +5,17 @@ last_reviewed: 2026-11-02
 
 # Podman single-host deployment proposal
 
+## Current synthetic host
+
+The existing synthetic host runs both Elysia API and Caddy in separate rootless
+Podman containers supervised by user Quadlet services. Caddy serves the static
+SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
+access remains loopback/private. The existing manual helper consumes verified
+archives without rebuilding on the host. This differs from the future host-Caddy
+proposal below. Production topology and public ingress/TLS remain unresolved.
+See [CI release bundles](../runbooks/release-bundles.md) for the proposed artifact
+handoff and the reviewed helper-adoption boundary.
+
 ## Status
 
 **Proposal only; local implementation exists. Rehearsal remains NO-GO.** This document recommends a target architecture for review. It does not authorize changes to an EC2 host, production systems, secrets, or data. An earlier image scan found no Alpine package findings, but it did not cover Bun's embedded SQLite 3.53.4 or the unresolved FTS5 CVE. C2 has not been scanned. Earlier test records apply to other source snapshots and constrained environments. Some passed, while other release and E2E runs failed or timed out. None establishes release acceptance for C2. C2 still needs qualified-runner validation, current image artifacts and scans, independent review, and an authorized Ubuntu rehearsal.

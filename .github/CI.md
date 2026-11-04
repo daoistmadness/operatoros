@@ -58,3 +58,12 @@ The active `main` ruleset requires these seven checks from their trusted GitHub 
 Enable repository auto-merge only after effective protection enforces all checks. Allow only squash merges and automatic deletion of merged feature branches; the ruleset protects `main` from deletion. No merge queue is configured; strict up-to-date validation serializes changes against the latest base. Reinspect live repository settings and `/rules/branches/main` before merging; checked-in documentation is not proof of effective protection.
 
 Use the [contributor PR procedure](../CONTRIBUTING.md) for merge and recovery. A failed check blocks merging. Keep evidence in Actions and the PR, allow at most two focused correction attempts, and leave unresolved PRs open. Reverting a workflow change uses a new protected PR; never disable a rule to recover.
+
+## Manual release artifacts
+
+The `Manual release bundle` job runs only on a main-branch manual dispatch after
+full release validation and E2E acceptance. It builds the API OCI image and SPA
+from the event SHA, attests the bundle, tests an isolated consumer, and retains
+it for 90 days. No scheduled, push, or PR event publishes a bundle. See the
+[release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
+security limitations, helper adoption, and CI rollback.
