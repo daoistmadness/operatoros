@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Add unified `./scripts/dev`, `./scripts/check`, `./scripts/doctor`, and `./scripts/stop` commands with Git worktree-integrity diagnostics, protected-listener preflight guidance, and verified session shutdown.
 - Ignore stale Grade Ledger responses so changing assessment sessions cannot discard score edits.
 - Add a rootless Podman API image, Quadlet/Caddy configuration, source-tree provenance checks, and a synthetic local deployment harness.
 - Keep the dashboard heading available during analytics loading and synchronize E2E checks on relevant page readiness.
