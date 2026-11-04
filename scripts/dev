@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Unified development entrypoint.
+#
+# Delegates to the existing managed launcher (./start-dev.sh); no launcher
+# logic is duplicated here. All flags and environment variables supported by
+# ./start-dev.sh pass through unchanged (for example --check, --auto-port,
+# BACKEND_PORT, FRONTEND_PORT, OPERATOROS_RUNTIME_DIR).
+set -Eeuo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cd "$ROOT"
+exec ./start-dev.sh "$@"

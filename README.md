@@ -182,24 +182,32 @@ flowchart TD
 ```bash
 mise install
 bun install --frozen-lockfile
-mise run doctor
+./scripts/doctor
 ```
 
 - `mise install`: Installs exact runtime versions from `mise.lock`.
 - `bun install --frozen-lockfile`: Installs all monorepo workspace dependencies from the repository root. Nested workspace installs are forbidden.
-- `mise run doctor`: Validates checkout hygiene, toolchain versions, native Linux Bun, workspace packages, `origin/main` alignment, development data directory, schema head, and development database state without launching services. (Run `git fetch origin main` first if `origin/main` is stale or missing).
+- `./scripts/doctor`: Validates Git worktree integrity first (fails if `core.worktree`, `GIT_DIR`, or another override makes Git read a different checkout), then toolchain versions, native Linux Bun, workspace packages, `origin/main` alignment, development data directory, schema head, and development database state without launching services. Normal uncommitted work is allowed and reported. (Run `git fetch origin main` first if `origin/main` is stale or missing). Use `./scripts/doctor --git-only` for the Git-integrity subset.
 
 ### 2. Start the Development Stack
 
 ```bash
-mise run dev
+./scripts/dev
 ```
 
-`mise run dev` delegates to [`./start-dev.sh`](start-dev.sh). The launcher:
+`./scripts/dev` delegates to [`./start-dev.sh`](start-dev.sh). The launcher:
 1. Validates Bun version, dependency locks, and required ports (`8000` API, `5173` Web).
 2. Initializes or validates the managed development database in the canonical data root.
 3. Launches the Elysia backend, then the Vite frontend.
 4. Displays the ready banner once both health check endpoints respond successfully. Logs are persisted to `.runtime/operatoros-dev/`.
+
+> [!IMPORTANT]
+> Ports held by an unrelated or protected listener are never terminated. The launcher
+> exits with the owning PID and remediation, or with `--auto-port` it selects a free port
+> in `5173-5199` (frontend) / `8000-8099` (backend). Explicit overrides use the existing
+> `FRONTEND_PORT` / `BACKEND_PORT` variables; no other port mechanism is introduced.
+> The launcher also requires the primary checkout to be on `main`; develop on the
+> default branch, or use a secondary worktree for feature work.
 
 | Surface | URL | Description |
 | --- | --- | --- |
@@ -230,18 +238,31 @@ production or hosted Podman deployments.
 
 ### Diagnostic & Operational Commands
 
+| Command | Purpose |
+| --- | --- |
+| `./scripts/dev` | Start the managed Elysia + Vite stack (delegates to `./start-dev.sh`). |
+| `./scripts/check` | Run the essential CI gate locally: `mise run check` plus the CI script regression suites. |
+| `./scripts/doctor` | Verify Git worktree integrity, development ports, pinned toolchain, prerequisites, and the development database. |
+| `./scripts/stop` | Stop only the development session owned by this checkout, after PID identity verification. |
+
 - **Preflight check without starting**:
   ```bash
-  ./start-dev.sh --check
+  ./scripts/dev --check
   ```
 - **Clean shutdown**:
   Press `Ctrl+C` in the running launcher terminal, or run:
   ```bash
-  ./stop-dev.sh
+  ./scripts/stop
   ```
+  `./scripts/stop` refuses stale, unrelated, or PID-reused records; production Quadlet
+  units are never in scope. (`./stop-dev.sh` remains available as the underlying alias.)
 - **Browser UI smoke test** (runs against a live stack):
   ```bash
   ./scripts/verify-browser.sh
+  ```
+- **Git-integrity subset only**:
+  ```bash
+  ./scripts/doctor --git-only
   ```
 
 ### Advanced: Direct Backend and Frontend Execution

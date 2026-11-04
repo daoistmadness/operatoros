@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Run the repository's essential local checks.
+#
+# This is the same aggregator CI uses for the pull-request gates:
+#   1. `mise run check`  -> lint, boundary/architecture checks, typecheck, workspace tests
+#   2. the CI-gated script regression suites (kept in sync with .github/workflows/ci.yml)
+#
+# Usage:
+#   ./scripts/check            # full essential gate (slow)
+#   ./scripts/check --help     # this help
+set -Eeuo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cd "$ROOT"
+
+if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
+  printf '%s\n' 'Usage: ./scripts/check' '' 'Runs the essential CI gate locally:' '  - mise run check (lint, typecheck, workspace tests)' '  - CI script regression tests (dev runtime, worktree safety, scope, e2e, docs, podman, dev scripts)'
+  exit 0
+fi
+
+command -v mise >/dev/null 2>&1 || {
+  printf 'FAIL: mise is unavailable.\nNext: install mise >= 2024.1.0, then run `mise install`.\n' >&2
+  exit 1
+}
+
+mise run check
+
+mise exec -- bun test \
+  scripts/tests/dev-runtime.test.ts \
+  scripts/tests/worktree-safety.test.ts \
+  scripts/tests/test-scope.test.ts \
+  scripts/tests/e2e-workspace.test.ts \
+  scripts/tests/e2e-summaries.test.ts \
+  scripts/tests/readiness-seeder.test.ts \
+  scripts/tests/podman-source-manifest.test.ts \
+  scripts/tests/dev-scripts.test.ts

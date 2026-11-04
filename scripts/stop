@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Stop the OperatorOS development session owned by this checkout.
+#
+# Delegates to the existing ./stop-dev.sh, which uses the session registry and
+# verifies PID identity (start_ticks + session token) before signalling
+# anything. Unrelated, stale, or PID-reused processes are refused, never
+# killed. Production Quadlet units are not in scope.
+#
+# Usage:
+#   ./scripts/stop                         # stop the active session for this checkout
+#   ./scripts/stop --session <session-id>  # stop one recorded session
+#   ./scripts/stop --all-operatoros-dev    # stop all sessions recorded for this repository
+set -Eeuo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+exec "$ROOT/stop-dev.sh" "$@"
