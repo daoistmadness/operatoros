@@ -9917,15 +9917,15 @@
       ]
     },
     "source:scripts/tests/dev-scripts.test.ts": {
-      "fingerprint": "7e070b8edec7486437a2ef1fbf3512f3c6cf130e8c6a113849bee7d4eddc22a6",
+      "fingerprint": "a83217c8beae3cb927f38e9fbac27ead9f9979c3ede6edd0b364f2764664bbc7",
       "snapshot": {
-        "scripts/tests/dev-scripts.test.ts": "fb061b66537390d1dcee39ff7cd9d6fd89d37b1fee6cd49fd21804f52e595a2d"
+        "scripts/tests/dev-scripts.test.ts": "3908868821f784cf681719a860f891ed5a2af1d9fcee3f0748aa55d57afa9b45"
       },
-      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
+      "head": "287a6fad337599c1ee675f21af32e2a4a95cd476",
       "outcome": "no-change",
-      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "reason": "Additional dev-script regression tests only; no guidance change.",
       "evidence": [
-        "Changed: scripts/tests/dev-scripts.test.ts at 56744b4f294f7e5b6e27d0889e35159659e84540"
+        "Changed: scripts/tests/dev-scripts.test.ts at 287a6fad337599c1ee675f21af32e2a4a95cd476"
       ]
     }
   }

@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 const repository = resolve(import.meta.dir, "../..");
 const roots: string[] = [];
+const children: Bun.Subprocess[] = [];
 
 // Hermetic environment: strip every Git local variable so fixtures cannot be
 // influenced by the checkout that runs the tests.
@@ -13,7 +14,21 @@ const localVars = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdo
 if (localVars.exitCode !== 0) throw new Error("Git local environment discovery failed");
 for (const name of localVars.stdout.toString().trim().split("\n")) delete cleanEnv[name];
 
-afterEach(() => {
+afterEach(async () => {
+  for (const child of children.splice(0)) {
+    if (child.exitCode === null) {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch {
+        try {
+          child.kill();
+        } catch {
+          /* already gone */
+        }
+      }
+    }
+    await child.exited;
+  }
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
@@ -74,6 +89,82 @@ function alive(pid: number) {
   }
 }
 
+function writeText(path: string, value: string) {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, value);
+}
+
+function writeJson(path: string, value: unknown) {
+  writeText(path, JSON.stringify(value));
+}
+
+// A disposable checkout containing the real stop wrapper, stop-dev.sh, and
+// runtime helper, plus synthetic API/frontend entrypoints that the runtime
+// recognizes as OperatorOS services.
+function ownedFixture() {
+  const root = temporaryDirectory("operatoros-stop-e2e-");
+  const repo = join(root, "repo");
+  const runtime = join(root, "runtime");
+  mkdirSync(repo);
+  git(repo, "init", "-qb", "main");
+  git(repo, "config", "user.name", "Synthetic Fixture");
+  git(repo, "config", "user.email", "fixture@example.invalid");
+  for (const app of ["api", "web"]) writeJson(join(repo, `apps/${app}/package.json`), { name: `@operatoros/${app}` });
+  const server =
+    'const server = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response("synthetic") });' +
+    ' for (const signal of ["SIGINT", "SIGTERM"]) process.on(signal, () => { server.stop(true); process.exit(0); });' +
+    " console.log(server.port);";
+  writeText(join(repo, "apps/api/src/server.ts"), server);
+  writeText(join(repo, "apps/web/vite.js"), server);
+  for (const path of ["stop-dev.sh", "scripts/stop", "scripts/operatoros-dev-runtime.ts", "scripts/validate-wsl-bun.sh"]) {
+    const target = join(repo, path);
+    mkdirSync(dirname(target), { recursive: true });
+    copyFileSync(resolve(repository, path), target);
+  }
+  chmodSync(join(repo, "scripts/stop"), 0o755);
+  writeText(join(repo, "package.json"), "{}");
+  writeText(join(repo, "bun.lock"), "fixture");
+  writeText(join(repo, "mise.toml"), `[tools]\nbun = "${Bun.version}"\n`);
+  git(repo, "add", ".");
+  git(repo, "commit", "-qm", "fixture");
+  return { root, repo, runtime };
+}
+
+function runtimeCli(repo: string, runtime: string, action: string, args: string[]) {
+  const result = Bun.spawnSync(
+    [process.execPath, join(repo, "scripts/operatoros-dev-runtime.ts"), action, "--repo", repo, "--runtime", runtime, ...args],
+    {
+      cwd: repo,
+      env: { ...cleanEnv, OPERATOROS_PRIMARY_CHECKOUT_PATH: repo },
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: 20_000,
+    },
+  );
+  return { code: result.exitCode, output: `${result.stdout}${result.stderr}` };
+}
+
+async function ownedService(repo: string, role: "backend" | "frontend") {
+  const cwd = join(repo, role === "backend" ? "apps/api" : "apps/web");
+  const path = join(cwd, role === "backend" ? "src/server.ts" : "vite.js");
+  const child = Bun.spawn(["setsid", process.execPath, path], {
+    cwd,
+    env: cleanEnv,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  children.push(child);
+  const reader = child.stdout.getReader();
+  let text = "";
+  while (!text.includes("\n")) {
+    const value = await reader.read();
+    if (value.done) throw new Error("synthetic listener exited before readiness");
+    text += new TextDecoder().decode(value.value);
+  }
+  reader.releaseLock();
+  return { child, port: Number(text.trim()) };
+}
+
 describe("scripts/doctor Git integrity", () => {
   test("passes on a clean checkout", () => {
     const repo = fixture();
@@ -104,6 +195,18 @@ describe("scripts/doctor Git integrity", () => {
     expect(result.output).toContain("uncommitted work allowed");
     expect(result.output).toMatch(/tracked changes=1/);
     expect(result.output).toMatch(/untracked files=1/);
+  });
+
+  test("allows legitimate staged changes", () => {
+    const repo = fixture();
+    writeFileSync(join(repo, "README.md"), "# fixture\n\nstaged edit\n");
+    writeFileSync(join(repo, "staged-note.txt"), "staged\n");
+    git(repo, "add", "README.md", "staged-note.txt");
+    const result = doctor(repo);
+    expect(result.code).toBe(0);
+    expect(result.output).toContain("uncommitted work allowed");
+    expect(result.output).toMatch(/tracked changes=2/);
+    expect(result.output).toMatch(/untracked files=0/);
   });
 
   test("rejects Git environment overrides", () => {
@@ -154,6 +257,45 @@ describe("scripts/stop ownership safety", () => {
       sleeper.kill();
       await sleeper.exited;
     }
+  });
+
+  test("terminates a correctly registered session and leaves unrelated processes alone", async () => {
+    const fixtureRepo = ownedFixture();
+    const backend = await ownedService(fixtureRepo.repo, "backend");
+    const launcher = Bun.spawn(["sleep", "120"], { cwd: fixtureRepo.repo, env: cleanEnv, stdout: "ignore", stderr: "ignore" });
+    children.push(launcher);
+    const init = runtimeCli(fixtureRepo.repo, fixtureRepo.runtime, "init-session", [
+      "--session", "fixture", "--mode", "browser", "--token", "synthetic-token",
+      "--javascript-runtime", "bun", "--javascript-runtime-version", Bun.version,
+      "--launcher-pid", String(launcher.pid),
+      "--frontend-host", "127.0.0.1", "--backend-host", "127.0.0.1",
+      "--frontend-port", "45123", "--backend-port", "45124",
+      "--database-path", join(fixtureRepo.root, "data/operatoros.sqlite"),
+    ]);
+    expect(init.code).toBe(0);
+    const register = runtimeCli(fixtureRepo.repo, fixtureRepo.runtime, "register", [
+      "--session", "fixture", "--role", "backend", "--token", "synthetic-token",
+      "--pid", String(backend.child.pid), "--port", String(backend.port),
+    ]);
+    expect(register.code).toBe(0);
+
+    const unrelated = Bun.spawn(["setsid", "sleep", "120"], { cwd: fixtureRepo.repo, env: cleanEnv, stdout: "ignore", stderr: "ignore" });
+    children.push(unrelated);
+
+    const result = Bun.spawnSync([join(fixtureRepo.repo, "scripts/stop")], {
+      cwd: fixtureRepo.repo,
+      env: { ...cleanEnv, OPERATOROS_RUNTIME_DIR: fixtureRepo.runtime },
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: 30_000,
+    });
+    expect(result.exitCode).toBe(0);
+    await backend.child.exited;
+    expect(alive(backend.child.pid)).toBe(false);
+    expect(alive(unrelated.pid)).toBe(true);
+    const session = JSON.parse(readFileSync(join(fixtureRepo.runtime, "sessions", "fixture", "session.json"), "utf8"));
+    expect(session.status).toBe("stopped");
+    expect(existsSync(join(fixtureRepo.runtime, "sessions", "fixture", "backend.pid"))).toBe(false);
   });
 });
 
