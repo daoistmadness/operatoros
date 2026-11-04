@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "47292ff6cb09b558f2593e31ecbe2d5928f39abd3d50fb4cda0847b54db85404",
+      "fingerprint": "d2d1a0cbf19cc6eae148a4df9807a968634c0a96b8155b01a1a0a69508f9913c",
       "snapshot": {
-        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
-        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
+        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
+        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "d6cfa4e21e38f532c65d1f5ff15868c847083c9f5dbc25377a6b95512e8bb178",
+      "fingerprint": "771d4e496501fae154593cfe0dd4be474a339203f7a78adf4e191e0616027c6a",
       "snapshot": {
-        ".github/CI.md": "3c270c904c3e609a3219cfb0e153c3cd8fca699bd4622ef7e8d16e5b263930c9",
-        ".github/workflows/ci.yml": "b7e82107d67b4590cead09386d25557c7bee394ab400633465b02cdce3f56907",
+        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
+        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4f161d3fb0b906f250c9f0ebbadaaba8ce99b344c3e2b6758097da80b533cdd5",
+      "fingerprint": "4734295aabc75bdec1182724be36b63aa224048f468a9e1e391216af98fc7587",
       "snapshot": {
-        "CHANGELOG.md": "164da3ebfbee969f134c09ef234c1d825cacc73ea419111c38be3760f678f8f4"
+        "CHANGELOG.md": "4c1e0cc15303703662ec6563bdb97b92e8bb819995bd775b43a5c9632819ce51"
       },
-      "head": "d197453d206c2679cec1f9936a038d5d7fd0cd75",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "Attach assigned PR #355 to the release-bundle changelog entry; documentation-only identifier change, no skill or planning guidance impact. Bundle rejection/policy tests and documentation checks already passed.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: CHANGELOG.md at d197453d206c2679cec1f9936a038d5d7fd0cd75"
+        "Changed: CHANGELOG.md at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     },
     "source:COMMANDS.md": {
@@ -9929,27 +9929,27 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "b32f12bca8ee187a8e34a4c423c31644f03eb1a0e7437dbeff93a6a47d301d8c",
+      "fingerprint": "49a5b8db79bdd7d5d1009daba1b3d2e4d537a6f36788c26e1f7f46cf3cbf2c53",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "efb86b60595f7c7b7d0139a398f241b357ba586c5fa580c976cc99d3c0c2b358"
+        "docs/runbooks/release-bundles.md": "5beb47efad750d9c9ef159de4f013dc0b317a2cbb6106cc92eeb22f3b0a0a1e6"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: docs/runbooks/release-bundles.md at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     },
     "source:scripts/release-bundle.py": {
-      "fingerprint": "7ba7af022a3259d11eb64a11c7cc05780c523c5bbb8c2e0bc76f8146be339b44",
+      "fingerprint": "db3785fb9d8834c0090faf03c4222d62230da1be3a0fdaaf3b613bca167be532",
       "snapshot": {
-        "scripts/release-bundle.py": "651f69c45ddccd716bb47aef5976ff9994d9b79b17079e4df98326353d3aafd2"
+        "scripts/release-bundle.py": "9b173a1cbff91e706047750f3072e913f137b3fef29bc82177053b5f8295225d"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "Artifact build logs now remain visible in CI; nine bundle verification and workflow policy tests pass. These CI/scripts/docs-only changes do not affect the Elysia skill or its existing planning records; no source API, dependency, auth or schema changes. Live attestation and image-consumer execution remain unverified until authorized main dispatch.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: scripts/release-bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/release-bundle.py at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     },
     "source:scripts/test-release-consumer.sh": {
@@ -9965,15 +9965,27 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "6c2ee4f0c418e5c450014fbcc5b1d2deb80f01d629cd6352aeb781bbfd35ec23",
+      "fingerprint": "efb76e3c34e593d9ed9e11ca4f5a29c287b4368cc25b685605a0e43cf80b350e",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "77cffe407816dc6dc3e4a8559c7deba9bb0c6196522dc1ae907fa937a25b997b"
+        "scripts/tests/test_release_bundle.py": "0d10726be41970f392e6f860b593eef647d6d28b534436243decc77ee799b17e"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
       "outcome": "no-change",
-      "reason": "Release-bundle implementation validates source-bound OCI and static archives and GitHub workflow provenance; tests passed including archive corruption and mismatched identities. No Elysia library behavior, source mapping, or skill/planning guidance changes are needed. Main-only end-to-end publication is intentionally not run.",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/tests/test_release_bundle.py at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
+      ]
+    },
+    "source:scripts/tests/check_trivy_oci.py": {
+      "fingerprint": "9c8a95005c3aadfbdf6c08fbf99558bf09409380cc8b503376f1afaf2eb2ad8d",
+      "snapshot": {
+        "scripts/tests/check_trivy_oci.py": "a2595312916cdb700582c45eab0dd75a5481011f7f51f8f543e0f15a6c9bdf5c"
+      },
+      "head": "18a3696c90ffe059cab24987ce7dda9a02e5fbf0",
+      "outcome": "no-change",
+      "reason": "OCI scanner input now uses a validated read-only layout of the same exported image, with config-ID checks in Trivy JSON and CycloneDX and safe failure diagnostics. Trivy 0.76.1 local real-image and synthetic fixture comparisons passed after reproducing tar-input failure; corrupt archive rejection, scanner failure, malformed reports and workflow gate tests passed. Elysia library behavior, existing skill and all three Elysia planning records remain unchanged; no guidance update is required.",
+      "evidence": [
+        "Changed: scripts/tests/check_trivy_oci.py at 18a3696c90ffe059cab24987ce7dda9a02e5fbf0"
       ]
     }
   }

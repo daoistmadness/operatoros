@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tarfile
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -28,9 +29,16 @@ def fixture():
         key = m.digest(data)
         blobs['blobs/sha256/' + key] = data
         return {'digest': 'sha256:' + key, 'size': len(data)}
-    config = blob({'architecture': 'amd64', 'os': 'linux', 'config': {'Labels': {'org.opencontainers.image.revision': SHA, 'org.operatoros.source.dirty': 'false', 'org.operatoros.source.tree-sha256': 'b' * 64}}})
-    manifest = blob({'config': config, 'layers': []})
-    blobs['index.json'] = json.dumps({'manifests': [manifest]}).encode()
+    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n', 'lib/apk/db/installed': b'P:musl\nV:1.2.5-r10\nA:x86_64\nL:MIT\nT:musl C library\n\n'})
+    layer_hash = m.digest(layer_data)
+    blobs['blobs/sha256/' + layer_hash] = layer_data
+    layer = {'mediaType': 'application/vnd.oci.image.layer.v1.tar', 'digest': 'sha256:' + layer_hash, 'size': len(layer_data)}
+    config = blob({'rootfs': {'type': 'layers', 'diff_ids': ['sha256:' + layer_hash]}, 'architecture': 'amd64', 'os': 'linux', 'config': {'Labels': {'org.opencontainers.image.revision': SHA, 'org.operatoros.source.dirty': 'false', 'org.operatoros.source.tree-sha256': 'b' * 64}}})
+    config['mediaType'] = 'application/vnd.oci.image.config.v1+json'
+    manifest = blob({'schemaVersion': 2, 'mediaType': 'application/vnd.oci.image.manifest.v1+json', 'config': config, 'layers': [layer]})
+    manifest['mediaType'] = 'application/vnd.oci.image.manifest.v1+json'
+    blobs['oci-layout'] = b'{"imageLayoutVersion":"1.0.0"}'
+    blobs['index.json'] = json.dumps({'schemaVersion': 2, 'manifests': [manifest]}).encode()
     files = {'operatoros-api.oci.tar': archive(blobs), 'operatoros-web-client.tar.gz': archive({'client/_shell.html': b'shell', 'client/assets/app.js': b'app', 'client/release.json': json.dumps({'source_commit': SHA}).encode()}), 'sbom.cdx.json': b'{"bomFormat":"CycloneDX"}', 'scan.json': b'{"Results":[]}'}
     manifest = {'schema_version': 1, 'lockfiles': {'bun.lock': 'a' * 64, 'mise.lock': 'b' * 64}, 'source_commit': SHA, 'repository': m.REPO, 'workflow': m.WORKFLOW, 'source_ref': 'refs/heads/main', 'run_id': '123', 'run_attempt': '1', 'image': m.image_metadata(files['operatoros-api.oci.tar'], SHA), 'artifacts': {name: m.digest(data) for name, data in files.items()}}
     files['manifest.json'] = json.dumps(manifest).encode()
@@ -99,6 +107,64 @@ class BundleTests(unittest.TestCase):
             with self.subTest(event=event, ref=ref), patch.dict('os.environ', {'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref}), patch.object(m, 'run', return_value=SHA) as command:
                 with self.assertRaisesRegex(ValueError, 'trusted manual main'): m.build('/unused', 'podman')
                 self.assertEqual(command.call_count, 1)
+
+    def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); source = root / 'api.tar'; source.write_bytes(fixture()['operatoros-api.oci.tar'])
+            expected = m.image_metadata(source.read_bytes(), SHA)
+            def scanner(command, log, **kwargs):
+                reports = root / 'reports'
+                if '/reports/scan.json' in command:
+                    (reports / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': expected['image_id']}}))
+                if '/reports/sbom.cdx.json' in command:
+                    (reports / 'sbom.cdx.json').write_text(json.dumps({'bomFormat': 'CycloneDX', 'components': [], 'metadata': {'component': {'properties': [{'name': 'aquasecurity:trivy:ImageID', 'value': expected['image_id']}]}}}))
+            with patch.object(m, 'logged', side_effect=scanner) as commands:
+                self.assertEqual(m.scan_image(source, SHA, root / 'layout', root / 'reports', 'podman'), expected)
+                scan = commands.call_args_list[-1].args[0]
+                self.assertIn(str(root / 'layout') + ':/image:ro', scan)
+                self.assertIn('/image', scan)
+                self.assertNotIn('/out/operatoros-api.oci.tar', scan)
+
+    def test_bad_archive_rejected_before_scanner_with_diagnostics(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); source = root / 'bad.tar'; source.write_bytes(b'invalid archive')
+            with patch.object(m, 'logged') as scanner:
+                with self.assertRaises(tarfile.TarError): m.scan_image(source, SHA, root / 'layout', root / 'reports', 'podman')
+                scanner.assert_not_called()
+            self.assertTrue((root / 'reports' / 'archive.json').exists())
+            self.assertTrue((root / 'reports' / 'scan-error.txt').read_text())
+
+    def test_scanner_exit_is_fatal_and_retains_log(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); source = root / 'api.tar'; source.write_bytes(fixture()['operatoros-api.oci.tar'])
+            with self.assertRaises(subprocess.CalledProcessError): m.scan_image(source, SHA, root / 'layout', root / 'reports', '/bin/false')
+            self.assertTrue((root / 'reports' / 'trivy-version.txt').exists())
+            self.assertTrue((root / 'reports' / 'scan-error.txt').read_text())
+
+    def test_missing_malformed_or_wrong_image_reports_are_fatal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            expected = {'image_id': 'sha256:' + 'a' * 64}
+            with self.assertRaises(FileNotFoundError): m.security_reports(root, expected)
+            (root / 'scan.json').write_text('not JSON')
+            with self.assertRaises(ValueError): m.security_reports(root, expected)
+            (root / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': 'wrong image'}}))
+            (root / 'sbom.cdx.json').write_text('{}')
+            with self.assertRaises(ValueError): m.security_reports(root, expected)
+            (root / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': expected['image_id']}}))
+            with self.assertRaises(ValueError): m.security_reports(root, expected)
+
+    def test_failure_upload_contains_only_diagnostics_not_failed_bundles(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text()
+        job = workflow.split('  release-bundle:\n')[1].split('\n  changes:')[0]
+        diagnostics = job.split('      - name: Retain build and scan failure diagnostics')[1]
+        self.assertIn('if: failure()', diagnostics)
+        self.assertIn('release-diagnostics/*.json', diagnostics)
+        self.assertIn('release-diagnostics/*.log', diagnostics)
+        self.assertIn('release-diagnostics/*.txt', diagnostics)
+        self.assertNotIn('operatoros-release.tar', diagnostics)
+        self.assertNotIn('continue-on-error', job)
+        self.assertIn('python3 scripts/tests/check_trivy_oci.py', workflow)
 
     def test_workflow_requires_success_and_exact_checkout(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text()
