@@ -171,13 +171,16 @@ describe("restore foreign-key validation", () => {
     } finally { cleanup(value); }
   }, 30000);
 
-  it("does not convert a foreign-key check error into zero violations", async () => {
+  it("rejects a physically incompatible schema before integrity or foreign-key scans", async () => {
     const value = await prepare("check-error");
     try {
       const checked = await preflight(value);
       expect(checked.source.foreign_key_violation_count).toBe(null);
       expect(checked.source.restore_eligible).toBe(false);
-      expect(checked.source.blocking_reasons).toContain("foreign_key_check_unavailable");
+      expect(checked.source.schema_version).toBe("unknown");
+      expect(checked.source.blocking_reasons).toContain("schema_incompatible");
+      expect(checked.source.blocking_reasons).not.toContain("foreign_key_check_unavailable");
+      expect(checked.source.blocking_reasons).not.toContain("integrity_check_failed");
       const response = await restore(value, checked);
       expect(response.status).toBe(409);
       expect(activeMarker(value)).toBe(1);

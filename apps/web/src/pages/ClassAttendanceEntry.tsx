@@ -33,6 +33,7 @@ import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation
 import { useAuth } from "../context/AuthContext";
 import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { schoolLocalDate } from "../lib/school-date";
 
 type AttendanceStatus = "on-time" | "late" | "incomplete" | "sick" | "leave" | "absent" | "alfa";
 
@@ -142,7 +143,7 @@ export default function ClassAttendanceEntry() {
   const { can } = useAuth();
   const [searchParams] = useSearchParams();
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = schoolLocalDate();
   const [selectedClassId, setSelectedClassId] = useState<string>(() => searchParams.get("class_id") ?? "");
   const [selectedDate, setSelectedDate] = useState<string>(() => searchParams.get("date") ?? todayStr);
   const [exportMonth, setExportMonth] = useState<string>(todayStr.slice(0, 7));

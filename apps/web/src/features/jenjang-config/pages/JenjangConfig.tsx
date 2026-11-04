@@ -7,6 +7,7 @@ import { fetchAvailableJenjang } from "../../../api/jenjangConfig";
 import type { AvailableJenjangResponse } from "@operatoros/contracts/config";
 import { useAuth } from "../../../context/AuthContext";
 import { getPageApiError } from "../../../lib/api/errors";
+import { schoolLocalDate } from "../../../lib/school-date";
 import { PageHeader } from "../../../components/common/page-header";
 import { Card } from "../../../components/ui/card";
 import {
@@ -140,7 +141,7 @@ function JenjangConfig() {
   const [permissionRestricted, setPermissionRestricted] = useState(false);
   const [editingJenjang, setEditingJenjang] = useState("");
   const [deleteConfirmJenjang, setDeleteConfirmJenjang] = useState("");
-  const [form, setForm] = useState({ cutoff_time: "07:00", effective_from: new Date().toISOString().slice(0, 10), reason: "" });
+  const [form, setForm] = useState({ cutoff_time: "07:00", effective_from: schoolLocalDate(), reason: "" });
   const [initialCutoff, setInitialCutoff] = useState("07:00");
   const [fieldError, setFieldError] = useState("");
   const requestIdRef = useRef(0);
@@ -185,7 +186,7 @@ function JenjangConfig() {
   const resetInlineForm = useCallback(() => {
     setEditingJenjang("");
     setDeleteConfirmJenjang("");
-    setForm({ cutoff_time: "07:00", effective_from: new Date().toISOString().slice(0, 10), reason: "" });
+    setForm({ cutoff_time: "07:00", effective_from: schoolLocalDate(), reason: "" });
     setInitialCutoff("07:00");
     setFieldError("");
   }, []);
@@ -196,7 +197,7 @@ function JenjangConfig() {
     setError("");
     setDeleteConfirmJenjang("");
     setEditingJenjang(row.jenjang);
-    setForm({ cutoff_time: cutoff, effective_from: new Date().toISOString().slice(0, 10), reason: "" });
+    setForm({ cutoff_time: cutoff, effective_from: schoolLocalDate(), reason: "" });
     setInitialCutoff(cutoff);
     setFieldError("");
   }, []);

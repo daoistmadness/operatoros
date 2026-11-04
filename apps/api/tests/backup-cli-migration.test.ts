@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { CURRENT_SCHEMA_VERSION, S48_SCHEMA_FINGERPRINT, createFreshDatabase, migrateExistingDatabase, openDatabase } from "@operatoros/db";
 import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 
@@ -186,5 +186,56 @@ it("rejects an S4.8 source with an altered migration ledger before backup, dispo
     sourceWithBadLedger.close();
     expect(command("backup").stderr.toString()).toContain("migration ledger layout differs");
     expect(() => migrateExistingDatabase(databasePath)).toThrow("migration ledger layout differs");
+  } finally { rmSync(temporary, { recursive: true, force: true }); }
+}, 15000);
+
+it("rejects a virtual report attachment table before the backup CLI queries it", () => {
+  const temporary = mkdtempSync(join(tmpdir(), "operatoros-virtual-attachment-test-"));
+  const source = join(temporary, "source");
+  const restored = join(temporary, "restored");
+  mkdirSync(source);
+  mkdirSync(restored);
+  const databasePath = join(source, "operatoros.sqlite");
+  const backupDir = join(source, "backups");
+  const env = { ...process.env, OPERATOROS_DATA_DIR: source, DATABASE_URL: `sqlite:///${databasePath}`, BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"), BACKUP_ENCRYPTION_KEY_ID: "synthetic-test", AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key" };
+  const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  try {
+    createFreshDatabase(databasePath);
+    const candidate = new Database(databasePath);
+    let plaintext: Uint8Array;
+    try {
+      candidate.run("DROP TABLE upp_report_versions");
+      candidate.run("CREATE VIRTUAL TABLE upp_report_versions USING fts5(content)");
+      plaintext = candidate.serialize();
+    } finally { candidate.close(); }
+
+    const encryption = parseBackupEncryptionConfig({ activeKey: env.BACKUP_ENCRYPTION_KEY, activeKeyId: env.BACKUP_ENCRYPTION_KEY_ID, authCookieSecret: env.AUTH_COOKIE_SECRET });
+    if (!encryption) throw new Error("synthetic backup encryption config missing");
+    const encrypted = encryptBackup(plaintext!, encryption);
+    const filename = "backup_2099-01-01T00-00-00Z.sqlite3";
+    const artifact = join(backupDir, filename);
+    mkdirSync(backupDir, { mode: 0o700 });
+    writeFileSync(artifact, encrypted, { mode: 0o600 });
+    writeFileSync(`${artifact}.meta.json`, JSON.stringify({
+      filename,
+      created_at: "2099-01-01T00:00:00Z",
+      trigger: "manual",
+      schema_version: CURRENT_SCHEMA_VERSION,
+      encrypted: true,
+      format_version: 1,
+      algorithm: "aes-256-gcm",
+      key_id: "synthetic-test",
+      source_db_path: basename(databasePath),
+      backup_file_size_bytes: encrypted.byteLength,
+      sqlite_file_size_bytes: plaintext!.byteLength,
+      sha256: backupSha256(encrypted),
+      plaintext_sha256: backupSha256(plaintext!),
+    }), { mode: 0o600 });
+
+    const restore = command("restore-disposable", filename, restored);
+    expect(restore.exitCode).not.toBe(0);
+    expect(restore.stderr.toString()).toContain("DATABASE_SCHEMA_INVALID");
+    expect(restore.stderr.toString()).not.toContain("no such column: file_sha256");
+    expect(existsSync(join(restored, "operatoros.sqlite"))).toBe(false);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 15000);

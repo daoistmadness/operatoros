@@ -1,5 +1,6 @@
 import type { AuthContext } from "../auth/service";
 import { setStudentMasterStatus } from "./student-master-status";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 
@@ -44,6 +45,7 @@ function restoreFields(context: AuthContext, table: string, id: number | string,
 
 /** Called only inside the rollback transaction after the current state matches `after`. */
 export function restoreStudentUpdate(context: AuthContext, before: Row, after: Row, user: string, reason: string): void {
+  const today = schoolLocalDate(context.now?.() ?? new Date());
   const fields = before.fields as string[];
   const group = (set: Set<string>) => fields.filter((field) => set.has(field));
   const profileFields = group(profile);
@@ -65,7 +67,7 @@ export function restoreStudentUpdate(context: AuthContext, before: Row, after: R
     const previous = new Map((before.devices as Row[]).map((device) => [device.id, device]));
     for (const device of after.devices as Row[]) {
       const old = previous.get(device.id);
-      if (!old) context.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = CURRENT_DATE WHERE id = ?", [device.id]);
+      if (!old) context.database.client.run("UPDATE student_device_identities SET is_active = 0, effective_to = ? WHERE id = ?", [today, device.id]);
     }
     for (const device of before.devices as Row[]) context.database.client.run("UPDATE student_device_identities SET is_active = ?, effective_to = ? WHERE id = ?", [device.is_active, device.effective_to, device.id]);
   }
@@ -75,7 +77,7 @@ export function restoreStudentUpdate(context: AuthContext, before: Row, after: R
       const restore = ["student_id", "jenjang_id", "academic_class_id", "class_name", "class_assigned", "effective_from", "effective_to", "lifecycle_state", "lifecycle_effective_date", "lifecycle_reason_code", "lifecycle_reason"];
       restoreFields(context, "student_enrollments", after.enrollment.id, restore, before.enrollment, user);
     } else {
-      context.database.client.run("UPDATE student_enrollments SET lifecycle_state = 'ENDED', effective_to = CURRENT_DATE, class_assigned = 0, lifecycle_effective_date = CURRENT_DATE, lifecycle_reason_code = 'ROLLBACK', lifecycle_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [reason, after.enrollment.id]);
+      context.database.client.run("UPDATE student_enrollments SET lifecycle_state = 'ENDED', effective_to = ?, class_assigned = 0, lifecycle_effective_date = ?, lifecycle_reason_code = 'ROLLBACK', lifecycle_reason = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [today, today, reason, after.enrollment.id]);
     }
   }
 }

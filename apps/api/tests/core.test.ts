@@ -1,10 +1,16 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { createGoldenFixture } from "./fixtures/golden";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
+
+function testPath(name: string): string {
+  return join(tmpdir(), `${name}-${process.pid}-${Date.now()}`);
+}
 
 function seedAcademic(path: string): void {
   createGoldenFixture(path, "academic-with-defaults");
@@ -18,10 +24,10 @@ function cookie(response: Response): string {
 
 describe("core CRUD parity slices", () => {
   it("keeps academic hierarchy, legacy students, canonical students, and enrollments separate", async () => {
-    const path = `/tmp/operatoros-core-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-core")}.db`;
     seedAcademic(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-core-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -81,10 +87,10 @@ describe("core CRUD parity slices", () => {
   }, 30000);
 
   it("rejects grades whose program belongs to another jenjang", async () => {
-    const path = `/tmp/operatoros-core-grade-scope-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-core-grade-scope")}.db`;
     seedAcademic(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-scope-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-core-grade-scope-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -110,10 +116,10 @@ describe("core CRUD parity slices", () => {
   }, 30000);
 
   it("creates grade batches atomically with canonical parents and per-grade audit rows", async () => {
-    const path = `/tmp/operatoros-core-grade-batch-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-core-grade-batch")}.db`;
     seedAcademic(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-grade-batch-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-core-grade-batch-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -194,10 +200,10 @@ describe("core CRUD parity slices", () => {
   }, 30000);
 
   it("enforces admin-only academic writes and server-side staff permissions", async () => {
-    const path = `/tmp/operatoros-core-permissions-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-core-permissions")}.db`;
     seedAcademic(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-core-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -216,10 +222,10 @@ describe("core CRUD parity slices", () => {
   }, 30000);
 
   it("preserves staff education and enrollment lifecycle history", async () => {
-    const path = `/tmp/operatoros-core-lifecycle-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-core-lifecycle")}.db`;
     seedAcademic(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-core-lifecycle-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-core-lifecycle-audit") } });
     try {
       const secondClass = database.client.run("INSERT INTO academic_classes (academic_year_id, grade_id, class_name, section_code, active) SELECT academic_year_id, grade_id, '7B', 'B', 1 FROM academic_classes WHERE id = 1");
       const staffId = "staff-golden-1";

@@ -18,6 +18,7 @@ import {
 } from "@operatoros/contracts/reports";
 import { getMonthlyClassAbsenceStudentTotals, getMonthlyClassAbsenceTotals, reopenMonthlyClassAbsenceLedger, saveMonthlyClassAbsenceTotals, submitMonthlyClassAbsenceLedger } from "./manual-absence";
 import { validCalendarDate } from "./attendance-calendar";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -124,7 +125,7 @@ export function configRoutes(app: any, context: AuthContext, config: { deploymen
     if (!key) return fail(ctx.set, 400, "jenjang must be a non-empty string");
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)) return fail(ctx.set, 400, "cutoff_time must be in HH:MM format");
     if (!validCalendarDate(ctx.body.effective_from)) return fail(ctx.set, 400, "effective_from must be a valid YYYY-MM-DD date");
-    if (ctx.body.effective_from < new Date().toISOString().slice(0, 10)) return fail(ctx.set, 400, "A cutoff policy cannot be backdated.");
+    if (ctx.body.effective_from < schoolLocalDate(context.now?.() ?? new Date())) return fail(ctx.set, 400, "A cutoff policy cannot be backdated.");
     if (ctx.body.reason.trim().length < 5) return fail(ctx.set, 400, "A policy reason of at least five characters is required");
     if (!row(context, "SELECT 1 FROM students WHERE trim(jenjang) = ? LIMIT 1", [key])) return fail(ctx.set, 400, "jenjang must exist in students data");
     const ids = rows(context, "SELECT id FROM jenjangs WHERE trim(name) = ? ORDER BY id", [key]);

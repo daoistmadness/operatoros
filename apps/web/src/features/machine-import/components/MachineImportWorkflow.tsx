@@ -17,6 +17,7 @@ import { invalidateAttendanceQueries } from "../../../lib/query/attendanceInvali
 import { queryKeys } from "../../../lib/query/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FeatureReadinessCard, useReadinessQuery } from "../../readiness";
+import { schoolLocalDate } from "../../../lib/school-date";
 
 const stateLabel: Record<string, string> = {
   SCAN_PRESENT: "Scan present", NO_SCAN: "No scan", MULTIPLE_SCANS: "Multiple scans", INVALID_SCAN_VALUE: "Invalid scan value", UNSUPPORTED_SOURCE_STATUS: "Unsupported source status",
@@ -84,7 +85,7 @@ export default function MachineImportWorkflow({ embedded = false }: { embedded?:
     mutationFn: ({ item, fullName }: { item: IdentityReview; fullName: string }) => createStudent({
       identity: { full_name: fullName, preferred_name: null, nipd: null, nisn: null, nik: null, birth_place: null, birth_date: null, gender: null, religion: null, student_status: "active" },
       contact: null, guardians: [], health: null, document_status: null,
-      device_identity: { device_identifier: item.deviceIdentifier, device_source: "attendance_machine", effective_from: item.effectiveFrom ?? new Date().toISOString().slice(0, 10), reason: "Linked from attendance machine identity review" },
+      device_identity: { device_identifier: item.deviceIdentifier, device_source: "attendance_machine", effective_from: item.effectiveFrom ?? schoolLocalDate(), reason: "Linked from attendance machine identity review" },
       enrollment: null, duplicate_override_reason: null,
     }),
     onSuccess: refreshPreview,

@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 const machineFixture = process.env.OPERATOROS_E2E_MACHINE_IMPORT_XLSX!;
 
 test("@attendance @machine-preview @critical @release previews scan evidence against calendar rules without Alfa inference", async ({ page }) => {
-  await login(page);
+  await login(page, { home: true });
   const cutoff = await page.request.get("/api/config/jenjang");
   expect(cutoff.status()).toBe(200);
   expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
@@ -72,7 +72,7 @@ test("@attendance @machine-import-redirect @critical @release redirects the lega
 });
 
 test("@attendance @machine-onboarding @critical @release resolves existing and new machine identities explicitly", async ({ page }) => {
-  await login(page);
+  await login(page, { home: true });
   const beforeAttendance = await page.evaluate(async () => (await (await fetch("/api/attendance/classes/1/dates/2026-08-08")).json()) as { items: unknown[] });
   await page.goto("/upload");
   await page.locator("#machine-preview-file").setInputFiles({ name: "machine-onboarding.xlsx", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer: readFileSync(machineFixture) });

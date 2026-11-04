@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { appendRow, loadXlsxWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
@@ -7,6 +9,10 @@ import { createStudentFixture } from "./fixtures/students";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
 const headers = ["OperatorOS Student UUID", "Record Version", "Legal Name", "Preferred Name", "NIPD", "NISN", "NIK", "Birth Place", "Birth Date", "Gender", "Religion", "Student Status", "Address", "Kelurahan", "Kecamatan", "City", "Province", "Postal Code", "Phone", "Email", "Guardian Name", "Guardian Phone", "Attendance Device No. ID", "Device Source", "Academic Year ID", "Academic Year", "Academic Class ID", "Class"];
+
+function testPath(name: string): string {
+  return join(tmpdir(), `${name}-${process.pid}-${Date.now()}`);
+}
 
 function seed(path: string): void {
   createStudentFixture(path, "update");
@@ -20,7 +26,7 @@ function cookie(response: Response): string {
 
 describe("student update workbook candidates", () => {
   it("keeps workbook preview non-mutating and rejects invalid rows at commit", async () => {
-    const path = `/tmp/operatoros-student-update-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-student-update-audit-${process.pid}` } });
+    const path = `${testPath("operatoros-student-update")}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-student-update-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       const template = await app.handle(new Request("http://local/api/student-masters/management/export-template", { headers: auth })); expect(template.status).toBe(200);
@@ -33,7 +39,7 @@ describe("student update workbook candidates", () => {
   }, 30000);
 
   it("reports applied and not-updated rows from a synthetic workbook", async () => {
-    const path = `/tmp/operatoros-student-update-result-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-student-update-audit-${process.pid}` } });
+    const path = `${testPath("operatoros-student-update-result")}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-student-update-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
       const template = await app.handle(new Request("http://local/api/student-masters/management/export-template", { headers: auth }));
@@ -78,7 +84,7 @@ describe("student update workbook candidates", () => {
   }, 30000);
 
   it("compensates only the applied Student's profile, address, guardian, contact, and device changes", async () => {
-    const path = `/tmp/operatoros-student-update-rollback-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-student-update-audit-${process.pid}` } });
+    const path = `${testPath("operatoros-student-update-rollback")}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-student-update-audit") } });
     try {
       const yearId = Number(database.client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-student-update-rollback','2026-07-01','2027-06-30','active',1)").lastInsertRowid);
       const jenjangId = Number(database.client.run("INSERT INTO jenjangs (name,code,level,active) VALUES ('Synthetic Rollback','SYN-ROLLBACK','primary',1)").lastInsertRowid);

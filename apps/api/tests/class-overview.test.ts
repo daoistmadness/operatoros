@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { createOverviewFixture } from "./fixtures/overview";
@@ -16,20 +18,30 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function setup(label: string) {
-  const path = `/tmp/operatoros-class-overview-${label}-${process.pid}-${Date.now()}.db`;
+async function setup(label: string, clock?: Date) {
+  const tempDir = mkdtempSync(join(tmpdir(), `operatoros-class-overview-${label}-${process.pid}-`));
+  const path = join(tempDir, "operatoros.sqlite");
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-overview-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, clock: clock ? () => clock : undefined, auth: { authCookieSecret: secret, auditDir: join(tempDir, "audit") } });
   const adminResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   const staffResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
   const year = database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as { id: number };
   const classValue = database.client.query("SELECT id FROM academic_classes WHERE academic_year_id = ? ORDER BY id LIMIT 1").get(year.id) as { id: number };
   const otherClass = database.client.query("SELECT id FROM academic_classes WHERE academic_year_id = ? ORDER BY id DESC LIMIT 1").get(year.id) as { id: number };
-  return { app, database, yearId: year.id, classId: classValue.id, otherClassId: otherClass.id, admin: cookie(adminResponse), staff: cookie(staffResponse), cleanup: () => { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); } };
+  return { app, database, yearId: year.id, classId: classValue.id, otherClassId: otherClass.id, admin: cookie(adminResponse), staff: cookie(staffResponse), cleanup: () => { database.close(); rmSync(tempDir, { recursive: true, force: true }); } };
 }
 
 describe("class overview", () => {
+  it("checks teacher assignment effectiveness against the Jakarta school date", async () => {
+    const value = await setup("jakarta-midnight", new Date("2099-12-31T17:00:00.000Z"));
+    try {
+      value.database.client.run("UPDATE teacher_class_assignments SET effective_from = '2100-01-01', effective_to = NULL WHERE user_id = (SELECT id FROM users WHERE username = 'golden-staff') AND academic_class_id = ?", [value.classId]);
+      const response = await value.app.handle(new Request(`http://local/api/classes/${value.classId}/overview`, { headers: { cookie: value.staff } }));
+      expect(response.status).toBe(200);
+    } finally { value.cleanup(); }
+  }, 30000);
+
   it("composes canonical class, roster, attendance, academic, and quality data", async () => {
     const value = await setup("canonical");
     try {

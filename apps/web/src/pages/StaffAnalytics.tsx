@@ -13,6 +13,7 @@ import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
 import { getPageApiError } from "../lib/api/errors";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 
 const categories = ["LEADERSHIP", "TEACHING", "TEACHING_SUPPORT", "ADMINISTRATION", "FINANCE", "HR", "MARKETING", "IT", "FACILITIES", "SECURITY", "GENERAL_SUPPORT", "OTHER"];
 function percent(value: number | null) { return value == null ? "Unavailable" : `${value.toFixed(1)}%`; }
@@ -33,7 +34,7 @@ function PositionReview({ item, editable }: { item: StaffPosition; editable: boo
 
 export default function StaffAnalytics() {
   const { can } = useAuth();
-  const [asOfDate, setAsOfDate] = useState(new Date().toISOString().slice(0, 10));
+  const [asOfDate, setAsOfDate] = useState(schoolLocalDate());
   const [exporting, setExporting] = useState(false);
   const analytics = useQuery({ queryKey: queryKeys.staff.analytics({ as_of_date: asOfDate }), queryFn: () => fetchStaffAnalytics(asOfDate), enabled: can("view_staff_analytics") });
   const positions = useQuery({ queryKey: queryKeys.staff.positions("ALL"), queryFn: () => fetchStaffPositions("ALL"), enabled: can("view_staff_analytics") });
@@ -44,7 +45,7 @@ export default function StaffAnalytics() {
   return <div className="space-y-6">
     <Link to="/staff" className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline"><ArrowLeft className="size-4" />Back to Employees</Link>
     <PageHeader eyebrow="Employee management" title="Workforce analytics" description="Server-calculated employee, age, tenure, DAPODIK, NUPTK, and data-quality metrics." actions={can("export_staff") && <Button variant="outline" onClick={() => void exportWorkbook()} disabled={exporting}><Download className="size-4" />{exporting ? "Exporting…" : "Export workbook"}</Button>} />
-    <div className="flex items-end gap-3"><div><Label htmlFor="staff-as-of">Reporting date</Label><Input id="staff-as-of" type="date" value={asOfDate} max={new Date().toISOString().slice(0, 10)} onChange={(event) => setAsOfDate(event.target.value)} /></div><span className="pb-2 text-sm text-muted-foreground">As of {data.as_of_date}</span></div>
+    <div className="flex items-end gap-3"><div><Label htmlFor="staff-as-of">Reporting date</Label><Input id="staff-as-of" type="date" value={asOfDate} max={schoolLocalDate()} onChange={(event) => setAsOfDate(event.target.value)} /></div><span className="pb-2 text-sm text-muted-foreground">As of {data.as_of_date}</span></div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {[["Active employees", data.workforce.active], ["Former employees", data.workforce.former], ["Teaching", data.workforce.teaching], ["Non-teaching", data.workforce.non_teaching], ["NUPTK coverage", percent(data.nuptk.coverage.percentage)], ["DAPODIK coverage", percent(data.dapodik.coverage.percentage)]].map(([label, value]) => <Card key={String(label)}><CardContent className="p-4"><p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-black">{value ?? "Unavailable"}</p></CardContent></Card>)}
     </div>

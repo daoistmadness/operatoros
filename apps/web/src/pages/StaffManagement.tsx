@@ -17,6 +17,7 @@ import { NativeSelect } from "../components/ui/native-select";
 import { queryKeys } from "../lib/query/queryKeys";
 import { getPageApiError } from "../lib/api/errors";
 import { isApiError } from "../lib/api/errors";
+import { schoolLocalDate } from "../lib/school-date";
 
 const statusLabels = { ACTIVE: "Active", FORMER: "Former", ALL: "All" } as const;
 function serviceLabel(member: { service_years: number | null; service_months: number | null }) { return member.service_years === null ? "—" : `${member.service_years}y ${member.service_months || 0}m`; }
@@ -59,7 +60,7 @@ export default function StaffManagement() {
   const unitDraft = (unit: { id: number; name: string; status: "ACTIVE" | "INACTIVE"; version: number }) => unitDrafts[unit.id] ?? { name: unit.name, status: unit.status, expected_version: unit.version, reason: "" };
   const updateUnitDraft = (unit: { id: number; name: string; status: "ACTIVE" | "INACTIVE"; version: number }, changes: Partial<{ name: string; status: "ACTIVE" | "INACTIVE"; reason: string }>) => setUnitDrafts((current) => ({ ...current, [unit.id]: { ...(current[unit.id] ?? unitDraft(unit)), ...changes } }));
   const unitMutationError = createUnitMutation.error || updateUnitMutation.error;
-  const exportWorkbook = async () => { setExporting(true); try { saveBlob(await downloadStaffExcel({ ...filters, status, include_sensitive: includeSensitive }), `employee-directory-${new Date().toISOString().slice(0, 10)}.xlsx`); } catch (error) { window.alert(getPageApiError(error, "Employee export could not be downloaded.")); } finally { setExporting(false); } };
+  const exportWorkbook = async () => { setExporting(true); try { saveBlob(await downloadStaffExcel({ ...filters, status, include_sensitive: includeSensitive }), `employee-directory-${schoolLocalDate()}.xlsx`); } catch (error) { window.alert(getPageApiError(error, "Employee export could not be downloaded.")); } finally { setExporting(false); } };
   return <div className="space-y-6">
     <PageHeader eyebrow="People and administration" title="Employees" description="Browse staff profiles, review employment history, and manage the employee source workbook." actions={<div className="flex flex-wrap items-center gap-2">{can("manage_staff") && <Link className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground" to="/staff/new">Add employee</Link>}{can("import_staff") && <Link className="inline-flex min-h-10 items-center rounded-md border border-border px-4 py-2 text-sm font-bold" to="/staff/import">Import workbook</Link>}{can("view_staff_analytics") && <Link className="inline-flex min-h-10 items-center rounded-md border border-border px-4 py-2 text-sm font-bold" to="/staff/analytics">Analytics</Link>}{can("export_sensitive_staff_fields") && <label className="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={includeSensitive} onChange={(event) => setIncludeSensitive(event.target.checked)} />Include sensitive fields</label>}{can("export_staff") && <Button variant="outline" onClick={() => void exportWorkbook()} disabled={exporting}><Download className="size-4" />{exporting ? "Exporting…" : "Export XLSX"}</Button>}</div>} />
     {can("view_staff_analytics") && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Employee workforce indicators">

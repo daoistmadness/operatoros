@@ -3,6 +3,23 @@ import { loginForFeature as login } from "../../helpers/feature-login";
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
 import { withCleanup } from "../../helpers/with-cleanup";
 
+async function readCanonicalAttendance(page: Page, academicYearId: number) {
+  const [termResponse, analyticsResponse, latenessResponse] = await Promise.all([
+    page.request.get(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`),
+    page.request.get(`/api/analytics/overview?academic_year_id=${academicYearId}`),
+    page.request.get(`/api/analytics/attendance/term-lateness?academic_year_id=${academicYearId}&term_number=1`),
+  ]);
+  expect(termResponse.status()).toBe(200);
+  expect(analyticsResponse.status()).toBe(200);
+  expect(latenessResponse.status()).toBe(200);
+  const [term, analytics, lateness] = await Promise.all([
+    termResponse.json(),
+    analyticsResponse.json(),
+    latenessResponse.json(),
+  ]);
+  return { term: term.totals, analytics: analytics.summary, lateness: lateness.totals };
+}
+
 async function saveMonth(page: Page, month: string, values: Record<string, [number, number, number]>) {
   await page.getByLabel("Bulan", { exact: true }).selectOption(month);
   await expect(page.getByLabel("sakit Primary 1A", { exact: true })).toHaveValue("0");
@@ -45,7 +62,7 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   expect(primary).toBeTruthy();
   const saveWeekdays = async (weekdays: Array<{ weekday: number; expectation: "EXPECTED" | "NOT_EXPECTED" | null }>) => {
     const response = await page.request.put("/api/attendance/calendar/weekdays", {
-      headers: { origin: new URL(page.url()).origin },
+      headers: { origin: process.env.OPERATOROS_E2E_FRONTEND_URL! },
       timeout: 15000,
       data: { academic_year_id: academicYearId, jenjang_id: primary.id, weekdays },
     });
@@ -54,20 +71,13 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
     await response.json();
   };
   const previousWeekdays = primary.weekdays;
+
+  await withCleanup(async () => {
   await saveWeekdays(Array.from({ length: 7 }, (_, weekday) => ({
     weekday,
     expectation: weekday === 0 || weekday === 6 ? "NOT_EXPECTED" as const : "EXPECTED" as const,
   })));
-
-  await withCleanup(async () => {
-  const before = await page.evaluate(async () => {
-    const filters = await (await fetch("/api/reports/filters")).json();
-    const academicYearId = filters.default_academic_year_id;
-    const term = await (await fetch(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`)).json();
-    const analytics = await (await fetch(`/api/analytics/overview?academic_year_id=${academicYearId}`)).json();
-    const lateness = await (await fetch(`/api/analytics/attendance/term-lateness?academic_year_id=${academicYearId}&term_number=1`)).json();
-    return { academicYearId, term: term.totals, analytics: analytics.summary, lateness: lateness.totals };
-  });
+  const before = await readCanonicalAttendance(page, academicYearId);
 
   await page.goto("/config/absence-reasons");
   await expect(page).toHaveURL(/\/attendance\/monthly-recap$/);
@@ -122,17 +132,12 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
   await expect(totalRow).toContainText("2");
   await expect(totalRow).toContainText("1");
 
-  const after = await page.evaluate(async (academicYearId) => {
-    const term = await (await fetch(`/api/analytics/attendance/term?academic_year_id=${academicYearId}&term_number=1`)).json();
-    const analytics = await (await fetch(`/api/analytics/overview?academic_year_id=${academicYearId}`)).json();
-    const lateness = await (await fetch(`/api/analytics/attendance/term-lateness?academic_year_id=${academicYearId}&term_number=1`)).json();
-    return { term: term.totals, analytics: analytics.summary, lateness: lateness.totals };
-  }, before.academicYearId);
-  expect(after).toEqual({ term: before.term, analytics: before.analytics, lateness: before.lateness });
+  const after = await readCanonicalAttendance(page, academicYearId);
+  expect(after).toEqual(before);
 
   await page.goto("/attendance/monthly-recap");
   const correctionYear = page.getByLabel("Tahun Ajaran", { exact: true });
-  await expect(correctionYear).toHaveValue(String(before.academicYearId));
+  await expect(correctionYear).toHaveValue(String(academicYearId));
   await expect(page.getByLabel("Program", { exact: true }).locator("option", { hasText: "MAIN" })).toHaveCount(1);
   await page.getByLabel("Program", { exact: true }).selectOption({ label: "MAIN" });
   await page.getByLabel("Bulan", { exact: true }).selectOption("2026-09");
@@ -195,10 +200,10 @@ test("@attendance @manual-absence-reporting @critical @release enters monthly to
     await perStudentClassRow.getByRole("button", { name: "Kirim dengan selisih" }).click();
   } else await perStudentClassRow.getByRole("button", { name: "Kirim" }).click();
   await expect(perStudentClassRow).toContainText("Terkirim");
-  const classTotalsResponse = await page.request.get(`/api/config/absence-reasons?academic_year_id=${before.academicYearId}&month=2026-09`);
+  const classTotalsResponse = await page.request.get(`/api/config/absence-reasons?academic_year_id=${academicYearId}&month=2026-09`);
   expect(classTotalsResponse.status()).toBe(200);
   const classId = (await classTotalsResponse.json()).classes.find((value: { class_name: string }) => value.class_name === "Primary 1B").class_id;
-  const basisResponse = await page.request.get(`/api/analytics/attendance/basis?academic_year_id=${before.academicYearId}&month=2026-09&class_id=${classId}`);
+  const basisResponse = await page.request.get(`/api/analytics/attendance/basis?academic_year_id=${academicYearId}&month=2026-09&class_id=${classId}`);
   expect(basisResponse.status()).toBe(200);
   expect((await basisResponse.json()).classes[0]).toMatchObject({ ledger: { state: "SUBMITTED", entry_mode: "PER_STUDENT" }, declared: { sakit_student_days: 1, izin_student_days: 0, alfa_student_days: 0 } });
 

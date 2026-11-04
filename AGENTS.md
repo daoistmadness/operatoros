@@ -154,11 +154,16 @@ matter, index, links, and changelog bullet.
 ## Runtime and ownership
 
 OperatorOS is an offline-first school attendance and academic analytics system.
-Runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
-`POSTGRESQL_NOT_SUPPORTED`, `CONTAINER_RUNTIME_NOT_REQUIRED`.
-Run the local Elysia backend (`apps/api/`) and React browser frontend
-(`apps/web/`). Tauri is removed. `backend/` holds migration, fixture, and
-operations tooling; it is not the production backend.
+Local runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
+and `POSTGRESQL_NOT_SUPPORTED`. Native Elysia and browser workflows remain the
+current local development path; the optional Podman launcher is development
+only. A single-host Podman production deployment is proposed, not supported,
+until its decision is accepted and an authorized Ubuntu rehearsal passes. See
+`docs/decisions/podman-deployment.md` and
+`docs/runbooks/ubuntu-server-deployment.md`. Run the local Elysia backend
+(`apps/api/`) and React browser frontend (`apps/web/`). Tauri is removed.
+`backend/` holds migration, fixture, and operations tooling; it is not the
+production backend.
 
 - `@operatoros/db` owns Drizzle schema, SQLite lifecycle, and `packages/db/src/data-dir.ts`. Business services, HTTP, backup policy, and scheduling belong in `apps/api/`.
 - `@operatoros/contracts` owns cross-boundary TypeBox DTO schemas/types. Keep HTTP transport in API and database rows in DB. Use explicit internal-to-DTO mappers.

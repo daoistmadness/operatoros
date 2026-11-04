@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import { chmodSync, closeSync, existsSync, fsyncSync, mkdtempSync, openSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { assertDatabasePath, schemaFingerprint, validateDatabase } from "./connection";
+import { assertDatabasePath, assertMigrationLedgerShape, assertOrdinarySchemaObjects, schemaFingerprint, validateDatabase } from "./connection";
 import { installS47Schema, installS47Triggers, installS48EmployeeSchema, installS49SchoolUnitSchema, installS49SchoolUnitTriggers, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema } from "./bootstrap";
 import { legacySchemaFingerprint } from "./legacy-fingerprint";
 import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT } from "./manifest";
@@ -10,17 +10,8 @@ const SOURCE_VERSION = "20260901_s46";
 const S47_VERSION = "20260929_s47";
 type SourceVariant = keyof typeof S46_SOURCE_VARIANTS;
 type Ledger = { version: string; schema_fingerprint: string };
-type LedgerColumn = { name: string; type: string; notnull: number; dflt_value: string | null; pk: number };
 type Named = { name: string };
 type LegacyTotal = { id: number; class_name: string; month: number; year: number; sakit: number; izin: number; alfa: number; note: string | null; entered_at: string | null; updated_at: string | null };
-const MIGRATION_LEDGER_LAYOUT = [
-  { name: "version", affinity: "TEXT", notnull: 0, pk: 1 },
-  { name: "predecessor", affinity: "TEXT", notnull: 0, pk: 0 },
-  { name: "schema_fingerprint", affinity: "TEXT", notnull: 1, pk: 0 },
-  { name: "protected_fingerprints", affinity: "TEXT", notnull: 1, pk: 0 },
-  { name: "approved_by", affinity: "TEXT", notnull: 1, pk: 0 },
-  { name: "applied_at", affinity: "TEXT", notnull: 1, pk: 0 },
-] as const;
 
 function identifier(value: string): string {
   if (!/^[a-z_][a-z0-9_]*$/i.test(value)) throw new Error("UNSUPPORTED_SCHEMA_OBJECT");
@@ -35,30 +26,14 @@ function date(value: unknown): string {
   return text;
 }
 
-function sqliteAffinity(type: string): string {
-  const value = type.toUpperCase();
-  if (value.includes("INT")) return "INTEGER";
-  if (/CHAR|CLOB|TEXT/.test(value)) return "TEXT";
-  if (value.includes("BLOB") || !value.trim()) return "BLOB";
-  if (/REAL|FLOA|DOUB/.test(value)) return "REAL";
-  return "NUMERIC";
-}
-
-function validateMigrationLedger(client: Database): void {
-  const columns = client.query("PRAGMA table_info(operatoros_schema_migrations)").all() as LedgerColumn[];
-  if (columns.length !== MIGRATION_LEDGER_LAYOUT.length || columns.some((column, index) => {
-    const expected = MIGRATION_LEDGER_LAYOUT[index]!;
-    return column.name !== expected.name || sqliteAffinity(column.type) !== expected.affinity ||
-      column.notnull !== expected.notnull || column.pk !== expected.pk || column.dflt_value !== null;
-  })) throw new Error("UNSUPPORTED_SCHEMA: migration ledger layout differs from the approved definition");
-}
-
 function sourceVariant(client: Database): SourceVariant | "S47" | "S48" | "S49" | "S50" | "S51" | "S52" | "S53" | "CURRENT" {
+  assertOrdinarySchemaObjects(client);
+
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check: string };
   if (integrity.integrity_check !== "ok" || client.query("PRAGMA foreign_key_check").all().length) throw new Error("DATABASE_INTEGRITY_FAILED");
   const hasLedger = client.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='operatoros_schema_migrations'").get();
   if (!hasLedger) throw new Error("UNSUPPORTED_SCHEMA: migration ledger missing");
-  validateMigrationLedger(client);
+  assertMigrationLedgerShape(client);
   const rows = client.query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations").all() as Ledger[];
   if (!rows.length || rows.some((row) => !SCHEMA_MIGRATIONS.includes(row.version as (typeof SCHEMA_MIGRATIONS)[number]))) {
     throw new Error("UNSUPPORTED_SCHEMA: unknown migration metadata");
@@ -132,8 +107,8 @@ export function validateMigrationSource(client: Database): void {
 }
 
 function copyData(target: Database): void {
-  const oldTables = target.query("SELECT name FROM previous.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as Named[];
-  const currentTables = new Set((target.query("SELECT name FROM main.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as Named[]).map((row) => row.name));
+  const oldTables = target.query("SELECT name FROM previous.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*'").all() as Named[];
+  const currentTables = new Set((target.query("SELECT name FROM main.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*'").all() as Named[]).map((row) => row.name));
   for (const { name } of oldTables) {
     if (!currentTables.has(name)) throw new Error(`UNSUPPORTED_SCHEMA: extra table ${name}`);
     const table = identifier(name);

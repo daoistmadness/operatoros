@@ -3,7 +3,7 @@ import { loginForFeature as login } from "../../helpers/feature-login";
 
 test("@management @analytics @release management overview preserves scope through detail pages", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await login(page);
+  await login(page, { home: true });
   const reducedMotionDurations = await page.evaluate(() => {
     const probe = document.createElement("div");
     probe.style.animationDuration = "1s";

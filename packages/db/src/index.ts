@@ -1,5 +1,7 @@
 export {
   assertDatabasePath,
+  assertMigrationLedgerShape,
+  assertOrdinarySchemaObjects,
   inTransaction,
   openDatabase,
   validateDatabase,

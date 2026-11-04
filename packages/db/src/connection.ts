@@ -21,6 +21,14 @@ export const REQUIRED_TABLES: readonly string[] = Object.values(schema)
 
 export type AppDatabase = BunSQLiteDatabase<typeof schema>;
 
+/** Reject views and virtual/shadow tables before validating or reading a database snapshot. */
+export function assertOrdinarySchemaObjects(client: Database): void {
+  const objects = client.query("PRAGMA main.table_list").all() as { schema: string; type: string }[];
+  if (objects.some((object) => object.schema === "main" && object.type !== "table")) {
+    fail("DATABASE_SCHEMA_INVALID", "unsupported SQLite schema objects are present");
+  }
+}
+
 export interface DatabaseHandle {
   readonly client: Database;
   readonly db: AppDatabase;
@@ -31,17 +39,44 @@ export interface DatabaseHandle {
 
 type SchemaObject = { name: string; type: string; tbl_name: string; sql: string | null };
 type LedgerRow = { version: string; schema_fingerprint: string };
+type LedgerColumn = { cid: number; name: string; type: string; notnull: number; dflt_value: string | null; pk: number; hidden: number };
+const MIGRATION_LEDGER_LAYOUT = [
+  { name: "version", affinity: "TEXT", notnull: 0, pk: 1 },
+  { name: "predecessor", affinity: "TEXT", notnull: 0, pk: 0 },
+  { name: "schema_fingerprint", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "protected_fingerprints", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "approved_by", affinity: "TEXT", notnull: 1, pk: 0 },
+  { name: "applied_at", affinity: "TEXT", notnull: 1, pk: 0 },
+] as const;
 
 export function schemaFingerprint(client: Database): string {
   const objects = client.query(
     "SELECT type, name, tbl_name, COALESCE(sql, '') AS sql FROM sqlite_master " +
-    "WHERE name NOT LIKE 'sqlite_%' AND name != 'operatoros_schema_migrations' ORDER BY type, name",
+    "WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations') ORDER BY type, name",
   ).all();
   return createHash("sha256").update(JSON.stringify(objects)).digest("hex");
 }
 
 function fail(code: string, detail: string): never {
   throw new Error(`${code}: ${detail}`);
+}
+
+function sqliteAffinity(type: string): string {
+  const value = type.toUpperCase();
+  if (value.includes("INT")) return "INTEGER";
+  if (/CHAR|CLOB|TEXT/.test(value)) return "TEXT";
+  if (value.includes("BLOB") || !value.trim()) return "BLOB";
+  if (/REAL|FLOA|DOUB/.test(value)) return "REAL";
+  return "NUMERIC";
+}
+
+export function assertMigrationLedgerShape(client: Database): void {
+  const columns = client.query("PRAGMA main.table_xinfo(operatoros_schema_migrations)").all() as LedgerColumn[];
+  if (columns.length !== MIGRATION_LEDGER_LAYOUT.length || columns.some((column, index) => {
+    const expected = MIGRATION_LEDGER_LAYOUT[index]!;
+    return column.cid !== index || column.name !== expected.name || sqliteAffinity(column.type) !== expected.affinity ||
+      column.notnull !== expected.notnull || column.pk !== expected.pk || column.dflt_value !== null || column.hidden !== 0;
+  })) fail("DATABASE_SCHEMA_INVALID", "migration ledger layout differs from the approved definition");
 }
 
 export function assertDatabasePath(path: string): void {
@@ -53,6 +88,8 @@ export function assertDatabasePath(path: string): void {
 }
 
 function validateSchema(client: Database): void {
+  assertOrdinarySchemaObjects(client);
+
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check?: string } | null;
   if (integrity?.integrity_check !== "ok") fail("DATABASE_INTEGRITY_FAILED", "PRAGMA integrity_check failed");
 
@@ -60,7 +97,7 @@ function validateSchema(client: Database): void {
   if (foreignKeys.length > 0) fail("DATABASE_INTEGRITY_FAILED", "foreign-key violations exist");
 
   const objects = client
-    .query("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%'")
+    .query("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT GLOB 'sqlite_*'")
     .all() as SchemaObject[];
   const tables = new Set(objects.filter((object) => object.type === "table").map((object) => object.name));
   const triggers = new Set(objects.filter((object) => object.type === "trigger").map((object) => object.name));
@@ -76,6 +113,8 @@ function validateSchema(client: Database): void {
   }
   const missingTriggers = REQUIRED_TRIGGERS.filter((trigger) => !triggers.has(trigger));
   if (missingTriggers.length > 0) fail("DATABASE_SCHEMA_INVALID", `missing triggers: ${missingTriggers.join(", ")}`);
+
+  assertMigrationLedgerShape(client);
 
   // Ledger validation is version-identity based, not wall-clock ordered:
   // applied_at timestamps come from datetime.now() and a backward clock step

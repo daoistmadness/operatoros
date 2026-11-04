@@ -9,7 +9,7 @@ import { syncDirectory, syncFile } from "./durable-files";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
-import { compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, schemaFingerprint } from "@operatoros/db";
+import { assertMigrationLedgerShape, compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES as DATABASE_REQUIRED_TABLES, schemaFingerprint } from "@operatoros/db";
 import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile, type BackupEncryptionConfig, type BackupFileVerification } from "../security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
@@ -40,7 +40,7 @@ const RECOVERY_HISTORY_MAX_SCAN_BYTES = 1024 * 1024;
 export const BACKUP_RETENTION_LIMIT = 10;
 const BACKUP_TRIGGERS = new Set(["manual", "scheduled", "pre_restore_auto"]);
 
-const REQUIRED_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
+const REQUIRED_OPERATIONAL_TABLES = ["attendance", "attendance_override_history", "student_enrollments"];
 const backupFile = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
 let backupBusy = false;
 let restoreBusy = false;
@@ -156,21 +156,51 @@ function activeJournalMode(context: AuthContext): string {
   try { return String((context.database.client.query("PRAGMA journal_mode").get() as Row | null)?.journal_mode ?? "unknown"); } catch { return "unknown"; }
 }
 
-function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity: string; quick: string; schemaValid: boolean; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number | null>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null } {
+type DatabaseInspection = { integrity: string; quick: string; schemaValid: boolean; foreignKeyViolationCount: number | null; tables: Set<string>; counts: Record<string, number | null>; schema: string; identityCompatible: boolean; restoreIdentityEligible: boolean | null; restoreIdentityBlockingReason: string | null };
+type InspectionMode = "restore-candidate" | "trusted-database";
+
+function incompatibleDatabaseInspection(tables: Set<string>, schema = "unknown"): DatabaseInspection {
+  return {
+    integrity: "not_checked",
+    quick: "not_checked",
+    schemaValid: false,
+    foreignKeyViolationCount: null,
+    tables,
+    counts: { students: null, attendance: null, enrollments: null },
+    schema,
+    identityCompatible: false,
+    restoreIdentityEligible: null,
+    restoreIdentityBlockingReason: null,
+  };
+}
+
+function inspectDatabase(path: string, mode: InspectionMode = "restore-candidate"): DatabaseInspection {
   const database = new Database(path, { readonly: true });
   try {
+    const tableList = database.query("PRAGMA main.table_list").all() as Row[];
+    const mainObjects = tableList.filter((value) => value.schema === "main");
+    const tables = new Set(mainObjects.filter((value) => value.type === "table").map((value) => String(value.name)));
+    const ordinarySchemaObjects = mainObjects.every((value) => value.type === "table");
+    const requiredTablesPresent = [...DATABASE_REQUIRED_TABLES, "operatoros_schema_migrations"].every((table) => tables.has(table));
+    if (!ordinarySchemaObjects || !requiredTablesPresent) return incompatibleDatabaseInspection(tables);
+
+    try { assertMigrationLedgerShape(database); }
+    catch { return incompatibleDatabaseInspection(tables); }
+    const physicalSchemaValid = schemaFingerprint(database) === CURRENT_SCHEMA_FINGERPRINT;
+    if (!physicalSchemaValid && mode === "restore-candidate") return incompatibleDatabaseInspection(tables);
+
+    const migrations = database.query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations").all() as Row[];
+    const currentMigration = migrations.find((value) => value.version === CURRENT_SCHEMA_VERSION);
+    const schemaValid = physicalSchemaValid && currentMigration?.schema_fingerprint === CURRENT_SCHEMA_FINGERPRINT &&
+      !migrations.some((value) => compareSchemaVersions(String(value.version), CURRENT_SCHEMA_VERSION) === 1);
+    const schema = dbSchemaVersion(database);
+    if (!schemaValid && mode === "restore-candidate") return incompatibleDatabaseInspection(tables, schema);
+
     const integrity = String((database.query("PRAGMA integrity_check").get() as Row | null)?.integrity_check ?? "");
     const quick = String((database.query("PRAGMA quick_check").get() as Row | null)?.quick_check ?? "");
     let foreignKeyViolationCount: number | null;
     try { foreignKeyViolationCount = database.query("PRAGMA foreign_key_check").all().length; }
     catch { foreignKeyViolationCount = null; }
-    const migrations = database.query("SELECT version, schema_fingerprint FROM operatoros_schema_migrations").all() as Row[];
-    const currentMigration = migrations.find((value) => value.version === CURRENT_SCHEMA_VERSION);
-    const schemaValid = currentMigration?.schema_fingerprint === CURRENT_SCHEMA_FINGERPRINT &&
-      !migrations.some((value) => compareSchemaVersions(String(value.version), CURRENT_SCHEMA_VERSION) === 1) &&
-      schemaFingerprint(database) === CURRENT_SCHEMA_FINGERPRINT;
-    const objects = database.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[];
-    const tables = new Set(objects.map((value) => String(value.name)));
     const counts: Record<string, number | null> = {};
     for (const [key, table] of Object.entries({ students: "students", attendance: "attendance", enrollments: "student_enrollments" })) {
       try { counts[key] = tables.has(table) ? Number((database.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as Row).count) : null; }
@@ -179,16 +209,16 @@ function inspectDatabase(path: string, checkRestoreIdentity = true): { integrity
     const userColumns = new Set((database.query("PRAGMA table_info(users)").all() as Row[]).map((value) => String(value.name)));
     const sessionColumns = new Set((database.query("PRAGMA table_info(sessions)").all() as Row[]).map((value) => String(value.name)));
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
-    const restoreIdentity = checkRestoreIdentity ? restoreIdentityState(database) : null;
-    return { integrity, quick, schemaValid, foreignKeyViolationCount, tables, counts, schema: dbSchemaVersion(database), identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
+    const restoreIdentity = mode === "restore-candidate" ? restoreIdentityState(database) : null;
+    return { integrity, quick, schemaValid, foreignKeyViolationCount, tables, counts, schema, identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
   } finally { database.close(); }
 }
 
-function validateSnapshot(path: string, sourceTables: Set<string>, checkRestoreIdentity = true): ReturnType<typeof inspectDatabase> {
-  const value = inspectDatabase(path, checkRestoreIdentity);
+function validateSnapshot(path: string, sourceTables: Set<string>, mode: InspectionMode = "restore-candidate"): ReturnType<typeof inspectDatabase> {
+  const value = inspectDatabase(path, mode);
   if (value.integrity !== "ok" || value.quick !== "ok") throw new Error("Backup integrity validation failed.");
   if (value.foreignKeyViolationCount !== 0) throw new Error("Backup foreign-key validation failed.");
-  const missing = REQUIRED_TABLES.filter((table) => !value.tables.has(table));
+  const missing = REQUIRED_OPERATIONAL_TABLES.filter((table) => !value.tables.has(table));
   if (missing.length > 0 || (sourceTables.has("student_subject_grades") && !value.tables.has("student_subject_grades"))) throw new Error(`Backup is missing required operational tables: ${missing.join(", ")}`);
   return value;
 }
@@ -267,10 +297,6 @@ function backupContents(plaintextPath: string, temporaryDirectory: string, manif
   const bundled = isBackupPayload(plaintextPath);
   if (manifest.payload_format_version == null) {
     if (bundled) throw Object.assign(new Error("Backup payload metadata is missing."), { status: 409, code: "BACKUP_METADATA_INVALID" });
-    const source = new Database(plaintextPath, { readonly: true });
-    try {
-      if (!backupAttachmentsMatch(source, [])) throw Object.assign(new Error("This database backup omits referenced UPP report files."), { status: 409, code: "BACKUP_ATTACHMENTS_MISSING" });
-    } finally { source.close(); }
     return { databasePath: plaintextPath, attachments: [] };
   }
   if (manifest.payload_format_version !== 1 || !bundled) throw Object.assign(new Error("Backup payload format is unsupported."), { status: 409, code: "BACKUP_METADATA_INVALID" });
@@ -280,10 +306,6 @@ function backupContents(plaintextPath: string, temporaryDirectory: string, manif
       extracted.attachments.length !== manifest.report_attachment_count) {
     throw Object.assign(new Error("Backup attachment metadata does not match its payload."), { status: 409, code: "BACKUP_METADATA_INVALID" });
   }
-  const source = new Database(extracted.databasePath, { readonly: true });
-  try {
-    if (!backupAttachmentsMatch(source, extracted.attachments)) throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code: "BACKUP_ATTACHMENTS_INVALID" });
-  } finally { source.close(); }
   return extracted;
 }
 
@@ -312,7 +334,7 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     writeFileSync(temporary, bytes);
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
-    validateSnapshot(temporary, sourceTables, false);
+    validateSnapshot(temporary, sourceTables, "trusted-database");
     const references = referencedReportFiles(context.database.client as unknown as Database);
     let payloadPath = temporary;
     let payloadInfo: { databaseSizeBytes: number; payloadSizeBytes: number; attachments: { sha256: string; sizeBytes: number }[] } | null = null;
@@ -877,17 +899,28 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
         manifest.plaintext_sha256 !== artifact.plaintextSha256) throw Object.assign(new Error("Backup metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     }
     const contents = backupContents(plaintextPath, dirname(plaintextPath), manifest);
-    const source = inspectDatabase(contents.databasePath); const active = inspectDatabase(dbPath(context), false); const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(contents.databasePath);
-    if (artifact.encrypted && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
+    const source = inspectDatabase(contents.databasePath);
+    if (source.schemaValid) {
+      const candidate = new Database(contents.databasePath, { readonly: true });
+      try {
+        if (!backupAttachmentsMatch(candidate, contents.attachments)) {
+          const code = contents.attachments.length ? "BACKUP_ATTACHMENTS_INVALID" : "BACKUP_ATTACHMENTS_MISSING";
+          throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code });
+        }
+      } finally { candidate.close(); }
+    }
+    const active = source.schemaValid ? inspectDatabase(dbPath(context), "trusted-database") : incompatibleDatabaseInspection(new Set());
+    const activeChecksum = backupSha256(context.database.client.serialize()); const plaintextChecksum = sha256(contents.databasePath);
+    if (artifact.encrypted && source.schema !== "unknown" && manifest.schema_version !== source.schema) throw Object.assign(new Error("Backup schema metadata does not match the encrypted artifact."), { status: 409, code: "BACKUP_METADATA_INVALID" });
     const attachmentStorageReady = contents.attachments.length === 0 || Boolean(config.reportStorageDir);
     const same = plaintextChecksum === activeChecksum; const compatible = source.schemaValid && source.schema === active.schema && source.identityCompatible;
     const classification = same ? "NO_CHANGE" : !compatible ? "SCHEMA_INCOMPATIBLE" : "LOW_IMPACT";
     const reasons = [
       ...(same ? ["source_identical_to_active"] : []),
       ...(classification === "SCHEMA_INCOMPATIBLE" ? ["schema_incompatible"] : []),
-      ...(source.integrity !== "ok" ? ["integrity_check_failed"] : []),
-      ...(source.quick !== "ok" ? ["quick_check_failed"] : []),
-      ...(source.foreignKeyViolationCount === null ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
+      ...(source.integrity !== "ok" && source.integrity !== "not_checked" ? ["integrity_check_failed"] : []),
+      ...(source.quick !== "ok" && source.quick !== "not_checked" ? ["quick_check_failed"] : []),
+      ...(source.foreignKeyViolationCount === null && source.schemaValid ? ["foreign_key_check_unavailable"] : source.foreignKeyViolationCount !== null && source.foreignKeyViolationCount > 0 ? ["foreign_key_violations"] : []),
       ...(source.restoreIdentityBlockingReason ? [source.restoreIdentityBlockingReason] : []),
       ...(!attachmentStorageReady ? ["upp_report_storage_unavailable"] : []),
     ];
@@ -948,11 +981,12 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         const contents = backupContents(plaintextPath, dirname(plaintextPath), manifest);
         copyFileSync(contents.databasePath, candidate);
         chmodSync(candidate, 0o600);
-        const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_TABLES));
+        const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_OPERATIONAL_TABLES));
         if (candidateInspection.restoreIdentityEligible !== true) throw new Error("Restore candidate has no eligible active administrator and first-run setup is closed.");
         if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
         const candidateDatabase = new Database(candidate, { readonly: true });
         try {
+          if (!backupAttachmentsMatch(candidateDatabase, contents.attachments)) throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code: "BACKUP_ATTACHMENTS_INVALID" });
           if (!restoredAdministratorCredentialsMatch(candidateDatabase, body, operator)) throw Object.assign(new Error("A password for an active administrator in the selected backup could not be verified."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
         } finally { candidateDatabase.close(); }
         if (contents.attachments.length) {

@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-10-31
+last_reviewed: 2026-11-01
 ---
 
 # Offline install and start
@@ -75,8 +75,8 @@ repository. This sequence uses only local state.
 
    ```bash
    export OPERATOROS_DATA_DIR="$(mktemp -d /tmp/operatoros-offline.XXXXXX)"
-   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261027_s51
-   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261027_s51
+   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261027_s54
+   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261027_s54
    ```
 
    The CLI usage is `<bootstrap|migrate-existing|validate> --data-dir
@@ -116,8 +116,9 @@ repository. This sequence uses only local state.
    ```
 
    `apps/web` builds the TanStack Start SPA into `apps/web/build/client`,
-   including the generated `/_shell.html` and static assets. Its `preview`
-   script uses `vite.preview.config.js` to serve only that client directory,
+   including the generated `/_shell.html` and static assets. Use Vite preview
+   only for local smoke checks; it is not the proposed production web server.
+   Its `preview` script uses `vite.preview.config.js` to serve only that client directory,
    rewrite HTML document requests to the shell, and proxy `/api`, `/health`,
    `/ready`, and `/openapi` to the existing API. The preview server binds
    `127.0.0.1`. `FRONTEND_PORT` defaults to 5173 and `DEV_API_PROXY_TARGET`

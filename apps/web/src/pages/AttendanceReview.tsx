@@ -8,6 +8,7 @@ import { ATTENDANCE_STATUS_VALUES } from "@operatoros/contracts/attendance";
 import { useAuth } from "../context/AuthContext";
 import { cn } from "../lib/cn";
 import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
+import { schoolLocalDate } from "../lib/school-date";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "../components/ui/alert-dialog";
 
@@ -81,7 +82,7 @@ function AttendanceReview() {
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [selectedAcademicYearId, setSelectedAcademicYearId] = useState(() => searchParams.get("academic_year_id") ?? "");
   const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(() => searchParams.get("academic_class_id") ?? "");
-  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") ?? new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(() => searchParams.get("date") ?? schoolLocalDate());
   const [rows, setRows] = useState<AttendanceReviewRow[]>([]);
 
   const [loadingClasses, setLoadingClasses] = useState(true);

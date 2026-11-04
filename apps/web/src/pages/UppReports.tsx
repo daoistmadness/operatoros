@@ -13,12 +13,10 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { getPageApiError } from "../lib/api/errors";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 
 function currentMonth(): string {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit" }).formatToParts(new Date());
-  const year = parts.find((part) => part.type === "year")?.value ?? "";
-  const month = parts.find((part) => part.type === "month")?.value ?? "";
-  return `${year}-${month}`;
+  return schoolLocalDate().slice(0, 7);
 }
 
 function saveBlob(blob: Blob, filename: string): void {

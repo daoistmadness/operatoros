@@ -123,7 +123,7 @@ function saveIdentifiers(context: AuthContext, staffId: string, identity: Record
   const contact = ["email", "phone", "address"].some((field) => Object.hasOwn(identity, field));
   if (contact) context.database.client.run("INSERT INTO staff_contact_details (staff_member_id,address,email,phone) VALUES (?,?,?,?) ON CONFLICT(staff_member_id) DO UPDATE SET address=CASE WHEN ? THEN excluded.address ELSE staff_contact_details.address END,email=CASE WHEN ? THEN excluded.email ELSE staff_contact_details.email END,phone=CASE WHEN ? THEN excluded.phone ELSE staff_contact_details.phone END,updated_at=CURRENT_TIMESTAMP", [staffId, identity.address ?? null, identity.email ?? null, identity.phone ?? null, Number(Object.hasOwn(identity, "address")), Number(Object.hasOwn(identity, "email")), Number(Object.hasOwn(identity, "phone"))]);
 }
-function buildFilters(query: Row, prefix = "s", canSearchEmail = false, schoolUnitAsOfDate = new Date().toISOString().slice(0, 10)): { where: string[]; params: SQLQueryBindings[]; visible: Record<string, unknown> } {
+function buildFilters(query: Row, prefix = "s", canSearchEmail = false, schoolUnitAsOfDate = schoolLocalDate(new Date())): { where: string[]; params: SQLQueryBindings[]; visible: Record<string, unknown> } {
   const where: string[] = [];
   const params: SQLQueryBindings[] = [];
   const status = String(query.status ?? "ACTIVE");
@@ -362,9 +362,10 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
         if (profile.assignments.length) context.database.client.run(`UPDATE staff_members SET ${profile.assignments.map(([column]) => `${column}=?`).join(",")}, updated_at=strftime('%Y-%m-%d %H:%M:%f','now') WHERE id=?`, [...profile.assignments.map(([, item]) => item), params.staff_id]);
         else context.database.client.run("UPDATE staff_members SET updated_at=strftime('%Y-%m-%d %H:%M:%f','now') WHERE id=?", [params.staff_id]);
         saveIdentifiers(context, params.staff_id, profile.identity);
-        if (hasLegacyEndDate) context.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,position_title,source,created_by) VALUES (?,?,?,?, 'MANUAL',?)", [params.staff_id, requestedEndDate ?? new Date().toISOString().slice(0, 10), requestedEndDate ? "FORMER" : "ACTIVE", current.job_title_normalized ?? current.job_title_raw, user.username]);
-        if (Object.hasOwn(body, "job_title_raw") && value(body.job_title_raw) !== current.job_title_raw) context.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,position_title,source,created_by) VALUES (?,date('now'),?,?,'MANUAL',?)", [params.staff_id, current.employment_status, value(body.job_title_raw), user.username]);
-        audit(context.database.client, user, hasLegacyEndDate ? "STAFF_UPDATE" : "STAFF_PROFILE_UPDATE", "STAFF", params.staff_id, profile.changed, hasLegacyEndDate ? { effective_date: requestedEndDate ?? new Date().toISOString().slice(0, 10) } : Object.hasOwn(body, "job_title_raw") ? { previous_position: oldPosition, new_position: value(body.job_title_raw) } : {});
+        const effectiveToday = today(context);
+        if (hasLegacyEndDate) context.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,position_title,source,created_by) VALUES (?,?,?,?, 'MANUAL',?)", [params.staff_id, requestedEndDate ?? effectiveToday, requestedEndDate ? "FORMER" : "ACTIVE", current.job_title_normalized ?? current.job_title_raw, user.username]);
+        if (Object.hasOwn(body, "job_title_raw") && value(body.job_title_raw) !== current.job_title_raw) context.database.client.run("INSERT INTO staff_employment_history (staff_member_id,effective_date,employment_status,position_title,source,created_by) VALUES (?,?,?,?,'MANUAL',?)", [params.staff_id, effectiveToday, current.employment_status, value(body.job_title_raw), user.username]);
+        audit(context.database.client, user, hasLegacyEndDate ? "STAFF_UPDATE" : "STAFF_PROFILE_UPDATE", "STAFF", params.staff_id, profile.changed, hasLegacyEndDate ? { effective_date: requestedEndDate ?? effectiveToday } : Object.hasOwn(body, "job_title_raw") ? { previous_position: oldPosition, new_position: value(body.job_title_raw) } : {});
       });
       return detail(context, params.staff_id);
     } catch { set.status = 409; return { detail: "Employee could not be updated because a duplicate or invalid value was found." }; }
@@ -454,7 +455,7 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
 
   app.post("/api/staff/import/preview", async ({ body, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "import_staff" }); if (!user) return { detail: "Insufficient permissions" };
-    try { return await previewStaffImport(context.database.client, new Uint8Array(await body.file.arrayBuffer()), body.file.name, user); }
+    try { return await previewStaffImport(context.database.client, new Uint8Array(await body.file.arrayBuffer()), body.file.name, user, today(context)); }
     catch (error) { const failure = error instanceof StaffImportError ? error : new StaffImportError(400, "Employee import preview failed."); set.status = failure.status; return { detail: failure.message }; }
   }, { body: t.Object({ file: t.File() }), response: StaffImportPreviewResponse });
 

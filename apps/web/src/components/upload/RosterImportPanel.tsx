@@ -17,8 +17,9 @@ import { DataTable, DataTableBody, DataTableCell, DataTableContainer, DataTableH
 import { Checkbox } from "../ui/checkbox";
 import { buildApiUrl } from "../../lib/api/client";
 import { eligibleIds, rosterRowView, safeSelectedIds, selectionState } from "../../lib/uploadWorkflow";
+import { schoolLocalDate } from "../../lib/school-date";
 
-const today = new Date().toISOString().slice(0, 10);
+const today = schoolLocalDate();
 const ROSTER_COLUMNS = ["student_identifier", "student_name", "academic_year", "jenjang", "class_name", "program", "status"];
 
 function formatFileSize(bytes: number): string {

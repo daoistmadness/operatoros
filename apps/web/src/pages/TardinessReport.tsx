@@ -33,6 +33,7 @@ import { HebBadgeRow } from '../components/HebBadgeRow';
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { useUrlSearchParams as useSearchParams } from '../lib/router/search';
+import { schoolLocalDate } from '../lib/school-date';
 
 const FILTER_MODES = [
   { value: 'month', label: 'Month' },
@@ -238,13 +239,13 @@ function ClassLateRateChart({ data }: { data: TardinessClassRow[] }) {
 
 function TardinessReport() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const today = useMemo(() => new Date(), []);
-  const currentMonth = today.getMonth() + 1;
-  const currentYear = today.getFullYear();
-  const currentMonthStart = useMemo(() => formatLocalDate(currentYear, today.getMonth(), 1), [currentYear, today]);
+  const today = useMemo(() => schoolLocalDate(), []);
+  const currentMonth = Number(today.slice(5, 7));
+  const currentYear = Number(today.slice(0, 4));
+  const currentMonthStart = useMemo(() => formatLocalDate(currentYear, currentMonth - 1, 1), [currentYear, currentMonth]);
   const currentMonthEnd = useMemo(
-    () => formatLocalDate(currentYear, today.getMonth(), new Date(currentYear, today.getMonth() + 1, 0).getDate()),
-    [currentYear, today]
+    () => formatLocalDate(currentYear, currentMonth - 1, new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate()),
+    [currentYear, currentMonth]
   );
 
   const [filterMode, setFilterMode] = useState<FilterMode>(() => requestedFilterMode(searchParams));

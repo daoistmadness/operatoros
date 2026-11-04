@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { constants, chmodSync, closeSync, copyFileSync, existsSync, fstatSync, linkSync, lstatSync, mkdirSync, openSync, readSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { Database } from "bun:sqlite";
+import { assertOrdinarySchemaObjects } from "@operatoros/db";
 import { syncDirectory, syncFile } from "./durable-files";
 import type { BackupAttachment, BackupAttachmentSource } from "../security/backup-payload";
 
@@ -92,6 +93,7 @@ function tableExists(database: Database, name: string): boolean {
 }
 
 export function referencedReportFiles(database: Database): FileMetadata[] {
+  assertOrdinarySchemaObjects(database);
   const parts: string[] = [];
   if (tableExists(database, "upp_report_versions")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_versions");
   if (tableExists(database, "upp_report_submission_evidence")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_submission_evidence");

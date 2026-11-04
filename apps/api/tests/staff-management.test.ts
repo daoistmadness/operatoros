@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApp } from "../src/app";
+import { schoolLocalDate } from "../src/domains/attendance-submission-deadline";
 import { eligibleStaffBySchoolUnitForMonth } from "../src/domains/staff-school-units";
 
 const secret = "synthetic-staff-test-cookie-secret-32";
@@ -94,7 +95,7 @@ describe("employee master data", () => {
       const updated = await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { job_title_raw: "Synthetic Lead", expected_updated_at: profile.updated_at }));
       expect(updated.status).toBe(200);
       expect((await value.app.handle(jsonRequest("PATCH", `/api/staff/${profile.id}`, value.admin, { full_name: "Stale overwrite", expected_updated_at: profile.updated_at }))).status).toBe(409);
-      const statusDate = new Date().toISOString().slice(0, 10);
+      const statusDate = schoolLocalDate(new Date());
       const status = await value.app.handle(jsonRequest("POST", `/api/staff/${profile.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: statusDate }));
       expect(status.status).toBe(200);
       expect((await status.json() as { employment_end_date: string }).employment_end_date).toBe(statusDate);
@@ -275,6 +276,8 @@ describe("employee master data", () => {
       const updated = await value.app.handle(jsonRequest("PATCH", `/api/staff/${createdProfile.id}`, value.admin, { job_title_raw: "Boundary Teacher", expected_updated_at: createdProfile.updated_at }));
       expect(updated.status).toBe(200);
       expect(await updated.json()).toMatchObject({ service_years: 6, service_months: 0 });
+      const history = await value.app.handle(jsonRequest("GET", `/api/staff/${createdProfile.id}/history`, value.admin));
+      expect(await history.json()).toEqual(expect.arrayContaining([expect.objectContaining({ action: "EMPLOYMENT_HISTORY", effective_date: "2026-10-27" })]));
       const directory = await value.app.handle(jsonRequest("GET", "/api/staff", value.admin));
       expect(await directory.json()).toMatchObject({ items: [{ id: createdProfile.id, service_years: 6, service_months: 0 }] });
       const csv = await value.app.handle(jsonRequest("GET", "/api/staff/export", value.admin));
@@ -295,6 +298,14 @@ describe("employee master data", () => {
       const analytics = await value.app.handle(jsonRequest("GET", "/api/staff/analytics/summary", value.admin));
       expect(analytics.status).toBe(200);
       expect(await analytics.json()).toMatchObject({ as_of_date: "2026-10-27" });
+      const importRow = employeeRow("TEST-IMPORT-JAKARTA");
+      importRow[7] = new Date("2026-10-27T00:00:00.000Z");
+      importRow[10] = new Date("2026-10-27T00:00:00.000Z");
+      const imported = await preview(value.app, value.admin, await employeeWorkbook([importRow]));
+      expect(imported.status).toBe(200);
+      const importIssues = (await imported.json() as any).rows[0].issues;
+      expect(importIssues).not.toContainEqual(expect.objectContaining({ code: "FUTURE_BIRTH_DATE" }));
+      expect(importIssues).not.toContainEqual(expect.objectContaining({ code: "FUTURE_START_DATE" }));
       const status = await value.app.handle(jsonRequest("POST", `/api/staff/${staff.id}/employment-status`, value.admin, { employment_status: "FORMER", effective_date: "2026-10-27" }));
       expect(status.status).toBe(200);
       expect(await status.json()).toMatchObject({ staff_id: staff.id, employment_status: "FORMER", employment_end_date: "2026-10-27", effective_date: "2026-10-27" });

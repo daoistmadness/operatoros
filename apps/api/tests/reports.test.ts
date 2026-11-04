@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Value } from "@sinclair/typebox/value";
 import { loadXlsxWorkbook } from "@operatoros/excel";
 import { AttendanceBasisResponseSchema } from "@operatoros/contracts/analytics";
@@ -51,11 +53,29 @@ async function staffCookie(app: ReturnType<typeof createApp>): Promise<string> {
 }
 
 describe("analytics and report parity", () => {
-  it("matches the report service corpus on a disposable database", async () => {
-    const path = `/tmp/operatoros-phase8-reports-${process.pid}-${Date.now()}.db`;
+  it("defaults the report period to the Jakarta month at UTC year rollover", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "operatoros-report-jakarta-month-"));
+    const path = join(directory, "operatoros.sqlite");
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase8-reports-audit-${process.pid}` } });
+    const now = new Date("2026-12-31T17:00:00.000Z");
+    const app = createApp({ databaseHandle: database, clock: () => now, auth: { authCookieSecret: secret, auditDir: join(directory, "audit") } });
+    try {
+      const cookie = await adminCookie(app);
+      const response = await app.handle(new Request("http://local/api/analytics/tardiness-report", { headers: { cookie } }));
+      expect(response.status).toBe(200);
+      expect((await response.json() as any).period).toMatchObject({ date_from: "2027-01-01", date_to: "2027-01-31", label: "Januari 2027" });
+    } finally {
+      database.close();
+      rmSync(directory, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  it("matches the report service corpus on a disposable database", async () => {
+    const path = `${tmpdir()}/operatoros-phase8-reports-${process.pid}-${Date.now()}.db`;
+    seed(path);
+    const database = openDatabase(path);
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-phase8-reports-audit-${process.pid}` } });
     try {
       const cookie = await adminCookie(app);
       const staff = await staffCookie(app);
@@ -235,10 +255,10 @@ describe("analytics and report parity", () => {
   });
 
   it("uses canonical jenjang levels for dynamically named report scopes", async () => {
-    const path = `/tmp/operatoros-round2-report-scope-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-round2-report-scope-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-round2-report-scope-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-round2-report-scope-audit-${process.pid}` } });
     try {
       database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=2");
       seedManualClassInventory(database.client);
@@ -256,10 +276,10 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("filters reports by class ID when display names repeat and keeps legacy names at the boundary", async () => {
-    const path = `/tmp/operatoros-report-class-id-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-report-class-id-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-report-class-id-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-report-class-id-audit-${process.pid}` } });
     try {
       database.client.run("UPDATE student_enrollments SET effective_from='2027-01-01' WHERE academic_year_id=2");
       const { academicYearId, classIds } = seedManualClassInventory(database.client);
@@ -292,10 +312,10 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("serves historical trends and management export aliases", async () => {
-    const path = `/tmp/operatoros-phase10-analytics-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-phase10-analytics-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase10-analytics-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-phase10-analytics-audit-${process.pid}` } });
     try {
       const cookie = await adminCookie(app);
       const trends = await app.handle(new Request("http://local/api/analytics/historical-trends?academic_year_id=2&include_forecast=true", { headers: { cookie } }));
@@ -319,10 +339,10 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("exports report, tardiness, and rekap workbooks without mutation", async () => {
-    const path = `/tmp/operatoros-phase8-exports-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-phase8-exports-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase8-exports-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-phase8-exports-audit-${process.pid}` } });
     try {
       const cookie = await adminCookie(app);
       const before = database.client.query("SELECT COUNT(*) AS count FROM attendance").get() as { count: number };
@@ -349,10 +369,10 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("keeps tardiness table, chart source, and export values on the same canonical DTO", async () => {
-    const path = `/tmp/operatoros-phase8-lateness-parity-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-phase8-lateness-parity-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-phase8-lateness-parity-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-phase8-lateness-parity-audit-${process.pid}` } });
     try {
       const cookie = await adminCookie(app);
       const report = await app.handle(new Request("http://local/api/analytics/tardiness-report?month=8&year=2026", { headers: { cookie } }));
@@ -394,7 +414,7 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("returns no HEB for an empty auto case", () => {
-    const path = `/tmp/operatoros-phase8-heb-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-phase8-heb-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
     try {
@@ -406,10 +426,10 @@ describe("analytics and report parity", () => {
   }, 30000);
 
   it("keeps monthly class absence entry separate and reconciles reports, Term, and export", async () => {
-    const path = `/tmp/operatoros-manual-absence-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-manual-absence-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-manual-absence-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-manual-absence-audit-${process.pid}` } });
     try {
       const { academicYearId, previousAcademicYearId, classIds } = seedManualClassInventory(database.client);
       const cookie = await adminCookie(app);
@@ -562,8 +582,8 @@ describe("analytics and report parity", () => {
 
 describe("attendance basis resolver", () => {
   it("resolves canonical, declared, partial, transfer, override, and unreported class-months", async () => {
-    const path = `/tmp/operatoros-c2-basis-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-c2-basis-audit-${process.pid}-${Date.now()}`;
+    const path = `${tmpdir()}/operatoros-c2-basis-${process.pid}-${Date.now()}.db`;
+    const auditDir = `${tmpdir()}/operatoros-c2-basis-audit-${process.pid}-${Date.now()}`;
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });

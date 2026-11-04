@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { createAttendanceReadFixture } from "./fixtures/attendance-reads";
@@ -17,8 +19,39 @@ function cookie(response: Response): string {
 }
 
 describe("attendance parity slices", () => {
+  it("rejects cutoff dates before the current Jakarta school day", async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), `operatoros-cutoff-jakarta-${process.pid}-`));
+    const path = join(tempDir, "operatoros.sqlite");
+    const now = new Date("2026-11-01T17:00:00.000Z");
+    try {
+      seed(path);
+      const database = openDatabase(path);
+      try {
+        const app = createApp({
+          databaseHandle: database,
+          clock: () => now,
+          auth: { authCookieSecret: secret, auditDir: join(tempDir, "audit") },
+        });
+        const login = await app.handle(new Request("http://local/api/auth/login", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }),
+        }));
+        const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
+        const response = await app.handle(new Request("http://local/api/config/jenjang/SMP", {
+          method: "PUT",
+          headers: { ...auth, "content-type": "application/json" },
+          body: JSON.stringify({ cutoff_time: "07:45", effective_from: "2026-11-01", reason: "Approved school schedule update" }),
+        }));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ detail: "A cutoff policy cannot be backdated." });
+        expect(database.client.query("SELECT id FROM jenjang_lateness_policy WHERE effective_from = '2026-11-01'").get()).toBeNull();
+      } finally { database.close(); }
+    } finally { rmSync(tempDir, { recursive: true, force: true }); }
+  }, 30000);
+
   it("records cutoff changes as effective-dated policies with reasons", async () => {
-    const path = `/tmp/operatoros-cutoff-policy-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-cutoff-policy-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-cutoff-policy-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-cutoff-policy-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const body = { cutoff_time: "07:45", effective_from: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10), reason: "Approved school schedule update" };
@@ -39,7 +72,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("keeps overrides append-only and blocks mutation after finalization", async () => {
-    const path = `/tmp/operatoros-attendance-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-attendance-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-attendance-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const override = await app.handle(new Request("http://local/api/review/attendance/1/override", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ override_status: "on-time", note: "Device missed the morning scan." }) }));
@@ -68,7 +101,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("runs correction draft, submit, approve, and terminal replay", async () => {
-    const path = `/tmp/operatoros-correction-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-correction-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-correction-audit-${process.pid}` } });
     try {
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) })); const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
       const rawBefore = database.client.query("SELECT status, check_in, check_out FROM attendance WHERE id = 2").get();
@@ -89,10 +122,10 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("keeps correction transitions retryable when audit writes fail", async () => {
-    const path = `/tmp/operatoros-correction-audit-atomic-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-correction-audit-atomic-${process.pid}-${Date.now()}.db`;
     createAttendanceReadFixture(path, "corrections");
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-audit-atomic-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-correction-audit-atomic-${process.pid}` } });
     try {
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
       const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
@@ -140,10 +173,10 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("audits stale approval conflicts and retries after the audit store recovers", async () => {
-    const path = `/tmp/operatoros-correction-stale-audit-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-correction-stale-audit-${process.pid}-${Date.now()}.db`;
     createAttendanceReadFixture(path, "corrections");
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-stale-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-correction-stale-audit-${process.pid}` } });
     try {
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
       const staff = { cookie: `astyx_session=${cookie(staffLogin)}`, origin: "http://localhost:5173" };
@@ -173,7 +206,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("requires a structured paper-book source and rejects unknown status before writes", async () => {
-    const path = `/tmp/operatoros-paper-book-override-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-override-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-paper-book-override-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-paper-book-override-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const postOverride = (body: unknown) => app.handle(new Request("http://local/api/review/attendance/1/override", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(body) }));
@@ -198,10 +231,10 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("reports effective dated S/I/A separately from teacher-book ledger totals", async () => {
-    const path = `/tmp/operatoros-paper-book-student-summary-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-paper-book-student-summary-${process.pid}-${Date.now()}.db`;
     createAttendanceReadFixture(path, "corrections");
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-student-summary-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-paper-book-student-summary-audit-${process.pid}` } });
     try {
       database.client.run("UPDATE attendance_overrides SET override_status = 'sakit' WHERE attendance_id = 1");
       database.client.run("INSERT INTO absence_reasons (student_id,class_name,month,year,sakit,izin,alfa,entered_by,entered_at,updated_at) VALUES (9601,'7A',8,2026,4,2,1,'golden-admin',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)");
@@ -217,7 +250,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("records the prior override on self-confirm and rejects a stale decision", async () => {
-    const path = `/tmp/operatoros-self-confirm-history-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-self-confirm-history-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-self-confirm-history-${process.pid}-${Date.now()}.db`; createAttendanceReadFixture(path, "corrections"); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-self-confirm-history-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const create = (status: string) => app.handle(new Request("http://local/api/attendance-corrections", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ attendance_id: 1, proposed_status: status, reason_code: "VERIFIED_SOURCE", explanation: "Class record verified by the operator." }) }));
@@ -240,7 +273,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("keeps early-departure policy, excuse, and history behavior", async () => {
-    const path = `/tmp/operatoros-departure-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-departure-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-departure-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-departure-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const created = await app.handle(new Request("http://local/api/attendance/departure-policies", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ jenjang: "SMP", weekday: 5, dismissal_time: "16:30", grace_period_minutes: 15, effective_from: "2026-07-01", change_reason: "Attendance policy test" }) }));
@@ -275,7 +308,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("supports follow-up candidate discovery and case workflow", async () => {
-    const path = `/tmp/operatoros-followups-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-followups-audit-${process.pid}` } });
+    const path = `${tmpdir()}/operatoros-followups-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-followups-audit-${process.pid}` } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) })); const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
       const candidates = await app.handle(new Request("http://local/api/attendance/followups/candidates?date_from=2026-08-01&date_to=2026-08-02", { headers: auth }));
@@ -297,11 +330,11 @@ describe("attendance parity slices", () => {
     } finally { database.close(); rmSync(path, { force: true }); }
   }, 30000);
   it("enforces class scope and teacher assignment effective dates across attendance review and entries", async () => {
-    const path = `/tmp/operatoros-review-scoping-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-review-scoping-${process.pid}-${Date.now()}.db`;
     createAttendanceReadFixture(path, "corrections");
     const database = openDatabase(path);
     database.client.run("UPDATE student_enrollments SET effective_from = '2026-01-01' WHERE student_id = 9601");
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-review-scoping-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-review-scoping-audit-${process.pid}` } });
     try {
       const adminLogin = await app.handle(new Request("http://local/api/auth/login", {
         method: "POST",
@@ -376,7 +409,7 @@ describe("attendance parity slices", () => {
   }, 30000);
 
   it("enforces teacher class assignment scope on attendance corrections", async () => {
-    const path = `/tmp/operatoros-correction-scope-${process.pid}-${Date.now()}.db`;
+    const path = `${tmpdir()}/operatoros-correction-scope-${process.pid}-${Date.now()}.db`;
     seed(path);
     const database = openDatabase(path);
     database.client.run("INSERT INTO academic_classes (academic_year_id,grade_id,class_name,section_code,active) VALUES (1,1,'7B','B',1)");
@@ -384,7 +417,7 @@ describe("attendance parity slices", () => {
     database.client.run("INSERT INTO student_enrollments (student_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,effective_from,lifecycle_state) VALUES (9002,1,1,2,'7B',1,'2026-07-01','ACTIVE')");
     database.client.run("INSERT INTO teacher_class_assignments (user_id,academic_year_id,academic_class_id,class_role,active,assigned_by,effective_from) VALUES (2,1,1,'HOMEROOM_TEACHER',1,'golden-admin','2026-07-01')");
     database.client.run("INSERT INTO attendance (id,student_id,date,check_in,check_out,late_duration,late_source,is_absent,status) VALUES (3,9002,'2026-08-02','07:35:00',NULL,0,'none',0,'incomplete')");
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-correction-scope-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `${tmpdir()}/operatoros-correction-scope-audit-${process.pid}` } });
     try {
       const staffLogin = await app.handle(new Request("http://local/api/auth/login", {
         method: "POST",

@@ -1,11 +1,17 @@
 import { describe, expect, it } from "bun:test";
 import JSZip from "jszip";
 import { rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { createGoldenFixture } from "./fixtures/golden";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
+
+function testPath(name: string): string {
+  return join(tmpdir(), `${name}-${process.pid}-${Date.now()}`);
+}
 
 function seed(path: string): void {
   createGoldenFixture(path, "academic-with-defaults");
@@ -19,10 +25,10 @@ function cookie(response: Response): string {
 
 describe("CSV data portability candidates", () => {
   it("lists datasets, previews and exports CSV, and creates templates", async () => {
-    const path = `/tmp/operatoros-portability-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-portability")}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-portability-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-portability-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -65,8 +71,8 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("keeps sensitive roster export fields correct with bulk related-record queries", async () => {
-    const path = `/tmp/operatoros-portability-sensitive-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-portability-sensitive-audit-${process.pid}-${Date.now()}`;
+    const path = `${testPath("operatoros-portability-sensitive")}.db`;
+    const auditDir = testPath("operatoros-portability-sensitive-audit");
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
@@ -98,8 +104,8 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("counts the complete export dataset and rejects exports above the supported limit", async () => {
-    const path = `/tmp/operatoros-portability-limit-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-portability-limit-audit-${process.pid}-${Date.now()}`;
+    const path = `${testPath("operatoros-portability-limit")}.db`;
+    const auditDir = testPath("operatoros-portability-limit-audit");
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
@@ -142,10 +148,10 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("previews and commits a disposable CSV import, then emits errors and history", async () => {
-    const path = `/tmp/operatoros-portability-import-${process.pid}-${Date.now()}.db`;
+    const path = `${testPath("operatoros-portability-import")}.db`;
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-portability-import-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testPath("operatoros-portability-import-audit") } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: `astyx_session=${cookie(login)}`, origin: "http://localhost:5173" };
@@ -173,8 +179,8 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("classifies every repeated roster ID as a conflict and revalidates duplicates at commit", async () => {
-    const path = `/tmp/operatoros-portability-duplicates-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-portability-duplicates-audit-${process.pid}-${Date.now()}`;
+    const path = `${testPath("operatoros-portability-duplicates")}.db`;
+    const auditDir = testPath("operatoros-portability-duplicates-audit");
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
@@ -232,8 +238,8 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("classifies changes to every committed roster field and rejects stale or unaudited commits", async () => {
-    const path = `/tmp/operatoros-portability-parity-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-portability-parity-audit-${process.pid}-${Date.now()}`;
+    const path = `${testPath("operatoros-portability-parity")}.db`;
+    const auditDir = testPath("operatoros-portability-parity-audit");
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
@@ -291,8 +297,8 @@ describe("CSV data portability candidates", () => {
   }, 30000);
 
   it("limits decompressed ZIP members before retaining oversized contents", async () => {
-    const path = `/tmp/operatoros-portability-zip-limit-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-portability-zip-limit-audit-${process.pid}-${Date.now()}`;
+    const path = `${testPath("operatoros-portability-zip-limit")}.db`;
+    const auditDir = testPath("operatoros-portability-zip-limit-audit");
     seed(path);
     const database = openDatabase(path);
     const app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });

@@ -20,7 +20,7 @@ async function workbook(label: string): Promise<Buffer> {
 test("@upp @critical archives, replaces, downloads, and submits one synthetic workbook per unit", async ({ page }) => {
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  await login(page);
+  await login(page, { home: true });
 
   const suffix = String(Date.now());
   const unitName = `E2E UPP Unit ${suffix}`;

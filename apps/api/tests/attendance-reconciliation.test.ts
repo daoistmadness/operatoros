@@ -1,6 +1,8 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it as bunIt } from "bun:test";
 import { randomUUID } from "node:crypto";
 import { copyFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Value } from "@sinclair/typebox/value";
 import { AttendanceReconciliationResponseSchema } from "@operatoros/contracts/analytics";
 import { openDatabase } from "@operatoros/db";
@@ -10,9 +12,18 @@ import { reopenMonthlyClassAbsenceLedger, submitMonthlyClassAbsenceLedger } from
 import { createReportFixture } from "./fixtures/reports";
 
 const secret = "astryx-test-only-cookie-secret-32-chars";
+// This suite builds a full synthetic SQLite fixture for each monthly read-model
+// case. Under the complete API suite, one case took 6.8s versus about 1s alone.
+// Keep the wider ceiling local to this integration suite; Bun's default stays
+// unchanged for all other API tests.
+const reconciliationIntegrationTimeoutMs = 15_000;
+
+function reconciliationTest(name: string, run: () => void | Promise<unknown>): void {
+  bunIt(name, run, { timeout: reconciliationIntegrationTimeoutMs });
+}
 
 function fixture() {
-  const path = `/tmp/operatoros-attendance-reconciliation-${process.pid}-${Date.now()}.sqlite`;
+  const path = join(tmpdir(), `operatoros-attendance-reconciliation-${process.pid}-${Date.now()}.sqlite`);
   createReportFixture(path);
   let database = openDatabase(path);
   let client = database.client;
@@ -77,7 +88,7 @@ function fixture() {
     submitMonthlyClassAbsenceLedger(context, { id: 1, username: "golden-admin", role: "admin" }, { academic_year_id: academicYearId, month, class_id: classId });
   };
   const query = (month: string) => ({ academic_year_id: String(academicYearId), class_id: String(classId), month, scope: "combined" as const });
-  const appOptions = () => ({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-attendance-reconciliation-audit-${process.pid}` } });
+  const appOptions = () => ({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: join(tmpdir(), `operatoros-attendance-reconciliation-audit-${process.pid}`) } });
   let app = createApp(appOptions());
   let databaseOpen = true;
   const closeDatabase = () => { if (databaseOpen) { database.close(); databaseOpen = false; } };
@@ -105,7 +116,7 @@ async function reviewRequest(app: ReturnType<typeof createApp>, session: string,
 }
 
 describe("monthly attendance reconciliation read model", () => {
-  it("compares per-student book totals without hiding a dated machine/book contradiction", () => {
+  reconciliationTest("compares per-student book totals without hiding a dated machine/book contradiction", () => {
     const value = fixture();
     try {
       value.saveLedger("2026-09", { sakit: 1, izin: 1, alfa: 1 }, "PER_STUDENT");
@@ -153,7 +164,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("keeps an explicit zero report distinct from no report and leaves missing scans unresolved", () => {
+  reconciliationTest("keeps an explicit zero report distinct from no report and leaves missing scans unresolved", () => {
     const value = fixture();
     try {
       value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
@@ -166,7 +177,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("compares each absence reason and does not promote class-only agreement to a student match", () => {
+  reconciliationTest("compares each absence reason and does not promote class-only agreement to a student match", () => {
     const mismatch = fixture();
     try {
       const firstAttendanceId = Number((mismatch.client.query("SELECT id FROM attendance WHERE student_id=? AND date='2026-09-01'").get(mismatch.studentId) as any).id);
@@ -177,18 +188,14 @@ describe("monthly attendance reconciliation read model", () => {
       expect(result.ledger.comparison).toMatchObject({ status: "MISMATCH", reason_code: "SIA_REASON_MISMATCH", differences: { sakit: -1, izin: 1, alfa: 0 } });
       expect(result.students[0]?.comparison).toMatchObject({ status: "MISMATCH", reason_code: "SIA_REASON_MISMATCH" });
       expect(result.students[0]?.first_review_date).toBeNull();
+      mismatch.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
+      const classTotalsOnly = resolveAttendanceReconciliation(mismatch.context, mismatch.query("2026-10"));
+      expect(classTotalsOnly.ledger.comparison.status).toBe("MATCH");
+      expect(classTotalsOnly.students[0]).toMatchObject({ book_totals: { sakit: null, izin: null, alfa: null }, comparison: { status: "NOT_COMPARABLE", reason_code: "CLASS_TOTALS_ONLY" } });
     } finally { mismatch.close(); }
-
-    const totalsOnly = fixture();
-    try {
-      totalsOnly.saveLedger("2026-09", { sakit: 1, izin: 1, alfa: 1 });
-      const result = resolveAttendanceReconciliation(totalsOnly.context, totalsOnly.query("2026-09"));
-      expect(result.ledger.comparison.status).toBe("MATCH");
-      expect(result.students[0]).toMatchObject({ book_totals: { sakit: null, izin: null, alfa: null }, comparison: { status: "NOT_COMPARABLE", reason_code: "CLASS_TOTALS_ONLY" } });
-    } finally { totalsOnly.close(); }
   });
 
-  it("flags student-level disagreements when class S/I/A totals happen to match", () => {
+  reconciliationTest("flags student-level disagreements when class S/I/A totals happen to match", () => {
     const value = fixture();
     try {
       const firstAttendanceId = Number((value.client.query("SELECT id FROM attendance WHERE student_id=? AND date='2026-09-01'").get(value.studentId) as any).id);
@@ -221,7 +228,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("splits student-days across historical class transfers and exposes unknown school-day coverage", () => {
+  reconciliationTest("splits student-days across historical class transfers and exposes unknown school-day coverage", () => {
     const value = fixture();
     try {
       const gradeId = Number((value.client.query("SELECT grade_id FROM academic_classes WHERE id=?").get(value.classId) as any).grade_id);
@@ -245,7 +252,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("rejects unauthorized and out-of-scope requests while keeping the GET read-only", async () => {
+  reconciliationTest("rejects unauthorized and out-of-scope requests while keeping the GET read-only", async () => {
     const value = fixture();
     try {
       const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
@@ -271,7 +278,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("records an explicit reviewed decision with server attribution and idempotent retries", async () => {
+  reconciliationTest("records an explicit reviewed decision with server attribution and idempotent retries", async () => {
     const value = fixture();
     try {
       value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
@@ -308,7 +315,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("requires issue and reopen notes, preserves review history, and rejects stale revisions", async () => {
+  reconciliationTest("requires issue and reopen notes, preserves review history, and rejects stale revisions", async () => {
     const value = fixture();
     try {
       const admin = await cookie(value.app, "golden-admin", "golden-admin-pass-1");
@@ -336,7 +343,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("rejects stale evidence and derives outdated state after attendance, ledger, import, calendar, and enrollment changes", async () => {
+  reconciliationTest("rejects stale evidence and derives outdated state after attendance, ledger, import, calendar, and enrollment changes", async () => {
     const value = fixture();
     try {
       value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
@@ -379,7 +386,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("keeps a review current when only another month changes, blocks invalid and unauthorized writes, and rolls back audit failure", async () => {
+  reconciliationTest("keeps a review current when only another month changes, blocks invalid and unauthorized writes, and rolls back audit failure", async () => {
     const value = fixture();
     try {
       value.saveLedger("2026-10", { sakit: 0, izin: 0, alfa: 0 });
@@ -405,7 +412,7 @@ describe("monthly attendance reconciliation read model", () => {
     } finally { value.close(); }
   });
 
-  it("records a review without changing a machine scan or canonical attendance", async () => {
+  reconciliationTest("records a review without changing a machine scan or canonical attendance", async () => {
     const value = fixture();
     try {
       value.saveLedger("2026-09", { sakit: 0, izin: 1, alfa: 1 });

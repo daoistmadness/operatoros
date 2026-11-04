@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { Database, SQLQueryBindings } from "bun:sqlite";
 import { inTransaction } from "@operatoros/db";
 import { isBlank, parseExcelDate, readXlsxWorkbook, safeExportFilename } from "@operatoros/excel";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, unknown>;
 type Severity = "INFO" | "WARNING" | "ERROR";
@@ -151,7 +152,7 @@ function ensurePositionMapping(db: Database, title: string | null): void {
   db.run("INSERT INTO staff_job_title_mappings (raw_title,normalized_title,status) VALUES (?,?,'PENDING')", [title, title]);
 }
 
-function parseRows(db: Database, headers: string[], sourceRows: Array<{ rowNumber: number; values: unknown[] }>, date1904: boolean): { rows: ImportRow[]; mapping: Record<string, string> } {
+function parseRows(db: Database, headers: string[], sourceRows: Array<{ rowNumber: number; values: unknown[] }>, date1904: boolean, today: string): { rows: ImportRow[]; mapping: Record<string, string> } {
   const byKey = new Map<string, number>();
   for (const [index, header] of headers.entries()) {
     const key = headerKey(header);
@@ -194,7 +195,6 @@ function parseRows(db: Database, headers: string[], sourceRows: Array<{ rowNumbe
     if (!nik) addMissing(issues, "nik", "MISSING_NIK", "NIK");
     const birthDate = parseDate(get("birth_date"), "birth_date", source.rowNumber, issues, date1904);
     const employmentStartDate = parseDate(get("employment_start_date"), "employment_start_date", source.rowNumber, issues, date1904);
-    const today = new Date().toISOString().slice(0, 10);
     if (birthDate && birthDate > today) issues.push({ field: "birth_date", code: "FUTURE_BIRTH_DATE", severity: "ERROR", message: "Birth date cannot be in the future." });
     if (employmentStartDate && employmentStartDate > today) issues.push({ field: "employment_start_date", code: "FUTURE_START_DATE", severity: "ERROR", message: "Employment start date cannot be in the future." });
     if (!birthDate) addMissing(issues, "birth_date", "MISSING_BIRTH_DATE", "Birth date");
@@ -318,14 +318,14 @@ function previewSummary(rows: ImportRow[]): { total: number; valid: number; new:
   };
 }
 
-export async function previewStaffImport(db: Database, bytes: Uint8Array, filename: string, actor: { id: number; username: string; role: string }): Promise<Preview> {
+export async function previewStaffImport(db: Database, bytes: Uint8Array, filename: string, actor: { id: number; username: string; role: string }, today = schoolLocalDate(new Date())): Promise<Preview> {
   expirePendingStaffImportData(db);
   if (!filename.toLowerCase().endsWith(".xlsx") || !bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) throw new StaffImportError(400, "Choose a non-empty XLSX file smaller than 25 MB.");
   let workbook;
   try { workbook = await readXlsxWorkbook(bytes); } catch { throw new StaffImportError(400, "Workbook could not be read. Check that it is a valid XLSX file."); }
   const sheet = workbook.sheets.find((value) => value.name === SOURCE_SHEET);
   if (!sheet) throw new StaffImportError(400, `Workbook must contain the '${SOURCE_SHEET}' worksheet.`);
-  const { rows, mapping } = parseRows(db, sheet.headers, sheet.rows, workbook.date1904);
+  const { rows, mapping } = parseRows(db, sheet.headers, sheet.rows, workbook.date1904, today);
   if (!rows.length) throw new StaffImportError(400, "Employee worksheet has no data rows.");
   const summary = previewSummary(rows);
   const batchId = randomUUID();

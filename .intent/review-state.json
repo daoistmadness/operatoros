@@ -3,17 +3,17 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "a8c6963be97dd918c81e933fc9d9b939036c306e0007e0207e25a476e053dccc",
+      "fingerprint": "44bc14b45b34ef821788cc2637bc22e7f0240142409fd3be5403c390ca499437",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
-        "AGENTS.md": "9b01e36c40454d5f445b29702e1e2e78dfe7367b2104891781eb191b842f8d54",
+        ".github/workflows/ci.yml": "7dc6a1434a4f0a3adbe8db808706a4b1beafa63c02705a633e807819631de5dc",
+        "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
         "bun.lock": "8fcd8648c30da0c64dcd04f6f41035b87cb5ccc4ab960295044573af211fbfff",
-        "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
+        "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
+        "docs/guides/testing.md": "aad8dcf51e822d3286ab52d86d1ff40ff4785e708ca976d5490f419ed0f4110c",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -44,28 +44,28 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: AGENTS.md, bun.lock at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: .github/workflows/ci.yml, AGENTS.md, docs/architecture/change-safety-golden-path.md, docs/guides/testing.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "2ef2e07c0083e9631be73cc152c0e111f4a56e8ebdb102816bf618e9c4b6d127",
+      "fingerprint": "ed18d88a090a7114bd29be090e36ec1c61e112e47c10ee7d4b5154410e706621",
       "snapshot": {
         ".github/CI.md": "0ce8664bb15588fdc943461504ebf192781c673b10cab77313ddaa1d208f705f",
-        ".github/workflows/ci.yml": "8aa2d13b34a0dc3e405c09a86942ae1bc249d0a8640480571ac906b89f0a3668",
-        "AGENTS.md": "9b01e36c40454d5f445b29702e1e2e78dfe7367b2104891781eb191b842f8d54",
+        ".github/workflows/ci.yml": "7dc6a1434a4f0a3adbe8db808706a4b1beafa63c02705a633e807819631de5dc",
+        "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
         "bun.lock": "8fcd8648c30da0c64dcd04f6f41035b87cb5ccc4ab960295044573af211fbfff",
-        "docs/architecture/change-safety-golden-path.md": "b068b8a7062b6cd9d71ec66c7fff5c0bbdc920e4c9c28b0e940db7c6aa4d6870",
+        "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
-        "docs/guides/testing.md": "c51325241f3ea8b64fbacd2cef885f89b9b049a1cbf611045f2966b7edbf25d7",
+        "docs/guides/testing.md": "aad8dcf51e822d3286ab52d86d1ff40ff4785e708ca976d5490f419ed0f4110c",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: AGENTS.md, bun.lock at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: .github/workflows/ci.yml, AGENTS.md, docs/architecture/change-safety-golden-path.md, docs/guides/testing.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -142,15 +142,15 @@
       ]
     },
     "source:apps/web/src/pages/StudentManagement.tsx": {
-      "fingerprint": "ab919d669cba66d6ce777708c4af9df0fa5437a7101c21c68c70a37efa7446ec",
+      "fingerprint": "2b8eb6d5dd8feedec9db91e4b149cf206484cb0e819cc5c69d16dcd6d81fbd1b",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.tsx": "53495b4a703546b5fa2efa25d62a0b0f14c268017728989c19957e61fd3c13d7"
+        "apps/web/src/pages/StudentManagement.tsx": "45cd28b5db235fbca0e64e06b2cf172243c229e1123821979a92770dfc7b0362"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/StudentManagement.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
@@ -228,15 +228,15 @@
       ]
     },
     "source:apps/api/src/domains/safety.ts": {
-      "fingerprint": "2d3932f5d1bc62488f912e603f92dde90c80896832b4f3a96e75ed93f821676b",
+      "fingerprint": "6b9262ab54b19664a45f46dc5182d5ae1070b6ca62cc57c47fd7c946a54d32a2",
       "snapshot": {
-        "apps/api/src/domains/safety.ts": "fcab630eb7c50faefcaa566809176d3fb2b6f53e6ec5029cd661b2e36f1bbd4a"
+        "apps/api/src/domains/safety.ts": "83afd3679837e597d754eac7f59dc18d1e2291d703697818ec0645c6cbca8e37"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/safety.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: apps/api/src/domains/safety.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/restore-rename-failure.test.ts": {
@@ -347,15 +347,15 @@
       ]
     },
     "source:apps/api/tests/restore-foreign-keys.test.ts": {
-      "fingerprint": "946c122b274009be6fa02118c364366f918bb403ca1dc1a3c855a76cfb845798",
+      "fingerprint": "03674df13dedfd732968dc66f9b58853f5dca21d69421d221287e316f75b2d08",
       "snapshot": {
-        "apps/api/tests/restore-foreign-keys.test.ts": "69e97b9acf7841a443a7da4a9802cb4b976ba9a0215de4bcfdcf90cfa387ad04"
+        "apps/api/tests/restore-foreign-keys.test.ts": "c82948f0b2722388f375d659b6f7ec01bcc2efec2f5cb9394bdf7435a94c7eab"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/restore-foreign-keys.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.tsx": {
@@ -371,15 +371,15 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "6f1d0d89b4a3fb212be4d26435475aba60bdb513b2fb60698843cdc8089c4ff5",
+      "fingerprint": "3c3bea258b0ac282e12ee4e4481b0608d8200246c6b0da691fe4d9182f43df28",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "091d7bd0c49d9ee15d7554b760348464e341b3b9868209efef3dc2f3f0d82be2"
+        "apps/api/src/backup-cli.ts": "bf8aa382e472a76b21be5ecdcef2d67c3af6d59ac2ffacd864aa4416f2782237"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: apps/api/src/backup-cli.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -419,15 +419,15 @@
       ]
     },
     "source:apps/api/tests/restore-administrator.test.ts": {
-      "fingerprint": "6d31ce3d4fccccd3c241f231fa9e703559193bdaea17b4b8c9bc27dddecfad79",
+      "fingerprint": "26770fe331275c2928217fdfed64a8358f9eb3f2904f75cbcd2df8c21fe436c8",
       "snapshot": {
-        "apps/api/tests/restore-administrator.test.ts": "784cc60222695a1c17d7445e89bb435ba70601e9e76f006f420290d58d380a75"
+        "apps/api/tests/restore-administrator.test.ts": "7c6d2ea0b79293b44d7ee0c5c86b429e1a4b094490ff71faba5454f8462ff493"
       },
-      "head": "59a5d0317cac6f718546b994820200f1d08d6eed",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all changed backup and restore implementation, tests, shared contracts, OpenAPI files, and operator guidance against the loaded Elysia v1 guidance. These changes affect runtime behavior and its DTOs; they do not change agent skills or planning artifacts.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/restore-administrator.test.ts at 59a5d0317cac6f718546b994820200f1d08d6eed"
+        "Changed: apps/api/tests/restore-administrator.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/auth/sqlite-date.ts": {
@@ -527,15 +527,15 @@
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
-      "fingerprint": "45b339a543e88bf96a647348d29c42862a3a52347be8192d6e9122e6656d4bf7",
+      "fingerprint": "c4506056ca4e4f124c98a39309c3a91d701433d66d27ddc7bd53096022cb6933",
       "snapshot": {
-        "apps/api/tests/backup-cli-migration.test.ts": "8b2787f286956c42a42f2eb3d2c23eadfdbeb099633ffa8979f70c3ba5450623"
+        "apps/api/tests/backup-cli-migration.test.ts": "2b996951f3d427b14716caad39f05626531258e23487b436c6bb386d1d6f2c07"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-migration.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/tests/backup-cli-migration.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/safety.test.ts": {
@@ -587,15 +587,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "796f8afe99b1d8b19f9b054e82b0ef4e49192698d0c9db52d63ac8818686367f",
+      "fingerprint": "ca26923e6eb815dc32b3fb181fdf11a1fa13dc6fad6c6a058b303e3aeb661353",
       "snapshot": {
-        "README.md": "a74b8a79b12c97234af8890bb4c5d342ca890a3c32a93292d389c8ff6b3657c7"
+        "README.md": "b45057696641454c7b6e40a6c975ee694241e96921fc96c3f16525cfac096dae"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: README.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: README.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -838,15 +838,15 @@
       ]
     },
     "source:e2e/smoke/web/phase11-verification.spec.ts": {
-      "fingerprint": "7e8b1450a4ec8c2d85f00525c543778ebc25681a4f5cd2f2c433c6613d9364a7",
+      "fingerprint": "ecce138792e3fc05176d1b601f85f657c63664fff392f34b43a8bfa12316e27b",
       "snapshot": {
-        "e2e/smoke/web/phase11-verification.spec.ts": "247f8f0f929129a4f8b6950de18b9d59853e6f422f1376b4ff8378566c84ad16"
+        "e2e/smoke/web/phase11-verification.spec.ts": "92a4e88f7ba91f5dab24305be4d3469825b7d15a98780df62de6f6c864a1f40c"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/phase11-verification.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/phase11-verification.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/security/backup-crypto.ts": {
@@ -1234,15 +1234,15 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "932246c38a2f43c1ddbf88e60714c245b64577101ee3bc5baf0e0ce8f7541427",
+      "fingerprint": "4ca8205240590e447bd26180893175b04826aa00b1c38b593f39a218838ef784",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "dd0e6bf3dbe99902ebeaefe95ef2f51d8e8a749db77e912479fd0e75ec3153d6"
+        "apps/web/src/pages/Dashboard.tsx": "33df394f565b3a1e5ba760d038c1fb3e7e65f0d730794fb2b432f0844c94317c"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: apps/web/src/pages/Dashboard.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -1384,15 +1384,15 @@
       ]
     },
     "source:docs/deployment/systemd/operatoros-api.service": {
-      "fingerprint": "b93d13637cc2aa2bfd39a0fa4984dba490d52cdfb313ce95f7e618709431f3d2",
+      "fingerprint": "007d0ba49205b88319db3505b1abc6d1959c960fc5c819bccd71a47773b4305d",
       "snapshot": {
-        "docs/deployment/systemd/operatoros-api.service": "49640e95f77c8baf756d8802949b6856f0aaae511ed166d5df16dcb19ab594d1"
+        "docs/deployment/systemd/operatoros-api.service": "40e97756d6e8ea6d61e142524ed6d22a162b58b69d87227d29cdc6d12a310754"
       },
-      "head": "151459de8c499de68cb78f26232178bf41e40349",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Isolate subprocess timezone to Asia/Jakarta for deterministic golden snapshot comparison across environments",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/deployment/systemd/operatoros-api.service at 151459de8c499de68cb78f26232178bf41e40349"
+        "Changed: docs/deployment/systemd/operatoros-api.service at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:mise.lock": {
@@ -1456,15 +1456,15 @@
       ]
     },
     "source:apps/api/tests/attendance.test.ts": {
-      "fingerprint": "269a9503473fcbf686a77840e6af8d2fbded80430ef3cb2b2dffa5a2f1fcd69d",
+      "fingerprint": "664e077ee55bf88eff36843b593f247872d16e64a6bbfca2505b81210f4cd585",
       "snapshot": {
-        "apps/api/tests/attendance.test.ts": "98b2a0a06f30d3c9ed3acebe8901ab4ea542210e8ba87c0a70ed5a55dc8f3fd4"
+        "apps/api/tests/attendance.test.ts": "5c751a23b67ad393bfc0ecf66a1db516de366c05f166610e9b1e8984fd7bd6e9"
       },
-      "head": "b750650670cadc946f47edecd595917875692ed6",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed both attendance changes against the Elysia skill, attendance consolidation contract, and change-safety golden path. The fix uses existing API transaction and audit patterns; it adds no reusable Elysia guidance or changes to the documented attendance contract.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/attendance.test.ts at b750650670cadc946f47edecd595917875692ed6"
+        "Changed: apps/api/tests/attendance.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/attendance.ts": {
@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "67c03f107566e0eff2e2a37f88ce696ae5cba27c26dbe432d8bb284e4e5c2dba",
+      "fingerprint": "a67b5ba8e444136eb860c22d91811f2081bc7d645605e123f69a6f933196d5a4",
       "snapshot": {
-        "docs/README.md": "0c2fdb5918dd517ab779d8d89c8b4d553723a1f969b7b3e3a04d1f690379cebc"
+        "docs/README.md": "061016d2524b89ae7a1431b072cd97c364495b2bef42b1ad9f45dea73c3fba45"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/README.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: docs/README.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -1903,15 +1903,15 @@
       ]
     },
     "source:apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": {
-      "fingerprint": "2cb74d1fdc06a19ae228669689db2cdba766403a3fece427af34a6141950e327",
+      "fingerprint": "72c152ae02622ca47834de6da7e34d0b498aeb9c229c1a2d6c85bc8f84300200",
       "snapshot": {
-        "apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": "3b1e2f1956e0901bf753b857d6a54a4bae5a524f2ac4abd47fd0ffc387e762bd"
+        "apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx": "2ebf2f76bb8b7e04a92b55720cf655ca20cb7aa80ca058b322055ceebd968a15"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/web/src/features/jenjang-config/pages/JenjangConfig.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/features/machine-import/components/MachineImportWorkflow.test.tsx": {
@@ -1927,17 +1927,15 @@
       ]
     },
     "source:apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx": {
-      "fingerprint": "b4a999aba42e4668d680a599064ab7c4c1dbe0848a70b1fb1a27496d22261095",
+      "fingerprint": "ff47020f1ba42cd5596f1aac8c218807e01acc2214c082ed5a6b74a69802a916",
       "snapshot": {
-        "apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx": "495694a3b813f30567c6141864c213abdd7f93dd647a2fe85e4f7d55fe9c0325"
+        "apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx": "dc618f6dde02ab38d730c1dffd8e1535292f2d3424ed205b73abd36b7ebeae13"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/features/machine-import/components/MachineImportWorkflow.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/features/readiness/components/ReadinessChecklist.test.tsx": {
@@ -2001,15 +1999,15 @@
       ]
     },
     "source:apps/web/src/pages/AbsenceReasons.tsx": {
-      "fingerprint": "b30f77a0609919d6aedd9c231b871179c7937fe7f6a8b8fd19cb29dcb20d0e77",
+      "fingerprint": "fdb4e4d90c56b9af2b6f75946ac843c52191d3786044f4a4e749947ae4413478",
       "snapshot": {
-        "apps/web/src/pages/AbsenceReasons.tsx": "3dd34ffbf3cd9054ea87a58c38069373d42eb685639e569765dbd31551f4e8a9"
+        "apps/web/src/pages/AbsenceReasons.tsx": "b3aeef5296807aa8b699527882bc4474034bc217ba0c347c8b9714d067e6761b"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/AbsenceReasons.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AbsenceReasons.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/AcademicAnalytics.test.tsx": {
@@ -2185,41 +2183,39 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceReview.tsx": {
-      "fingerprint": "785083f76f45923489110a639f30c6b80c0569bacd3dfab1b5a2ab350811d8a9",
+      "fingerprint": "ec2aebd852b9db9c342538211212dddb347f37020a7e486f22e7d3404de92add",
       "snapshot": {
-        "apps/web/src/pages/AttendanceReview.tsx": "ce9b969573299071f6627ad7cd85fecdb7ae7310861116599813b31a89aef0ed"
+        "apps/web/src/pages/AttendanceReview.tsx": "df5ca7375ec700cf90b5156463d8e0b14674d2c9bbd721873c2cfad32aa4e392"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceReview.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AttendanceReview.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/CanonicalStudentProfile.tsx": {
-      "fingerprint": "5cbb2fc468b35290a1655af01a33069c739ef8b78fc68c6945c76af43f611b05",
+      "fingerprint": "8439db2ec9bebcbdeeddd0875c4d09c6b24ff6452240c3dd62cbcfd44fada9a2",
       "snapshot": {
-        "apps/web/src/pages/CanonicalStudentProfile.tsx": "aa51f943cdd6d96adfecdd1f08cb21363867a5d67f4ebf78c0ee7ed972532076"
+        "apps/web/src/pages/CanonicalStudentProfile.tsx": "c4dcb1684babc6a067975370942cca1585fff0851f743492e3d8c9a8213a3183"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/ClassAttendanceEntry.tsx": {
-      "fingerprint": "0508b94fd19a4c328b20b2ed12a6fe91421c9100653c2c46c1a6b6e86afe8061",
+      "fingerprint": "4f5748ac476f43ba2f4c16c3f2e1ad66b4d756a7d77d062381d1fe8a756d35c1",
       "snapshot": {
-        "apps/web/src/pages/ClassAttendanceEntry.tsx": "ac5fdbbaf26a2d806790d816a8f99ab6a1037644b5dcb558b8453d0ee748fac1"
+        "apps/web/src/pages/ClassAttendanceEntry.tsx": "7253e12d6c66f370968512475d5877aeef8b98e08248e60dc2605f10d0ff064c"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed apps/web/src/pages/ClassAttendanceEntry.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/ClassAttendanceEntry.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/ClassMapping.tsx": {
@@ -2259,15 +2255,15 @@
       ]
     },
     "source:apps/web/src/pages/DailyAttendanceOperations.tsx": {
-      "fingerprint": "0fec922a28a036915fa03642a80c96c5bd4c0f113d1f9c1cc6d397ea89e969ca",
+      "fingerprint": "b1ba56e8c08850626f7a3a0f409c8a2e15f6cba32af63a56f5b936b2b966a854",
       "snapshot": {
-        "apps/web/src/pages/DailyAttendanceOperations.tsx": "762a35e564b8cfd8fd7550809e9217d2824e4cbeb5ea9526948bef9eecbfb242"
+        "apps/web/src/pages/DailyAttendanceOperations.tsx": "c4a4eb77ae9c7f36199cecb535401ad6c593f1e3f27a74888f903d56c125c6a4"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/DailyAttendanceOperations.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/DailyAttendanceOperations.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/DataPortability.test.tsx": {
@@ -2283,15 +2279,15 @@
       ]
     },
     "source:apps/web/src/pages/DataPortability.tsx": {
-      "fingerprint": "23aa602ce93351423cf058a0a291b9f45ca3a3fd39ff5a03795c52369db45296",
+      "fingerprint": "3cd793c37b1570e5ea4e48dc3b3a7b43f14a4f88526fb99d31819153f1ccb35d",
       "snapshot": {
-        "apps/web/src/pages/DataPortability.tsx": "ae752f5d0f9d5d1f7aaf8d2e12f672fea39983064ec120649330a05d6c066462"
+        "apps/web/src/pages/DataPortability.tsx": "ebe6616592ce237e6eef7f7f0bb505420dc73ae7a222e86c2fa265769f5b8f78"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/DataPortability.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/DataPortability.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/DataQuality.tsx": {
@@ -2343,15 +2339,15 @@
       ]
     },
     "source:apps/web/src/pages/GradeLedger.tsx": {
-      "fingerprint": "9cee48400680f08ee236685c2521d3d2d099711c7213481f0693e1a015fdddb8",
+      "fingerprint": "7ec59ce6fff1cdbb811ef2bfb264b18db5a53f6cd9f27c6d1752b75dd38ec365",
       "snapshot": {
-        "apps/web/src/pages/GradeLedger.tsx": "e959c460ed25d5dca019120c4b5d8f8b889a1650987eb2891ec21c19d7e99728"
+        "apps/web/src/pages/GradeLedger.tsx": "43222e40ba5cab8dbe4a310e3216fd0ceb69b13a442bf0bd592861fadd158c78"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/GradeLedger.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/GradeLedger.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/Login.tsx": {
@@ -2393,15 +2389,15 @@
       ]
     },
     "source:apps/web/src/pages/ManagementReviewStudentProfile.tsx": {
-      "fingerprint": "1acc1e4f217717ffad1284faa0be7c66dfda2aff6f1e3372e5a411fea956eb87",
+      "fingerprint": "a500043c374a69b05244279cdccd5862420231e86d9b8c0694594c13c10fe036",
       "snapshot": {
-        "apps/web/src/pages/ManagementReviewStudentProfile.tsx": "0fefcd09ae9730cacd6eb37658ea38194bb9f65e37236c4c86f1b113c7bf66fc"
+        "apps/web/src/pages/ManagementReviewStudentProfile.tsx": "9cc43f79236a4bf01ac8bcf3bc7e961c3cc11154a43f80a9df78962b441e0f72"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/ManagementReviewStudentProfile.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/ManagementReviewStudentProfile.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/MonthlyReport.test.tsx": {
@@ -2503,17 +2499,15 @@
       ]
     },
     "source:apps/web/src/pages/StaffAnalytics.tsx": {
-      "fingerprint": "77a0dea04cc72480af5394343e8abdf387d548d0a19dd80a421e8552da02c60e",
+      "fingerprint": "6bc60e145442e797872d4baf7edfe9da6fc37b9c49120346d5ba9b99cf6d5342",
       "snapshot": {
-        "apps/web/src/pages/StaffAnalytics.tsx": "3704d11081ceb4de48b5c05ae2479c1177284ab32cbeb95476ced75261d4f319"
+        "apps/web/src/pages/StaffAnalytics.tsx": "b3fa3f9effa701d00c6b77863895fa650bfa870478d2ffdc985ce749ef1c34f6"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed apps/web/src/pages/StaffAnalytics.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/StaffAnalytics.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/StaffDetail.test.tsx": {
@@ -2529,15 +2523,15 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "bb03e941d4647071210578007a2354b2a3a094b0f3797ae489a9975332bc46d5",
+      "fingerprint": "0d3c18a69ada3d043f3a126a5c508e078bd42e779783a60c3660feb3c0555485",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "d056563c6e8115628de706360d040c1b8a2beae304d8fbedd2ecfdbb418683e4"
+        "apps/web/src/pages/StaffDetail.tsx": "79cad9fce01d6ebd6014725a64b5858c3008d4cba3ce10ec90c04df2fbeb872f"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/pages/StaffDetail.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
@@ -2577,15 +2571,15 @@
       ]
     },
     "source:apps/web/src/pages/StaffManagement.tsx": {
-      "fingerprint": "9626dd6a5ba01fa66a195d77561efa6e2d1875ccdd25964b8990fc556aab2248",
+      "fingerprint": "99d269d287ba39552e1e511e6e406e02d041b70d23a7a2399ae710a238e8105d",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.tsx": "5cad3e842c703ca7203fe0b2d5f9077004212a6fb52354a06b01d3b44428de2e"
+        "apps/web/src/pages/StaffManagement.tsx": "f42663dc3a3a29c9cea7d61b1941ddef0d4aefe16f9b31ea94c168d7b179cdd7"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/StaffManagement.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/StaffWorkflows.test.tsx": {
@@ -2675,15 +2669,15 @@
       ]
     },
     "source:apps/web/src/pages/TardinessReport.tsx": {
-      "fingerprint": "5885a1599a2ddbfd34fca64a528d5a2fd14d3b298ca83bf8ee3e109ef351810b",
+      "fingerprint": "60b84384d54000faea2317dbf8e38379e4368869e2c3877fb7f3ac2d5158a9eb",
       "snapshot": {
-        "apps/web/src/pages/TardinessReport.tsx": "f1106d05e1cead03bb333de3f88c094eb064c39f651490a9c73265744c186bd5"
+        "apps/web/src/pages/TardinessReport.tsx": "3300b17859774ee2d9e8bacc5950d5c1415df57719ba8e7e316572a57281dafd"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/TardinessReport.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/TardinessReport.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/pages/UploadCenter.improved.test.tsx": {
@@ -2952,15 +2946,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "435ad4295ead66e2b669ecc3a0ae3b7aa9c4523b0a32e26ec46708b944af0257",
+      "fingerprint": "5ba11f505b33ebda6434d08bec7e5a055b818c452d997c1d9442fba1ea4362ed",
       "snapshot": {
-        "CHANGELOG.md": "e53e366a62312fd1a8d6675af55f9b98eb3d8431726ffd7e491a567c477af987"
+        "CHANGELOG.md": "9f0e4cf31d4e63acb079d10b36b8c1c924de23eda1748f7fa5b06be343f2c277"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Record PR 352 changelog entry",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: CHANGELOG.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: CHANGELOG.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:COMMANDS.md": {
@@ -3348,15 +3342,15 @@
       ]
     },
     "source:docs/architecture/overview.md": {
-      "fingerprint": "57a4817158819ed45c095ce6e60fd9f8a76627e9e4f8c5dcfbeea76e2aa5760d",
+      "fingerprint": "e487e52ad93d9964bcb9ae85f3acabbff6d02b6f82326cc999db67b17000df90",
       "snapshot": {
-        "docs/architecture/overview.md": "b358ea4d1880c762b87bb3e2b7c0587265fbb9cded9f2baf3fda45387d4cc8d3"
+        "docs/architecture/overview.md": "6a75d13a7c2693392259b0be0f87e9a27e16867346170b8689eddb02efc12027"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/architecture/overview.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/architecture/overview.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/architecture/phase-14-monorepo.md": {
@@ -3522,15 +3516,15 @@
       ]
     },
     "source:docs/decisions/sqlite-only-runtime.md": {
-      "fingerprint": "c3c04a4af167b6f67dd4e581ea2ed2075d5621385ad3a9d084d6d773cb177646",
+      "fingerprint": "927d12a7f3ecf968b0694217f5143ef83f2976dc474737b49d8185b7a983f1bf",
       "snapshot": {
-        "docs/decisions/sqlite-only-runtime.md": "fa4f737c6908233c153f953d600d95352dff585d31e7e0d4487bc95ade8fd46b"
+        "docs/decisions/sqlite-only-runtime.md": "a73c08465bdd9db3c2a09833c173e70fb50d3bd496a0f3880efef11d062445f4"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/decisions/sqlite-only-runtime.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/decisions/sqlite-only-runtime.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/decisions/tauri-desktop-architecture.md": {
@@ -4010,27 +4004,27 @@
       ]
     },
     "source:docs/guides/development-database.md": {
-      "fingerprint": "8801d9b85241c8db650e87519394adc4bbf9fb5b83861a2b15a2d71a4eaa6bcc",
+      "fingerprint": "52036fcd4c697c7c3cd0a761dd81139ebbab13e6b0e626e88771ffab5f63c210",
       "snapshot": {
-        "docs/guides/development-database.md": "8caa0faa04d37e97abe481f8e21cf9cfa3f159fd59bfd5ddcb451a88fe08b674"
+        "docs/guides/development-database.md": "c677555e2b357d102772d29e8bdb3ca407c5fa44734f7dbeefbbffec26d34d11"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/guides/development-database.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/guides/development-database.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "fe39568839dd22951ef0227313b064495c411ad33aaf05868491a84b1f63914c",
+      "fingerprint": "f36fa2768ee71adb3174cf0970608a0c4f5275fbadb64e1cf23ae8b17253fe1f",
       "snapshot": {
-        "docs/guides/offline-install.md": "65f0541f5e91bfad7be7a867980435c589e1d4e43993f387c7ae251eeff108b0"
+        "docs/guides/offline-install.md": "2723baba65d06afd95073786d25630819f6e982bb16cf57404504c93a950b6f7"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/guides/offline-install.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/guides/offline-install.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4590,17 +4584,15 @@
       ]
     },
     "source:docs/reference/production-profile.md": {
-      "fingerprint": "6a354a3a48f19b30b7f9a52c6c0343be486e53f0e96033eda7b6cc737115184b",
+      "fingerprint": "9fcf63f3128cf4918ae93696192e94e2a91e40555abe624a9d94ffc03f04fadb",
       "snapshot": {
-        "docs/reference/production-profile.md": "95942e1b9299e217fb8c7c51481a822c93fc8f0c2dda109be1ee9e84e982863b"
+        "docs/reference/production-profile.md": "144ba8f7d6b0db656abbc1cac4b501522efd6294584f6a6d584e16db129d3290"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/reference/production-profile.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/reference/risk-threshold-validation.md": {
@@ -4618,15 +4610,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "dafd6e698b0871c94ae4c947ee31ffe347799f117bf45742fe92d6db585f6030",
+      "fingerprint": "ec883e07bd896a254fe551a8e9693e25ec640c7ace9ae4ec6f9f03ceb971b2bb",
       "snapshot": {
-        "docs/reference/runtime-support.md": "68ae560a3fb0d2d72f0c34e449a304bef75dc55b790c64d17399edf76e745ff5"
+        "docs/reference/runtime-support.md": "3bd2d9b4ef113abe2533ba72c3bc5128594ccae0ff6de4f82f1915dbdaa6ed86"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/reference/runtime-support.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/reference/runtime-support.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4768,27 +4760,27 @@
       ]
     },
     "source:docs/runbooks/data-reset.md": {
-      "fingerprint": "e45eb400502da99c260f645709a928f340eacfdb3bf8ef91ec9fcf4f43cd7855",
+      "fingerprint": "899e9359bdce1f119bfec3af705089393b783433d54ef5b856c0207f1ff8232d",
       "snapshot": {
-        "docs/runbooks/data-reset.md": "b1ad08b1c471f2a210cecbb3c7256bce9b8325e3e4c5870d6b4b604454ea2afd"
+        "docs/runbooks/data-reset.md": "f7ebf1316db67f5dc752cd4c75fc53b10bc5962e88fce4a64478e511a9572b4e"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/runbooks/data-reset.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/runbooks/data-reset.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "bcb0885f1d4804bc550ea7d67c31460a813247b306270adc93511f2f4728f86a",
+      "fingerprint": "3977b18f36d0ac64a5e9cbb054718e964a75b938a475e165fe6681a1b4694ad9",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "f4cd55596b732064ac5372178709d638c8832d8ef965d60dbbd18f8f59e86de8"
+        "docs/runbooks/database-operations.md": "e939a5ea05cc3d6fc4d3ab5f33bfb16d4f6ad7cd172feda978edd71360432c51"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/runbooks/database-operations.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: docs/runbooks/database-operations.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4834,15 +4826,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "4138f841139984cd621411d3a963522c55f7d29d1204b2b2b9082d550e7a69df",
+      "fingerprint": "b43639738670443283d82946099a2b8274df63f9eb72aa761b843e1087e69288",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "0f0fae3d163fea2fae0f5ac9dccf6bdc00f5fdc120895fe24860d45613dd4521"
+        "docs/runbooks/ubuntu-server-deployment.md": "b3c1ebee31d70ba4faf71aaae0200c376ed2966de30378a63c0dd28e51219ccc"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5115,27 +5107,27 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "f0c48469f484e93a03645ab77787658715bfdfe26691a9ead01b12dd7c333a77",
+      "fingerprint": "2000c43665c444e090c8ac5c44e578582b82a61a7303e4ab99e143ab5fa6a7ac",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "15b9764afb5a9278c78b05c68e087480569dd4c892a95c031d119aa3d17b765d"
+        "apps/api/src/domains/core.ts": "8bfafcd2d66a042879d55558b014c791ece986929b754afd96b3f074f4ee29e8"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/src/domains/core.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
-      "fingerprint": "c29502208ef8ed750e24b204acd4abf2edc5a2ecc3c6534e4c724c91d5e858f2",
+      "fingerprint": "e59083b0cc015b6c50e04f876d42a70e9df6a067505044cea9140f3979a0954f",
       "snapshot": {
-        "apps/api/tests/student-nisn-filter.test.ts": "70323c77dd8e1686b90bee816574fa1146e9b19e529737d8c126468da6781e94"
+        "apps/api/tests/student-nisn-filter.test.ts": "419c9544bb3a81703395cf0ce63ddd68f288dead5433a9180870ca997fc194fd"
       },
-      "head": "525c00f8e044df92ff0e4776d2938e6504f32fb0",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the NISN filter implementation and all ten changed paths. The API route follows the existing Elysia 1 and contract DTO guidance; list and CSV behavior are covered by the affected API test. The web changes follow existing API, query, and controlled-filter patterns, with focused web tests and typechecks passing. The change adds no new reusable Elysia or frontend guidance task, so all three planning documents and existing guidance remain accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/student-nisn-filter.test.ts at 525c00f8e044df92ff0e4776d2938e6504f32fb0"
+        "Changed: apps/api/tests/student-nisn-filter.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/api/students.test.ts": {
@@ -5189,27 +5181,27 @@
       ]
     },
     "source:apps/api/src/domains/employee-management.ts": {
-      "fingerprint": "74510425079a7799d283409ef7878d36d0896bace5c7acf8495b12d7b7feb34c",
+      "fingerprint": "aedb80b05dc580ee9016911066e79b2e670c2d63837df20b8c984fe8a542e00e",
       "snapshot": {
-        "apps/api/src/domains/employee-management.ts": "e4857e1c0ba6137332e86e01d60810bedb1b5aa062792b853aee9acd00db933f"
+        "apps/api/src/domains/employee-management.ts": "69b2302f2b8180b33d3a9ab95ed4acc9227c4f058090ba48f16408cc27098f4c"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/employee-management.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/src/domains/employee-management.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/staff-metrics.ts": {
-      "fingerprint": "60cd6fe41a376785faa81270877a78666d2e23cc52d5a7d5923eabbe775c1e53",
+      "fingerprint": "f3fbf0f5fcb0c5bf85f978cb7b5568d05a9f41d95c948f6e4f7e9b86559eec81",
       "snapshot": {
-        "apps/api/src/domains/staff-metrics.ts": "a4dcb60923954a1bd1013cf0fe4bc1ef1f475af6ca7d53e8cc5274f2eecbd06a"
+        "apps/api/src/domains/staff-metrics.ts": "bccb213c55cdec406374ffb8781145ebcddab46aab41f1af02ffd300189137b2"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/staff-metrics.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/src/domains/staff-metrics.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/staff-school-units.ts": {
@@ -5237,15 +5229,15 @@
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
-      "fingerprint": "743167ac0db3f561cd13b3ea74d7deb8018347adb58d6bbf70f369351c8259ce",
+      "fingerprint": "c60c5e22e8e465a54b71953759fad90a7eb05365b2beb0fe5335367c2e2c622a",
       "snapshot": {
-        "apps/api/tests/staff-management.test.ts": "dd646cb29ef6efd1aa8442779ea063bf38456185bd05d08f23f01646a0ab2e2b"
+        "apps/api/tests/staff-management.test.ts": "c1da2987a6143cf155e4480f954f2836114421a7333fb53d11a8da6480a8d090"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/staff-management.test.ts at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: apps/api/tests/staff-management.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/system.test.ts": {
@@ -5299,15 +5291,15 @@
       ]
     },
     "source:packages/db/README.md": {
-      "fingerprint": "49f8ef375cfc6181c6c29ad62c9dbec27c906300756c3b930deca8dbd8a72ddd",
+      "fingerprint": "7eefe267e8c702c9bb9db7b6d2d4e6648b60118408844018bbeadd7151ce746f",
       "snapshot": {
-        "packages/db/README.md": "79f059533055cf1228aa161cdda68c62e226ed2bef99e2c66b212829d0efc736"
+        "packages/db/README.md": "a17bd2b0dae40d2e22a2cfc5b2c8b4de89c4ac6f56cef02d1df187df17118774"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: packages/db/README.md at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: packages/db/README.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
@@ -5323,15 +5315,15 @@
       ]
     },
     "source:packages/db/src/index.ts": {
-      "fingerprint": "a343b4d45268c120fde22106534dccdcac6599e77b070a1000b59e1479b0dad0",
+      "fingerprint": "4eefd78222bf0c2532fb12edacde74dc94bfd12ee45644f0982f466543139ed1",
       "snapshot": {
-        "packages/db/src/index.ts": "281844349cc917f0c45fd876b6a2f04ec1254f9ca4155a413a726b9724988898"
+        "packages/db/src/index.ts": "b47eb89a42330d4b38d84a33ea8b2ef03d0092a1bb185e400f17ce1c398b3957"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: packages/db/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/src/index.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/db/src/manifest.ts": {
@@ -5347,15 +5339,15 @@
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "6695fb4a43705d2e2565be8c7d9c8b0637d7bf90503e2c7db3762a4cc105f70f",
+      "fingerprint": "fc0832dd002984467ee59ec7ed6d4b148b0a415083d1be011f66dd94cb7d3de4",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "9a11c652f86a4ae9df4c00ed86e7f1d696ca6cee1ab7444aea8aa8c2d53b60e3"
+        "packages/db/src/migrate-existing.ts": "240d525a4b0aa39cda643a36356626127899b81e34d357ed45fd708a98efd4b7"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/src/migrate-existing.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5395,27 +5387,27 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "552790a91df7c22d24260d4c11aadda050d7f453d990bd0d163bc8646bf5d211",
+      "fingerprint": "2b76a2c6138b0dac40e8251876757f2058ca229fc2dfeaf1282a5895d7c9361b",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "65bf0cf25022338d5deabdb565c6fcb7a0dee89e053a9dba1d8e4f0def719f1a"
+        "packages/db/tests/db.test.ts": "18bda5a2ee61d1fd1b9ed197e36179913feebfead804a0f4db7f501fcb03efb7"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/tests/db.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "73dea37d856050a381beb945e8640c969c85a8eb672a2b830ef038d60f1005aa",
+      "fingerprint": "73aa0d47e87861a822ce240f00cbd60c66601192749e12ed1e82ce53d5f9ae82",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "e646b3a5842379c0e8c08c2020a9d819ad8279456c378ce244654533f7466992"
+        "packages/db/tests/migrate-existing.test.ts": "232d338d1506196709f79d1f6ca8e1263b823c546f23c3285a9668cadb0fb97f"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/tests/migrate-existing.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -5479,15 +5471,15 @@
       ]
     },
     "source:apps/web/src/pages/StaffMonthlyActivities.tsx": {
-      "fingerprint": "e47e99391d51616670c29a0c4ef3a783fd5c8e982ef67c9fee0e5cc018d9a17a",
+      "fingerprint": "a1f5ae90b082436d3d9036ebd8029fe6b33bce460c866bcd9c3d5391487e7f15",
       "snapshot": {
-        "apps/web/src/pages/StaffMonthlyActivities.tsx": "7825b49f865ef072f7c8e771fea76a9ce57f49d18414731e6bcef0e43621333a"
+        "apps/web/src/pages/StaffMonthlyActivities.tsx": "29ed3fc16dd4f47136a7019f2d5350ef42febc349e24cceb8b8c23900970c499"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffMonthlyActivities.tsx at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: apps/web/src/pages/StaffMonthlyActivities.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/routes/routeDefinitions.test.tsx": {
@@ -5503,15 +5495,15 @@
       ]
     },
     "source:e2e/smoke/web/staff-monthly-activities.spec.ts": {
-      "fingerprint": "ab83d0f7ababa78ec042eb9533406e9b1edb0a5976a42e17bb0ddc0057be7ba5",
+      "fingerprint": "fd188287f3d2516facbd2f254cce7b89ec0d4960ac72f6a1a3ea057fec656641",
       "snapshot": {
-        "e2e/smoke/web/staff-monthly-activities.spec.ts": "2f113028abf6be9411ef95b45f763b3c3c18b9078d446edb67aed0588c36ec5b"
+        "e2e/smoke/web/staff-monthly-activities.spec.ts": "2b67eda3c1b08b729f17eb03e527644561a1439e89452298b5c6378b9b169a01"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/staff-monthly-activities.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/contracts/src/staff-monthly-activity.ts": {
@@ -5539,41 +5531,39 @@
       ]
     },
     "source:apps/api/src/domains/operator.ts": {
-      "fingerprint": "178fc497aec3e55e399934c4573438186abc5f7a6395ab93d7a3125f282f4973",
+      "fingerprint": "d0a7d8e2603d48a3b9b355dd7d7e6bf6cebe9bd7e8cfb92bb6ee089a23d3033d",
       "snapshot": {
-        "apps/api/src/domains/operator.ts": "efa24fb469622f0a768b33e01ab83d1df7482a51a88a05718bff1f8b182add18"
+        "apps/api/src/domains/operator.ts": "b0729958449f1c7f278a25e7bd35ffe2c6e5398c76a3147a665dcb082e9c9b0a"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/operator.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/api/src/domains/operator.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/core.test.ts": {
-      "fingerprint": "3666ffe789ea8c607c06e15fd8591976a6288877ba62d99cb6556bd4c0facb87",
+      "fingerprint": "8a9ddc24198e3e346ff996bed505a1f067a70fa2f00fb5b300678fa7260c43b9",
       "snapshot": {
-        "apps/api/tests/core.test.ts": "43a44d4ad9c50f454e33c992f2b1c9933b8f79b3ba4cbc0dc04adb972f02cceb"
+        "apps/api/tests/core.test.ts": "725b86a448222856f848bc12ba2ee79f6d57f896048aa7b4dd359f3cf9d1c246"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Test expectation update only: the work-queue endpoint now returns two STUDENT_VERIFICATION items from the golden fixture instead of an empty array. No guidance change.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for apps/api/tests/core.test.ts.",
-        "Changed: apps/api/tests/core.test.ts at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: apps/api/tests/core.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/operator-phase6.test.ts": {
-      "fingerprint": "2e13bc01f589aa42767bf6f610606198847650a1a24dd5717f94c3ee298d1352",
+      "fingerprint": "e83a7cff9b367297a78d17e7899012252ce74136587090692f56939eb36e2668",
       "snapshot": {
-        "apps/api/tests/operator-phase6.test.ts": "77a820db518b10f4839b7bd06970dd66e532cf9a386afe0ae3dbbd815dc8ca21"
+        "apps/api/tests/operator-phase6.test.ts": "afb8c4548b605b77d2565e6891764846a3c6cca95ab1a3192c1242ff666623ee"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/operator-phase6.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/api/tests/operator-phase6.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
@@ -5617,27 +5607,27 @@
       ]
     },
     "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
-      "fingerprint": "81f074ca7ddb1b0fddc153e1a0c1c8ba828a1ce81e0039596f7872807c27fc92",
+      "fingerprint": "5fd69f6bbfbc65b6d5beb84ac787e9dcf52f92e755cc111aabb3fbbb24ae8832",
       "snapshot": {
-        "e2e/smoke/web/analytics-phase-a.spec.ts": "5328e31a56c656f8bb3b6ab83f4f2a11f1f9ab00fe80dcd51ea542924835b9c7"
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "fccc837fc6415d28394fdb5a9fb9efcf43f0e6e8ab204593a6f083afd177e587"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/upp-reports.spec.ts": {
-      "fingerprint": "c0052fe6b3ad875fb7e028f3b5f54af6293e1efdc3e5e87d42727658ab833d58",
+      "fingerprint": "d716d838be2ae49a226f182f77a3271a9b04744a452ab55ae40ab7fb7054449b",
       "snapshot": {
-        "e2e/smoke/web/upp-reports.spec.ts": "e333a3f40fd96e16a8e4beb835c0cbe5d8dda5e2e425a44845392dc2c407a7b7"
+        "e2e/smoke/web/upp-reports.spec.ts": "67575a9461619fcdb1b8f120d30071a9fa84a48b5a0c44203fd5f96b2e50f444"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/upp-reports.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/upp-reports.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/contracts/src/admin-dashboard.ts": {
@@ -5665,15 +5655,15 @@
       ]
     },
     "source:apps/api/src/domains/upp-report-files.ts": {
-      "fingerprint": "095b8462c221dee4b3e571250a17cc5d164e76784455f1f2d8b1f14c5d271b38",
+      "fingerprint": "caa5518dea41bbca8689f22509db01fc8da681ac7a82fa76a75797017617408e",
       "snapshot": {
-        "apps/api/src/domains/upp-report-files.ts": "8f3571d5276b23ccfc6518460c2f50217773483962402ba87813fa16e6001d7c"
+        "apps/api/src/domains/upp-report-files.ts": "c06f79b7c10880e7f43e4cf1d0d7abe9ad803a6d6482bb8c5d7891366bf2d1c9"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/upp-report-files.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/src/domains/upp-report-files.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/upp-reports.ts": {
@@ -5749,15 +5739,15 @@
       ]
     },
     "source:apps/web/src/pages/UppReports.tsx": {
-      "fingerprint": "be4b5577466a759ba7705b019f6539bfe3103ddbe04f9442e34ac8260067ebd2",
+      "fingerprint": "bbd7fbf24c88f68674fb089a72242ffc69a4b6764efc0e698a629a886dd4a2c8",
       "snapshot": {
-        "apps/web/src/pages/UppReports.tsx": "c0eaa418be79d9c2567f557f296a82fd0c4262871229e0bfc76feb67df625c83"
+        "apps/web/src/pages/UppReports.tsx": "7f4054f261320cc232d9d4cfb6e4eabd8138222b623d9d9a5f66a5532ae2809c"
       },
-      "head": "b1e3d06d88d05f2c7bea908d33df4d4505dadda1",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 4 UPP diff from base 0409c9c13dbe8fc62fa3e59040716c40fed96b2d to the current head. API registration and the UPP handler/tests use existing Elysia 1.4.29 composition and testing patterns; the only Elysia-linked guide change updates disposable database evidence from S5.0 to S5.1 without changing Elysia advice. Contracts, migration, backup handling, web UI, and E2E add no new backend framework task. The existing Elysia source notes and _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml remain accurate for the sole registered skill and no-distribution mode. The app setup guard is covered by the three previously failing API suites (13 tests pass), and API typechecking passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/UppReports.tsx at b1e3d06d88d05f2c7bea908d33df4d4505dadda1"
+        "Changed: apps/web/src/pages/UppReports.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/contracts/src/upp-reports.ts": {
@@ -5845,15 +5835,15 @@
       ]
     },
     "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
-      "fingerprint": "a539c8fca3bc94060f8b9378ddac83f20b764e4301217ab6f0bf0fddd09fa6fa",
+      "fingerprint": "88a715ad686e25f277083988961e2dbad746b35026875552434f5fa405c41691",
       "snapshot": {
-        "e2e/smoke/web/student-administration-phase56.spec.ts": "9ae810e7526f5364ffa7cc3e26c815efbae872ffdc55eca28d89333bdd35e338"
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "b6520a9951f38e66a94fab2623bee295c3441ac1ee95f20d9c086d20acfb455b"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/db/src/s54-migration.sql": {
@@ -5917,27 +5907,27 @@
       ]
     },
     "source:apps/api/src/domains/data-portability.ts": {
-      "fingerprint": "cd7fd310799004ec9253d1d89d91e0d87889091eb0d7657890eb735bcbb1b037",
+      "fingerprint": "9a5f53bf11700824bfc5daad1018ade21a32835d264d109cef625307c63c6531",
       "snapshot": {
-        "apps/api/src/domains/data-portability.ts": "5706130a316d6128909197b3ac430afab1d6d70af79aa794885446a0faaa410c"
+        "apps/api/src/domains/data-portability.ts": "55be0d6314b91d5375d46bd4b37e01c3d1d0cdccb2d848e73dfcdb6c3397e61c"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/data-portability.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: apps/api/src/domains/data-portability.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/data-portability.test.ts": {
-      "fingerprint": "646effce290610868bd6ed0bff86b1b05129451cd7678874ae4357e9a184340a",
+      "fingerprint": "a511cf68d38d00d49b4b4c3485532ea421aa9a82552b08f8276a739df9020225",
       "snapshot": {
-        "apps/api/tests/data-portability.test.ts": "a81d8e16dd51702267d2ca08f0751c6fb43b58470d4aeefd78d3bd6fbe458474"
+        "apps/api/tests/data-portability.test.ts": "b317085388b177612a44aba393b9bb09557ea03fe5b695703642438df1938837"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/tests/data-portability.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: apps/api/tests/data-portability.test.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/readiness.test.ts": {
@@ -7003,15 +6993,15 @@
       ]
     },
     "source:e2e/smoke/web/data-management-import-export.spec.ts": {
-      "fingerprint": "bcbeae2fbb611ffdefbfd750856c0cf403ddc278914fe08070b850bf0ebe716b",
+      "fingerprint": "9882b31ec439f69a0a9a29f5f4a9b82b38c1c71ad1081c780496e317779bd522",
       "snapshot": {
-        "e2e/smoke/web/data-management-import-export.spec.ts": "4b43446129cfd86bd77282111d552bc8091adb97f9dcb1a4bf7290ab938d1d96"
+        "e2e/smoke/web/data-management-import-export.spec.ts": "c69106ddda6a2bae6384445efb1e5b8accc4ec7aa1c2555a14fc798a93490c58"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/student-360-overview.spec.ts": {
@@ -7150,15 +7140,15 @@
       ]
     },
     "source:docs/audits/dependency-optimization.md": {
-      "fingerprint": "34e622058008d716aee50eed2a4d03d76bf5c1e03aa5fe5ecce3c934dafd6cc0",
+      "fingerprint": "28a35a9e6b84f9abdb68cb1e970f90a74602cd06ce3e3915c4909a9366f348a4",
       "snapshot": {
-        "docs/audits/dependency-optimization.md": "a76e41685c942b9943e0fd04751674f640dea132998798069fe16959cd5e5b8b"
+        "docs/audits/dependency-optimization.md": "7d37af4efd6963b931c91d659951730d62e384e329b69336e90817b98257b99f"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/audits/dependency-optimization.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: docs/audits/dependency-optimization.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:.gitignore": {
@@ -7412,17 +7402,15 @@
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": {
-      "fingerprint": "0c9d94831b7e3dfdcd848d363ba69d33df174bc695147bb28481d4d180fe08ce",
+      "fingerprint": "08b195f64872ca98a412bea86a9f3cf584f8e9223d8ba69708eac5651b68c8e7",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "005f6b8aae51de1c97b09a8fe2e34320121403a536bea71231108b1fc2fc2c0c"
+        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "70e6fb0ef591cc19c9e24511ffcb6f4e858b9203d0ae4cdb875ec8514fcb891e"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "f41d9000d619472a0ae61392fc176b6fab1c5239",
+      "outcome": "no-change",
+      "reason": "Updated the synthetic navigation search test to provide its opener after the callback ref attaches, matching production state and avoiding a render timing dependency. No Elysia skill source or guidance changed.",
       "evidence": [
-        "Reviewed apps/web/src/components/navigation/NavigationCommandSearch.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at f41d9000d619472a0ae61392fc176b6fab1c5239"
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.tsx": {
@@ -7868,17 +7856,15 @@
       ]
     },
     "source:docs/decisions/tanstack-redact-research.md": {
-      "fingerprint": "0c783e230ba58ec424343775d8f93594048d092cc74b95d5c13f094867d81cfc",
+      "fingerprint": "2f269d3047e4c5aa59df7227465621b93a9b69bc5c4e23bf0dbd3276a358374f",
       "snapshot": {
-        "docs/decisions/tanstack-redact-research.md": "5bd77f0d05b115ce421d4d17a8124f5ca0558102a062f8f36afa20f8f1a26849"
+        "docs/decisions/tanstack-redact-research.md": "5f51fde5929638b05c6836c30701801a1ee7f3de569dd68f59473ed1d226fa39"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed docs/decisions/tanstack-redact-research.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/decisions/tanstack-redact-research.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/reference/frontend-performance-baseline-samples.json": {
@@ -7896,15 +7882,15 @@
       ]
     },
     "source:docs/reference/frontend-performance-baseline.md": {
-      "fingerprint": "e7978bf063e74c758fd79d9ff1f5326357b90857f73420f4eb41bdb779c5c61f",
+      "fingerprint": "f84d895b1032e0044c6f305f36ec72edb8ccd5603c715b64700b034890546232",
       "snapshot": {
-        "docs/reference/frontend-performance-baseline.md": "b9ba981cfc299853ce10d8dac78bc36c6e44b3e62d59ddfe69bbd678274aa846"
+        "docs/reference/frontend-performance-baseline.md": "fa2adee403a8e63101bbad4a8206026dcb017ba07a7fe8a86d86ddca4413e453"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/reference/frontend-performance-baseline.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/reference/frontend-performance-baseline.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/reference/frontend-query-focus-comparison.json": {
@@ -7936,17 +7922,15 @@
       ]
     },
     "source:docs/reference/frontend-release-validation.md": {
-      "fingerprint": "60186f11da18847b7d00b6bd8c5553d511c674bf876651d22c99e45cfadf0a25",
+      "fingerprint": "43aebfcce8502e98f9ee52ec2a2bd72dada62b203f8c98b66fdb72cd4bd29414",
       "snapshot": {
-        "docs/reference/frontend-release-validation.md": "46fe9880743dea2faf8f8252f09bc81aa061078f5b71c9ce1d2a6a7225e3bd93"
+        "docs/reference/frontend-release-validation.md": "45947c493f09a782775153b6467b209de4c3e465a72dea1089bcafb36af3ce3e"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed docs/reference/frontend-release-validation.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: docs/reference/frontend-release-validation.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/reference/tanstack-redact-comparison-samples.json": {
@@ -7964,17 +7948,15 @@
       ]
     },
     "source:e2e/run-smoke.sh": {
-      "fingerprint": "49c384eb6482efeac99aea277ec1e7648f1504cc84cdb7c3e0cede95b69694b3",
+      "fingerprint": "35abbfb1123e828865703dd298220ac2fe82f4ced24307ea0b647fdd4cfb6840",
       "snapshot": {
-        "e2e/run-smoke.sh": "68ad15d415d7ff279d294a978b715fb53ea9736e576d6200ab16f86ae9f15e97"
+        "e2e/run-smoke.sh": "4d1edf012e1fd78ae54a36cf69a4553953383c3df98e8cf8b7ffd59b51f8985f"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Reviewed e2e/run-smoke.sh in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/run-smoke.sh at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/attendance-followup-table.spec.ts": {
@@ -8014,15 +7996,15 @@
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
-      "fingerprint": "c2890c73ec68fa10670e0f675c220e01d3a88ece754bb0462c6a54eafa90bf68",
+      "fingerprint": "aaec3e9d495433037cb080c68c5ebfa1ad397d2143dd49c5b9f36b1af1b37dfe",
       "snapshot": {
-        "e2e/smoke/web/management-analytics-overview.spec.ts": "f46f1f14415b8b7f1794b05dd45de7422375d2ab301b6779c8a20584643a7b31"
+        "e2e/smoke/web/management-analytics-overview.spec.ts": "4baa73b02dea6e90dc296d0932d7e6c711c5ff85162936c98448a6272e05d6d1"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/navigation-command-search.spec.ts": {
@@ -8064,27 +8046,27 @@
       ]
     },
     "source:e2e/smoke/web/responsive-review.spec.ts": {
-      "fingerprint": "940ed2a4f27d192ef44fd5d5a67cedf59b28ad50d6d99d0fa60ff09c61f2e968",
+      "fingerprint": "b25842c3e13930806fee1b762eab42b4ba4c6c46f619b6eb9689832939170aae",
       "snapshot": {
-        "e2e/smoke/web/responsive-review.spec.ts": "7368512c92daf271a44c06171b2664d8387e6fc66d6a750dccdcf7cf841abe2d"
+        "e2e/smoke/web/responsive-review.spec.ts": "4c74cfee59c8c125c5af4033263d0bdcdb8411bd5fb827334b6059eadf273c76"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/responsive-review.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/responsive-review.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/ui-preferences.spec.ts": {
-      "fingerprint": "e42909c589b480f5b447d86af420b3ce511edd6ec7fd1e1ee10939329d8c5460",
+      "fingerprint": "390a2eec7208f70b13f43b5f3771565dc808b1cec5aafabafe19fa60168efa93",
       "snapshot": {
-        "e2e/smoke/web/ui-preferences.spec.ts": "5779be38d47bc7d34e2123001f0f8a196ec49a63641ee25d103bc3809650ecc7"
+        "e2e/smoke/web/ui-preferences.spec.ts": "8660bf5fd67a5b915638974b7028f8f380fca668bf89bbda3b1fe3b075ecc7fb"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/ui-preferences.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/ui-preferences.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/start-elysia-test-stack.sh": {
@@ -8256,15 +8238,15 @@
       ]
     },
     "source:apps/api/src/domains/config.ts": {
-      "fingerprint": "420b62e150202e9fbd381fc24aa1fc41e8aba20c4b0f2eb5546037387ef11e53",
+      "fingerprint": "b8cf7c804b2f34bfd635ee64f7b9f8bf7cc230d16f160aa11b39ce9b962e6db4",
       "snapshot": {
-        "apps/api/src/domains/config.ts": "d778266599e11c4f91c2d376ce583c1bde482c61f4a99452128e8b40df4ab589"
+        "apps/api/src/domains/config.ts": "bf39bf77dd29f29278a2d0a3a6e218392023d036f273ad47dac14c129a6f378f"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/config.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/api/src/domains/config.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/roster.ts": {
@@ -8280,27 +8262,27 @@
       ]
     },
     "source:apps/api/src/domains/student-import-sessions.ts": {
-      "fingerprint": "9c8a8f9ac30383d0b2ebdcd2d9d531f0c8447b0579130679dc4d1cff8a45e84d",
+      "fingerprint": "dd3967eba93b61b1f0a3169d670169f3bdaea57c08f5699038a1076021c5f7f5",
       "snapshot": {
-        "apps/api/src/domains/student-import-sessions.ts": "beb34f1aa4f113cd553e68a3e81c35a0a466133ed8943c8f66d3737ab4270657"
+        "apps/api/src/domains/student-import-sessions.ts": "206f03e5c980e2f0ef3d1cd786ed0262b2c1d446e2f58dae57952bfd39ed656e"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/student-import-sessions.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/api/src/domains/student-import-sessions.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/src/domains/student-update.ts": {
-      "fingerprint": "46291169c953d3b033c264a9c6c6a514fd35ccfe1b7dc67a80e43da0de038db6",
+      "fingerprint": "99eabfddf774249ed511ef12c77b8f4ed6bda4d62342a213b8dc149b95702b2b",
       "snapshot": {
-        "apps/api/src/domains/student-update.ts": "d65099cc1e4a0466dbaceec5a67a332f754530c514ce192f523805ef647dbe44"
+        "apps/api/src/domains/student-update.ts": "f30c78d3507fd397df216e940735eab75666c41c8bcdd0eb22dea1413e8c93ce"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/student-update.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/api/src/domains/student-update.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/api/jenjangConfig.ts": {
@@ -8316,15 +8298,15 @@
       ]
     },
     "source:apps/web/src/components/upload/RosterImportPanel.tsx": {
-      "fingerprint": "49bbab3e99867f379ce6ce782314ab968bcb1d36959f1345fa2b7a4790be7d86",
+      "fingerprint": "92b02f4672ee8a590b0d3a2d019bf42624e0be8fba638d9573a7609ac7e719fc",
       "snapshot": {
-        "apps/web/src/components/upload/RosterImportPanel.tsx": "28e97076bd4815fd63685029a26a05e93d19a37b4fc80f19ed587d9caec2a200"
+        "apps/web/src/components/upload/RosterImportPanel.tsx": "4b76dc5618802cedaedf3ced784f87ddbe35c349ecc48b882a3938520dc43471"
       },
-      "head": "e2f31223cd3a7cf60062c281ccba616a178c42c7",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Trimmed only trailing blank lines in the extracted panels. Existing upload flow and guidance remain unchanged; git diff --check passes.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/components/upload/RosterImportPanel.tsx at e2f31223cd3a7cf60062c281ccba616a178c42c7"
+        "Changed: apps/web/src/components/upload/RosterImportPanel.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/components/upload/StudentUpdatePanel.tsx": {
@@ -8376,15 +8358,15 @@
       ]
     },
     "source:apps/web/src/pages/HebConfig.tsx": {
-      "fingerprint": "81d20695b55403218165d1f94869c96ebf513ed06937598443dd5444f7dcdfe6",
+      "fingerprint": "953b150f707dcdd717a53ded5bec65fd154990975b919da69cd3860bd06a8b3d",
       "snapshot": {
-        "apps/web/src/pages/HebConfig.tsx": "d2791bb48026790eb2b9414ad6ab2849d9cd338032e490eed75f75dbc86879c2"
+        "apps/web/src/pages/HebConfig.tsx": "22fd3573425a283b73c128c18309ffae0c8da6fb487cfdcfacf401be614b36f0"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/web/src/pages/HebConfig.tsx at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/web/src/pages/HebConfig.tsx at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:packages/contracts/src/config/index.ts": {
@@ -8460,15 +8442,15 @@
       ]
     },
     "source:apps/api/src/domains/upload-conflicts.ts": {
-      "fingerprint": "68fb30e3cfa13d9da723bc68282a95833064b6e2cf4d9cbc53d2a1e5037e3c5a",
+      "fingerprint": "fd2116971e34906912f595b72fdd2877c5560cd967d488b635c7887babb426a4",
       "snapshot": {
-        "apps/api/src/domains/upload-conflicts.ts": "aec548721ec470c662a736d66bdcc76162ff4c654ba17980edfd22438de16ef3"
+        "apps/api/src/domains/upload-conflicts.ts": "73e0ae552937bac8ec193c4f72ebad9ab63a6c6cbd5f735d129ead803f14eff4"
       },
-      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: apps/api/src/domains/upload-conflicts.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
+        "Changed: apps/api/src/domains/upload-conflicts.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/api/tests/machine-attendance-preview.test.ts": {
@@ -8532,15 +8514,15 @@
       ]
     },
     "source:docs/decisions/tanstack-start-spa.md": {
-      "fingerprint": "accac200f5fefd019e3983adb7c4587df04e0d9b70cfcba528355f085c5103d3",
+      "fingerprint": "701b749635672f9d03f2cb40af7c7e5a51bfcd1a9d4c18f60ed98b83f74ab976",
       "snapshot": {
-        "docs/decisions/tanstack-start-spa.md": "aef5eda3ae87b6677096021d97b9c21ece439997e418bc37be2c184221157f3e"
+        "docs/decisions/tanstack-start-spa.md": "93e37e51ad680d4c80c88c6fdaeb6b075877c1bf9773012bf9b23585cb3396ad"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: docs/decisions/tanstack-start-spa.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/decisions/tanstack-start-spa.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:docs/session/tanstack-start-migration.tsv": {
@@ -8556,15 +8538,15 @@
       ]
     },
     "source:e2e/README.md": {
-      "fingerprint": "941aa8eb6abca29a7a34f21fce4e0f4d3062c293ed1352ed1afd0ca2d872317e",
+      "fingerprint": "cd5d9e2620d0907a084d650074458dc8839fd029b565fa22c1508322386e7ee2",
       "snapshot": {
-        "e2e/README.md": "6ba0c0cd08566f9dfd3509f57dd94f4cacf1ee1c82c08e8434a790b9d228e260"
+        "e2e/README.md": "01f58ea58d3a40e4a703305c0acd00b3b3d54c60988daa252ad936fc16d89576"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/README.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: e2e/README.md at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:apps/web/src/lib/api/errors.test.ts": {
@@ -8592,15 +8574,15 @@
       ]
     },
     "source:e2e/helpers/feature-login.ts": {
-      "fingerprint": "452e7fc1b523e77b3499fe2b055ead818790b5c9dc4251af0b1fd700230d35c6",
+      "fingerprint": "9a5de9718fbcb13a02af6c783f46ad242e8760f9ee6e17b8e0efcbed31bd7d08",
       "snapshot": {
-        "e2e/helpers/feature-login.ts": "3da5548fe690c8fda3018f7e7559c905d5471cff126825baeb6a5569a952b6d8"
+        "e2e/helpers/feature-login.ts": "d71cdb78af6fcbd6ebc17aa37abfc325ae5824920634e7aca577eac45b0ebae2"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/helpers/feature-login.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/helpers/feature-login.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/academic-analytics.spec.ts": {
@@ -8616,15 +8598,15 @@
       ]
     },
     "source:e2e/smoke/web/assessment-operations.spec.ts": {
-      "fingerprint": "43e2683b95212867f65b2a9509463a2f1bcb2c4ac84ccaca1698e95049ed382a",
+      "fingerprint": "39478024e261ebcc1c64ceaede64ed7ebf50c72e5491f38db2d0974a8851f256",
       "snapshot": {
-        "e2e/smoke/web/assessment-operations.spec.ts": "f3057f27dbea27e2b581bf57e6faf0cb6bf144b0f0152cda4dd90c79d7425cf6"
+        "e2e/smoke/web/assessment-operations.spec.ts": "2148e305ffa846367f7ea5cb350314375c1496f23ad695a33692b8d711c3ab7b"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/assessment-operations.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/assessment-operations.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/attendance-analytics.spec.ts": {
@@ -8640,15 +8622,15 @@
       ]
     },
     "source:e2e/smoke/web/attendance-machine-preview.spec.ts": {
-      "fingerprint": "c683f7dbde815d0b417cb0eb96b0c3dce0a102b1828e2ec42359bb5b9c1ab942",
+      "fingerprint": "d920d1e62325334685fe1fbca486b90fe297be4ee5346cd718d460ee97ed4a47",
       "snapshot": {
-        "e2e/smoke/web/attendance-machine-preview.spec.ts": "c4839df15c7404c079c0bf0f21723230b023e6b5c397b5b663703c93bef080d5"
+        "e2e/smoke/web/attendance-machine-preview.spec.ts": "7af5f72e660d23f521806a91655579326f9b174ff89e2585d20a2dddcdf9abd8"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/attendance-machine-preview.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/attendance-machine-preview.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/attendance-reconciliation.spec.ts": {
@@ -8676,27 +8658,27 @@
       ]
     },
     "source:e2e/smoke/web/critical-paths.spec.ts": {
-      "fingerprint": "c0cd8a756e633d2d5b74da7c30c5fd50a5362514e7d437f88c0f5177ae683432",
+      "fingerprint": "37e212dd1c8e9dc7c330d17b12231315205f5c3f11a74a967efadfce7145e2c1",
       "snapshot": {
-        "e2e/smoke/web/critical-paths.spec.ts": "801d82068893b11b0351844d3b01642e5991261b4cb014847e7ac16000b7f6c6"
+        "e2e/smoke/web/critical-paths.spec.ts": "7efff8740530505eb6e42540b5dbcf6b50b6d8ff3375b6b727aaec1c67166eb1"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/critical-paths.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/critical-paths.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/daily-attendance-operations.spec.ts": {
-      "fingerprint": "fa53edd6881c0b7961c5801ce855a85b7472709ce90473dc6413449881914342",
+      "fingerprint": "d8e18b2c3337091498939100d3d1cab8a07b8875af65de6e7278e2fcb6953c63",
       "snapshot": {
-        "e2e/smoke/web/daily-attendance-operations.spec.ts": "ccabcea6085c26ebc1b2fd70cad5b880e3a2ace33a183a14895ba1d3f8d4b10a"
+        "e2e/smoke/web/daily-attendance-operations.spec.ts": "df5b77cd19b9219d3bd86990c73badea8247e57682bf5c8813d0b96ef62cf685"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/daily-attendance-operations.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/daily-attendance-operations.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/data-quality-resolution.spec.ts": {
@@ -8748,15 +8730,15 @@
       ]
     },
     "source:e2e/smoke/web/manual-absence-reporting.spec.ts": {
-      "fingerprint": "b32b5ae12d866fdbb1b14a5f57e1a1139a3aa872fe04047f8fc844d4ca4eae8f",
+      "fingerprint": "ec7bca7bdf68bf31f0779a8a6876fcd0e9004bb21e8a14a0d6c7090c6f229dc6",
       "snapshot": {
-        "e2e/smoke/web/manual-absence-reporting.spec.ts": "326dc09d4c59ac553efc9fa0841c1034f3acce9a8f9349b286bb80bf555241b5"
+        "e2e/smoke/web/manual-absence-reporting.spec.ts": "f37ed273ef6de17666965318301e6916b5055517f1fdb7a3c1b0e79e9f29869e"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/manual-absence-reporting.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/manual-absence-reporting.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/manual-absence-save-state.spec.ts": {
@@ -8772,27 +8754,27 @@
       ]
     },
     "source:e2e/smoke/web/session-verification-retry.spec.ts": {
-      "fingerprint": "5925b55829c7ac7e9fc305edf3445ae77f22049426e7add1ed6d83f7c8a24281",
+      "fingerprint": "8977979197993f0324b86f53e7bfc29c66a488db4e83c7edb9ecd53df2054b74",
       "snapshot": {
-        "e2e/smoke/web/session-verification-retry.spec.ts": "72bdc0a180c61ac009470ca98b723fdb317a177cd6cd3f2cc8c5c26d242c7b15"
+        "e2e/smoke/web/session-verification-retry.spec.ts": "302770b32db8da21d36faf05c7e25e6665483f80e02bdf6192899b548fe6fe98"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/session-verification-retry.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/session-verification-retry.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/student-indicator-insights.spec.ts": {
-      "fingerprint": "72badd81c6dcc6330d15f6aa426a2e7ad6ca03f8bc6c3d7cd202148aebb4ef5a",
+      "fingerprint": "7599eeced534f28cd86e9b9db1fa780451570620f8230a51008199cf59ec924e",
       "snapshot": {
-        "e2e/smoke/web/student-indicator-insights.spec.ts": "868c17a41df53456e495ac67d38f1da9261dbbf3fb299c4a69d2d6729cdbe1d1"
+        "e2e/smoke/web/student-indicator-insights.spec.ts": "dc11831887685d6ecbe7f0a2fb0cae0cdf01fee155c3f205f039c8aa97b60b73"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-indicator-insights.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/student-indicator-insights.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/student-trend-insights.spec.ts": {
@@ -8808,27 +8790,27 @@
       ]
     },
     "source:e2e/smoke/web/student-update-detail.spec.ts": {
-      "fingerprint": "3c943cd0f2795aba665768f1e3d266e3f57c4416a4a96cd50724012da9a44c4d",
+      "fingerprint": "aba2410da86c68883dae39fd518a4d32e14ade3c3ad3a6c47e49e1f600b56933",
       "snapshot": {
-        "e2e/smoke/web/student-update-detail.spec.ts": "127ee491c3aa2ba2fa9a460a2a65c72f9070bd101fcbfa81748a4b1d9bb1e227"
+        "e2e/smoke/web/student-update-detail.spec.ts": "b8f29608d2e3e1401cafcfb881c11f507d87f07edd96616c4d4d1fe5408e97d7"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-update-detail.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/student-update-detail.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/term-lateness.spec.ts": {
-      "fingerprint": "ead8c2e7fbfc62d17547a663fa93f88b8300e2db9d3a92797093a3c62de9a194",
+      "fingerprint": "0c97c0f3e5d8616579569455f7dd0c218df00142055bbd567b0bd510147a28b7",
       "snapshot": {
-        "e2e/smoke/web/term-lateness.spec.ts": "cdc40e572d1ff0e1d5214f1cc6d15013d1ec61950ee70229d1ec7e4185142da9"
+        "e2e/smoke/web/term-lateness.spec.ts": "b407f50b85b71b9cc30db6c850f3d960fea6c976d34a4746266ddea0143b40e6"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "039c44449118797c4f20b29419e63367722150d2",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
       "evidence": [
-        "Changed: e2e/smoke/web/term-lateness.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/term-lateness.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
       ]
     },
     "source:e2e/smoke/web/upload-conflict-regression.spec.ts": {
@@ -9417,6 +9399,474 @@
       "reason": "Update lazy loader and test path resolution",
       "evidence": [
         "Changed: project-sources/TESTS_AND_ACCEPTANCE.md at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+      ]
+    },
+    "source:apps/api/src/domains/class-overview.ts": {
+      "fingerprint": "e24630cdb5aca5f4db3172d30b60b8cf683fc59766b8fc0d49559429b008185f",
+      "snapshot": {
+        "apps/api/src/domains/class-overview.ts": "4285375f56d3d612c213c2fb4bcc111891a1140981127a0faad80fc53ab642f3"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/class-overview.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/recapitulation.ts": {
+      "fingerprint": "8969a0e9f12d60f02390c759e940459b8494bdae9e75b09a5e90240e65426215",
+      "snapshot": {
+        "apps/api/src/domains/recapitulation.ts": "0d1cd15d57b8f7800191bf9b2440868bed186e7ace220d8098467be164045b72"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/recapitulation.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/reports.ts": {
+      "fingerprint": "1b6b3ca8f7445bdc26a22add2ad7b1c15cbde89b4977a25cdb5517fe5e3d298d",
+      "snapshot": {
+        "apps/api/src/domains/reports.ts": "96d5ad1a47fe28f683127ce0e982ca16a68e68e25afc75c7c4114e50c007db15"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/reports.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/staff-import.ts": {
+      "fingerprint": "b5f9e9aef17e9ba48013ec4a716567e3a1ad090b1680b1eaa064a203b3fee9a3",
+      "snapshot": {
+        "apps/api/src/domains/staff-import.ts": "c0e925923a57fd114e3bd5191204007511f0337cbefee67f7ba2ba27c679d5d4"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-import.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/student-overview.ts": {
+      "fingerprint": "de108ca6dc923be90f408ddda13baf65858bbbad2f918c6c9e2a18024e32a104",
+      "snapshot": {
+        "apps/api/src/domains/student-overview.ts": "6b114e08fe75c7d9a557e5677da16b1d237b2a4c8e654d09b7a698cf7e25c6c6"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-overview.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/student-update-rollback.ts": {
+      "fingerprint": "12f97bb072572ecffe1a789e5828cf781cce2b30fc8f7a0f0e9ce8054840637f",
+      "snapshot": {
+        "apps/api/src/domains/student-update-rollback.ts": "5ad00669317270ee0880338e50db75c059ea19d298882a0b211b13f1ce48a673"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/student-update-rollback.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/src/domains/upload-history.ts": {
+      "fingerprint": "3205b60c66fe127dbe703f59f08c2e91208c757d900bbed51cf40534f353ed7f",
+      "snapshot": {
+        "apps/api/src/domains/upload-history.ts": "76e354035dd042e25ae12c65ac22bd392bbfb21b4f83f6b9a1f909437113f404"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/src/domains/upload-history.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/tests/attendance-reconciliation.test.ts": {
+      "fingerprint": "de63b7aa29f3bab43c717b94cd1dd62fc03df8649fc206ca62307f363eda8bee",
+      "snapshot": {
+        "apps/api/tests/attendance-reconciliation.test.ts": "65ce961b28cd013e382685a58262f5a4c012dcdad1a997be780351771e8da964"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/tests/attendance-reconciliation.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/tests/class-overview.test.ts": {
+      "fingerprint": "ee554fca1e65b8f2fe4a2f512496ecaf05d375463569a9333db02196be802015",
+      "snapshot": {
+        "apps/api/tests/class-overview.test.ts": "79ac8079152b4e5c3dbadccbd472482af7dfc54ffb04f5dc2be3bfac83c4f52a"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/tests/class-overview.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/tests/recapitulation.test.ts": {
+      "fingerprint": "a0b4b2abdeb961e94b73a3362af4588c730c7a7017a5a8ca4584c65f52f09ee9",
+      "snapshot": {
+        "apps/api/tests/recapitulation.test.ts": "8591cd54bd0f6c3b7d2b1587c18a2f6ac7104c562b5309fd984534ed3b34a46d"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/tests/recapitulation.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/tests/reports.test.ts": {
+      "fingerprint": "16d6a94b3602bb7671c977d60fbed6c41fbbc2c7b20ccc788ce47ee0f00d4a52",
+      "snapshot": {
+        "apps/api/tests/reports.test.ts": "770a164915147c712ba8361e7e075a8f74f1d6dc0f549053962ce866ea82dc76"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/tests/reports.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/api/tests/student-update.test.ts": {
+      "fingerprint": "5f7fb690ae86df37073593250abf1fe38cfeb651e3e5fdf7501707f13cb594c7",
+      "snapshot": {
+        "apps/api/tests/student-update.test.ts": "181bf4f4ad04199923d42115bc41d677764b1f7a5208fddf8bf31088452c35d6"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/api/tests/student-update.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/components/ChartMonthly.test.tsx": {
+      "fingerprint": "494600d0a420390933efb00f805068da07f58bd45985f0130007657ed1235960",
+      "snapshot": {
+        "apps/web/src/components/ChartMonthly.test.tsx": "c0acbaba45485d7eace8918505e42c2f5c79bc2904381f251ebfc010c903a557"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/components/ChartMonthly.test.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/components/ChartMonthly.tsx": {
+      "fingerprint": "664c657ad7f08eaa7481585244984eea66f9a19eca12f85cc062f59047146fea",
+      "snapshot": {
+        "apps/web/src/components/ChartMonthly.tsx": "29b81fdd47a9be032494e5c264b915ae9902af277edac3501d14a8dab2cdddfa"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/components/ChartMonthly.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/components/enrollment/EnrollmentPanel.tsx": {
+      "fingerprint": "369ae0050cf018b376d812f21e2dd21c582d169a5fe81bfc3c5fb0274032d879",
+      "snapshot": {
+        "apps/web/src/components/enrollment/EnrollmentPanel.tsx": "00d30c106baceb5584fbedea882333aba6240a3669de347ddd0014576ca078bd"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/components/enrollment/EnrollmentPanel.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/lib/defaultReportMonth.test.ts": {
+      "fingerprint": "52b6318ef8894005078832125765a23386445a860273155e65d84882ccfe7ee9",
+      "snapshot": {
+        "apps/web/src/lib/defaultReportMonth.test.ts": "85739b8cf1ea191fe0ef4ee92917bbea1fb5eb005cabcc6da7f1075f8c902bc0"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/lib/defaultReportMonth.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/lib/defaultReportMonth.ts": {
+      "fingerprint": "b588534b092b18259e45549990aa8fa226c0ef57825379d61dcdeaa1cf38230c",
+      "snapshot": {
+        "apps/web/src/lib/defaultReportMonth.ts": "6ca6c61afdb291bef026f4ff958ee01fd9401897e35f66d01e442e9504d6c4ec"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/lib/defaultReportMonth.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/lib/school-date.test.ts": {
+      "fingerprint": "dffcc3d85931ed11bc9b88d72b130b4329ba59edbfb6d8d5ce13ceeca91e9a49",
+      "snapshot": {
+        "apps/web/src/lib/school-date.test.ts": "102bbcf17221c0b6a7d4f381ba2bcf21db4c7db8951972948446369167f5e5a8"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/lib/school-date.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/lib/school-date.ts": {
+      "fingerprint": "8ceaac22f497974223b100c9a93b0522efdfe2953eb5053cc8653486f56d03d0",
+      "snapshot": {
+        "apps/web/src/lib/school-date.ts": "d24d9e4a1973d2357f4ca03e23b141c5140fcdfcf557dbcadba21edccd155586"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/lib/school-date.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/pages/AttendanceCorrections.tsx": {
+      "fingerprint": "61dfba11d303997cf71afc78de888c1753cdac3b7abc054b95125071cf89d3e7",
+      "snapshot": {
+        "apps/web/src/pages/AttendanceCorrections.tsx": "3f3903dfadd349d2a95c56b9a089b0df6b358dad592b20ccec552a5e8b6c950a"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/pages/AttendanceCorrections.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/pages/ClassEarlyDeparture.tsx": {
+      "fingerprint": "0f14cc49e523f53fc071723d8afd94fcfaafca131435a65987e21275702ac277",
+      "snapshot": {
+        "apps/web/src/pages/ClassEarlyDeparture.tsx": "a2d837d9a8926b23f20dee1a2d20b40c2b1b3a5a72cdfe919b8935ad28ea4e67"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/pages/ClassEarlyDeparture.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:apps/web/src/pages/DismissalPolicies.tsx": {
+      "fingerprint": "619bc1fc94b2a8f2f253e5ce9989d7476396c33d262e5b180c670c3b9268cb6f",
+      "snapshot": {
+        "apps/web/src/pages/DismissalPolicies.tsx": "3c65d82eeccb33b825c8ed366265a50c197ee608106f1adb06480033bcf2c65d"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: apps/web/src/pages/DismissalPolicies.tsx at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/.containerignore": {
+      "fingerprint": "71eba309b73b13d53f7bd9f47d63fd6da8c933a39e140e9085b4daf35fb0fec8",
+      "snapshot": {
+        "deploy/podman/.containerignore": "1f0102b62a1a515bfc1084b11472ae874c717cacb4b75fdeb03ef22bd6c6f4a6"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/.containerignore at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/Caddyfile": {
+      "fingerprint": "48217b8859ba373e86e5fd55675b1da253d2d0d64c8e5bc5d23dcedbc0097194",
+      "snapshot": {
+        "deploy/podman/Caddyfile": "109ff4766e1b7f92c733e4256901860930c6b750194d0a6481b71795ef7ba129"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/Caddyfile at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/Containerfile.api": {
+      "fingerprint": "9920a7b4e05b7152ddd547a68d5a118ce9eab1f10e8373f8a5db1718ea8d2973",
+      "snapshot": {
+        "deploy/podman/Containerfile.api": "6b1af8f8f7350f44eecf6beff1994b1dab89801289cf4c5a2cae8567cba9c0ba"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/Containerfile.api at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/api-healthcheck.sh": {
+      "fingerprint": "b465a469ae7928ec5a3d096e9639d2dff7645ce197b4fc8ec71cc09190c16c13",
+      "snapshot": {
+        "deploy/podman/api-healthcheck.sh": "61d84aa16c8883d632421ca0e7efdbc4667690a5120fbd2d9c1b5fbe0d8cc7ae"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/api-healthcheck.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/operatoros-api.container.in": {
+      "fingerprint": "c018f4d1fe93da133e8e42c04fca87d37b770e01f4acc09401048f78fffd6a7f",
+      "snapshot": {
+        "deploy/podman/operatoros-api.container.in": "fbf52b87e860cda50131c7ec2014c65964b3f06eb16394412ae92e2d0491b0ac"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-api.container.in at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:deploy/podman/operatoros-api.env.example": {
+      "fingerprint": "89fa2f58d24dd8c7684cad8098002fb7d85ae7d29121092fe3d2d7498894f6f5",
+      "snapshot": {
+        "deploy/podman/operatoros-api.env.example": "507feb96180927269876e0924b7fe8fe205cb1745eea59f0bdaad8047ec5e44e"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-api.env.example at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:docs/audits/podman-deployment-readiness.md": {
+      "fingerprint": "dcd685a2e64ffd1e9d37d70f2bb3a6d85f826209e07445e78df2dbcf3be3b68c",
+      "snapshot": {
+        "docs/audits/podman-deployment-readiness.md": "01957b82fb0da6b602562078981e13bb5dfb838c2c0694169420641e3b4637ee"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: docs/audits/podman-deployment-readiness.md at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:docs/decisions/podman-deployment.md": {
+      "fingerprint": "27e4c4b10f59b3cf5947da4f49d6b1d52a3d38a79c5afd74a7112fcc0f8e6e70",
+      "snapshot": {
+        "docs/decisions/podman-deployment.md": "2901b1c31c8a38df34f918a6d812ce43790d4658fce5d00724fad034e465b389"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: docs/decisions/podman-deployment.md at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:e2e/runner-cleanup.sh": {
+      "fingerprint": "6c65178946242a64db99781fe1ceeb26de32700c466a7d2ed6f0339f65062503",
+      "snapshot": {
+        "e2e/runner-cleanup.sh": "1e60c4a47503b5702d7aefabd44f01532fb939d64376b09bab96892e6fb16ad4"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: e2e/runner-cleanup.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:e2e/tests/runner-cleanup.sh": {
+      "fingerprint": "565418376778ae060bf49e9cf311d47e5ce364e58e47939c528f673fa6f6bcd3",
+      "snapshot": {
+        "e2e/tests/runner-cleanup.sh": "810655d713cc2296b6a4920ad2447a74a12e728ef3b7d7d18a1a83834c902756"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: e2e/tests/runner-cleanup.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:packages/db/src/connection.ts": {
+      "fingerprint": "584a63f4d4b215572c0e6a27aa745b1bff42b7953982b597e95ce68b9aadcd34",
+      "snapshot": {
+        "packages/db/src/connection.ts": "437a4edaf6ec00ed8071cf6a3979378a7784803e8ca8fec1a1434365b1ac9515"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: packages/db/src/connection.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:packages/db/src/legacy-fingerprint.ts": {
+      "fingerprint": "02ab3e8403865bf36872d00a324abb5cea772aead2bcb6caeb2c7dbbeeabcbc1",
+      "snapshot": {
+        "packages/db/src/legacy-fingerprint.ts": "65ad63f8b459cb820c3a9cf6689083d99cb6df8b482bdb29f1af25b6d84aa935"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: packages/db/src/legacy-fingerprint.ts at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:scripts/podman-local-deploy.sh": {
+      "fingerprint": "c6ead0d1275ae0506af1add05c1c9acd30081087be6d81b9725f69655425fa83",
+      "snapshot": {
+        "scripts/podman-local-deploy.sh": "2e12e806a70022795dccabaad74d870b37ae693b6ba08c856d6d5f89d574eec8"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: scripts/podman-local-deploy.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:scripts/podman-local-teardown.sh": {
+      "fingerprint": "8f942361c0571a157082c61b5edcc1744065c0e8dc8d8421f629383962e9395e",
+      "snapshot": {
+        "scripts/podman-local-teardown.sh": "aacbc21224834bf3e57384c319ea075c1ca8c89aaf14dc952efa7cf9384e0069"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: scripts/podman-local-teardown.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:scripts/podman-source-manifest.mjs": {
+      "fingerprint": "265a4b42b4e1542acf0125ea0cd1c9c933fec56e94dc350f03c07613ccbecae0",
+      "snapshot": {
+        "scripts/podman-source-manifest.mjs": "42b81e9e3e5034491f07cdc4d55e7fd3afa6749f42a2dca00ba67735a63b5336"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: scripts/podman-source-manifest.mjs at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:scripts/render-operatoros-quadlet.sh": {
+      "fingerprint": "66732a37020ef8a818ba2c4e14f7264643a9b5355bb3dbe6e170a6b4502d4fb2",
+      "snapshot": {
+        "scripts/render-operatoros-quadlet.sh": "6d519310914ca133e3258320caef7114f5d23250b27d315fa3895536fd40b877"
+      },
+      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "outcome": "no-change",
+      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "evidence": [
+        "Changed: scripts/render-operatoros-quadlet.sh at 039c44449118797c4f20b29419e63367722150d2"
+      ]
+    },
+    "source:scripts/tests/podman-source-manifest.test.ts": {
+      "fingerprint": "b841f909c725b1d48f2d18aeb9396b935e579b9a68ec101b4bcaf121e6c811f3",
+      "snapshot": {
+        "scripts/tests/podman-source-manifest.test.ts": "9b09277845efcfa0c66f60560498d69f57b38b405a728861eeadd15286afedcd"
+      },
+      "head": "0bd3643c941cefc3a9f8b8d71e1c1cd99e56eb84",
+      "outcome": "no-change",
+      "reason": "Changed only the synthetic Git test helper to clear inherited repository context while running fixture and manifest assertions. This does not change Elysia guidance or skill planning artifacts.",
+      "evidence": [
+        "Changed: scripts/tests/podman-source-manifest.test.ts at 0bd3643c941cefc3a9f8b8d71e1c1cd99e56eb84"
       ]
     }
   }

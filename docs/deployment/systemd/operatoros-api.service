@@ -1,5 +1,10 @@
 # OperatorOS API — Ubuntu systemd unit (review candidate, Phase 3 P3-01)
 #
+# STATUS
+#   Native-host systemd draft retained for reference. The proposed server target
+#   is a rootless Podman Quadlet API service with host Caddy; this unit is not
+#   the current deployment target.
+#
 # PURPOSE
 #   Supervise the local OperatorOS API on a native Ubuntu host or VM.
 #   Runtime contract: SQLITE_ONLY_SUPPORTED / LOCAL_BROWSER_RUNTIME.

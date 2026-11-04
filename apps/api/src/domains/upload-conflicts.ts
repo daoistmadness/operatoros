@@ -5,6 +5,7 @@ import { actor } from "./core";
 import { createPreview, commitPreview } from "./attendance-import";
 import type { AuthContext } from "../auth/service";
 import type { AttendanceSourceRow, WorkbookRows } from "../import/excel-reader";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -158,7 +159,7 @@ function linkDevice(context: AuthContext, reference: string, body: Row, user: Ro
       const legacyId = Number(body.expected_device_identifier);
       if (legacy && normalizedName(legacy.name) !== normalizedName(student.full_name)) throw new Error("legacy");
       if (!legacy) context.database.client.run("INSERT INTO students (id, name) VALUES (?, ?)", [legacyId, student.full_name]);
-      const result = context.database.client.run("INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active, created_by) VALUES (?, ?, ?, 'attendance_machine', ?, 1, ?)", [student.id, legacyId, body.expected_device_identifier, sourceDate(value.attendance_date) ?? new Date().toISOString().slice(0, 10), user.username]);
+      const result = context.database.client.run("INSERT INTO student_device_identities (student_master_id, legacy_student_id, device_identifier, device_source, effective_from, is_active, created_by) VALUES (?, ?, ?, 'attendance_machine', ?, 1, ?)", [student.id, legacyId, body.expected_device_identifier, sourceDate(value.attendance_date) ?? schoolLocalDate(context.now?.() ?? new Date()), user.username]);
       mapping = row(context, "SELECT * FROM student_device_identities WHERE id = ?", [Number(result.lastInsertRowid)]);
       context.database.client.run("INSERT INTO student_master_change_history (student_master_id, action, field_name, new_value, source, changed_by) VALUES (?, 'device_identity_added', 'device_identifier', ?, 'upload_conflict_resolution', ?)", [student.id, body.expected_device_identifier, user.username]);
       operationAudit(context, user, reference, "UPLOAD_CONFLICT_DEVICE_LINKED", batch.id, { student_master_id: student.id, source_row: value.source_row, source_checksum_prefix: String(batch.checksum).slice(0, 12), mapping_id: mapping?.id ?? Number(result.lastInsertRowid) }, "manage_device_identity");

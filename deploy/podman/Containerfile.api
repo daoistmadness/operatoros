@@ -1,0 +1,62 @@
+FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS dependencies
+
+WORKDIR /app
+
+COPY package.json bun.lock ./
+COPY patches ./patches
+COPY apps ./apps
+COPY packages ./packages
+COPY openapi ./openapi
+
+RUN bun install --frozen-lockfile --production --filter '@operatoros/api'
+
+FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS runtime
+
+RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0
+
+WORKDIR /app
+
+ARG VCS_REF=unknown
+ARG SOURCE_TREE_SHA256=unknown
+ARG SOURCE_DIRTY=unknown
+LABEL org.opencontainers.image.title="OperatorOS API" \
+      org.opencontainers.image.source="https://github.com/daoistmadness/operatoros" \
+      org.opencontainers.image.revision="$VCS_REF" \
+      org.operatoros.source.tree-sha256="$SOURCE_TREE_SHA256" \
+      org.operatoros.source.dirty="$SOURCE_DIRTY"
+
+RUN mkdir -p /usr/share/operatoros \
+    && printf 'revision=%s\nsource_tree_sha256=%s\nsource_dirty=%s\n' \
+      "$VCS_REF" "$SOURCE_TREE_SHA256" "$SOURCE_DIRTY" \
+      > /usr/share/operatoros/build-provenance
+
+COPY --from=dependencies --chown=10000:10000 /app/package.json ./package.json
+COPY --from=dependencies --chown=10000:10000 /app/node_modules ./node_modules
+COPY --from=dependencies --chown=10000:10000 /app/apps/api/package.json ./apps/api/package.json
+COPY --from=dependencies --chown=10000:10000 /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=dependencies --chown=10000:10000 /app/apps/api/src ./apps/api/src
+COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/package.json ./packages/contracts/package.json
+COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/node_modules ./packages/contracts/node_modules
+COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/src ./packages/contracts/src
+COPY --from=dependencies --chown=10000:10000 /app/packages/db/package.json ./packages/db/package.json
+COPY --from=dependencies --chown=10000:10000 /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=dependencies --chown=10000:10000 /app/packages/db/src ./packages/db/src
+COPY --from=dependencies --chown=10000:10000 /app/packages/excel/package.json ./packages/excel/package.json
+COPY --from=dependencies --chown=10000:10000 /app/packages/excel/node_modules ./packages/excel/node_modules
+COPY --from=dependencies --chown=10000:10000 /app/packages/excel/src ./packages/excel/src
+COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/package.json ./packages/sheetjs-fork/package.json
+COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/xlsx.js ./packages/sheetjs-fork/xlsx.js
+COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/dist ./packages/sheetjs-fork/dist
+COPY --from=dependencies --chown=10000:10000 /app/openapi/operatoros.openapi.json ./openapi/operatoros.openapi.json
+COPY --chmod=0555 deploy/podman/api-healthcheck.sh /usr/local/bin/operatoros-api-healthcheck
+
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=8090 \
+    OPERATOROS_DATA_DIR=/var/lib/operatoros/data
+
+USER 10000:10000
+EXPOSE 8090
+STOPSIGNAL SIGTERM
+
+ENTRYPOINT ["bun", "run", "apps/api/src/server.ts"]

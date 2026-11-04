@@ -1,39 +1,41 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-01
 ---
 
 # SQLite-only local runtime
 
 ## Decision
 
-OperatorOS supports one local Elysia API process, a React frontend in a browser,
-and file-backed SQLite. PostgreSQL is unsupported. A container runtime and a
-Tauri desktop shell are not required or part of the current application.
+OperatorOS uses file-backed SQLite and one Elysia API process per data root.
+PostgreSQL is unsupported. The local development workflow runs the API and a
+React browser app. Rootless Podman is also available for local development.
 
-The public runtime labels are SQLITE_ONLY_SUPPORTED,
-LOCAL_BROWSER_RUNTIME, POSTGRESQL_NOT_SUPPORTED, and
-CONTAINER_RUNTIME_NOT_REQUIRED.
+A Podman-based Ubuntu server deployment is proposed separately. It is not a
+supported deployment until the proposal is accepted and an authorized host
+rehearsal passes.
 
 ## Rationale
 
-The supported product is an offline-first local system. SQLite keeps the
-application data in one locally managed database and avoids introducing a
+SQLite keeps application data in one locally managed database and avoids a
 network database service as a runtime prerequisite. The browser communicates
-with the local API; it does not connect to SQLite directly.
+with the API; it never connects to SQLite directly.
 
 ## Consequences
 
-- The database package owns schema, SQLite lifecycle, and canonical data paths.
+- `packages/db` owns the SQLite schema, lifecycle, and canonical data paths.
 - Existing databases are validated at startup and are never migrated by
   ordinary application startup.
-- Fresh bootstrap uses the S4.7 base and applies S4.8 employee, S4.9
-  school-unit, S5.0 monthly PTK, and S5.1 monthly UPP archive extensions.
-- PostgreSQL support requires a new architecture decision and operational
-  evidence; old PostgreSQL migration files do not establish support.
-- The API and CLI backup/restore paths retain their documented single-process
+- Fresh bootstrap installs the S4.7 base, then S4.8 employee, S4.9 school-unit,
+  S5.0 monthly PTK, S5.1 UPP archive, S5.2 student administration, S5.3 student
+  identity verification, and S5.4 BOSP reminder extensions.
+- The current schema head is `20261027_s54`. The protected operational database
+  remains S4.3 until a separately authorized migration.
+- The API and CLI backup and restore paths retain their single-process
   restrictions.
+- PostgreSQL support requires a new architecture decision and operational
+  evidence. Old PostgreSQL migration files do not establish support.
 
-The current runtime contract and startup details are in
-[runtime support](../reference/runtime-support.md) and the
-[database operations runbook](../runbooks/database-operations.md).
+See [runtime support](../reference/runtime-support.md),
+[database operations](../runbooks/database-operations.md), and the draft
+[Podman deployment proposal](podman-deployment.md).

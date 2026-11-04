@@ -15,6 +15,7 @@ import { NativeSelect } from "../components/ui/native-select";
 import { useAuth } from "../context/AuthContext";
 import { useAcademicAnalyticsOptionsQuery } from "../hooks/useAcademicAnalyticsQueries";
 import { useAnalyticsFiltersQuery, useManagementReviewProfileQuery, useManagementReviewProgramsQuery, useManagementReviewTermsQuery } from "../hooks/useAnalyticsQueries";
+import { schoolLocalDate } from "../lib/school-date";
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 type CountRow = { label: string; count: number; percentage: number };
@@ -42,7 +43,7 @@ export default function ManagementReviewStudentProfile() {
   const reportQuery = useManagementReviewProfileQuery(filters);
   const update = (values: Record<string, string | number | null>) => setSearch((current) => { const next = new URLSearchParams(current); for (const [key, value] of Object.entries(values)) value === null || value === "" ? next.delete(key) : next.set(key, String(value)); return next; });
   useEffect(() => { if (!academicYearId && years.length) update({ academic_year_id: (years.find((value) => value.is_default) ?? years[0])!.id }); }, [academicYearId, years]);
-  useEffect(() => { if (academicYearId && terms.length && !terms.some((term) => term.id === termId)) { const today = new Date().toISOString().slice(0, 10); update({ term_id: (terms.find((term) => term.start_date <= today && term.end_date >= today) ?? terms[0])!.id, jenjang_id: null, program_id: null, class_id: null }); } }, [academicYearId, termId, terms]);
+  useEffect(() => { if (academicYearId && terms.length && !terms.some((term) => term.id === termId)) { const today = schoolLocalDate(); update({ term_id: (terms.find((term) => term.start_date <= today && term.end_date >= today) ?? terms[0])!.id, jenjang_id: null, program_id: null, class_id: null }); } }, [academicYearId, termId, terms]);
   useEffect(() => { if (classId && !classes.some((value) => value.id === classId)) update({ class_id: null }); }, [classId, classes]);
   useEffect(() => { if (programId && programsQuery.data && !programs.some((value) => value.id === programId)) update({ program_id: null, class_id: null }); }, [programId, programsQuery.data, jenjangId]);
   const runExport = async (format: "pdf" | "xlsx") => { if (!filters) return; setExporting(format); setExportError(""); try { download(await exportManagementReviewProfile(format, filters), `management-review-student-profile.${format}`); } catch { setExportError(`Ekspor ${format.toUpperCase()} gagal.`); } finally { setExporting(null); } };

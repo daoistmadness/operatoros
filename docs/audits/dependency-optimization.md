@@ -1,9 +1,13 @@
 ---
-status: current
-last_reviewed: 2026-10-28
+status: deprecated
+last_reviewed: 2026-11-01
 ---
 
 # Dependency optimization audit
+
+Historical comparison of the pre-Start TanStack Router tree. Its dependency
+inventory and route bundle measurements are not evidence for the merged Start
+release; retain them only as historical research.
 
 ## Scope and method
 

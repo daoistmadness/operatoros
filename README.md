@@ -8,7 +8,13 @@
 
 OperatorOS delivers school attendance processing, automated Hari Efektif Belajar (HEB) calculations, academic performance tracking against Kriteria Ketuntasan Minimal (KKM), and administrative analytics directly on local hardware without depending on external cloud services or persistent internet connectivity.
 
-The supported runtime is a local Elysia/TypeScript backend paired with a React frontend accessed via a local browser, backed by SQLite (`bun:sqlite` via Drizzle ORM). PostgreSQL and containerized hosted deployments (Docker/Podman/Quadlet) are unsupported. An optional rootless Podman workflow is available for local development only.
+The current local runtime is a native Elysia/TypeScript backend paired with a
+React frontend in the browser, backed by SQLite (`bun:sqlite` via Drizzle ORM).
+The web app uses TanStack Start in SPA mode. PostgreSQL is unsupported. The
+repository includes an optional rootless Podman development workflow. A
+single-host Podman server deployment has a draft local implementation, but
+remains unsupported pending architecture acceptance and an authorized Ubuntu
+rehearsal.
 
 Current developer and operational guidance is indexed in [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) is the authoritative execution contract.
 
@@ -41,7 +47,7 @@ OperatorOS follows a strict local-first architecture where the backend API remai
 flowchart LR
   subgraph Client ["Client Interface"]
     Browser["Browser / Staff User"]
-    FE["React Frontend<br/>(Vite 8 + TanStack Router 1.170.46)"]
+    FE["React Frontend<br/>(Vite 8 + TanStack Start SPA)"]
   end
 
   subgraph Server ["Backend API Authority"]
@@ -63,7 +69,7 @@ flowchart LR
 ### Architectural Principles
 
 - **Server-Owned Computation**: The API server is the sole authority for authentication, role authorization, attendance processing, HEB derivation, and academic metrics. The frontend renders server DTOs and formats charts via Chart.js; it never recomputes business metrics or generates authoritative reports.
-- **Browser Routing**: The Vite SPA uses TanStack Router file-based routes under `apps/web/src/routes/`; Vite generates the route tree. Route guards manage browser navigation, while the API independently authorizes every protected request. See [UI and routing](docs/architecture/ui-and-routing.md) for route conventions and navigation behavior.
+- **Browser Routing**: TanStack Start owns the SPA shell and file-based routes under `apps/web/src/routes/`; the Vite plugin generates the route tree. Route guards manage browser navigation, while the API independently authorizes every protected request. See [UI and routing](docs/architecture/ui-and-routing.md) for route conventions and [the Start decision](docs/decisions/tanstack-start-spa.md) for the SPA boundary.
 - **Contract Boundary Integrity**: Monorepo packages enforce strict dependency boundaries via automated architectural tests (`bun run check:architecture`). Shared TypeBox schemas in `packages/contracts/` define cross-boundary DTOs without leaking database or framework internals.
 - **Transactional Ingestion**: Attendance data enters through non-mutating preview endpoints (`/api/uploads/preview`) before being confirmed in an explicit transactional commit. Unresolved student identifiers are flagged as conflicts and never create unverified student records.
 
@@ -93,7 +99,7 @@ The table below delineates verified system capabilities, bounded partial feature
 | **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/reference/risk-threshold-validation.md)). |
 | **Enterprise / Cloud Auth** | **Not Implemented** | No MFA, SSO, OAuth, LDAP, password-reset emails, or cloud identity integrations. |
 | **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is unencrypted; encryption applies solely to backup envelopes via `BACKUP_ENCRYPTION_KEY`. |
-| **Distributed / Cloud Hosting** | **Not Implemented** | PostgreSQL and containerized hosted deployments (Docker/Podman/Quadlet) are unsupported; optional local Podman development does not change this runtime contract. |
+| **Server Deployment** | **Proposal** | The draft single-host Podman and Quadlet implementation is not supported until architecture acceptance and an authorized Ubuntu rehearsal pass. No public or LAN access profile is approved. |
 
 ---
 
@@ -138,7 +144,7 @@ flowchart TD
 | **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @operatoros/sheetjs-fork, pdf-lib | ExcelJS `4.4`, `@operatoros/sheetjs-fork` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
-| **Frontend Web Client** | React, Vite, TanStack Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19.2.7`, Vite `8.3.4`, TanStack Router `1.170.46`, TanStack Query `5`, TanStack Table `9.3.1`, Tailwind CSS `4`, Chart.js `4` |
+| **Frontend Web Client** | React, Vite, TanStack Start, TanStack Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19.2.7`, Vite `8.3.4`, Start `1.169.4`, TanStack Router `1.170.46`, TanStack Query `5`, TanStack Table `9.3.1`, Tailwind CSS `4`, Chart.js `4` |
 | **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
 
 ---
@@ -146,7 +152,7 @@ flowchart TD
 ## Repository Layout
 
 - [`apps/api/`](apps/api/): Elysia HTTP API, domain services, authentication, security, and backup tooling.
-- [`apps/web/`](apps/web/): React pages and shared components, file-based TanStack Router routes, API client, query hooks, and frontend configuration.
+- [`apps/web/`](apps/web/): TanStack Start SPA, file-based routes, API client, query hooks, and frontend configuration.
 - [`packages/db/`](packages/db/): Drizzle schema, SQLite lifecycle, schema manifest, migrations, and canonical data-path resolution.
 - [`packages/contracts/`](packages/contracts/): Shared TypeBox schemas and types.
 - [`packages/ui/`](packages/ui/): Domain-neutral UI primitives and source-owned shadcn components.
@@ -305,8 +311,8 @@ flowchart TD
 - **Authentication Contracts**: Session state is managed strictly via server-side session tables and HttpOnly, `SameSite=Lax` cookies named `astyx_session`. No JSON Web Tokens (JWT), browser `localStorage` credentials, or token-reading client scripts are permitted. First-run setup cookies use `SameSite=Strict`.
 - **Authorization**: Backend roles are limited to `admin` and `staff`. Request authorization is evaluated solely from database-backed sessions and server-derived capabilities. Client-supplied headers or body fields (`request.role`, `reviewed_by`, `uploaded_by`) are untrusted audit metadata, never authorization proofs.
 - **Database Schema Management**:
-  - The current active application schema head is **S5.0** (`20261027_s50`).
-  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), the S4.8 employee migration, the S4.9 school-unit migration, and the S5.0 monthly PTK activity migration.
+  - The current active application schema head is **S5.4** (`20261027_s54`).
+  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), followed by the S4.8 employee, S4.9 school-unit, S5.0 monthly PTK activity, S5.1 UPP workbook archive, S5.2 student administration, S5.3 student identity verification, and S5.4 BOSP reminder migrations.
   - Historical baseline and rollback target is **S4.2** (`20260724_s42`).
   - The protected operational database remains **S4.3** (`20260725_s43`) until a separately authorized migration.
   - The API server opens databases with `create: false`, validates integrity and schema version on startup, and never automatically applies migrations.

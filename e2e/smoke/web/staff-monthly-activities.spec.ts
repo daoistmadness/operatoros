@@ -15,7 +15,7 @@ function jakartaDate(): string {
 test("@staff @critical generates and completes a synthetic monthly PTK activity", async ({ page }) => {
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  await login(page);
+  await login(page, { home: true });
 
   const date = jakartaDate();
   const month = date.slice(0, 7);

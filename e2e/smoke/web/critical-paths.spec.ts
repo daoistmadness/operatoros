@@ -64,7 +64,7 @@ test("@auth @readiness @fresh-install @release admin login exposes a healthy das
 });
 
 test("@analytics @release dashboard filters use the selected period", async ({ page }) => {
-  await loginForFeature(page);
+  await loginForFeature(page, { home: true });
   const refresh = page.waitForResponse(response => {
     if (!response.url().includes("/api/config/absence-reasons/summary")) return false;
     const url = new URL(response.url());
@@ -79,7 +79,7 @@ test("@analytics @release dashboard filters use the selected period", async ({ p
 });
 
 test("@configuration @release academic hierarchy reaches candidates without enrollment mutation", async ({ page, request }) => {
-  await loginForFeature(page);
+  await loginForFeature(page, { home: true });
   const enrollmentBefore = await enrollmentFingerprint(page);
   const before = await request.get("/api/academic-masters/academic-years");
   expect(before.status()).toBe(401);
@@ -98,7 +98,7 @@ test("@configuration @release academic hierarchy reaches candidates without enro
 });
 
 test("@configuration @release progression management generates a responsive non-mutating preview", async ({ page }) => {
-  await loginForFeature(page);
+  await loginForFeature(page, { home: true });
   const enrollmentBefore = await enrollmentFingerprint(page);
   await page.goto("/academic-management");
   await page.getByRole("button", { name: "Progression" }).click();

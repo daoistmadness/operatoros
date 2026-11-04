@@ -38,6 +38,7 @@ import {
   DataTableRow,
 } from "../common/data-table";
 import { invalidateEnrollmentQueries } from "../../lib/query/enrollmentInvalidation";
+import { schoolLocalDate } from "../../lib/school-date";
 
 
 interface EnrollmentPanelProps {
@@ -84,7 +85,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
   const [error, setError] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [lifecycleDialog, setLifecycleDialog] = useState<{ row: EnrollmentRow; action: EnrollmentLifecycleAction } | null>(null);
-  const [lifecycleDate, setLifecycleDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [lifecycleDate, setLifecycleDate] = useState(() => schoolLocalDate());
   const [lifecycleReason, setLifecycleReason] = useState("");
 
   const selectedAcademicYear = useMemo(
@@ -285,7 +286,7 @@ export function EnrollmentPanel({ showHero = true }: EnrollmentPanelProps) {
 
   const openLifecycleDialog = (row: EnrollmentRow, action: EnrollmentLifecycleAction) => {
     setLifecycleDialog({ row, action });
-    setLifecycleDate(new Date().toISOString().slice(0, 10));
+    setLifecycleDate(schoolLocalDate());
     setLifecycleReason("");
   };
 

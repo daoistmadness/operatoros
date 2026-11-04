@@ -9,6 +9,7 @@ import { studentAcademicMeasurements } from "./student-indicators";
 import { studentTrendInsights } from "./student-trends";
 import { hasAcademicTimelineTable, studentAcademicHistory } from "./academic-timeline";
 import { actor, studentDetail } from "./core";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -23,10 +24,10 @@ function link(path: string, values: Record<string, string | number | null | unde
   return `${path}?${query}`;
 }
 
-export function studentOverview(context: AuthContext, studentMasterId: string, role: string, today = new Date().toISOString().slice(0, 10)): StudentOverviewResponse | null {
+export function studentOverview(context: AuthContext, studentMasterId: string, role: string, today = schoolLocalDate(context.now?.() ?? new Date())): StudentOverviewResponse | null {
   const master = row(context, "SELECT * FROM student_masters WHERE id = ?", [studentMasterId]);
   if (!master) return null;
-  const profile = studentDetail(context.database.client, master);
+  const profile = studentDetail(context.database.client, master, false, false, today);
   const enrollment = row(context, `SELECT e.id, e.student_id, e.academic_year_id, ay.label AS academic_year,
       ay.start_date, ay.end_date, e.jenjang_id, j.name AS jenjang, e.academic_class_id,
       COALESCE(c.class_name, e.class_name) AS class_name, g.name AS grade, p.name AS program

@@ -1,8 +1,7 @@
 import { expect, test, type Page } from "../../../apps/web/node_modules/@playwright/test";
 import { loginForFeature as login } from "../../helpers/feature-login";
 
-async function verifyNoHorizontalOverflow(page: Page, label: string, waitForNetwork = true) {
-  if (waitForNetwork) await page.waitForLoadState("networkidle");
+async function verifyNoHorizontalOverflow(page: Page, label: string) {
   const overflow = await page.evaluate(() => {
     return document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
   });
@@ -45,7 +44,6 @@ async function waitForDashboardContent(page: Page) {
 }
 
 async function waitForAcademicContent(page: Page) {
-  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("button", { name: "Refresh Metadata" })).toBeEnabled();
   const calendar = page.locator("section").filter({ has: page.getByRole("heading", { name: "Calendar matrix" }) });
   await expect(calendar.locator("tbody tr").first().or(calendar.getByText("No academic years found."))).toBeVisible();
@@ -54,14 +52,22 @@ async function waitForAcademicContent(page: Page) {
 }
 
 async function waitForEnrollmentContent(page: Page) {
-  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("heading", { name: "Master students not enrolled" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Assigned grade ledger rows" })).toBeVisible();
+  const candidates = page.getByRole("checkbox", { name: /^Select / }).first()
+    .or(page.getByText("No candidate students for this context.", { exact: true }));
+  await expect(candidates).toBeVisible();
+  const enrollmentSection = page.locator("section").filter({
+    has: page.getByRole("heading", { name: "Assigned grade ledger rows" }),
+  });
+  await expect(enrollmentSection.locator("tbody tr").first()
+    .or(enrollmentSection.getByText("No current enrollments.", { exact: true }))).toBeVisible();
 }
 
 async function waitForStudentContent(page: Page) {
-  await page.waitForLoadState("networkidle");
-  await expect(page.getByRole("table").or(page.getByText("No students found", { exact: true }))).toBeVisible();
+  await expect(page.getByText("Loading students", { exact: true })).not.toBeVisible();
+  await expect(page.getByRole("table").locator("tbody tr").first()
+    .or(page.getByText("No students found", { exact: true }))).toBeVisible();
 }
 
 async function waitForUploadContent(page: Page) {
@@ -119,10 +125,10 @@ for (const vp of VIEWPORTS) {
     await page.goto("/academic-management");
     await expect(page.getByRole("heading", { name: "Calendar matrix" })).toBeVisible();
     await waitForAcademicContent(page);
-    await verifyNoHorizontalOverflow(page, `AcademicManagement ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `AcademicManagement ${vp.width}x${vp.height}`);
     await page.getByRole("button", { name: "Progression" }).click();
     await expect(page.getByRole("heading", { name: "Student Progression" })).toBeVisible();
-    await verifyNoHorizontalOverflow(page, `StudentProgression ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `StudentProgression ${vp.width}x${vp.height}`);
 
     // 3. Class Allocation / Enrollment
     await page.goto("/enrollment");
@@ -135,13 +141,13 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByLabel("Grade")).toBeVisible();
     await expect(page.getByLabel("Academic Class")).toBeVisible();
     await waitForEnrollmentContent(page);
-    await verifyNoHorizontalOverflow(page, `Enrollment ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `Enrollment ${vp.width}x${vp.height}`);
 
     // 4. Canonical student management
     await page.goto("/students");
     await expect(page.getByRole("heading", { name: "Student Management" })).toBeVisible();
     await waitForStudentContent(page);
-    await verifyNoHorizontalOverflow(page, `StudentManagement ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `StudentManagement ${vp.width}x${vp.height}`);
 
     // 5. Unified import center
     await page.goto("/upload");
@@ -149,14 +155,14 @@ for (const vp of VIEWPORTS) {
     await expect(page.getByRole("tab", { name: /Student Roster/ })).toBeVisible();
     await expect(page.getByRole("tab", { name: /Student Data Update/ })).toBeVisible();
     await waitForUploadContent(page);
-    await verifyNoHorizontalOverflow(page, `UploadCenter ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `UploadCenter ${vp.width}x${vp.height}`);
 
     // 6. Student-derived lateness cutoff configuration
     await page.goto("/config/jenjang");
     await expect(page.getByRole("heading", { name: "Cutoff Keterlambatan per Jenjang" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Status cutoff jenjang" })).toBeVisible();
     await waitForJenjangContent(page);
-    await verifyNoHorizontalOverflow(page, `JenjangConfig ${vp.width}x${vp.height}`, false);
+    await verifyNoHorizontalOverflow(page, `JenjangConfig ${vp.width}x${vp.height}`);
   });
 }
 
@@ -188,21 +194,21 @@ test("@error-recovery @release responsive audit handles empty data", async ({ pa
 
   await page.goto("/academic-management");
   await waitForAcademicContent(page);
-  await verifyNoHorizontalOverflow(page, "Empty academic management", false);
+  await verifyNoHorizontalOverflow(page, "Empty academic management");
   await page.getByRole("button", { name: "Progression" }).click();
   await expect(page.getByRole("heading", { name: "Student Progression" })).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Empty progression", false);
+  await verifyNoHorizontalOverflow(page, "Empty progression");
 
   await page.goto("/enrollment");
   await waitForEnrollmentContent(page);
   await expect(page.getByText("No candidate students for this context.", { exact: true })).toBeVisible();
   await expect(page.getByText("No current enrollments.", { exact: true })).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Empty enrollment", false);
+  await verifyNoHorizontalOverflow(page, "Empty enrollment");
 
   await page.goto("/students");
   await waitForStudentContent(page);
   await expect(page.getByText("No students found", { exact: true })).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Empty student management", false);
+  await verifyNoHorizontalOverflow(page, "Empty student management");
 
   let machineImportReady = false;
   await page.route("**/api/readiness", async (route) => {
@@ -224,22 +230,22 @@ test("@error-recovery @release responsive audit handles empty data", async ({ pa
   await page.goto("/upload");
   await waitForUploadContent(page);
   await expect(page.getByText("This workflow is waiting for the listed foundation items.")).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Blocked upload scope", false);
+  await verifyNoHorizontalOverflow(page, "Blocked upload scope");
   machineImportReady = true;
   await page.goto("/upload");
   await waitForUploadContent(page);
   await expect(page.getByText("No import scope available", { exact: true })).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Empty upload scope", false);
+  await verifyNoHorizontalOverflow(page, "Empty upload scope");
 
   await page.goto("/config/jenjang");
   await waitForJenjangContent(page);
   await expect(page.getByText("Belum ada jenjang dari data siswa", { exact: true })).toBeVisible();
-  await verifyNoHorizontalOverflow(page, "Empty cutoff configuration", false);
+  await verifyNoHorizontalOverflow(page, "Empty cutoff configuration");
 });
 
 test('@error-recovery @release mobile navigation manages focus, dismissal, history, and route state', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await login(page);
+  await login(page, { home: true });
 
   const opener = page.getByRole('button', { name: 'Open navigation' });
   await opener.click();

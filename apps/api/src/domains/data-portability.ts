@@ -8,6 +8,7 @@ import { actor } from "./core";
 import { setStudentMasterStatus } from "./student-master-status";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";
+import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -384,7 +385,7 @@ export function dataPortabilityRoutes(app: any, context: AuthContext): any {
               context.database.client.run("UPDATE student_device_identities SET is_active = 1 WHERE id = ?", [existing.id]);
               committed++;
             } else if (!existing) {
-              context.database.client.run("INSERT INTO student_device_identities (student_master_id, device_identifier, device_source, effective_from, is_active) VALUES (?, ?, 'CSV_IMPORT', CURRENT_DATE, 1)", [id, device]);
+              context.database.client.run("INSERT INTO student_device_identities (student_master_id, device_identifier, device_source, effective_from, is_active) VALUES (?, ?, 'CSV_IMPORT', ?, 1)", [id, device, schoolLocalDate(context.now?.() ?? new Date())]);
               committed++;
             }
           }

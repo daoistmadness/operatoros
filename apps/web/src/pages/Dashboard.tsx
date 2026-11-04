@@ -41,6 +41,7 @@ import { SetupOverview, useReadinessQuery } from "../features/readiness";
 import { useAuth } from "../context/AuthContext";
 import { useDashboardSnapshotQuery } from "../hooks/useAnalyticsQueries";
 import { queryKeys } from "../lib/query/queryKeys";
+import { schoolLocalDate } from "../lib/school-date";
 import { StatCard } from "../components/common/stat-card";
 import { EmptyState as SharedEmptyState, ErrorState, LoadingState } from "../components/common/state-message";
 import {
@@ -81,10 +82,11 @@ export default function Dashboard() {
   const { user, can } = useAuth();
   const readiness = useReadinessQuery(user?.id ?? null);
   const queryClient = useQueryClient();
-  const today = useMemo(() => new Date(), []);
+  const today = useMemo(() => schoolLocalDate(), []);
+  const currentYear = Number(today.slice(0, 4));
 
-  const [selectedMonth, setSelectedMonth] = useState(String(today.getMonth() + 1));
-  const [selectedYear, setSelectedYear] = useState(String(today.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(Number(today.slice(5, 7))));
+  const [selectedYear, setSelectedYear] = useState(today.slice(0, 4));
   const monthNumber = Number(selectedMonth);
   const overviewQuery = useDashboardOverviewQuery();
   const bospQuery = useBospReminderQuery();
@@ -92,6 +94,7 @@ export default function Dashboard() {
   const yearNumber = Number(selectedYear);
   const dashboardQuery = useDashboardSnapshotQuery(monthNumber, yearNumber);
   const snapshot = dashboardQuery.data;
+  const pageHeader = <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />;
   const monthlyData = snapshot?.monthlyData ?? [];
   const classData = snapshot?.classData ?? [];
   const offenders = snapshot?.offenders ?? [];
@@ -121,11 +124,21 @@ export default function Dashboard() {
   };
 
   if (dashboardQuery.isPending && !snapshot) {
-    return <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />;
+    return (
+      <div aria-busy="true" className="space-y-8 pb-16">
+        {pageHeader}
+        <LoadingState className="min-h-[50vh]" title="Loading analytics" description="Preparing attendance and behavioral metrics." />
+      </div>
+    );
   }
   if (dashboardQuery.isError && !snapshot) {
     const message = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : "Dashboard analytics could not be loaded.";
-    return <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={message}><Button className="mt-4" onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>;
+    return (
+      <div aria-busy="false" className="space-y-8 pb-16">
+        {pageHeader}
+        <ErrorState className="min-h-[50vh]" title="Dashboard analytics could not be loaded" description={message}><Button className="mt-4" onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>
+      </div>
+    );
   }
 
   const absenceTotals = normalizeAbsenceTotals(absenceSummary);
@@ -137,7 +150,7 @@ export default function Dashboard() {
   return (
     <div aria-busy={dashboardQuery.isFetching} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
-      <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />
+      {pageHeader}
       {dashboardQuery.isFetching && snapshot && <p role="status" className="text-sm font-semibold text-muted-foreground">Updating dashboard data…</p>}
       {dashboardQuery.isError && snapshot && <ErrorState title="Dashboard refresh failed" description="Showing the last successful dashboard result."><Button onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>}
       <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
@@ -242,7 +255,7 @@ export default function Dashboard() {
       )}
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
-        <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(today.getFullYear() - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
+        <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(currentYear - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
         <Link to="/analytics/attendance?view=recap" className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto")}><Download size={16} /> Open report</Link>
       </FilterBar>
 

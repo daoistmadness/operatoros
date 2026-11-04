@@ -1,9 +1,13 @@
 ---
-status: current
-last_reviewed: 2026-10-31
+status: deprecated
+last_reviewed: 2026-11-01
 ---
 
 # Frontend performance baseline
+
+Historical measurements from the TanStack Router migration, with a later Start
+client-build sample. These local measurements are not a release benchmark for
+the merged TanStack Start tree.
 
 This page records the historical PR-01 local performance baseline for the
 React 19, Vite, and TanStack Router application, plus PR-02 and PR-08 follow-up

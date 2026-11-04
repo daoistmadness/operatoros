@@ -6,7 +6,7 @@ import { openDatabase } from "@operatoros/db";
 import { StudentListResponseSchema } from "@operatoros/contracts/students";
 import { Value } from "@sinclair/typebox/value";
 import { createApp } from "../src/app";
-import { createGoldenFixture } from "./fixtures/golden";
+import { createStudentFixture } from "./fixtures/students";
 
 const secret = "operatoros-nisn-filter-test-secret-32-chars";
 
@@ -17,8 +17,9 @@ describe("student management NISN input filter", () => {
     const auditDir = join(root, "audit");
     const backupDir = join(root, "backups");
     mkdirSync(auditDir); mkdirSync(backupDir);
-    createGoldenFixture(path, "academic-with-defaults");
+    createStudentFixture(path, "update");
     const database = openDatabase(path);
+    database.client.run("INSERT INTO student_masters (id, full_name, normalized_name, student_status) VALUES ('baseline-student-two', 'Baseline Student Two', 'baseline student two', 'active')");
     const app = createApp({ databaseHandle: database, backupDir, environment: "test", auth: { authCookieSecret: secret, auditDir } });
     try {
       const values = [["null", null], ["empty", ""], ["spaces", " \t\n"], ["unicode", "\u00a0\u2003"], ["nel", "\u0085"], ["bom", " \ufeff"], ["padded", " 12345\t"], ["other", "98765"]] as const;

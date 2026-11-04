@@ -63,15 +63,20 @@ Do not upgrade unrelated packages to make Start fit.
 
 ## Hosting contract
 
+This accepted decision defines the SPA build and API ownership boundary. It
+does not select the Ubuntu production web server. See the separate draft
+[Podman deployment proposal](podman-deployment.md); that proposal does not
+change this decision's SPA-only scope.
+
 The Start build emits `/_shell.html` and client assets under
-`apps/web/build/client/`. The production preview command uses
-`vite.preview.config.js` without the Start server plugin, so it serves the
-client output as static files. Application HTML paths must load the generated
-shell on direct navigation and refresh. Existing static assets must resolve
-before the fallback, and `/api`, `/health`, `/ready`, and `/openapi` must reach
-Elysia before any SPA fallback. The build also creates `build/server/` to
-prerender the shell; preview must not execute that output. Verify the generated
-files and actual development and preview requests.
+`apps/web/build/client/`. Local preview uses `vite.preview.config.js` without
+the Start server plugin for static smoke testing. `vite preview` is not a
+production web server.
+Application HTML paths must load the generated shell on direct navigation and
+refresh. Existing static assets must resolve before the fallback, and `/api`,
+`/health`, `/ready`, and `/openapi` must reach Elysia before any SPA fallback.
+The build also creates `build/server/` to prerender the shell; local preview
+must not execute that output. Verify generated files and local preview requests.
 
 The route generator remains the sole owner of `apps/web/src/routeTree.gen.ts`.
 Commit the generated tree, pin its generator through the lockfile, and make CI
@@ -141,20 +146,24 @@ hydration.
 
 - **Start server with an HTTP forwarder to Elysia:** this adds a second web
   server and duplicates proxy, host, and forwarding policy while replacing the
-  existing Vite preview contract.
+  existing local Vite preview workflow. Vite preview is not a production host.
 - **Elysia embedded in a Start route:** this violates the separate API process
   and SQLite lock ownership requirements.
 - **SSR migration:** this changes request-scoped auth, cache, rendering, and
   deployment behavior beyond the requested framework migration.
 - **TanStack Router without Start:** this does not meet the current request.
 
-## Rollback
+## Migration record and rollback status
 
-Keep the known-good baseline commit and its React Router-free TanStack Router
-build until route, auth, search, calendar, proxy, and E2E checks pass. Roll back
-the web dependency, plugin, bootstrap, and shell configuration as one change.
-No database recovery is needed because this decision makes no schema or data
-changes.
+The migration was merged through PR #351, with merge commit
+`b565abeea070fb1b0261d83898faae46430fecb8` in current `main`. The earlier
+pre-merge instruction to retain a TanStack Router build was a migration gate;
+it does not prove that a deployable old build artifact is available. For a
+future deployment, preserve the prior API image and SPA client artifact as
+specified by the [draft Podman deployment proposal](podman-deployment.md).
+Application rollback is safe only if that API supports the active SQLite
+schema. This framework migration changes no database schema and does not define
+a database rollback.
 
 ## History
 

@@ -19,8 +19,9 @@ import { createDownloadUrl, revokeDownloadUrl } from "../lib/api/client";
 import { downloadStudentAttendanceHistoryExcel } from "../lib/api/endpoints";
 import { downloadIomDocumentBlob } from "../api/students";
 import { Student360Overview } from "../components/students/Student360Overview";
+import { schoolLocalDate } from "../lib/school-date";
 
-const today = new Date().toISOString().slice(0, 10);
+const today = schoolLocalDate();
 const identityFields = ["full_name", "preferred_name", "nipd", "nisn", "nik", "kk", "birth_place", "birth_date", "gender", "religion", "citizenship", "blood_type", "student_status", "admission_date", "admission_type", "previous_school"];
 
 function DefinitionList({ values }: { values: Record<string, unknown> }) {
@@ -508,11 +509,13 @@ export default function CanonicalStudentProfile() {
     if (!profile) return;
     setAttendanceExporting(true); setAttendanceExportError(null);
     try {
-      const now = new Date();
-      const blob = await downloadStudentAttendanceHistoryExcel({ studentMasterId: profile.id, month: now.getMonth() + 1, year: now.getFullYear() });
+      const today = schoolLocalDate();
+      const year = Number(today.slice(0, 4));
+      const month = Number(today.slice(5, 7));
+      const blob = await downloadStudentAttendanceHistoryExcel({ studentMasterId: profile.id, month, year });
       const url = createDownloadUrl(blob);
       const link = document.createElement("a"); link.href = url;
-      link.download = `absensi_${(profile.identity.full_name || "student").replace(/[^A-Za-z0-9_-]+/g, "-")}_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}.xlsx`;
+      link.download = `absensi_${(profile.identity.full_name || "student").replace(/[^A-Za-z0-9_-]+/g, "-")}_${today.slice(0, 7)}.xlsx`;
       link.click(); revokeDownloadUrl(url);
     } catch (error) {
       setAttendanceExportError((error as { message?: string })?.message || "Attendance history could not be exported.");

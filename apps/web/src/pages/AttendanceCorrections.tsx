@@ -6,6 +6,7 @@ import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { Card } from "../components/ui/card";
 import { invalidateAttendanceQueries } from "../lib/query/attendanceInvalidation";
+import { schoolLocalDate } from "../lib/school-date";
 
 type CorrectionAuditEvent = {
   action: string;
@@ -68,7 +69,7 @@ export default function AttendanceCorrections() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().slice(0, 10));
+  const [attendanceDate, setAttendanceDate] = useState(schoolLocalDate());
   const [period, setPeriod] = useState<AttendancePeriod>({ status: "OPEN", version: 0, audit: [] });
   const [form, setForm] = useState({ attendance_id: "", proposed_status: "late", proposed_check_in: "", proposed_check_out: "", reason_code: "SCAN_REVIEW", explanation: "" });
   const [rejecting, setRejecting] = useState<number | null>(null);

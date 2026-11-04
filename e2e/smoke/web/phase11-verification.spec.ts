@@ -68,26 +68,161 @@ test("@phase11 @auth logout clears the browser session after refresh", async ({ 
 
 test("@phase11 @grades grade ledger reads and saves through Elysia", async ({ page }) => {
   await loginForFeature(page);
+  const assessmentSessionsResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return url.pathname === "/api/grades/assessment-sessions"
+      && response.request().method() === "GET"
+      && response.status() === 200;
+  });
   await page.goto("/grades");
   await expect(page.getByRole("heading", { name: "Dynamic normalized grade matrix" })).toBeVisible();
-  await page.getByLabel("New assessment label").fill("E2E Term 1 Assessment");
-  await page.getByLabel("Assessment date").fill("2026-08-15");
-  await page.getByRole("button", { name: "Create" }).click();
-  await expect(page.getByText("is ready for score entry.")).toBeVisible();
-  const score = page.locator('input[type="number"]').first();
-  await score.fill("88");
-  await page.getByRole("button", { name: "Save Ledger Matrix" }).click();
-  await expect(page.getByText(/grade line\(s\) saved/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Save Ledger Matrix" })).toBeVisible();
-  await page.goto("/students");
-  const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
-  await page.goto(await studentLink.getAttribute("href") as string);
-  await expect(page.getByRole("heading", { name: "Academic", exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: /E2E (Progression Score|Authorable Component)/ }).first()).toBeVisible();
-  await expect(page.getByText("Term 1 · 2026-08-15")).toBeVisible();
-  await page.goto("/analytics/academic");
-  await page.getByLabel("Term").selectOption("term_1");
-  await expect(page.getByText("Expected results", { exact: true })).toBeVisible();
+  const existingSessionsPayload = await assessmentSessionsResponse;
+  const existingSessions = await existingSessionsPayload.json() as Array<{ id: number }>;
+  const assessmentSession = page.getByLabel("Assessment session");
+  let initialSessionId = "";
+
+  if (existingSessions.length === 0) {
+    const initialSessionLedgerResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === "/api/grades/ledger" && response.status() === 200;
+    });
+    await page.getByLabel("New assessment label").fill("E2E Seed Ledger Session");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText("is ready for score entry.")).toBeVisible();
+    await initialSessionLedgerResponse;
+    initialSessionId = await assessmentSession.inputValue();
+  } else {
+    initialSessionId = String(existingSessions[0].id);
+    await expect(assessmentSession).toHaveValue(initialSessionId);
+  }
+
+  expect(initialSessionId).not.toBe("");
+  const ledgerRoute = /\/api\/grades\/ledger(?:\?|$)/;
+  let holdInitialLedger = true;
+  let releaseInitialLedger: () => void = () => {};
+  let resolveInitialLedgerRequest: (() => void) | undefined;
+  const initialLedgerGate = new Promise<void>((resolve) => {
+    releaseInitialLedger = resolve;
+  });
+  const initialLedgerRequest = new Promise<void>((resolve) => {
+    resolveInitialLedgerRequest = resolve;
+  });
+  await page.route(ledgerRoute, async (route) => {
+    const sessionId = new URL(route.request().url()).searchParams.get("assessment_session_id");
+    if (holdInitialLedger && sessionId === initialSessionId) {
+      holdInitialLedger = false;
+      resolveInitialLedgerRequest?.();
+      await initialLedgerGate;
+    }
+    await route.continue();
+  });
+
+  try {
+    const staleLedgerResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === "/api/grades/ledger"
+        && url.searchParams.get("assessment_session_id") === initialSessionId
+        && response.status() === 200;
+    });
+    await page.getByRole("button", { name: "Refresh grade ledger" }).click();
+    await initialLedgerRequest;
+    const selectedLedgerResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === "/api/grades/ledger"
+        && url.searchParams.get("assessment_session_id") !== initialSessionId
+        && response.status() === 200;
+    });
+    await page.getByLabel("New assessment label").fill("E2E Term 1 Assessment");
+    await page.getByLabel("Assessment date").fill("2026-08-15");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText("is ready for score entry.")).toBeVisible();
+    await selectedLedgerResponse;
+    const selectedSessionId = await assessmentSession.inputValue();
+    expect(selectedSessionId).not.toBe(initialSessionId);
+    const score = page.locator('input[type="number"]').first();
+    await score.fill("88");
+    await expect(page.getByText("1 dirty cells")).toBeVisible();
+    releaseInitialLedger();
+    await staleLedgerResponse;
+    await expect(score).toHaveValue("88");
+    await page.getByRole("button", { name: "Save Ledger Matrix" }).click();
+    await expect(page.getByText(/grade line\(s\) saved/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save Ledger Matrix" })).toBeVisible();
+
+    const followUpLedgerResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname === "/api/grades/ledger"
+        && response.request().method() === "GET"
+        && url.searchParams.get("assessment_session_id") !== initialSessionId
+        && url.searchParams.get("assessment_session_id") !== selectedSessionId
+        && response.status() === 200;
+    });
+    await page.getByLabel("New assessment label").fill("E2E Term 1 Pending Save");
+    await page.getByLabel("Assessment date").fill("2026-09-15");
+    await page.getByRole("button", { name: "Create" }).click();
+    await expect(page.getByText("is ready for score entry.")).toBeVisible();
+    await followUpLedgerResponse;
+    const pendingSaveSessionId = await assessmentSession.inputValue();
+    expect(pendingSaveSessionId).not.toBe(selectedSessionId);
+    await page.locator('input[type="number"]').first().fill("92");
+    await expect(page.getByText("1 dirty cells")).toBeVisible();
+
+    const saveRoute = /\/api\/grades\/save(?:\?|$)/;
+    let releasePendingSave: () => void = () => {};
+    let resolvePendingSaveRequest: (() => void) | undefined;
+    const pendingSaveGate = new Promise<void>((resolve) => {
+      releasePendingSave = resolve;
+    });
+    const pendingSaveRequest = new Promise<void>((resolve) => {
+      resolvePendingSaveRequest = resolve;
+    });
+    await page.route(saveRoute, async (route) => {
+      resolvePendingSaveRequest?.();
+      await pendingSaveGate;
+      await route.continue();
+    });
+
+    try {
+      const pendingSaveResponse = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return url.pathname === "/api/grades/save"
+          && response.request().method() === "POST"
+          && response.status() === 200;
+      });
+      await page.getByRole("button", { name: "Save Ledger Matrix" }).click();
+      await pendingSaveRequest;
+      const restoredSessionLedger = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return url.pathname === "/api/grades/ledger"
+          && response.request().method() === "GET"
+          && url.searchParams.get("assessment_session_id") === initialSessionId
+          && response.status() === 200;
+      });
+      await assessmentSession.selectOption(initialSessionId);
+      await restoredSessionLedger;
+      releasePendingSave();
+      await pendingSaveResponse;
+      await expect(page.getByRole("button", { name: "Save Ledger Matrix" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /Assessment Grid/ })).toBeVisible();
+      await expect(assessmentSession).toHaveValue(initialSessionId);
+    } finally {
+      releasePendingSave();
+      await page.unroute(saveRoute);
+    }
+
+    await page.goto("/students");
+    const studentLink = page.getByRole("link", { name: "E2E Ada", exact: true });
+    await page.goto(await studentLink.getAttribute("href") as string);
+    await expect(page.getByRole("heading", { name: "Academic", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: /E2E (Progression Score|Authorable Component)/ }).first()).toBeVisible();
+    await expect(page.getByText("Term 1 · 2026-08-15")).toBeVisible();
+    await page.goto("/analytics/academic");
+    await page.getByLabel("Term").selectOption("term_1");
+    await expect(page.getByText("Expected results", { exact: true })).toBeVisible();
+  } finally {
+    releaseInitialLedger();
+    await page.unroute(ledgerRoute);
+  }
 });
 
 test("@phase11 @imports machine attendance workbook validates and applies through Data Import & Export", async ({ page }) => {
@@ -95,11 +230,21 @@ test("@phase11 @imports machine attendance workbook validates and applies throug
   const cutoff = await page.request.get("/api/config/jenjang");
   expect(cutoff.status()).toBe(200);
   expect(await cutoff.json()).toMatchObject({ configured: [expect.objectContaining({ jenjang: "Primary", cutoff_time: "07:30", effective_from: "2026-07-01" })] });
-  await page.evaluate(async () => {
-    const save = (path: string, body: unknown) => fetch(path, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    for (const weekday of [1, 2, 6]) await save("/api/attendance/calendar/weekday", { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" });
-    for (const date of ["2026-12-14", "2026-12-15"]) await save("/api/attendance/calendar/exception", { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" });
-  });
+  const origin = process.env.OPERATOROS_E2E_FRONTEND_URL!;
+  for (const weekday of [1, 2, 6]) {
+    const response = await page.request.put(`${origin}/api/attendance/calendar/weekday`, {
+      headers: { origin },
+      data: { academic_year_id: 1, jenjang_id: 1, weekday, expectation: "EXPECTED" },
+    });
+    expect(response.status()).toBe(200);
+  }
+  for (const date of ["2026-12-14", "2026-12-15"]) {
+    const response = await page.request.put(`${origin}/api/attendance/calendar/exception`, {
+      headers: { origin },
+      data: { academic_year_id: 1, jenjang_id: 1, date, expectation: "NOT_EXPECTED", reason: "SCHOOL_BREAK" },
+    });
+    expect(response.status()).toBe(200);
+  }
   await page.goto("/upload");
   await expect(page.getByRole("heading", { name: "Attendance Upload" })).toBeVisible();
   // The canonical machine workflow accepts .xlsx only; .xls is refused by server-side validation.
