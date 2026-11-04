@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b175e5d129d22dc94790ad3a20ce959a472fbefca0150102e351b32a5aca3c41",
+      "fingerprint": "ffbd004ceeed98d9adf834cfafffa0e33577abef61e3b9d3dbe1ea0fe882663d",
       "snapshot": {
-        "CHANGELOG.md": "3db133920b465b9ae7666f0ec02559e6d42d3b71516da57dc4a340f7e49565e4"
+        "CHANGELOG.md": "26fb122d5905e57bad0746e86a71106ac766372f8d370680ee52e2ba89a53ec4"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "6925210739b979098467ef814c86ec9945ab4476",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "Updating the scanner changelog attribution to the successor PR number is release metadata only; it does not change Elysia behavior or agent skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: CHANGELOG.md at 6925210739b979098467ef814c86ec9945ab4476"
       ]
     },
     "source:COMMANDS.md": {
