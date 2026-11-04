@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail.
+- Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#356).
 
 - Build checksummed, attested API and static SPA release bundles through manual main-only CI, with verification before container import (#355).
 
