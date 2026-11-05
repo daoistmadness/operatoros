@@ -121,12 +121,15 @@ pinned Caddy image checks readiness, nested SPA routing, missing assets, and
 dotfile rejection.
 
 The exit trap removes only the two fixed consumer container names from that
-store, verifies that no containers or Podman mounts remain, and refuses cleanup
-if the workspace, storage configuration, graphroot, or runroot is shared,
-symlinked, mounted, or outside the unique temporary root. It uses `podman
-unshare` only to remove the verified graphroot and runroot, which may contain
-files owned by subordinate host UIDs; after that process exits, the runner user
-removes the remaining temporary workspace. The trap preserves a consumer
+store, verifies that no containers or Podman mounts remain (querying rootless
+mounts through `podman unshare`), and refuses cleanup if the workspace, storage
+configuration, graphroot, or runroot is shared, symlinked, mounted, or outside
+the unique temporary root. It uses `podman unshare` to inspect mounts and remove
+the verified graphroot and runroot, which may contain files owned by subordinate
+host UIDs. If Podman recreates runner-owned lock metadata as its namespace exits,
+the cleanup verifies every residual entry is runner-owned before removing those
+store directories; then the runner removes the remaining temporary workspace.
+The trap preserves a consumer
 failure and reports cleanup failure separately. A successful consumer run with
 failed cleanup is still a failed release gate. Cleanup diagnostics contain
 command status and bounded Podman output only; container storage, database,

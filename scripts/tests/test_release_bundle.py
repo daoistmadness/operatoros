@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import pwd
 import shutil
+import sys
 import tarfile
 import tempfile
 import subprocess
@@ -218,6 +219,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         }
         self.commands = []
         self.rm_status = 0
+        self.mount_status = 0
         self.containers_output = ''
         self.mounts_output = ''
 
@@ -230,10 +232,15 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             return subprocess.CompletedProcess(arguments, self.rm_status, '', 'simulated rm result')
         if arguments[:3] == ['ps', '--all', '--quiet']:
             return subprocess.CompletedProcess(arguments, 0, self.containers_output, '')
-        if arguments == ['mount']:
-            return subprocess.CompletedProcess(arguments, 0, self.mounts_output, '')
+        if arguments == ['unshare', 'podman', 'mount']:
+            return subprocess.CompletedProcess(arguments, self.mount_status, self.mounts_output, '')
         if arguments[0] == 'unshare':
             cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
+            # Podman may recreate runner-owned lock directories while its namespace exits.
+            for name in ('graphroot', 'runroot'):
+                residual = workspace / name / 'podman-locks'
+                residual.mkdir(parents=True)
+                (residual / 'lock').write_text('synthetic lock', encoding='utf-8')
             return subprocess.CompletedProcess(arguments, 0, '', '')
         self.fail(f'unexpected Podman command: {arguments}')
 
@@ -254,6 +261,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             self.assertIsNone(process.poll())
             self.assertEqual(self.commands[0], ['rm', '--force', '--ignore', 'operatoros-release-api', 'operatoros-release-web'])
             self.assertNotIn('--all', self.commands[0])
+            self.assertIn(['unshare', 'podman', 'mount'], self.commands)
             self.assertEqual(self.commands[-1][0], 'unshare')
         finally:
             process.terminate()
@@ -270,14 +278,24 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         self.containers_output = 'unexpected-container\n'
         self.assertEqual(self.run_cleanup(), 1)
         self.assertTrue(self.workspace.exists())
-        self.assertNotIn('unshare', [command[0] for command in self.commands])
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
 
         self.commands.clear()
         self.containers_output = ''
         self.mounts_output = '/tmp/consumer-mount\n'
         self.assertEqual(self.run_cleanup(), 1)
         self.assertTrue(self.workspace.exists())
-        self.assertNotIn('unshare', [command[0] for command in self.commands])
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
+
+        self.commands.clear()
+        self.mounts_output = ''
+        self.mount_status = 125
+        self.assertEqual(self.run_cleanup(), 1)
+        self.assertTrue(self.workspace.exists())
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
 
     def test_traversal_symlink_and_shared_storage_paths_are_rejected(self):
         shared = self.temp_parent / 'shared-storage'
@@ -363,6 +381,15 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 1)
             run.assert_not_called()
         self.assertEqual(marker.read_text(encoding='utf-8'), 'preserve')
+
+    def test_host_cleanup_rejects_store_residuals_not_owned_by_runner(self):
+        marker = self.graphroot / 'storage.lock'
+        marker.write_text('synthetic lock', encoding='utf-8')
+        runner_uid = os.geteuid()
+        with unittest.mock.patch.object(cleanup.os, 'geteuid', return_value=runner_uid + 1):
+            with self.assertRaises(cleanup.CleanupError):
+                cleanup.remove_host_owned_store_residual(self.graphroot, self.workspace)
+        self.assertTrue(marker.exists())
 
     def test_cleanup_command_environment_excludes_credentials_and_remote_storage(self):
         with unittest.mock.patch.dict(os.environ, self.environment | {
@@ -462,7 +489,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             ranges[label] = starts[0]
 
         layer = self.graphroot / 'vfs' / 'dir' / 'layer'
-        env = cleanup.command_environment() | {'CONTAINERS_STORAGE_CONF': str(self.storage_conf)}
+        env = self.environment | {'CONTAINERS_STORAGE_CONF': str(self.storage_conf)}
         create = subprocess.run(
             ['podman', 'unshare', 'sh', '-c',
              'set -eu; mkdir -p "$1"; printf synthetic > "$1/file"; chown -R 1:1 "$(dirname "$1")"; chmod 755 "$(dirname "$1")"',

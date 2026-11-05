@@ -230,6 +230,36 @@ def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
     return 0
 
 
+def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
+    if path.parent != workspace:
+        raise CleanupError("Refusing store cleanup outside the consumer workspace.")
+    try:
+        root_stat = path.lstat()
+    except FileNotFoundError:
+        return
+    if not stat.S_ISDIR(root_stat.st_mode) or stat.S_ISLNK(root_stat.st_mode) or os.path.ismount(path):
+        raise CleanupError("Refusing unsafe residual Podman store path.")
+    if root_stat.st_uid != os.geteuid():
+        raise CleanupError("Refusing residual Podman store data outside the runner UID.")
+
+    pending = [path]
+    while pending:
+        directory = pending.pop()
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                info = entry.stat(follow_symlinks=False)
+                child = Path(entry.path)
+                if stat.S_ISLNK(info.st_mode) or os.path.ismount(child):
+                    raise CleanupError("Refusing symlink or mount in residual Podman store.")
+                if info.st_uid != os.geteuid():
+                    raise CleanupError("Refusing residual Podman store data outside the runner UID.")
+                if stat.S_ISDIR(info.st_mode):
+                    pending.append(child)
+                elif not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                    raise CleanupError("Refusing unexpected file type in residual Podman store.")
+    shutil.rmtree(path)
+
+
 def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str | None = None) -> int:
     try:
         workspace, temp_parent, _ = validate_workspace(workspace_value, temp_parent_value)
@@ -252,7 +282,8 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
         failures += 1
 
     containers = run_podman(["ps", "--all", "--quiet"], workspace, log_path)
-    mounts = run_podman(["mount"], workspace, log_path)
+    # Rootless Podman requires mount inspection from its user namespace.
+    mounts = run_podman(["unshare", "podman", "mount"], workspace, log_path)
     if containers is None or containers.returncode != 0 or containers.stdout.strip():
         append_log(log_path, "Podman container verification failed or found remaining containers.")
         append_log(log_path, "Refusing workspace removal: Podman reports remaining containers or cannot verify them.")
@@ -270,12 +301,12 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
     )
     if unshare is None or unshare.returncode != 0:
         failures += 1
-    elif any((workspace / name).exists() for name in ("graphroot", "runroot")):
-        append_log(log_path, "Podman user-namespace cleanup returned success but left a storage root behind.")
-        failures += 1
     else:
         try:
             validate_workspace(str(workspace), str(temp_parent))
+            assert_no_mounts_below(workspace)
+            for name in ("graphroot", "runroot"):
+                remove_host_owned_store_residual(workspace / name, workspace)
             assert_no_mounts_below(workspace)
             shutil.rmtree(workspace)
         except (CleanupError, OSError) as error:
