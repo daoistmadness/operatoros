@@ -4,12 +4,12 @@ set -euo pipefail
 bundle=$(realpath "$1")
 source_sha=$2
 python3 scripts/release-bundle.py verify "$bundle" "$source_sha"
-workspace=$(mktemp -d)
-cleanup() {
-  podman rm -f operatoros-release-api operatoros-release-web >/dev/null 2>&1 || true
-  rm -rf "$workspace"
-}
-trap cleanup EXIT
+temp_parent=$(realpath -e "${RUNNER_TEMP:-${TMPDIR:-/tmp}}")
+workspace=$(mktemp -d "$temp_parent/operatoros-release-consumer.XXXXXXXX")
+source scripts/release-consumer-cleanup-trap.sh
+trap 'operatoros_release_consumer_exit "$workspace" "$temp_parent"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 export CONTAINERS_STORAGE_CONF="$workspace/storage.conf"
 cat > "$CONTAINERS_STORAGE_CONF" <<EOF
 [storage]
@@ -17,6 +17,7 @@ driver="vfs"
 graphroot="$workspace/graphroot"
 runroot="$workspace/runroot"
 EOF
+chmod 600 "$CONTAINERS_STORAGE_CONF"
 python3 - "$bundle" "$source_sha" "$workspace" <<'PY'
 import importlib.util, pathlib, sys, tarfile
 spec = importlib.util.spec_from_file_location('release', 'scripts/release-bundle.py')

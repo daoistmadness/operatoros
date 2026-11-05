@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-05
 ---
 
 # CI release bundles
@@ -114,12 +114,30 @@ No publishing runs on PRs, and this pipeline does not create GitHub Releases.
 ## Isolated consumer and deployment boundary
 
 After attestation and before upload, `scripts/test-release-consumer.sh` verifies
-trusted provenance and validates the bundle,
-loads it into a temporary VFS Podman store, bootstraps synthetic S5.4 data, and
-starts the imported API without building. A pinned Caddy image checks readiness,
-nested SPA routing, missing assets, and dotfile rejection. Cleanup removes only
-that temporary store and its fixed names inside that store. This is not a live
+trusted provenance and validates the bundle, then creates a private, uniquely
+named temporary VFS Podman store beneath the runner's temporary directory. It
+bootstraps synthetic S5.4 data and starts the imported API without building. A
+pinned Caddy image checks readiness, nested SPA routing, missing assets, and
+dotfile rejection.
+
+The exit trap removes only the two fixed consumer container names from that
+store, verifies that no containers or Podman mounts remain, and refuses cleanup
+if the workspace, storage configuration, graphroot, or runroot is shared,
+symlinked, mounted, or outside the unique temporary root. It uses `podman
+unshare` only to remove the verified graphroot and runroot, which may contain
+files owned by subordinate host UIDs; after that process exits, the runner user
+removes the remaining temporary workspace. The trap preserves a consumer
+failure and reports cleanup failure separately. A successful consumer run with
+failed cleanup is still a failed release gate. Cleanup diagnostics contain
+command status and bounded Podman output only; container storage, database,
+environment files, and runtime data are never uploaded. This is not a live
 Quadlet, reboot, or production-host test.
+
+If consumer verification fails, the complete attested bundle remains only in
+the ephemeral runner workspace and is not uploaded. Only the allowlisted
+diagnostics artifact is retained. A separately named, short-retention quarantine
+artifact could support a future investigation, but this workflow does not create
+one and the deployment verifier must never treat such an artifact as accepted.
 
 The existing synthetic host uses two rootless Quadlet containers: API and Caddy.
 Caddy serves static SPA files and proxies the API. SQLite stays in a host-mounted
