@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "327522ca52100609be3d7ba286ef600d23288e914951132e8c3bc5e5ae1ea0f4",
+      "fingerprint": "5fb048e2f8e192b3b5cb9b47e50e9c1cfa1da206586195a9471730f58af6937d",
       "snapshot": {
-        "CHANGELOG.md": "3abdbffcaa51e2887006f21adee019ca75c31fc8fec75a943c49c049daab45be"
+        "CHANGELOG.md": "98a8991f5c1b033ab4f11cb32a3b17a1a5052e778851dd2d16d8670c28865f65"
       },
-      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "head": "23a0849bb27947c62d6e9a45c7ff442f9741aa84",
       "outcome": "no-change",
-      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "reason": "The only change since the cleanup review is adding the assigned PR number to the existing Unreleased changelog bullet; no skill, architecture, or planning guidance changes.",
       "evidence": [
-        "Changed: CHANGELOG.md at 02879a18efda292f72f96f1314fb05ab266715e6"
+        "Changed: CHANGELOG.md at 23a0849bb27947c62d6e9a45c7ff442f9741aa84"
       ]
     },
     "source:COMMANDS.md": {
