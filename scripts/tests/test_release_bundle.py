@@ -2,13 +2,14 @@ import importlib.util
 import io
 import json
 import os
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import pwd
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
-import subprocess
 import unittest
 from unittest.mock import Mock, patch
 
@@ -120,16 +121,118 @@ class BundleTests(unittest.TestCase):
 
 
 class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
-    def test_podman_secret_is_sent_on_stdin_not_command_arguments_or_logs(self):
+    def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
-        with patch.object(rehearsal, 'run') as command:
-            rehearsal.create_podman_secret('operatoros-rehearsal-auth', secret_value, {'HOME': '/private'})
+        child_output = 'synthetic-child-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-diagnostics-test-') as temporary:
+            diagnostics = Path(temporary)
+            success = subprocess.CompletedProcess([], 0, child_output, child_output)
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=success) as command:
+                rehearsal.create_podman_secret(
+                    'operatoros-rehearsal-auth', secret_value, {'HOME': '/private'},
+                )
 
-        args = command.call_args.args[0]
-        self.assertEqual(args, ['podman', 'secret', 'create', 'operatoros-rehearsal-auth', '-'])
-        self.assertNotIn(secret_value, args)
-        self.assertEqual(command.call_args.kwargs['input_data'], secret_value)
-        self.assertFalse(command.call_args.kwargs['log_output'])
+            args = command.call_args.args[0]
+            self.assertEqual(args, ['podman', 'secret', 'create', 'operatoros-rehearsal-auth', '-'])
+            self.assertNotIn(secret_value, args)
+            self.assertEqual(command.call_args.kwargs['input'], secret_value)
+            self.assertNotIn(child_output, (diagnostics / 'rehearsal.log').read_text())
+
+            failure = subprocess.CompletedProcess([], 23, child_output, child_output)
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=failure):
+                with self.assertRaises(rehearsal.RehearsalError) as error:
+                    rehearsal.create_podman_secret(
+                        'operatoros-rehearsal-auth', secret_value, {'HOME': '/private'},
+                    )
+            self.assertNotIn(secret_value, str(error.exception))
+            self.assertNotIn(child_output, str(error.exception))
+            self.assertNotIn(child_output, (diagnostics / 'rehearsal.log').read_text())
+
+    def test_deployment_cli_failure_does_not_log_token_or_child_output(self):
+        token = 'synthetic-release-token-marker'
+        child_output = 'synthetic-cli-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cli-test-') as temporary:
+            diagnostics = Path(temporary)
+            result = subprocess.CompletedProcess([], 23, child_output, child_output)
+            stdout = io.StringIO()
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {'PATH': '/usr/bin:/bin', 'OPERATOROS_RELEASE_TOKEN': token}, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=result) as command, \
+                 redirect_stdout(stdout):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'non-secret rehearsal log') as error:
+                    rehearsal.run_cli(['operatoros-deploy', 'verify'], needs_token=True)
+
+            self.assertNotIn(token, command.call_args.args[0])
+            self.assertEqual(command.call_args.kwargs['env']['OPERATOROS_RELEASE_TOKEN'], token)
+            self.assertNotIn(token, str(error.exception))
+            self.assertNotIn(child_output, str(error.exception))
+            self.assertNotIn(token, stdout.getvalue())
+            self.assertNotIn(child_output, stdout.getvalue())
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertNotIn(token, diagnostic)
+            self.assertNotIn(child_output, diagnostic)
+
+    def test_successful_secret_setup_keeps_credentials_out_of_files_arguments_and_logs(self):
+        child_output = 'synthetic-subprocess-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-success-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            calls = []
+
+            def successful_process(args, **kwargs):
+                calls.append((args, kwargs))
+                if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
+                    data_dir = Path(kwargs['env']['OPERATOROS_DATA_DIR'])
+                    (data_dir / 'operatoros.sqlite').write_bytes(b'synthetic database')
+                return subprocess.CompletedProcess(args, 0, child_output, child_output)
+
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {
+                     'GITHUB_RUN_ID': '123456789',
+                     'GITHUB_RUN_ATTEMPT': '1',
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                     'PATH': '/usr/bin:/bin',
+                 }, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=successful_process):
+                username, password, cookie_secret, backup_key, auth_name, backup_name = \
+                    rehearsal.setup_synthetic_database(workspace, SHA)
+
+            self.assertEqual(len(calls), 5)
+            secret_calls = calls[:2]
+            self.assertEqual(secret_calls[0][0], ['podman', 'secret', 'create', auth_name, '-'])
+            self.assertEqual(secret_calls[1][0], ['podman', 'secret', 'create', backup_name, '-'])
+            self.assertEqual(secret_calls[0][1]['input'], cookie_secret)
+            self.assertEqual(secret_calls[1][1]['input'], backup_key)
+            seed_args, seed_kwargs = calls[3]
+            self.assertNotIn(password, seed_args)
+            self.assertEqual(seed_kwargs['env']['OPERATOROS_E2E_ADMIN_PASSWORD'], password)
+            self.assertEqual(seed_kwargs['env']['OPERATOROS_E2E_ADMIN_USERNAME'], username)
+            for args, _ in calls:
+                for value in (password, cookie_secret, backup_key):
+                    self.assertNotIn(value, args)
+
+            api_env = (workspace / 'deploy/api.env').read_text()
+            self.assertNotIn(password, api_env)
+            self.assertNotIn(cookie_secret, api_env)
+            self.assertNotIn(backup_key, api_env)
+            self.assertNotIn('AUTH_COOKIE_SECRET=', api_env)
+            self.assertNotIn('BACKUP_ENCRYPTION_KEY=', api_env)
+            persisted = [path.read_bytes() for path in workspace.rglob('*') if path.is_file()]
+            for value in (password, cookie_secret, backup_key):
+                self.assertFalse(any(value.encode() in contents for contents in persisted))
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertNotIn(child_output, diagnostic)
+            for value in (password, cookie_secret, backup_key):
+                self.assertNotIn(value, diagnostic)
+
+    def test_diagnostic_logger_rejects_unapproved_dynamic_text(self):
+        with self.assertRaisesRegex(rehearsal.RehearsalError, 'not allowlisted'):
+            rehearsal.log('synthetic-password-or-cookie-secret')
 
     def test_api_environment_contains_no_authentication_or_backup_secrets(self):
         values = rehearsal.api_environment(SHA, 'http://127.0.0.1:18080')
@@ -191,6 +294,108 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         self.assertNotIn('synthetic-cookie-jar.txt', script)
         self.assertNotIn('--cookie-jar', script)
         self.assertNotIn('--data-binary', script)
+
+    def test_partial_secret_setup_keeps_values_private_and_reports_only_exit_code(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-partial-setup-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            calls = []
+
+            def fail_second_secret(args, **kwargs):
+                calls.append((args, kwargs))
+                return subprocess.CompletedProcess(
+                    args, 0 if len(calls) == 1 else 23,
+                    'synthetic-podman-output-marker', 'synthetic-podman-output-marker',
+                )
+
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {
+                     'GITHUB_RUN_ID': '123456789',
+                     'GITHUB_RUN_ATTEMPT': '1',
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                     'PATH': '/usr/bin:/bin',
+                 }, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=fail_second_secret):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'exit code 23'):
+                    rehearsal.setup_synthetic_database(workspace, SHA)
+
+            self.assertEqual(len(calls), 2)
+            secret_values = [call[1]['input'] for call in calls]
+            for args, kwargs in calls:
+                self.assertEqual(args[-1], '-')
+                self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
+                self.assertNotIn('BACKUP_ENCRYPTION_KEY', kwargs['env'])
+            self.assertFalse((workspace / 'deploy/api.env').exists())
+            file_contents = [path.read_bytes() for path in workspace.rglob('*') if path.is_file()]
+            for value in secret_values:
+                self.assertFalse(any(value.encode() in contents for contents in file_contents))
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertIn('subprocess exit=23', diagnostic)
+            self.assertNotIn('synthetic-podman-output-marker', diagnostic)
+            for value in secret_values:
+                self.assertNotIn(value, diagnostic)
+
+    def test_main_runs_cleanup_after_interruption_without_uploading_raw_outputs(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-interruption-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=KeyboardInterrupt), \
+                 patch.object(rehearsal, 'cleanup_workspace') as cleanup:
+                with self.assertRaises(KeyboardInterrupt):
+                    rehearsal.main()
+
+            cleanup.assert_called_once_with(workspace, runner_temp, diagnostics)
+            evidence = json.loads((diagnostics / 'rehearsal-evidence.json').read_text())
+            self.assertEqual(evidence['failures'], [])
+            self.assertFalse((diagnostics / 'deploy-result.json').exists())
+
+    def test_main_sanitizes_exception_text_and_cleanup_failures_in_evidence(self):
+        secret = 'synthetic-exception-secret-marker'
+        cleanup_secret = 'synthetic-cleanup-secret-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-error-test-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+            stderr = io.StringIO()
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=rehearsal.RehearsalError(secret)), \
+                 patch.object(rehearsal, 'cleanup_workspace',
+                              side_effect=rehearsal.RehearsalError(cleanup_secret)), \
+                 redirect_stderr(stderr):
+                self.assertEqual(rehearsal.main(), 1)
+
+            evidence = (diagnostics / 'rehearsal-evidence.json').read_text()
+            self.assertIn('RehearsalError', evidence)
+            self.assertNotIn(secret, evidence)
+            self.assertNotIn(cleanup_secret, evidence)
+            self.assertNotIn(secret, stderr.getvalue())
+            self.assertNotIn(cleanup_secret, stderr.getvalue())
 
     def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -295,6 +500,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         self.assertNotIn('operatoros.sqlite', job)
         self.assertNotIn('api.env', job)
         self.assertNotIn('graphroot', job)
+        self.assertNotIn('deploy-result.json', job)
 
     def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
         script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()

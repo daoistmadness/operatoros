@@ -48,21 +48,15 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
 
 
 def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60,
-        check: bool = True, log_output: bool = True,
-        input_data: str | None = None) -> subprocess.CompletedProcess[str]:
+        check: bool = True, input_data: str | None = None) -> subprocess.CompletedProcess[str]:
     try:
         result = subprocess.run(args, env=env if env is not None else system_environment(), capture_output=True, text=True,
                                 input=input_data, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as error:
-        raise RehearsalError(f"command could not complete: {Path(args[0]).name}: {type(error).__name__}") from error
-    if log_output:
-        log(f"command={Path(args[0]).name} exit={result.returncode}")
-        output = (result.stdout + result.stderr).strip()
-        if output:
-            for line in output[-4_000:].splitlines():
-                log("output=" + line[:1_000])
+        raise RehearsalError(f"subprocess could not complete ({type(error).__name__})") from error
+    log("subprocess", exit_code=result.returncode)
     if check and result.returncode != 0:
-        raise RehearsalError(f"command failed: {Path(args[0]).name} exited {result.returncode}")
+        raise RehearsalError(f"subprocess failed with exit code {result.returncode}")
     return result
 
 
@@ -75,7 +69,12 @@ def system_environment() -> dict[str, str]:
     return {name: os.environ[name] for name in names if name in os.environ}
 
 
-def log(message: str) -> None:
+def log(event: str, *, exit_code: int | None = None) -> None:
+    if event not in {"subprocess", "deployment_cli", "cleanup"}:
+        raise RehearsalError("diagnostic event is not allowlisted")
+    if exit_code is not None and not isinstance(exit_code, int):
+        raise RehearsalError("diagnostic exit code must be an integer")
+    message = event if exit_code is None else f"{event} exit={exit_code}"
     print(message, flush=True)
     if DIAGNOSTICS is not None:
         with (DIAGNOSTICS / "rehearsal.log").open("a", encoding="utf-8") as output:
@@ -87,14 +86,18 @@ def require(condition: bool, message: str) -> None:
         raise RehearsalError(message)
 
 
+def failure_kind(error: BaseException) -> str:
+    return type(error).__name__
+
+
 def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 30) -> str:
-    result = run(args, env=env, timeout=timeout, log_output=False)
+    result = run(args, env=env, timeout=timeout)
     return result.stdout.strip()
 
 
 def create_podman_secret(name: str, value: str, env: dict[str, str]) -> None:
     run(["podman", "secret", "create", name, "-"], env=env,
-        input_data=value, log_output=False)
+        input_data=value)
 
 
 def require_subid_file(path: Path, username: str, uid: int) -> None:
@@ -482,7 +485,7 @@ def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str
     seed_env = db_env | {"OPERATOROS_E2E_ADMIN_USERNAME": admin_username,
                          "OPERATOROS_E2E_ADMIN_PASSWORD": admin_password}
     run(["bun", "e2e/helpers/seed-test-database.ts", "--database", str(data_dir / "operatoros.sqlite"),
-         "--runtime-root", str(workspace)], env=seed_env, timeout=120, log_output=False)
+         "--runtime-root", str(workspace)], env=seed_env, timeout=120)
 
     incompatible = workspace / "schema-negative/data"
     incompatible.mkdir(mode=0o700, parents=True)
@@ -555,7 +558,7 @@ def run_cli(args: list[str], *, expect_success: bool = True,
     if needs_token:
         env["OPERATOROS_RELEASE_TOKEN"] = os.environ["OPERATOROS_RELEASE_TOKEN"]
     result = subprocess.run(args, env=env, capture_output=True, text=True, timeout=300, check=False)
-    log(f"deployment_cli={args[1] if len(args) > 1 else 'unknown'} exit={result.returncode}")
+    log("deployment_cli", exit_code=result.returncode)
     if expect_success and result.returncode != 0:
         raise RehearsalError("deployment CLI failed; inspect the non-secret rehearsal log")
     if not expect_success and result.returncode == 0:
@@ -641,8 +644,7 @@ def cleanup_workspace(workspace: Path, runner_temp: Path, diagnostics: Path) -> 
         sys.executable, str(path), str(workspace), str(runner_temp),
         "--diagnostics-dir", str(diagnostics),
     ], env=env, capture_output=True, text=True, timeout=300, check=False)
-    for line in (result.stdout + result.stderr).strip().splitlines():
-        log("cleanup=" + line[:1_000])
+    log("cleanup", exit_code=result.returncode)
     require(result.returncode == 0 and not workspace.exists(),
             "isolated Podman cleanup failed; workspace was retained for investigation")
 
@@ -743,8 +745,7 @@ def rehearse(workspace: Path, diagnostics: Path,
             "AUTH_COOKIE_SECRET": cookie_secret,
             "BACKUP_ENCRYPTION_KEY": backup_key,
         }
-        run(["bun", "apps/api/src/backup-cli.ts", "backup"], env=backup_env,
-            timeout=120, log_output=False)
+        run(["bun", "apps/api/src/backup-cli.ts", "backup"], env=backup_env, timeout=120)
         backups = list((workspace / "data/backups").glob("backup_*.sqlite3"))
         require(len(backups) == 1, "expected exactly one synthetic encrypted backup")
 
@@ -788,10 +789,7 @@ def rehearse(workspace: Path, diagnostics: Path,
                 "wrong-source artifact rejection did not fail at request validation")
         REPORT["checks"]["wrong_source_rejected"] = True
 
-        deploy_result = run_cli(deployment_command(config, "deploy", backup_name=backups[0].name), needs_token=True)
-        if deploy_result.stdout:
-            (diagnostics / "deploy-result.json").write_text(deploy_result.stdout, encoding="utf-8")
-            (diagnostics / "deploy-result.json").chmod(0o600)
+        run_cli(deployment_command(config, "deploy", backup_name=backups[0].name), needs_token=True)
         require(deploy.sha_db_snapshot(cfg["data_dir"]) == before_deploy,
                 "SQLite main/WAL/SHM changed during the real deployment")
         report = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
@@ -883,7 +881,7 @@ def main() -> int:
     except Exception as error:
         failure = error
         REPORT["result"] = "failed"
-        REPORT["failures"].append(str(error)[:1_000])
+        REPORT["failures"].append(failure_kind(error))
         if diagnostics is not None:
             try:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
@@ -899,20 +897,21 @@ def main() -> int:
                 REPORT["checks"]["cleanup"] = "run-scoped units stopped and disposable VFS workspace removed"
             except Exception as error:
                 cleanup_failure = error
-                REPORT["failures"].append(str(error)[:1_000])
+                REPORT["failures"].append(failure_kind(error))
                 REPORT["result"] = "failed_cleanup"
             try:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
             except OSError:
                 cleanup_failure = cleanup_failure or RehearsalError("could not write final diagnostics")
     if failure is not None and cleanup_failure is not None:
-        print(f"Rehearsal failed: {failure}; cleanup also failed: {cleanup_failure}", file=sys.stderr)
+        print(f"Rehearsal failed ({failure_kind(failure)}); cleanup also failed ({failure_kind(cleanup_failure)})",
+              file=sys.stderr)
         return 1
     if failure is not None:
-        print(f"Rehearsal failed: {failure}", file=sys.stderr)
+        print(f"Rehearsal failed ({failure_kind(failure)})", file=sys.stderr)
         return 1
     if cleanup_failure is not None:
-        print(f"Rehearsal cleanup failed: {cleanup_failure}", file=sys.stderr)
+        print(f"Rehearsal cleanup failed ({failure_kind(cleanup_failure)})", file=sys.stderr)
         return 1
     print("PHASE_3B_SYNTHETIC_REHEARSAL_PASS")
     return 0

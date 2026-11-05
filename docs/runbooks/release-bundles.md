@@ -206,10 +206,12 @@ rejection, incompatible-schema rejection, interrupted-transaction reporting,
 application-only rollback, and SQLite/WAL preservation. The repository's
 deployment unit tests separately cover malformed bundle and attestation
 rejection, simulated health-check failure, and rollback failure. The workflow
-retains only `rehearsal.log`, `rehearsal-evidence.json`, `deploy-result.json`,
-and the bounded cleanup log for 14 days; it never uploads the bundle, database,
-environment file, secrets, or container storage. This preparation has not run
-the workflow or exercised the hosted runner's actual service manager.
+retains only allowlisted event names, exit codes, `rehearsal-evidence.json`,
+and the cleanup tool's bounded diagnostics for 14 days. It does not retain
+arbitrary subprocess output or deployment CLI output, and never uploads the
+bundle, database, environment file, secrets, or container storage. This
+preparation has not run the workflow or exercised the hosted runner's actual
+service manager.
 
 If consumer verification fails, the complete attested bundle remains only in
 the ephemeral runner workspace and is not uploaded. Only the allowlisted
