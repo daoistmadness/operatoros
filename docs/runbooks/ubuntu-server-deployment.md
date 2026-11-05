@@ -64,6 +64,14 @@ configuration and SPA target; it never restores SQLite. The CLI is not yet
 installed or validated on Ubuntu 24.04, and it does not close rootless systemd
 reboot recovery, backup ownership, or production topology approval.
 
+The repository also prepares a separate, manually confirmed GitHub-hosted
+deployment rehearsal using one retained release artifact and run-scoped
+Quadlet names. That workflow is not a host deployment path and has not been
+executed. It requires a working user systemd manager, rootless UID/GID maps,
+cgroup v2, supported temporary storage, and measured capacity; the job checks
+these at runtime and stops before creating services if any check fails. See
+[CI release bundles](release-bundles.md#isolated-deployment-rehearsal-prepared-not-executed).
+
 Do not modify an EC2 or production host from this document until the host owner approves the exact target, change scope, network policy, package sources, recovery policy, reviewers, and execution window.
 
 The repository now contains the production API Containerfile, Quadlet template, host Caddyfile, placeholder-only environment example, digest renderer, and local deploy/teardown harness under `deploy/podman/` and `scripts/podman-local-*.sh`. The local harness was exercised against synthetic data. It does not activate a user systemd service, test a reboot, publish/sign artifacts, install host packages, or validate Ubuntu 24.04 compatibility.

@@ -341,6 +341,7 @@ class DeploymentFixture(unittest.TestCase):
     def test_config_and_backup_preconditions_are_strict(self):
         cfg = deploy.load_config(self.config_file)
         self.assertEqual(cfg["expected_uid"], os.getuid())
+        self.assertEqual(cfg["profile"], "host")
         self.assertEqual(deploy.validate_backup(cfg, self.backup.name), self.backup)
         with self.assertRaises(deploy.DeployError):
             deploy.validate_backup(cfg, "../backup_synthetic.sqlite3")
@@ -354,6 +355,39 @@ class DeploymentFixture(unittest.TestCase):
         self.config_file.chmod(0o644)
         with self.assertRaisesRegex(deploy.DeployError, "mode 0600"):
             deploy.load_config(self.config_file)
+
+    def test_rehearsal_profile_is_bound_to_unique_github_run_paths_and_services(self):
+        with tempfile.TemporaryDirectory(prefix="operatoros-rehearsal-profile-test-") as temp:
+            runner_temp = Path(temp)
+            run_id, attempt = "123456789", "2"
+            root = runner_temp / (deploy.REHEARSAL_WORKSPACE_PREFIX + run_id + "a" + attempt)
+            root.mkdir(mode=0o700)
+            root.chmod(0o700)
+            cfg = {
+                "api_service": f"operatoros-rehearsal-{run_id}-{attempt}-api.service",
+                "caddy_service": f"operatoros-rehearsal-{run_id}-{attempt}-caddy.service",
+            }
+            env = {
+                "GITHUB_ACTIONS": "true",
+                "GITHUB_REPOSITORY": deploy.REPOSITORY,
+                "GITHUB_REF": "refs/heads/main",
+                "GITHUB_EVENT_NAME": "workflow_dispatch",
+                "GITHUB_RUN_ID": run_id,
+                "GITHUB_RUN_ATTEMPT": attempt,
+                "RUNNER_TEMP": str(runner_temp),
+            }
+            with patch.dict(os.environ, env, clear=True):
+                self.assertEqual(deploy.deployment_profile(cfg, root), "rehearsal")
+                with self.assertRaisesRegex(deploy.DeployError, "unique to this GitHub Actions run"):
+                    deploy.deployment_profile(cfg, runner_temp / "operatoros")
+                cfg["api_service"] = "operatoros-lite-api.service"
+                with self.assertRaisesRegex(deploy.DeployError, "unique to this GitHub Actions run"):
+                    deploy.deployment_profile(cfg, root)
+                cfg["api_service"] = f"operatoros-rehearsal-{run_id}-{attempt}-api.service"
+                feature_env = env | {"GITHUB_REF": "refs/heads/feature"}
+                with patch.dict(os.environ, feature_env, clear=True):
+                    with self.assertRaisesRegex(deploy.DeployError, "approved GitHub rehearsal context"):
+                        deploy.deployment_profile(cfg, root)
 
     def test_backup_failure_stops_preflight_before_schema_validation(self):
         release = fake_release()

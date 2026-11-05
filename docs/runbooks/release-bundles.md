@@ -136,6 +136,68 @@ command status and bounded Podman output only; container storage, database,
 environment files, and runtime data are never uploaded. This is not a live
 Quadlet, reboot, or production-host test.
 
+## Isolated deployment rehearsal (prepared, not executed)
+
+The separate `.github/workflows/deployment-rehearsal.yml` workflow is prepared
+to test the repository-managed deployment CLI on a disposable GitHub-hosted
+`ubuntu-24.04` VM. It has only a `workflow_dispatch` trigger, runs only on
+`main` when the required boolean confirmation is true, and does not build or
+publish a release. It cannot run from a PR, push, or schedule. Its
+`GITHUB_TOKEN` is limited to `actions: read`, `attestations: read`, and
+`contents: read`; checkout credentials are not persisted. No production
+credential is needed. The token is used only for artifact retrieval and
+attestation verification; the API and Caddy services do not inherit it. A
+private empty registry-auth file prevents the public digest-pinned Caddy pull
+from reading credentials from the runner user's normal Podman auth file.
+
+The rehearsal reuses, without rebuilding, the retained release from source
+`278faae7a027cf1c96326d32a9b796618d75620e`, workflow run `41987515713`
+(attempt 1), artifact `13396749662`. Before import, the existing deployment
+verifier checks the artifact's GitHub envelope digest
+`22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7`, inner
+bundle SHA-256
+`a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435`, run and
+source identity, and GitHub attestation. The artifact was recorded as
+80,791,318 bytes and expires on 2027-02-03 07:28:55 UTC. This repository-only
+preparation did not retrieve it again or create a durable local copy; the
+earlier `/tmp` copy is not the preservation copy. Download and preserve the
+verified bundle and its hashes in the approved evidence location before
+expiration.
+
+Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS
+graphroot/runroot, random synthetic-only authentication and backup secrets,
+and service names that include the workflow run ID and attempt. The API port
+is published to loopback only; Caddy uses host networking but binds only to a
+separate loopback port. The harness rejects paths overlapping default/shared
+Podman storage, application data, repository worktrees, or the existing
+`/mnt/podman-data` root. Cleanup removes only the run-specific Quadlet files,
+the two container names in the private store, and that verified workspace.
+It does not use `sudo`, modify system-wide settings, or touch the existing
+OperatorOS services or database.
+
+GitHub currently documents the Ubuntu 24.04 hosted image with Podman 4.9.3
+and systemd 255.4, but the hosted image changes over time. The image inventory
+does not guarantee that this job receives a working user systemd manager,
+subordinate UID/GID ranges, cgroup delegation, a compatible filesystem, or
+sufficient free bytes and inodes. The harness checks the actual runner and
+fails before service configuration if any prerequisite is absent; it does not
+enable lingering, change cgroups, or fall back to a different host. These
+runtime capabilities are **not verified** until a separately authorized run.
+See the [Ubuntu 24.04 runner inventory](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md)
+and [Podman 4.9.3 Quadlet reference](https://docs.podman.io/en/v4.9.3/markdown/podman-systemd.unit.5.html).
+
+The rehearsal script checks the verified release, rootless image import,
+read-only SQLite schema validation, API/Caddy Quadlet startup, synthetic
+authenticated requests, SPA deep/static routes and dotfile protection, lock
+rejection, incompatible-schema rejection, interrupted-transaction reporting,
+application-only rollback, and SQLite/WAL preservation. The repository's
+deployment unit tests separately cover malformed bundle and attestation
+rejection, simulated health-check failure, and rollback failure. The workflow
+retains only `rehearsal.log`, `rehearsal-evidence.json`, `deploy-result.json`,
+and the bounded cleanup log for 14 days; it never uploads the bundle, database,
+environment file, secrets, or container storage. This preparation has not run
+the workflow or exercised the hosted runner's actual service manager.
+
 If consumer verification fails, the complete attested bundle remains only in
 the ephemeral runner workspace and is not uploaded. Only the allowlisted
 diagnostics artifact is retained. A separately named, short-retention quarantine
@@ -216,8 +278,12 @@ deploying non-root user. It identifies the data/deployment roots, existing
 Quadlet files and service names, rootless Podman storage, loopback URLs, free
 space/inode floors, and maximum backup age. Keep that config, API environment
 file, encryption keys, backup metadata, logs, current release record, and
-transaction snapshots outside Git. The CLI only recognizes the existing
-`operatoros-lite-api.service` and `operatoros-lite-caddy.service` identities.
+transaction snapshots outside Git. For a normal host deployment the CLI
+accepts only the existing `operatoros-lite-api.service` and
+`operatoros-lite-caddy.service` identities. It has a separate run-scoped
+profile for the confirmed GitHub rehearsal workflow, bound to that run's
+`RUNNER_TEMP`, run ID, and attempt. That profile does not permit host deployment
+from an ordinary local invocation and is not installed on the existing host.
 
 The config contains exactly these keys. Paths must already exist, be absolute,
 canonical (no symlink components), and be owned by the deploying user. The

@@ -19,6 +19,9 @@ spec.loader.exec_module(m)
 cleanup_spec = importlib.util.spec_from_file_location('release_consumer_cleanup', ROOT / 'scripts/release-consumer-cleanup.py')
 cleanup = importlib.util.module_from_spec(cleanup_spec)
 cleanup_spec.loader.exec_module(cleanup)
+rehearsal_spec = importlib.util.spec_from_file_location('deployment_rehearsal', ROOT / 'scripts/deployment-rehearsal.py')
+rehearsal = importlib.util.module_from_spec(rehearsal_spec)
+rehearsal_spec.loader.exec_module(rehearsal)
 SHA = 'a' * 40
 
 
@@ -188,6 +191,59 @@ class BundleTests(unittest.TestCase):
         api = workflow.split('  api:\n')[1].split('\n  frontend:')[0]
         self.assertIn('OPERATOROS_TEST_ROOTLESS_PODMAN: "1"', api)
 
+    def test_deployment_rehearsal_is_manual_confirmed_read_only_and_separate(self):
+        workflow = (ROOT / '.github/workflows/deployment-rehearsal.yml').read_text()
+        triggers = workflow.split('permissions:', 1)[0]
+        self.assertIn('workflow_dispatch:', triggers)
+        self.assertNotIn('pull_request:', triggers)
+        self.assertNotIn('push:', triggers)
+        self.assertNotIn('schedule:', triggers)
+        self.assertIn('type: boolean', triggers)
+        self.assertIn('default: false', triggers)
+        self.assertIn("inputs.confirm_rehearsal == true", workflow)
+        self.assertIn("github.ref == 'refs/heads/main'", workflow)
+        self.assertIn('runs-on: ubuntu-24.04', workflow)
+        self.assertIn('contents: none', workflow)
+        job = workflow.split('  rehearsal:\n', 1)[1]
+        permissions = job.split('permissions:', 1)[1].split('steps:', 1)[0]
+        self.assertIn('actions: read', permissions)
+        self.assertIn('attestations: read', permissions)
+        self.assertIn('contents: read', permissions)
+        self.assertNotIn('id-token:', permissions)
+        self.assertNotIn('write', permissions)
+        self.assertIn('persist-credentials: false', job)
+        self.assertIn('cache-write: "false"', job)
+        self.assertIn('OPERATOROS_RELEASE_TOKEN: ${{ github.token }}', job)
+        self.assertIn('python3 scripts/deployment-rehearsal.py', job)
+        self.assertNotIn('ci.yml', job)
+        self.assertNotIn('deploy.sh', job)
+        self.assertIn('retention-days: 14', job)
+        self.assertNotIn('operatoros.sqlite', job)
+        self.assertNotIn('api.env', job)
+        self.assertNotIn('graphroot', job)
+
+    def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
+        for identity in (
+            '278faae7a027cf1c96326d32a9b796618d75620e',
+            '41987515713',
+            '13396749662',
+            'a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435',
+            '22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7',
+        ):
+            self.assertIn(identity, script)
+        self.assertIn('deploy.verified_artifact(request', script)
+        self.assertIn('verified.bundle_sha256 == INNER_BUNDLE_SHA256', script)
+        self.assertIn('OPERATOROS_REHEARSAL_CONFIRMED', script)
+        self.assertIn('RUNNER_TEMP', script)
+        self.assertIn('podman-rootless/graphroot', script)
+        self.assertIn('show-environment', script)
+        self.assertIn('OPERATOROS_RELEASE_TOKEN', script)
+        self.assertIn('REGISTRY_AUTH_FILE', script)
+        self.assertNotIn('podman", "build', script)
+        self.assertNotIn('sudo ', script)
+        self.assertNotIn('/mnt/podman-data/operatoros', script)
+
 
 class ReleaseConsumerCleanupTests(unittest.TestCase):
     def setUp(self):
@@ -237,8 +293,9 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         if arguments[0] == 'unshare':
             cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
             # Podman may recreate runner-owned lock directories while its namespace exits.
-            for name in ('graphroot', 'runroot'):
-                residual = workspace / name / 'podman-locks'
+            _prefix, profile = cleanup.workspace_profile(workspace)
+            for key in ('graphroot', 'runroot'):
+                residual = workspace / profile[key] / 'podman-locks'
                 residual.mkdir(parents=True)
                 (residual / 'lock').write_text('synthetic lock', encoding='utf-8')
             return subprocess.CompletedProcess(arguments, 0, '', '')
@@ -266,6 +323,61 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def test_deployment_rehearsal_profile_cleans_only_its_scoped_containers(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        graphroot = workspace / 'podman-rootless/graphroot'
+        runroot = workspace / 'podman-rootless/runroot'
+        graphroot.mkdir(parents=True)
+        runroot.mkdir()
+        storage_conf = workspace / 'deploy/storage.conf'
+        storage_conf.parent.mkdir()
+        storage_conf.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{graphroot}"\n'
+            f'runroot="{runroot}"\n',
+            encoding='utf-8',
+        )
+        storage_conf.chmod(0o600)
+        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage_conf)}
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
+        self.assertFalse(workspace.exists())
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+        self.assertEqual(self.commands[0], [
+            'rm', '--force', '--ignore', 'operatoros-lite-api', 'operatoros-lite-caddy',
+        ])
+
+    def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        storage = workspace / 'deploy/storage.conf'
+        storage.parent.mkdir()
+        external_store = self.temp_parent / 'external-store'
+        external_store.mkdir()
+        (workspace / 'podman-rootless').mkdir()
+        (workspace / 'podman-rootless/graphroot').symlink_to(external_store, target_is_directory=True)
+        (workspace / 'podman-rootless/runroot').mkdir()
+        storage.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{workspace / "podman-rootless/graphroot"}"\n'
+            f'runroot="{workspace / "podman-rootless/runroot"}"\n',
+            encoding='utf-8',
+        )
+        storage.chmod(0o600)
+        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage)}
+        with patch.dict(os.environ, environment, clear=True):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'unsafe consumer graphroot path'):
+                cleanup.validate_workspace(str(workspace), str(self.temp_parent))
+        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, storage)):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot'):
+                cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
+        self.assertTrue(external_store.is_dir())
+
 
     def test_cleanup_command_failure_is_reported_even_if_store_is_removed(self):
         self.rm_status = 9
@@ -521,3 +633,32 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             'missing.js")" == 404',
         ):
             self.assertIn(required, harness)
+
+
+class RehearsalUnitCleanupTests(unittest.TestCase):
+    def test_teardown_stops_only_run_scoped_quadlets_created_by_this_run(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-units-') as temp:
+            unit_dir = Path(temp)
+            services = ('operatoros-rehearsal-123456789-1-api.service',
+                        'operatoros-rehearsal-123456789-1-caddy.service')
+            api_unit, caddy_unit = tuple(
+                unit_dir / (service.removesuffix('.service') + '.container') for service in services
+            )
+            api_copy = unit_dir / 'operatoros-lite-api.container'
+            unrelated = unit_dir / 'unrelated.service'
+            for path in (api_unit, caddy_unit, api_copy, unrelated):
+                path.write_text('synthetic', encoding='utf-8')
+
+            def systemctl(arguments, **_kwargs):
+                return subprocess.CompletedProcess(arguments, 3 if 'is-active' in arguments else 0, '', '')
+
+            with patch.object(rehearsal.subprocess, 'run', side_effect=systemctl) as run:
+                rehearsal.remove_run_units(unit_dir, services, {api_unit, caddy_unit, api_copy})
+
+            commands = [call.args[0] for call in run.call_args_list]
+            self.assertEqual([command[3] for command in commands if command[2] == 'stop'], list(services))
+            self.assertEqual([command[4] for command in commands if command[2] == 'is-active'], list(services))
+            self.assertFalse(api_unit.exists())
+            self.assertFalse(caddy_unit.exists())
+            self.assertTrue(api_copy.is_file())
+            self.assertTrue(unrelated.is_file())
