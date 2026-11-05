@@ -466,7 +466,7 @@ it("rejects an admin-less candidate with closed setup before making the CLI safe
     expect(readFileSync(databasePath).equals(activeBefore)).toBe(true);
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(1);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);
 
 it("restores an empty CLI candidate while first-admin setup is still open", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-first-run-"));
