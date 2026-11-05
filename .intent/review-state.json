@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "d146e30c4df9cabee35f2f4b0daa9129e3125a579aadca7653739a638d028c8e",
+      "fingerprint": "8d92d61443c7a0dcea20b2c369480b3f1ff325814d2442007e904d00a3992f87",
       "snapshot": {
         ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
+        ".github/workflows/ci.yml": "f92e0d9e3fcafef1ee5ed7b1087a0f6933edd4deba7f48e683a061c41b025143",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: .github/workflows/ci.yml at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "54f93bce23095f38e0d427937a19dc44ffcfffa600e4d44ca4187a8229127b7f",
+      "fingerprint": "6be33ac58597e1b014ca34b4b74443ac73abfc5f4dc4ce2ad031f9141994834f",
       "snapshot": {
         ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "04681ec5f3af80ed2103088e8db52b4932be9edbe9df159f2dd3f308f1d94cde",
+        ".github/workflows/ci.yml": "f92e0d9e3fcafef1ee5ed7b1087a0f6933edd4deba7f48e683a061c41b025143",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: .github/workflows/ci.yml at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ffbd004ceeed98d9adf834cfafffa0e33577abef61e3b9d3dbe1ea0fe882663d",
+      "fingerprint": "327522ca52100609be3d7ba286ef600d23288e914951132e8c3bc5e5ae1ea0f4",
       "snapshot": {
-        "CHANGELOG.md": "26fb122d5905e57bad0746e86a71106ac766372f8d370680ee52e2ba89a53ec4"
+        "CHANGELOG.md": "3abdbffcaa51e2887006f21adee019ca75c31fc8fec75a943c49c049daab45be"
       },
-      "head": "6925210739b979098467ef814c86ec9945ab4476",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "Updating the scanner changelog attribution to the successor PR number is release metadata only; it does not change Elysia behavior or agent skill guidance.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at 6925210739b979098467ef814c86ec9945ab4476"
+        "Changed: CHANGELOG.md at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "source:COMMANDS.md": {
@@ -9927,15 +9927,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "49a5b8db79bdd7d5d1009daba1b3d2e4d537a6f36788c26e1f7f46cf3cbf2c53",
+      "fingerprint": "ab6a6b46c781fed6cec5d1647033067630cb895b32c89ffe7de7c3d9d56797df",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "5beb47efad750d9c9ef159de4f013dc0b317a2cbb6106cc92eeb22f3b0a0a1e6"
+        "docs/runbooks/release-bundles.md": "5dc0f9cb6a58245d515cb5ef19ff4b73a5d3c07f8f58721bb90868329b46cd60"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: docs/runbooks/release-bundles.md at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9951,27 +9951,27 @@
       ]
     },
     "source:scripts/test-release-consumer.sh": {
-      "fingerprint": "3ac9b68f2663c046e34355446a341e8c68eda173b07fb2dd5fb04beafa726580",
+      "fingerprint": "2cb57be061b03d3f39738795cad97bc0276daea809968c5051785f74b7350cd0",
       "snapshot": {
-        "scripts/test-release-consumer.sh": "8bc61c1308c39166198ab9f83ba004567484d5d1c5630eafae0246cb933eae53"
+        "scripts/test-release-consumer.sh": "7ef4c38b49bedb1a05f61042878b28173d7a58fbc7baa92687b6e7c81bbe12f4"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "The release path signs the bundle then requires trusted main/source attestation before isolated image import. Nine focused rejection/policy tests and docs checks passed. Existing Elysia skill and all three planning records remain accurate; no backend behavior changes. Signed consumer execution awaits an authorized main dispatch.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: scripts/test-release-consumer.sh at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/test-release-consumer.sh at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "efb76e3c34e593d9ed9e11ca4f5a29c287b4368cc25b685605a0e43cf80b350e",
+      "fingerprint": "ad8d0297a1a2715922be9b618e197b3526c3e10fa467c597df95857cd32361f7",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "0d10726be41970f392e6f860b593eef647d6d28b534436243decc77ee799b17e"
+        "scripts/tests/test_release_bundle.py": "78f8f666373355673bae11485697cf60b8f02fa0f26de48d408c355f92dbfc59"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: scripts/tests/test_release_bundle.py at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10032,6 +10032,30 @@
       "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
       "evidence": [
         "Changed: scripts/tests/check_trivy_oci.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+      ]
+    },
+    "source:scripts/release-consumer-cleanup-trap.sh": {
+      "fingerprint": "2d15ba6c27db032c3a89efb0f995bafdb05c225c0dc6c1eb8c829f854cdf99dd",
+      "snapshot": {
+        "scripts/release-consumer-cleanup-trap.sh": "be4ab6055cca1d41629ffe468df6f2b6c9f29a17e408310e3471465944ab4a01"
+      },
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "outcome": "no-change",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "evidence": [
+        "Changed: scripts/release-consumer-cleanup-trap.sh at 02879a18efda292f72f96f1314fb05ab266715e6"
+      ]
+    },
+    "source:scripts/release-consumer-cleanup.py": {
+      "fingerprint": "a3b03c8cd195f219f35ad4920f8e1a2b99b36a6387d17fa5655f7f1c0178e27e",
+      "snapshot": {
+        "scripts/release-consumer-cleanup.py": "917db43a83f3b1dca67da2723a8d5d642d57aedc13835f4950312bb4b77121fc"
+      },
+      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "outcome": "no-change",
+      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "evidence": [
+        "Changed: scripts/release-consumer-cleanup.py at 02879a18efda292f72f96f1314fb05ab266715e6"
       ]
     }
   }
