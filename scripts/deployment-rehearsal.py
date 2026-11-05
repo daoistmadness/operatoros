@@ -11,6 +11,7 @@ from pathlib import Path
 import pwd
 import re
 import secrets
+import shlex
 import shutil
 import socket
 import stat
@@ -62,6 +63,7 @@ def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60
 
 DIAGNOSTICS: Path | None = None
 REPORT: dict[str, Any] = {"schema_version": 1, "checks": {}, "failures": []}
+PODMAN_CONTEXT_VERIFIED = False
 
 
 def system_environment() -> dict[str, str]:
@@ -131,6 +133,38 @@ def workspace_path(runner_temp: Path) -> Path:
     return runner_temp / (WORKSPACE_PREFIX + run_id + "a" + attempt)
 
 
+def require_private_workspace_boundary(runner_temp: Path, workspace: Path) -> None:
+    """Reject a rehearsal root that could overlap shared stores or application data."""
+    suffix = workspace.name.removeprefix(WORKSPACE_PREFIX)
+    require(workspace.parent == runner_temp and workspace.name.startswith(WORKSPACE_PREFIX) and
+            len(suffix) >= 8 and suffix.isalnum() and
+            workspace.resolve(strict=False) == workspace,
+            "rehearsal workspace is not a canonical run-scoped child of RUNNER_TEMP")
+    protected = [
+        Path(pwd.getpwuid(os.getuid()).pw_dir) / ".local/share/containers/storage",
+        Path("/var/lib/containers/storage"),
+        Path("/run/containers/storage"),
+        Path("/mnt/podman-data"),
+        ROOT,
+    ]
+    for name, suffix in (("XDG_DATA_HOME", "containers/storage"),
+                         ("XDG_RUNTIME_DIR", "containers"),
+                         ("OPERATOROS_DATA_DIR", "")):
+        value = os.environ.get(name)
+        if not value:
+            continue
+        path = Path(value)
+        require(path.is_absolute() and ".." not in path.parts,
+                f"refusing an ambiguous protected path in {name}")
+        protected.append(path / suffix if suffix else path)
+    workspace_root = workspace.resolve(strict=False)
+    for value in protected:
+        protected_root = value.resolve(strict=False)
+        require(workspace_root != protected_root and protected_root not in workspace_root.parents and
+                workspace_root not in protected_root.parents,
+                "rehearsal workspace overlaps shared Podman storage or protected application data")
+
+
 def validate_workflow_context() -> tuple[Path, Path, Path, tuple[str, str]]:
     required = {
         "GITHUB_ACTIONS": "true",
@@ -157,6 +191,7 @@ def validate_workflow_context() -> tuple[Path, Path, Path, tuple[str, str]]:
             stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(info.st_mode) and info.st_uid == os.getuid(),
             "RUNNER_TEMP must be a canonical runner-owned directory")
     workspace = workspace_path(runner_temp)
+    require_private_workspace_boundary(runner_temp, workspace)
     require(not workspace.exists() and not workspace.is_symlink(),
             "run-specific rehearsal workspace already exists; refusing reuse")
     diagnostics = runner_temp / ("operatoros-deployment-rehearsal-diagnostics." + workspace.name.removeprefix(WORKSPACE_PREFIX))
@@ -258,14 +293,35 @@ def reserve_loopback_port(excluded: set[int]) -> int:
     raise RehearsalError("could not allocate a unique loopback-only rehearsal port")
 
 
-def private_env(workspace: Path, *, include_runtime: bool = True) -> dict[str, str]:
+def private_env(workspace: Path, context: Any) -> dict[str, str]:
     result = system_environment()
-    result["REGISTRY_AUTH_FILE"] = str(workspace / "deploy/registry-auth.json")
-    if include_runtime:
-        result["CONTAINERS_STORAGE_CONF"] = str(workspace / "deploy/storage.conf")
-    for key in ("CONTAINER_HOST", "CONTAINER_CONNECTION", "DOCKER_HOST", "CONTAINERS_CONF"):
+    for key in ("CONTAINER_HOST", "CONTAINER_CONNECTION", "DOCKER_HOST", "CONTAINERS_CONF_OVERRIDE",
+                "STORAGE_DRIVER", "STORAGE_OPTS"):
         require(not os.environ.get(key), f"refusing an alternate or remote Podman context: {key}")
+    require(context.root == workspace.resolve(strict=True),
+            "Podman context does not belong to the unique rehearsal workspace")
+    result.update(context.environment())
     return result
+
+
+def verify_quadlet_podman_environment(value: str, context: Any) -> None:
+    """Require systemd's effective service environment to match direct Podman calls."""
+    try:
+        entries = shlex.split(value)
+    except ValueError as error:
+        raise RehearsalError("Quadlet service returned an unparseable environment") from error
+    expected = context.environment()
+    observed: dict[str, str] = {}
+    for entry in entries:
+        name, separator, setting = entry.partition("=")
+        if not separator:
+            raise RehearsalError("Quadlet service returned a malformed environment entry")
+        if name in expected:
+            if name in observed:
+                raise RehearsalError("Quadlet service has duplicate Podman context settings")
+            observed[name] = setting
+    if observed != expected:
+        raise RehearsalError("Quadlet service storage environment differs from the direct private Podman context")
 
 
 def atomic_text(path: Path, value: str, mode: int = 0o600) -> None:
@@ -324,15 +380,15 @@ def make_caddyfile(web_port: int, api_port: int) -> str:
 def write_quadlets(workspace: Path, unit_dir: Path, api_service: str, caddy_service: str,
                    api_port: int, web_port: int, image_ref: str,
                    auth_secret_name: str, backup_secret_name: str,
-                   created: set[Path]) -> tuple[Path, Path, Path]:
+                   created: set[Path], context: Any) -> tuple[Path, Path, Path]:
     root = workspace
     deploy_dir = root / "deploy"
     data_dir = root / "data"
     api_unit = unit_dir / (api_service.removesuffix(".service") + ".container")
     caddy_unit = unit_dir / (caddy_service.removesuffix(".service") + ".container")
     api_copy = deploy_dir / "operatoros-lite-api.container"
-    storage_conf = deploy_dir / "storage.conf"
-    atomic_text(storage_conf, f'[storage]\ndriver="vfs"\ngraphroot="{root / "podman-rootless/graphroot"}"\nrunroot="{root / "podman-rootless/runroot"}"\n')
+    storage_conf = context.storage_conf
+    environment = "\n".join(context.quadlet_environment())
     api_text = f'''[Unit]
 Description=OperatorOS disposable rehearsal API
 
@@ -353,7 +409,7 @@ Secret={backup_secret_name},type=env,target=BACKUP_ENCRYPTION_KEY
 Volume={data_dir}:/var/lib/operatoros/data:rw
 
 [Service]
-Environment=CONTAINERS_STORAGE_CONF={storage_conf}
+{environment}
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=600
@@ -377,7 +433,7 @@ Volume={deploy_dir / "Caddyfile"}:/etc/caddy/Caddyfile:ro
 Volume={root / "web/current/client"}:/srv/operatoros/current/client:ro
 
 [Service]
-Environment=CONTAINERS_STORAGE_CONF={storage_conf}
+{environment}
 Restart=on-failure
 RestartSec=5s
 TimeoutStartSec=600
@@ -430,18 +486,19 @@ def toml_config(workspace: Path, api_unit: Path, caddy_unit: Path, api_copy: Pat
     return path
 
 
-def image_identity_for_release(deploy: Any, release: Any, workspace: Path) -> str:
+def image_identity_for_release(deploy: Any, release: Any, workspace: Path, context: Any) -> str:
     archive = workspace / "deploy/operatoros-api.oci.tar"
     archive.write_bytes(release.files["operatoros-api.oci.tar"])
     archive.chmod(0o600)
-    env = private_env(workspace)
+    env = private_env(workspace, context)
     deploy.command(["podman", "load", "--input", str(archive)], env, timeout=300)
     image = release.manifest["image"]
     image_id = "sha256:" + image["image_id"].removeprefix("sha256:")
-    deploy.validate_image_after_load(image_id, SOURCE_SHA, image["source_tree_sha256"], image["manifest_digest"],
-                                     {"storage_conf": workspace / "deploy/storage.conf",
-                                      "graphroot": workspace / "podman-rootless/graphroot",
-                                      "runroot": workspace / "podman-rootless/runroot"})
+    podman_cfg = {"root": workspace, "profile": "rehearsal", "storage_conf": context.storage_conf,
+                  "graphroot": context.graphroot, "runroot": context.runroot,
+                  "_private_podman_context": context}
+    deploy.validate_image_after_load(image_id, SOURCE_SHA, image["source_tree_sha256"],
+                                     image["manifest_digest"], podman_cfg)
     image_ref = "localhost/operatoros-api:" + SOURCE_SHA
     deploy.command(["podman", "tag", image_id, image_ref], env)
     return image_ref
@@ -460,7 +517,7 @@ def api_environment(source_sha: str, origin: str) -> dict[str, str]:
     }
 
 
-def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str, str, str, str, str]:
+def setup_synthetic_database(workspace: Path, source_sha: str, context: Any) -> tuple[str, str, str, str, str, str]:
     data_dir = workspace / "data"
     backup_dir = data_dir / "backups"
     data_dir.mkdir(mode=0o700)
@@ -472,13 +529,13 @@ def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str
     secret_prefix = "operatoros-rehearsal-" + os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
     auth_secret_name = secret_prefix + "-auth-cookie"
     backup_secret_name = secret_prefix + "-backup-key"
-    podman_env = private_env(workspace)
-    create_podman_secret(auth_secret_name, cookie_secret, podman_env)
-    create_podman_secret(backup_secret_name, backup_key, podman_env)
+    podman_environment = private_env(workspace, context)
+    create_podman_secret(auth_secret_name, cookie_secret, podman_environment)
+    create_podman_secret(backup_secret_name, backup_key, podman_environment)
     api_env = workspace / "deploy/api.env"
     env_values = api_environment(source_sha, os.environ["OPERATOROS_REHEARSAL_ORIGIN"])
     atomic_text(api_env, "".join(f"{key}={value}\n" for key, value in env_values.items()))
-    base_env = private_env(workspace, include_runtime=False)
+    base_env = system_environment()
     db_env = base_env | {"OPERATOROS_DATA_DIR": str(data_dir)}
     run(["bun", "packages/db/src/db-cli.ts", "bootstrap", "--data-dir", str(data_dir)],
         env=db_env, timeout=120)
@@ -638,8 +695,35 @@ def cleanup_workspace(workspace: Path, runner_temp: Path, diagnostics: Path) -> 
     module = module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    env = private_env(workspace)
+    if not PODMAN_CONTEXT_VERIFIED:
+        info = workspace.lstat()
+        require(workspace.parent == runner_temp and workspace.name.startswith(WORKSPACE_PREFIX) and
+                len(workspace.name.removeprefix(WORKSPACE_PREFIX)) >= 8 and
+                workspace.resolve(strict=True) == workspace and stat.S_ISDIR(info.st_mode) and
+                not stat.S_ISLNK(info.st_mode) and info.st_uid == os.getuid() and
+                stat.S_IMODE(info.st_mode) == 0o700 and not os.path.ismount(workspace),
+                "refusing cleanup outside the unique owned rehearsal workspace")
+        module.assert_no_mounts_below(workspace)
+        if not shutil.rmtree.avoids_symlink_attacks:
+            raise RehearsalError("safe workspace cleanup is unavailable")
+        shutil.rmtree(workspace)
+        require(not workspace.exists(), "private rehearsal workspace cleanup failed")
+        return
+    try:
+        helper = ROOT / "scripts/operatoros_deploy.py"
+        helper_spec = spec_from_file_location("operatoros_deploy_cleanup", helper)
+        require(helper_spec is not None and helper_spec.loader is not None,
+                "deployment verifier is unavailable for cleanup")
+        deploy_module = module_from_spec(helper_spec)
+        sys.modules[helper_spec.name] = deploy_module
+        helper_spec.loader.exec_module(deploy_module)
+        context = deploy_module.podman_context_from_workspace(workspace)
+    except Exception as error:
+        raise RehearsalError("verified Podman cleanup context could not be reconstructed") from error
+    env = private_env(workspace, context)
     env.update({"TMPDIR": str(runner_temp)})
+    if os.environ.get("XDG_DATA_HOME"):
+        env["OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME"] = os.environ["XDG_DATA_HOME"]
     result = subprocess.run([
         sys.executable, str(path), str(workspace), str(runner_temp),
         "--diagnostics-dir", str(diagnostics),
@@ -660,15 +744,16 @@ def rehearse(workspace: Path, diagnostics: Path,
     sys.modules[spec.name] = deploy
     spec.loader.exec_module(deploy)
 
+    global PODMAN_CONTEXT_VERIFIED
     uid = os.getuid()
     api_service, caddy_service = services
     unit_dir = Path.home() / ".config/containers/systemd"
+    require_private_workspace_boundary(workspace.parent, workspace)
     workspace.mkdir(mode=0o700)
     os.chmod(workspace, 0o700)
-    for name in ("deploy", "data", "data/backups", "web", "web/releases", "podman-rootless",
-                 "podman-rootless/graphroot", "podman-rootless/runroot"):
+    for name in ("deploy", "data", "data/backups", "web", "web/releases"):
         (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
-    atomic_text(workspace / "deploy/registry-auth.json", "{}\n")
+    context = deploy.create_private_podman_context(workspace)
     api_port = reserve_loopback_port(set())
     web_port = reserve_loopback_port({api_port})
     origin = f"http://127.0.0.1:{web_port}"
@@ -684,26 +769,20 @@ def rehearse(workspace: Path, diagnostics: Path,
                    "services": list(services), "loopback_ports": {"api": api_port, "web": web_port}})
     write_json(report_path, REPORT)
 
-    graphroot = workspace / "podman-rootless/graphroot"
-    runroot = workspace / "podman-rootless/runroot"
-    storage_conf = workspace / "deploy/storage.conf"
-    atomic_text(storage_conf, f'[storage]\ndriver="vfs"\ngraphroot="{graphroot}"\nrunroot="{runroot}"\n')
-    env = private_env(workspace)
-    info = json.loads(deploy.command(["podman", "info", "--format", "json"], env))
-    require(info["host"]["security"]["rootless"] is True, "Podman is not running rootless")
-    require(Path(info["store"]["graphRoot"]).resolve() == graphroot.resolve() and
-            Path(info["store"]["runRoot"]).resolve() == runroot.resolve() and
-            info["store"].get("graphDriverName") == "vfs",
-            "Podman did not select the disposable VFS storage context")
-    require(str(info["host"].get("cgroupsVersion", "")) == "v2", "rootless Podman is not using cgroup v2")
-    require(info["host"].get("cgroupManager") == "systemd",
-            "rootless Podman is not using the user systemd cgroup manager")
+    storage_conf = context.storage_conf
+    graphroot = context.graphroot
+    runroot = context.runroot
+    env = private_env(workspace, context)
+    info = deploy.command_json(["podman", "info", "--format", "json"], env)
+    deploy.validate_podman_store(info, context, require_empty=True)
+    PODMAN_CONTEXT_VERIFIED = True
+    deploy.require_empty_podman_store(context, env)
     uid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/uid_map"], env)
     gid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/gid_map"], env)
     for mapping in (uid_map, gid_map):
         require(sum(int(line.split()[2]) for line in mapping.splitlines() if len(line.split()) == 3) >= 65_536,
                 "Podman user namespace does not expose the required subordinate ID range")
-    REPORT["checks"]["podman_context"] = "rootless dedicated VFS store, systemd cgroup v2, subordinate ID maps verified"
+    REPORT["checks"]["podman_context"] = "private config, graphroot/runroot, metadata paths, VFS driver, empty inventory, rootless systemd cgroup v2, subordinate ID maps verified"
 
     request = deploy.ReleaseRequest(SOURCE_SHA, RELEASE_RUN_ID, RELEASE_ATTEMPT,
                                     ARTIFACT_ID, ARTIFACT_NAME, ENVELOPE_SHA256)
@@ -712,11 +791,11 @@ def rehearse(workspace: Path, diagnostics: Path,
         require(verified.bundle_sha256 == INNER_BUNDLE_SHA256,
                 "verified inner bundle checksum differs from the approved rehearsal artifact")
         release = verified
-        image_ref = image_identity_for_release(deploy, release, workspace)
+        image_ref = image_identity_for_release(deploy, release, workspace, context)
         deploy.command(["podman", "pull", deploy.CADDY_IMAGE], env, timeout=300)
 
         (admin_username, admin_password, cookie_secret, backup_key,
-         auth_secret_name, backup_secret_name) = setup_synthetic_database(workspace, SOURCE_SHA)
+         auth_secret_name, backup_secret_name) = setup_synthetic_database(workspace, SOURCE_SHA, context)
         # Seed a deliberately distinct previous SPA target so rollback visibly restores application files.
         previous_spa = deploy.materialize_spa({"root": workspace}, release, "legacy-" + SOURCE_SHA)
         shell = previous_spa / "client/_shell.html"
@@ -754,7 +833,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         create_unit_directory(unit_dir, unit_dirs_created)
         api_unit, caddy_unit, api_copy = write_quadlets(
             workspace, unit_dir, api_service, caddy_service, api_port, web_port,
-            image_ref, auth_secret_name, backup_secret_name, units_created,
+            image_ref, auth_secret_name, backup_secret_name, units_created, context,
         )
         config = toml_config(workspace, api_unit, caddy_unit, api_copy, api_service, caddy_service,
                              api_port, web_port)
@@ -768,8 +847,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         deploy.verify_quadlet_service(caddy_service, caddy_unit, require_active=False)
         for service in services:
             unit_env = deploy.command(["systemctl", "--user", "show", "--property=Environment", "--value", service], timeout=20)
-            require("CONTAINERS_STORAGE_CONF=" + str(storage_conf) in unit_env,
-                    "Quadlet service does not inherit the run-scoped Podman storage configuration")
+            verify_quadlet_podman_environment(unit_env, context)
         deploy.service_call(cfg, "start", api_service)
         wait_url(cfg["api_url"] + "/health")
         wait_url(cfg["api_url"] + "/ready")
@@ -862,7 +940,8 @@ def rehearse(workspace: Path, diagnostics: Path,
 
 
 def main() -> int:
-    global DIAGNOSTICS
+    global DIAGNOSTICS, PODMAN_CONTEXT_VERIFIED
+    PODMAN_CONTEXT_VERIFIED = False
     runner_temp: Path | None = None
     workspace: Path | None = None
     diagnostics: Path | None = None

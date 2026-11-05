@@ -83,6 +83,289 @@ class VerifiedRelease:
     artifact_name: str
 
 
+@dataclass(frozen=True)
+class PrivatePodmanContext:
+    root: Path
+    storage_conf: Path
+    containers_conf: Path
+    graphroot: Path
+    runroot: Path
+    static_dir: Path
+    volume_path: Path
+    image_copy_tmp_dir: Path
+    xdg_config_home: Path
+    xdg_data_home: Path
+    home: Path
+    registry_auth_file: Path
+
+    def environment(self) -> dict[str, str]:
+        return {
+            "HOME": str(self.home),
+            "CONTAINERS_STORAGE_CONF": str(self.storage_conf),
+            "CONTAINERS_CONF": str(self.containers_conf),
+            "XDG_CONFIG_HOME": str(self.xdg_config_home),
+            "XDG_DATA_HOME": str(self.xdg_data_home),
+            "REGISTRY_AUTH_FILE": str(self.registry_auth_file),
+            "TMPDIR": str(self.image_copy_tmp_dir),
+        }
+
+    def quadlet_environment(self) -> list[str]:
+        lines = []
+        for name, value in self.environment().items():
+            # These values are generated absolute paths. Refuse systemd quoting or
+            # specifier syntax instead of trying to reinterpret an unexpected path.
+            if not re.fullmatch(r"[A-Z_]+", name) or not re.fullmatch(r"/[A-Za-z0-9_./-]+", value):
+                raise DeployError("private Podman environment cannot be represented safely in Quadlet")
+            lines.append(f"Environment={name}={value}")
+        return lines
+
+
+def create_private_podman_context(root: Path) -> PrivatePodmanContext:
+    """Create a fresh Podman context whose persistent paths live under root."""
+    supplied_root = root.absolute()
+    root = root.resolve(strict=True)
+    if supplied_root != root:
+        raise DeployError("private Podman context root must not use symlinks or non-canonical components")
+    root_info = root.lstat()
+    if (not stat.S_ISDIR(root_info.st_mode) or stat.S_ISLNK(root_info.st_mode) or
+        root_info.st_uid != os.getuid() or stat.S_IMODE(root_info.st_mode) != 0o700):
+        raise DeployError("private Podman context root must be a canonical runner-owned mode-0700 directory")
+
+    podman_root = root / "podman-rootless"
+    paths = {
+        "home": podman_root / "home",
+        "graphroot": podman_root / "graphroot",
+        "runroot": podman_root / "runroot",
+        "static_dir": podman_root / "metadata",
+        "volume_path": podman_root / "volumes",
+        "image_copy_tmp_dir": podman_root / "image-tmp",
+        "xdg_config_home": podman_root / "xdg-config",
+        "xdg_data_home": podman_root / "xdg-data",
+    }
+    for path in (podman_root, *paths.values(), paths["xdg_config_home"] / "containers"):
+        try:
+            path.mkdir(mode=0o700, parents=True, exist_ok=True)
+            info = path.lstat()
+        except OSError as error:
+            raise DeployError("could not create the private Podman context") from error
+        if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or
+            info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o077 or
+            path.resolve(strict=True) != path):
+            raise DeployError("private Podman context contains an unsafe path")
+
+    deploy_dir = root / "deploy"
+    deploy_dir.mkdir(mode=0o700, exist_ok=True)
+    deploy_info = deploy_dir.lstat()
+    if (not stat.S_ISDIR(deploy_info.st_mode) or stat.S_ISLNK(deploy_info.st_mode) or
+        deploy_info.st_uid != os.getuid() or stat.S_IMODE(deploy_info.st_mode) & 0o077 or
+        deploy_dir.resolve(strict=True) != deploy_dir):
+        raise DeployError("private Podman configuration directory is unsafe")
+
+    storage_conf = deploy_dir / "storage.conf"
+    containers_conf = deploy_dir / "containers.conf"
+    registry_auth_file = deploy_dir / "registry-auth.json"
+    storage_text = (
+        "[storage]\n"
+        'driver = "vfs"\n'
+        f'graphroot = "{paths["graphroot"]}"\n'
+        f'runroot = "{paths["runroot"]}"\n'
+    )
+    containers_text = (
+        "[engine]\n"
+        'cgroup_manager = "systemd"\n'
+        f'static_dir = "{paths["static_dir"]}"\n'
+        f'volume_path = "{paths["volume_path"]}"\n'
+        f'image_copy_tmp_dir = "{paths["image_copy_tmp_dir"]}"\n'
+    )
+    for path, content in ((storage_conf, storage_text), (containers_conf, containers_text)):
+        try:
+            descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+                output.write(content)
+        except OSError as error:
+            raise DeployError("private Podman configuration already exists or cannot be created") from error
+
+    try:
+        descriptor = os.open(registry_auth_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                             getattr(os, "O_NOFOLLOW", 0), 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            output.write("{}\n")
+    except OSError as error:
+        raise DeployError("private Podman registry-auth file cannot be created") from error
+
+    for path in (storage_conf, containers_conf, registry_auth_file):
+        info = path.lstat()
+        if (not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_nlink != 1 or
+            info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600):
+            raise DeployError("private Podman configuration has unsafe ownership or permissions")
+
+    return PrivatePodmanContext(
+        root=root,
+        storage_conf=storage_conf,
+        containers_conf=containers_conf,
+        graphroot=paths["graphroot"],
+        runroot=paths["runroot"],
+        static_dir=paths["static_dir"],
+        volume_path=paths["volume_path"],
+        image_copy_tmp_dir=paths["image_copy_tmp_dir"],
+        xdg_config_home=paths["xdg_config_home"],
+        xdg_data_home=paths["xdg_data_home"],
+        home=paths["home"],
+        registry_auth_file=registry_auth_file,
+    )
+
+
+def podman_context_from_workspace(root: Path) -> PrivatePodmanContext:
+    root = root.resolve(strict=True)
+    podman_root = root / "podman-rootless"
+    deploy_dir = root / "deploy"
+    return PrivatePodmanContext(
+        root=root,
+        storage_conf=deploy_dir / "storage.conf",
+        containers_conf=deploy_dir / "containers.conf",
+        graphroot=podman_root / "graphroot",
+        runroot=podman_root / "runroot",
+        static_dir=podman_root / "metadata",
+        volume_path=podman_root / "volumes",
+        image_copy_tmp_dir=podman_root / "image-tmp",
+        xdg_config_home=podman_root / "xdg-config",
+        xdg_data_home=podman_root / "xdg-data",
+        home=podman_root / "home",
+        registry_auth_file=deploy_dir / "registry-auth.json",
+    )
+
+
+def validate_private_podman_config(context: PrivatePodmanContext) -> None:
+    """Validate private config files before starting Podman or creating units."""
+    for path in (context.storage_conf, context.containers_conf, context.registry_auth_file):
+        require_regular_owned(path, os.getuid(), "private Podman configuration", 0o077)
+        if path.resolve(strict=True) != path:
+            raise DeployError("private Podman configuration path is not canonical")
+    if context.registry_auth_file.read_bytes() != b"{}\n":
+        raise DeployError("private Podman registry-auth file must not contain credentials")
+    try:
+        storage_config = tomllib.loads(context.storage_conf.read_text(encoding="utf-8"))
+        containers_config = tomllib.loads(context.containers_conf.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        raise DeployError("private Podman configuration is malformed") from error
+    storage = storage_config.get("storage")
+    containers = containers_config.get("engine")
+    if (set(storage_config) != {"storage"} or not isinstance(storage, dict) or
+        set(storage) != {"driver", "graphroot", "runroot"} or storage.get("driver") != "vfs" or
+        storage.get("graphroot") != str(context.graphroot) or storage.get("runroot") != str(context.runroot)):
+        raise DeployError("private storage.conf selects an unexpected image or container store")
+    expected_engine = {
+        "cgroup_manager": "systemd",
+        "static_dir": str(context.static_dir),
+        "volume_path": str(context.volume_path),
+        "image_copy_tmp_dir": str(context.image_copy_tmp_dir),
+    }
+    if (set(containers_config) != {"engine"} or not isinstance(containers, dict) or
+        set(containers) != set(expected_engine) or
+        any(containers.get(key) != value for key, value in expected_engine.items())):
+        raise DeployError("private containers.conf metadata paths differ from the rehearsal workspace")
+    for path in (context.root, context.root / "podman-rootless", context.home, context.graphroot,
+                 context.runroot, context.static_dir, context.volume_path, context.image_copy_tmp_dir,
+                 context.xdg_config_home, context.xdg_data_home, context.xdg_config_home / "containers"):
+        info = path.lstat()
+        if (not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or info.st_uid != os.getuid() or
+            stat.S_IMODE(info.st_mode) & 0o077 or path.resolve(strict=True) != path or
+            not path.is_relative_to(context.root)):
+            raise DeployError("private Podman storage path is unsafe or outside the rehearsal workspace")
+
+
+def validate_podman_store(info: Any, context: PrivatePodmanContext, *, require_empty: bool = False) -> None:
+    validate_private_podman_config(context)
+    try:
+        host = info["host"]
+        store = info["store"]
+        expected_paths = {
+            "configFile": context.storage_conf,
+            "graphRoot": context.graphroot,
+            "runRoot": context.runroot,
+            "volumePath": context.volume_path,
+            "imageCopyTmpDir": context.image_copy_tmp_dir,
+        }
+        cgroup_version = host.get("cgroupVersion", host.get("cgroupsVersion"))
+        if (host["security"]["rootless"] is not True or host.get("serviceIsRemote") is not False or
+            cgroup_version != "v2" or host.get("cgroupManager") != "systemd" or
+            store.get("graphDriverName") != "vfs"):
+            raise DeployError("Podman is not running in the required local rootless VFS/systemd context")
+        for key, expected in expected_paths.items():
+            actual = Path(store[key])
+            if (not actual.is_absolute() or actual.resolve(strict=True) != actual or
+                actual != expected or actual != expected.resolve(strict=True)):
+                raise DeployError(f"Podman {key} is outside the approved private storage context")
+        if "staticDir" in store:
+            static_dir = Path(store["staticDir"])
+            if (not static_dir.is_absolute() or static_dir.resolve(strict=True) != static_dir or
+                static_dir != context.static_dir):
+                raise DeployError("Podman staticDir is outside the approved private metadata context")
+        additional_stores = store.get("additionalImageStores", [])
+        if additional_stores not in ([], None):
+            raise DeployError("Podman reported an additional image store outside the private configuration")
+        for key in ("imageStore", "containerStore"):
+            if not isinstance(store.get(key), dict) or type(store[key].get("number")) is not int:
+                raise DeployError(f"Podman did not report a verifiable {key} inventory")
+        if require_empty:
+            for field in ("containerStore", "imageStore"):
+                value = store.get(field)
+                if not isinstance(value, dict) or value.get("number") != 0:
+                    raise DeployError("private Podman context already contains containers or images")
+        if context.static_dir.resolve(strict=True) != context.static_dir:
+            raise DeployError("Podman metadata directory is not canonical")
+    except (KeyError, TypeError, ValueError, OSError) as error:
+        raise DeployError("Podman returned incomplete private storage identity") from error
+
+
+def stderr_classification(stderr: str) -> str:
+    value = stderr.casefold()
+    if not value.strip():
+        return "empty"
+    if ("graph driver" in value and ("overwritten" in value or "overridden" in value) and
+        ("database" in value or "store" in value)):
+        return "storage-driver-database-override"
+    if "additionalimagestore" in value or "additional image store" in value:
+        return "additional-image-store-warning"
+    if (("graphroot" in value or "runroot" in value or "volumepath" in value) and
+        any(word in value for word in ("default", "outside", "fallback", "overridden", "overwritten"))):
+        return "storage-path-warning"
+    storage_terms = ("storage", "graphroot", "runroot", "imagestore", "volume_path", "volumepath")
+    if ("warning" in value or "warn[" in value) and any(word in value for word in storage_terms):
+        return "storage-configuration-warning"
+    return "present"
+
+
+def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str]) -> None:
+    diagnostic = stderr_classification(result.stderr)
+    if result.returncode != 0:
+        raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})")
+    if args and Path(args[0]).name == "podman" and diagnostic in {
+        "storage-driver-database-override", "additional-image-store-warning", "storage-path-warning",
+        "storage-configuration-warning",
+    }:
+        raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})")
+
+
+def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> Any:
+    result = run_command(args, env=env, timeout=timeout)
+    _assert_podman_command(result, args)
+    if not result.stdout.strip():
+        raise DeployError(f"{args[0]} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise DeployError(f"{args[0]} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
+
+
+def run_command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(args, env=env if env is not None else system_environment(), text=True,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise DeployError(f"command failed to execute: {args[0]} ({type(error).__name__})") from error
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
@@ -491,10 +774,13 @@ def load_config(path: Path) -> dict[str, Any]:
     return cfg
 
 
-def private_environment(storage_conf: Path) -> dict[str, str]:
-    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": os.environ.get("HOME", ""),
-            "XDG_RUNTIME_DIR": os.environ.get("XDG_RUNTIME_DIR", ""),
-            "CONTAINERS_STORAGE_CONF": str(storage_conf), "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+def private_environment(storage_conf: Path, context: PrivatePodmanContext | None = None) -> dict[str, str]:
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": os.environ.get("HOME", ""),
+           "XDG_RUNTIME_DIR": os.environ.get("XDG_RUNTIME_DIR", ""),
+           "CONTAINERS_STORAGE_CONF": str(storage_conf), "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+    if context is not None:
+        env.update(context.environment())
+    return env
 
 
 def system_environment() -> dict[str, str]:
@@ -503,13 +789,8 @@ def system_environment() -> dict[str, str]:
 
 
 def command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> str:
-    try:
-        result = subprocess.run(args, env=env if env is not None else system_environment(), text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                timeout=timeout, check=False)
-    except (OSError, subprocess.TimeoutExpired) as error:
-        raise DeployError(f"command failed to execute: {args[0]}: {error}") from error
-    if result.returncode != 0:
-        raise DeployError(f"command failed ({result.returncode}): {' '.join(args[:3])}: {result.stdout[-3000:]}")
+    result = run_command(args, env=env, timeout=timeout)
+    _assert_podman_command(result, args)
     return result.stdout.strip()
 
 
@@ -545,10 +826,24 @@ def read_owned_json(path: Path, uid: int, label: str) -> dict[str, Any]:
 
 
 def podman_env(cfg: dict[str, Any]) -> dict[str, str]:
-    env = private_environment(cfg["storage_conf"])
-    for forbidden in ("CONTAINER_HOST", "DOCKER_HOST", "CONTAINERS_CONF"):
+    context = cfg.get("_private_podman_context")
+    if context is None and cfg.get("profile") == "rehearsal":
+        context = podman_context_from_workspace(cfg["root"])
+        validate_private_podman_config(context)
+    env = private_environment(cfg["storage_conf"], context)
+    for forbidden in ("CONTAINER_HOST", "CONTAINER_CONNECTION", "DOCKER_HOST", "CONTAINERS_CONF_OVERRIDE",
+                      "STORAGE_DRIVER", "STORAGE_OPTS"):
         if os.environ.get(forbidden):
             raise DeployError(f"unexpected remote/alternate Podman context variable is set: {forbidden}")
+    if context is not None:
+        validate_private_podman_config(context)
+        configured_paths = (("storage_conf", context.storage_conf), ("graphroot", context.graphroot),
+                            ("runroot", context.runroot))
+        for key, expected in configured_paths:
+            if Path(cfg[key]).resolve(strict=True) != expected.resolve(strict=True):
+                raise DeployError(f"Podman {key} does not identify the current private workspace")
+    elif any(os.environ.get(name) for name in ("CONTAINERS_CONF", "CONTAINERS_STORAGE_CONF")):
+        raise DeployError("unexpected alternate Podman configuration is set")
     return env
 
 
@@ -563,15 +858,32 @@ def inspect_podman_context(cfg: dict[str, Any]) -> None:
     if not stat.S_ISDIR(runtime_info.st_mode) or runtime_info.st_uid != os.getuid() or stat.S_IMODE(runtime_info.st_mode) & 0o077:
         raise DeployError("systemd user runtime directory has unsafe ownership or permissions")
     env = podman_env(cfg)
-    raw = command(["podman", "info", "--format", "json"], env)
+    info = command_json(["podman", "info", "--format", "json"], env)
+    if cfg.get("profile") == "rehearsal":
+        context = cfg.get("_private_podman_context") or podman_context_from_workspace(cfg["root"])
+        validate_podman_store(info, context)
+        return
     try:
-        info = json.loads(raw)
         store = info["store"]
         rootless = info["host"]["security"]["rootless"]
-    except (json.JSONDecodeError, KeyError, TypeError) as error:
+    except (KeyError, TypeError) as error:
         raise DeployError("Podman returned incomplete storage identity") from error
     if not rootless or Path(store["graphRoot"]).resolve() != cfg["graphroot"].resolve() or Path(store["runRoot"]).resolve() != cfg["runroot"].resolve():
         raise DeployError("Podman is not using the configured rootless graphroot/runroot")
+
+
+def require_empty_podman_store(context: PrivatePodmanContext, env: dict[str, str]) -> None:
+    """Prove the private store cannot see pre-existing containers, images, or volumes."""
+    if any(env.get(name) != value for name, value in context.environment().items()):
+        raise DeployError("Podman inventory command environment differs from the verified private context")
+    commands = (
+        ["podman", "ps", "--all", "--quiet"],
+        ["podman", "image", "ls", "--quiet"],
+        ["podman", "volume", "ls", "--quiet"],
+    )
+    for args in commands:
+        if command(args, env).strip():
+            raise DeployError("private Podman context exposes pre-existing containers, images, or volumes")
 
 
 def service_active(name: str) -> None:
@@ -704,11 +1016,10 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
 
 
 def inspect_image(image: str, cfg: dict[str, Any]) -> dict[str, Any]:
-    raw = command(["podman", "image", "inspect", "--format", "json", image], podman_env(cfg))
+    values = command_json(["podman", "image", "inspect", "--format", "json", image], podman_env(cfg))
     try:
-        values = json.loads(raw)
         value = values[0] if isinstance(values, list) else values
-    except (json.JSONDecodeError, IndexError, TypeError) as error:
+    except (IndexError, TypeError) as error:
         raise DeployError(f"cannot inspect local image {image}") from error
     return value
 
@@ -990,24 +1301,20 @@ def isolated_schema_preflight(release: VerifiedRelease, cfg: dict[str, Any]) -> 
     workspace.chmod(0o700)
     if workspace.parent.resolve() != parent.resolve() or not workspace.name.startswith("operatoros-deploy-preflight."):
         raise DeployError("refusing an ambiguous schema preflight workspace")
-    graphroot, runroot = workspace / "graphroot", workspace / "runroot"
-    graphroot.mkdir(mode=0o700)
-    runroot.mkdir(mode=0o700)
-    storage_conf = workspace / "storage.conf"
-    storage_conf.write_text('[storage]\ndriver="vfs"\ngraphroot="' + str(graphroot) + '"\nrunroot="' + str(runroot) + '"\n', encoding="utf-8")
-    storage_conf.chmod(0o600)
-    temp_cfg = dict(cfg, storage_conf=storage_conf, graphroot=graphroot, runroot=runroot)
+    context = create_private_podman_context(workspace)
+    graphroot, runroot = context.graphroot, context.runroot
+    temp_cfg = dict(cfg, storage_conf=context.storage_conf, graphroot=graphroot, runroot=runroot,
+                    _private_podman_context=context)
     env = podman_env(temp_cfg)
     before = sha_db_snapshot(cfg["data_dir"])
     cleanup_error: Exception | None = None
     failure: Exception | None = None
+    context_verified = False
     try:
-        info = json.loads(command(["podman", "info", "--format", "json"], env))
-        if not info.get("host", {}).get("security", {}).get("rootless"):
-            raise DeployError("schema preflight Podman store is not rootless")
-        store = info.get("store", {})
-        if Path(store.get("graphRoot", "")).resolve() != graphroot.resolve() or Path(store.get("runRoot", "")).resolve() != runroot.resolve():
-            raise DeployError("schema preflight did not use its disposable VFS store")
+        info = command_json(["podman", "info", "--format", "json"], env)
+        validate_podman_store(info, context, require_empty=True)
+        context_verified = True
+        require_empty_podman_store(context, env)
         image_archive = workspace / "candidate.oci.tar"
         image_archive.write_bytes(release.files["operatoros-api.oci.tar"])
         command(["podman", "load", "--input", str(image_archive)], env, timeout=300)
@@ -1023,29 +1330,25 @@ def isolated_schema_preflight(release: VerifiedRelease, cfg: dict[str, Any]) -> 
     finally:
         try:
             load_consumer_cleanup_module().assert_no_mounts_below(workspace)
-            containers = command(["podman", "ps", "--all", "--quiet"], env)
-            mounts = command(["podman", "unshare", "podman", "mount"], env)
-            if containers or mounts:
-                raise DeployError("temporary schema preflight Podman store still has containers or mounts")
-            cleanup_program = """
-import os
-import shutil
-import stat
-import sys
+            if context_verified:
+                if (command(["podman", "ps", "--all", "--quiet"], env) or
+                    command(["podman", "unshare", "podman", "mount"], env)):
+                    raise DeployError("temporary schema preflight Podman store still has containers or mounts")
+                cleanup_program = """
+import os, shutil, stat, sys
 from pathlib import Path
 w = Path(sys.argv[1])
 p = Path(sys.argv[2]).resolve()
 assert w.parent.resolve() == p and w.name.startswith("operatoros-deploy-preflight.")
 assert w.is_dir() and not w.is_symlink() and not os.path.ismount(w)
 assert w.stat().st_uid == os.getuid() and stat.S_IMODE(w.stat().st_mode) == 0o700
-for name in ("graphroot", "runroot"):
-    path = w / name
-    if path.exists():
-        info = path.lstat()
-        assert stat.S_ISDIR(info.st_mode) and not path.is_symlink() and not os.path.ismount(path)
-        shutil.rmtree(path)
+store = w / "podman-rootless"
+if store.exists():
+    info = store.lstat()
+    assert stat.S_ISDIR(info.st_mode) and not store.is_symlink() and not os.path.ismount(store)
+    shutil.rmtree(store)
 """
-            command(["podman", "unshare", sys.executable, "-c", cleanup_program, str(workspace), str(parent)], env, timeout=120)
+                command(["podman", "unshare", sys.executable, "-c", cleanup_program, str(workspace), str(parent)], env, timeout=120)
             shutil.rmtree(workspace)
         except Exception as error:
             cleanup_error = error
@@ -1154,13 +1457,21 @@ def podman_import(release: VerifiedRelease, cfg: dict[str, Any]) -> tuple[str, s
     image_meta = release.manifest["image"]
     image_id = image_meta["image_id"]
     image_ref = image_id
-    existing = subprocess.run(["podman", "image", "inspect", "--format", "json", image_ref], env=podman_env(cfg), text=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    env = podman_env(cfg)
+    existing = run_command(["podman", "image", "exists", image_ref], env)
     if existing.returncode == 0:
+        _assert_podman_command(existing, ["podman", "image", "exists", image_ref])
         existing_id, _ = local_image_identity(image_ref, cfg)
         if existing_id != image_id:
             raise DeployError("immutable source tag already points to a different API image")
+    elif existing.returncode == 1:
+        if stderr_classification(existing.stderr) in {
+            "storage-driver-database-override", "additional-image-store-warning", "storage-path-warning",
+        }:
+            raise DeployError("Podman reported an isolation warning while checking the private image store")
+        command(["podman", "load", "--input", str(release.bundle_path.parent / "operatoros-api.oci.tar")], env, timeout=300)
     else:
-        command(["podman", "load", "--input", str(release.bundle_path.parent / "operatoros-api.oci.tar")], podman_env(cfg), timeout=300)
+        _assert_podman_command(existing, ["podman", "image", "exists", image_ref])
     validate_image_after_load(image_id, release.manifest["source_commit"], image_meta["source_tree_sha256"],
                               image_meta["manifest_digest"], cfg)
     return image_ref, image_id

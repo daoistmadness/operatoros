@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
+import pwd
 import shutil
 import stat
 import subprocess
@@ -25,8 +26,16 @@ WORKSPACE_PROFILES = {
     "operatoros-deployment-rehearsal.": {
         "containers": ("operatoros-lite-api", "operatoros-lite-caddy"),
         "storage_conf": "deploy/storage.conf",
+        "containers_conf": "deploy/containers.conf",
         "graphroot": "podman-rootless/graphroot",
         "runroot": "podman-rootless/runroot",
+        "metadata": "podman-rootless/metadata",
+        "volumes": "podman-rootless/volumes",
+        "image_tmp": "podman-rootless/image-tmp",
+        "xdg_config_home": "podman-rootless/xdg-config",
+        "xdg_containers": "podman-rootless/xdg-config/containers",
+        "xdg_data_home": "podman-rootless/xdg-data",
+        "home": "podman-rootless/home",
     },
 }
 MAX_LOG_BYTES = 16_384
@@ -72,15 +81,14 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
     if len(suffix) < 8 or not suffix.isalnum():
         raise CleanupError("Consumer workspace name must have a unique temporary suffix.")
     protected_roots = [
-        Path.home() / ".local/share/containers/storage",
+        Path(pwd.getpwuid(os.geteuid()).pw_dir) / ".local/share/containers/storage",
         Path("/var/lib/containers/storage"),
         Path("/run/containers/storage"),
         Path("/mnt/podman-data"),
     ]
-    for name, suffix in (
-        ("XDG_DATA_HOME", "containers/storage"),
-        ("XDG_RUNTIME_DIR", "containers"),
-    ):
+    xdg_data_name = ("OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME"
+                     if prefix == "operatoros-deployment-rehearsal." else "XDG_DATA_HOME")
+    for name, suffix in ((xdg_data_name, "containers/storage"), ("XDG_RUNTIME_DIR", "containers")):
         value = os.environ.get(name)
         if value:
             path = Path(value)
@@ -128,16 +136,80 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
     runroot = workspace / str(profile["runroot"])
     if storage.get("graphroot") != str(graphroot) or storage.get("runroot") != str(runroot):
         raise CleanupError("Podman graphroot and runroot must be direct workspace children.")
+    if storage_conf.resolve(strict=True) != storage_conf:
+        raise CleanupError("Consumer storage config must use a canonical path.")
+    if prefix == "operatoros-deployment-rehearsal.":
+        containers_conf = workspace / str(profile["containers_conf"])
+        if os.environ.get("CONTAINERS_CONF") != str(containers_conf):
+            raise CleanupError("Podman engine config is not scoped to the rehearsal workspace.")
+        try:
+            containers_stat = containers_conf.lstat()
+            if (not stat.S_ISREG(containers_stat.st_mode) or stat.S_ISLNK(containers_stat.st_mode) or
+                containers_stat.st_nlink != 1 or containers_stat.st_uid != os.geteuid() or
+                containers_stat.st_mode & 0o022):
+                raise CleanupError("Rehearsal engine config must be a private regular file.")
+            engine_config = tomllib.loads(containers_conf.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError) as error:
+            raise CleanupError("Cannot validate rehearsal engine config.") from error
+        engine = engine_config.get("engine")
+        expected_engine = {
+            "cgroup_manager": "systemd",
+            "static_dir": str(workspace / str(profile["metadata"])),
+            "volume_path": str(workspace / str(profile["volumes"])),
+            "image_copy_tmp_dir": str(workspace / str(profile["image_tmp"])),
+        }
+        if (set(engine_config) != {"engine"} or not isinstance(engine, dict) or
+            engine != expected_engine or set(config) != {"storage"} or
+            set(storage) != {"driver", "graphroot", "runroot"}):
+            raise CleanupError("Rehearsal Podman configs contain unexpected stores or metadata paths.")
+        if containers_conf.resolve(strict=True) != containers_conf:
+            raise CleanupError("Rehearsal engine config must use a canonical path.")
+        expected_environment = {
+            "HOME": str(workspace / str(profile["home"])),
+            "XDG_CONFIG_HOME": str(workspace / str(profile["xdg_config_home"])),
+            "XDG_DATA_HOME": str(workspace / str(profile["xdg_data_home"])),
+            "REGISTRY_AUTH_FILE": str(workspace / "deploy/registry-auth.json"),
+            "TMPDIR": str(workspace / str(profile["image_tmp"])),
+        }
+        for name, expected in expected_environment.items():
+            if os.environ.get(name) != expected:
+                raise CleanupError("Rehearsal Podman environment differs from its private workspace.")
+        auth_file = workspace / "deploy/registry-auth.json"
+        try:
+            auth_info = auth_file.lstat()
+        except OSError as error:
+            raise CleanupError("Rehearsal registry-auth file is unavailable.") from error
+        if (not stat.S_ISREG(auth_info.st_mode) or stat.S_ISLNK(auth_info.st_mode) or
+            auth_info.st_nlink != 1 or auth_info.st_uid != os.geteuid() or
+            auth_info.st_mode & 0o077 or auth_file.resolve(strict=True) != auth_file):
+            raise CleanupError("Rehearsal registry-auth file must be a private regular file.")
+        for relative in (profile["metadata"], profile["volumes"], profile["image_tmp"],
+                         profile["xdg_config_home"], profile["xdg_containers"],
+                         profile["xdg_data_home"], profile["home"]):
+            expected = workspace / str(relative)
+            current = workspace
+            for part in expected.relative_to(workspace).parts:
+                current /= part
+                try:
+                    path_stat = current.lstat()
+                except OSError as error:
+                    raise CleanupError("Rehearsal Podman context path is missing.") from error
+                if (not stat.S_ISDIR(path_stat.st_mode) or stat.S_ISLNK(path_stat.st_mode) or
+                    path_stat.st_uid != os.geteuid() or path_stat.st_mode & 0o077 or os.path.ismount(current) or
+                    current.resolve(strict=True) != current):
+                    raise CleanupError("Rehearsal Podman context path is unsafe.")
     for label, path in (("graphroot", graphroot), ("runroot", runroot)):
         current = workspace
         for part in path.relative_to(workspace).parts:
             current /= part
             try:
                 path_stat = current.lstat()
-            except FileNotFoundError:
-                break
+            except OSError as error:
+                raise CleanupError(f"Consumer {label} path is missing.") from error
+            rehearsal_context = prefix == "operatoros-deployment-rehearsal."
             if (not stat.S_ISDIR(path_stat.st_mode) or stat.S_ISLNK(path_stat.st_mode) or
-                os.path.ismount(current)):
+                (rehearsal_context and (path_stat.st_uid != os.geteuid() or path_stat.st_mode & 0o077)) or
+                os.path.ismount(current) or current.resolve(strict=True) != current):
                 raise CleanupError(f"Refusing unsafe consumer {label} path.")
 
     if not shutil.rmtree.avoids_symlink_attacks:
@@ -217,7 +289,9 @@ def append_log(log_path: Path | None, message: str) -> None:
 
 
 def command_environment() -> dict[str, str]:
-    names = ("PATH", "HOME", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS", "TMPDIR", "CONTAINERS_STORAGE_CONF")
+    names = ("PATH", "HOME", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS", "TMPDIR",
+             "CONTAINERS_STORAGE_CONF", "CONTAINERS_CONF", "XDG_CONFIG_HOME", "XDG_DATA_HOME",
+             "REGISTRY_AUTH_FILE", "OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME")
     return {name: os.environ[name] for name in names if name in os.environ}
 
 
@@ -246,15 +320,19 @@ def run_podman(arguments: list[str], workspace: Path, log_path: Path | None) -> 
 def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
     if not shutil.rmtree.avoids_symlink_attacks:
         raise CleanupError("Safe recursive removal is unavailable.")
-    # Revalidate after entering Podman's user namespace. Remove only the two configured
-    # store roots here; the host user removes the remaining workspace after Podman exits.
+    # Revalidate after entering Podman's user namespace. Clear only private
+    # storage contents here while preserving configured directories for the
+    # host-side postcondition checks.
     validate_workspace(str(workspace), str(temp_parent))
     assert_no_mounts_below(workspace)
     selected = workspace_profile(workspace)
     if selected is None:
         raise CleanupError("Unknown disposable workspace profile.")
     _prefix, profile = selected
-    for key in ("graphroot", "runroot"):
+    keys = ["graphroot", "runroot"]
+    if "metadata" in profile:
+        keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home"))
+    for key in keys:
         path = workspace / str(profile[key])
         try:
             info = path.lstat()
@@ -262,8 +340,26 @@ def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
             continue
         if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or os.path.ismount(path):
             raise CleanupError(f"Refusing unsafe consumer {key} removal.")
-        shutil.rmtree(path)
+        clear_private_directory(path)
+    if profile is not None and "xdg_containers" in profile:
+        clear_private_directory(workspace / str(profile["xdg_containers"]))
     return 0
+
+
+def clear_private_directory(path: Path) -> None:
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or os.path.ismount(path):
+        raise CleanupError("Refusing unsafe private storage directory.")
+    for child in path.iterdir():
+        child_info = child.lstat()
+        if stat.S_ISLNK(child_info.st_mode) or os.path.ismount(child):
+            raise CleanupError("Refusing symlink or mount in private storage directory.")
+        if stat.S_ISDIR(child_info.st_mode):
+            shutil.rmtree(child)
+        elif stat.S_ISREG(child_info.st_mode) and child_info.st_nlink == 1:
+            child.unlink()
+        else:
+            raise CleanupError("Refusing unexpected file type in private storage directory.")
 
 
 def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
@@ -271,7 +367,10 @@ def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
     if selected is None:
         raise CleanupError("Refusing residual cleanup for an unknown workspace profile.")
     _prefix, profile = selected
-    allowed_paths = {workspace / str(profile[key]) for key in ("graphroot", "runroot")}
+    allowed_keys = ["graphroot", "runroot"]
+    if "metadata" in profile:
+        allowed_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home", "xdg_containers"))
+    allowed_paths = {workspace / str(profile[key]) for key in allowed_keys}
     if path not in allowed_paths:
         raise CleanupError("Refusing store cleanup outside the consumer workspace.")
     try:
@@ -298,7 +397,7 @@ def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
                     pending.append(child)
                 elif not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
                     raise CleanupError("Refusing unexpected file type in residual Podman store.")
-    shutil.rmtree(path)
+    clear_private_directory(path)
 
 
 def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str | None = None) -> int:
@@ -355,7 +454,10 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
             if selected is None:
                 raise CleanupError("Unknown disposable workspace profile.")
             _prefix, profile = selected
-            for key in ("graphroot", "runroot"):
+            residual_keys = ["graphroot", "runroot"]
+            if "metadata" in profile:
+                residual_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home", "xdg_containers"))
+            for key in residual_keys:
                 remove_host_owned_store_residual(workspace / str(profile[key]), workspace)
             assert_no_mounts_below(workspace)
             shutil.rmtree(workspace)

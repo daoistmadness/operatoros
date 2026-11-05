@@ -165,15 +165,47 @@ verified bundle and its hashes in the approved evidence location before
 expiration.
 
 Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS
-graphroot/runroot, random synthetic-only authentication and backup secrets,
-and service names that include the workflow run ID and attempt. The API port
-is published to loopback only; Caddy uses host networking but binds only to a
-separate loopback port. The harness rejects paths overlapping default/shared
-Podman storage, application data, repository worktrees, or the existing
-`/mnt/podman-data` root. Cleanup removes only the run-specific Quadlet files,
-the two container names in the private store, and that verified workspace.
-It does not use `sudo`, modify system-wide settings, or touch the existing
-OperatorOS services or database.
+run-scoped Podman configuration and storage, random synthetic-only
+authentication and backup secrets, and service names that include the workflow
+run ID and attempt. The API port is published to loopback only; Caddy uses host
+networking but binds only to a separate loopback port. The harness rejects paths
+overlapping default/shared Podman storage, application data, repository
+worktrees, or the existing `/mnt/podman-data` root. Cleanup removes only the
+run-specific Quadlet files, the two container names in the private store, and
+that verified workspace. It does not use `sudo`, modify system-wide settings,
+or touch the existing OperatorOS services or database.
+
+The failed rehearsal on workflow run `42043131126`, attempt 1, showed Podman
+warning that the requested `vfs` driver had been replaced by `overlay` from the
+database under `/home/runner/.local/share/containers/storage`. The same step
+parsed `podman info --format json` after combining stderr with stdout, so that
+warning also caused JSON decoding to fail. The recorded output confirms that
+the runner's default metadata database was consulted; it does not establish
+whether the storage configuration was ignored or a default engine metadata
+path caused the lookup. The correction pins both storage and engine metadata
+paths and treats effective-path mismatch as a pre-import failure.
+
+The harness supplies `CONTAINERS_STORAGE_CONF` and `CONTAINERS_CONF`, along
+with private `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `TMPDIR`, and an empty
+`REGISTRY_AUTH_FILE`, to direct Podman commands and each generated Quadlet
+service. It leaves the systemd manager's `XDG_RUNTIME_DIR` unchanged. The
+private storage file selects only VFS graphroot/runroot; the private engine
+file selects workspace-owned static metadata, volume, and image-copy paths.
+Before downloading or importing the release image or creating services, the
+harness parses JSON from stdout only and checks Podman's reported config file,
+graphroot, runroot, volume path, image-copy directory, rootless/local state,
+VFS driver, and systemd cgroup v2. It rejects additional image stores and
+unknown configuration keys, then requires the private image, container, and
+volume inventories to be empty. Podman storage warnings remain fatal even when
+stdout contains valid JSON. After Quadlet startup, the harness compares each
+service's effective Podman environment and confirms that direct Podman sees
+exactly the two expected run-scoped containers.
+
+If this storage proof fails, cleanup does not invoke Podman. It removes only a
+canonical, private, runner-owned workspace with no mounts. After the private
+context has been proven, cleanup may use Podman only with the validated
+run-scoped environment and removes namespace-owned files only below that
+workspace. No command resets or repairs the runner's default Podman store.
 
 The rehearsal writes only non-secret settings to `deploy/api.env`. It creates
 the API's synthetic cookie and backup keys as run-scoped Podman secrets by

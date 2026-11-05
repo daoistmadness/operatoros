@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "266b1b2c2dc94dc836b922f8506e43d5187d81fa9a89ad2fe006ac926c024f07",
+      "fingerprint": "b7a10f57904cc3891b946e9daa4597623ef8520d2a5574dff09cc9ebb492e234",
       "snapshot": {
-        "CHANGELOG.md": "c4418a45693af75963c794ebd62dccf37c4b86cc3723e3ec97193c6dcea24f57"
+        "CHANGELOG.md": "06686800d3b5bd4be5c9b03b6acb78013c480d1b4fb3b745cd70830871397eb4"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: CHANGELOG.md at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: CHANGELOG.md at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:COMMANDS.md": {
@@ -9927,15 +9927,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "98297a4dc136fa5b04f40f292a368e83ff111cf54d3850fbcd9d7e7bf016344a",
+      "fingerprint": "59ec142064a8f71e193e1e05ba2503582653847660769d2a46bbaf944cd5347c",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "4eb247fde3df79e941202cb0c85f81f7f07eabc0f30914fae8997f1a0b6b974e"
+        "docs/runbooks/release-bundles.md": "95d2a03aa405c8204f89b2442c6bfe652d66d320d96bc0001819b5cbbdf429d4"
       },
-      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
+        "Changed: docs/runbooks/release-bundles.md at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9963,15 +9963,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "922681d278b5445d4d1b13428238cfde458fe6ed1a52de4a11bfce981314a5df",
+      "fingerprint": "5460544a5a8194f11828e3ab61b45c3d63673740dbbbe53e7a16ffe42d8cf324",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "f03563e12642e280b010a2104642df87ab0b16855ce33f5a5f3006972479926a"
+        "scripts/tests/test_release_bundle.py": "2b718e5f129d6eacca8811ea1dd89941f87171689ba8522e9661e73a717c2376"
       },
-      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
+        "Changed: scripts/tests/test_release_bundle.py at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10047,15 +10047,15 @@
       ]
     },
     "source:scripts/release-consumer-cleanup.py": {
-      "fingerprint": "c967af443289a04a9f2bd058a0a99dd9a5e112cf3454beadbc13b7291ce5e2e0",
+      "fingerprint": "71ccaf3de015b091970bcf8493fbc96bfc9864e86363ddb64e4c8f1d49f80d08",
       "snapshot": {
-        "scripts/release-consumer-cleanup.py": "8e0d9b5c9774ddd0228b40cc710241562936da75b9213bff15365fd6b0349fd8"
+        "scripts/release-consumer-cleanup.py": "73ae2887b0db977939d3569fe73db18e5ce32315932e3c4e6eec6de087124e33"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/release-consumer-cleanup.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: scripts/release-consumer-cleanup.py at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:scripts/operatoros-deploy.sh": {
@@ -10071,27 +10071,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "189d84615b834e43e959483dc632747af46953fb00bb5e16abb9a4b386ecef3c",
+      "fingerprint": "0c1ffddec2d6c66110b077c4dc3799aaf310f5094dec1aed777aca657f64137c",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "081d69bf55dc48f6619b1dafe563ce710104e0b797f2a8994245122d7e829f0c"
+        "scripts/operatoros_deploy.py": "5295d578ab0aa0d37c34db0965dded9d4f045a58fcde988a89152821c9f2f5e9"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: scripts/operatoros_deploy.py at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "2964e859baf5f644a4e201ba94410f341f71dd35174872affd6b968dfdf9e17f",
+      "fingerprint": "a60de64b4a4b8d87df9366360a1f9936217bbefc9d3871d7dcdfdac9c45a54bf",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "569cebb2b40f993b2c514b9bea47d2bc05f4f9cee0a739cef77a5a9fad6205e0"
+        "scripts/tests/test_operatoros_deploy.py": "7c12081ddd06e2f091ed3e81aa9af9f2dbc3caa4d69d71c287c63abad0fd8a01"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: scripts/tests/test_operatoros_deploy.py at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10107,15 +10107,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "0848973c07db26f92cc20a96f952c724ca358bf5ff898d4cb6195e49edb3d201",
+      "fingerprint": "2ae6b40726224a2d8db407d8b78b1943371db26a70bebd15d368d3406b853d16",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "2a4a153632e20d17d60c7ec1fcd8aaa66d674a278bcf4695b1bd5201dd04153c"
+        "scripts/deployment-rehearsal.py": "13ec591f44d49b1eaf3c0fcf2ee1b0d10c4a0df0663edfec78752160071ab1be"
       },
-      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
+      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
       "outcome": "no-change",
-      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
+      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
+        "Changed: scripts/deployment-rehearsal.py at cde3ffcbb34db69a1e995d4258099a923581533b"
       ]
     }
   }
