@@ -127,6 +127,8 @@ jobs:
         run: bun test scripts/tests/dev-runtime.test.ts scripts/tests/worktree-safety.test.ts scripts/tests/test-scope.test.ts scripts/tests/e2e-workspace.test.ts scripts/tests/e2e-summaries.test.ts scripts/tests/readiness-seeder.test.ts scripts/tests/podman-source-manifest.test.ts
       - name: Release bundle rejection and workflow policy tests
         working-directory: ${{ github.workspace }}
+        env:
+          OPERATOROS_TEST_ROOTLESS_PODMAN: "1"
         run: python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
       - name: Pinned Trivy OCI compatibility regression
         working-directory: ${{ github.workspace }}

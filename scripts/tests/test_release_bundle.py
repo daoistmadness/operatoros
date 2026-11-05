@@ -1,7 +1,11 @@
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
+import pwd
+import shutil
+import sys
 import tarfile
 import tempfile
 import subprocess
@@ -12,6 +16,9 @@ ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('release', ROOT / 'scripts/release-bundle.py')
 m = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(m)
+cleanup_spec = importlib.util.spec_from_file_location('release_consumer_cleanup', ROOT / 'scripts/release-consumer-cleanup.py')
+cleanup = importlib.util.module_from_spec(cleanup_spec)
+cleanup_spec.loader.exec_module(cleanup)
 SHA = 'a' * 40
 
 
@@ -178,3 +185,339 @@ class BundleTests(unittest.TestCase):
         release = workflow.split('  release:\n')[1].split('  release-bundle:')[0]
         self.assertIn('ref: ${{ github.sha }}', release)
         self.assertIn('run: mise run check:full', release)
+        api = workflow.split('  api:\n')[1].split('\n  frontend:')[0]
+        self.assertIn('OPERATOROS_TEST_ROOTLESS_PODMAN: "1"', api)
+
+
+class ReleaseConsumerCleanupTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='operatoros-release-cleanup-tests-')
+        self.temp_parent = Path(self.temp.name).resolve()
+        self.workspace = self.temp_parent / 'operatoros-release-consumer.fixture01'
+        self.workspace.mkdir(mode=0o700)
+        self.graphroot = self.workspace / 'graphroot'
+        self.runroot = self.workspace / 'runroot'
+        self.graphroot.mkdir()
+        self.runroot.mkdir()
+        self.storage_conf = self.workspace / 'storage.conf'
+        self.storage_conf.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{self.graphroot}"\n'
+            f'runroot="{self.runroot}"\n',
+            encoding='utf-8',
+        )
+        self.storage_conf.chmod(0o600)
+        self.external = self.temp_parent / 'unrelated.txt'
+        self.external.write_text('preserve', encoding='utf-8')
+        self.environment = {
+            'CONTAINERS_STORAGE_CONF': str(self.storage_conf),
+            'HOME': str(self.temp_parent),
+            'PATH': os.environ.get('PATH', '/usr/bin:/bin'),
+            'TMPDIR': str(self.temp_parent),
+            'XDG_RUNTIME_DIR': str(self.temp_parent),
+        }
+        self.commands = []
+        self.rm_status = 0
+        self.mount_status = 0
+        self.containers_output = ''
+        self.mounts_output = ''
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def fake_podman(self, arguments, workspace, log_path):
+        self.commands.append(arguments)
+        if arguments[0] == 'rm':
+            return subprocess.CompletedProcess(arguments, self.rm_status, '', 'simulated rm result')
+        if arguments[:3] == ['ps', '--all', '--quiet']:
+            return subprocess.CompletedProcess(arguments, 0, self.containers_output, '')
+        if arguments == ['unshare', 'podman', 'mount']:
+            return subprocess.CompletedProcess(arguments, self.mount_status, self.mounts_output, '')
+        if arguments[0] == 'unshare':
+            cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
+            # Podman may recreate runner-owned lock directories while its namespace exits.
+            for name in ('graphroot', 'runroot'):
+                residual = workspace / name / 'podman-locks'
+                residual.mkdir(parents=True)
+                (residual / 'lock').write_text('synthetic lock', encoding='utf-8')
+            return subprocess.CompletedProcess(arguments, 0, '', '')
+        self.fail(f'unexpected Podman command: {arguments}')
+
+    def run_cleanup(self, workspace=None):
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
+            return cleanup.cleanup(str(workspace or self.workspace), str(self.temp_parent))
+
+    def test_consumer_success_removes_only_its_store_and_preserves_unrelated_process(self):
+        layer = self.graphroot / 'vfs' / 'dir' / 'layer'
+        layer.mkdir(parents=True)
+        (layer / 'payload').write_text('synthetic image layer', encoding='utf-8')
+        process = subprocess.Popen(['sleep', '30'])
+        try:
+            self.assertEqual(self.run_cleanup(), 0)
+            self.assertFalse(self.workspace.exists())
+            self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+            self.assertIsNone(process.poll())
+            self.assertEqual(self.commands[0], ['rm', '--force', '--ignore', 'operatoros-release-api', 'operatoros-release-web'])
+            self.assertNotIn('--all', self.commands[0])
+            self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+            self.assertEqual(self.commands[-1][0], 'unshare')
+        finally:
+            process.terminate()
+            process.wait(timeout=5)
+
+    def test_cleanup_command_failure_is_reported_even_if_store_is_removed(self):
+        self.rm_status = 9
+        with unittest.mock.patch('sys.stderr', new_callable=io.StringIO) as error:
+            self.assertEqual(self.run_cleanup(), 1)
+            self.assertIn('exit=9', error.getvalue())
+        self.assertFalse(self.workspace.exists())
+
+    def test_remaining_container_or_mount_blocks_filesystem_cleanup(self):
+        self.containers_output = 'unexpected-container\n'
+        self.assertEqual(self.run_cleanup(), 1)
+        self.assertTrue(self.workspace.exists())
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
+
+        self.commands.clear()
+        self.containers_output = ''
+        self.mounts_output = '/tmp/consumer-mount\n'
+        self.assertEqual(self.run_cleanup(), 1)
+        self.assertTrue(self.workspace.exists())
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
+
+        self.commands.clear()
+        self.mounts_output = ''
+        self.mount_status = 125
+        self.assertEqual(self.run_cleanup(), 1)
+        self.assertTrue(self.workspace.exists())
+        self.assertIn(['unshare', 'podman', 'mount'], self.commands)
+        self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
+
+    def test_traversal_symlink_and_shared_storage_paths_are_rejected(self):
+        shared = self.temp_parent / 'shared-storage'
+        shared.mkdir()
+        marker = shared / 'keep.txt'
+        marker.write_text('preserve', encoding='utf-8')
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            traversal = str(self.workspace / '..' / 'shared-storage')
+            self.assertEqual(cleanup.cleanup(traversal, str(self.temp_parent)), 1)
+            self.assertEqual(cleanup.cleanup('', str(self.temp_parent)), 1)
+            self.assertEqual(cleanup.cleanup('/', str(self.temp_parent)), 1)
+            link = self.temp_parent / 'operatoros-release-consumer.symlink01'
+            link.symlink_to(self.workspace, target_is_directory=True)
+            self.assertEqual(cleanup.cleanup(str(link), str(self.temp_parent)), 1)
+            self.assertEqual(cleanup.cleanup(str(shared), str(self.temp_parent)), 1)
+            run.assert_not_called()
+        self.assertEqual(marker.read_text(encoding='utf-8'), 'preserve')
+        self.assertTrue(self.workspace.exists())
+
+        data_root = self.temp_parent / 'synthetic-application-data'
+        data_temp = data_root / 'tmp'
+        data_workspace = data_temp / 'operatoros-release-consumer.fixture02'
+        data_workspace.mkdir(parents=True, mode=0o700)
+        (data_workspace / 'graphroot').mkdir()
+        (data_workspace / 'runroot').mkdir()
+        data_config = data_workspace / 'storage.conf'
+        data_config.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{data_workspace / "graphroot"}"\n'
+            f'runroot="{data_workspace / "runroot"}"\n',
+            encoding='utf-8',
+        )
+        with unittest.mock.patch.dict(os.environ, self.environment | {
+            'CONTAINERS_STORAGE_CONF': str(data_config),
+            'OPERATOROS_DATA_DIR': str(data_root),
+        }, clear=True), unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(data_workspace), str(data_temp)), 1)
+            run.assert_not_called()
+
+        with unittest.mock.patch.dict(os.environ, self.environment | {
+            'OPERATOROS_DATA_DIR': str(self.workspace / 'state'),
+        }, clear=True), unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+
+        with unittest.mock.patch.dict(os.environ, self.environment | {
+            'XDG_DATA_HOME': str(self.workspace),
+        }, clear=True), unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+
+    def test_shared_graphroot_or_symlinked_graphroot_is_rejected(self):
+        shared = self.temp_parent / 'shared-storage'
+        shared.mkdir()
+        marker = shared / 'keep.txt'
+        marker.write_text('preserve', encoding='utf-8')
+        self.storage_conf.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{shared}"\n'
+            f'runroot="{self.runroot}"\n',
+            encoding='utf-8',
+        )
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+        self.assertEqual(marker.read_text(encoding='utf-8'), 'preserve')
+
+        self.storage_conf.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{self.graphroot}"\n'
+            f'runroot="{self.runroot}"\n',
+            encoding='utf-8',
+        )
+        self.graphroot.rmdir()
+        self.graphroot.symlink_to(shared, target_is_directory=True)
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+        self.assertEqual(marker.read_text(encoding='utf-8'), 'preserve')
+
+    def test_host_cleanup_rejects_store_residuals_not_owned_by_runner(self):
+        marker = self.graphroot / 'storage.lock'
+        marker.write_text('synthetic lock', encoding='utf-8')
+        runner_uid = os.geteuid()
+        with unittest.mock.patch.object(cleanup.os, 'geteuid', return_value=runner_uid + 1):
+            with self.assertRaises(cleanup.CleanupError):
+                cleanup.remove_host_owned_store_residual(self.graphroot, self.workspace)
+        self.assertTrue(marker.exists())
+
+    def test_cleanup_command_environment_excludes_credentials_and_remote_storage(self):
+        with unittest.mock.patch.dict(os.environ, self.environment | {
+            'GH_TOKEN': 'must-not-propagate',
+            'CONTAINER_HOST': 'tcp://unexpected.example',
+        }, clear=True):
+            env = cleanup.command_environment()
+        self.assertEqual(env['CONTAINERS_STORAGE_CONF'], str(self.storage_conf))
+        self.assertNotIn('GH_TOKEN', env)
+        self.assertNotIn('CONTAINER_HOST', env)
+
+    def test_existing_allowlisted_diagnostics_directory_can_receive_cleanup_log(self):
+        diagnostics = self.temp_parent / 'release-diagnostics'
+        diagnostics.mkdir(mode=0o755)
+        log = diagnostics / 'consumer-cleanup.log'
+        log.write_text('build diagnostics\n', encoding='utf-8')
+        log.chmod(0o644)
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True):
+            path = cleanup.diagnostic_log(str(diagnostics), self.temp_parent, self.workspace)
+            cleanup.append_log(path, 'consumer cleanup exit=0')
+        self.assertEqual(log.read_text(encoding='utf-8'), 'build diagnostics\nconsumer cleanup exit=0\n')
+
+    def run_exit_trap(self, consumer_status, rm_status):
+        fake_bin = self.temp_parent / 'bin'
+        fake_bin.mkdir()
+        calls = self.temp_parent / 'podman-calls.log'
+        fake_podman = fake_bin / 'podman'
+        fake_podman.write_text(
+            '#!/bin/sh\n'
+            f'printf "%s\\n" "$*" >> {str(calls)!r}\n'
+            'case "$1" in\n'
+            f'  rm) exit {rm_status} ;;\n'
+            '  ps|mount) exit 0 ;;\n'
+            '  unshare) shift; exec "$@" ;;\n'
+            '  *) exit 64 ;;\n'
+            'esac\n',
+            encoding='utf-8',
+        )
+        fake_podman.chmod(0o700)
+        self.storage_conf.chmod(0o600)
+        library = ROOT / 'scripts/release-consumer-cleanup-trap.sh'
+        bash_script = (
+            'set -euo pipefail\n'
+            f'workspace={str(self.workspace)!r}\n'
+            f'temp_parent={str(self.temp_parent)!r}\n'
+            f'source {str(library)!r}\n'
+            'trap "operatoros_release_consumer_exit \\\"$workspace\\\" \\\"$temp_parent\\\"" EXIT\n'
+            f'exit {consumer_status}\n'
+        )
+        env = self.environment | {
+            'PATH': f'{fake_bin}:/usr/bin:/bin',
+            'RUNNER_TEMP': str(self.temp_parent),
+            'PYTHONDONTWRITEBYTECODE': '1',
+        }
+        result = subprocess.run(['bash', '-c', bash_script], env=env, capture_output=True, text=True)
+        return result, calls.read_text(encoding='utf-8')
+
+    def test_startup_failure_triggers_successful_cleanup_and_preserves_exit_code(self):
+        result, calls = self.run_exit_trap(23, 0)
+        self.assertEqual(result.returncode, 23)
+        self.assertIn('[consumer] failed with exit code 23', result.stderr)
+        self.assertNotIn('[cleanup] failed', result.stderr)
+        self.assertIn('rm --force --ignore operatoros-release-api operatoros-release-web', calls)
+        self.assertFalse(self.workspace.exists())
+
+    def test_successful_consumer_fails_when_cleanup_fails(self):
+        result, calls = self.run_exit_trap(0, 9)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('Podman consumer container removal failed with exit=9', result.stderr)
+        self.assertIn('Consumer cleanup did not complete successfully', result.stderr)
+        self.assertIn('unshare', calls)
+        self.assertFalse(self.workspace.exists())
+
+    def test_consumer_and_cleanup_failures_are_both_reported_without_masking_consumer(self):
+        result, calls = self.run_exit_trap(23, 9)
+        self.assertEqual(result.returncode, 23)
+        self.assertIn('[consumer] failed with exit code 23', result.stderr)
+        self.assertIn('[cleanup] failed with exit code 1', result.stderr)
+        self.assertIn('Podman consumer container removal failed with exit=9', result.stderr)
+        self.assertIn('rm --force --ignore operatoros-release-api operatoros-release-web', calls)
+        self.assertFalse(self.workspace.exists())
+
+    def test_subordinate_uid_files_are_cleaned_by_podman_unshare(self):
+        if os.environ.get('OPERATOROS_TEST_ROOTLESS_PODMAN') != '1':
+            self.skipTest('set OPERATOROS_TEST_ROOTLESS_PODMAN=1 on a rootless Podman host')
+        if shutil.which('podman') is None:
+            self.fail('rootless Podman is required when OPERATOROS_TEST_ROOTLESS_PODMAN=1')
+        user = pwd.getpwuid(os.getuid()).pw_name
+        subuid_path = Path('/etc/subuid')
+        subgid_path = Path('/etc/subgid')
+        ranges = {}
+        for label, path in (('UID', subuid_path), ('GID', subgid_path)):
+            starts = [int(line.split(':')[1]) for line in path.read_text(encoding='utf-8').splitlines()
+                      if line.startswith(f'{user}:') and len(line.split(':')) == 3]
+            if not starts:
+                self.fail(f'a subordinate {label} range is required for the rootless cleanup regression')
+            ranges[label] = starts[0]
+
+        layer = self.graphroot / 'vfs' / 'dir' / 'layer'
+        env = self.environment | {'CONTAINERS_STORAGE_CONF': str(self.storage_conf)}
+        create = subprocess.run(
+            ['podman', 'unshare', 'sh', '-c',
+             'set -eu; mkdir -p "$1"; printf synthetic > "$1/file"; chown -R 1:1 "$(dirname "$1")"; chmod 755 "$(dirname "$1")"',
+             'sh', str(layer)],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        self.assertEqual(create.returncode, 0, create.stderr)
+        self.assertEqual(layer.stat().st_uid, ranges['UID'])
+        self.assertEqual(layer.stat().st_gid, ranges['GID'])
+        with self.assertRaises(PermissionError):
+            (layer / 'file').unlink()
+
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=False):
+            self.assertEqual(cleanup.cleanup(str(self.workspace), str(self.temp_parent)), 0)
+        self.assertFalse(self.workspace.exists())
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+
+    def test_consumer_health_and_static_site_assertions_remain_enabled(self):
+        harness = (ROOT / 'scripts/test-release-consumer.sh').read_text(encoding='utf-8')
+        for required in (
+            'curl -fsS "http://127.0.0.1:$web_port/ready"',
+            'curl -fsS "http://127.0.0.1:$web_port/health"',
+            'attendance/calendar',
+            'cmp - "$workspace/client/_shell.html"',
+            '.env")" == 404',
+            'missing.js")" == 404',
+        ):
+            self.assertIn(required, harness)
