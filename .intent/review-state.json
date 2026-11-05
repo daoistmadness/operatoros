@@ -9927,15 +9927,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "efad030b8073915816b7bb01917c39a676617bb4b6ae2895272fd61c63338177",
+      "fingerprint": "d821289dc39e0cc73569224c30b0b33b7ff4cebcac73dbe2f887ff12dde207bb",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "fe089e29f9d82c98c1103df7ad2a010776bdd88e8e6a609b23b80a312c45ba07"
+        "docs/runbooks/release-bundles.md": "2d02ae855dedb6149ba501acd284fc8ef845b75782027eee3e6cea70ab6da6ed"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "3bb6570c0a1ba4164da8fa3b8f240e4298dbb257",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "This PR change fixes rehearsal credential handling in the Python harness and runbook; it does not change the Elysia library skill or examples.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: docs/runbooks/release-bundles.md at 3bb6570c0a1ba4164da8fa3b8f240e4298dbb257"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9963,15 +9963,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "f4541fbed82924b3e5e0e2fb0a0e78fe5b5a29baa235cd09de0f06cec84d5406",
+      "fingerprint": "d71bfd25bb9fb44cf19b2f87176bce9e776739c00ef785d44a5108f1fb934f8e",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "64f4c806ccfd868ad6eead9a36200a04cd6e1a78e1257018b03f2405a43eb890"
+        "scripts/tests/test_release_bundle.py": "7423c078a6ed088939bb0e50ab001cb8760fbe0212d0af1c5be07f57ea145d5e"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "3bb6570c0a1ba4164da8fa3b8f240e4298dbb257",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "This PR change fixes rehearsal credential handling in the Python harness and runbook; it does not change the Elysia library skill or examples.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: scripts/tests/test_release_bundle.py at 3bb6570c0a1ba4164da8fa3b8f240e4298dbb257"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10107,15 +10107,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "643a262a97ab9c1bf9d108d70b9f859c2b5638b29613dfc82b74333095780718",
+      "fingerprint": "af05493cfdd6da55b7c39b5bcd4df16d220efa8c8a1f9d1871f0df03c8816caf",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "7f8c930d3136bde6f7b05ba71f51a681c99830c2b6de0dddc75a8ccc988edb00"
+        "scripts/deployment-rehearsal.py": "18001770365c6108585ecb54855a4c18b1775300ddf16f07370a3c3e023f9b9d"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "3bb6570c0a1ba4164da8fa3b8f240e4298dbb257",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "This PR change fixes rehearsal credential handling in the Python harness and runbook; it does not change the Elysia library skill or examples.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: scripts/deployment-rehearsal.py at 3bb6570c0a1ba4164da8fa3b8f240e4298dbb257"
       ]
     }
   }
