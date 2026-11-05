@@ -383,15 +383,15 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "0d5fbd233d9b4ad37761cd482dc3f073772b1fe83b3e0aa382f3122f1e484baf",
+      "fingerprint": "341c85c51dc4b047d0dd54fae056bee24680cf86aa9872f9f94d7f869f19dd58",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "831b5b944b38ca08b6756af39e6c1a2c8d1dcf078e0689173499f616b8659a5d"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "a3f3a761fc6ea8c496deb1c550dde34e307d9dfa8df132c1a4a033695d9ce31a"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "7cfdbbe72c19a148d79699b3c402d3fdc410d535",
       "outcome": "no-change",
-      "reason": "Reviewed the CLI restore artifact path and named-pipe regression test. The change rejects non-regular files before reading and does not alter agent guidance, skills, or planning artifacts.",
+      "reason": "The API backup restore integration test only receives a scoped 15-second harness budget; no Elysia behavior, skill guidance, or package architecture changes.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7cfdbbe72c19a148d79699b3c402d3fdc410d535"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
