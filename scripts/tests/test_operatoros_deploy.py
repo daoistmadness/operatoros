@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -234,6 +235,157 @@ class ArtifactVerificationTests(unittest.TestCase):
         self.assertIsNone(handler.redirect_request(request, None, 302, "Found", {}, "https://evil.test/"))
 
 
+class PodmanIsolationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="operatoros-private-podman-test-")
+        self.parent = Path(self.temp.name).resolve()
+        self.root = self.parent / "operatoros-deployment-rehearsal.fixture01"
+        self.root.mkdir(mode=0o700)
+        self.context = deploy.create_private_podman_context(self.root)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def info(self):
+        context = self.context
+        return {
+            "host": {
+                "security": {"rootless": True}, "serviceIsRemote": False,
+                "cgroupVersion": "v2", "cgroupManager": "systemd",
+            },
+            "store": {
+                "configFile": str(context.storage_conf), "graphRoot": str(context.graphroot),
+                "runRoot": str(context.runroot), "volumePath": str(context.volume_path),
+                "imageCopyTmpDir": str(context.image_copy_tmp_dir), "staticDir": str(context.static_dir),
+                "graphDriverName": "vfs", "imageStore": {"number": 0},
+                "containerStore": {"number": 0},
+            },
+        }
+
+    def test_private_vfs_context_and_quadlet_environment_are_exact(self):
+        deploy.validate_private_podman_config(self.context)
+        deploy.validate_podman_store(self.info(), self.context, require_empty=True)
+        values = self.context.environment()
+        lines = self.context.quadlet_environment()
+        for name, value in values.items():
+            self.assertIn(f"Environment={name}={value}", lines)
+        self.assertNotIn("XDG_RUNTIME_DIR", values)
+        self.assertTrue(all(Path(value).is_relative_to(self.root) for value in values.values()))
+
+    def test_default_overlay_database_override_is_rejected(self):
+        value = self.info()
+        value["store"].update({
+            "configFile": str(Path.home() / ".config/containers/storage.conf"),
+            "graphRoot": str(Path.home() / ".local/share/containers/storage"),
+            "runRoot": "/run/user/1001/containers",
+            "volumePath": str(Path.home() / ".local/share/containers/storage/volumes"),
+            "graphDriverName": "overlay",
+        })
+        with self.assertRaisesRegex(deploy.DeployError, "rootless VFS/systemd"):
+            deploy.validate_podman_store(value, self.context, require_empty=True)
+
+    def test_graphroot_runroot_and_driver_mismatches_fail_closed(self):
+        cases = (
+            ("graphRoot", str(self.parent / "outside-graphroot")),
+            ("runRoot", str(self.parent / "outside-runroot")),
+            ("graphDriverName", "overlay"),
+        )
+        for key, value in cases:
+            with self.subTest(key=key):
+                if key in ("graphRoot", "runRoot"):
+                    Path(value).mkdir(mode=0o700, exist_ok=True)
+                info = self.info()
+                info["store"][key] = value
+                with self.assertRaises(deploy.DeployError):
+                    deploy.validate_podman_store(info, self.context, require_empty=True)
+
+    def test_noncanonical_path_alias_and_reported_additional_store_fail_closed(self):
+        alias = self.parent / "graphroot-alias"
+        alias.symlink_to(self.context.graphroot, target_is_directory=True)
+        info = self.info()
+        info["store"]["graphRoot"] = str(alias)
+        with self.assertRaisesRegex(deploy.DeployError, "graphRoot"):
+            deploy.validate_podman_store(info, self.context, require_empty=True)
+
+        info = self.info()
+        info["store"]["additionalImageStores"] = [str(self.parent / "shared-images")]
+        with self.assertRaisesRegex(deploy.DeployError, "additional image store"):
+            deploy.validate_podman_store(info, self.context, require_empty=True)
+
+    def test_malformed_effective_path_fails_with_sanitized_error(self):
+        info = self.info()
+        info["store"]["graphRoot"] = "\0invalid-path"
+        with self.assertRaises(deploy.DeployError) as error:
+            deploy.validate_podman_store(info, self.context, require_empty=True)
+        self.assertNotIn("invalid-path", str(error.exception))
+
+    def test_extra_or_default_storage_configuration_is_rejected(self):
+        original = self.context.storage_conf.read_text(encoding="utf-8")
+        self.context.storage_conf.write_text(original + '\n[storage.options]\nadditionalimagestores=["/home/runner/.local/share/containers/storage"]\n', encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "unexpected image or container store"):
+            deploy.validate_private_podman_config(self.context)
+
+    def test_remote_service_and_nonempty_private_store_are_rejected(self):
+        info = self.info()
+        info["host"]["serviceIsRemote"] = True
+        with self.assertRaisesRegex(deploy.DeployError, "local rootless"):
+            deploy.validate_podman_store(info, self.context)
+        info = self.info()
+        info["store"]["imageStore"]["number"] = 1
+        with self.assertRaisesRegex(deploy.DeployError, "already contains"):
+            deploy.validate_podman_store(info, self.context, require_empty=True)
+
+    def test_initial_inventory_checks_all_resources_and_environment_identity(self):
+        env = self.context.environment()
+        with patch.object(deploy, "command", return_value="") as command:
+            deploy.require_empty_podman_store(self.context, env)
+        self.assertEqual(command.call_count, 3)
+        self.assertEqual(command.call_args_list[0].args[0], ["podman", "ps", "--all", "--quiet"])
+        with patch.object(deploy, "command", side_effect=["", "existing-image"]):
+            with self.assertRaisesRegex(deploy.DeployError, "pre-existing"):
+                deploy.require_empty_podman_store(self.context, env)
+        with self.assertRaisesRegex(deploy.DeployError, "environment differs"):
+            deploy.require_empty_podman_store(self.context, env | {"CONTAINERS_CONF": "/etc/containers/containers.conf"})
+
+    def test_json_uses_stdout_and_sanitizes_stderr_classification(self):
+        result = subprocess.CompletedProcess(["podman"], 0, '{"store":{}}', "warning: harmless notice")
+        with patch.object(deploy, "run_command", return_value=result):
+            self.assertEqual(deploy.command_json(["podman", "info", "--format", "json"]), {"store": {}})
+
+        secret = "synthetic-private-token"
+        warning = f'User-selected graph driver "vfs" overwritten by graph driver "overlay" from database; token={secret}'
+        result = subprocess.CompletedProcess(["podman"], 0, '{"store":{}}', warning)
+        with patch.object(deploy, "run_command", return_value=result):
+            with self.assertRaisesRegex(deploy.DeployError, "storage-driver-database-override") as error:
+                deploy.command_json(["podman", "info", "--format", "json"])
+        self.assertNotIn(secret, str(error.exception))
+
+        result = subprocess.CompletedProcess(["podman"], 0, '{"store":{}}', "WARN[0000] using default storage path")
+        with patch.object(deploy, "run_command", return_value=result):
+            with self.assertRaisesRegex(deploy.DeployError, "storage-configuration-warning"):
+                deploy.command_json(["podman", "info", "--format", "json"])
+
+    def test_malformed_empty_and_nonzero_json_responses_fail_with_sanitized_diagnostics(self):
+        cases = (
+            subprocess.CompletedProcess(["podman"], 0, "not json", "harmless warning"),
+            subprocess.CompletedProcess(["podman"], 0, "", ""),
+            subprocess.CompletedProcess(["podman"], 17, "{}", "synthetic secret must not leak"),
+        )
+        for result in cases:
+            with self.subTest(result=result):
+                with patch.object(deploy, "run_command", return_value=result):
+                    with self.assertRaises(deploy.DeployError) as error:
+                        deploy.command_json(["podman", "info", "--format", "json"])
+                self.assertNotIn("synthetic secret", str(error.exception))
+        self.assertIn("command failed (17)", str(error.exception))
+
+    def test_private_context_refuses_symlinked_workspace_root(self):
+        alias = self.parent / "alias"
+        alias.symlink_to(self.root, target_is_directory=True)
+        with self.assertRaisesRegex(deploy.DeployError, "must not use symlinks"):
+            deploy.create_private_podman_context(alias)
+
+
 class DeploymentFixture(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="operatoros-deploy-state-test-")
@@ -461,23 +613,34 @@ class DeploymentFixture(unittest.TestCase):
 
         def command(args, env=None, *, timeout=60):
             commands.append(args)
-            if args == ["podman", "info", "--format", "json"]:
-                storage = deploy.tomllib.loads(Path(env["CONTAINERS_STORAGE_CONF"]).read_text())["storage"]
-                return json.dumps({"host": {"security": {"rootless": True}}, "store": {
-                    "graphRoot": storage["graphroot"], "runRoot": storage["runroot"]}})
             if args[:3] == ["podman", "load", "--input"]:
                 return "Loaded image"
             if args == ["podman", "unshare", "podman", "mount"]:
                 return ""
             if args == ["podman", "ps", "--all", "--quiet"]:
                 return ""
+            if args in (["podman", "image", "ls", "--quiet"], ["podman", "volume", "ls", "--quiet"]):
+                return ""
             if args[:3] == ["podman", "unshare", sys.executable]:
                 return ""
             self.fail(f"unexpected command: {args}")
 
-        with patch.object(deploy, "podman_env", side_effect=lambda cfg: {
-                 "CONTAINERS_STORAGE_CONF": str(cfg["storage_conf"])}), \
+        def command_json(args, env=None, *, timeout=60):
+            self.assertEqual(args, ["podman", "info", "--format", "json"])
+            context = deploy.podman_context_from_workspace(Path(env["CONTAINERS_STORAGE_CONF"]).parent.parent)
+            return {
+                "host": {"security": {"rootless": True}, "serviceIsRemote": False,
+                         "cgroupVersion": "v2", "cgroupManager": "systemd"},
+                "store": {"configFile": str(context.storage_conf), "graphRoot": str(context.graphroot),
+                          "runRoot": str(context.runroot), "volumePath": str(context.volume_path),
+                          "imageCopyTmpDir": str(context.image_copy_tmp_dir), "staticDir": str(context.static_dir),
+                          "graphDriverName": "vfs", "imageStore": {"number": 0},
+                          "containerStore": {"number": 0}},
+            }
+
+        with patch.object(deploy, "podman_env", side_effect=lambda cfg: cfg["_private_podman_context"].environment()), \
              patch.object(deploy, "command", side_effect=command), \
+             patch.object(deploy, "command_json", side_effect=command_json), \
              patch.object(deploy, "load_consumer_cleanup_module", return_value=type("Cleanup", (), {
                  "assert_no_mounts_below": staticmethod(lambda _path: None)})()), \
              patch.object(deploy, "validate_image_after_load"), \
@@ -529,7 +692,7 @@ class DeploymentFixture(unittest.TestCase):
                                              release.artifact_id, release.artifact_name)
             env = {"CONTAINERS_STORAGE_CONF": str(self.storage_conf)}
             with patch.object(deploy, "podman_env", return_value=env), \
-                 patch.object(deploy.subprocess, "run", return_value=type("Result", (), {"returncode": 1})()), \
+                 patch.object(deploy.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, "", "image not known")), \
                  patch.object(deploy, "command", return_value="") as run_command, \
                  patch.object(deploy, "validate_image_after_load"):
                 image_ref, image_id = deploy.podman_import(release, self.cfg)

@@ -23,7 +23,15 @@ cleanup_spec.loader.exec_module(cleanup)
 rehearsal_spec = importlib.util.spec_from_file_location('deployment_rehearsal', ROOT / 'scripts/deployment-rehearsal.py')
 rehearsal = importlib.util.module_from_spec(rehearsal_spec)
 rehearsal_spec.loader.exec_module(rehearsal)
+deploy_spec = importlib.util.spec_from_file_location('operatoros_deploy_tests', ROOT / 'scripts/operatoros_deploy.py')
+deploy = importlib.util.module_from_spec(deploy_spec)
+sys.modules[deploy_spec.name] = deploy
+deploy_spec.loader.exec_module(deploy)
 SHA = 'a' * 40
+
+
+def private_context(workspace):
+    return deploy.create_private_podman_context(workspace)
 
 
 def archive(files):
@@ -121,6 +129,37 @@ class BundleTests(unittest.TestCase):
 
 
 class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_rehearsal_workspace_must_be_outside_protected_roots_before_creation(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-boundary-') as temporary:
+            base = Path(temporary).resolve()
+            runner_temp = base / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {}, clear=True):
+                rehearsal.require_private_workspace_boundary(runner_temp, workspace)
+
+            xdg_home = base / 'xdg'
+            protected_runner_temp = xdg_home / 'containers/storage'
+            protected_runner_temp.mkdir(parents=True, mode=0o700)
+            protected_workspace = protected_runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {'XDG_DATA_HOME': str(xdg_home)}, clear=True):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'overlaps shared Podman storage'):
+                    rehearsal.require_private_workspace_boundary(protected_runner_temp, protected_workspace)
+
+    def test_unverified_context_cleanup_never_invokes_podman(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-unverified-cleanup-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'partial-setup').write_text('synthetic only', encoding='utf-8')
+            diagnostics = runner_temp / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            rehearsal.PODMAN_CONTEXT_VERIFIED = False
+            with patch.object(rehearsal.subprocess, 'run') as run:
+                rehearsal.cleanup_workspace(workspace, runner_temp, diagnostics)
+            run.assert_not_called()
+            self.assertFalse(workspace.exists())
+
     def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
         child_output = 'synthetic-child-output-marker'
@@ -179,7 +218,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-success-') as temporary:
             root = Path(temporary)
             workspace = root / 'operatoros-deployment-rehearsal.fixture01'
-            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
             calls = []
@@ -200,7 +240,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                  }, clear=True), \
                  patch.object(rehearsal.subprocess, 'run', side_effect=successful_process):
                 username, password, cookie_secret, backup_key, auth_name, backup_name = \
-                    rehearsal.setup_synthetic_database(workspace, SHA)
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 5)
             secret_calls = calls[:2]
@@ -246,21 +286,55 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
     def test_quadlet_references_run_scoped_podman_secrets_without_values(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-test-') as temporary:
             workspace = Path(temporary) / 'workspace'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'data').mkdir(mode=0o700)
+            context = private_context(workspace)
             unit_dir = Path(temporary) / 'units'
-            for directory in ('deploy', 'data', 'podman-rootless/graphroot', 'podman-rootless/runroot'):
-                (workspace / directory).mkdir(parents=True, exist_ok=True)
             unit_dir.mkdir()
-            api_unit, _, api_copy = rehearsal.write_quadlets(
+            api_unit, caddy_unit, api_copy = rehearsal.write_quadlets(
                 workspace, unit_dir, 'operatoros-rehearsal-api.service',
                 'operatoros-rehearsal-caddy.service', 18081, 18080,
                 'localhost/operatoros-api:' + SHA,
                 'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(),
+                context,
             )
 
-            rendered = api_unit.read_text(encoding='utf-8') + api_copy.read_text(encoding='utf-8')
+            rendered = (api_unit.read_text(encoding='utf-8') + caddy_unit.read_text(encoding='utf-8') +
+                        api_copy.read_text(encoding='utf-8'))
             self.assertIn('Secret=operatoros-rehearsal-auth,type=env,target=AUTH_COOKIE_SECRET', rendered)
             self.assertIn('Secret=operatoros-rehearsal-backup,type=env,target=BACKUP_ENCRYPTION_KEY', rendered)
             self.assertNotIn('synthetic-secret-value', rendered)
+            for name, value in context.environment().items():
+                self.assertEqual(rendered.count(f'Environment={name}={value}'), 3)
+            self.assertNotIn('XDG_RUNTIME_DIR=', rendered)
+
+    def test_effective_quadlet_environment_must_match_private_podman_context(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-unit-env-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            valid = 'PATH=/usr/bin:/bin ' + ' '.join(
+                f'{name}={value}' for name, value in context.environment().items()
+            )
+            rehearsal.verify_quadlet_podman_environment(valid, context)
+
+            wrong = valid.replace(
+                str(context.storage_conf),
+                '/home/runner/.config/containers/storage.conf',
+            )
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
+                rehearsal.verify_quadlet_podman_environment(wrong, context)
+
+            duplicate = valid + f' CONTAINERS_STORAGE_CONF={context.storage_conf}'
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'duplicate'):
+                rehearsal.verify_quadlet_podman_environment(duplicate, context)
+
+            missing = ' '.join(
+                f'{name}={value}' for name, value in context.environment().items()
+                if name != 'XDG_DATA_HOME'
+            )
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
+                rehearsal.verify_quadlet_podman_environment(missing, context)
 
     def test_synthetic_login_uses_memory_request_and_cookie_jar(self):
         class Response(io.BytesIO):
@@ -299,7 +373,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-partial-setup-') as temporary:
             root = Path(temporary)
             workspace = root / 'operatoros-deployment-rehearsal.fixture01'
-            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
             calls = []
@@ -320,13 +395,15 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                  }, clear=True), \
                  patch.object(rehearsal.subprocess, 'run', side_effect=fail_second_secret):
                 with self.assertRaisesRegex(rehearsal.RehearsalError, 'exit code 23'):
-                    rehearsal.setup_synthetic_database(workspace, SHA)
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 2)
             secret_values = [call[1]['input'] for call in calls]
             for args, kwargs in calls:
                 self.assertEqual(args[-1], '-')
                 self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertTrue(Path(kwargs['env']['CONTAINERS_CONF']).is_relative_to(workspace))
+                self.assertEqual(kwargs['env']['XDG_DATA_HOME'], str(context.xdg_data_home))
                 self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
                 self.assertNotIn('BACKUP_ENCRYPTION_KEY', kwargs['env'])
             self.assertFalse((workspace / 'deploy/api.env').exists())
@@ -519,7 +596,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         self.assertIn('podman-rootless/graphroot', script)
         self.assertIn('show-environment', script)
         self.assertIn('OPERATOROS_RELEASE_TOKEN', script)
-        self.assertIn('REGISTRY_AUTH_FILE', script)
+        self.assertIn('REGISTRY_AUTH_FILE', (ROOT / 'scripts/operatoros_deploy.py').read_text())
         self.assertNotIn('podman", "build', script)
         self.assertNotIn('sudo ', script)
         self.assertNotIn('/mnt/podman-data/operatoros', script)
@@ -561,6 +638,17 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def test_podman_cleanup_environment_keeps_host_xdg_guard_but_not_secrets(self):
+        with unittest.mock.patch.dict(os.environ, {
+            'OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME': '/home/runner/.local/share',
+            'GITHUB_TOKEN': 'synthetic-token-must-not-propagate',
+            'AUTH_COOKIE_SECRET': 'synthetic-cookie-must-not-propagate',
+        }, clear=True):
+            environment = cleanup.command_environment()
+        self.assertEqual(environment['OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME'], '/home/runner/.local/share')
+        self.assertNotIn('GITHUB_TOKEN', environment)
+        self.assertNotIn('AUTH_COOKIE_SECRET', environment)
 
     def fake_podman(self, arguments, workspace, log_path):
         self.commands.append(arguments)
@@ -607,21 +695,8 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
     def test_deployment_rehearsal_profile_cleans_only_its_scoped_containers(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
         workspace.mkdir(mode=0o700)
-        graphroot = workspace / 'podman-rootless/graphroot'
-        runroot = workspace / 'podman-rootless/runroot'
-        graphroot.mkdir(parents=True)
-        runroot.mkdir()
-        storage_conf = workspace / 'deploy/storage.conf'
-        storage_conf.parent.mkdir()
-        storage_conf.write_text(
-            '[storage]\n'
-            'driver="vfs"\n'
-            f'graphroot="{graphroot}"\n'
-            f'runroot="{runroot}"\n',
-            encoding='utf-8',
-        )
-        storage_conf.chmod(0o600)
-        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage_conf)}
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
         with unittest.mock.patch.dict(os.environ, environment, clear=True), \
              unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
             self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
@@ -634,30 +709,19 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
     def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
         workspace.mkdir(mode=0o700)
-        storage = workspace / 'deploy/storage.conf'
-        storage.parent.mkdir()
+        context = private_context(workspace)
         external_store = self.temp_parent / 'external-store'
         external_store.mkdir()
-        (workspace / 'podman-rootless').mkdir()
-        (workspace / 'podman-rootless/graphroot').symlink_to(external_store, target_is_directory=True)
-        (workspace / 'podman-rootless/runroot').mkdir()
-        storage.write_text(
-            '[storage]\n'
-            'driver="vfs"\n'
-            f'graphroot="{workspace / "podman-rootless/graphroot"}"\n'
-            f'runroot="{workspace / "podman-rootless/runroot"}"\n',
-            encoding='utf-8',
-        )
-        storage.chmod(0o600)
-        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage)}
+        context.graphroot.rmdir()
+        context.graphroot.symlink_to(external_store, target_is_directory=True)
+        environment = self.environment | context.environment()
         with patch.dict(os.environ, environment, clear=True):
-            with self.assertRaisesRegex(cleanup.CleanupError, 'unsafe consumer graphroot path'):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot path'):
                 cleanup.validate_workspace(str(workspace), str(self.temp_parent))
-        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, storage)):
+        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, context.storage_conf)):
             with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot'):
                 cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
         self.assertTrue(external_store.is_dir())
-
 
     def test_cleanup_command_failure_is_reported_even_if_store_is_removed(self):
         self.rm_status = 9
