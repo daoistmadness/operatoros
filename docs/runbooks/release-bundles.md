@@ -148,22 +148,133 @@ data directory. Access is loopback/private. The draft production decision still
 proposes host Caddy; production topology, public ingress/TLS, Ubuntu rehearsal,
 and operational approvals remain unresolved. See the [deployment proposal](../decisions/podman-deployment.md).
 
-## Bring the existing helper under version control
+## Repository-managed deployment interface
 
-The running host helper was reviewed read-only. Its checksum verification,
-exclusive deployment lock, safe client extraction, image-ID comparison,
-versioned static directories, pre-deploy backup checks, health checks and rollback
-can become a single repository-managed script. Replace fixed host paths with one
-explicit deployment-root argument and keep unit names/configuration as templates.
-Make trusted bundle verification precede its first import or service mutation.
-Do not add a competing deploy path: migrate the reviewed helper after approval.
+`scripts/operatoros-deploy.sh` is the version-controlled interface for the
+existing two-container synthetic host topology. It wraps
+`scripts/operatoros_deploy.py` and reuses `scripts/release-bundle.py` for the
+signed inner bundle. It is not installed on the host and has not replaced or
+modified `/mnt/podman-data/operatoros/deploy/deploy.sh` or any live Quadlet.
+Copying this interface and its private configuration onto a host requires a
+separate deployment approval.
 
-Keep credentials, environment files, encryption keys, deployment logs, backup
-metadata, data, generated units, and rollback snapshots outside Git. Host-specific
-Quadlet/Caddy settings stay in private deployment configuration. Phase 2A does
-not replace the installed helper or units. Its archive inventory differs from
-the older local-release-record format; the installed helper cannot consume the
-new bundle directly until that separately reviewed integration is implemented.
+The supported commands are:
+
+~~~sh
+scripts/operatoros-deploy.sh verify \
+  --source-sha FULL_SHA --run-id RUN_ID --run-attempt ATTEMPT \
+  --artifact-id ARTIFACT_ID --artifact-name ARTIFACT_NAME \
+  --envelope-sha256 SHA256
+
+scripts/operatoros-deploy.sh status --config /private/path/operatoros-deploy.toml
+
+scripts/operatoros-deploy.sh deploy \
+  --source-sha FULL_SHA --run-id RUN_ID --run-attempt ATTEMPT \
+  --artifact-id ARTIFACT_ID --artifact-name ARTIFACT_NAME \
+  --envelope-sha256 SHA256 --config /private/path/operatoros-deploy.toml \
+  --backup-name backup_YYYY-MM-DD.sqlite3 --yes
+
+scripts/operatoros-deploy.sh rollback RELEASE_ID \
+  --config /private/path/operatoros-deploy.toml --yes
+~~~
+
+`verify` is read-only with respect to services and application data. It uses
+the GitHub Actions REST API to confirm the successful `workflow_dispatch` run,
+attempt, `main` ref, source SHA, artifact ID/name, and GitHub's artifact-envelope
+digest. It then checks the inner checksum and asks the existing bundle verifier
+to validate the GitHub attestation for this repository, exact workflow, main
+ref, signer commit, and source SHA. The bundle verifier validates OCI config,
+manifest and layers, Linux/amd64 platform and source labels, SPA identity, and
+the exact bundle inventory. The outer GitHub artifact digest and inner release
+bundle checksum identify different serialized files; both are recorded.
+
+For a private repository, provide a short-lived fine-grained credential in
+`OPERATOROS_RELEASE_TOKEN`, scoped to this repository with [Actions: read](https://docs.github.com/en/rest/actions/artifacts#fine-grained-access-tokens-for-get-an-artifact)
+and [Attestations: read](https://docs.github.com/en/rest/repos/attestations) only.
+The script maps this dedicated variable to `GH_TOKEN` only for GitHub API
+requests and `gh attestation verify`; it ignores an ambient `GH_TOKEN` and never
+writes the credential to config, artifact, or application environment. Do not
+use the API/backup environment file as a credential source. Verification needs
+network access to GitHub and Sigstore trust data. Although the bundle has
+checksums, offline verification is not supported by this command: lack of
+GitHub or attestation evidence fails closed.
+
+`deploy` obtains a nonblocking exclusive lock before downloading or changing
+application state. It checks the dedicated rootless Podman context, the current
+user systemd manager and exact API/Caddy Quadlet identities, directory ownership,
+capacity, current image and SPA rollback availability, loopback health, and a
+recent encrypted backup. It imports into the existing service store without a
+build, checks the image config ID and labels, validates the current SQLite
+schema with the candidate image in a separate disposable rootless VFS store and
+a read-only data mount, then stages the SPA under a release-specific directory.
+It atomically replaces the API Quadlet image reference and SPA symlink, restarts
+the existing API then Caddy services, and checks health/readiness, a SPA route,
+and the unauthenticated API response. It does not migrate or restore SQLite.
+
+The private TOML config is host-specific and must be mode `0600`, owned by the
+deploying non-root user. It identifies the data/deployment roots, existing
+Quadlet files and service names, rootless Podman storage, loopback URLs, free
+space/inode floors, and maximum backup age. Keep that config, API environment
+file, encryption keys, backup metadata, logs, current release record, and
+transaction snapshots outside Git. The CLI only recognizes the existing
+`operatoros-lite-api.service` and `operatoros-lite-caddy.service` identities.
+
+The config contains exactly these keys. Paths must already exist, be absolute,
+canonical (no symlink components), and be owned by the deploying user. The
+dedicated storage paths and SQLite data must remain under the configured root.
+
+| Key | Required value |
+| --- | --- |
+| `root` | Private deployment root, for example `/mnt/podman-data/operatoros` |
+| `expected_uid` | Numeric UID of the non-root account running rootless Podman |
+| `storage_conf` | Dedicated `storage.conf` under `root/deploy` |
+| `graphroot` | Rootless image store under `root/podman-rootless` |
+| `runroot` | Dedicated runroot under `root/podman-rootless`, or `/run/user/<expected_uid>/operatoros-podman-runroot` |
+| `data_dir` | Existing SQLite data directory under `root` |
+| `backup_dir` | Exactly `<data_dir>/backups`; contains encrypted backup and metadata pairs |
+| `api_unit` | Existing `operatoros-lite-api.container` in the user Quadlet directory |
+| `api_unit_copy` | Managed copy at `<root>/deploy/operatoros-lite-api.container`; must match `api_unit` before deploy |
+| `caddy_unit` | Existing `operatoros-lite-caddy.container` beside `api_unit` |
+| `api_service` | Exactly `operatoros-lite-api.service` |
+| `caddy_service` | Exactly `operatoros-lite-caddy.service` |
+| `api_url` | Explicit HTTP loopback URL and port for the API |
+| `web_url` | Explicit HTTP loopback URL and port served by Caddy |
+| `min_free_bytes` | Non-negative minimum free bytes required on deployment and image storage |
+| `min_free_inodes` | Non-negative minimum free inodes required on those filesystems |
+| `backup_max_age_seconds` | Positive maximum age for the selected backup |
+
+The config must not contain credentials. The CLI rejects missing or extra keys,
+noncanonical paths, a root user, a remote Podman context, service-name changes,
+or paths outside the dedicated deployment/data layout. Choose capacity floors
+from the actual artifact size and host filesystem; the example root above is a
+layout illustration, not an approved host setting.
+
+Before a switch, the CLI writes a durable transaction and snapshots the current
+API unit, managed unit copy, and release identity. `status` reports active or
+failed transactions without clearing them. A failed restart/health check tries
+to restore only the prior API unit and SPA target; rollback failure keeps the
+active transaction and bounded error details for operator recovery. A process
+interruption leaves the transaction marker. `rollback` accepts a retained
+release only after checking its image, SPA hashes, and schema compatibility.
+Neither deployment nor rollback restores a database backup. If rollback itself
+fails, use `status`, the retained transaction snapshot, and the user journal to
+diagnose; do not delete the marker or restore SQLite automatically.
+
+Example command failures are intentionally fail-closed: wrong SHA/run/artifact,
+unavailable attestation trust, missing bundle member, insufficient capacity,
+missing/old backup, incompatible schema, wrong service or Podman store, and
+health failure all abort. Schema preflight imports the candidate only into its
+separate disposable VFS store. Preflight failures occur before import into the
+configured service store, SPA staging, or service changes. Post-switch failures initiate application-only rollback and
+preserve diagnostics if recovery is incomplete.
+
+The older host helper and the CI release bundle are not interchangeable
+formats. The new interface verifies the CI ZIP envelope and its inner
+`operatoros-release.tar`; the ZIP envelope digest comes from GitHub's artifact
+API, while the inner checksum and attestation cover the release bundle. The
+existing live helper remains unchanged and cannot be assumed to consume this
+format. See [Ubuntu server deployment](ubuntu-server-deployment.md) for the
+current/repository-managed boundary and the still-required host review.
 
 ## Roll back the CI change
 

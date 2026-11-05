@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "8d92d61443c7a0dcea20b2c369480b3f1ff325814d2442007e904d00a3992f87",
+      "fingerprint": "0a82f654ac2a7fe2447c0a0267b1064038d600cc43dcf6287dc93fd36a8ec1f5",
       "snapshot": {
         ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "f92e0d9e3fcafef1ee5ed7b1087a0f6933edd4deba7f48e683a061c41b025143",
+        ".github/workflows/ci.yml": "9a78812c60f838560f3e92f09047a02e52e4a26937e930dc4a25a707ccc02f6b",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 02879a18efda292f72f96f1314fb05ab266715e6"
+        "Changed: .github/workflows/ci.yml at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "6be33ac58597e1b014ca34b4b74443ac73abfc5f4dc4ce2ad031f9141994834f",
+      "fingerprint": "28d071403405769b751c3fac83ef62cbd6eba686ef5ba485f33022a5160c58db",
       "snapshot": {
         ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "f92e0d9e3fcafef1ee5ed7b1087a0f6933edd4deba7f48e683a061c41b025143",
+        ".github/workflows/ci.yml": "9a78812c60f838560f3e92f09047a02e52e4a26937e930dc4a25a707ccc02f6b",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 02879a18efda292f72f96f1314fb05ab266715e6"
+        "Changed: .github/workflows/ci.yml at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -383,15 +383,15 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "0d5fbd233d9b4ad37761cd482dc3f073772b1fe83b3e0aa382f3122f1e484baf",
+      "fingerprint": "341c85c51dc4b047d0dd54fae056bee24680cf86aa9872f9f94d7f869f19dd58",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "831b5b944b38ca08b6756af39e6c1a2c8d1dcf078e0689173499f616b8659a5d"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "a3f3a761fc6ea8c496deb1c550dde34e307d9dfa8df132c1a4a033695d9ce31a"
       },
-      "head": "c2437d6c3e57f6db448ca800f6319862433add29",
+      "head": "7cfdbbe72c19a148d79699b3c402d3fdc410d535",
       "outcome": "no-change",
-      "reason": "Reviewed the CLI restore artifact path and named-pipe regression test. The change rejects non-regular files before reading and does not alter agent guidance, skills, or planning artifacts.",
+      "reason": "The API backup restore integration test only receives a scoped 15-second harness budget; no Elysia behavior, skill guidance, or package architecture changes.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at c2437d6c3e57f6db448ca800f6319862433add29"
+        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 7cfdbbe72c19a148d79699b3c402d3fdc410d535"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a56a8a6d08405c616e86787320df7f92813b6d434b5e83ec77313abce9918d5b",
+      "fingerprint": "cabfd81f57ea0ba3754caf9441afab48b35bd60024bcf73c758576018576f747",
       "snapshot": {
-        "CHANGELOG.md": "cfdd358fb00c066ee7d4a42354e86baf5942f9102d42b61fd701d2ee33c5f2af"
+        "CHANGELOG.md": "5f9f1ca70dbc255cf60d95df35d20a2b82ce8e0535379c86cbea8345d8139263"
       },
-      "head": "3622270a314dbc59b01317da619216f86148d588",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "Consumer cleanup code, regression tests, and release-bundle runbook wording do not change the installed Elysia skill guidance; no skill guidance update is warranted.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: CHANGELOG.md at 3622270a314dbc59b01317da619216f86148d588"
+        "Changed: CHANGELOG.md at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "source:COMMANDS.md": {
@@ -4823,15 +4823,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "e97297f111ef625557768fba0a6e18df5985c1a351f218cd9facc785bb14f9c2",
+      "fingerprint": "4f06b9c0b4bd577ca2b422e1b5625315c774ec81466bf4a776c701d1dc0925f9",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "9414714693a1ffe49cb62efa340be81a851fadc525ea3c5114186633b9e65831"
+        "docs/runbooks/ubuntu-server-deployment.md": "44794c37780aa035b7e7bb8d3daa3407a5b9c13268f04c81f9d49d5988f88d90"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9867,15 +9867,15 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "4af22712642decefacd618668946b6daafce642cf03894e960999f63291468bf",
+      "fingerprint": "81060b6628a9ca5b6f0111de3072d0c7e1b72085fca17c92802c91c81e21e182",
       "snapshot": {
-        "scripts/check": "0505c9dfb54dec4646df4ad317bb8934c46cdda28a249f2a134e506e7cce88d3"
+        "scripts/check": "dd7405303b1f699e30ee6031a47a7c4d94cf924407c1e11d2eb09d7a35da20dc"
       },
-      "head": "1b8bf39a1adf462acb52d280191889f470ea551b",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "Phase 2A adds only CI artifact packaging, provenance verification, synthetic consumer tests, and deployment documentation. Existing Elysia v1.4.29 routes, auth, schema, toolchain and skill guidance are unchanged; all three existing planning records retain their Elysia-only scope. Focused release-bundle rejection tests and documentation checks passed; real main attestation and bundle publication remain unexecuted by authorization.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: scripts/check at 1b8bf39a1adf462acb52d280191889f470ea551b"
+        "Changed: scripts/check at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "source:scripts/dev": {
@@ -9927,15 +9927,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "c58ea631b9a787f4dfda3fb9f006bfa22b356699b454a84e969ebf06b786286b",
+      "fingerprint": "6ef5e7921c9eb360461fc6cec1b18c6f781f52d9f3b6e0d1984bb72cf5b628ca",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "a65165b83306c366401a38d0189e16781142221561a3584ba8956b6a74020d39"
+        "docs/runbooks/release-bundles.md": "5c9863f003c9b99c9dfc09b6e903d4507b4f50fa066369618fce2656f8cfc13c"
       },
-      "head": "3622270a314dbc59b01317da619216f86148d588",
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
       "outcome": "no-change",
-      "reason": "Consumer cleanup code, regression tests, and release-bundle runbook wording do not change the installed Elysia skill guidance; no skill guidance update is warranted.",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 3622270a314dbc59b01317da619216f86148d588"
+        "Changed: docs/runbooks/release-bundles.md at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10056,6 +10056,42 @@
       "reason": "Consumer cleanup code, regression tests, and release-bundle runbook wording do not change the installed Elysia skill guidance; no skill guidance update is warranted.",
       "evidence": [
         "Changed: scripts/release-consumer-cleanup.py at 3622270a314dbc59b01317da619216f86148d588"
+      ]
+    },
+    "source:scripts/operatoros-deploy.sh": {
+      "fingerprint": "3817c8aabb40cdf859efd172c58dad442ca0d8553fb7eb761fc8934721e4a69f",
+      "snapshot": {
+        "scripts/operatoros-deploy.sh": "b78b263dd8bd2d7e49a13216212f912ade61ee67a55905e6e125aca77ee55096"
+      },
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "outcome": "no-change",
+      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "evidence": [
+        "Changed: scripts/operatoros-deploy.sh at a65917021725c62f3326abac03a654b5438ad4b6"
+      ]
+    },
+    "source:scripts/operatoros_deploy.py": {
+      "fingerprint": "265274e29e9d00658b639b8b512f8e0f5c57c011ff33b9e64f3dc33f018bd1cc",
+      "snapshot": {
+        "scripts/operatoros_deploy.py": "bddbcb288fa1c28dd223474f38e8187252fc750fd918e5d2efcc184ae347b62b"
+      },
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "outcome": "no-change",
+      "reason": "Phase 3A deployment CLI: attested artifact verification, rootless host preflight, transaction safety, rollback, docs, and disposable Podman integration",
+      "evidence": [
+        "Changed: scripts/operatoros_deploy.py at a65917021725c62f3326abac03a654b5438ad4b6"
+      ]
+    },
+    "source:scripts/tests/test_operatoros_deploy.py": {
+      "fingerprint": "5efbbd4c5e3df066832856aecbfda4def9e89720757fcb65c797c0552a77e91e",
+      "snapshot": {
+        "scripts/tests/test_operatoros_deploy.py": "69e7ea8f1b986e3bb9c4615b2fbb66e91a06d110c474b0fd3570a80c024d5eeb"
+      },
+      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "outcome": "no-change",
+      "reason": "Phase 3A deployment CLI: attested artifact verification, rootless host preflight, transaction safety, rollback, docs, and disposable Podman integration",
+      "evidence": [
+        "Changed: scripts/tests/test_operatoros_deploy.py at a65917021725c62f3326abac03a654b5438ad4b6"
       ]
     }
   }
