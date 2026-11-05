@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "cabfd81f57ea0ba3754caf9441afab48b35bd60024bcf73c758576018576f747",
+      "fingerprint": "266b1b2c2dc94dc836b922f8506e43d5187d81fa9a89ad2fe006ac926c024f07",
       "snapshot": {
-        "CHANGELOG.md": "5f9f1ca70dbc255cf60d95df35d20a2b82ce8e0535379c86cbea8345d8139263"
+        "CHANGELOG.md": "c4418a45693af75963c794ebd62dccf37c4b86cc3723e3ec97193c6dcea24f57"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
       "evidence": [
-        "Changed: CHANGELOG.md at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: CHANGELOG.md at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
       ]
     },
     "source:COMMANDS.md": {
@@ -4823,15 +4823,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "4f06b9c0b4bd577ca2b422e1b5625315c774ec81466bf4a776c701d1dc0925f9",
+      "fingerprint": "6138abc0937840ad11d4f7b8c72912d1607db3b5377530846ec9a0bf8c2ea8e3",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "44794c37780aa035b7e7bb8d3daa3407a5b9c13268f04c81f9d49d5988f88d90"
+        "docs/runbooks/ubuntu-server-deployment.md": "b44e14d5bc7181f3c92691a0b992303494cab40910d76954c00967911f012579"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9927,15 +9927,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "6ef5e7921c9eb360461fc6cec1b18c6f781f52d9f3b6e0d1984bb72cf5b628ca",
+      "fingerprint": "98297a4dc136fa5b04f40f292a368e83ff111cf54d3850fbcd9d7e7bf016344a",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "5c9863f003c9b99c9dfc09b6e903d4507b4f50fa066369618fce2656f8cfc13c"
+        "docs/runbooks/release-bundles.md": "4eb247fde3df79e941202cb0c85f81f7f07eabc0f30914fae8997f1a0b6b974e"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: docs/runbooks/release-bundles.md at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9963,15 +9963,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "54b6bd596132ce78dca6c9418588bfa1e66fbf1d739d617fdf01acf589f4f5f9",
+      "fingerprint": "922681d278b5445d4d1b13428238cfde458fe6ed1a52de4a11bfce981314a5df",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "10813ffce1af4fd994e87b3641ff1a327f9bc787af46d81bc670f3afd94f0959"
+        "scripts/tests/test_release_bundle.py": "f03563e12642e280b010a2104642df87ab0b16855ce33f5a5f3006972479926a"
       },
-      "head": "3622270a314dbc59b01317da619216f86148d588",
+      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
       "outcome": "no-change",
-      "reason": "Consumer cleanup code, regression tests, and release-bundle runbook wording do not change the installed Elysia skill guidance; no skill guidance update is warranted.",
+      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 3622270a314dbc59b01317da619216f86148d588"
+        "Changed: scripts/tests/test_release_bundle.py at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10047,15 +10047,15 @@
       ]
     },
     "source:scripts/release-consumer-cleanup.py": {
-      "fingerprint": "6a33ba2c0267966acdc3f1177f3e36390cc14680eadffd638811c874f95714c1",
+      "fingerprint": "c967af443289a04a9f2bd058a0a99dd9a5e112cf3454beadbc13b7291ce5e2e0",
       "snapshot": {
-        "scripts/release-consumer-cleanup.py": "b613e10eae9edc28696c15d95ee882d53d8af7281f1e280217e841efbce9564e"
+        "scripts/release-consumer-cleanup.py": "8e0d9b5c9774ddd0228b40cc710241562936da75b9213bff15365fd6b0349fd8"
       },
-      "head": "3622270a314dbc59b01317da619216f86148d588",
+      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
       "outcome": "no-change",
-      "reason": "Consumer cleanup code, regression tests, and release-bundle runbook wording do not change the installed Elysia skill guidance; no skill guidance update is warranted.",
+      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
       "evidence": [
-        "Changed: scripts/release-consumer-cleanup.py at 3622270a314dbc59b01317da619216f86148d588"
+        "Changed: scripts/release-consumer-cleanup.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
       ]
     },
     "source:scripts/operatoros-deploy.sh": {
@@ -10071,27 +10071,51 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "265274e29e9d00658b639b8b512f8e0f5c57c011ff33b9e64f3dc33f018bd1cc",
+      "fingerprint": "189d84615b834e43e959483dc632747af46953fb00bb5e16abb9a4b386ecef3c",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "bddbcb288fa1c28dd223474f38e8187252fc750fd918e5d2efcc184ae347b62b"
+        "scripts/operatoros_deploy.py": "081d69bf55dc48f6619b1dafe563ce710104e0b797f2a8994245122d7e829f0c"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
       "outcome": "no-change",
-      "reason": "Phase 3A deployment CLI: attested artifact verification, rootless host preflight, transaction safety, rollback, docs, and disposable Podman integration",
+      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: scripts/operatoros_deploy.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "5efbbd4c5e3df066832856aecbfda4def9e89720757fcb65c797c0552a77e91e",
+      "fingerprint": "2964e859baf5f644a4e201ba94410f341f71dd35174872affd6b968dfdf9e17f",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "69e7ea8f1b986e3bb9c4615b2fbb66e91a06d110c474b0fd3570a80c024d5eeb"
+        "scripts/tests/test_operatoros_deploy.py": "569cebb2b40f993b2c514b9bea47d2bc05f4f9cee0a739cef77a5a9fad6205e0"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
       "outcome": "no-change",
-      "reason": "Phase 3A deployment CLI: attested artifact verification, rootless host preflight, transaction safety, rollback, docs, and disposable Podman integration",
+      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+      ]
+    },
+    "source:.github/workflows/deployment-rehearsal.yml": {
+      "fingerprint": "30a46d38991678ca320e610ab24f4cd7b0464f81a7e8373f8d0067e19b502ee7",
+      "snapshot": {
+        ".github/workflows/deployment-rehearsal.yml": "66cf06f2ff204b850a5238987c7a4e3b9aa8c848ead8099f3650497e7921b59a"
+      },
+      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
+      "outcome": "no-change",
+      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
+      "evidence": [
+        "Changed: .github/workflows/deployment-rehearsal.yml at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
+      ]
+    },
+    "source:scripts/deployment-rehearsal.py": {
+      "fingerprint": "0848973c07db26f92cc20a96f952c724ca358bf5ff898d4cb6195e49edb3d201",
+      "snapshot": {
+        "scripts/deployment-rehearsal.py": "2a4a153632e20d17d60c7ec1fcd8aaa66d674a278bcf4695b1bd5201dd04153c"
+      },
+      "head": "13965a126d0edc8063f454a3ceecdcad396d3a2c",
+      "outcome": "no-change",
+      "reason": "Reviewed the rehearsal diagnostics and credential-handling changes; they affect no Elysia skill guidance, so the existing guidance remains accurate.",
+      "evidence": [
+        "Changed: scripts/deployment-rehearsal.py at 13965a126d0edc8063f454a3ceecdcad396d3a2c"
       ]
     }
   }

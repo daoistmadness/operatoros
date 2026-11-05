@@ -15,6 +15,20 @@ import tomllib
 
 WORKSPACE_PREFIX = "operatoros-release-consumer."
 CONTAINERS = ("operatoros-release-api", "operatoros-release-web")
+WORKSPACE_PROFILES = {
+    WORKSPACE_PREFIX: {
+        "containers": CONTAINERS,
+        "storage_conf": "storage.conf",
+        "graphroot": "graphroot",
+        "runroot": "runroot",
+    },
+    "operatoros-deployment-rehearsal.": {
+        "containers": ("operatoros-lite-api", "operatoros-lite-caddy"),
+        "storage_conf": "deploy/storage.conf",
+        "graphroot": "podman-rootless/graphroot",
+        "runroot": "podman-rootless/runroot",
+    },
+}
 MAX_LOG_BYTES = 16_384
 
 
@@ -40,12 +54,21 @@ def canonical_directory(value: str, label: str) -> Path:
     return raw
 
 
+def workspace_profile(workspace: Path) -> tuple[str, dict[str, object]] | None:
+    for prefix, profile in WORKSPACE_PROFILES.items():
+        if workspace.name.startswith(prefix):
+            return prefix, profile
+    return None
+
+
 def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Path, Path, Path]:
     temp_parent = canonical_directory(temp_parent_value, "temporary parent")
     workspace = canonical_directory(workspace_value, "consumer workspace")
-    if workspace.parent != temp_parent or not workspace.name.startswith(WORKSPACE_PREFIX):
+    selected = workspace_profile(workspace)
+    if workspace.parent != temp_parent or selected is None:
         raise CleanupError("Refusing cleanup outside the unique consumer workspace.")
-    suffix = workspace.name.removeprefix(WORKSPACE_PREFIX)
+    prefix, profile = selected
+    suffix = workspace.name.removeprefix(prefix)
     if len(suffix) < 8 or not suffix.isalnum():
         raise CleanupError("Consumer workspace name must have a unique temporary suffix.")
     protected_roots = [
@@ -81,7 +104,7 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
         raise CleanupError("Refusing to clean a mounted consumer workspace.")
 
     storage_value = os.environ.get("CONTAINERS_STORAGE_CONF")
-    storage_conf = workspace / "storage.conf"
+    storage_conf = workspace / str(profile["storage_conf"])
     if storage_value != str(storage_conf):
         raise CleanupError("Podman storage config is not scoped to the consumer workspace.")
     try:
@@ -101,17 +124,21 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
     storage = config.get("storage")
     if not isinstance(storage, dict) or storage.get("driver") != "vfs":
         raise CleanupError("Consumer Podman store must use the isolated VFS driver.")
-    graphroot = workspace / "graphroot"
-    runroot = workspace / "runroot"
+    graphroot = workspace / str(profile["graphroot"])
+    runroot = workspace / str(profile["runroot"])
     if storage.get("graphroot") != str(graphroot) or storage.get("runroot") != str(runroot):
         raise CleanupError("Podman graphroot and runroot must be direct workspace children.")
     for label, path in (("graphroot", graphroot), ("runroot", runroot)):
-        try:
-            path_stat = path.lstat()
-        except FileNotFoundError:
-            continue
-        if not stat.S_ISDIR(path_stat.st_mode) or stat.S_ISLNK(path_stat.st_mode) or os.path.ismount(path):
-            raise CleanupError(f"Refusing unsafe consumer {label} path.")
+        current = workspace
+        for part in path.relative_to(workspace).parts:
+            current /= part
+            try:
+                path_stat = current.lstat()
+            except FileNotFoundError:
+                break
+            if (not stat.S_ISDIR(path_stat.st_mode) or stat.S_ISLNK(path_stat.st_mode) or
+                os.path.ismount(current)):
+                raise CleanupError(f"Refusing unsafe consumer {label} path.")
 
     if not shutil.rmtree.avoids_symlink_attacks:
         raise CleanupError("This platform cannot safely remove the consumer workspace.")
@@ -143,7 +170,12 @@ def diagnostic_log(path_value: str | None, temp_parent: Path, workspace: Path) -
     if not path.is_absolute():
         raise CleanupError("Diagnostics directory must be an absolute path.")
     expected_parent = Path(os.path.realpath(path.parent))
-    if path.name != "release-diagnostics" or expected_parent != temp_parent:
+    profile = workspace_profile(workspace)
+    expected_name = "release-diagnostics"
+    if profile is not None and profile[0] == "operatoros-deployment-rehearsal.":
+        suffix = workspace.name.removeprefix(profile[0])
+        expected_name = "operatoros-deployment-rehearsal-diagnostics." + suffix
+    if path.name != expected_name or expected_parent != temp_parent:
         raise CleanupError("Refusing diagnostics outside the runner temporary directory.")
     if workspace == path or workspace in path.parents:
         raise CleanupError("Diagnostics must remain outside the consumer workspace.")
@@ -218,20 +250,29 @@ def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
     # store roots here; the host user removes the remaining workspace after Podman exits.
     validate_workspace(str(workspace), str(temp_parent))
     assert_no_mounts_below(workspace)
-    for name in ("graphroot", "runroot"):
-        path = workspace / name
+    selected = workspace_profile(workspace)
+    if selected is None:
+        raise CleanupError("Unknown disposable workspace profile.")
+    _prefix, profile = selected
+    for key in ("graphroot", "runroot"):
+        path = workspace / str(profile[key])
         try:
             info = path.lstat()
         except FileNotFoundError:
             continue
         if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or os.path.ismount(path):
-            raise CleanupError(f"Refusing unsafe consumer {name} removal.")
+            raise CleanupError(f"Refusing unsafe consumer {key} removal.")
         shutil.rmtree(path)
     return 0
 
 
 def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
-    if path.parent != workspace:
+    selected = workspace_profile(workspace)
+    if selected is None:
+        raise CleanupError("Refusing residual cleanup for an unknown workspace profile.")
+    _prefix, profile = selected
+    allowed_paths = {workspace / str(profile[key]) for key in ("graphroot", "runroot")}
+    if path not in allowed_paths:
         raise CleanupError("Refusing store cleanup outside the consumer workspace.")
     try:
         root_stat = path.lstat()
@@ -275,7 +316,12 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
         log_path = None
         failures += 1
 
-    removed = run_podman(["rm", "--force", "--ignore", *CONTAINERS], workspace, log_path)
+    selected = workspace_profile(workspace)
+    if selected is None:
+        append_log(log_path, "Unknown disposable workspace profile; refusing cleanup.")
+        return 1
+    _prefix, profile = selected
+    removed = run_podman(["rm", "--force", "--ignore", *profile["containers"]], workspace, log_path)
     if removed is None or removed.returncode != 0:
         code = "unavailable" if removed is None else str(removed.returncode)
         append_log(log_path, f"Podman consumer container removal failed with exit={code}.")
@@ -305,8 +351,12 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
         try:
             validate_workspace(str(workspace), str(temp_parent))
             assert_no_mounts_below(workspace)
-            for name in ("graphroot", "runroot"):
-                remove_host_owned_store_residual(workspace / name, workspace)
+            selected = workspace_profile(workspace)
+            if selected is None:
+                raise CleanupError("Unknown disposable workspace profile.")
+            _prefix, profile = selected
+            for key in ("graphroot", "runroot"):
+                remove_host_owned_store_residual(workspace / str(profile[key]), workspace)
             assert_no_mounts_below(workspace)
             shutil.rmtree(workspace)
         except (CleanupError, OSError) as error:

@@ -46,6 +46,7 @@ MAX_SPA_BYTES = 256 * 1024 * 1024
 API_NAME = "operatoros-lite-api"
 CADDY_NAME = "operatoros-lite-caddy"
 CADDY_IMAGE = "docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5"
+REHEARSAL_WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
 
 
 class DeployError(RuntimeError):
@@ -364,6 +365,66 @@ def path_from_config(value: str, label: str, must_exist: bool = True) -> Path:
     return path
 
 
+def deployment_profile(cfg: dict[str, Any], root: Path) -> str:
+    production_services = ("operatoros-lite-api.service", "operatoros-lite-caddy.service")
+    services = (cfg["api_service"], cfg["caddy_service"])
+    if services == production_services:
+        return "host"
+
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "")
+    runner_temp_value = os.environ.get("RUNNER_TEMP", "")
+    if (os.environ.get("GITHUB_ACTIONS") != "true" or
+        os.environ.get("GITHUB_REPOSITORY", "").lower() != REPOSITORY or
+        os.environ.get("GITHUB_REF") != "refs/heads/main" or
+        os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" or
+        not re.fullmatch(r"[1-9][0-9]{5,19}", run_id) or
+        not re.fullmatch(r"[1-9][0-9]{0,8}", attempt) or
+        not runner_temp_value):
+        raise DeployError("non-host service identities are allowed only in the approved GitHub rehearsal context")
+    runner_temp = Path(runner_temp_value)
+    try:
+        runner_info = runner_temp.lstat()
+        canonical_temp = runner_temp.resolve(strict=True)
+    except OSError as error:
+        raise DeployError("GitHub runner temporary directory is unavailable") from error
+    if (not stat.S_ISDIR(runner_info.st_mode) or stat.S_ISLNK(runner_info.st_mode) or
+        runner_info.st_uid != os.getuid() or canonical_temp != runner_temp):
+        raise DeployError("GitHub runner temporary directory has unsafe ownership or path identity")
+    suffix = run_id + "a" + attempt
+    expected_root = canonical_temp / (REHEARSAL_WORKSPACE_PREFIX + suffix)
+    expected_services = (f"operatoros-rehearsal-{run_id}-{attempt}-api.service",
+                         f"operatoros-rehearsal-{run_id}-{attempt}-caddy.service")
+    if services != expected_services or root != expected_root:
+        raise DeployError("rehearsal service names and root must be unique to this GitHub Actions run")
+    protected_roots = [
+        Path.home() / ".local/share/containers/storage",
+        Path("/var/lib/containers/storage"),
+        Path("/run/containers/storage"),
+        Path("/mnt/podman-data"),
+        Path.home() / "code/repos/operatoros",
+        Path.home() / "code/worktrees/operatoros",
+    ]
+    for name, suffix in (("XDG_DATA_HOME", "containers/storage"),
+                         ("XDG_RUNTIME_DIR", "containers"),
+                         ("OPERATOROS_DATA_DIR", "")):
+        value = os.environ.get(name)
+        if value:
+            candidate = Path(value)
+            if not candidate.is_absolute() or ".." in candidate.parts:
+                raise DeployError(f"refusing rehearsal with an ambiguous {name} path")
+            protected_roots.append(candidate / suffix if suffix else candidate)
+    for protected in protected_roots:
+        protected = Path(os.path.realpath(protected))
+        if root == protected or root in protected.parents or protected in root.parents:
+            raise DeployError("rehearsal workspace overlaps a protected or shared storage path")
+    workspace_info = root.lstat()
+    if (not stat.S_ISDIR(workspace_info.st_mode) or stat.S_ISLNK(workspace_info.st_mode) or
+        workspace_info.st_uid != os.getuid() or stat.S_IMODE(workspace_info.st_mode) != 0o700):
+        raise DeployError("rehearsal workspace must be a private runner-owned directory")
+    return "rehearsal"
+
+
 def load_config(path: Path) -> dict[str, Any]:
     try:
         info = path.lstat()
@@ -388,8 +449,6 @@ def load_config(path: Path) -> dict[str, Any]:
             raise DeployError(f"invalid systemd service name: {key}")
         if not re.fullmatch(r"[A-Za-z0-9_.@-]+\.service", cfg[key]):
             raise DeployError(f"invalid systemd service name: {key}")
-    if cfg["api_service"] != "operatoros-lite-api.service" or cfg["caddy_service"] != "operatoros-lite-caddy.service":
-        raise DeployError("service names must identify the existing OperatorOS Lite Quadlet services")
     for key in ("api_url", "web_url"):
         if not isinstance(cfg[key], str):
             raise DeployError(f"{key} must be an explicit loopback HTTP URL with a port")
@@ -402,6 +461,7 @@ def load_config(path: Path) -> dict[str, Any]:
     for key in paths:
         cfg[key] = path_from_config(cfg[key], key)
     root = cfg["root"].resolve(strict=True)
+    cfg["profile"] = deployment_profile(cfg, root)
     for key in ("storage_conf", "graphroot"):
         if not cfg[key].resolve(strict=True).is_relative_to(root):
             raise DeployError(f"{key} must remain inside the configured rootless OperatorOS storage root")
@@ -415,7 +475,10 @@ def load_config(path: Path) -> dict[str, Any]:
              cfg["runroot"].resolve(strict=True) == runtime_runroot)):
         raise DeployError("Podman storage configuration must use the dedicated deployment-owned rootless store")
     unit_dir = cfg["api_unit"].parent.resolve(strict=True)
-    if (cfg["caddy_unit"].parent.resolve(strict=True) != unit_dir or
+    expected_api_unit = cfg["api_service"].removesuffix(".service") + ".container"
+    expected_caddy_unit = cfg["caddy_service"].removesuffix(".service") + ".container"
+    if (cfg["api_unit"].name != expected_api_unit or cfg["caddy_unit"].name != expected_caddy_unit or
+        cfg["caddy_unit"].parent.resolve(strict=True) != unit_dir or
         unit_dir.parts[-3:] != (".config", "containers", "systemd") or
         cfg["api_unit_copy"].resolve(strict=True) != (root / "deploy/operatoros-lite-api.container").resolve(strict=True)):
         raise DeployError("Quadlet inputs must use the current user's standard Quadlet directory and managed API copy")
@@ -734,8 +797,9 @@ def preflight(cfg: dict[str, Any], release: VerifiedRelease, backup_name: str) -
     require_directory(cfg["backup_dir"], uid, "backup directory", 0o077)
     for key in ("storage_conf", "api_unit", "api_unit_copy", "caddy_unit"):
         require_regular_owned(cfg[key], uid, key)
-    if cfg["api_unit"].name != "operatoros-lite-api.container" or cfg["caddy_unit"].name != "operatoros-lite-caddy.container":
-        raise DeployError("Quadlet paths do not identify the existing OperatorOS API/Caddy services")
+    if (cfg["api_unit"].name != cfg["api_service"].removesuffix(".service") + ".container" or
+        cfg["caddy_unit"].name != cfg["caddy_service"].removesuffix(".service") + ".container"):
+        raise DeployError("Quadlet filenames must match their configured API/Caddy service identities")
     load_unit_image(cfg["api_unit"], API_NAME)
     verify_runtime_units(cfg)
     if cfg["api_unit"].read_bytes() != cfg["api_unit_copy"].read_bytes():

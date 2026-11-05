@@ -2,15 +2,16 @@ import importlib.util
 import io
 import json
 import os
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import pwd
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
-import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('release', ROOT / 'scripts/release-bundle.py')
@@ -19,6 +20,9 @@ spec.loader.exec_module(m)
 cleanup_spec = importlib.util.spec_from_file_location('release_consumer_cleanup', ROOT / 'scripts/release-consumer-cleanup.py')
 cleanup = importlib.util.module_from_spec(cleanup_spec)
 cleanup_spec.loader.exec_module(cleanup)
+rehearsal_spec = importlib.util.spec_from_file_location('deployment_rehearsal', ROOT / 'scripts/deployment-rehearsal.py')
+rehearsal = importlib.util.module_from_spec(rehearsal_spec)
+rehearsal_spec.loader.exec_module(rehearsal)
 SHA = 'a' * 40
 
 
@@ -115,6 +119,284 @@ class BundleTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'trusted manual main'): m.build('/unused', 'podman')
                 self.assertEqual(command.call_count, 1)
 
+
+class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
+        secret_value = 'synthetic-secret-value'
+        child_output = 'synthetic-child-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-diagnostics-test-') as temporary:
+            diagnostics = Path(temporary)
+            success = subprocess.CompletedProcess([], 0, child_output, child_output)
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=success) as command:
+                rehearsal.create_podman_secret(
+                    'operatoros-rehearsal-auth', secret_value, {'HOME': '/private'},
+                )
+
+            args = command.call_args.args[0]
+            self.assertEqual(args, ['podman', 'secret', 'create', 'operatoros-rehearsal-auth', '-'])
+            self.assertNotIn(secret_value, args)
+            self.assertEqual(command.call_args.kwargs['input'], secret_value)
+            self.assertNotIn(child_output, (diagnostics / 'rehearsal.log').read_text())
+
+            failure = subprocess.CompletedProcess([], 23, child_output, child_output)
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=failure):
+                with self.assertRaises(rehearsal.RehearsalError) as error:
+                    rehearsal.create_podman_secret(
+                        'operatoros-rehearsal-auth', secret_value, {'HOME': '/private'},
+                    )
+            self.assertNotIn(secret_value, str(error.exception))
+            self.assertNotIn(child_output, str(error.exception))
+            self.assertNotIn(child_output, (diagnostics / 'rehearsal.log').read_text())
+
+    def test_deployment_cli_failure_does_not_log_token_or_child_output(self):
+        token = 'synthetic-release-token-marker'
+        child_output = 'synthetic-cli-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cli-test-') as temporary:
+            diagnostics = Path(temporary)
+            result = subprocess.CompletedProcess([], 23, child_output, child_output)
+            stdout = io.StringIO()
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {'PATH': '/usr/bin:/bin', 'OPERATOROS_RELEASE_TOKEN': token}, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', return_value=result) as command, \
+                 redirect_stdout(stdout):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'non-secret rehearsal log') as error:
+                    rehearsal.run_cli(['operatoros-deploy', 'verify'], needs_token=True)
+
+            self.assertNotIn(token, command.call_args.args[0])
+            self.assertEqual(command.call_args.kwargs['env']['OPERATOROS_RELEASE_TOKEN'], token)
+            self.assertNotIn(token, str(error.exception))
+            self.assertNotIn(child_output, str(error.exception))
+            self.assertNotIn(token, stdout.getvalue())
+            self.assertNotIn(child_output, stdout.getvalue())
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertNotIn(token, diagnostic)
+            self.assertNotIn(child_output, diagnostic)
+
+    def test_successful_secret_setup_keeps_credentials_out_of_files_arguments_and_logs(self):
+        child_output = 'synthetic-subprocess-output-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-success-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            calls = []
+
+            def successful_process(args, **kwargs):
+                calls.append((args, kwargs))
+                if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
+                    data_dir = Path(kwargs['env']['OPERATOROS_DATA_DIR'])
+                    (data_dir / 'operatoros.sqlite').write_bytes(b'synthetic database')
+                return subprocess.CompletedProcess(args, 0, child_output, child_output)
+
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {
+                     'GITHUB_RUN_ID': '123456789',
+                     'GITHUB_RUN_ATTEMPT': '1',
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                     'PATH': '/usr/bin:/bin',
+                 }, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=successful_process):
+                username, password, cookie_secret, backup_key, auth_name, backup_name = \
+                    rehearsal.setup_synthetic_database(workspace, SHA)
+
+            self.assertEqual(len(calls), 5)
+            secret_calls = calls[:2]
+            self.assertEqual(secret_calls[0][0], ['podman', 'secret', 'create', auth_name, '-'])
+            self.assertEqual(secret_calls[1][0], ['podman', 'secret', 'create', backup_name, '-'])
+            self.assertEqual(secret_calls[0][1]['input'], cookie_secret)
+            self.assertEqual(secret_calls[1][1]['input'], backup_key)
+            seed_args, seed_kwargs = calls[3]
+            self.assertNotIn(password, seed_args)
+            self.assertEqual(seed_kwargs['env']['OPERATOROS_E2E_ADMIN_PASSWORD'], password)
+            self.assertEqual(seed_kwargs['env']['OPERATOROS_E2E_ADMIN_USERNAME'], username)
+            for args, _ in calls:
+                for value in (password, cookie_secret, backup_key):
+                    self.assertNotIn(value, args)
+
+            api_env = (workspace / 'deploy/api.env').read_text()
+            self.assertNotIn(password, api_env)
+            self.assertNotIn(cookie_secret, api_env)
+            self.assertNotIn(backup_key, api_env)
+            self.assertNotIn('AUTH_COOKIE_SECRET=', api_env)
+            self.assertNotIn('BACKUP_ENCRYPTION_KEY=', api_env)
+            persisted = [path.read_bytes() for path in workspace.rglob('*') if path.is_file()]
+            for value in (password, cookie_secret, backup_key):
+                self.assertFalse(any(value.encode() in contents for contents in persisted))
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertNotIn(child_output, diagnostic)
+            for value in (password, cookie_secret, backup_key):
+                self.assertNotIn(value, diagnostic)
+
+    def test_diagnostic_logger_rejects_unapproved_dynamic_text(self):
+        with self.assertRaisesRegex(rehearsal.RehearsalError, 'not allowlisted'):
+            rehearsal.log('synthetic-password-or-cookie-secret')
+
+    def test_api_environment_contains_no_authentication_or_backup_secrets(self):
+        values = rehearsal.api_environment(SHA, 'http://127.0.0.1:18080')
+        rendered = ''.join(f'{key}={value}\n' for key, value in values.items())
+
+        self.assertNotIn('AUTH_COOKIE_SECRET', values)
+        self.assertNotIn('BACKUP_ENCRYPTION_KEY', values)
+        self.assertNotIn('Synthetic-', rendered)
+        self.assertIn('BACKUP_ENCRYPTION_KEY_ID=', rendered)
+
+    def test_quadlet_references_run_scoped_podman_secrets_without_values(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-test-') as temporary:
+            workspace = Path(temporary) / 'workspace'
+            unit_dir = Path(temporary) / 'units'
+            for directory in ('deploy', 'data', 'podman-rootless/graphroot', 'podman-rootless/runroot'):
+                (workspace / directory).mkdir(parents=True, exist_ok=True)
+            unit_dir.mkdir()
+            api_unit, _, api_copy = rehearsal.write_quadlets(
+                workspace, unit_dir, 'operatoros-rehearsal-api.service',
+                'operatoros-rehearsal-caddy.service', 18081, 18080,
+                'localhost/operatoros-api:' + SHA,
+                'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(),
+            )
+
+            rendered = api_unit.read_text(encoding='utf-8') + api_copy.read_text(encoding='utf-8')
+            self.assertIn('Secret=operatoros-rehearsal-auth,type=env,target=AUTH_COOKIE_SECRET', rendered)
+            self.assertIn('Secret=operatoros-rehearsal-backup,type=env,target=BACKUP_ENCRYPTION_KEY', rendered)
+            self.assertNotIn('synthetic-secret-value', rendered)
+
+    def test_synthetic_login_uses_memory_request_and_cookie_jar(self):
+        class Response(io.BytesIO):
+            status = 200
+
+        username = 'synthetic-admin'
+        password = 'synthetic-password-only-in-memory'
+        login_response = Response(json.dumps({'username': username, 'role': 'admin'}).encode())
+        current_response = Response(b'{}')
+        opener = Mock()
+        opener.open.side_effect = [login_response, current_response]
+
+        with patch.object(rehearsal, 'build_opener', return_value=opener) as build:
+            rehearsal.login_synthetic_admin('http://127.0.0.1:18080', username, password)
+
+        handlers = build.call_args.args
+        cookie_handler = next(handler for handler in handlers
+                              if isinstance(handler, rehearsal.HTTPCookieProcessor))
+        self.assertIsInstance(cookie_handler.cookiejar, rehearsal.CookieJar)
+        login_request = opener.open.call_args_list[0].args[0]
+        self.assertEqual(login_request.full_url, 'http://127.0.0.1:18080/api/auth/login')
+        self.assertIn(password.encode(), login_request.data)
+        self.assertNotIn(password, repr(login_request.headers))
+        self.assertEqual(opener.open.call_args_list[1].args[0].full_url,
+                         'http://127.0.0.1:18080/api/auth/me')
+
+    def test_rehearsal_does_not_persist_login_or_cookie_files(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text(encoding='utf-8')
+        self.assertNotIn('synthetic-login-request.json', script)
+        self.assertNotIn('synthetic-login-response.json', script)
+        self.assertNotIn('synthetic-cookie-jar.txt', script)
+        self.assertNotIn('--cookie-jar', script)
+        self.assertNotIn('--data-binary', script)
+
+    def test_partial_secret_setup_keeps_values_private_and_reports_only_exit_code(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-partial-setup-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            calls = []
+
+            def fail_second_secret(args, **kwargs):
+                calls.append((args, kwargs))
+                return subprocess.CompletedProcess(
+                    args, 0 if len(calls) == 1 else 23,
+                    'synthetic-podman-output-marker', 'synthetic-podman-output-marker',
+                )
+
+            with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, {
+                     'GITHUB_RUN_ID': '123456789',
+                     'GITHUB_RUN_ATTEMPT': '1',
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                     'PATH': '/usr/bin:/bin',
+                 }, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=fail_second_secret):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'exit code 23'):
+                    rehearsal.setup_synthetic_database(workspace, SHA)
+
+            self.assertEqual(len(calls), 2)
+            secret_values = [call[1]['input'] for call in calls]
+            for args, kwargs in calls:
+                self.assertEqual(args[-1], '-')
+                self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
+                self.assertNotIn('BACKUP_ENCRYPTION_KEY', kwargs['env'])
+            self.assertFalse((workspace / 'deploy/api.env').exists())
+            file_contents = [path.read_bytes() for path in workspace.rglob('*') if path.is_file()]
+            for value in secret_values:
+                self.assertFalse(any(value.encode() in contents for contents in file_contents))
+            diagnostic = (diagnostics / 'rehearsal.log').read_text()
+            self.assertIn('subprocess exit=23', diagnostic)
+            self.assertNotIn('synthetic-podman-output-marker', diagnostic)
+            for value in secret_values:
+                self.assertNotIn(value, diagnostic)
+
+    def test_main_runs_cleanup_after_interruption_without_uploading_raw_outputs(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-interruption-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=KeyboardInterrupt), \
+                 patch.object(rehearsal, 'cleanup_workspace') as cleanup:
+                with self.assertRaises(KeyboardInterrupt):
+                    rehearsal.main()
+
+            cleanup.assert_called_once_with(workspace, runner_temp, diagnostics)
+            evidence = json.loads((diagnostics / 'rehearsal-evidence.json').read_text())
+            self.assertEqual(evidence['failures'], [])
+            self.assertFalse((diagnostics / 'deploy-result.json').exists())
+
+    def test_main_sanitizes_exception_text_and_cleanup_failures_in_evidence(self):
+        secret = 'synthetic-exception-secret-marker'
+        cleanup_secret = 'synthetic-cleanup-secret-marker'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-error-test-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+            stderr = io.StringIO()
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=rehearsal.RehearsalError(secret)), \
+                 patch.object(rehearsal, 'cleanup_workspace',
+                              side_effect=rehearsal.RehearsalError(cleanup_secret)), \
+                 redirect_stderr(stderr):
+                self.assertEqual(rehearsal.main(), 1)
+
+            evidence = (diagnostics / 'rehearsal-evidence.json').read_text()
+            self.assertIn('RehearsalError', evidence)
+            self.assertNotIn(secret, evidence)
+            self.assertNotIn(cleanup_secret, evidence)
+            self.assertNotIn(secret, stderr.getvalue())
+            self.assertNotIn(cleanup_secret, stderr.getvalue())
+
     def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); source = root / 'api.tar'; source.write_bytes(fixture()['operatoros-api.oci.tar'])
@@ -188,6 +470,60 @@ class BundleTests(unittest.TestCase):
         api = workflow.split('  api:\n')[1].split('\n  frontend:')[0]
         self.assertIn('OPERATOROS_TEST_ROOTLESS_PODMAN: "1"', api)
 
+    def test_deployment_rehearsal_is_manual_confirmed_read_only_and_separate(self):
+        workflow = (ROOT / '.github/workflows/deployment-rehearsal.yml').read_text()
+        triggers = workflow.split('permissions:', 1)[0]
+        self.assertIn('workflow_dispatch:', triggers)
+        self.assertNotIn('pull_request:', triggers)
+        self.assertNotIn('push:', triggers)
+        self.assertNotIn('schedule:', triggers)
+        self.assertIn('type: boolean', triggers)
+        self.assertIn('default: false', triggers)
+        self.assertIn("inputs.confirm_rehearsal == true", workflow)
+        self.assertIn("github.ref == 'refs/heads/main'", workflow)
+        self.assertIn('runs-on: ubuntu-24.04', workflow)
+        self.assertIn('contents: none', workflow)
+        job = workflow.split('  rehearsal:\n', 1)[1]
+        permissions = job.split('permissions:', 1)[1].split('steps:', 1)[0]
+        self.assertIn('actions: read', permissions)
+        self.assertIn('attestations: read', permissions)
+        self.assertIn('contents: read', permissions)
+        self.assertNotIn('id-token:', permissions)
+        self.assertNotIn('write', permissions)
+        self.assertIn('persist-credentials: false', job)
+        self.assertIn('cache-write: "false"', job)
+        self.assertIn('OPERATOROS_RELEASE_TOKEN: ${{ github.token }}', job)
+        self.assertIn('python3 scripts/deployment-rehearsal.py', job)
+        self.assertNotIn('ci.yml', job)
+        self.assertNotIn('deploy.sh', job)
+        self.assertIn('retention-days: 14', job)
+        self.assertNotIn('operatoros.sqlite', job)
+        self.assertNotIn('api.env', job)
+        self.assertNotIn('graphroot', job)
+        self.assertNotIn('deploy-result.json', job)
+
+    def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
+        for identity in (
+            '278faae7a027cf1c96326d32a9b796618d75620e',
+            '41987515713',
+            '13396749662',
+            'a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435',
+            '22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7',
+        ):
+            self.assertIn(identity, script)
+        self.assertIn('deploy.verified_artifact(request', script)
+        self.assertIn('verified.bundle_sha256 == INNER_BUNDLE_SHA256', script)
+        self.assertIn('OPERATOROS_REHEARSAL_CONFIRMED', script)
+        self.assertIn('RUNNER_TEMP', script)
+        self.assertIn('podman-rootless/graphroot', script)
+        self.assertIn('show-environment', script)
+        self.assertIn('OPERATOROS_RELEASE_TOKEN', script)
+        self.assertIn('REGISTRY_AUTH_FILE', script)
+        self.assertNotIn('podman", "build', script)
+        self.assertNotIn('sudo ', script)
+        self.assertNotIn('/mnt/podman-data/operatoros', script)
+
 
 class ReleaseConsumerCleanupTests(unittest.TestCase):
     def setUp(self):
@@ -237,8 +573,9 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         if arguments[0] == 'unshare':
             cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
             # Podman may recreate runner-owned lock directories while its namespace exits.
-            for name in ('graphroot', 'runroot'):
-                residual = workspace / name / 'podman-locks'
+            _prefix, profile = cleanup.workspace_profile(workspace)
+            for key in ('graphroot', 'runroot'):
+                residual = workspace / profile[key] / 'podman-locks'
                 residual.mkdir(parents=True)
                 (residual / 'lock').write_text('synthetic lock', encoding='utf-8')
             return subprocess.CompletedProcess(arguments, 0, '', '')
@@ -266,6 +603,61 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def test_deployment_rehearsal_profile_cleans_only_its_scoped_containers(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        graphroot = workspace / 'podman-rootless/graphroot'
+        runroot = workspace / 'podman-rootless/runroot'
+        graphroot.mkdir(parents=True)
+        runroot.mkdir()
+        storage_conf = workspace / 'deploy/storage.conf'
+        storage_conf.parent.mkdir()
+        storage_conf.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{graphroot}"\n'
+            f'runroot="{runroot}"\n',
+            encoding='utf-8',
+        )
+        storage_conf.chmod(0o600)
+        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage_conf)}
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
+        self.assertFalse(workspace.exists())
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+        self.assertEqual(self.commands[0], [
+            'rm', '--force', '--ignore', 'operatoros-lite-api', 'operatoros-lite-caddy',
+        ])
+
+    def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        storage = workspace / 'deploy/storage.conf'
+        storage.parent.mkdir()
+        external_store = self.temp_parent / 'external-store'
+        external_store.mkdir()
+        (workspace / 'podman-rootless').mkdir()
+        (workspace / 'podman-rootless/graphroot').symlink_to(external_store, target_is_directory=True)
+        (workspace / 'podman-rootless/runroot').mkdir()
+        storage.write_text(
+            '[storage]\n'
+            'driver="vfs"\n'
+            f'graphroot="{workspace / "podman-rootless/graphroot"}"\n'
+            f'runroot="{workspace / "podman-rootless/runroot"}"\n',
+            encoding='utf-8',
+        )
+        storage.chmod(0o600)
+        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage)}
+        with patch.dict(os.environ, environment, clear=True):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'unsafe consumer graphroot path'):
+                cleanup.validate_workspace(str(workspace), str(self.temp_parent))
+        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, storage)):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot'):
+                cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
+        self.assertTrue(external_store.is_dir())
+
 
     def test_cleanup_command_failure_is_reported_even_if_store_is_removed(self):
         self.rm_status = 9
@@ -521,3 +913,32 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             'missing.js")" == 404',
         ):
             self.assertIn(required, harness)
+
+
+class RehearsalUnitCleanupTests(unittest.TestCase):
+    def test_teardown_stops_only_run_scoped_quadlets_created_by_this_run(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-units-') as temp:
+            unit_dir = Path(temp)
+            services = ('operatoros-rehearsal-123456789-1-api.service',
+                        'operatoros-rehearsal-123456789-1-caddy.service')
+            api_unit, caddy_unit = tuple(
+                unit_dir / (service.removesuffix('.service') + '.container') for service in services
+            )
+            api_copy = unit_dir / 'operatoros-lite-api.container'
+            unrelated = unit_dir / 'unrelated.service'
+            for path in (api_unit, caddy_unit, api_copy, unrelated):
+                path.write_text('synthetic', encoding='utf-8')
+
+            def systemctl(arguments, **_kwargs):
+                return subprocess.CompletedProcess(arguments, 3 if 'is-active' in arguments else 0, '', '')
+
+            with patch.object(rehearsal.subprocess, 'run', side_effect=systemctl) as run:
+                rehearsal.remove_run_units(unit_dir, services, {api_unit, caddy_unit, api_copy})
+
+            commands = [call.args[0] for call in run.call_args_list]
+            self.assertEqual([command[3] for command in commands if command[2] == 'stop'], list(services))
+            self.assertEqual([command[4] for command in commands if command[2] == 'is-active'], list(services))
+            self.assertFalse(api_unit.exists())
+            self.assertFalse(caddy_unit.exists())
+            self.assertTrue(api_copy.is_file())
+            self.assertTrue(unrelated.is_file())
