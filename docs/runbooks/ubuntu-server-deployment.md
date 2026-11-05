@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-05
 ---
 
 # Ubuntu server deployment runbook
@@ -19,6 +19,50 @@ handoff and the reviewed helper-adoption boundary.
 ## Status and scope
 
 This remains a draft procedure for a single Ubuntu host. It follows the proposed [Podman deployment architecture](../decisions/podman-deployment.md). Local rootless Podman validation passed on Ubuntu 26.04.1 with synthetic data. This does not approve or validate an EC2/Ubuntu 24.04 host or production deployment.
+
+## Version-controlled release interface
+
+The repository now contains `scripts/operatoros-deploy.sh` and
+`scripts/operatoros_deploy.py`, a reviewed implementation for the existing
+two-container synthetic host topology. It does not install itself, replace the
+live `/mnt/podman-data/operatoros/deploy/deploy.sh`, or change either Quadlet.
+This code has not been run against that host. Copying it or its private config
+to a host and invoking `deploy` requires separate authorization.
+
+The interface is:
+
+~~~sh
+scripts/operatoros-deploy.sh verify \
+  --source-sha FULL_SHA --run-id RUN_ID --run-attempt ATTEMPT \
+  --artifact-id ARTIFACT_ID --artifact-name ARTIFACT_NAME \
+  --envelope-sha256 SHA256
+
+scripts/operatoros-deploy.sh status --config /private/operatoros-deploy.toml
+~~~
+
+After an explicit deployment decision and host-specific review, the operator
+can pass the same release identity to `deploy` with `--config`, the name of a
+recent encrypted backup, and `--yes`. The credential is an environment-only,
+short-lived repository-scoped `OPERATOROS_RELEASE_TOKEN` with Actions read and
+Attestations read permissions. The script ignores ambient `GH_TOKEN` and does
+not store the credential in the deployment config or API environment.
+The command verifies the artifact envelope through GitHub, verifies the signed
+inner bundle using the existing release-bundle verifier, then checks the image,
+SPA and manifest identities before proceeding. Online GitHub/Sigstore access is
+required; loss of that trust evidence blocks deployment even when checksums
+match. See [CI release bundles](release-bundles.md) for the complete workflow,
+configuration contract and failure handling.
+
+The version-controlled CLI targets the existing API and Caddy user services,
+the dedicated rootless graphroot/runroot, persistent SQLite directory, and
+versioned SPA directory. It locks deployment operations, checks the backup and
+read-only schema compatibility, snapshots application configuration, imports
+the image without rebuilding, switches the SPA atomically, and checks health,
+readiness, API proxying and a nested SPA route. It records artifact provenance
+and incomplete transactions. Rollback restores only the previous API image
+configuration and SPA target; it never restores SQLite. The CLI is not yet
+installed or validated on Ubuntu 24.04, and it does not close rootless systemd
+reboot recovery, backup ownership, or production topology approval.
 
 Do not modify an EC2 or production host from this document until the host owner approves the exact target, change scope, network policy, package sources, recovery policy, reviewers, and execution window.
 

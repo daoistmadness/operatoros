@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 
