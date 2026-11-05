@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+from http.cookiejar import CookieJar
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,7 @@ import sys
 import tempfile
 import time
 from typing import Any
+from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,10 +48,11 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
 
 
 def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60,
-        check: bool = True, log_output: bool = True) -> subprocess.CompletedProcess[str]:
+        check: bool = True, log_output: bool = True,
+        input_data: str | None = None) -> subprocess.CompletedProcess[str]:
     try:
         result = subprocess.run(args, env=env if env is not None else system_environment(), capture_output=True, text=True,
-                                timeout=timeout, check=False)
+                                input=input_data, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as error:
         raise RehearsalError(f"command could not complete: {Path(args[0]).name}: {type(error).__name__}") from error
     if log_output:
@@ -87,6 +90,11 @@ def require(condition: bool, message: str) -> None:
 def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 30) -> str:
     result = run(args, env=env, timeout=timeout, log_output=False)
     return result.stdout.strip()
+
+
+def create_podman_secret(name: str, value: str, env: dict[str, str]) -> None:
+    run(["podman", "secret", "create", name, "-"], env=env,
+        input_data=value, log_output=False)
 
 
 def require_subid_file(path: Path, username: str, uid: int) -> None:
@@ -312,6 +320,7 @@ def make_caddyfile(web_port: int, api_port: int) -> str:
 
 def write_quadlets(workspace: Path, unit_dir: Path, api_service: str, caddy_service: str,
                    api_port: int, web_port: int, image_ref: str,
+                   auth_secret_name: str, backup_secret_name: str,
                    created: set[Path]) -> tuple[Path, Path, Path]:
     root = workspace
     deploy_dir = root / "deploy"
@@ -336,6 +345,8 @@ ReadOnlyTmpfs=true
 NoNewPrivileges=true
 DropCapability=all
 EnvironmentFile={deploy_dir / "api.env"}
+Secret={auth_secret_name},type=env,target=AUTH_COOKIE_SECRET
+Secret={backup_secret_name},type=env,target=BACKUP_ENCRYPTION_KEY
 Volume={data_dir}:/var/lib/operatoros/data:rw
 
 [Service]
@@ -433,7 +444,20 @@ def image_identity_for_release(deploy: Any, release: Any, workspace: Path) -> st
     return image_ref
 
 
-def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str]:
+def api_environment(source_sha: str, origin: str) -> dict[str, str]:
+    return {
+        "NODE_ENV": "production",
+        "HOST": "0.0.0.0",
+        "PORT": "8090",
+        "OPERATOROS_DATA_DIR": "/var/lib/operatoros/data",
+        "BACKUP_ENCRYPTION_KEY_ID": "deployment-rehearsal-" + source_sha[:12],
+        "ALLOWED_ORIGINS": origin,
+        "COOKIE_SECURE": "false",
+        "ENABLE_DESTRUCTIVE_OPERATIONS": "false",
+    }
+
+
+def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str, str, str, str, str]:
     data_dir = workspace / "data"
     backup_dir = data_dir / "backups"
     data_dir.mkdir(mode=0o700)
@@ -442,19 +466,14 @@ def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str
     backup_key = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
     admin_username = "operatoros_rehearsal_" + os.environ["GITHUB_RUN_ID"]
     admin_password = "Synthetic-" + secrets.token_urlsafe(30)
+    secret_prefix = "operatoros-rehearsal-" + os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
+    auth_secret_name = secret_prefix + "-auth-cookie"
+    backup_secret_name = secret_prefix + "-backup-key"
+    podman_env = private_env(workspace)
+    create_podman_secret(auth_secret_name, cookie_secret, podman_env)
+    create_podman_secret(backup_secret_name, backup_key, podman_env)
     api_env = workspace / "deploy/api.env"
-    env_values = {
-        "NODE_ENV": "production",
-        "HOST": "0.0.0.0",
-        "PORT": "8090",
-        "OPERATOROS_DATA_DIR": "/var/lib/operatoros/data",
-        "AUTH_COOKIE_SECRET": cookie_secret,
-        "BACKUP_ENCRYPTION_KEY": backup_key,
-        "BACKUP_ENCRYPTION_KEY_ID": "deployment-rehearsal-" + source_sha[:12],
-        "ALLOWED_ORIGINS": os.environ["OPERATOROS_REHEARSAL_ORIGIN"],
-        "COOKIE_SECURE": "false",
-        "ENABLE_DESTRUCTIVE_OPERATIONS": "false",
-    }
+    env_values = api_environment(source_sha, os.environ["OPERATOROS_REHEARSAL_ORIGIN"])
     atomic_text(api_env, "".join(f"{key}={value}\n" for key, value in env_values.items()))
     base_env = private_env(workspace, include_runtime=False)
     db_env = base_env | {"OPERATOROS_DATA_DIR": str(data_dir)}
@@ -463,7 +482,7 @@ def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str
     seed_env = db_env | {"OPERATOROS_E2E_ADMIN_USERNAME": admin_username,
                          "OPERATOROS_E2E_ADMIN_PASSWORD": admin_password}
     run(["bun", "e2e/helpers/seed-test-database.ts", "--database", str(data_dir / "operatoros.sqlite"),
-         "--runtime-root", str(workspace)], env=seed_env, timeout=120)
+         "--runtime-root", str(workspace)], env=seed_env, timeout=120, log_output=False)
 
     incompatible = workspace / "schema-negative/data"
     incompatible.mkdir(mode=0o700, parents=True)
@@ -474,7 +493,22 @@ def setup_synthetic_database(workspace: Path, source_sha: str) -> tuple[str, str
         shutil.copy2(data_dir / "operatoros.sqlite-shm", incompatible / "operatoros.sqlite-shm")
     run(["bun", "-e", "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1]); db.query(\"UPDATE operatoros_schema_migrations SET version = 'invalid-rehearsal-schema'\").run(); db.close();",
          str(incompatible / "operatoros.sqlite")], env=base_env, timeout=30)
-    return admin_username, admin_password
+    return admin_username, admin_password, cookie_secret, backup_key, auth_secret_name, backup_secret_name
+
+
+def login_synthetic_admin(web_url: str, username: str, password: str) -> None:
+    opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(CookieJar()))
+    body = json.dumps({"username": username, "password": password}).encode("utf-8")
+    login_request = Request(web_url + "/api/auth/login", data=body,
+                            headers={"Content-Type": "application/json", "Origin": web_url}, method="POST")
+    with opener.open(login_request, timeout=10) as response:
+        require(response.status == 200, "synthetic login through Caddy failed")
+        login_value = json.load(response)
+    require(login_value.get("username") == username and login_value.get("role") == "admin",
+            "synthetic login returned an unexpected identity")
+    current_request = Request(web_url + "/api/auth/me")
+    with opener.open(current_request, timeout=10) as response:
+        require(response.status == 200, "authenticated synthetic API request failed")
 
 
 def wait_url(url: str, expected: int = 200, timeout: int = 60) -> None:
@@ -679,7 +713,8 @@ def rehearse(workspace: Path, diagnostics: Path,
         image_ref = image_identity_for_release(deploy, release, workspace)
         deploy.command(["podman", "pull", deploy.CADDY_IMAGE], env, timeout=300)
 
-        admin_username, admin_password = setup_synthetic_database(workspace, SOURCE_SHA)
+        (admin_username, admin_password, cookie_secret, backup_key,
+         auth_secret_name, backup_secret_name) = setup_synthetic_database(workspace, SOURCE_SHA)
         # Seed a deliberately distinct previous SPA target so rollback visibly restores application files.
         previous_spa = deploy.materialize_spa({"root": workspace}, release, "legacy-" + SOURCE_SHA)
         shell = previous_spa / "client/_shell.html"
@@ -703,19 +738,23 @@ def rehearse(workspace: Path, diagnostics: Path,
                 "schema compatibility rejection modified its synthetic SQLite fixture")
 
         # Create the encrypted backup after schema rejection and before starting services.
-        api_env = (workspace / "deploy/api.env").read_text(encoding="utf-8").splitlines()
-        backup_env = env | {line.split("=", 1)[0]: line.split("=", 1)[1]
-                            for line in api_env if "=" in line and not line.startswith("OPERATOROS_DATA_DIR=")}
-        backup_env["OPERATOROS_DATA_DIR"] = str(workspace / "data")
-        run(["bun", "apps/api/src/backup-cli.ts", "backup"], env=backup_env, timeout=120)
+        backup_env = env | api_environment(SOURCE_SHA, origin) | {
+            "OPERATOROS_DATA_DIR": str(workspace / "data"),
+            "AUTH_COOKIE_SECRET": cookie_secret,
+            "BACKUP_ENCRYPTION_KEY": backup_key,
+        }
+        run(["bun", "apps/api/src/backup-cli.ts", "backup"], env=backup_env,
+            timeout=120, log_output=False)
         backups = list((workspace / "data/backups").glob("backup_*.sqlite3"))
         require(len(backups) == 1, "expected exactly one synthetic encrypted backup")
 
         (workspace / "deploy/Caddyfile").write_text(make_caddyfile(web_port, api_port), encoding="utf-8")
         (workspace / "deploy/Caddyfile").chmod(0o600)
         create_unit_directory(unit_dir, unit_dirs_created)
-        api_unit, caddy_unit, api_copy = write_quadlets(workspace, unit_dir, api_service, caddy_service,
-                                                        api_port, web_port, image_ref, units_created)
+        api_unit, caddy_unit, api_copy = write_quadlets(
+            workspace, unit_dir, api_service, caddy_service, api_port, web_port,
+            image_ref, auth_secret_name, backup_secret_name, units_created,
+        )
         config = toml_config(workspace, api_unit, caddy_unit, api_copy, api_service, caddy_service,
                              api_port, web_port)
         cfg = deploy.load_config(config)
@@ -764,24 +803,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["bundle_sha256"] = verified.bundle_sha256
         REPORT["spa_sha256"] = release.manifest["artifacts"]["operatoros-web-client.tar.gz"]
 
-        cookie_jar = workspace / "deploy/synthetic-cookie-jar.txt"
-        login_body = workspace / "deploy/synthetic-login-response.json"
-        login_input = workspace / "deploy/synthetic-login-request.json"
-        write_json(login_input, {"username": admin_username, "password": admin_password})
-        login = subprocess.run([
-            "curl", "--silent", "--show-error", "--max-time", "10", "--cookie-jar", str(cookie_jar),
-            "--output", str(login_body), "--write-out", "%{http_code}",
-            "--header", "Content-Type: application/json", "--header", "Origin: " + cfg["web_url"],
-            "--data-binary", "@" + str(login_input), cfg["web_url"] + "/api/auth/login",
-        ], env=system_environment(), capture_output=True, text=True, check=False)
-        require(login.returncode == 0 and login.stdout == "200", "synthetic login through Caddy failed")
-        login_value = json.loads(login_body.read_text(encoding="utf-8"))
-        require(login_value.get("username") == admin_username and login_value.get("role") == "admin",
-                "synthetic login returned an unexpected identity")
-        current = subprocess.run(["curl", "--silent", "--show-error", "--max-time", "10", "--cookie", str(cookie_jar),
-                                  "--output", os.devnull, "--write-out", "%{http_code}", cfg["web_url"] + "/api/auth/me"],
-                                 env=system_environment(), capture_output=True, text=True, check=False)
-        require(current.returncode == 0 and current.stdout == "200", "authenticated synthetic API request failed")
+        login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
         wait_url(cfg["web_url"] + "/attendance/calendar", 200)
         wait_url(cfg["web_url"] + "/.env", 404)
         # The release verifier already checked the SPA archive. Ask Caddy for one real file by its retained tree.

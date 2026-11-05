@@ -10,7 +10,7 @@ import tarfile
 import tempfile
 import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('release', ROOT / 'scripts/release-bundle.py')
@@ -117,6 +117,80 @@ class BundleTests(unittest.TestCase):
             with self.subTest(event=event, ref=ref), patch.dict('os.environ', {'GITHUB_EVENT_NAME': event, 'GITHUB_REF': ref}), patch.object(m, 'run', return_value=SHA) as command:
                 with self.assertRaisesRegex(ValueError, 'trusted manual main'): m.build('/unused', 'podman')
                 self.assertEqual(command.call_count, 1)
+
+
+class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_podman_secret_is_sent_on_stdin_not_command_arguments_or_logs(self):
+        secret_value = 'synthetic-secret-value'
+        with patch.object(rehearsal, 'run') as command:
+            rehearsal.create_podman_secret('operatoros-rehearsal-auth', secret_value, {'HOME': '/private'})
+
+        args = command.call_args.args[0]
+        self.assertEqual(args, ['podman', 'secret', 'create', 'operatoros-rehearsal-auth', '-'])
+        self.assertNotIn(secret_value, args)
+        self.assertEqual(command.call_args.kwargs['input_data'], secret_value)
+        self.assertFalse(command.call_args.kwargs['log_output'])
+
+    def test_api_environment_contains_no_authentication_or_backup_secrets(self):
+        values = rehearsal.api_environment(SHA, 'http://127.0.0.1:18080')
+        rendered = ''.join(f'{key}={value}\n' for key, value in values.items())
+
+        self.assertNotIn('AUTH_COOKIE_SECRET', values)
+        self.assertNotIn('BACKUP_ENCRYPTION_KEY', values)
+        self.assertNotIn('Synthetic-', rendered)
+        self.assertIn('BACKUP_ENCRYPTION_KEY_ID=', rendered)
+
+    def test_quadlet_references_run_scoped_podman_secrets_without_values(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-test-') as temporary:
+            workspace = Path(temporary) / 'workspace'
+            unit_dir = Path(temporary) / 'units'
+            for directory in ('deploy', 'data', 'podman-rootless/graphroot', 'podman-rootless/runroot'):
+                (workspace / directory).mkdir(parents=True, exist_ok=True)
+            unit_dir.mkdir()
+            api_unit, _, api_copy = rehearsal.write_quadlets(
+                workspace, unit_dir, 'operatoros-rehearsal-api.service',
+                'operatoros-rehearsal-caddy.service', 18081, 18080,
+                'localhost/operatoros-api:' + SHA,
+                'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(),
+            )
+
+            rendered = api_unit.read_text(encoding='utf-8') + api_copy.read_text(encoding='utf-8')
+            self.assertIn('Secret=operatoros-rehearsal-auth,type=env,target=AUTH_COOKIE_SECRET', rendered)
+            self.assertIn('Secret=operatoros-rehearsal-backup,type=env,target=BACKUP_ENCRYPTION_KEY', rendered)
+            self.assertNotIn('synthetic-secret-value', rendered)
+
+    def test_synthetic_login_uses_memory_request_and_cookie_jar(self):
+        class Response(io.BytesIO):
+            status = 200
+
+        username = 'synthetic-admin'
+        password = 'synthetic-password-only-in-memory'
+        login_response = Response(json.dumps({'username': username, 'role': 'admin'}).encode())
+        current_response = Response(b'{}')
+        opener = Mock()
+        opener.open.side_effect = [login_response, current_response]
+
+        with patch.object(rehearsal, 'build_opener', return_value=opener) as build:
+            rehearsal.login_synthetic_admin('http://127.0.0.1:18080', username, password)
+
+        handlers = build.call_args.args
+        cookie_handler = next(handler for handler in handlers
+                              if isinstance(handler, rehearsal.HTTPCookieProcessor))
+        self.assertIsInstance(cookie_handler.cookiejar, rehearsal.CookieJar)
+        login_request = opener.open.call_args_list[0].args[0]
+        self.assertEqual(login_request.full_url, 'http://127.0.0.1:18080/api/auth/login')
+        self.assertIn(password.encode(), login_request.data)
+        self.assertNotIn(password, repr(login_request.headers))
+        self.assertEqual(opener.open.call_args_list[1].args[0].full_url,
+                         'http://127.0.0.1:18080/api/auth/me')
+
+    def test_rehearsal_does_not_persist_login_or_cookie_files(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text(encoding='utf-8')
+        self.assertNotIn('synthetic-login-request.json', script)
+        self.assertNotIn('synthetic-login-response.json', script)
+        self.assertNotIn('synthetic-cookie-jar.txt', script)
+        self.assertNotIn('--cookie-jar', script)
+        self.assertNotIn('--data-binary', script)
 
     def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
         with tempfile.TemporaryDirectory() as temp:

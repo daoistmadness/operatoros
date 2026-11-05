@@ -175,6 +175,19 @@ the two container names in the private store, and that verified workspace.
 It does not use `sudo`, modify system-wide settings, or touch the existing
 OperatorOS services or database.
 
+The rehearsal writes only non-secret settings to `deploy/api.env`. It creates
+the API's synthetic cookie and backup keys as run-scoped Podman secrets by
+passing their values on stdin, then references those secret names in the API
+Quadlet. The local Podman secret store is not treated as encrypted storage;
+these synthetic secrets exist only in the private disposable VFS store and are
+removed with that store during cleanup. The backup CLI receives the synthetic
+keys in its child-process environment. The seeded admin password is passed to
+the database seeder in its child-process environment and used for the login
+request in memory. Login JSON, response bodies, and the session cookie jar are
+not written to files or command arguments. These controls avoid persistent
+credential files; they do not make the runner's process memory or environment
+an encrypted secret vault.
+
 GitHub currently documents the Ubuntu 24.04 hosted image with Podman 4.9.3
 and systemd 255.4, but the hosted image changes over time. The image inventory
 does not guarantee that this job receives a working user systemd manager,
