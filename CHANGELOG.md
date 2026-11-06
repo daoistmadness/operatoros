@@ -7,6 +7,7 @@ Notable user-facing changes are recorded here.
 - Record a public summary of the read-only host integration findings and the missing attested release for the reviewed main baseline (#363).
 - Report and fail closed on an invalid rootless Podman storage context in `operatoros-deploy status`, so a default-store listing cannot be mistaken for the deployed stack (#364).
 - Document the two ingress candidates with an evidence-backed container recommendation, the deployment-root/data/container-mount distinction, and Tailscale route ownership (#364).
+- Accept GitHub Actions runs whose workflow path has no ref suffix when verifying a release artifact, while still rejecting foreign workflows and non-main refs (#365).
 - Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
 - Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.

@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "fe5ec6d53e319f09d8180e74599a0a36ef025c0f225989099ca444d3961e6897",
+      "fingerprint": "d2b590d52576ef46e526b45da223ce136cad1c82691d10502a73254dba14a56e",
       "snapshot": {
-        "CHANGELOG.md": "bdab173e8776081015a2b36147f7d84a0d33e613990889618cb90e93cd358821"
+        "CHANGELOG.md": "7c1651649577c35bffe6c387df3a3cdd1fec275953dd97e8a055630844e53ebb"
       },
-      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
+      "head": "e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4",
       "outcome": "no-change",
-      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
+      "reason": "Reviewed PR #365 release-consumer workflow identity normalization, including accepted GitHub workflow path variants and negative foreign-workflow/ref cases; #364 explicit Podman storage validation remains incorporated. No reusable skill or planning guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at e3fb995130ff18c085d8973c12db2a7875569735"
+        "Changed: CHANGELOG.md at e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4"
       ]
     },
     "source:COMMANDS.md": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "42dd9efab4113a78a6d2a8d0ca8194f3a56cc069d9c298a44e471b00becc372d",
+      "fingerprint": "8999284d7bc256ba2acb1d6ca1f2064c3c56a8a14bda560a8cbb16445e581602",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "7f5f15cbd6eec9e96a98f94196fe8ee846a327e2498d59429b41118c45933a00"
+        "scripts/operatoros_deploy.py": "a78deb108b8c0f59298d32ffdb91361c1811d0a98f67a5f3ecf2ab6694d037af"
       },
-      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
+      "head": "e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4",
       "outcome": "no-change",
-      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
+      "reason": "Reviewed PR #365 release-consumer workflow identity normalization, including accepted GitHub workflow path variants and negative foreign-workflow/ref cases; #364 explicit Podman storage validation remains incorporated. No reusable skill or planning guidance changed.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at e3fb995130ff18c085d8973c12db2a7875569735"
+        "Changed: scripts/operatoros_deploy.py at e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "ed36767812ae3977d4c80e09f4422a81d54c62acf3b38b8164386328d582fc21",
+      "fingerprint": "f940d8bc4fa51fe86f1d98e604c633f122adccede1931722a27eac87c9af9621",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "b2195a829eeba3777bc5f59667609dd30767849e809f3b7ccdc4f44e25470c4a"
+        "scripts/tests/test_operatoros_deploy.py": "915732ddc5a8511ba7c4217c7a5b18f7c112004886bacca259cc49d66475696f"
       },
-      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
+      "head": "e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4",
       "outcome": "no-change",
-      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
+      "reason": "Reviewed PR #365 release-consumer workflow identity normalization, including accepted GitHub workflow path variants and negative foreign-workflow/ref cases; #364 explicit Podman storage validation remains incorporated. No reusable skill or planning guidance changed.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at e3fb995130ff18c085d8973c12db2a7875569735"
+        "Changed: scripts/tests/test_operatoros_deploy.py at e8e5147e5052adebb2de4d5f4cd0e513f1f1afa4"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
