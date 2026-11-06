@@ -488,20 +488,17 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             services = ('operatoros-rehearsal-fixture-api.service',
                         'operatoros-rehearsal-fixture-caddy.service')
             report = {'schema_version': 1, 'checks': {}, 'failures': []}
-            error = deploy.DeployError('private Podman command failed')
-            error.code = 'CTX_PODMAN_INFO_FAILURE'
-            error.stage = 'podman_info'
-            error.last_completed_guard = 'private_environment_verified'
-            error.exit_code = 17
-            error.expected = 'successful_podman_info'
-            error.observed = 'command_failed'
+            error = deploy.PodmanContextError(
+                'CTX_PODMAN_INFO_FAILURE', 'podman_info', 'private_environment_verified',
+                exit_code=17, expected='successful_podman_info', observed='command_failed',
+            )
             error.stderr = secret
 
             def fail_context(*args):
                 report['podman_context'] = {
                     'stage': 'podman_info',
                     'last_completed_guard': 'private_environment_verified',
-                    'status': 'in_progress',
+                    'status': 'qualifying',
                     'cleanup_status': 'not_started',
                 }
                 raise error

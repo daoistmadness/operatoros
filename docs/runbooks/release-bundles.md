@@ -248,6 +248,13 @@ bundle, database, environment file, secrets, or container storage. This
 preparation has not run the workflow or exercised the hosted runner's actual
 service manager.
 
+When private Podman-context qualification fails, `podman_context` records the
+failing stage, last completed guard, stable failure code, optional process exit
+code, sanitized explanation, and allowlisted expected and observed labels. It
+records cleanup status separately so successful cleanup cannot hide a failed
+qualification. The evidence never includes raw subprocess output, environment
+variables, configuration contents, credentials, or full storage paths.
+
 If consumer verification fails, the complete attested bundle remains only in
 the ephemeral runner workspace and is not uploaded. Only the allowlisted
 diagnostics artifact is retained. A separately named, short-retention quarantine

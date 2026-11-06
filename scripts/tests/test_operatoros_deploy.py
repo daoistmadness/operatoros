@@ -371,8 +371,11 @@ class PodmanIsolationTests(unittest.TestCase):
     def test_extra_or_default_storage_configuration_is_rejected(self):
         original = self.context.storage_conf.read_text(encoding="utf-8")
         self.context.storage_conf.write_text(original + '\n[storage.options]\nadditionalimagestores=["/home/runner/.local/share/containers/storage"]\n', encoding="utf-8")
-        with self.assertRaisesRegex(deploy.DeployError, "unexpected image or container store"):
-            deploy.validate_private_podman_config(self.context)
+        with self.assertRaisesRegex(deploy.DeployError, "unexpected image or container store") as error:
+            deploy.validate_podman_store(self.info(), self.context, require_empty=True)
+        self.assertEqual(error.exception.code, "CTX_CONFIG_FAILURE")
+        self.assertEqual(error.exception.stage, "private_configuration")
+        self.assertEqual(error.exception.last_completed_guard, "podman_info_parsed")
 
     def test_remote_service_and_nonempty_private_store_are_rejected(self):
         info = self.info()
@@ -451,21 +454,20 @@ class PodmanIsolationTests(unittest.TestCase):
     def test_user_namespace_maps_must_be_numeric_and_cover_the_required_range(self):
         validator = getattr(deploy, "validate_user_namespace_map", None)
         self.assertTrue(callable(validator))
-        self.assertIsNone(validator(
-            "0 1001 1\n1 100000 65536", name="uid",
-            last_completed_guard="podman_store_identity_verified",
-        ))
-        for mapping in ("x y 65536", "0 1001 0", "0 1001 65535", ""):
-            with self.subTest(mapping=mapping):
-                with self.assertRaises(deploy.DeployError) as error:
-                    validator(
-                        mapping, name="gid",
-                        last_completed_guard="uid_map_verified",
-                    )
-                self.assertEqual(getattr(error.exception, "code", None), "CTX_IDMAP_INVALID")
-                self.assertEqual(getattr(error.exception, "stage", None), "uid_gid_map_validation")
-                self.assertEqual(getattr(error.exception, "last_completed_guard", None), "uid_map_verified")
-                self.assertNotIn(mapping, str(error.exception))
+        for name, last_guard in (("uid", "store_inventory_empty"), ("gid", "uid_map_verified")):
+            self.assertIsNone(validator(
+                "0 1001 1\n1 100000 65536", name=name,
+                last_completed_guard=last_guard,
+            ))
+            for mapping in ("x y 65536", "0 1001 0", "0 1001 65535", ""):
+                with self.subTest(name=name, mapping=mapping):
+                    with self.assertRaises(deploy.DeployError) as error:
+                        validator(mapping, name=name, last_completed_guard=last_guard)
+                    self.assertEqual(getattr(error.exception, "code", None), "CTX_IDMAP_INVALID")
+                    self.assertEqual(getattr(error.exception, "stage", None), "uid_gid_map_validation")
+                    self.assertEqual(getattr(error.exception, "last_completed_guard", None), last_guard)
+                    if mapping:
+                        self.assertNotIn(mapping, str(error.exception))
 
     def test_initial_inventory_checks_all_resources_and_environment_identity(self):
         env = self.context.environment()
