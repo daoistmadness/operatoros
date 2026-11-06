@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-05
+last_reviewed: 2026-11-06
 ---
 
 # Ubuntu server deployment runbook
@@ -64,6 +64,30 @@ configuration and SPA target; it never restores SQLite. The CLI is not yet
 installed or validated on Ubuntu 24.04, and it does not close rootless systemd
 reboot recovery, backup ownership, or production topology approval.
 
+### Podman storage context
+
+The deployed units and the CLI select a dedicated `storage.conf`. A bare
+`podman ps` reads the developer's default store and does not show the deployed
+containers, images, or volumes. An empty default-store listing must never be
+treated as evidence that the stack is absent.
+
+`status` validates the Podman-reported `configFile`, `graphRoot`, and `runRoot`
+against the deployment config and reports them under `podman_storage`. A
+mismatch fails the report with `podman_storage_invalid` instead of guessing.
+For ad-hoc read-only inspection, select the same context explicitly:
+
+~~~sh
+CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros/deploy/storage.conf podman ps -a
+~~~
+
+Do not use `podman system reset`, do not switch graphroots, and do not copy
+images between stores to "fix" a listing discrepancy. The deployed store is the
+authority.
+
+Release artifacts are retained by GitHub Actions for a fixed window (currently
+90 days). Keep the imported image, the verified bundle, and the release record
+for every deployment so rollback does not depend on an expired artifact.
+
 The repository also prepares a separate, manually confirmed GitHub-hosted
 deployment rehearsal using one retained release artifact and run-scoped
 Quadlet names. That workflow is not a host deployment path and has not been
@@ -81,14 +105,18 @@ The repository now contains the production API Containerfile, Quadlet template, 
 | Component | Target |
 | --- | --- |
 | Browser app | TanStack Start SPA client files built under `apps/web/build/client` |
-| Static and reverse proxy | Host Caddy system service |
+| Static and reverse proxy | Loopback Caddy ingress (host service or container; not yet accepted) |
 | API | One rootless Podman container managed by a Quadlet-generated user systemd service |
-| Database | SQLite files in the persistent host directory `/var/lib/operatoros/data` |
+| Database | SQLite files in the persistent host data directory, mounted at `/var/lib/operatoros/data` |
 | Development stack | Native local Elysia and Vite; Podman dev launcher remains optional |
 
 The SPA has no production server process. Do not run Vite preview or the Start build output under `build/server` in production.
 
-The API binds to `0.0.0.0:8090` inside the container. Podman publishes it only as `127.0.0.1:8090` on the host. Caddy binds to `127.0.0.1:8088` for the initial isolated rehearsal. All values are proposals until the target host inventory and approval confirm them.
+These are rehearsal proposals, not the deployed values. The API binds to
+`0.0.0.0:8090` inside the container and is published only on the host loopback
+address. The deployed host uses two-container Quadlet units with API `18090` and
+Caddy `18088`; the host-Caddy variant uses `8090` and `8088`. Do not copy either
+set without the host inventory and approval that this section requires.
 
 ## Required decisions before installation
 
@@ -122,7 +150,7 @@ it.
 
 Build the API image and SPA artifact from one reviewed commit after the release gate passes.
 
-`deploy/podman/Containerfile.api` builds a production API image from the workspace lockfile. It pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and pins the required `flock` and `lsof` APK packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. A fresh Trivy scan found no Alpine OS or Node-package findings, but Bun's bundled SQLite 3.53.4 remains affected by CVE-2026-119373. Image promotion is blocked pending a supported runtime fix or an explicit time-bounded security decision. See the [current audit](../audits/podman-deployment-readiness.md).
+`deploy/podman/Containerfile.api` builds a production API image from the workspace lockfile. It pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and pins the required `flock` and `lsof` APK packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. A fresh Trivy scan found no Alpine OS or Node-package findings, but Bun's bundled SQLite 3.53.4 remains affected by CVE-2026-119373. Image promotion is blocked pending a supported runtime fix or an explicit time-bounded security decision. See the [current integration audit](../audits/host-integration-2026-11-06.md).
 
 Record these immutable release identifiers:
 

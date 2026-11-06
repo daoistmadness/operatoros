@@ -72,6 +72,27 @@ def github_artifact(request, envelope, *, artifact_id=456, run_id=123, sha=relea
     }
 
 
+def podman_info_fixture(test):
+    return {
+        "host": {"security": {"rootless": True}},
+        "store": {
+            "configFile": str(test.storage_conf),
+            "graphRoot": str(test.graphroot),
+            "runRoot": str(test.runroot),
+            "graphDriverName": "vfs",
+        },
+    }
+
+
+def podman_storage_fixture(test):
+    return {
+        "storage_conf": str(test.storage_conf),
+        "graphroot": str(test.graphroot),
+        "runroot": str(test.runroot),
+        "graph_driver": "vfs",
+    }
+
+
 class ArtifactVerificationTests(unittest.TestCase):
     def setUp(self):
         self.files = release_tests.fixture()
@@ -602,11 +623,55 @@ class DeploymentFixture(unittest.TestCase):
         marker.write_text(json.dumps({"phase": "api_restarted", "transaction_id": "synthetic"}), encoding="utf-8")
         marker.chmod(0o600)
         with patch.object(deploy.subprocess, "run", return_value=type("Result", (), {"returncode": 0, "stdout": "active\n"})()), \
+             patch.object(deploy, "inspect_podman_context", return_value=podman_storage_fixture(self)), \
              patch.object(deploy, "local_image_identity", return_value=(self.old_id, {})), \
              patch.object(deploy, "check_loopback_services"):
             report = deploy.status(self.cfg)
         self.assertEqual(report["incomplete_transaction"]["phase"], "api_restarted")
         self.assertTrue(marker.exists())
+
+    def test_status_reports_verified_podman_storage_context(self):
+        with patch.object(deploy.subprocess, "run", return_value=type("Result", (), {"returncode": 0, "stdout": "active\n"})()), \
+             patch.object(deploy, "inspect_podman_context", return_value=podman_storage_fixture(self)), \
+             patch.object(deploy, "local_image_identity", return_value=(self.old_id, {})), \
+             patch.object(deploy, "check_loopback_services"):
+            report = deploy.status(self.cfg)
+        self.assertTrue(report["podman_storage"]["verified"])
+        self.assertEqual(report["podman_storage"]["graphroot"], str(self.graphroot))
+        self.assertEqual(report["podman_storage"]["runroot"], str(self.runroot))
+        self.assertEqual(report["podman_storage"]["storage_conf"], str(self.storage_conf))
+        self.assertEqual(report["state"], "legacy_release")
+
+    def test_status_fails_closed_when_podman_storage_context_is_invalid(self):
+        with patch.object(deploy.subprocess, "run", return_value=type("Result", (), {"returncode": 0, "stdout": "active\n"})()), \
+             patch.object(deploy, "inspect_podman_context",
+                           side_effect=deploy.DeployError("Podman is not using the configured rootless graphroot/runroot")), \
+             patch.object(deploy, "local_image_identity", return_value=(self.old_id, {})), \
+             patch.object(deploy, "check_loopback_services"):
+            report = deploy.status(self.cfg)
+        self.assertEqual(report["state"], "podman_storage_invalid")
+        self.assertFalse(report["podman_storage"]["verified"])
+        self.assertIn("configured rootless", report["podman_storage"]["detail"])
+
+    def test_host_store_validator_requires_the_configured_graphroot_runroot_and_config(self):
+        info = podman_info_fixture(self)
+        self.assertEqual(deploy.validate_host_podman_store(info, self.cfg)["graph_driver"], "vfs")
+        cases = (
+            ("graphRoot", str(self.base / "other-graphroot"), "configured rootless"),
+            ("runRoot", str(self.base / "other-runroot"), "configured rootless"),
+            ("configFile", str(self.base / "other-storage.conf"), "different storage configuration"),
+        )
+        for key, value, message in cases:
+            with self.subTest(key=key):
+                variant = {**info, "store": {**info["store"], key: value}}
+                with self.assertRaisesRegex(deploy.DeployError, message):
+                    deploy.validate_host_podman_store(variant, self.cfg)
+        rootful = {**info, "host": {"security": {"rootless": False}}}
+        with self.assertRaisesRegex(deploy.DeployError, "configured rootless"):
+            deploy.validate_host_podman_store(rootful, self.cfg)
+        relative = {**info, "store": {**info["store"], "graphRoot": "relative/graphroot"}}
+        with self.assertRaisesRegex(deploy.DeployError, "configured rootless"):
+            deploy.validate_host_podman_store(relative, self.cfg)
 
     def test_runtime_unit_contract_rejects_public_api_binding_and_unpinned_caddy(self):
         deploy.verify_runtime_units(self.cfg)

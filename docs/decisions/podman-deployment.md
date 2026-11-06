@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-02
+last_reviewed: 2026-11-06
 ---
 
 # Podman single-host deployment proposal
@@ -11,8 +11,30 @@ The existing synthetic host runs both Elysia API and Caddy in separate rootless
 Podman containers supervised by user Quadlet services. Caddy serves the static
 SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
 access remains loopback/private. The existing manual helper consumes verified
-archives without rebuilding on the host. This differs from the future host-Caddy
-proposal below. Production topology and public ingress/TLS remain unresolved.
+archives without rebuilding on the host.
+
+A read-only audit on 2026-11-06 confirmed this shape: units
+`operatoros-lite-api` and `operatoros-lite-caddy` under host UID 1000, API
+published only as `127.0.0.1:18090`, Caddy bound to `127.0.0.1:18088`, container
+runtime UID 10000, and no Tailscale Serve route pointing at either. The earlier
+host-Caddy proposal below was never installed on that host. Production topology
+and public ingress/TLS remain unresolved.
+
+Storage has three distinct layers and one hazard:
+
+| Layer | Meaning |
+| --- | --- |
+| Deployment root | `/mnt/podman-data/operatoros`, owned by the deployment account |
+| Data directory | SQLite, logs, and backups under that root |
+| Container mount | The data directory appears as `/var/lib/operatoros/data`; that host path does not exist |
+| Development root | A separate per-repository directory under the developer's state directory |
+
+The hazard: the deployed units select a dedicated `storage.conf`, so bare
+`podman ps` reads the developer's default store and reports no OperatorOS
+containers. An empty default-store listing is never evidence that the stack is
+absent. Use the deployment CLI `status`, which validates and reports the
+effective store, or set `CONTAINERS_STORAGE_CONF` explicitly.
+
 See [CI release bundles](../runbooks/release-bundles.md) for the proposed artifact
 handoff and the reviewed helper-adoption boundary.
 
@@ -24,34 +46,44 @@ Application baseline: `6070cbb7fee48b937596944da3694d39105cd3ee`, with TanStack 
 
 ## Proposed decision
 
-Use rootless Podman and Quadlet to supervise one Elysia API container. Keep Caddy as a host systemd service. Caddy serves the built TanStack Start SPA files from an immutable release directory and proxies API requests to a loopback-only published API port. Preload the exact image before service start and set Quadlet `Pull=never` so boot does not depend on registry access.
+Use rootless Podman and Quadlet to supervise the Elysia API container, and put a
+single loopback ingress in front of it. Preload the exact image before service
+start and set Quadlet `Pull=never` so boot does not depend on registry access.
 
-This topology has two long-running services and one container. The SPA is static output; it does not need a web runtime container. Do not run `vite preview` or `build/server/server.js` in production.
+Two ingress candidates remain open; see
+[the comparison below](#ingress-topology-two-candidates). The deployed host uses
+the Caddy container (Candidate B). Earlier revisions of this document proposed
+host Caddy (Candidate A). Do not treat either as accepted until this record is
+approved.
+
+The SPA is static output. Do not run `vite preview` or `build/server/server.js`
+in production.
 
 ~~~mermaid
 flowchart LR
   Browser["Approved browser origin"]
-  Caddy["Host Caddy systemd service<br/>static client files + reverse proxy"]
+  Caddy["Loopback ingress<br/>static client files + reverse proxy"]
   API["Rootless Podman API container<br/>Elysia + Bun"]
   Data[("Persistent host directory<br/>SQLite + API-owned files")]
   Backup["Approved off-host encrypted backup"]
 
   Browser -->|"HTTP / HTTPS<br/>access model pending"| Caddy
-  Caddy -->|"127.0.0.1:8090<br/>API, health, OpenAPI paths"| API
+  Caddy -->|"loopback API port<br/>API, health, OpenAPI paths"| API
   Caddy -->|"static SPA shell and assets"| Static["Immutable release client directory"]
   API -->|"single bind mount"| Data
   Data -.->|"application backup flow"| Backup
 ~~~
 
-Initial disposable rehearsal values remain proposals and need host approval:
+Initial disposable rehearsal values remain proposals and need host approval.
+They are not the values observed on the deployed host:
 
 | Setting | Proposed value | State |
 | --- | --- | --- |
-| Caddy listener | `127.0.0.1:8088` | Pending host inventory and approval |
-| API published listener | `127.0.0.1:8090` | Pending host inventory and approval |
+| Caddy listener | `127.0.0.1:8088` | Pending host inventory and approval; deployed host uses `18088` |
+| API published listener | `127.0.0.1:8090` | Pending host inventory and approval; deployed host uses `18090` |
 | API container listener | `0.0.0.0:8090` inside the container | Must be tested |
-| SQLite data root | `/var/lib/operatoros/data` | Pending owner and mount-permission rehearsal |
-| Runtime identity | Unprivileged `operatoros` account | Pending host approval |
+| Data directory | persistent host directory mounted at `/var/lib/operatoros/data` | Pending owner and mount-permission rehearsal |
+| Runtime identity | Unprivileged account, container UID 10000 | Deployed host uses UID 1000; decision pending |
 | Release staging identity | `operatoros-release` | Proposed; confirm whether it is needed |
 | Operating system | Ubuntu Server 24.04.5 LTS amd64 | Preferred rehearsal target, not verified |
 | Podman package | Ubuntu 24.04 package source | Host candidate and Quadlet compatibility pending; local testing used Podman 5.7.0 on Ubuntu 26.04.1 |
@@ -65,7 +97,8 @@ Keep the accepted [TanStack Start SPA decision](tanstack-start-spa.md):
 
 - Start builds a static shell at `apps/web/build/client/_shell.html` and browser assets under `apps/web/build/client`.
 - The app remains client-rendered. Do not add SSR, Start server routes, Start server functions, or embedded Elysia.
-- Caddy owns static delivery and same-origin routing in the proposed host deployment.
+- Caddy owns static delivery and same-origin routing on the loopback ingress,
+  whichever candidate is accepted.
 - The separately supervised Elysia service remains the only API owner.
 - `packages/db` continues to own SQLite schema and lifecycle. Do not add a database container.
 - Run exactly one Elysia process for each SQLite data root. Preserve the Linux data-root `flock` and API shutdown behavior.
@@ -81,19 +114,61 @@ The application image must run as a non-root numeric user. Test the exact user-n
 
 Bun's JavaScriptCore runtime may need writable-executable memory for its JIT. Do not add a systemd or container memory-execution restriction until the exact production image passes runtime tests.
 
-## Why Caddy stays on the host
+## Ingress topology: two candidates
 
-The host Caddy service serves immutable static files and proxies the API. It can manage HTTPS later if the approved access model needs it. Keeping Caddy on the host avoids another container and avoids depending on rootless port mapping for privileged public ports.
+Both candidates put Tailscale Serve in front of exactly one loopback ingress and
+keep the API unpublished. They are not equivalent in maintenance cost, and the
+choice is still open.
 
-The initial rehearsal binds Caddy to loopback. Do not assume TLS or public DNS is required. If a later approved profile needs LAN or public access, decide the DNS, certificate, ingress, firewall, and monitoring policy before changing the listener.
+### Candidate A — host Caddy
 
-Caddy must route `/api`, `/health`, `/ready`, and `/openapi` before any SPA fallback. Existing static files must win. A missing file with an extension must return 404 instead of `_shell.html`. Validate the exact Caddyfile with the pinned package and test those responses.
+Caddy runs as a host systemd service, serves the immutable client directory, and
+proxies `/api`, `/health`, `/ready`, and `/openapi` to the loopback API port. It
+can terminate TLS later if a non-Tailscale access model is approved. This keeps
+the web tier outside rootless port mapping and adds one host package and unit.
 
-## Why not run Compose or add a web container
+### Candidate B — Caddy container plus API container
 
-The web build contains static assets and a shell, so a Node or Bun web server container would add a runtime without adding application behavior. The Elysia API already needs one independent process. Caddy can serve the static output and proxy to the loopback API port.
+Caddy runs as a second rootless container on the host network, bound to loopback,
+with the same routing contract. The API stays on its own rootless container and
+its published port remains `127.0.0.1`-only. Both are Quadlet units under the
+deployment account.
 
-Podman Compose would add a second orchestration configuration for one container. Quadlet and systemd already provide the needed lifecycle. Reconsider Compose only if the runtime topology grows and a reproducible need appears.
+### Evidence comparison
+
+| Question | Candidate A | Candidate B |
+| --- | --- | --- |
+| Matches the deployed stack on 2026-11-06 | No | Yes (`operatoros-lite-api` and `operatoros-lite-caddy`) |
+| Matches `scripts/operatoros_deploy.py` | No | Yes |
+| Additional host packages or units | Caddy package, host unit | None beyond Podman and Quadlet |
+| Ingress owner | Host systemd | Rootless container |
+| Static file ownership | Host release directory | Bind-mounted read-only release directory |
+| Artifact promotion and pointer switch | Host symlink | Host symlink, same code path |
+| Restart and failure unit | Host service | Quadlet-generated user service |
+| Tailscale Serve compatibility | Yes | Yes |
+| Privileged port requirement | None on loopback | None on loopback |
+| Operational surface to maintain | Host package, config, unit, logs | Container image digest, config, unit, logs |
+
+**Recommendation: Candidate B**, because it is the topology already deployed,
+already targeted by the version-controlled deployment interface, and already
+validated with synthetic data. Selecting Candidate A would require migrating a
+working stack, adding a host package and unit, and rewriting the deploy helper
+without a demonstrated benefit.
+
+This is a recommendation, not an accepted decision. Changing live ingress, the
+Quadlet units, or the deployment helper requires the acceptance of this decision
+record first.
+
+## Why not run Compose or add another web runtime
+
+The web build contains static assets and a shell, so a third runtime to serve
+them would add a process without adding behavior. Caddy already serves the
+client and proxies the API in the implemented container topology.
+
+Podman Compose would add a second orchestration configuration for two
+containers. Quadlet and systemd already provide the needed lifecycle.
+Reconsider Compose only if the runtime topology grows and a reproducible need
+appears.
 
 Rootful Podman is not the default. It can simplify host networking, but gives the runtime manager greater host privilege. Revisit it only if rootless storage, cgroup, or networking cannot satisfy a measured requirement and a reviewer accepts the added risk.
 
