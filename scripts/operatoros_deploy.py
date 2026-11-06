@@ -847,7 +847,31 @@ def podman_env(cfg: dict[str, Any]) -> dict[str, str]:
     return env
 
 
-def inspect_podman_context(cfg: dict[str, Any]) -> None:
+def validate_host_podman_store(info: Any, cfg: dict[str, Any]) -> dict[str, str]:
+    """Prove Podman is reading the configured rootless store, not a default one."""
+    try:
+        store = info["store"]
+        rootless = info["host"]["security"]["rootless"]
+        graphroot = Path(store["graphRoot"])
+        runroot = Path(store["runRoot"])
+    except (KeyError, TypeError) as error:
+        raise DeployError("Podman returned incomplete storage identity") from error
+    if not rootless or not graphroot.is_absolute() or not runroot.is_absolute():
+        raise DeployError("Podman is not using the configured rootless graphroot/runroot")
+    if graphroot.resolve() != cfg["graphroot"].resolve() or runroot.resolve() != cfg["runroot"].resolve():
+        raise DeployError("Podman is not using the configured rootless graphroot/runroot")
+    config_file = store.get("configFile")
+    if config_file and Path(config_file).resolve() != cfg["storage_conf"].resolve():
+        raise DeployError("Podman is reading a different storage configuration file")
+    return {
+        "storage_conf": str(cfg["storage_conf"]),
+        "graphroot": str(graphroot),
+        "runroot": str(runroot),
+        "graph_driver": str(store.get("graphDriverName") or "unknown"),
+    }
+
+
+def inspect_podman_context(cfg: dict[str, Any]) -> dict[str, str]:
     runtime_dir = Path(os.environ.get("XDG_RUNTIME_DIR", ""))
     if not runtime_dir.is_absolute() or runtime_dir != Path(f"/run/user/{os.getuid()}"):
         raise DeployError("XDG_RUNTIME_DIR does not identify this user's systemd runtime directory")
@@ -862,14 +886,13 @@ def inspect_podman_context(cfg: dict[str, Any]) -> None:
     if cfg.get("profile") == "rehearsal":
         context = cfg.get("_private_podman_context") or podman_context_from_workspace(cfg["root"])
         validate_podman_store(info, context)
-        return
-    try:
-        store = info["store"]
-        rootless = info["host"]["security"]["rootless"]
-    except (KeyError, TypeError) as error:
-        raise DeployError("Podman returned incomplete storage identity") from error
-    if not rootless or Path(store["graphRoot"]).resolve() != cfg["graphroot"].resolve() or Path(store["runRoot"]).resolve() != cfg["runroot"].resolve():
-        raise DeployError("Podman is not using the configured rootless graphroot/runroot")
+        return {
+            "storage_conf": str(context.storage_conf),
+            "graphroot": str(context.graphroot),
+            "runroot": str(context.runroot),
+            "graph_driver": str(info["store"].get("graphDriverName") or "unknown"),
+        }
+    return validate_host_podman_store(info, cfg)
 
 
 def require_empty_podman_store(context: PrivatePodmanContext, env: dict[str, str]) -> None:
@@ -1734,6 +1757,11 @@ def status(cfg: dict[str, Any]) -> dict[str, Any]:
         result = subprocess.run(["systemctl", "--user", "is-active", value["service"]], text=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=False, env=system_environment())
         value["state"] = result.stdout.strip() or f"exit-{result.returncode}"
+    storage: dict[str, Any] = {"verified": False}
+    try:
+        storage = {"verified": True, **inspect_podman_context(cfg)}
+    except DeployError as error:
+        storage["detail"] = str(error)
     actual_release = "unknown"
     try:
         api["image_ref"] = load_unit_image(cfg["api_unit"], API_NAME)
@@ -1757,6 +1785,8 @@ def status(cfg: dict[str, Any]) -> dict[str, Any]:
         health = {"state": "unhealthy", "detail": str(error)}
     if transaction is not None:
         state = "incomplete_transaction"
+    elif not storage["verified"]:
+        state = "podman_storage_invalid"
     elif actual_release not in ("consistent", "legacy") or health["state"] != "healthy":
         state = "inconsistent_or_unhealthy"
     elif actual_release == "legacy":
@@ -1765,7 +1795,7 @@ def status(cfg: dict[str, Any]) -> dict[str, Any]:
         state = "healthy"
     return {"state": state, "current_release": current, "actual_release_consistency": actual_release,
             "api": api, "caddy": caddy, "spa_path": web_state, "health": health,
-            "incomplete_transaction": transaction}
+            "podman_storage": storage, "incomplete_transaction": transaction}
 
 
 def request_from_args(args: argparse.Namespace) -> ReleaseRequest:
