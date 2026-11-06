@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Record the read-only OPRSERVER integration audit: five existing Tailscale Serve routes carry unrelated services, OperatorOS has no tailnet ingress, the deployed stack runs under UID 1000, and no attested release artifact exists for merged HEAD.
+- Record a public summary of the read-only host integration findings and the missing attested release for the reviewed main baseline (#363).
 - Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
 - Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.

@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "cd3d7a16f68013289e62e039955fc54e365a3d7c5ef7055705613a07b560d0bf",
+      "fingerprint": "4e4b61ff42d310fcbc144b0abc8a74b35c83817eca01e3a46f3ecbbc24e8d2e9",
       "snapshot": {
-        "docs/README.md": "cfb21b0e2b221055cdf20a2324ee2489149fad12bb9010a3c966e5addfe6b9af"
+        "docs/README.md": "d619ec3de22a8ae166b4c5d38e8aac60209bc077c17fc62d51f8a16b35e4df62"
       },
-      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
+      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
       "outcome": "no-change",
-      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
+      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
       "evidence": [
-        "Changed: docs/README.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
+        "Changed: docs/README.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2706145e4273703f97144bd99a248bdcfb2eeacc0f1dabb1b9c1fb4adc2eaf32",
+      "fingerprint": "317bb0b47b33bae758f032d24b35b0ec9ae98d3613832f4b48d0b11aff896799",
       "snapshot": {
-        "CHANGELOG.md": "3ab2d6d7533b7cb2df5bb81d49dac6e2186bb8d1e5f89655df18a14b301e6aee"
+        "CHANGELOG.md": "642f24fa60c370a2aa36d7509000f65a4a535a8b661561a16a6a78ae70002a8e"
       },
-      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
+      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
       "outcome": "no-change",
-      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
+      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
+        "Changed: CHANGELOG.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
       ]
     },
     "source:COMMANDS.md": {
@@ -4823,15 +4823,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "6138abc0937840ad11d4f7b8c72912d1607db3b5377530846ec9a0bf8c2ea8e3",
+      "fingerprint": "321e11a5840537866cd8d3fe1a24850a9470998b95b84e2141a2435f65fdc6f9",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "b44e14d5bc7181f3c92691a0b992303494cab40910d76954c00967911f012579"
+        "docs/runbooks/ubuntu-server-deployment.md": "fcf7fb66c3e83f0de0822d1f24277cedf52df91367db76e2f6a4cc7cc76913fe"
       },
-      "head": "1ac76faf54d9360797373e03c3dc6c9ef692f774",
+      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
       "outcome": "no-change",
-      "reason": "Reviewed the manual GitHub-only rehearsal workflow, run-scoped deployment harness, verifier and cleanup extensions, focused tests, and runbook changes against current guidance. They add no Elysia package or skill behavior and do not change the existing Elysia guidance; all new operational behavior is documented in the release and Ubuntu runbooks.",
+      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1ac76faf54d9360797373e03c3dc6c9ef692f774"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -10119,15 +10119,15 @@
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
-      "fingerprint": "e90873d4801087d94108684f25c2f270c8c0c31f0b9a36b69e338a1e8f509866",
+      "fingerprint": "11890f21055643b0a17936c9f9a5ea816d4c90eb340274f95d758a0266230e3a",
       "snapshot": {
-        "docs/audits/oprserver-integration-2026-11-06.md": "24b443980b0fe8bed3c48c4e7179dce14b521c4b86642e90a39def4bb3f5b7bd"
+        "docs/audits/oprserver-integration-2026-11-06.md": "60fa369128371cd5f29c5349ccb9c8899db79ea68edc6600f09bfb3f399d5370"
       },
-      "head": "6e42dd1f3971705d3d60e6a29d3bf49be8f1bfe0",
+      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
       "outcome": "no-change",
-      "reason": "audit doc kernel correction only; no skill, source, schema, or behavior change",
+      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
       "evidence": [
-        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 6e42dd1f3971705d3d60e6a29d3bf49be8f1bfe0"
+        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
       ]
     }
   }
