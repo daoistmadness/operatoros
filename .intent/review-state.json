@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "19d7f90390e699680adfccb16c86d4297260b3603a4fdb9144c14b599f8d871a",
+      "fingerprint": "c047f7843fb6cfa76a0cf9a704bb296991e727263bd5570248912ba2da285654",
       "snapshot": {
-        "CHANGELOG.md": "30ebe8c7a203efa1267f837e8133931e5c169d4a08d6a49377a9ad109b18c54b"
+        "CHANGELOG.md": "07122dbd0e057abbe47a41f2a4517cd0c10c221b36e63efccb05387572f214a5"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "5e807f1ad705c500eb3b4613d9c71796d9b609d7",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "The changelog now records PR #366 for the same already-reviewed deployment and rehearsal correction; this user-facing release note does not change or contradict the registered Elysia guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: CHANGELOG.md at 5e807f1ad705c500eb3b4613d9c71796d9b609d7"
       ]
     },
     "source:COMMANDS.md": {
