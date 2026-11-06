@@ -37,7 +37,7 @@ values, database contents, backup filenames, and live checksums.
 
 | Item | Observed |
 | --- | --- |
-| OS / kernel | Ubuntu 26.04.1 LTS, `7.0.0-31-generic` |
+| OS / kernel | Ubuntu 26.04.1 LTS, `7.0.0-38-generic` |
 | CPU | 4 vCPU, Intel i5-3470 |
 | Memory | 14 GiB total, ~9 GiB available |
 | Swap | 11 GiB (4 GiB file + 7.5 GiB zram), ~4.5 GiB in use |
