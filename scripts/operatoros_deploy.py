@@ -487,8 +487,8 @@ def verify_run_and_artifact(request: ReleaseRequest, token: str, work: Path) -> 
         "workflow_dispatch", "completed", "success", "main", request.source_sha
     ):
         raise DeployError("workflow run was not a successful manual run on the requested main commit")
-    expected_path = WORKFLOW + "@refs/heads/main"
-    if run.get("path") != expected_path:
+    run_path, separator, run_ref = str(run.get("path") or "").partition("@")
+    if run_path != WORKFLOW or (separator and run_ref not in ("main", "refs/heads/main")):
         raise DeployError("workflow run path/ref does not match the trusted main release workflow")
 
     artifact = api_json(f"/repos/{REPOSITORY}/actions/artifacts/{request.artifact_id}", token)

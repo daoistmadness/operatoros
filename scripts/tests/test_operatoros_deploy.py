@@ -56,7 +56,7 @@ def github_run(sha=release_tests.SHA, *, event="workflow_dispatch", status="comp
         "conclusion": conclusion,
         "head_branch": "main",
         "head_sha": sha,
-        "path": deploy.WORKFLOW + "@refs/heads/main",
+        "path": deploy.WORKFLOW,
     }
 
 
@@ -128,9 +128,28 @@ class ArtifactVerificationTests(unittest.TestCase):
                     self.verify(run=bad)
                 download.assert_not_called()
 
+    def test_workflow_path_accepts_github_run_api_forms(self):
+        for path in (deploy.WORKFLOW, deploy.WORKFLOW + "@main", deploy.WORKFLOW + "@refs/heads/main"):
+            with self.subTest(path=path):
+                result = self.verify(run={**self.run, "path": path})
+                self.assertEqual(result.manifest["source_commit"], release_tests.SHA)
+
     def test_wrong_workflow_path_is_rejected_before_download(self):
-        run = {**self.run, "path": "attacker/workflow.yml@refs/heads/main"}
+        bad_paths = (
+            "attacker/workflow.yml@refs/heads/main",
+            deploy.WORKFLOW + "@refs/heads/dev",
+            deploy.WORKFLOW + "@release",
+            deploy.WORKFLOW + "@",
+            "",
+        )
+        for path in bad_paths:
+            with self.subTest(path=path), patch.object(deploy, "download_artifact") as download:
+                with self.assertRaisesRegex(deploy.DeployError, "run path/ref"):
+                    self.verify(run={**self.run, "path": path})
+                download.assert_not_called()
         with patch.object(deploy, "download_artifact") as download:
+            run = dict(self.run)
+            del run["path"]
             with self.assertRaisesRegex(deploy.DeployError, "run path/ref"):
                 self.verify(run=run)
             download.assert_not_called()
