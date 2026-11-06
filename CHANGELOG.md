@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Record a public summary of the read-only host integration findings and the missing attested release for the reviewed main baseline (#363).
 - Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
 - Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.
