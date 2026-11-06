@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b7a10f57904cc3891b946e9daa4597623ef8520d2a5574dff09cc9ebb492e234",
+      "fingerprint": "593fe31613b1429feab196efd6bb0c46a096ae78414b85b2c9d88d8f40f36c5b",
       "snapshot": {
-        "CHANGELOG.md": "06686800d3b5bd4be5c9b03b6acb78013c480d1b4fb3b745cd70830871397eb4"
+        "CHANGELOG.md": "9505d38d2d1cf2a9f2cea603596044d23bb3b5b530101d055432350763bf1306"
       },
-      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
+      "head": "8c8736045347ffa1e742ceae02cedeb6c8b87349",
       "outcome": "no-change",
-      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
+      "reason": "Release-consumer path normalization and its regression tests do not change agent skill guidance; existing deployment docs remain accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at cde3ffcbb34db69a1e995d4258099a923581533b"
+        "Changed: CHANGELOG.md at 8c8736045347ffa1e742ceae02cedeb6c8b87349"
       ]
     },
     "source:COMMANDS.md": {
@@ -10071,27 +10071,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "0c1ffddec2d6c66110b077c4dc3799aaf310f5094dec1aed777aca657f64137c",
+      "fingerprint": "e7994cc0c37edf2d9e6780baee89e951f093ba460c83492ce848dda259aee396",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "5295d578ab0aa0d37c34db0965dded9d4f045a58fcde988a89152821c9f2f5e9"
+        "scripts/operatoros_deploy.py": "326cb84d3a600c046fd9471d03edb3be2ab8be6ca983b3d45ccbda9d79ec26aa"
       },
-      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
+      "head": "8c8736045347ffa1e742ceae02cedeb6c8b87349",
       "outcome": "no-change",
-      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
+      "reason": "Release-consumer path normalization and its regression tests do not change agent skill guidance; existing deployment docs remain accurate.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at cde3ffcbb34db69a1e995d4258099a923581533b"
+        "Changed: scripts/operatoros_deploy.py at 8c8736045347ffa1e742ceae02cedeb6c8b87349"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "a60de64b4a4b8d87df9366360a1f9936217bbefc9d3871d7dcdfdac9c45a54bf",
+      "fingerprint": "d224d70bac0282853337ec0af1303f399e9a7d83ccf63c25794dd1dbd958a851",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "7c12081ddd06e2f091ed3e81aa9af9f2dbc3caa4d69d71c287c63abad0fd8a01"
+        "scripts/tests/test_operatoros_deploy.py": "2f78b4f4220a25d81df6b6724a831d9ab6124d0c61f8af9f7205d417b23d2b3c"
       },
-      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
+      "head": "8c8736045347ffa1e742ceae02cedeb6c8b87349",
       "outcome": "no-change",
-      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
+      "reason": "Release-consumer path normalization and its regression tests do not change agent skill guidance; existing deployment docs remain accurate.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at cde3ffcbb34db69a1e995d4258099a923581533b"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 8c8736045347ffa1e742ceae02cedeb6c8b87349"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
