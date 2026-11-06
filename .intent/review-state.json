@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "9ea44a9501897e7414a8fcfeec434e52728bf8c00e2a0bcc3fbc464aa43728b8",
+      "fingerprint": "a4ca9be34bb1238ae04d5381e8e60bd782c9a86390cd3838ee7b13224775a89d",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "e7b760a9acc950d317e290b75f26cb6e104a58ff3f1148ba9591b43b6e317ce7"
+        "scripts/tests/test_release_bundle.py": "8d16600e3fadf45cf6144baa4505a4d6d4ff81637cdbb8fd5a6b0724b60a7393"
       },
-      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
+      "head": "ab09670894e71321b9c872170b965429dd2d38c2",
       "outcome": "no-change",
-      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
+      "reason": "Reviewed the workspace failure regression test; it covers rehearsal diagnostics without changing agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
+        "Changed: scripts/tests/test_release_bundle.py at ab09670894e71321b9c872170b965429dd2d38c2"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {

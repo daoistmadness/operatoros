@@ -163,6 +163,38 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertFalse(workspace.exists())
             self.assertEqual(unrelated.read_text(encoding='utf-8'), 'preserve')
 
+    def test_private_workspace_creation_failure_is_recorded_with_its_stage(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-workspace-failure-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            report = {'schema_version': 2, 'checks': {}, 'failures': []}
+            error_text = 'synthetic workspace failure detail'
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'require_private_workspace_boundary',
+                              side_effect=rehearsal.RehearsalError(error_text)):
+                with self.assertRaises(RuntimeError) as error:
+                    rehearsal.rehearse(
+                        workspace, diagnostics,
+                        ('operatoros-rehearsal-fixture-api.service',
+                         'operatoros-rehearsal-fixture-caddy.service'),
+                        set(), [],
+                    )
+
+                self.assertEqual(error.exception.code, 'CTX_WORKSPACE_FAILURE')
+                self.assertEqual(error.exception.stage, 'workspace_creation')
+                self.assertEqual(error.exception.last_completed_guard, 'none')
+                rehearsal.retain_context_failure(error.exception)
+
+            failure = report['podman_context']['failure']
+            self.assertEqual(failure['code'], 'CTX_WORKSPACE_FAILURE')
+            self.assertEqual(failure['stage'], 'workspace_creation')
+            self.assertEqual(failure['last_completed_guard'], 'none')
+            self.assertEqual(failure['observed'], 'unsafe')
+            self.assertNotIn(error_text, json.dumps(failure))
+
     def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
         child_output = 'synthetic-child-output-marker'
