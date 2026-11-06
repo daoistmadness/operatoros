@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-06
 ---
 
 # Tailscale HTTPS development
@@ -15,6 +15,29 @@ Local development remains independent of Tailscale:
 ```bash
 ./start-dev.sh
 ```
+
+## Existing routes are not yours
+
+A node may already serve several applications on different HTTPS ports. On the
+current OPRSERVER deployment, five routes belong to unrelated services
+(t3code, a development session, homarr, beszel, and Uptime Kuma); none of them
+serves the OperatorOS deployment, and no dedicated OperatorOS route exists.
+
+Read the current state before assuming a port is free or belongs to the app:
+
+```bash
+tailscale serve status --json
+tailscale funnel status --json
+```
+
+Do not reuse, repoint, or remove a route you did not create. Publishing the
+deployed application requires its own approved route decision; a development
+launcher must not claim a route that a deployment needs, and vice versa.
+
+A development endpoint outlives the shell that created it when it runs as a
+persistent user unit. Before deleting or moving a worktree, confirm that no
+session or unit still serves from it; a deleted working directory can leave a
+process serving a stale build on the tailnet indefinitely.
 
 ## Configure a development endpoint
 
