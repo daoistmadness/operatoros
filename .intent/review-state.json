@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "4e4b61ff42d310fcbc144b0abc8a74b35c83817eca01e3a46f3ecbbc24e8d2e9",
+      "fingerprint": "060c9bcf7ce92eb13a97f19c9dbec241dd915333cbbc132cd0ea7a4fddbe503b",
       "snapshot": {
-        "docs/README.md": "d619ec3de22a8ae166b4c5d38e8aac60209bc077c17fc62d51f8a16b35e4df62"
+        "docs/README.md": "8d4dade5f8e3eed3bcc5c84958f27d865aa16da3eb5ebd0a9fcba047085dc6c1"
       },
-      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
       "outcome": "no-change",
-      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
-        "Changed: docs/README.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
+        "Changed: docs/README.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -4823,15 +4823,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "321e11a5840537866cd8d3fe1a24850a9470998b95b84e2141a2435f65fdc6f9",
+      "fingerprint": "2df02497b53e41233c35550f225ddda1569cd3f267574925d7892daa2905e965",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "fcf7fb66c3e83f0de0822d1f24277cedf52df91367db76e2f6a4cc7cc76913fe"
+        "docs/runbooks/ubuntu-server-deployment.md": "e7b86b27311cc4712d6aeb0d70ed1f9a387df9bb37ad171f9efd6fbac96ec587"
       },
-      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
       "outcome": "no-change",
-      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9735,15 +9735,15 @@
       ]
     },
     "source:docs/audits/podman-deployment-readiness.md": {
-      "fingerprint": "93c1b593fb197879f206e2e9113beb77f56807a16a1d9c971235911cc6e75c50",
+      "fingerprint": "e65861211ad27334997de6cfdcc654233d9829f2721e5c5be548925bc4061596",
       "snapshot": {
-        "docs/audits/podman-deployment-readiness.md": "1f04796f533ec7d741f16ec26555dd87acac3626af661655531d3216ccce8ea7"
+        "docs/audits/podman-deployment-readiness.md": "896a965669eed1c4ba092044e58cfa28af47adbc9b696758b65757247b7c81ef"
       },
-      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
       "outcome": "no-change",
-      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
-        "Changed: docs/audits/podman-deployment-readiness.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
+        "Changed: docs/audits/podman-deployment-readiness.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
@@ -10128,6 +10128,18 @@
       "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
       "evidence": [
         "Changed: docs/audits/oprserver-integration-2026-11-06.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
+      ]
+    },
+    "source:docs/audits/host-integration-2026-11-06.md": {
+      "fingerprint": "414e881eab9733506d76120059fe6b08eea2a9fd6bf224e6ea760525719359fa",
+      "snapshot": {
+        "docs/audits/host-integration-2026-11-06.md": "3a5d5b36835c96a223a5e5b311d6a6da64ed00d2807a84ae46d31efb619eebd8"
+      },
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
+      "outcome": "no-change",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
+      "evidence": [
+        "Changed: docs/audits/host-integration-2026-11-06.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     }
   }

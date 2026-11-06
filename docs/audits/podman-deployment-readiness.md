@@ -9,7 +9,7 @@ last_reviewed: 2026-11-06
 > 2026-11-03 and predates merged PRs #353–#362, including the version-controlled
 > deployment interface and the isolated rehearsal harness. Its "Current
 > decision" and blocker register are historical; read
-> [the 2026-11-06 OPRSERVER integration audit](oprserver-integration-2026-11-06.md)
+> [the 2026-11-06 OperatorOS host integration audit](host-integration-2026-11-06.md)
 > for the current state. Tables below are retained as evidence for the C6 source
 > revision only.
 

@@ -122,7 +122,7 @@ it.
 
 Build the API image and SPA artifact from one reviewed commit after the release gate passes.
 
-`deploy/podman/Containerfile.api` builds a production API image from the workspace lockfile. It pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and pins the required `flock` and `lsof` APK packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. A fresh Trivy scan found no Alpine OS or Node-package findings, but Bun's bundled SQLite 3.53.4 remains affected by CVE-2026-119373. Image promotion is blocked pending a supported runtime fix or an explicit time-bounded security decision. See the [current integration audit](../audits/oprserver-integration-2026-11-06.md).
+`deploy/podman/Containerfile.api` builds a production API image from the workspace lockfile. It pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and pins the required `flock` and `lsof` APK packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. A fresh Trivy scan found no Alpine OS or Node-package findings, but Bun's bundled SQLite 3.53.4 remains affected by CVE-2026-119373. Image promotion is blocked pending a supported runtime fix or an explicit time-bounded security decision. See the [current integration audit](../audits/host-integration-2026-11-06.md).
 
 Record these immutable release identifiers:
 

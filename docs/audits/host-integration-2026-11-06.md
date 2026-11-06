@@ -3,7 +3,7 @@ status: current
 last_reviewed: 2026-11-06
 ---
 
-# OPRSERVER × OperatorOS integration audit — 2026-11-06
+# OperatorOS host integration audit — 2026-11-06
 
 Read-only audit of the Ubuntu host that supports interactive development and a
 synthetic OperatorOS stack. The audit checked `origin/main` at `b3860c62`. No
@@ -34,16 +34,16 @@ checksums, and database contents.
 
 | Item | Observed |
 | --- | --- |
-| OS | Ubuntu 26.04.1 LTS |
+| OS | Ubuntu LTS; release detail omitted |
 | Resource pressure | Low during inspection |
 
 Any CI-equivalent build on this host needs a measured resource budget.
 
-## Ingress: the five existing routes
+## Ingress
 
-Five existing routes were tailnet-only, and Funnel was not enabled. No
-`cloudflared` unit, binary, or configuration was present. The exact route,
-listener, and service-owner mapping remains in the restricted evidence package.
+Existing routes were tailnet-only, and Funnel was not enabled. No public tunnel
+service was present. The exact route, listener, and service-owner mapping
+remains in the restricted evidence package.
 
 None of the existing routes serves OperatorOS. The application has no tailnet
 ingress, so publishing it would require a new route and separate approval.
@@ -95,8 +95,8 @@ commit has no deployable release identity and the gate stays failed.
 
 | ID | State | Finding |
 | --- | --- | --- |
-| F01 | Closed, corrected | Five routes exist and function; none serves OperatorOS. Publishing the application requires a new route, which remains blocked. |
-| F02 | Closed, corrected | No Cloudflare tunnel component is installed: no unit, binary, or configuration, and no public listener. Owner-side DNS cannot reach this host without a new public exposure decision. |
+| F01 | Closed, corrected | Existing routes function; none serves OperatorOS. Publishing the application requires a new route, which remains blocked. |
+| F02 | Closed, corrected | No public tunnel component is installed and no public listener is present. Externally managed DNS cannot reach this host without a new public exposure decision. |
 | F03 | Confirmed | The live topology uses a web proxy container; the decision document still proposes host Caddy. Accept one topology before installation. |
 | F04 | Reframed | Deployment root, data directory, and container mount are layers of one layout, not competing conventions. No silent migration exists or is needed. |
 | F05 | Corrected | The deployed stack shares its host account with interactive development, while a separate legacy account retains a retired unit and protected database. The account relationship needs an explicit isolation decision. |
@@ -123,8 +123,8 @@ Additional findings not in the original register:
 
 1. Tailnet grants and device posture. Requires tailnet administration, not host
    inspection. Reading routes does not prove authorization policy.
-2. Owner-side Cloudflare DNS and origin mapping. No tunnel exists on this host,
-   so any mapping would terminate elsewhere; ownership evidence is external.
+2. Externally managed DNS and origin mapping. No tunnel exists on this host, so
+   any mapping would terminate elsewhere; ownership evidence is external.
 3. Off-host backup restoration and key escrow. Requires an approved separate
    destination and a real restore, neither of which was authorized.
 4. Encrypted-root boot recovery. Requires out-of-band console procedure and a
