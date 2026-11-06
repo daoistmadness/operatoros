@@ -102,7 +102,8 @@ Dated session logs and the reusable session template are exempt from the index.
 ## Audits
 
 - [Dependency optimization audit — 2026-11-04](audits/dependency-optimization-20261104.md) — Current workspace inventory, security findings, and before/after measurements.
-- [Podman deployment readiness audit](audits/podman-deployment-readiness.md) — Current audit of merged main and deployment gates.
+- [OperatorOS host integration audit — 2026-11-06](audits/host-integration-2026-11-06.md) — Current public summary of read-only ingress, runtime, storage, and release findings.
+- [Podman deployment readiness audit](audits/podman-deployment-readiness.md) — Deprecated historical C6 record; predates the merged deployment interface.
 - [Dependency optimization audit](audits/dependency-optimization.md) — Deprecated pre-Start Router comparison.
 
 ## Session logs

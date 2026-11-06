@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "cb3fd83c2dbdd220e7a8550fab9b4b227e7ffce2a303063d570e315b4d927d2c",
+      "fingerprint": "060c9bcf7ce92eb13a97f19c9dbec241dd915333cbbc132cd0ea7a4fddbe503b",
       "snapshot": {
-        "docs/README.md": "6b7cfdd71d9967d247c67a1fe6ad7f5a6fb131c3e0e207fba32d0ecaebf9c5e4"
+        "docs/README.md": "8d4dade5f8e3eed3bcc5c84958f27d865aa16da3eb5ebd0a9fcba047085dc6c1"
       },
-      "head": "ec845acb676699b6ba92ee75069bdbe24e4c438e",
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
       "outcome": "no-change",
-      "reason": "Reviewed the dependency change at ec845acb676699b6ba92ee75069bdbe24e4c438e. It changes Tailwind class merging only in apps/web and packages/ui; the Elysia skill's backend version, routes, runtime, and development task did not change. The new audit and regression cases describe this scoped dependency work, not a reusable Elysia skill task. The existing planning records explicitly limit coverage to the Elysia backend and remain accurate, so no skill or planning edits are needed.",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
-        "Changed: docs/README.md at ec845acb676699b6ba92ee75069bdbe24e4c438e"
+        "Changed: docs/README.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "465b0d8a8877d423d51b98d45f5d45c663adfd1ffc4db892250f875072e9499d",
+      "fingerprint": "fe5ec6d53e319f09d8180e74599a0a36ef025c0f225989099ca444d3961e6897",
       "snapshot": {
-        "CHANGELOG.md": "f9c00db4ca2289483645fe09dc33432398fcd8b6bb1c903dd50b9b68f0a171ee"
+        "CHANGELOG.md": "bdab173e8776081015a2b36147f7d84a0d33e613990889618cb90e93cd358821"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: CHANGELOG.md at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: CHANGELOG.md at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:COMMANDS.md": {
@@ -4045,11 +4045,11 @@
       "snapshot": {
         "docs/guides/tailscale-https-development.md": "34a4100d38cdc18e82ec7104cd351bd7bf7173b1a51722b88c9218a0af8e7967"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: docs/guides/tailscale-https-development.md at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: docs/guides/tailscale-https-development.md at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:docs/migration/legacy-tooling/README.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "2dff3a5577a2226aadea0935dbe2deb03f3968550c626a25d4d3b976bce5f991",
+      "fingerprint": "4ade57084d31cef4d760e349d13014ebacac94debd666a9538e33910c522982b",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "1c2d10d969f96b4d091d6cebdd8a807c560419027572b48958122cbe04cde680"
+        "docs/runbooks/ubuntu-server-deployment.md": "7b77ebaae2abced03a24b75e843f3f12f22d7402abed71aac508224e87ac51f9"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9733,15 +9733,15 @@
       ]
     },
     "source:docs/audits/podman-deployment-readiness.md": {
-      "fingerprint": "dcd685a2e64ffd1e9d37d70f2bb3a6d85f826209e07445e78df2dbcf3be3b68c",
+      "fingerprint": "e65861211ad27334997de6cfdcc654233d9829f2721e5c5be548925bc4061596",
       "snapshot": {
-        "docs/audits/podman-deployment-readiness.md": "01957b82fb0da6b602562078981e13bb5dfb838c2c0694169420641e3b4637ee"
+        "docs/audits/podman-deployment-readiness.md": "896a965669eed1c4ba092044e58cfa28af47adbc9b696758b65757247b7c81ef"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
-        "Changed: docs/audits/podman-deployment-readiness.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/audits/podman-deployment-readiness.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
@@ -9749,11 +9749,11 @@
       "snapshot": {
         "docs/decisions/podman-deployment.md": "9f964f98ea6d2cee5eb90ffac67d57b24a7f26a55a2be3cd687a237601ced87a"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: docs/decisions/podman-deployment.md at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -10073,11 +10073,11 @@
       "snapshot": {
         "scripts/operatoros_deploy.py": "7f5f15cbd6eec9e96a98f94196fe8ee846a327e2498d59429b41118c45933a00"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: scripts/operatoros_deploy.py at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
@@ -10085,11 +10085,11 @@
       "snapshot": {
         "scripts/tests/test_operatoros_deploy.py": "b2195a829eeba3777bc5f59667609dd30767849e809f3b7ccdc4f44e25470c4a"
       },
-      "head": "550ee51c57eb8f95969570eee83e3fa3b855e759",
+      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
       "outcome": "no-change",
-      "reason": "deployment storage-status fix and docs alignment; no skill, schema, or toolchain contract change",
+      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 550ee51c57eb8f95969570eee83e3fa3b855e759"
+        "Changed: scripts/tests/test_operatoros_deploy.py at e3fb995130ff18c085d8973c12db2a7875569735"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10114,6 +10114,30 @@
       "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
         "Changed: scripts/deployment-rehearsal.py at cde3ffcbb34db69a1e995d4258099a923581533b"
+      ]
+    },
+    "source:docs/audits/oprserver-integration-2026-11-06.md": {
+      "fingerprint": "11890f21055643b0a17936c9f9a5ea816d4c90eb340274f95d758a0266230e3a",
+      "snapshot": {
+        "docs/audits/oprserver-integration-2026-11-06.md": "60fa369128371cd5f29c5349ccb9c8899db79ea68edc6600f09bfb3f399d5370"
+      },
+      "head": "7ac459153107bfdd3c51958cddf1f9171bb79e3b",
+      "outcome": "no-change",
+      "reason": "The public audit and runbook edits do not change the Elysia skill or its guidance.",
+      "evidence": [
+        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 7ac459153107bfdd3c51958cddf1f9171bb79e3b"
+      ]
+    },
+    "source:docs/audits/host-integration-2026-11-06.md": {
+      "fingerprint": "414e881eab9733506d76120059fe6b08eea2a9fd6bf224e6ea760525719359fa",
+      "snapshot": {
+        "docs/audits/host-integration-2026-11-06.md": "3a5d5b36835c96a223a5e5b311d6a6da64ed00d2807a84ae46d31efb619eebd8"
+      },
+      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
+      "outcome": "no-change",
+      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
+      "evidence": [
+        "Changed: docs/audits/host-integration-2026-11-06.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
       ]
     }
   }
