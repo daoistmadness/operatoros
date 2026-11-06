@@ -81,6 +81,7 @@ class VerifiedRelease:
     bundle_sha256: str
     artifact_id: str
     artifact_name: str
+    artifact_expires_at: str
 
 
 @dataclass(frozen=True)
@@ -497,6 +498,17 @@ def verify_run_and_artifact(request: ReleaseRequest, token: str, work: Path) -> 
         artifact.get("expired") is not False or run_ref.get("id") != int(request.run_id) or
         run_ref.get("head_sha") != request.source_sha or run_ref.get("head_branch") != "main"):
         raise DeployError("GitHub artifact identity, retention, or workflow association mismatch")
+    expires_at = artifact.get("expires_at")
+    if not isinstance(expires_at, str):
+        raise DeployError("GitHub artifact expiration is missing or malformed")
+    try:
+        expiration = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    except (AttributeError, ValueError) as error:
+        raise DeployError("GitHub artifact expiration is missing or malformed") from error
+    if expiration.tzinfo is None:
+        raise DeployError("GitHub artifact expiration must include a timezone")
+    if expiration.astimezone(timezone.utc) <= datetime.now(timezone.utc):
+        raise DeployError("GitHub artifact has expired")
     api_digest = artifact.get("digest", "")
     expected_digest = request.envelope_sha256 if request.envelope_sha256.startswith("sha256:") else "sha256:" + request.envelope_sha256
     if api_digest != expected_digest:
@@ -634,7 +646,7 @@ def verified_artifact(request: ReleaseRequest, work: Path) -> VerifiedRelease:
     (work / "operatoros-api.oci.tar").write_bytes(verified["files"]["operatoros-api.oci.tar"])
     (work / "operatoros-web-client.tar.gz").write_bytes(verified["files"]["operatoros-web-client.tar.gz"])
     return VerifiedRelease(bundle, verified["files"], manifest, actual_envelope_sha, bundle_sha,
-                           request.artifact_id, request.artifact_name)
+                           request.artifact_id, request.artifact_name, artifact["expires_at"])
 
 
 def path_from_config(value: str, label: str, must_exist: bool = True) -> Path:
@@ -937,6 +949,8 @@ def sha_db_snapshot(data_dir: Path) -> dict[str, tuple[int, int, int, int, int]]
                 raise DeployError(f"SQLite path is not a regular file: {name}")
             if info.st_uid != os.getuid() or info.st_mode & 0o077:
                 raise DeployError(f"SQLite file ownership or permissions are unsafe: {name}")
+            if name == "operatoros.sqlite-shm" or (name == "operatoros.sqlite-wal" and info.st_size == 0):
+                continue
             snapshot[name] = (info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns, info.st_mode)
     if "operatoros.sqlite" not in snapshot:
         raise DeployError("application SQLite database is missing")
@@ -1842,7 +1856,16 @@ def main() -> int:
                 print(json.dumps({"result": "verified", "source_sha": request.source_sha,
                                   "run_id": request.run_id, "run_attempt": request.run_attempt,
                                   "artifact_id": release.artifact_id, "artifact_name": release.artifact_name,
+                                  "artifact_expires_at": release.artifact_expires_at,
                                   "envelope_sha256": release.envelope_sha256, "bundle_sha256": release.bundle_sha256,
+                                  "manifest_sha256": hashlib.sha256(release.files["manifest.json"]).hexdigest(),
+                                  "repository": release.manifest["repository"],
+                                  "workflow": release.manifest["workflow"],
+                                  "source_ref": release.manifest["source_ref"],
+                                  "attestation": "verified",
+                                  "artifact_checksums": release.manifest["artifacts"],
+                                  "scanner": release.manifest["scanner"],
+                                  "security_scope": release.manifest["security_scope"],
                                   "api_image": release.manifest["image"],
                                   "spa_sha256": release.manifest["artifacts"]["operatoros-web-client.tar.gz"]}, indent=2))
             return 0

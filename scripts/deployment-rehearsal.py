@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 from http.cookiejar import CookieJar
 import json
 import os
@@ -25,13 +26,36 @@ from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_ope
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY = "daoistmadness/operatoros"
-SOURCE_SHA = "278faae7a027cf1c96326d32a9b796618d75620e"
-RELEASE_RUN_ID = "41987515713"
+SOURCE_SHA = "b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84"
+RELEASE_RUN_ID = "42181508155"
 RELEASE_ATTEMPT = "1"
-ARTIFACT_ID = "13396749662"
+ARTIFACT_ID = "13485579515"
 ARTIFACT_NAME = f"operatoros-release-{SOURCE_SHA}-{RELEASE_RUN_ID}-{RELEASE_ATTEMPT}"
-INNER_BUNDLE_SHA256 = "a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435"
-ENVELOPE_SHA256 = "sha256:22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7"
+INNER_BUNDLE_SHA256 = "0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39"
+ENVELOPE_SHA256 = "0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4"
+OCI_MANIFEST_DIGEST = "sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed"
+OCI_IMAGE_ID = "sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6"
+SPA_SHA256 = "8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc"
+ARTIFACT_EXPIRES_AT = "2027-02-04T07:32:13Z"
+SQLITE_WAL_SETUP = (
+    "import { Database } from 'bun:sqlite'; "
+    "const db = new Database(process.argv[1]); "
+    "const journalMode = db.query('PRAGMA journal_mode=WAL').get().journal_mode; "
+    "if (journalMode !== 'wal') throw new Error('synthetic database did not enter WAL mode'); "
+    "console.log(JSON.stringify({journal_mode: journalMode})); db.close();"
+)
+SQLITE_ASSERTION = (
+    "import { Database } from 'bun:sqlite'; "
+    "const db = new Database(process.argv[1], {readonly: true}); "
+    "const integrity = db.query('PRAGMA integrity_check').get()?.integrity_check; "
+    "const foreignKeys = db.query('PRAGMA foreign_key_check').all(); "
+    "const journalMode = db.query('PRAGMA journal_mode').get()?.journal_mode; "
+    "const admin = db.query('SELECT username, role, is_active FROM users WHERE username=?').get(process.argv[2]); "
+    "if (integrity !== 'ok' || foreignKeys.length !== 0 || journalMode !== 'wal' || "
+    "admin?.role !== 'admin' || admin?.is_active !== 1) throw new Error('synthetic SQLite validation failed'); "
+    "console.log(JSON.stringify({integrity_check: integrity, foreign_key_violations: foreignKeys.length, "
+    "journal_mode: journalMode, synthetic_admin_preserved: true})); db.close();"
+)
 WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
 MIN_FREE_BYTES = 5 * 1024**3
 MIN_FREE_INODES = 20_000
@@ -753,7 +777,6 @@ def rehearse(workspace: Path, diagnostics: Path,
     os.chmod(workspace, 0o700)
     for name in ("deploy", "data", "data/backups", "web", "web/releases"):
         (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
-    context = deploy.create_private_podman_context(workspace)
     api_port = reserve_loopback_port(set())
     web_port = reserve_loopback_port({api_port})
     origin = f"http://127.0.0.1:{web_port}"
@@ -769,34 +792,87 @@ def rehearse(workspace: Path, diagnostics: Path,
                    "services": list(services), "loopback_ports": {"api": api_port, "web": web_port}})
     write_json(report_path, REPORT)
 
-    storage_conf = context.storage_conf
-    graphroot = context.graphroot
-    runroot = context.runroot
-    env = private_env(workspace, context)
-    info = deploy.command_json(["podman", "info", "--format", "json"], env)
-    deploy.validate_podman_store(info, context, require_empty=True)
-    PODMAN_CONTEXT_VERIFIED = True
-    deploy.require_empty_podman_store(context, env)
-    uid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/uid_map"], env)
-    gid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/gid_map"], env)
-    for mapping in (uid_map, gid_map):
-        require(sum(int(line.split()[2]) for line in mapping.splitlines() if len(line.split()) == 3) >= 65_536,
-                "Podman user namespace does not expose the required subordinate ID range")
-    REPORT["checks"]["podman_context"] = "private config, graphroot/runroot, metadata paths, VFS driver, empty inventory, rootless systemd cgroup v2, subordinate ID maps verified"
-
     request = deploy.ReleaseRequest(SOURCE_SHA, RELEASE_RUN_ID, RELEASE_ATTEMPT,
                                     ARTIFACT_ID, ARTIFACT_NAME, ENVELOPE_SHA256)
     with tempfile.TemporaryDirectory(prefix="verified-artifact.", dir=workspace / "deploy") as temporary:
         verified = deploy.verified_artifact(request, Path(temporary))
-        require(verified.bundle_sha256 == INNER_BUNDLE_SHA256,
-                "verified inner bundle checksum differs from the approved rehearsal artifact")
+        manifest = verified.manifest
+        image = manifest.get("image", {})
+        artifacts = manifest.get("artifacts", {})
+        require(verified.envelope_sha256 == ENVELOPE_SHA256 and
+                verified.bundle_sha256 == INNER_BUNDLE_SHA256 and
+                verified.artifact_id == ARTIFACT_ID and verified.artifact_name == ARTIFACT_NAME and
+                verified.artifact_expires_at == ARTIFACT_EXPIRES_AT,
+                "verified release envelope, bundle, or artifact identity differs from Gate B")
+        require(manifest.get("source_commit") == SOURCE_SHA and
+                str(manifest.get("run_id")) == RELEASE_RUN_ID and
+                str(manifest.get("run_attempt")) == RELEASE_ATTEMPT and
+                manifest.get("repository") == REPOSITORY and
+                manifest.get("workflow") == REPOSITORY + "/.github/workflows/ci.yml" and
+                image.get("manifest_digest") == OCI_MANIFEST_DIGEST and
+                image.get("image_id") == OCI_IMAGE_ID and
+                artifacts.get("operatoros-web-client.tar.gz") == SPA_SHA256,
+                "verified release manifest or component identities differ from Gate B")
         release = verified
+        REPORT["artifact_verification"] = {
+            "result": "verified",
+            "attestation": "verified",
+            "repository": manifest["repository"],
+            "consumer": "scripts.operatoros_deploy.verified_artifact",
+            "source_sha": SOURCE_SHA,
+            "source_ref": manifest["source_ref"],
+            "workflow": REPOSITORY + "/.github/workflows/ci.yml",
+            "run_id": RELEASE_RUN_ID,
+            "run_attempt": RELEASE_ATTEMPT,
+            "artifact_id": ARTIFACT_ID,
+            "artifact_name": ARTIFACT_NAME,
+            "expires_at": verified.artifact_expires_at,
+            "envelope_sha256": verified.envelope_sha256,
+            "bundle_sha256": verified.bundle_sha256,
+            "manifest_sha256": hashlib.sha256(verified.files["manifest.json"]).hexdigest(),
+            "artifact_checksums": manifest["artifacts"],
+            "scanner": manifest["scanner"],
+            "security_scope": manifest["security_scope"],
+            "oci_manifest_digest": image["manifest_digest"],
+            "oci_image_id": image["image_id"],
+            "spa_sha256": artifacts["operatoros-web-client.tar.gz"],
+        }
+        REPORT["checks"]["artifact_verification"] = "GitHub repository, run, workflow, attestation, envelope, bundle, manifest, OCI, and SPA identities verified before Podman initialization"
+        write_json(report_path, REPORT)
+        print("ARTIFACT_VERIFICATION_PASS " + json.dumps(REPORT["artifact_verification"], sort_keys=True), flush=True)
+
+        context = deploy.create_private_podman_context(workspace)
+        storage_conf = context.storage_conf
+        graphroot = context.graphroot
+        runroot = context.runroot
+        env = private_env(workspace, context)
+        info = deploy.command_json(["podman", "info", "--format", "json"], env)
+        deploy.validate_podman_store(info, context, require_empty=True)
+        PODMAN_CONTEXT_VERIFIED = True
+        deploy.require_empty_podman_store(context, env)
+        uid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/uid_map"], env)
+        gid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/gid_map"], env)
+        for mapping in (uid_map, gid_map):
+            require(sum(int(line.split()[2]) for line in mapping.splitlines() if len(line.split()) == 3) >= 65_536,
+                    "Podman user namespace does not expose the required subordinate ID range")
+        REPORT["checks"]["podman_context"] = "private config, graphroot/runroot, metadata paths, VFS driver, empty inventory, rootless systemd cgroup v2, subordinate ID maps verified"
+
         image_ref = image_identity_for_release(deploy, release, workspace, context)
         deploy.command(["podman", "pull", deploy.CADDY_IMAGE], env, timeout=300)
 
         (admin_username, admin_password, cookie_secret, backup_key,
          auth_secret_name, backup_secret_name) = setup_synthetic_database(workspace, SOURCE_SHA, context)
-        # Seed a deliberately distinct previous SPA target so rollback visibly restores application files.
+        wal_setup = run(["bun", "-e", SQLITE_WAL_SETUP, str(workspace / "data/operatoros.sqlite")],
+                        env=system_environment(), timeout=30)
+        require(json.loads(wal_setup.stdout).get("journal_mode") == "wal",
+                "synthetic SQLite database did not enable WAL mode")
+        sqlite_before_transition = run(
+            ["bun", "-e", SQLITE_ASSERTION, str(workspace / "data/operatoros.sqlite"), admin_username],
+            env=system_environment(), timeout=30,
+        )
+        REPORT["checks"]["sqlite_wal_mode"] = "synthetic database set to WAL before deployment"
+        REPORT["checks"]["sqlite_before_transition"] = json.loads(sqlite_before_transition.stdout)
+        REPORT["checks"]["sqlite_schema"] = "synthetic S5.4 database passed integrity, foreign-key, and seeded-user checks"
         previous_spa = deploy.materialize_spa({"root": workspace}, release, "legacy-" + SOURCE_SHA)
         shell = previous_spa / "client/_shell.html"
         shell.chmod(0o600)
@@ -818,7 +894,6 @@ def rehearse(workspace: Path, diagnostics: Path,
         require(deploy.sha_db_snapshot(bad_data) == before_bad,
                 "schema compatibility rejection modified its synthetic SQLite fixture")
 
-        # Create the encrypted backup after schema rejection and before starting services.
         backup_env = env | api_environment(SOURCE_SHA, origin) | {
             "OPERATOROS_DATA_DIR": str(workspace / "data"),
             "AUTH_COOKIE_SECRET": cookie_secret,
@@ -879,19 +954,81 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["bundle_sha256"] = verified.bundle_sha256
         REPORT["spa_sha256"] = release.manifest["artifacts"]["operatoros-web-client.tar.gz"]
 
+        unauthenticated = run(["curl", "--silent", "--show-error", "--output", os.devnull,
+                               "--write-out", "%{http_code}", cfg["web_url"] + "/api/auth/me"])
+        require(unauthenticated.stdout == "401", "unauthenticated API request was not rejected")
+        REPORT["checks"]["unauthenticated_auth_me"] = 401
         login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
+        sqlite_after_deploy = run(
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            env=system_environment(), timeout=30,
+        )
+        REPORT["checks"]["sqlite_after_deploy"] = json.loads(sqlite_after_deploy.stdout)
         wait_url(cfg["web_url"] + "/attendance/calendar", 200)
         wait_url(cfg["web_url"] + "/.env", 404)
-        # The release verifier already checked the SPA archive. Ask Caddy for one real file by its retained tree.
+        wait_url(cfg["web_url"] + "/.git/config", 404)
         client = Path(previous_spa / "client")
-        static_files = [path for path in client.rglob("*") if path.is_file() and path.suffix in (".js", ".css")]
+        static_files = sorted(path for path in client.rglob("*") if path.is_file() and path.suffix in (".js", ".css"))
         require(bool(static_files), "verified SPA contains no JS/CSS asset for Caddy validation")
         rel = static_files[0].relative_to(client).as_posix()
-        wait_url(cfg["web_url"] + "/" + rel, 200)
-        REPORT["checks"]["authenticated_api_spa_dotfiles"] = "synthetic login, auth/me, deep route, static asset, dotfile 404 passed"
+        asset_url = cfg["web_url"] + "/" + rel
+        wait_url(asset_url, 200)
+        asset_headers = run(["curl", "--silent", "--show-error", "--dump-header", "-", "--output", os.devnull,
+                             "--max-time", "10", asset_url])
+        status_lines = [line for line in asset_headers.stdout.splitlines() if line.startswith("HTTP/")]
+        headers = {key.lower(): value.strip() for line in asset_headers.stdout.splitlines()
+                   if ":" in line for key, _, value in (line.partition(":"),)}
+        require(status_lines and status_lines[-1].split()[1] == "200",
+                "static asset response did not return HTTP 200")
+        expected_content_types = {".js": {"text/javascript", "application/javascript"}, ".css": {"text/css"}}
+        content_type = headers.get("content-type", "").split(";", 1)[0].strip().lower()
+        require(content_type in expected_content_types[static_files[0].suffix],
+                "static asset returned an unexpected MIME type")
+        etag = headers.get("etag")
+        require(bool(etag), "static asset response did not include an ETag cache validator")
+        conditional = run(["curl", "--silent", "--show-error", "--output", os.devnull,
+                           "--write-out", "%{http_code}", "--header", f"If-None-Match: {etag}", asset_url])
+        require(conditional.stdout == "304", "conditional static asset request did not return HTTP 304")
+        REPORT["checks"]["authenticated_api_spa_dotfiles"] = (
+            "synthetic login, auth/me, deep route, and dotfile protection passed"
+        )
+        REPORT["checks"]["static_asset"] = {"status": 200, "content_type": content_type,
+                                            "etag": "present", "conditional_status": 304}
 
-        # A held deployment lock must reject rollback without reaching Podman or systemd state changes.
+        deploy.service_call(cfg, "restart", api_service)
+        wait_url(cfg["api_url"] + "/health")
+        wait_url(cfg["api_url"] + "/ready")
+        login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
+        sqlite_after_api_restart = run(
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            env=system_environment(), timeout=30,
+        )
+        REPORT["checks"]["sqlite_after_api_restart"] = json.loads(sqlite_after_api_restart.stdout)
+        deploy.service_call(cfg, "restart", caddy_service)
+        wait_url(cfg["web_url"] + "/ready")
+        login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
+        REPORT["checks"]["quadlet_restart"] = (
+            "API and Caddy Quadlet user services restarted and passed readiness and authentication"
+        )
+
+        legacy_release_id = "legacy-" + SOURCE_SHA
         lock_path = workspace / "deploy/.operatoros-deploy.lock"
+
+        def locked_application_state() -> dict[str, Any]:
+            return {
+                "database": deploy.sha_db_snapshot(cfg["data_dir"]),
+                "spa_current": os.readlink(cfg["root"] / "web/current"),
+                "api_unit_sha256": hashlib.sha256(api_unit.read_bytes()).hexdigest(),
+                "caddy_unit_sha256": hashlib.sha256(caddy_unit.read_bytes()).hexdigest(),
+                "systemd_active": {
+                    service: deploy.command(["systemctl", "--user", "is-active", service]).strip()
+                    for service in services
+                },
+                "containers": sorted(deploy.command(
+                    ["podman", "ps", "--all", "--format", "{{.ID}} {{.Image}} {{.Names}} {{.State}}"], env
+                ).splitlines()),
+            }
+
         lock_holder = subprocess.Popen([
             sys.executable, "-c",
             "import fcntl,sys,time; f=open(sys.argv[1],'r+b'); fcntl.flock(f,fcntl.LOCK_EX); print('locked',flush=True); time.sleep(20)",
@@ -900,26 +1037,21 @@ def rehearse(workspace: Path, diagnostics: Path,
         try:
             require(lock_holder.stdout is not None and lock_holder.stdout.readline().strip() == "locked",
                     "could not establish the synthetic deployment lock")
-            locked = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", "legacy-" + SOURCE_SHA,
+            locked_state_before = locked_application_state()
+            locked = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", legacy_release_id,
                               "--config", str(config), "--yes"], expect_success=False)
             require("another OperatorOS deployment or rollback holds the lock" in locked.stderr,
                     "deployment lock did not reject a concurrent rollback")
+            require(locked_application_state() == locked_state_before,
+                    "lock-rejected rollback changed the synthetic database, SPA, units, services, or containers")
         finally:
             lock_holder.terminate()
             lock_holder.wait(timeout=5)
         REPORT["checks"]["concurrent_lock_rejected"] = True
-
-        marker = deploy.active_transaction(cfg)
-        deploy.update_transaction(marker, {"schema_version": 1, "transaction_id": "synthetic-interruption"}, "api_restarted")
-        interrupted = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
-                                          "--config", str(config)]).stdout)
-        require(interrupted.get("state") == "incomplete_transaction",
-                "incomplete deployment transaction was not reported")
-        marker.unlink()
-        REPORT["checks"]["interrupted_transaction_reported"] = True
+        REPORT["checks"]["locked_application_state_unchanged"] = True
 
         before_rollback = deploy.sha_db_snapshot(cfg["data_dir"])
-        rollback = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", "legacy-" + SOURCE_SHA,
+        rollback = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", legacy_release_id,
                             "--config", str(config), "--yes"])
         require(rollback.returncode == 0 and "rolled_back" in rollback.stdout,
                 "application-only rollback failed")
@@ -930,11 +1062,61 @@ def rehearse(workspace: Path, diagnostics: Path,
                                         env=system_environment(), capture_output=True, text=True, check=False)
         require(shell_response.returncode == 0 and "synthetic previous application shell" in shell_response.stdout,
                 "rollback did not restore the previous synthetic SPA")
+        login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
+        sqlite_after_rollback = run(
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            env=system_environment(), timeout=30,
+        )
+        REPORT["checks"]["sqlite_after_rollback"] = json.loads(sqlite_after_rollback.stdout)
+        rolled_back_status = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
+                                                 "--config", str(config)]).stdout)
+        require(rolled_back_status.get("state") == "healthy", "rollback did not restore a healthy application state")
+        REPORT["checks"]["application_rollback_sqlite_preserved"] = True
+
+        interrupted_db_before = deploy.sha_db_snapshot(cfg["data_dir"])
+        interrupted_previous = {
+            "old_release_path": str(previous_spa.resolve(strict=True)),
+            "old_release_id": previous_spa.name,
+            "old_image_ref": image_ref,
+            "old_image_id": release.manifest["image"]["image_id"],
+            "old_commit": SOURCE_SHA,
+            "release_id": legacy_release_id,
+            "db_snapshot": interrupted_db_before,
+        }
+        interrupted_tx = deploy.snapshot_state(
+            cfg, interrupted_previous, "interrupted-" + str(time.time_ns())
+        )
+        deployed_spa = cfg["root"] / "web/releases" / request.release_id
+        deploy.switch_pointer(cfg, deployed_spa)
+        deploy.service_call(cfg, "restart", caddy_service)
+        deploy.update_transaction(deploy.active_transaction(cfg), interrupted_tx, "caddy_restarted")
+        interrupted = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
+                                          "--config", str(config)]).stdout)
+        require(interrupted.get("state") == "incomplete_transaction",
+                "interrupted deployment transaction was not reported")
+        REPORT["checks"]["interrupted_transaction_reported"] = True
+
+        recovered = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", legacy_release_id,
+                             "--config", str(config), "--yes"])
+        require(recovered.returncode == 0 and "rolled_back" in recovered.stdout,
+                "interrupted deployment could not restore its recorded previous release")
+        require(deploy.sha_db_snapshot(cfg["data_dir"]) == interrupted_db_before,
+                "SQLite main/WAL/SHM changed during interrupted transaction recovery")
         final_status = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
                                            "--config", str(config)]).stdout)
-        require(final_status.get("state") == "healthy", "rollback did not restore a healthy application state")
-        REPORT["checks"]["application_rollback_sqlite_preserved"] = True
-        REPORT["result"] = "synthetic deployment and application rollback passed"
+        require(final_status.get("state") == "healthy" and
+                final_status.get("current_release", {}).get("release_id") == legacy_release_id,
+                "interrupted transaction recovery did not restore a healthy previous application")
+        sqlite_after_recovery = run(
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            env=system_environment(), timeout=30,
+        )
+        REPORT["checks"]["sqlite_after_interrupted_recovery"] = json.loads(sqlite_after_recovery.stdout)
+        REPORT["checks"]["interrupted_transaction_recovered"] = True
+        REPORT["rollback_scope"] = (
+            "same API image; rollback restored a distinct synthetic SPA target, not a second release artifact"
+        )
+        REPORT["result"] = "synthetic deployment, application rollback, and interrupted recovery passed"
 
     write_json(diagnostics / "rehearsal-evidence.json", REPORT)
 
@@ -982,6 +1164,12 @@ def main() -> int:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
             except OSError:
                 cleanup_failure = cleanup_failure or RehearsalError("could not write final diagnostics")
+    REPORT["rehearsal_exit_code"] = 1 if failure is not None or cleanup_failure is not None else 0
+    if diagnostics is not None:
+        try:
+            write_json(diagnostics / "rehearsal-evidence.json", REPORT)
+        except OSError:
+            cleanup_failure = cleanup_failure or RehearsalError("could not write rehearsal exit status")
     if failure is not None and cleanup_failure is not None:
         print(f"Rehearsal failed ({failure_kind(failure)}); cleanup also failed ({failure_kind(cleanup_failure)})",
               file=sys.stderr)
