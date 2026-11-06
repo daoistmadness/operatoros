@@ -10119,15 +10119,15 @@
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
-      "fingerprint": "9362640d95345cf78203c35338c4e7abd9f7f86222500290f260f78ab30378d6",
+      "fingerprint": "e90873d4801087d94108684f25c2f270c8c0c31f0b9a36b69e338a1e8f509866",
       "snapshot": {
-        "docs/audits/oprserver-integration-2026-11-06.md": "99a7aded136e00f028b0240e4c5a90880e4a79222b1b1e39fafda4eb11039b0b"
+        "docs/audits/oprserver-integration-2026-11-06.md": "24b443980b0fe8bed3c48c4e7179dce14b521c4b86642e90a39def4bb3f5b7bd"
       },
-      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
+      "head": "6e42dd1f3971705d3d60e6a29d3bf49be8f1bfe0",
       "outcome": "no-change",
-      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
+      "reason": "audit doc kernel correction only; no skill, source, schema, or behavior change",
       "evidence": [
-        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
+        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 6e42dd1f3971705d3d60e6a29d3bf49be8f1bfe0"
       ]
     }
   }
