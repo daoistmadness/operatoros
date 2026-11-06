@@ -384,6 +384,89 @@ class PodmanIsolationTests(unittest.TestCase):
         with self.assertRaisesRegex(deploy.DeployError, "already contains"):
             deploy.validate_podman_store(info, self.context, require_empty=True)
 
+    def test_private_context_rejections_have_stable_sanitized_codes(self):
+        cases = (
+            ("rootless", {"host": {"security": {"rootless": False}}}, "CTX_ROOTLESS_MISMATCH"),
+            ("graphroot", {"store": {"graphRoot": str(self.parent / "other-graphroot")},
+                            "host": {"security": {"rootless": True}, "serviceIsRemote": False,
+                                     "cgroupVersion": "v2", "cgroupManager": "systemd"}},
+             "CTX_GRAPHROOT_MISMATCH"),
+            ("runroot", {"store": {"runRoot": str(self.parent / "other-runroot")},
+                          "host": {"security": {"rootless": True}, "serviceIsRemote": False,
+                                   "cgroupVersion": "v2", "cgroupManager": "systemd"}},
+             "CTX_RUNROOT_MISMATCH"),
+            ("configfile", {"store": {"configFile": str(self.parent / "other-storage.conf")},
+                            "host": {"security": {"rootless": True}, "serviceIsRemote": False,
+                                     "cgroupVersion": "v2", "cgroupManager": "systemd"}},
+             "CTX_CONFIGFILE_MISMATCH"),
+        )
+        for name, partial, code in cases:
+            with self.subTest(name=name):
+                info = self.info()
+                info["host"].update(partial.get("host", {}))
+                info["store"].update(partial.get("store", {}))
+                with self.assertRaises(deploy.DeployError) as error:
+                    deploy.validate_podman_store(info, self.context, require_empty=True)
+                self.assertEqual(getattr(error.exception, "code", None), code)
+                self.assertIsInstance(getattr(error.exception, "stage", None), str)
+                self.assertIsInstance(getattr(error.exception, "last_completed_guard", None), str)
+                self.assertNotIn(str(self.parent), str(error.exception))
+
+        info = self.info()
+        info["store"]["imageStore"]["number"] = 1
+        with self.assertRaises(deploy.DeployError) as error:
+            deploy.validate_podman_store(info, self.context, require_empty=True)
+        self.assertEqual(getattr(error.exception, "code", None), "CTX_NONEMPTY_STORE")
+
+    def test_incomplete_podman_info_and_missing_private_directory_have_codes(self):
+        with self.assertRaises(deploy.DeployError) as error:
+            deploy.validate_podman_store({"host": {}, "store": {}}, self.context)
+        self.assertEqual(getattr(error.exception, "code", None), "CTX_PODMAN_INFO_INVALID_JSON")
+
+        self.context.graphroot.rmdir()
+        with self.assertRaises(deploy.DeployError) as error:
+            deploy.validate_private_podman_config(self.context)
+        self.assertEqual(getattr(error.exception, "code", None), "CTX_CONFIG_FAILURE")
+
+    def test_private_podman_info_command_and_json_failures_are_distinct(self):
+        secret = "synthetic-private-token"
+        command_failure = subprocess.CompletedProcess(
+            ["podman"], 17, "", f"{secret} command failed",
+        )
+        with patch.object(deploy, "run_command", return_value=command_failure):
+            with self.assertRaises(deploy.DeployError) as error:
+                deploy.command_json(["podman", "info", "--format", "json"], context_diagnostics=True)
+        self.assertEqual(getattr(error.exception, "code", None), "CTX_PODMAN_INFO_FAILURE")
+        self.assertEqual(getattr(error.exception, "exit_code", None), 17)
+        self.assertNotIn(secret, str(error.exception))
+
+        malformed = subprocess.CompletedProcess(["podman"], 0, "not json", secret)
+        with patch.object(deploy, "run_command", return_value=malformed):
+            with self.assertRaises(deploy.DeployError) as error:
+                deploy.command_json(["podman", "info", "--format", "json"], context_diagnostics=True)
+        self.assertEqual(getattr(error.exception, "code", None), "CTX_PODMAN_INFO_INVALID_JSON")
+        self.assertEqual(getattr(error.exception, "exit_code", None), 0)
+        self.assertNotIn(secret, str(error.exception))
+
+    def test_user_namespace_maps_must_be_numeric_and_cover_the_required_range(self):
+        validator = getattr(deploy, "validate_user_namespace_map", None)
+        self.assertTrue(callable(validator))
+        self.assertIsNone(validator(
+            "0 1001 1\n1 100000 65536", name="uid",
+            last_completed_guard="podman_store_identity_verified",
+        ))
+        for mapping in ("x y 65536", "0 1001 0", "0 1001 65535", ""):
+            with self.subTest(mapping=mapping):
+                with self.assertRaises(deploy.DeployError) as error:
+                    validator(
+                        mapping, name="gid",
+                        last_completed_guard="uid_map_verified",
+                    )
+                self.assertEqual(getattr(error.exception, "code", None), "CTX_IDMAP_INVALID")
+                self.assertEqual(getattr(error.exception, "stage", None), "uid_gid_map_validation")
+                self.assertEqual(getattr(error.exception, "last_completed_guard", None), "uid_map_verified")
+                self.assertNotIn(mapping, str(error.exception))
+
     def test_initial_inventory_checks_all_resources_and_environment_identity(self):
         env = self.context.environment()
         with patch.object(deploy, "command", return_value="") as command:
