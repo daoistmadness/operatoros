@@ -582,21 +582,45 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
     def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
         script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
         for identity in (
-            '278faae7a027cf1c96326d32a9b796618d75620e',
-            '41987515713',
-            '13396749662',
-            'a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435',
-            '22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7',
+            'b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84',
+            '42181508155',
+            '13485579515',
+            '0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39',
+            '0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4',
+            'sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed',
+            'sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6',
+            '8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc',
+            '2027-02-04T07:32:13Z',
         ):
             self.assertIn(identity, script)
         self.assertIn('deploy.verified_artifact(request', script)
+        self.assertIn('"manifest_sha256": hashlib.sha256(verified.files["manifest.json"]).hexdigest()', script)
+        self.assertIn('"artifact_checksums": manifest["artifacts"]', script)
+        self.assertIn('"attestation": "verified"', script)
+        self.assertIn('verified.envelope_sha256 == ENVELOPE_SHA256', script)
         self.assertIn('verified.bundle_sha256 == INNER_BUNDLE_SHA256', script)
+        self.assertIn('manifest.get("workflow") == REPOSITORY + "/.github/workflows/ci.yml"', script)
+        self.assertIn('SQLITE_ASSERTION', script)
+        self.assertIn('PRAGMA journal_mode=WAL', script)
+        self.assertIn('If-None-Match', script)
+        self.assertIn('"quadlet_restart"', script)
+        self.assertIn('"locked_application_state_unchanged"', script)
+        self.assertIn('"sqlite_after_interrupted_recovery"', script)
+        self.assertIn('"interrupted_transaction_recovered"', script)
+        self.assertIn('interrupted deployment could not restore its recorded previous release', script)
+        self.assertLess(script.index('verified = deploy.verified_artifact'),
+                        script.index('context = deploy.create_private_podman_context(workspace)'))
+        self.assertLess(script.index('context = deploy.create_private_podman_context(workspace)'),
+                        script.index('image_ref = image_identity_for_release'))
         self.assertIn('OPERATOROS_REHEARSAL_CONFIRMED', script)
         self.assertIn('RUNNER_TEMP', script)
         self.assertIn('podman-rootless/graphroot', script)
         self.assertIn('show-environment', script)
         self.assertIn('OPERATOROS_RELEASE_TOKEN', script)
         self.assertIn('REGISTRY_AUTH_FILE', (ROOT / 'scripts/operatoros_deploy.py').read_text())
+        deploy_source = (ROOT / 'scripts/operatoros_deploy.py').read_text()
+        self.assertIn('"manifest_sha256": hashlib.sha256(release.files["manifest.json"]).hexdigest()', deploy_source)
+        self.assertIn('"artifact_expires_at": release.artifact_expires_at', deploy_source)
         self.assertNotIn('podman", "build', script)
         self.assertNotIn('sudo ', script)
         self.assertNotIn('/mnt/podman-data/operatoros', script)

@@ -4,13 +4,14 @@ import io
 import json
 import os
 from pathlib import Path
+import sqlite3
 import stat
 import subprocess
 import sys
 import tempfile
 import unittest
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 
@@ -65,6 +66,7 @@ def github_artifact(request, envelope, *, artifact_id=456, run_id=123, sha=relea
         "id": artifact_id,
         "name": request.artifact_name,
         "expired": False,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat().replace("+00:00", "Z"),
         "digest": "sha256:" + hashlib.sha256(envelope).hexdigest(),
         "size_in_bytes": len(envelope),
         "archive_download_url": "https://api.github.com/repos/daoistmadness/operatoros/actions/artifacts/456/zip",
@@ -130,6 +132,7 @@ class ArtifactVerificationTests(unittest.TestCase):
         result = self.verify()
         self.assertEqual(result.envelope_sha256, hashlib.sha256(self.envelope).hexdigest())
         self.assertEqual(result.bundle_sha256, self.bundle_sha)
+        self.assertEqual(result.artifact_expires_at, self.artifact["expires_at"])
         self.assertEqual(result.manifest["source_commit"], release_tests.SHA)
         self.assertEqual(result.manifest["run_id"], "123")
         self.assertEqual(result.manifest["run_attempt"], "1")
@@ -186,6 +189,12 @@ class ArtifactVerificationTests(unittest.TestCase):
             with self.subTest(artifact=bad):
                 with self.assertRaises(deploy.DeployError):
                     self.verify(artifact=bad)
+
+    def test_artifact_expiration_must_be_future_and_timezone_qualified(self):
+        for expires_at in (None, 42181508155, "not-a-date", "2020-01-01T00:00:00Z", "2027-02-04T07:32:13"):
+            with self.subTest(expires_at=expires_at):
+                with self.assertRaisesRegex(deploy.DeployError, "expiration|expired"):
+                    self.verify(artifact=self.artifact | {"expires_at": expires_at})
 
     def test_wrong_artifact_name_run_manifest_or_attestation_fails_closed(self):
         wrong_request = deploy.ReleaseRequest(self.request.source_sha, self.request.run_id, self.request.run_attempt,
@@ -773,7 +782,8 @@ class DeploymentFixture(unittest.TestCase):
             (Path(temp) / "operatoros-api.oci.tar").write_bytes(b"synthetic OCI archive")
             release = deploy.VerifiedRelease(bundle, release.files, release.manifest,
                                              release.envelope_sha256, release.bundle_sha256,
-                                             release.artifact_id, release.artifact_name)
+                                             release.artifact_id, release.artifact_name,
+                                             release.artifact_expires_at)
             env = {"CONTAINERS_STORAGE_CONF": str(self.storage_conf)}
             with patch.object(deploy, "podman_env", return_value=env), \
                  patch.object(deploy.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, "", "image not known")), \
@@ -851,6 +861,47 @@ class DeploymentFixture(unittest.TestCase):
         self.assertFalse(deploy.active_transaction(self.cfg).exists())
         self.assertEqual(deploy.sha_db_snapshot(self.data), db_before)
         self.assertEqual(unrelated.read_text(encoding="utf-8"), "preserve")
+
+    def test_wal_reader_preserves_database_snapshot_and_wal_writes_change_it(self):
+        database = self.data / "operatoros.sqlite"
+        database.unlink()
+        connection = sqlite3.connect(database)
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("CREATE TABLE synthetic_marker (value TEXT NOT NULL)")
+        connection.execute("INSERT INTO synthetic_marker VALUES ('before-transition')")
+        connection.commit()
+        connection.close()
+        database.chmod(0o600)
+
+        def metadata_snapshot():
+            return {
+                path.name: (path.stat().st_ino, path.stat().st_size, path.stat().st_mtime_ns,
+                            path.stat().st_ctime_ns, path.stat().st_mode)
+                for path in self.data.glob("operatoros.sqlite*")
+            }
+
+        before = deploy.sha_db_snapshot(self.data)
+        legacy_before = metadata_snapshot()
+        readonly = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
+        self.assertEqual(readonly.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+        self.assertEqual(readonly.execute("SELECT value FROM synthetic_marker").fetchone()[0], "before-transition")
+        readonly.close()
+        for name in ("operatoros.sqlite-wal", "operatoros.sqlite-shm"):
+            self.assertTrue((self.data / name).is_file())
+            (self.data / name).chmod(0o600)
+        legacy_after = metadata_snapshot()
+        self.assertNotEqual(legacy_after, legacy_before)
+        self.assertEqual(deploy.sha_db_snapshot(self.data), before)
+
+        connection = sqlite3.connect(database)
+        connection.execute("INSERT INTO synthetic_marker VALUES ('after-transition')")
+        connection.commit()
+        for name in ("operatoros.sqlite", "operatoros.sqlite-wal", "operatoros.sqlite-shm"):
+            path = self.data / name
+            if path.exists():
+                path.chmod(0o600)
+        self.assertNotEqual(deploy.sha_db_snapshot(self.data), before)
+        connection.close()
 
     def test_image_import_failure_does_not_restart_or_change_application(self):
         unit_before = self.api_unit.read_bytes()
@@ -1044,7 +1095,7 @@ def fake_release():
             content = module.members(archive)
         manifest = module.validate(content, source_sha)
     return deploy.VerifiedRelease(Path("/unused"), content, manifest, "e" * 64, "f" * 64, "456",
-                                  f"operatoros-release-{source_sha}-123-1")
+                                  f"operatoros-release-{source_sha}-123-1", "2027-02-04T07:32:13Z")
 
 
 if __name__ == "__main__":

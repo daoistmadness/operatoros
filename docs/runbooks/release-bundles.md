@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-05
+last_reviewed: 2026-11-06
 ---
 
 # CI release bundles
@@ -150,19 +150,22 @@ attestation verification; the API and Caddy services do not inherit it. A
 private empty registry-auth file prevents the public digest-pinned Caddy pull
 from reading credentials from the runner user's normal Podman auth file.
 
-The rehearsal reuses, without rebuilding, the retained release from source
-`278faae7a027cf1c96326d32a9b796618d75620e`, workflow run `41987515713`
-(attempt 1), artifact `13396749662`. Before import, the existing deployment
-verifier checks the artifact's GitHub envelope digest
-`22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7`, inner
-bundle SHA-256
-`a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435`, run and
-source identity, and GitHub attestation. The artifact was recorded as
-80,791,318 bytes and expires on 2027-02-03 07:28:55 UTC. This repository-only
-preparation did not retrieve it again or create a durable local copy; the
-earlier `/tmp` copy is not the preservation copy. Download and preserve the
-verified bundle and its hashes in the approved evidence location before
-expiration.
+The rehearsal pins the verified release from source
+`b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, workflow run `42181508155`
+(attempt 1), artifact `13485579515`. The artifact name is
+`operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1`.
+Its envelope SHA-256 is
+`0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4`, and its
+inner bundle SHA-256 is
+`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`. The
+signed manifest records OCI digest
+`sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`,
+image config ID
+`sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6`,
+and SPA SHA-256
+`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc`. The
+artifact expires on 2027-02-04 07:32:13 UTC. The rehearsal verifies each
+identity before initializing its private Podman store or importing the image.
 
 Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS
 run-scoped Podman configuration and storage, random synthetic-only
@@ -296,6 +299,8 @@ ref, signer commit, and source SHA. The bundle verifier validates OCI config,
 manifest and layers, Linux/amd64 platform and source labels, SPA identity, and
 the exact bundle inventory. The outer GitHub artifact digest and inner release
 bundle checksum identify different serialized files; both are recorded.
+The output also records artifact expiration, manifest and component checksums,
+the attested workflow identity, scanner, and security scope.
 
 For a private repository, provide a short-lived fine-grained credential in
 `OPERATOROS_RELEASE_TOKEN`, scoped to this repository with [Actions: read](https://docs.github.com/en/rest/actions/artifacts#fine-grained-access-tokens-for-get-an-artifact)
