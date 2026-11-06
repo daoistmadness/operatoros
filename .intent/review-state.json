@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "cb3fd83c2dbdd220e7a8550fab9b4b227e7ffce2a303063d570e315b4d927d2c",
+      "fingerprint": "cd3d7a16f68013289e62e039955fc54e365a3d7c5ef7055705613a07b560d0bf",
       "snapshot": {
-        "docs/README.md": "6b7cfdd71d9967d247c67a1fe6ad7f5a6fb131c3e0e207fba32d0ecaebf9c5e4"
+        "docs/README.md": "cfb21b0e2b221055cdf20a2324ee2489149fad12bb9010a3c966e5addfe6b9af"
       },
-      "head": "ec845acb676699b6ba92ee75069bdbe24e4c438e",
+      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
       "outcome": "no-change",
-      "reason": "Reviewed the dependency change at ec845acb676699b6ba92ee75069bdbe24e4c438e. It changes Tailwind class merging only in apps/web and packages/ui; the Elysia skill's backend version, routes, runtime, and development task did not change. The new audit and regression cases describe this scoped dependency work, not a reusable Elysia skill task. The existing planning records explicitly limit coverage to the Elysia backend and remain accurate, so no skill or planning edits are needed.",
+      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
       "evidence": [
-        "Changed: docs/README.md at ec845acb676699b6ba92ee75069bdbe24e4c438e"
+        "Changed: docs/README.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b7a10f57904cc3891b946e9daa4597623ef8520d2a5574dff09cc9ebb492e234",
+      "fingerprint": "2706145e4273703f97144bd99a248bdcfb2eeacc0f1dabb1b9c1fb4adc2eaf32",
       "snapshot": {
-        "CHANGELOG.md": "06686800d3b5bd4be5c9b03b6acb78013c480d1b4fb3b745cd70830871397eb4"
+        "CHANGELOG.md": "3ab2d6d7533b7cb2df5bb81d49dac6e2186bb8d1e5f89655df18a14b301e6aee"
       },
-      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
+      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
       "outcome": "no-change",
-      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
+      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at cde3ffcbb34db69a1e995d4258099a923581533b"
+        "Changed: CHANGELOG.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
       ]
     },
     "source:COMMANDS.md": {
@@ -9735,15 +9735,15 @@
       ]
     },
     "source:docs/audits/podman-deployment-readiness.md": {
-      "fingerprint": "dcd685a2e64ffd1e9d37d70f2bb3a6d85f826209e07445e78df2dbcf3be3b68c",
+      "fingerprint": "93c1b593fb197879f206e2e9113beb77f56807a16a1d9c971235911cc6e75c50",
       "snapshot": {
-        "docs/audits/podman-deployment-readiness.md": "01957b82fb0da6b602562078981e13bb5dfb838c2c0694169420641e3b4637ee"
+        "docs/audits/podman-deployment-readiness.md": "1f04796f533ec7d741f16ec26555dd87acac3626af661655531d3216ccce8ea7"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
       "evidence": [
-        "Changed: docs/audits/podman-deployment-readiness.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/audits/podman-deployment-readiness.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
@@ -10116,6 +10116,18 @@
       "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
       "evidence": [
         "Changed: scripts/deployment-rehearsal.py at cde3ffcbb34db69a1e995d4258099a923581533b"
+      ]
+    },
+    "source:docs/audits/oprserver-integration-2026-11-06.md": {
+      "fingerprint": "9362640d95345cf78203c35338c4e7abd9f7f86222500290f260f78ab30378d6",
+      "snapshot": {
+        "docs/audits/oprserver-integration-2026-11-06.md": "99a7aded136e00f028b0240e4c5a90880e4a79222b1b1e39fafda4eb11039b0b"
+      },
+      "head": "65aebe5ec0f606770ece401b77a8aabecfa3618c",
+      "outcome": "no-change",
+      "reason": "Documentation-only OPRSERVER audit report, docs index, changelog, and a deprecation note; no agent guidance, skill, or release/deployment tooling behavior changed.",
+      "evidence": [
+        "Changed: docs/audits/oprserver-integration-2026-11-06.md at 65aebe5ec0f606770ece401b77a8aabecfa3618c"
       ]
     }
   }
