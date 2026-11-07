@@ -389,21 +389,22 @@ class PodmanIsolationTests(unittest.TestCase):
 
     def test_private_context_rejections_have_stable_sanitized_codes(self):
         cases = (
-            ("rootless", {"host": {"security": {"rootless": False}}}, "CTX_ROOTLESS_MISMATCH"),
+            ("rootless", {"host": {"security": {"rootless": False}}},
+             "CTX_ROOTLESS_MISMATCH", "private_config_validated"),
             ("graphroot", {"store": {"graphRoot": str(self.parent / "other-graphroot")},
                             "host": {"security": {"rootless": True}, "serviceIsRemote": False,
                                      "cgroupVersion": "v2", "cgroupManager": "systemd"}},
-             "CTX_GRAPHROOT_MISMATCH"),
+             "CTX_GRAPHROOT_MISMATCH", "configfile_matched"),
             ("runroot", {"store": {"runRoot": str(self.parent / "other-runroot")},
                           "host": {"security": {"rootless": True}, "serviceIsRemote": False,
                                    "cgroupVersion": "v2", "cgroupManager": "systemd"}},
-             "CTX_RUNROOT_MISMATCH"),
+             "CTX_RUNROOT_MISMATCH", "graphroot_matched"),
             ("configfile", {"store": {"configFile": str(self.parent / "other-storage.conf")},
                             "host": {"security": {"rootless": True}, "serviceIsRemote": False,
                                      "cgroupVersion": "v2", "cgroupManager": "systemd"}},
-             "CTX_CONFIGFILE_MISMATCH"),
+             "CTX_CONFIGFILE_MISMATCH", "rootless_runtime_validated"),
         )
-        for name, partial, code in cases:
+        for name, partial, code, last_completed_guard in cases:
             with self.subTest(name=name):
                 info = self.info()
                 info["host"].update(partial.get("host", {}))
@@ -412,7 +413,7 @@ class PodmanIsolationTests(unittest.TestCase):
                     deploy.validate_podman_store(info, self.context, require_empty=True)
                 self.assertEqual(getattr(error.exception, "code", None), code)
                 self.assertIsInstance(getattr(error.exception, "stage", None), str)
-                self.assertIsInstance(getattr(error.exception, "last_completed_guard", None), str)
+                self.assertEqual(getattr(error.exception, "last_completed_guard", None), last_completed_guard)
                 self.assertNotIn(str(self.parent), str(error.exception))
 
         info = self.info()
