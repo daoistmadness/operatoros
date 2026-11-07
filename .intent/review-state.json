@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3b71bd4dfb96f1475ad71fd977feeec3cb7204a974b8858e97cf3d1460d47938",
+      "fingerprint": "1087e63187eb8328168d9083fa58e81858aba42b71852be28d1a38cf10297573",
       "snapshot": {
-        "CHANGELOG.md": "0587901a1d78efd11f32737726b8d1fcc6dff5eaf0d178bfeb0e51e4f3711080"
+        "CHANGELOG.md": "a19fbb538e62106a0c328e3e9c414b63f0c16f748062effee50d7098533ec20b"
       },
-      "head": "957eb03e6a9c0c2374e567118382d4fff3e6e7bf",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Corrects deployment diagnostic guard reporting and adds regression coverage; no registered agent or skill guidance changed.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: CHANGELOG.md at 957eb03e6a9c0c2374e567118382d4fff3e6e7bf"
+        "Changed: CHANGELOG.md at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:COMMANDS.md": {
@@ -9925,15 +9925,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "ddaf33c19e31b29e89f36f7de908fc7fdee9c1ea946b52c89fe3e3f62adec1df",
+      "fingerprint": "7f5d23cccb36e9b3e81a88e66a2e519928b9503101fdd9cee485cd8477e64f44",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "298f5daa4cecf3b77d79cdafbdfb3bdd6b92fc4284f0628748aee425af5fbca3"
+        "docs/runbooks/release-bundles.md": "ccf3be93ce373e040a38a5fea100bb0d1fa119954d5efeb222cc0bae208a3138"
       },
-      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
+        "Changed: docs/runbooks/release-bundles.md at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "a4ca9be34bb1238ae04d5381e8e60bd782c9a86390cd3838ee7b13224775a89d",
+      "fingerprint": "838a337c9adf6aa2ff35ac00630c8cf140477413619df57eaf74091b57cb197a",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "8d16600e3fadf45cf6144baa4505a4d6d4ff81637cdbb8fd5a6b0724b60a7393"
+        "scripts/tests/test_release_bundle.py": "60922cbf37c9059376639bfe20a7f6a1cd0f9d354314c36d0e47a635824a5fc3"
       },
-      "head": "ab09670894e71321b9c872170b965429dd2d38c2",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Reviewed the workspace failure regression test; it covers rehearsal diagnostics without changing agent or Elysia skill guidance or maintainer planning records.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at ab09670894e71321b9c872170b965429dd2d38c2"
+        "Changed: scripts/tests/test_release_bundle.py at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10045,15 +10045,15 @@
       ]
     },
     "source:scripts/release-consumer-cleanup.py": {
-      "fingerprint": "71ccaf3de015b091970bcf8493fbc96bfc9864e86363ddb64e4c8f1d49f80d08",
+      "fingerprint": "ff54d5bd887b1ceced277d2c56be2afba6f331d5386b19e5e1853d425cbf7395",
       "snapshot": {
-        "scripts/release-consumer-cleanup.py": "73ae2887b0db977939d3569fe73db18e5ce32315932e3c4e6eec6de087124e33"
+        "scripts/release-consumer-cleanup.py": "90b4117d4e2c4c3cececad9000b49056120e847a10624b6eab069181b6a0835f"
       },
-      "head": "cde3ffcbb34db69a1e995d4258099a923581533b",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Reviewed all seven changed files at cde3ffcbb34db69a1e995d4258099a923581533b against the registered @operatoros/agent-skills#elysiajs guidance and planning artifacts. This correction changes the rehearsal harness's Podman storage environment, JSON subprocess validation, tests, changelog, and release-bundle runbook. It does not modify Elysia API behavior, Elysia framework/runtime conventions, skill content, or skill planning records; the registered guidance remains accurate, so no skill update is warranted.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: scripts/release-consumer-cleanup.py at cde3ffcbb34db69a1e995d4258099a923581533b"
+        "Changed: scripts/release-consumer-cleanup.py at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:scripts/operatoros-deploy.sh": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "f37062684314c8be97838f0b92bbbd7fea6a89d2358b83ede7cd9f1c31501347",
+      "fingerprint": "bac03d328b78686f8fe17c7a43142d4bc8210e3b9899397feda32d4b9601201e",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "e3b50aebb08872c286bd2ea474411fd15275549db778472dad15f134e55f813c"
+        "scripts/operatoros_deploy.py": "cf0e47c9265072cba622d91f9c2a09975a27e5bf7d31f58a1cf9afd529650749"
       },
-      "head": "d4550b6c2fe6033646d9635c8f8a762993033fec",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Corrects deployment diagnostic guard reporting and adds regression coverage; no registered agent or skill guidance changed.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at d4550b6c2fe6033646d9635c8f8a762993033fec"
+        "Changed: scripts/operatoros_deploy.py at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "810b77bca95f133ccccd7b302d85f188daf8cc9df80091fd3190d1285309a8a2",
+      "fingerprint": "fc77f46f7ad76dca815f84ed5a08c48bcd27300c575d1ee4629e2d45d08ac6d3",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "5f6412f7d52f9fdfc3e42b3262d9c17092189fd001033a5750b027a9290ff4f3"
+        "scripts/tests/test_operatoros_deploy.py": "8430ffe66d4b5a7acd42d00f0bd1e31a4ca1aca082f2f46bc5a7c4d898651732"
       },
-      "head": "d4550b6c2fe6033646d9635c8f8a762993033fec",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Corrects deployment diagnostic guard reporting and adds regression coverage; no registered agent or skill guidance changed.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at d4550b6c2fe6033646d9635c8f8a762993033fec"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "5b76bf2b27d079d91f9a943aaff7b11d587ca1ef17107ed45f1310d2ea2b6d83",
+      "fingerprint": "ccdf88b18984b8159ced91830f7a35a0eaca21eee4459321853bece137059bde",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "f8f5c94f4c8c16b917f1a085828754bc7264ff8c9f0e36b5786cf4b44077f5dc"
+        "scripts/deployment-rehearsal.py": "25dc6a359138fd33d5459d45ba26ace368a2a929236a8cb7a9bb7d1c634e1f87"
       },
-      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
+      "head": "148fc60be7e5809f289c9c455acef4454f787158",
       "outcome": "no-change",
-      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
+      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
+        "Changed: scripts/deployment-rehearsal.py at 148fc60be7e5809f289c9c455acef4454f787158"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
