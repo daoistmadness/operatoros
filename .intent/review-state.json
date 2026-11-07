@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "0436b7e1a4dcf013cf1d61e0e69697d2922408d75cc30ee87901c9c01bcbbfa9",
+      "fingerprint": "3b71bd4dfb96f1475ad71fd977feeec3cb7204a974b8858e97cf3d1460d47938",
       "snapshot": {
-        "CHANGELOG.md": "6af2f2ad3e4af3a545d9d6d4de9e048aec48558ceb0c8f18298c74491a3e4901"
+        "CHANGELOG.md": "0587901a1d78efd11f32737726b8d1fcc6dff5eaf0d178bfeb0e51e4f3711080"
       },
-      "head": "d4550b6c2fe6033646d9635c8f8a762993033fec",
+      "head": "957eb03e6a9c0c2374e567118382d4fff3e6e7bf",
       "outcome": "no-change",
       "reason": "Corrects deployment diagnostic guard reporting and adds regression coverage; no registered agent or skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at d4550b6c2fe6033646d9635c8f8a762993033fec"
+        "Changed: CHANGELOG.md at 957eb03e6a9c0c2374e567118382d4fff3e6e7bf"
       ]
     },
     "source:COMMANDS.md": {
