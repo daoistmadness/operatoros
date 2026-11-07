@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a24488b13d2f1f48d3ceb82c286784ccc2a31373eb5803935cdc3a94b3935d68",
+      "fingerprint": "b2cecf88ae768141f3a9e62f4f1fe819eeac8e2d5740fca7904a1779e13cca45",
       "snapshot": {
-        "CHANGELOG.md": "3f0450a2d97ac7853db9c30ec25997329893a9d3bd38914de7ebd1f4e6dca798"
+        "CHANGELOG.md": "eee0d3a83c67b8a1ae0a65730625884d70d3681d210ba5cc36d2bd72d4fb70dc"
       },
-      "head": "5e40948b214c792fd4763b15798d563801ce1633",
+      "head": "543dbc04f2e6e8f447958aa8adb6176b457f2e62",
       "outcome": "no-change",
-      "reason": "Loop 66 changes are limited to deployment rehearsal, cleanup diagnostics, and regression tests; no existing skill guidance applies or changed.",
+      "reason": "PR #370 adds its assigned identifier to the Unreleased changelog bullet; no project skill guidance applies or changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5e40948b214c792fd4763b15798d563801ce1633"
+        "Changed: CHANGELOG.md at 543dbc04f2e6e8f447958aa8adb6176b457f2e62"
       ]
     },
     "source:COMMANDS.md": {
