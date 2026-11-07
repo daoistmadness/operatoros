@@ -388,7 +388,7 @@ def validate_podman_store(info: Any, context: PrivatePodmanContext, *, require_e
             cgroup_version != "v2" or host.get("cgroupManager") != "systemd" or
             store.get("graphDriverName") != "vfs"):
             raise PodmanContextError(
-                "CTX_ROOTLESS_MISMATCH", "podman_store_validation", "podman_info_parsed",
+                "CTX_ROOTLESS_MISMATCH", "podman_store_validation", last_completed_guard,
                 expected="local_rootless_vfs_systemd_context", observed="rootless_or_runtime_mismatch",
             )
         last_completed_guard = "rootless_runtime_validated"
