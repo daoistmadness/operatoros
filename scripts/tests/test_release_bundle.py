@@ -129,6 +129,149 @@ class BundleTests(unittest.TestCase):
 
 
 class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_rehearsal_workspace_scaffold_leaves_synthetic_data_to_its_initializer(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-scaffold-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {}, clear=True):
+                rehearsal.create_rehearsal_workspace(runner_temp, workspace)
+            self.assertTrue((workspace / 'deploy').is_dir())
+            self.assertTrue((workspace / 'web/releases').is_dir())
+            self.assertFalse((workspace / 'data').exists())
+
+    def test_deployment_failure_record_reports_phase_without_filesystem_paths(self):
+        private_path = '/tmp/private-rehearsal/synthetic-data'
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress('synthetic_database_setup_started',
+                                          completed_guard='verified_oci_import')
+            rehearsal.retain_deployment_failure(FileExistsError(17, 'File exists', private_path))
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_PATH_COLLISION')
+        self.assertEqual(failure['phase'], 'synthetic_database_setup_started')
+        self.assertEqual(failure['last_completed_guard'], 'verified_oci_import')
+        self.assertEqual(failure['exception_class'], 'FileExistsError')
+        self.assertEqual(failure['path_category'], 'synthetic_data_directory')
+        self.assertEqual(failure['expected'], 'path_absent')
+        self.assertEqual(failure['observed'], 'path_exists')
+        self.assertNotIn(private_path, json.dumps(report))
+        self.assertNotIn('File exists', json.dumps(report))
+
+    def test_deployment_failure_codes_identify_import_quadlet_startup_and_acceptance(self):
+        cases = (
+            ('oci_import_started', 'DEPLOY_OCI_IMPORT_FAILED', 'release_staged'),
+            ('quadlet_staging_started', 'DEPLOY_QUADLET_STAGING_FAILED', 'synthetic_database_ready'),
+            ('application_start_started', 'DEPLOY_APPLICATION_START_FAILED', 'quadlet_files_staged'),
+            ('application_acceptance_started', 'DEPLOY_APPLICATION_ACCEPTANCE_FAILED', 'deployed_application_healthy'),
+        )
+        for phase, expected_code, previous_guard in cases:
+            with self.subTest(phase=phase):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report):
+                    rehearsal.deployment_progress(phase, completed_guard=previous_guard)
+                    rehearsal.retain_deployment_failure(rehearsal.RehearsalError('sensitive detail'))
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], expected_code)
+                self.assertEqual(failure['last_completed_guard'], previous_guard)
+                self.assertNotIn('sensitive detail', json.dumps(report))
+
+    def test_synthetic_database_setup_fails_closed_on_preexisting_data_directory(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'data').mkdir(mode=0o700)
+            with patch.object(rehearsal, 'create_podman_secret') as create_secret:
+                with self.assertRaises(FileExistsError):
+                    rehearsal.setup_synthetic_database(workspace, SHA, None)
+            create_secret.assert_not_called()
+
+    def test_cleanup_environment_keeps_private_image_temp_directory(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cleanup-env-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.123456789a1'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            with patch.dict(os.environ, {'XDG_DATA_HOME': str(Path(temporary) / 'host-xdg')}, clear=True):
+                environment = rehearsal.cleanup_environment(workspace, context)
+            self.assertEqual(environment['TMPDIR'], str(workspace / 'podman-rootless/image-tmp'))
+            self.assertEqual(environment['XDG_CONFIG_HOME'], str(context.xdg_config_home))
+            self.assertIn('OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME', environment)
+
+    def test_verified_cleanup_passes_private_tmpdir_and_embeds_child_result(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cleanup-parent-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.123456789a1'
+            workspace.mkdir(mode=0o700)
+            diagnostics.mkdir(mode=0o700)
+            context = private_context(workspace)
+            removed = {
+                'attempted': True,
+                'phase': 'complete',
+                'failure_code': None,
+                'exit_code': 0,
+                'command_exit_code': None,
+                'ownership_validated': True,
+                'resources_removed': ['run_scoped_containers', 'private_store_contents', 'workspace'],
+                'resources_remaining': [],
+                'diagnostics_log_created': True,
+                'status': 'passed',
+            }
+            observed = {}
+
+            def successful_cleanup(_args, **kwargs):
+                observed.update(kwargs['env'])
+                shutil.rmtree(workspace)
+                return subprocess.CompletedProcess(
+                    _args, 0, 'OPERATOROS_CLEANUP_RESULT=' + json.dumps(removed), '',
+                )
+
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'PODMAN_CONTEXT_VERIFIED', True), \
+                 patch.dict(os.environ, context.environment() | {'PATH': '/usr/bin:/bin'}, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=successful_cleanup):
+                rehearsal.cleanup_workspace(workspace, runner_temp, diagnostics)
+
+            self.assertEqual(observed['TMPDIR'], str(context.image_copy_tmp_dir))
+            self.assertNotEqual(observed['TMPDIR'], str(runner_temp))
+            self.assertEqual(report['cleanup']['status'], 'passed')
+            self.assertEqual(report['cleanup']['resources_remaining'], [])
+            self.assertEqual(report['cleanup']['cleanup_helper_exit_code'], 0)
+
+    def test_absent_run_scoped_workspace_is_recorded_as_already_clean(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-absent-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, {'GITHUB_RUN_ID': '123456789', 'GITHUB_RUN_ATTEMPT': '1'}, clear=True):
+                rehearsal.cleanup_workspace(workspace, runner_temp, runner_temp / 'diagnostics')
+            self.assertEqual(report['cleanup']['status'], 'passed')
+            self.assertEqual(report['cleanup']['phase'], 'workspace_absent')
+            self.assertTrue(report['cleanup']['ownership_validated'])
+            self.assertEqual(report['cleanup']['resources_remaining'], [])
+
+    def test_cleanup_result_parser_accepts_only_sanitized_allowlisted_values(self):
+        record = {
+            'attempted': True,
+            'phase': 'workspace_validation',
+            'failure_code': 'CLEANUP_PRIVATE_TMPDIR_MISMATCH',
+            'exit_code': 1,
+            'command_exit_code': None,
+            'ownership_validated': False,
+            'resources_removed': [],
+            'resources_remaining': ['workspace_and_private_store'],
+            'diagnostics_log_created': False,
+            'status': 'failed',
+            'expected': 'workspace_tmpdir',
+            'observed': 'runner_temp',
+        }
+        self.assertTrue(rehearsal.valid_cleanup_result(record))
+        record['observed'] = '/private/runner/path'
+        self.assertFalse(rehearsal.valid_cleanup_result(record))
+
     def test_rehearsal_workspace_must_be_outside_protected_roots_before_creation(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-boundary-') as temporary:
             base = Path(temporary).resolve()
@@ -514,12 +657,19 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             report = {'schema_version': 1, 'checks': {}, 'failures': []}
             stderr = io.StringIO()
 
+            def fail_after_import(*_args):
+                report['deployment'] = rehearsal.initial_deployment_record()
+                report['deployment']['status'] = 'in_progress'
+                rehearsal.deployment_progress('oci_import_started', completed_guard='podman_context_accepted',
+                                              oci_import='started')
+                raise rehearsal.RehearsalError(secret)
+
             with patch.object(rehearsal, 'REPORT', report), \
                  patch.object(rehearsal, 'DIAGNOSTICS', None), \
                  patch.object(rehearsal, 'validate_workflow_context',
                               return_value=(runner_temp, workspace, diagnostics, services)), \
                  patch.object(rehearsal, 'preflight_runner', return_value={}), \
-                 patch.object(rehearsal, 'rehearse', side_effect=rehearsal.RehearsalError(secret)), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_after_import), \
                  patch.object(rehearsal, 'cleanup_workspace',
                               side_effect=rehearsal.RehearsalError(cleanup_secret)), \
                  redirect_stderr(stderr):
@@ -531,6 +681,11 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertNotIn(cleanup_secret, evidence)
             self.assertNotIn(secret, stderr.getvalue())
             self.assertNotIn(cleanup_secret, stderr.getvalue())
+            retained = json.loads(evidence)
+            self.assertEqual(retained['deployment']['failure']['code'], 'DEPLOY_OCI_IMPORT_FAILED')
+            self.assertEqual(retained['deployment']['failure']['last_completed_guard'], 'podman_context_accepted')
+            self.assertEqual(retained['cleanup']['failure_code'], 'CLEANUP_WORKSPACE_FAILED')
+            self.assertEqual(retained['cleanup']['status'], 'failed')
 
     def test_main_retains_structured_context_failure_and_cleanup_status(self):
         secret = 'synthetic-podman-output-secret'
@@ -810,6 +965,12 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         process = subprocess.Popen(['sleep', '30'])
         try:
             self.assertEqual(self.run_cleanup(), 0)
+            self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+            self.assertTrue(cleanup.CLEANUP_RESULT['ownership_validated'])
+            self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+            self.assertEqual(cleanup.CLEANUP_RESULT['resources_removed'], [
+                'run_scoped_containers', 'private_store_contents', 'workspace',
+            ])
             self.assertFalse(self.workspace.exists())
             self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
             self.assertIsNone(process.poll())
@@ -831,6 +992,8 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
              unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
             self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
         self.assertFalse(workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
         self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
         self.assertEqual(self.commands[0], [
             'rm', '--force', '--ignore', 'operatoros-lite-api', 'operatoros-lite-caddy',
@@ -846,6 +1009,27 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
              unittest.mock.patch.object(cleanup, 'run_podman') as run:
             self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 1)
             run.assert_not_called()
+        self.assertTrue(workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_OWNERSHIP_REJECTED')
+        self.assertFalse(cleanup.CLEANUP_RESULT['ownership_validated'])
+
+    def test_rehearsal_cleanup_classifies_private_tmpdir_mismatch_before_log_creation(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
+        environment['TMPDIR'] = str(self.temp_parent)
+        diagnostics = self.temp_parent / 'operatoros-deployment-rehearsal-diagnostics.123456789a1'
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent), str(diagnostics)), 1)
+            run.assert_not_called()
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_PRIVATE_TMPDIR_MISMATCH')
+        self.assertEqual(cleanup.CLEANUP_RESULT['expected'], 'workspace_tmpdir')
+        self.assertEqual(cleanup.CLEANUP_RESULT['observed'], 'runner_temp')
+        self.assertFalse(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
+        self.assertFalse((diagnostics / 'consumer-cleanup.log').exists())
         self.assertTrue(workspace.exists())
 
     def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
@@ -872,11 +1056,43 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             self.assertEqual(self.run_cleanup(), 1)
             self.assertIn('exit=9', error.getvalue())
         self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_PODMAN_REMOVE_FAILED')
+        self.assertEqual(cleanup.CLEANUP_RESULT['command_exit_code'], 9)
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+
+    def test_cleanup_result_survives_diagnostic_log_creation_failure(self):
+        with unittest.mock.patch.object(cleanup, 'diagnostic_log', side_effect=OSError('private path detail')):
+            self.assertEqual(self.run_cleanup(), 1)
+        self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_LOG_UNAVAILABLE')
+        self.assertFalse(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_removed'], [
+            'run_scoped_containers', 'private_store_contents', 'workspace',
+        ])
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+
+    def test_cleanup_cli_emits_sanitized_result_when_cleanup_raises_before_logging(self):
+        secret = 'sensitive-cleanup-exception-detail'
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['release-consumer-cleanup.py', '/unsafe/workspace', '/tmp']), \
+             patch.object(cleanup, 'cleanup', side_effect=OSError(secret)), \
+             redirect_stdout(output):
+            self.assertEqual(cleanup.main(), 1)
+        record_lines = [line for line in output.getvalue().splitlines()
+                        if line.startswith('OPERATOROS_CLEANUP_RESULT=')]
+        self.assertEqual(len(record_lines), 1)
+        record = json.loads(record_lines[0].split('=', 1)[1])
+        self.assertEqual(record['failure_code'], 'CLEANUP_UNHANDLED_FAILURE')
+        self.assertEqual(record['exception_class'], 'OSError')
+        self.assertEqual(record['status'], 'failed')
+        self.assertNotIn(secret, output.getvalue())
 
     def test_remaining_container_or_mount_blocks_filesystem_cleanup(self):
         self.containers_output = 'unexpected-container\n'
         self.assertEqual(self.run_cleanup(), 1)
         self.assertTrue(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_CONTAINERS_REMAIN_OR_UNKNOWN')
+        self.assertIn('containers_or_unverified_inventory', cleanup.CLEANUP_RESULT['resources_remaining'])
         self.assertIn(['unshare', 'podman', 'mount'], self.commands)
         self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
 
