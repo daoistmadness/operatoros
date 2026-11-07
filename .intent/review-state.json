@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "1087e63187eb8328168d9083fa58e81858aba42b71852be28d1a38cf10297573",
+      "fingerprint": "95f1e44acc5a60fa8542cbb4ccda0619987ca98ef0ebb784b6d3bce40c0324ce",
       "snapshot": {
-        "CHANGELOG.md": "a19fbb538e62106a0c328e3e9c414b63f0c16f748062effee50d7098533ec20b"
+        "CHANGELOG.md": "cf1928a7f81a91870ac331cda9a4188e1311e3a80c17d79c5f535b6e199deb47"
       },
-      "head": "148fc60be7e5809f289c9c455acef4454f787158",
+      "head": "1a251339e5d5eba41aa0daf010cb844cfc36a341",
       "outcome": "no-change",
-      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
+      "reason": "Added the assigned PR number to the required Unreleased changelog bullet; no project skill guidance applies or changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 148fc60be7e5809f289c9c455acef4454f787158"
+        "Changed: CHANGELOG.md at 1a251339e5d5eba41aa0daf010cb844cfc36a341"
       ]
     },
     "source:COMMANDS.md": {

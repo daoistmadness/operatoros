@@ -14,7 +14,7 @@ Notable user-facing changes are recorded here.
 - Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.
 - Retain stable, sanitized failure codes and cleanup status when private Podman-context qualification fails (#367).
 - Report the last completed guard accurately for private Podman-context rejection (#368).
-- Use the standard private XDG storage config for rehearsal Podman and keep failure summaries synchronized with the rejected guard.
+- Use the standard private XDG storage config for rehearsal Podman and keep failure summaries synchronized with the rejected guard (#369).
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 
