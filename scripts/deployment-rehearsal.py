@@ -81,7 +81,9 @@ def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60
         raise RehearsalError(f"subprocess could not complete ({type(error).__name__})") from error
     log("subprocess", exit_code=result.returncode)
     if check and result.returncode != 0:
-        raise RehearsalError(f"subprocess failed with exit code {result.returncode}")
+        error = RehearsalError(f"subprocess failed with exit code {result.returncode}")
+        error.exit_code = result.returncode
+        raise error
     return result
 
 
@@ -148,6 +150,95 @@ def retain_context_failure(error: BaseException) -> None:
     record["failure"] = failure
     record["stage"] = failure["stage"]
     record["last_completed_guard"] = failure["last_completed_guard"]
+
+
+def deployment_progress(phase: str, *, completed_guard: str | None = None,
+                        oci_import: str | None = None, quadlet_staging: str | None = None,
+                        application_start: str | None = None,
+                        application_acceptance: str | None = None) -> None:
+    record = REPORT.get("deployment")
+    if not isinstance(record, dict):
+        return
+    record["phase"] = phase
+    if completed_guard is not None:
+        record["last_completed_guard"] = completed_guard
+    for name, value in (("oci_import", oci_import), ("quadlet_staging", quadlet_staging),
+                        ("application_start", application_start),
+                        ("application_acceptance", application_acceptance)):
+        if value is not None:
+            record[name] = value
+
+
+def retain_deployment_failure(error: BaseException) -> None:
+    record = REPORT.get("deployment")
+    if not isinstance(record, dict) or record.get("status") != "in_progress":
+        return
+    phase = record.get("phase", "unknown")
+    expected = observed = None
+    if isinstance(error, FileExistsError):
+        code = "DEPLOY_PATH_COLLISION"
+        path_category = {
+            "release_staging_started": "release_staging_path",
+            "synthetic_database_setup_started": "synthetic_data_directory",
+            "quadlet_staging_started": "quadlet_path",
+        }.get(phase, "deployment_path")
+        expected, observed = "path_absent", "path_exists"
+        explanation = "An expected rehearsal path already exists."
+    elif isinstance(error, PermissionError):
+        code, path_category = "DEPLOY_PATH_PERMISSION", None
+        explanation = "A rehearsal path permission check failed."
+    elif isinstance(error, OSError):
+        code, path_category = "DEPLOY_FILESYSTEM_FAILURE", None
+        explanation = "A rehearsal filesystem operation failed."
+    elif isinstance(error, RehearsalError):
+        code = {
+            "release_staging_started": "DEPLOY_RELEASE_STAGING_FAILED",
+            "oci_import_started": "DEPLOY_OCI_IMPORT_FAILED",
+            "oci_identity_validation_started": "DEPLOY_OCI_IDENTITY_VALIDATION_FAILED",
+            "runtime_image_pull_started": "DEPLOY_RUNTIME_IMAGE_PULL_FAILED",
+            "synthetic_database_setup_started": "DEPLOY_SYNTHETIC_DATABASE_SETUP_FAILED",
+            "sqlite_validation_started": "DEPLOY_SQLITE_VALIDATION_FAILED",
+            "spa_staging_started": "DEPLOY_SPA_STAGING_FAILED",
+            "quadlet_staging_started": "DEPLOY_QUADLET_STAGING_FAILED",
+            "deployment_cli_preflight_started": "DEPLOY_CLI_PREFLIGHT_FAILED",
+            "quadlet_lifecycle_validation_started": "DEPLOY_QUADLET_VALIDATION_FAILED",
+            "deployment_cli_deploy_started": "DEPLOY_CLI_DEPLOY_FAILED",
+            "application_start_started": "DEPLOY_APPLICATION_START_FAILED",
+            "application_acceptance_started": "DEPLOY_APPLICATION_ACCEPTANCE_FAILED",
+        }.get(phase, "DEPLOY_OPERATION_FAILED")
+        path_category = None
+        explanation = "A rehearsal deployment operation failed."
+    else:
+        code, path_category = "DEPLOY_UNCLASSIFIED_FAILURE", None
+        explanation = "A rehearsal deployment operation failed unexpectedly."
+    exit_code = getattr(error, "exit_code", None)
+    if not isinstance(exit_code, int):
+        exit_code = None
+    record["status"] = "failed"
+    record["failure"] = {
+        "code": code,
+        "phase": phase,
+        "last_completed_guard": record.get("last_completed_guard", "none"),
+        "exception_class": type(error).__name__,
+        "exit_code": exit_code,
+        "path_category": path_category,
+        "expected": expected,
+        "observed": observed,
+        "explanation": explanation,
+    }
+
+
+def initial_deployment_record() -> dict[str, Any]:
+    return {
+        "status": "not_started",
+        "phase": "not_started",
+        "last_completed_guard": "none",
+        "oci_import": "not_started",
+        "quadlet_staging": "not_started",
+        "application_start": "not_started",
+        "application_acceptance": "not_started",
+        "failure": None,
+    }
 
 
 def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 30) -> str:
@@ -362,6 +453,67 @@ def private_env(workspace: Path, context: Any) -> dict[str, str]:
     return result
 
 
+def cleanup_environment(workspace: Path, context: Any) -> dict[str, str]:
+    result = private_env(workspace, context)
+    if os.environ.get("XDG_DATA_HOME"):
+        result["OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME"] = os.environ["XDG_DATA_HOME"]
+    return result
+
+
+def create_rehearsal_workspace(runner_temp: Path, workspace: Path) -> None:
+    require_private_workspace_boundary(runner_temp, workspace)
+    workspace.mkdir(mode=0o700)
+    os.chmod(workspace, 0o700)
+    for name in ("deploy", "web", "web/releases"):
+        (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
+
+
+def valid_cleanup_result(value: Any) -> bool:
+    required = {
+        "attempted", "phase", "failure_code", "exit_code", "command_exit_code",
+        "ownership_validated", "resources_removed", "resources_remaining",
+        "diagnostics_log_created", "status",
+    }
+    optional = {"exception_class", "expected", "observed"}
+    if not isinstance(value, dict) or not required.issubset(value) or not set(value).issubset(required | optional):
+        return False
+    if not all(isinstance(value[name], bool) for name in (
+        "attempted", "ownership_validated", "diagnostics_log_created",
+    )):
+        return False
+    if value["status"] not in ("passed", "failed") or not isinstance(value["phase"], str):
+        return False
+    if re.fullmatch(r"[a-z_]+", value["phase"]) is None:
+        return False
+    failure_code = value["failure_code"]
+    if failure_code is not None and (not isinstance(failure_code, str) or
+                                     re.fullmatch(r"CLEANUP_[A-Z0-9_]+", failure_code) is None):
+        return False
+    for name in ("exit_code", "command_exit_code"):
+        code = value[name]
+        if code is not None and (not isinstance(code, int) or isinstance(code, bool)):
+            return False
+    allowed_resources = {
+        "run_scoped_containers", "private_store_contents", "workspace",
+        "workspace_and_private_store", "workspace_or_private_store",
+        "containers_or_unverified_inventory", "mounts_or_unverified_inventory",
+    }
+    for name in ("resources_removed", "resources_remaining"):
+        resources = value[name]
+        if not isinstance(resources, list) or any(
+            not isinstance(item, str) or item not in allowed_resources for item in resources
+        ):
+            return False
+    for name in ("expected", "observed"):
+        if name in value and (not isinstance(value[name], str) or
+                              re.fullmatch(r"[a-z0-9_]+", value[name]) is None):
+            return False
+    if "exception_class" in value and (not isinstance(value["exception_class"], str) or
+                                        re.fullmatch(r"[A-Za-z][A-Za-z0-9]*", value["exception_class"]) is None):
+        return False
+    return True
+
+
 def verify_quadlet_podman_environment(value: str, context: Any) -> None:
     """Require systemd's effective service environment to match direct Podman calls."""
     try:
@@ -552,7 +704,10 @@ def image_identity_for_release(deploy: Any, release: Any, workspace: Path, conte
     archive.write_bytes(release.files["operatoros-api.oci.tar"])
     archive.chmod(0o600)
     env = private_env(workspace, context)
+    deployment_progress("oci_import_started", oci_import="started")
     deploy.command(["podman", "load", "--input", str(archive)], env, timeout=300)
+    deployment_progress("oci_import_completed", completed_guard="oci_image_loaded", oci_import="completed")
+    deployment_progress("oci_identity_validation_started")
     image = release.manifest["image"]
     image_id = "sha256:" + image["image_id"].removeprefix("sha256:")
     podman_cfg = {"root": workspace, "profile": "rehearsal", "storage_conf": context.storage_conf,
@@ -562,6 +717,7 @@ def image_identity_for_release(deploy: Any, release: Any, workspace: Path, conte
                                      image["manifest_digest"], podman_cfg)
     image_ref = "localhost/operatoros-api:" + SOURCE_SHA
     deploy.command(["podman", "tag", image_id, image_ref], env)
+    deployment_progress("oci_identity_verified", completed_guard="verified_oci_import")
     return image_ref
 
 
@@ -746,7 +902,28 @@ def remove_created_unit_directories(created: list[Path]) -> None:
 
 
 def cleanup_workspace(workspace: Path, runner_temp: Path, diagnostics: Path) -> None:
-    if not workspace.exists():
+    report: dict[str, Any] = {
+        "attempted": True,
+        "phase": "initialization",
+        "failure_code": None,
+        "exit_code": None,
+        "ownership_validated": False,
+        "resources_removed": [],
+        "resources_remaining": ["workspace_or_private_store"],
+        "diagnostics_log_created": False,
+        "status": "in_progress",
+    }
+    REPORT["cleanup"] = report
+    try:
+        workspace.lstat()
+    except FileNotFoundError:
+        expected = workspace_path(runner_temp)
+        require(workspace == expected and runner_temp.is_dir() and
+                runner_temp.resolve(strict=True) == runner_temp,
+                "refusing cleanup for an absent workspace outside this run")
+        report.update({"phase": "workspace_absent", "ownership_validated": True,
+                       "resources_removed": [], "resources_remaining": [], "status": "passed",
+                       "exit_code": 0})
         return
     from importlib.util import module_from_spec, spec_from_file_location
 
@@ -764,11 +941,15 @@ def cleanup_workspace(workspace: Path, runner_temp: Path, diagnostics: Path) -> 
                 not stat.S_ISLNK(info.st_mode) and info.st_uid == os.getuid() and
                 stat.S_IMODE(info.st_mode) == 0o700 and not os.path.ismount(workspace),
                 "refusing cleanup outside the unique owned rehearsal workspace")
+        report["ownership_validated"] = True
+        report["phase"] = "unverified_workspace_removal"
         module.assert_no_mounts_below(workspace)
         if not shutil.rmtree.avoids_symlink_attacks:
             raise RehearsalError("safe workspace cleanup is unavailable")
         shutil.rmtree(workspace)
         require(not workspace.exists(), "private rehearsal workspace cleanup failed")
+        report.update({"resources_removed": ["workspace"], "resources_remaining": [],
+                       "phase": "complete", "status": "passed", "exit_code": 0})
         return
     try:
         helper = ROOT / "scripts/operatoros_deploy.py"
@@ -780,17 +961,35 @@ def cleanup_workspace(workspace: Path, runner_temp: Path, diagnostics: Path) -> 
         helper_spec.loader.exec_module(deploy_module)
         context = deploy_module.podman_context_from_workspace(workspace)
     except Exception as error:
+        report.update({"phase": "context_reconstruction", "failure_code": "CLEANUP_CONTEXT_RECONSTRUCTION_FAILED",
+                       "exception_class": type(error).__name__})
         raise RehearsalError("verified Podman cleanup context could not be reconstructed") from error
-    env = private_env(workspace, context)
-    env.update({"TMPDIR": str(runner_temp)})
-    if os.environ.get("XDG_DATA_HOME"):
-        env["OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME"] = os.environ["XDG_DATA_HOME"]
+    env = cleanup_environment(workspace, context)
+    report["phase"] = "consumer_cleanup"
     result = subprocess.run([
         sys.executable, str(path), str(workspace), str(runner_temp),
         "--diagnostics-dir", str(diagnostics),
     ], env=env, capture_output=True, text=True, timeout=300, check=False)
+    marker = "OPERATOROS_CLEANUP_RESULT="
+    records = [line[len(marker):] for line in result.stdout.splitlines() if line.startswith(marker)]
+    if len(records) == 1:
+        try:
+            child_report = json.loads(records[0])
+        except json.JSONDecodeError:
+            child_report = None
+        if valid_cleanup_result(child_report):
+            report.update(child_report)
+    report["cleanup_helper_exit_code"] = result.returncode
     log("cleanup", exit_code=result.returncode)
-    require(result.returncode == 0 and not workspace.exists(),
+    if not isinstance(report.get("exit_code"), int):
+        report["failure_code"] = "CLEANUP_HELPER_RESULT_INVALID"
+        report["status"] = "failed"
+    if result.returncode != 0 and report.get("status") != "failed":
+        report.update({"failure_code": "CLEANUP_HELPER_EXIT_NONZERO", "status": "failed"})
+    if result.returncode == 0 and workspace.exists():
+        report.update({"failure_code": "CLEANUP_WORKSPACE_REMAINS", "status": "failed",
+                       "resources_remaining": ["workspace_or_private_store"]})
+    require(result.returncode == 0 and report.get("status") == "passed" and not workspace.exists(),
             "isolated Podman cleanup failed; workspace was retained for investigation")
 
 
@@ -816,12 +1015,9 @@ def rehearse(workspace: Path, diagnostics: Path,
         "failure": None,
         "cleanup_status": "not_started",
     }
+    REPORT["deployment"] = initial_deployment_record()
     try:
-        require_private_workspace_boundary(workspace.parent, workspace)
-        workspace.mkdir(mode=0o700)
-        os.chmod(workspace, 0o700)
-        for name in ("deploy", "data", "data/backups", "web", "web/releases"):
-            (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
+        create_rehearsal_workspace(workspace.parent, workspace)
     except (OSError, RehearsalError) as error:
         REPORT["podman_context"]["status"] = "qualifying"
         raise deploy.PodmanContextError(
@@ -944,12 +1140,20 @@ def rehearse(workspace: Path, diagnostics: Path,
         context_progress("uid_gid_map_validation", "gid_map_verified")
         REPORT["podman_context"]["status"] = "passed"
         REPORT["checks"]["podman_context"] = "private config, graphroot/runroot, metadata paths, VFS driver, empty inventory, rootless systemd cgroup v2, subordinate ID maps verified"
+        REPORT["deployment"]["status"] = "in_progress"
+        deployment_progress("context_accepted", completed_guard="podman_context_accepted")
 
+        deployment_progress("release_staging_started")
         image_ref = image_identity_for_release(deploy, release, workspace, context)
+        deployment_progress("runtime_image_pull_started")
         deploy.command(["podman", "pull", deploy.CADDY_IMAGE], env, timeout=300)
 
+        deployment_progress("synthetic_database_setup_started", completed_guard="runtime_image_pulled")
         (admin_username, admin_password, cookie_secret, backup_key,
          auth_secret_name, backup_secret_name) = setup_synthetic_database(workspace, SOURCE_SHA, context)
+        deployment_progress("synthetic_database_bootstrap_completed",
+                            completed_guard="synthetic_database_bootstrapped")
+        deployment_progress("sqlite_validation_started")
         wal_setup = run(["bun", "-e", SQLITE_WAL_SETUP, str(workspace / "data/operatoros.sqlite")],
                         env=system_environment(), timeout=30)
         require(json.loads(wal_setup.stdout).get("journal_mode") == "wal",
@@ -961,11 +1165,14 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["checks"]["sqlite_wal_mode"] = "synthetic database set to WAL before deployment"
         REPORT["checks"]["sqlite_before_transition"] = json.loads(sqlite_before_transition.stdout)
         REPORT["checks"]["sqlite_schema"] = "synthetic S5.4 database passed integrity, foreign-key, and seeded-user checks"
+        deployment_progress("sqlite_validation_completed", completed_guard="synthetic_sqlite_validated")
+        deployment_progress("spa_staging_started")
         previous_spa = deploy.materialize_spa({"root": workspace}, release, "legacy-" + SOURCE_SHA)
         shell = previous_spa / "client/_shell.html"
         shell.chmod(0o600)
         shell.write_text(shell.read_text(encoding="utf-8") + "\n<!-- synthetic previous application shell -->\n", encoding="utf-8")
         shell.chmod(0o444)
+        deployment_progress("spa_staging_completed", completed_guard="previous_spa_staged")
 
         bad_data = workspace / "schema-negative/data"
         bad_cfg = {"data_dir": bad_data, "storage_conf": storage_conf, "graphroot": graphroot, "runroot": runroot}
@@ -991,6 +1198,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         backups = list((workspace / "data/backups").glob("backup_*.sqlite3"))
         require(len(backups) == 1, "expected exactly one synthetic encrypted backup")
 
+        deployment_progress("quadlet_staging_started", quadlet_staging="started")
         (workspace / "deploy/Caddyfile").write_text(make_caddyfile(web_port, api_port), encoding="utf-8")
         (workspace / "deploy/Caddyfile").chmod(0o600)
         create_unit_directory(unit_dir, unit_dirs_created)
@@ -998,19 +1206,27 @@ def rehearse(workspace: Path, diagnostics: Path,
             workspace, unit_dir, api_service, caddy_service, api_port, web_port,
             image_ref, auth_secret_name, backup_secret_name, units_created, context,
         )
+        deployment_progress("quadlet_staging_completed", completed_guard="quadlet_files_staged",
+                            quadlet_staging="completed")
         config = toml_config(workspace, api_unit, caddy_unit, api_copy, api_service, caddy_service,
                              api_port, web_port, context.storage_conf)
+        deployment_progress("deployment_cli_preflight_started")
         cfg = deploy.load_config(config)
         require(cfg["profile"] == "rehearsal" and cfg["expected_uid"] == uid,
                 "deployment CLI did not accept the exact isolated rehearsal profile")
         deploy.switch_pointer(cfg, previous_spa)
+        deployment_progress("deployment_cli_preflight_completed", completed_guard="deployment_config_accepted")
 
+        deployment_progress("quadlet_lifecycle_validation_started")
         deploy.command(["systemctl", "--user", "daemon-reload"], timeout=60)
         deploy.verify_quadlet_service(api_service, api_unit, require_active=False)
         deploy.verify_quadlet_service(caddy_service, caddy_unit, require_active=False)
         for service in services:
             unit_env = deploy.command(["systemctl", "--user", "show", "--property=Environment", "--value", service], timeout=20)
             verify_quadlet_podman_environment(unit_env, context)
+        deployment_progress("quadlet_lifecycle_validation_completed",
+                            completed_guard="quadlet_environment_verified")
+        deployment_progress("application_start_started", application_start="started")
         deploy.service_call(cfg, "start", api_service)
         wait_url(cfg["api_url"] + "/health")
         wait_url(cfg["api_url"] + "/ready")
@@ -1022,6 +1238,8 @@ def rehearse(workspace: Path, diagnostics: Path,
         require(set(containers) == {"operatoros-lite-api running", "operatoros-lite-caddy running"},
                 "disposable Podman store does not contain exactly the two expected running containers")
         REPORT["checks"]["quadlet_startup"] = "API then Caddy started under unique user-systemd units"
+        deployment_progress("application_start_completed", completed_guard="services_ready",
+                            application_start="completed")
 
         before_deploy = deploy.sha_db_snapshot(cfg["data_dir"])
         wrong = run_cli(deployment_command(config, "verify", wrong_source=True),
@@ -1030,12 +1248,15 @@ def rehearse(workspace: Path, diagnostics: Path,
                 "wrong-source artifact rejection did not fail at request validation")
         REPORT["checks"]["wrong_source_rejected"] = True
 
+        deployment_progress("deployment_cli_deploy_started")
         run_cli(deployment_command(config, "deploy", backup_name=backups[0].name), needs_token=True)
         require(deploy.sha_db_snapshot(cfg["data_dir"]) == before_deploy,
                 "SQLite main/WAL/SHM changed during the real deployment")
         report = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
                                      "--config", str(config)]).stdout)
         require(report.get("state") == "healthy", "deployed release status is not healthy")
+        deployment_progress("application_acceptance_started", application_acceptance="started",
+                            completed_guard="deployed_application_healthy")
         REPORT["checks"]["deployment"] = "verified artifact imported without rebuild; API/Caddy healthy"
         REPORT["api_image_id"] = release.manifest["image"]["image_id"]
         REPORT["oci_manifest_digest"] = release.manifest["image"]["manifest_digest"]
@@ -1205,6 +1426,9 @@ def rehearse(workspace: Path, diagnostics: Path,
             "same API image; rollback restored a distinct synthetic SPA target, not a second release artifact"
         )
         REPORT["result"] = "synthetic deployment, application rollback, and interrupted recovery passed"
+        deployment_progress("application_acceptance_completed", completed_guard="application_acceptance_passed",
+                            application_acceptance="completed")
+        REPORT["deployment"]["status"] = "passed"
 
     write_json(diagnostics / "rehearsal-evidence.json", REPORT)
 
@@ -1231,6 +1455,7 @@ def main() -> int:
     except Exception as error:
         failure = error
         retain_context_failure(error)
+        retain_deployment_failure(error)
         REPORT["result"] = "failed"
         REPORT["failures"].append(failure_kind(error))
         if diagnostics is not None:
@@ -1240,20 +1465,54 @@ def main() -> int:
                 pass
     finally:
         if workspace is not None and runner_temp is not None and diagnostics is not None:
-            try:
-                if services is not None and units_created:
+            cleanup_errors: list[dict[str, str]] = []
+            if services is not None and units_created:
+                try:
                     remove_run_units(Path.home() / ".config/containers/systemd", services, units_created)
+                except Exception as error:
+                    cleanup_errors.append({"resource": "run_scoped_units", "exception_class": type(error).__name__})
+            try:
                 remove_created_unit_directories(unit_dirs_created)
-                cleanup_workspace(workspace, runner_temp, diagnostics)
-                REPORT["checks"]["cleanup"] = "run-scoped units stopped and disposable VFS workspace removed"
-                if isinstance(REPORT.get("podman_context"), dict):
-                    REPORT["podman_context"]["cleanup_status"] = "passed"
             except Exception as error:
-                cleanup_failure = error
-                REPORT["failures"].append(failure_kind(error))
+                cleanup_errors.append({"resource": "run_scoped_quadlet_directories",
+                                       "exception_class": type(error).__name__})
+            try:
+                cleanup_workspace(workspace, runner_temp, diagnostics)
+            except Exception as error:
+                cleanup_errors.append({"resource": "workspace_or_private_store",
+                                       "exception_class": type(error).__name__})
+                cleanup_report = REPORT.setdefault("cleanup", {})
+                if isinstance(cleanup_report, dict):
+                    if not cleanup_report.get("failure_code"):
+                        cleanup_report["failure_code"] = "CLEANUP_WORKSPACE_FAILED"
+                    cleanup_report["status"] = "failed"
+                    cleanup_report["exception_class"] = type(error).__name__
+                    cleanup_report.setdefault("resources_remaining", ["workspace_or_private_store"])
+            if cleanup_errors:
+                cleanup_failure = RehearsalError("one or more rehearsal cleanup stages failed")
+                cleanup_report = REPORT.setdefault("cleanup", {})
+                if isinstance(cleanup_report, dict):
+                    cleanup_report["status"] = "failed"
+                    if not cleanup_report.get("failure_code"):
+                        cleanup_report["failure_code"] = "CLEANUP_RUN_SCOPED_RESOURCE_FAILED"
+                    cleanup_report["run_scoped_failures"] = cleanup_errors
+                    remaining = cleanup_report.get("resources_remaining", [])
+                    if not isinstance(remaining, list):
+                        remaining = []
+                    for item in cleanup_errors:
+                        if item["resource"] not in remaining:
+                            remaining.append(item["resource"])
+                    cleanup_report["resources_remaining"] = remaining
+                REPORT["failures"].extend(item["exception_class"] for item in cleanup_errors)
                 REPORT["result"] = "failed_cleanup"
                 if isinstance(REPORT.get("podman_context"), dict):
                     REPORT["podman_context"]["cleanup_status"] = "failed"
+            else:
+                REPORT["checks"]["cleanup"] = "run-scoped units stopped and disposable VFS workspace removed"
+                if isinstance(REPORT.get("cleanup"), dict):
+                    REPORT["cleanup"]["run_scoped_units"] = "removed_or_not_created"
+                if isinstance(REPORT.get("podman_context"), dict):
+                    REPORT["podman_context"]["cleanup_status"] = "passed"
             try:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
             except OSError:
