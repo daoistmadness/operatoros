@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-06
+last_reviewed: 2026-11-07
 ---
 
 # CI release bundles
@@ -188,12 +188,15 @@ whether the storage configuration was ignored or a default engine metadata
 path caused the lookup. The correction pins both storage and engine metadata
 paths and treats effective-path mismatch as a pre-import failure.
 
-The harness supplies `CONTAINERS_STORAGE_CONF` and `CONTAINERS_CONF`, along
-with private `HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `TMPDIR`, and an empty
-`REGISTRY_AUTH_FILE`, to direct Podman commands and each generated Quadlet
-service. It leaves the systemd manager's `XDG_RUNTIME_DIR` unchanged. The
-private storage file selects only VFS graphroot/runroot; the private engine
-file selects workspace-owned static metadata, volume, and image-copy paths.
+The rehearsal puts `storage.conf` at
+`<workspace>/deploy/xdg-config/containers/storage.conf` and sets
+`XDG_CONFIG_HOME` to its parent. It deliberately omits
+`CONTAINERS_STORAGE_CONF`: the Ubuntu 24.04 runner's Podman 4.9.3 can report the
+override path while rootless storage still uses a different graphroot. The
+separate `CONTAINERS_CONF` selects workspace-owned static metadata, volume, and
+image-copy paths. Direct Podman commands and each generated Quadlet service
+also receive private `HOME`, `XDG_DATA_HOME`, `TMPDIR`, and an empty
+`REGISTRY_AUTH_FILE`. The systemd manager's `XDG_RUNTIME_DIR` remains unchanged.
 Before downloading or importing the release image or creating services, the
 harness parses JSON from stdout only and checks Podman's reported config file,
 graphroot, runroot, volume path, image-copy directory, rootless/local state,
@@ -201,8 +204,10 @@ VFS driver, and systemd cgroup v2. It rejects additional image stores and
 unknown configuration keys, then requires the private image, container, and
 volume inventories to be empty. Podman storage warnings remain fatal even when
 stdout contains valid JSON. After Quadlet startup, the harness compares each
-service's effective Podman environment and confirms that direct Podman sees
-exactly the two expected run-scoped containers.
+service's effective Podman environment, rejects any `CONTAINERS_STORAGE_CONF`
+override, and confirms that direct Podman sees exactly the two expected
+run-scoped containers. Cleanup retains the XDG storage file until its
+post-unshare workspace validation completes.
 
 If this storage proof fails, cleanup does not invoke Podman. It removes only a
 canonical, private, runner-owned workspace with no mounts. After the private

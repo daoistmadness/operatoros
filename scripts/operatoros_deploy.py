@@ -184,7 +184,6 @@ class PrivatePodmanContext:
     def environment(self) -> dict[str, str]:
         return {
             "HOME": str(self.home),
-            "CONTAINERS_STORAGE_CONF": str(self.storage_conf),
             "CONTAINERS_CONF": str(self.containers_conf),
             "XDG_CONFIG_HOME": str(self.xdg_config_home),
             "XDG_DATA_HOME": str(self.xdg_data_home),
@@ -214,6 +213,14 @@ def create_private_podman_context(root: Path) -> PrivatePodmanContext:
         root_info.st_uid != os.getuid() or stat.S_IMODE(root_info.st_mode) != 0o700):
         raise DeployError("private Podman context root must be a canonical runner-owned mode-0700 directory")
 
+    deploy_dir = root / "deploy"
+    deploy_dir.mkdir(mode=0o700, exist_ok=True)
+    deploy_info = deploy_dir.lstat()
+    if (not stat.S_ISDIR(deploy_info.st_mode) or stat.S_ISLNK(deploy_info.st_mode) or
+        deploy_info.st_uid != os.getuid() or stat.S_IMODE(deploy_info.st_mode) & 0o077 or
+        deploy_dir.resolve(strict=True) != deploy_dir):
+        raise DeployError("private Podman configuration directory is unsafe")
+
     podman_root = root / "podman-rootless"
     paths = {
         "home": podman_root / "home",
@@ -222,7 +229,7 @@ def create_private_podman_context(root: Path) -> PrivatePodmanContext:
         "static_dir": podman_root / "metadata",
         "volume_path": podman_root / "volumes",
         "image_copy_tmp_dir": podman_root / "image-tmp",
-        "xdg_config_home": podman_root / "xdg-config",
+        "xdg_config_home": deploy_dir / "xdg-config",
         "xdg_data_home": podman_root / "xdg-data",
     }
     for path in (podman_root, *paths.values(), paths["xdg_config_home"] / "containers"):
@@ -236,15 +243,7 @@ def create_private_podman_context(root: Path) -> PrivatePodmanContext:
             path.resolve(strict=True) != path):
             raise DeployError("private Podman context contains an unsafe path")
 
-    deploy_dir = root / "deploy"
-    deploy_dir.mkdir(mode=0o700, exist_ok=True)
-    deploy_info = deploy_dir.lstat()
-    if (not stat.S_ISDIR(deploy_info.st_mode) or stat.S_ISLNK(deploy_info.st_mode) or
-        deploy_info.st_uid != os.getuid() or stat.S_IMODE(deploy_info.st_mode) & 0o077 or
-        deploy_dir.resolve(strict=True) != deploy_dir):
-        raise DeployError("private Podman configuration directory is unsafe")
-
-    storage_conf = deploy_dir / "storage.conf"
+    storage_conf = paths["xdg_config_home"] / "containers/storage.conf"
     containers_conf = deploy_dir / "containers.conf"
     registry_auth_file = deploy_dir / "registry-auth.json"
     storage_text = (
@@ -304,14 +303,14 @@ def podman_context_from_workspace(root: Path) -> PrivatePodmanContext:
     deploy_dir = root / "deploy"
     return PrivatePodmanContext(
         root=root,
-        storage_conf=deploy_dir / "storage.conf",
+        storage_conf=deploy_dir / "xdg-config/containers/storage.conf",
         containers_conf=deploy_dir / "containers.conf",
         graphroot=podman_root / "graphroot",
         runroot=podman_root / "runroot",
         static_dir=podman_root / "metadata",
         volume_path=podman_root / "volumes",
         image_copy_tmp_dir=podman_root / "image-tmp",
-        xdg_config_home=podman_root / "xdg-config",
+        xdg_config_home=deploy_dir / "xdg-config",
         xdg_data_home=podman_root / "xdg-data",
         home=podman_root / "home",
         registry_auth_file=deploy_dir / "registry-auth.json",
@@ -976,8 +975,10 @@ def load_config(path: Path) -> dict[str, Any]:
 def private_environment(storage_conf: Path, context: PrivatePodmanContext | None = None) -> dict[str, str]:
     env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": os.environ.get("HOME", ""),
            "XDG_RUNTIME_DIR": os.environ.get("XDG_RUNTIME_DIR", ""),
-           "CONTAINERS_STORAGE_CONF": str(storage_conf), "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
-    if context is not None:
+           "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+    if context is None:
+        env["CONTAINERS_STORAGE_CONF"] = str(storage_conf)
+    else:
         env.update(context.environment())
     return env
 

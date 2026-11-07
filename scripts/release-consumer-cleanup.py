@@ -25,15 +25,15 @@ WORKSPACE_PROFILES = {
     },
     "operatoros-deployment-rehearsal.": {
         "containers": ("operatoros-lite-api", "operatoros-lite-caddy"),
-        "storage_conf": "deploy/storage.conf",
+        "storage_conf": "deploy/xdg-config/containers/storage.conf",
         "containers_conf": "deploy/containers.conf",
         "graphroot": "podman-rootless/graphroot",
         "runroot": "podman-rootless/runroot",
         "metadata": "podman-rootless/metadata",
         "volumes": "podman-rootless/volumes",
         "image_tmp": "podman-rootless/image-tmp",
-        "xdg_config_home": "podman-rootless/xdg-config",
-        "xdg_containers": "podman-rootless/xdg-config/containers",
+        "xdg_config_home": "deploy/xdg-config",
+        "xdg_containers": "deploy/xdg-config/containers",
         "xdg_data_home": "podman-rootless/xdg-data",
         "home": "podman-rootless/home",
     },
@@ -111,9 +111,11 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
     if os.path.ismount(workspace):
         raise CleanupError("Refusing to clean a mounted consumer workspace.")
 
-    storage_value = os.environ.get("CONTAINERS_STORAGE_CONF")
     storage_conf = workspace / str(profile["storage_conf"])
-    if storage_value != str(storage_conf):
+    if prefix == "operatoros-deployment-rehearsal.":
+        if os.environ.get("CONTAINERS_STORAGE_CONF") is not None:
+            raise CleanupError("Rehearsal Podman storage must use its private XDG config without an override.")
+    elif os.environ.get("CONTAINERS_STORAGE_CONF") != str(storage_conf):
         raise CleanupError("Podman storage config is not scoped to the consumer workspace.")
     try:
         storage_stat = storage_conf.lstat()
@@ -174,6 +176,13 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
         for name, expected in expected_environment.items():
             if os.environ.get(name) != expected:
                 raise CleanupError("Rehearsal Podman environment differs from its private workspace.")
+        config_directory = workspace / str(profile["xdg_containers"])
+        try:
+            config_files = {path.name for path in config_directory.iterdir()}
+        except OSError as error:
+            raise CleanupError("Rehearsal XDG storage config directory is unavailable.") from error
+        if config_files != {storage_conf.name}:
+            raise CleanupError("Rehearsal XDG storage config directory contains unexpected files.")
         auth_file = workspace / "deploy/registry-auth.json"
         try:
             auth_info = auth_file.lstat()
@@ -322,7 +331,8 @@ def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
         raise CleanupError("Safe recursive removal is unavailable.")
     # Revalidate after entering Podman's user namespace. Clear only private
     # storage contents here while preserving configured directories for the
-    # host-side postcondition checks.
+    # host-side postcondition checks. XDG containers holds storage.conf, which
+    # must survive until that second validation completes.
     validate_workspace(str(workspace), str(temp_parent))
     assert_no_mounts_below(workspace)
     selected = workspace_profile(workspace)
@@ -341,8 +351,6 @@ def remove_store_in_user_namespace(workspace: Path, temp_parent: Path) -> int:
         if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode) or os.path.ismount(path):
             raise CleanupError(f"Refusing unsafe consumer {key} removal.")
         clear_private_directory(path)
-    if profile is not None and "xdg_containers" in profile:
-        clear_private_directory(workspace / str(profile["xdg_containers"]))
     return 0
 
 
@@ -369,7 +377,7 @@ def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
     _prefix, profile = selected
     allowed_keys = ["graphroot", "runroot"]
     if "metadata" in profile:
-        allowed_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home", "xdg_containers"))
+        allowed_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home"))
     allowed_paths = {workspace / str(profile[key]) for key in allowed_keys}
     if path not in allowed_paths:
         raise CleanupError("Refusing store cleanup outside the consumer workspace.")
@@ -456,7 +464,7 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
             _prefix, profile = selected
             residual_keys = ["graphroot", "runroot"]
             if "metadata" in profile:
-                residual_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home", "xdg_containers"))
+                residual_keys.extend(("metadata", "volumes", "image_tmp", "xdg_data_home", "home"))
             for key in residual_keys:
                 remove_host_owned_store_residual(workspace / str(profile[key]), workspace)
             assert_no_mounts_below(workspace)

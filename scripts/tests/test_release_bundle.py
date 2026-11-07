@@ -458,7 +458,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             secret_values = [call[1]['input'] for call in calls]
             for args, kwargs in calls:
                 self.assertEqual(args[-1], '-')
-                self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertNotIn('CONTAINERS_STORAGE_CONF', kwargs['env'])
+                self.assertEqual(kwargs['env']['XDG_CONFIG_HOME'], str(context.xdg_config_home))
                 self.assertTrue(Path(kwargs['env']['CONTAINERS_CONF']).is_relative_to(workspace))
                 self.assertEqual(kwargs['env']['XDG_DATA_HOME'], str(context.xdg_data_home))
                 self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
@@ -856,6 +857,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         context.graphroot.rmdir()
         context.graphroot.symlink_to(external_store, target_is_directory=True)
         environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
         with patch.dict(os.environ, environment, clear=True):
             with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot path'):
                 cleanup.validate_workspace(str(workspace), str(self.temp_parent))

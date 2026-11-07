@@ -817,7 +817,7 @@ class DeploymentFixture(unittest.TestCase):
 
         def command_json(args, env=None, *, timeout=60):
             self.assertEqual(args, ["podman", "info", "--format", "json"])
-            context = deploy.podman_context_from_workspace(Path(env["CONTAINERS_STORAGE_CONF"]).parent.parent)
+            context = deploy.podman_context_from_workspace(Path(env["XDG_CONFIG_HOME"]).parent.parent)
             return {
                 "host": {"security": {"rootless": True}, "serviceIsRemote": False,
                          "cgroupVersion": "v2", "cgroupManager": "systemd"},
