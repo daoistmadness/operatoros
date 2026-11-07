@@ -319,7 +319,18 @@ class PodmanIsolationTests(unittest.TestCase):
         for name, value in values.items():
             self.assertIn(f"Environment={name}={value}", lines)
         self.assertNotIn("XDG_RUNTIME_DIR", values)
+        self.assertNotIn("CONTAINERS_STORAGE_CONF", values)
+        self.assertEqual(self.context.storage_conf,
+                         self.context.xdg_config_home / "containers/storage.conf")
         self.assertTrue(all(Path(value).is_relative_to(self.root) for value in values.values()))
+
+    def test_private_environment_uses_xdg_for_rehearsal_and_explicit_config_for_deployment(self):
+        rehearsal_environment = deploy.private_environment(self.context.storage_conf, self.context)
+        self.assertNotIn("CONTAINERS_STORAGE_CONF", rehearsal_environment)
+        self.assertEqual(rehearsal_environment["XDG_CONFIG_HOME"], str(self.context.xdg_config_home))
+
+        deployment_environment = deploy.private_environment(self.context.storage_conf)
+        self.assertEqual(deployment_environment["CONTAINERS_STORAGE_CONF"], str(self.context.storage_conf))
 
     def test_default_overlay_database_override_is_rejected(self):
         value = self.info()
@@ -806,7 +817,7 @@ class DeploymentFixture(unittest.TestCase):
 
         def command_json(args, env=None, *, timeout=60):
             self.assertEqual(args, ["podman", "info", "--format", "json"])
-            context = deploy.podman_context_from_workspace(Path(env["CONTAINERS_STORAGE_CONF"]).parent.parent)
+            context = deploy.podman_context_from_workspace(Path(env["XDG_CONFIG_HOME"]).parent.parent)
             return {
                 "host": {"security": {"rootless": True}, "serviceIsRemote": False,
                          "cgroupVersion": "v2", "cgroupManager": "systemd"},

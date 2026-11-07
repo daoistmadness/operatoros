@@ -195,6 +195,27 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertEqual(failure['observed'], 'unsafe')
             self.assertNotIn(error_text, json.dumps(failure))
 
+    def test_structured_context_failure_updates_outer_guard_summary(self):
+        report = {
+            'podman_context': {
+                'status': 'qualifying',
+                'stage': 'podman_store_validation',
+                'last_completed_guard': 'podman_info_parsed',
+            },
+        }
+        error = deploy.PodmanContextError(
+            'CTX_GRAPHROOT_MISMATCH', 'podman_store_validation',
+            'rootless_runtime_validated', expected='private_graphroot', observed='different_path',
+        )
+
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.retain_context_failure(error)
+
+        summary = report['podman_context']
+        self.assertEqual(summary['stage'], summary['failure']['stage'])
+        self.assertEqual(summary['last_completed_guard'], summary['failure']['last_completed_guard'])
+        self.assertEqual(summary['last_completed_guard'], 'rootless_runtime_validated')
+
     def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
         child_output = 'synthetic-child-output-marker'
@@ -351,18 +372,19 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             valid = 'PATH=/usr/bin:/bin ' + ' '.join(
                 f'{name}={value}' for name, value in context.environment().items()
             )
+            self.assertNotIn('CONTAINERS_STORAGE_CONF', context.environment())
             rehearsal.verify_quadlet_podman_environment(valid, context)
 
             wrong = valid.replace(
-                str(context.storage_conf),
-                '/home/runner/.config/containers/storage.conf',
+                str(context.xdg_config_home),
+                '/home/runner/.config',
             )
             with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
                 rehearsal.verify_quadlet_podman_environment(wrong, context)
 
-            duplicate = valid + f' CONTAINERS_STORAGE_CONF={context.storage_conf}'
-            with self.assertRaisesRegex(rehearsal.RehearsalError, 'duplicate'):
-                rehearsal.verify_quadlet_podman_environment(duplicate, context)
+            override = valid + f' CONTAINERS_STORAGE_CONF={context.storage_conf}'
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'override'):
+                rehearsal.verify_quadlet_podman_environment(override, context)
 
             missing = ' '.join(
                 f'{name}={value}' for name, value in context.environment().items()
@@ -436,7 +458,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             secret_values = [call[1]['input'] for call in calls]
             for args, kwargs in calls:
                 self.assertEqual(args[-1], '-')
-                self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertNotIn('CONTAINERS_STORAGE_CONF', kwargs['env'])
+                self.assertEqual(kwargs['env']['XDG_CONFIG_HOME'], str(context.xdg_config_home))
                 self.assertTrue(Path(kwargs['env']['CONTAINERS_CONF']).is_relative_to(workspace))
                 self.assertEqual(kwargs['env']['XDG_DATA_HOME'], str(context.xdg_data_home))
                 self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
@@ -803,6 +826,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         workspace.mkdir(mode=0o700)
         context = private_context(workspace)
         environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
         with unittest.mock.patch.dict(os.environ, environment, clear=True), \
              unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
             self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
@@ -811,6 +835,18 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         self.assertEqual(self.commands[0], [
             'rm', '--force', '--ignore', 'operatoros-lite-api', 'operatoros-lite-caddy',
         ])
+
+    def test_deployment_rehearsal_cleanup_rejects_storage_config_override(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
+        environment['CONTAINERS_STORAGE_CONF'] = str(context.storage_conf)
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+        self.assertTrue(workspace.exists())
 
     def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
@@ -821,6 +857,7 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         context.graphroot.rmdir()
         context.graphroot.symlink_to(external_store, target_is_directory=True)
         environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
         with patch.dict(os.environ, environment, clear=True):
             with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot path'):
                 cleanup.validate_workspace(str(workspace), str(self.temp_parent))

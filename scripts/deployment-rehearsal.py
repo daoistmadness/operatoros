@@ -146,6 +146,8 @@ def retain_context_failure(error: BaseException) -> None:
         }
     record["status"] = "failed"
     record["failure"] = failure
+    record["stage"] = failure["stage"]
+    record["last_completed_guard"] = failure["last_completed_guard"]
 
 
 def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 30) -> str:
@@ -372,6 +374,8 @@ def verify_quadlet_podman_environment(value: str, context: Any) -> None:
         name, separator, setting = entry.partition("=")
         if not separator:
             raise RehearsalError("Quadlet service returned a malformed environment entry")
+        if name == "CONTAINERS_STORAGE_CONF":
+            raise RehearsalError("Quadlet service must use the private XDG storage config without an override")
         if name in expected:
             if name in observed:
                 raise RehearsalError("Quadlet service has duplicate Podman context settings")
@@ -513,11 +517,12 @@ TimeoutStopSec=45
 
 
 def toml_config(workspace: Path, api_unit: Path, caddy_unit: Path, api_copy: Path,
-                api_service: str, caddy_service: str, api_port: int, web_port: int) -> Path:
+                api_service: str, caddy_service: str, api_port: int, web_port: int,
+                storage_conf: Path) -> Path:
     values: dict[str, str | int] = {
         "root": str(workspace),
         "expected_uid": os.getuid(),
-        "storage_conf": str(workspace / "deploy/storage.conf"),
+        "storage_conf": str(storage_conf),
         "graphroot": str(workspace / "podman-rootless/graphroot"),
         "runroot": str(workspace / "podman-rootless/runroot"),
         "data_dir": str(workspace / "data"),
@@ -994,7 +999,7 @@ def rehearse(workspace: Path, diagnostics: Path,
             image_ref, auth_secret_name, backup_secret_name, units_created, context,
         )
         config = toml_config(workspace, api_unit, caddy_unit, api_copy, api_service, caddy_service,
-                             api_port, web_port)
+                             api_port, web_port, context.storage_conf)
         cfg = deploy.load_config(config)
         require(cfg["profile"] == "rehearsal" and cfg["expected_uid"] == uid,
                 "deployment CLI did not accept the exact isolated rehearsal profile")
