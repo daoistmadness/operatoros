@@ -152,6 +152,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
             workspace.mkdir(mode=0o700)
             (workspace / 'partial-setup').write_text('synthetic only', encoding='utf-8')
+            unrelated = runner_temp / 'unrelated-resource'
+            unrelated.write_text('preserve', encoding='utf-8')
             diagnostics = runner_temp / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
             rehearsal.PODMAN_CONTEXT_VERIFIED = False
@@ -159,6 +161,39 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 rehearsal.cleanup_workspace(workspace, runner_temp, diagnostics)
             run.assert_not_called()
             self.assertFalse(workspace.exists())
+            self.assertEqual(unrelated.read_text(encoding='utf-8'), 'preserve')
+
+    def test_private_workspace_creation_failure_is_recorded_with_its_stage(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-workspace-failure-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            report = {'schema_version': 2, 'checks': {}, 'failures': []}
+            error_text = 'synthetic workspace failure detail'
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'require_private_workspace_boundary',
+                              side_effect=rehearsal.RehearsalError(error_text)):
+                with self.assertRaises(RuntimeError) as error:
+                    rehearsal.rehearse(
+                        workspace, diagnostics,
+                        ('operatoros-rehearsal-fixture-api.service',
+                         'operatoros-rehearsal-fixture-caddy.service'),
+                        set(), [],
+                    )
+
+                self.assertEqual(error.exception.code, 'CTX_WORKSPACE_FAILURE')
+                self.assertEqual(error.exception.stage, 'workspace_creation')
+                self.assertEqual(error.exception.last_completed_guard, 'none')
+                rehearsal.retain_context_failure(error.exception)
+
+            failure = report['podman_context']['failure']
+            self.assertEqual(failure['code'], 'CTX_WORKSPACE_FAILURE')
+            self.assertEqual(failure['stage'], 'workspace_creation')
+            self.assertEqual(failure['last_completed_guard'], 'none')
+            self.assertEqual(failure['observed'], 'unsafe')
+            self.assertNotIn(error_text, json.dumps(failure))
 
     def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
@@ -473,6 +508,53 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertNotIn(cleanup_secret, evidence)
             self.assertNotIn(secret, stderr.getvalue())
             self.assertNotIn(cleanup_secret, stderr.getvalue())
+
+    def test_main_retains_structured_context_failure_and_cleanup_status(self):
+        secret = 'synthetic-podman-output-secret'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-context-diagnostic-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+            error = deploy.PodmanContextError(
+                'CTX_PODMAN_INFO_FAILURE', 'podman_info', 'private_environment_verified',
+                exit_code=17, expected='successful_podman_info', observed='command_failed',
+            )
+            error.stderr = secret
+
+            def fail_context(*args):
+                report['podman_context'] = {
+                    'stage': 'podman_info',
+                    'last_completed_guard': 'private_environment_verified',
+                    'status': 'qualifying',
+                    'cleanup_status': 'not_started',
+                }
+                raise error
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_context), \
+                 patch.object(rehearsal, 'cleanup_workspace'):
+                self.assertEqual(rehearsal.main(), 1)
+
+            evidence = (diagnostics / 'rehearsal-evidence.json').read_text()
+            record = json.loads(evidence)['podman_context']
+            failure = record.get('failure', {})
+            self.assertEqual(failure.get('code'), 'CTX_PODMAN_INFO_FAILURE')
+            self.assertEqual(failure.get('stage'), 'podman_info')
+            self.assertEqual(failure.get('last_completed_guard'), 'private_environment_verified')
+            self.assertEqual(failure.get('exit_code'), 17)
+            self.assertEqual(failure.get('expected'), 'successful_podman_info')
+            self.assertEqual(failure.get('observed'), 'command_failed')
+            self.assertEqual(record.get('cleanup_status'), 'passed')
+            self.assertNotIn(secret, evidence)
 
     def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
         with tempfile.TemporaryDirectory() as temp:

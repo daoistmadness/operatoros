@@ -50,7 +50,89 @@ REHEARSAL_WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
 
 
 class DeployError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, exit_code: int | None = None):
+        self.exit_code = exit_code
+        super().__init__(message)
+
+
+PODMAN_CONTEXT_FAILURES = {
+    "CTX_WORKSPACE_FAILURE": "The private rehearsal workspace is unavailable, noncanonical, or unsafe.",
+    "CTX_CONFIG_FAILURE": "private Podman configuration failed validation or selected an unexpected image or container store",
+    "CTX_PODMAN_INFO_FAILURE": "The Podman info command did not complete successfully.",
+    "CTX_PODMAN_INFO_INVALID_JSON": "Podman info returned malformed or incomplete JSON storage identity.",
+    "CTX_ROOTLESS_MISMATCH": "Podman is not running in the required local rootless VFS/systemd context.",
+    "CTX_GRAPHROOT_MISMATCH": "Podman graphRoot is outside the approved private storage context.",
+    "CTX_RUNROOT_MISMATCH": "Podman runRoot is outside the approved private storage context.",
+    "CTX_CONFIGFILE_MISMATCH": "Podman configFile does not identify the private storage configuration.",
+    "CTX_METADATA_PATH_MISMATCH": "Podman staticDir or metadata paths differ from the private context.",
+    "CTX_ADDITIONAL_STORE": "Podman reported an additional image store outside the private configuration.",
+    "CTX_INVENTORY_INVALID": "Podman did not report a verifiable image or container inventory.",
+    "CTX_NONEMPTY_STORE": "private Podman context exposes pre-existing containers, images, or volumes; it already contains resources.",
+    "CTX_STORE_INVENTORY_FAILURE": "The private Podman inventory command did not complete successfully.",
+    "CTX_ENVIRONMENT_MISMATCH": "Podman inventory command environment differs from the verified private context.",
+    "CTX_IDMAP_INVALID": "Podman user namespace mappings are invalid or too small.",
+    "CTX_UNCLASSIFIED_FAILURE": "Private Podman context qualification failed unexpectedly.",
+}
+PODMAN_CONTEXT_STAGES = frozenset({
+    "workspace_creation", "private_context_creation", "private_configuration",
+    "podman_environment", "podman_info", "podman_info_json",
+    "podman_store_validation", "store_inventory", "uid_gid_map_validation",
+})
+PODMAN_CONTEXT_GUARDS = frozenset({
+    "none", "artifact_verified", "workspace_created", "private_context_created",
+    "private_environment_verified", "podman_info_returned", "podman_info_parsed",
+    "private_config_validated", "rootless_runtime_validated", "configfile_matched",
+    "graphroot_matched", "runroot_matched", "metadata_paths_matched",
+    "inventory_shape_validated", "podman_store_identity_verified", "store_inventory_empty",
+    "uid_map_verified", "gid_map_verified",
+})
+PODMAN_CONTEXT_VALUES = frozenset({
+    "private_workspace", "private_storage_config", "local_rootless_vfs_systemd_context",
+    "private_graphroot", "private_runroot", "private_metadata_paths", "empty_store",
+    "successful_podman_info", "at_least_65536_numeric_mapping_ids",
+    "complete_private_store_identity", "verifiable_empty_inventory",
+    "unavailable", "unsafe", "rootless_or_runtime_mismatch", "different_path",
+    "different_config", "incomplete_identity", "additional_store_present",
+    "invalid_inventory", "nonempty_store", "nonzero_exit", "storage_warning",
+    "command_failed", "command_timeout", "command_unavailable", "empty_json",
+    "malformed_json", "environment_mismatch", "invalid_mapping", "insufficient_mapping",
+})
+
+
+class PodmanContextError(DeployError):
+    """A fail-closed private-context error with fields safe for rehearsal evidence."""
+
+    def __init__(self, code: str, stage: str, last_completed_guard: str, *,
+                 exit_code: int | None = None,
+                 expected: str | None = None, observed: str | None = None):
+        if code not in PODMAN_CONTEXT_FAILURES:
+            raise ValueError("invalid private Podman failure code")
+        if stage not in PODMAN_CONTEXT_STAGES or last_completed_guard not in PODMAN_CONTEXT_GUARDS:
+            raise ValueError("invalid private Podman diagnostic stage or guard")
+        if exit_code is not None and type(exit_code) is not int:
+            raise ValueError("private Podman process exit code must be an integer")
+        if expected is not None and expected not in PODMAN_CONTEXT_VALUES:
+            raise ValueError("invalid private Podman expected-value label")
+        if observed is not None and observed not in PODMAN_CONTEXT_VALUES:
+            raise ValueError("invalid private Podman observed-value label")
+        self.code = code
+        self.stage = stage
+        self.last_completed_guard = last_completed_guard
+        self.expected = expected
+        self.observed = observed
+        self.explanation = PODMAN_CONTEXT_FAILURES[code]
+        super().__init__(self.explanation, exit_code=exit_code)
+
+    def diagnostic_record(self) -> dict[str, Any]:
+        return {
+            "code": self.code,
+            "stage": self.stage,
+            "last_completed_guard": self.last_completed_guard,
+            "exit_code": self.exit_code,
+            "explanation": self.explanation,
+            "expected": self.expected,
+            "observed": self.observed,
+        }
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -236,8 +318,21 @@ def podman_context_from_workspace(root: Path) -> PrivatePodmanContext:
     )
 
 
-def validate_private_podman_config(context: PrivatePodmanContext) -> None:
+def validate_private_podman_config(context: PrivatePodmanContext, *,
+                                   last_completed_guard: str = "private_context_created") -> None:
     """Validate private config files before starting Podman or creating units."""
+    try:
+        _validate_private_podman_config(context)
+    except PodmanContextError:
+        raise
+    except (DeployError, OSError, UnicodeError, tomllib.TOMLDecodeError) as error:
+        raise PodmanContextError(
+            "CTX_CONFIG_FAILURE", "private_configuration", last_completed_guard,
+            expected="private_storage_config", observed="unsafe",
+        ) from error
+
+
+def _validate_private_podman_config(context: PrivatePodmanContext) -> None:
     for path in (context.storage_conf, context.containers_conf, context.registry_auth_file):
         require_regular_owned(path, os.getuid(), "private Podman configuration", 0o077)
         if path.resolve(strict=True) != path:
@@ -276,7 +371,8 @@ def validate_private_podman_config(context: PrivatePodmanContext) -> None:
 
 
 def validate_podman_store(info: Any, context: PrivatePodmanContext, *, require_empty: bool = False) -> None:
-    validate_private_podman_config(context)
+    validate_private_podman_config(context, last_completed_guard="podman_info_parsed")
+    last_completed_guard = "private_config_validated"
     try:
         host = info["host"]
         store = info["store"]
@@ -291,32 +387,92 @@ def validate_podman_store(info: Any, context: PrivatePodmanContext, *, require_e
         if (host["security"]["rootless"] is not True or host.get("serviceIsRemote") is not False or
             cgroup_version != "v2" or host.get("cgroupManager") != "systemd" or
             store.get("graphDriverName") != "vfs"):
-            raise DeployError("Podman is not running in the required local rootless VFS/systemd context")
+            raise PodmanContextError(
+                "CTX_ROOTLESS_MISMATCH", "podman_store_validation", "podman_info_parsed",
+                expected="local_rootless_vfs_systemd_context", observed="rootless_or_runtime_mismatch",
+            )
+        last_completed_guard = "rootless_runtime_validated"
         for key, expected in expected_paths.items():
-            actual = Path(store[key])
-            if (not actual.is_absolute() or actual.resolve(strict=True) != actual or
-                actual != expected or actual != expected.resolve(strict=True)):
-                raise DeployError(f"Podman {key} is outside the approved private storage context")
+            code, guard, label = {
+                "configFile": ("CTX_CONFIGFILE_MISMATCH", "configfile_matched", "private_storage_config"),
+                "graphRoot": ("CTX_GRAPHROOT_MISMATCH", "graphroot_matched", "private_graphroot"),
+                "runRoot": ("CTX_RUNROOT_MISMATCH", "runroot_matched", "private_runroot"),
+                "volumePath": ("CTX_METADATA_PATH_MISMATCH", "metadata_paths_matched", "private_metadata_paths"),
+                "imageCopyTmpDir": ("CTX_METADATA_PATH_MISMATCH", "metadata_paths_matched", "private_metadata_paths"),
+            }[key]
+            try:
+                actual = Path(store[key])
+                canonical = actual.resolve(strict=True)
+                expected_canonical = expected.resolve(strict=True)
+            except (TypeError, ValueError, OSError) as error:
+                raise PodmanContextError(
+                    code, "podman_store_validation", last_completed_guard,
+                    expected=label, observed="different_path",
+                ) from error
+            if (not actual.is_absolute() or canonical != actual or actual != expected or
+                actual != expected_canonical):
+                raise PodmanContextError(
+                    code, "podman_store_validation", last_completed_guard,
+                    expected=label, observed="different_path",
+                )
+            last_completed_guard = guard
         if "staticDir" in store:
-            static_dir = Path(store["staticDir"])
-            if (not static_dir.is_absolute() or static_dir.resolve(strict=True) != static_dir or
+            try:
+                static_dir = Path(store["staticDir"])
+                canonical_static_dir = static_dir.resolve(strict=True)
+            except (TypeError, ValueError, OSError) as error:
+                raise PodmanContextError(
+                    "CTX_METADATA_PATH_MISMATCH", "podman_store_validation", last_completed_guard,
+                    expected="private_metadata_paths", observed="different_path",
+                ) from error
+            if (not static_dir.is_absolute() or canonical_static_dir != static_dir or
                 static_dir != context.static_dir):
-                raise DeployError("Podman staticDir is outside the approved private metadata context")
+                raise PodmanContextError(
+                    "CTX_METADATA_PATH_MISMATCH", "podman_store_validation", last_completed_guard,
+                    expected="private_metadata_paths", observed="different_path",
+                )
+            last_completed_guard = "metadata_paths_matched"
         additional_stores = store.get("additionalImageStores", [])
         if additional_stores not in ([], None):
-            raise DeployError("Podman reported an additional image store outside the private configuration")
+            raise PodmanContextError(
+                "CTX_ADDITIONAL_STORE", "podman_store_validation", last_completed_guard,
+                expected="private_storage_config", observed="additional_store_present",
+            )
         for key in ("imageStore", "containerStore"):
             if not isinstance(store.get(key), dict) or type(store[key].get("number")) is not int:
-                raise DeployError(f"Podman did not report a verifiable {key} inventory")
+                raise PodmanContextError(
+                    "CTX_INVENTORY_INVALID", "podman_store_validation", last_completed_guard,
+                    expected="verifiable_empty_inventory", observed="invalid_inventory",
+                )
+        last_completed_guard = "inventory_shape_validated"
         if require_empty:
             for field in ("containerStore", "imageStore"):
                 value = store.get(field)
                 if not isinstance(value, dict) or value.get("number") != 0:
-                    raise DeployError("private Podman context already contains containers or images")
-        if context.static_dir.resolve(strict=True) != context.static_dir:
-            raise DeployError("Podman metadata directory is not canonical")
-    except (KeyError, TypeError, ValueError, OSError) as error:
-        raise DeployError("Podman returned incomplete private storage identity") from error
+                    raise PodmanContextError(
+                        "CTX_NONEMPTY_STORE", "podman_store_validation", last_completed_guard,
+                        expected="empty_store", observed="nonempty_store",
+                    )
+            last_completed_guard = "store_inventory_empty"
+        try:
+            canonical_static_dir = context.static_dir.resolve(strict=True)
+        except OSError as error:
+            raise PodmanContextError(
+                "CTX_METADATA_PATH_MISMATCH", "podman_store_validation", last_completed_guard,
+                expected="private_metadata_paths", observed="unavailable",
+            ) from error
+        if canonical_static_dir != context.static_dir:
+            raise PodmanContextError(
+                "CTX_METADATA_PATH_MISMATCH", "podman_store_validation", last_completed_guard,
+                expected="private_metadata_paths", observed="different_path",
+            )
+    except PodmanContextError:
+        raise
+    except (AttributeError, KeyError, TypeError, ValueError, OSError) as error:
+        raise PodmanContextError(
+            "CTX_PODMAN_INFO_INVALID_JSON", "podman_store_validation", last_completed_guard,
+            expected="complete_private_store_identity", observed="incomplete_identity",
+        ) from error
 
 
 def stderr_classification(stderr: str) -> str:
@@ -340,7 +496,8 @@ def stderr_classification(stderr: str) -> str:
 def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str]) -> None:
     diagnostic = stderr_classification(result.stderr)
     if result.returncode != 0:
-        raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})")
+        raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})",
+                          exit_code=result.returncode)
     if args and Path(args[0]).name == "podman" and diagnostic in {
         "storage-driver-database-override", "additional-image-store-warning", "storage-path-warning",
         "storage-configuration-warning",
@@ -348,14 +505,44 @@ def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[
         raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})")
 
 
-def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> Any:
-    result = run_command(args, env=env, timeout=timeout)
-    _assert_podman_command(result, args)
+def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60,
+                 context_diagnostics: bool = False) -> Any:
+    try:
+        result = run_command(args, env=env, timeout=timeout)
+    except DeployError as error:
+        if not context_diagnostics:
+            raise
+        cause = error.__cause__
+        observed = "command_timeout" if isinstance(cause, subprocess.TimeoutExpired) else "command_unavailable"
+        raise PodmanContextError(
+            "CTX_PODMAN_INFO_FAILURE", "podman_info", "private_environment_verified",
+            expected="successful_podman_info", observed=observed,
+        ) from error
+    try:
+        _assert_podman_command(result, args)
+    except DeployError as error:
+        if not context_diagnostics:
+            raise
+        observed = "nonzero_exit" if result.returncode != 0 else "storage_warning"
+        raise PodmanContextError(
+            "CTX_PODMAN_INFO_FAILURE", "podman_info", "private_environment_verified",
+            exit_code=result.returncode, expected="successful_podman_info", observed=observed,
+        ) from error
     if not result.stdout.strip():
+        if context_diagnostics:
+            raise PodmanContextError(
+                "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
+                exit_code=result.returncode, expected="complete_private_store_identity", observed="empty_json",
+            )
         raise DeployError(f"{args[0]} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as error:
+        if context_diagnostics:
+            raise PodmanContextError(
+                "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
+                exit_code=result.returncode, expected="complete_private_store_identity", observed="malformed_json",
+            ) from error
         raise DeployError(f"{args[0]} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
 
 
@@ -910,15 +1097,48 @@ def inspect_podman_context(cfg: dict[str, Any]) -> dict[str, str]:
 def require_empty_podman_store(context: PrivatePodmanContext, env: dict[str, str]) -> None:
     """Prove the private store cannot see pre-existing containers, images, or volumes."""
     if any(env.get(name) != value for name, value in context.environment().items()):
-        raise DeployError("Podman inventory command environment differs from the verified private context")
+        raise PodmanContextError(
+            "CTX_ENVIRONMENT_MISMATCH", "store_inventory", "podman_store_identity_verified",
+            expected="private_workspace", observed="environment_mismatch",
+        )
     commands = (
         ["podman", "ps", "--all", "--quiet"],
         ["podman", "image", "ls", "--quiet"],
         ["podman", "volume", "ls", "--quiet"],
     )
     for args in commands:
-        if command(args, env).strip():
-            raise DeployError("private Podman context exposes pre-existing containers, images, or volumes")
+        try:
+            output = command(args, env)
+        except DeployError as error:
+            raise PodmanContextError(
+                "CTX_STORE_INVENTORY_FAILURE", "store_inventory", "podman_store_identity_verified",
+                exit_code=error.exit_code, expected="empty_store", observed="command_failed",
+            ) from error
+        if output.strip():
+            raise PodmanContextError(
+                "CTX_NONEMPTY_STORE", "store_inventory", "podman_store_identity_verified",
+                expected="empty_store", observed="nonempty_store",
+            )
+
+
+def validate_user_namespace_map(mapping: str, *, name: str, last_completed_guard: str) -> None:
+    if name not in {"uid", "gid"}:
+        raise ValueError("user namespace map name must be uid or gid")
+    sizes: list[int] = []
+    for line in mapping.splitlines():
+        fields = line.split()
+        if (not line.isascii() or len(fields) != 3 or any(len(field) > 20 for field in fields) or
+            any(not field.isdecimal() for field in fields) or int(fields[2]) < 1):
+            raise PodmanContextError(
+                "CTX_IDMAP_INVALID", "uid_gid_map_validation", last_completed_guard,
+                expected="at_least_65536_numeric_mapping_ids", observed="invalid_mapping",
+            )
+        sizes.append(int(fields[2]))
+    if sum(sizes) < 65_536:
+        raise PodmanContextError(
+            "CTX_IDMAP_INVALID", "uid_gid_map_validation", last_completed_guard,
+            expected="at_least_65536_numeric_mapping_ids", observed="insufficient_mapping",
+        )
 
 
 def service_active(name: str) -> None:

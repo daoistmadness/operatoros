@@ -12,6 +12,7 @@ Notable user-facing changes are recorded here.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
 - Pin the rehearsal to the approved attested release, record its provenance and checksums, and verify WAL-safe SQLite preservation, lock isolation, restart recovery, and SPA cache behavior (#366).
 - Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.
+- Retain stable, sanitized failure codes and cleanup status when private Podman-context qualification fails (#367).
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 

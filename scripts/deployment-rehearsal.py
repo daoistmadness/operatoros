@@ -86,7 +86,7 @@ def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60
 
 
 DIAGNOSTICS: Path | None = None
-REPORT: dict[str, Any] = {"schema_version": 1, "checks": {}, "failures": []}
+REPORT: dict[str, Any] = {"schema_version": 2, "checks": {}, "failures": []}
 PODMAN_CONTEXT_VERIFIED = False
 
 
@@ -114,6 +114,38 @@ def require(condition: bool, message: str) -> None:
 
 def failure_kind(error: BaseException) -> str:
     return type(error).__name__
+
+
+def context_progress(stage: str, last_completed_guard: str | None = None) -> None:
+    record = REPORT.get("podman_context")
+    if not isinstance(record, dict):
+        return
+    record["stage"] = stage
+    if last_completed_guard is not None:
+        record["last_completed_guard"] = last_completed_guard
+
+
+def retain_context_failure(error: BaseException) -> None:
+    record = REPORT.get("podman_context")
+    if not isinstance(record, dict) or record.get("status") != "qualifying":
+        return
+    error_module = sys.modules.get(type(error).__module__)
+    error_type = getattr(error_module, "PodmanContextError", None)
+    if isinstance(error_type, type) and isinstance(error, error_type):
+        diagnostic_record = error.diagnostic_record
+        failure = diagnostic_record()
+    else:
+        failure = {
+            "code": "CTX_UNCLASSIFIED_FAILURE",
+            "stage": record["stage"],
+            "last_completed_guard": record["last_completed_guard"],
+            "exit_code": None,
+            "explanation": "Private Podman context qualification failed unexpectedly.",
+            "expected": None,
+            "observed": None,
+        }
+    record["status"] = "failed"
+    record["failure"] = failure
 
 
 def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 30) -> str:
@@ -772,11 +804,26 @@ def rehearse(workspace: Path, diagnostics: Path,
     uid = os.getuid()
     api_service, caddy_service = services
     unit_dir = Path.home() / ".config/containers/systemd"
-    require_private_workspace_boundary(workspace.parent, workspace)
-    workspace.mkdir(mode=0o700)
-    os.chmod(workspace, 0o700)
-    for name in ("deploy", "data", "data/backups", "web", "web/releases"):
-        (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
+    REPORT["podman_context"] = {
+        "status": "not_started",
+        "stage": "workspace_creation",
+        "last_completed_guard": "none",
+        "failure": None,
+        "cleanup_status": "not_started",
+    }
+    try:
+        require_private_workspace_boundary(workspace.parent, workspace)
+        workspace.mkdir(mode=0o700)
+        os.chmod(workspace, 0o700)
+        for name in ("deploy", "data", "data/backups", "web", "web/releases"):
+            (workspace / name).mkdir(mode=0o700, parents=True, exist_ok=True)
+    except (OSError, RehearsalError) as error:
+        REPORT["podman_context"]["status"] = "qualifying"
+        raise deploy.PodmanContextError(
+            "CTX_WORKSPACE_FAILURE", "workspace_creation", "none",
+            expected="private_workspace", observed="unsafe" if isinstance(error, RehearsalError) else "unavailable",
+        ) from error
+    context_progress("workspace_creation", "workspace_created")
     api_port = reserve_loopback_port(set())
     web_port = reserve_loopback_port({api_port})
     origin = f"http://127.0.0.1:{web_port}"
@@ -838,23 +885,59 @@ def rehearse(workspace: Path, diagnostics: Path,
             "spa_sha256": artifacts["operatoros-web-client.tar.gz"],
         }
         REPORT["checks"]["artifact_verification"] = "GitHub repository, run, workflow, attestation, envelope, bundle, manifest, OCI, and SPA identities verified before Podman initialization"
+        REPORT["podman_context"]["status"] = "qualifying"
+        context_progress("private_context_creation", "artifact_verified")
         write_json(report_path, REPORT)
         print("ARTIFACT_VERIFICATION_PASS " + json.dumps(REPORT["artifact_verification"], sort_keys=True), flush=True)
 
-        context = deploy.create_private_podman_context(workspace)
+        try:
+            context = deploy.create_private_podman_context(workspace)
+        except deploy.PodmanContextError:
+            raise
+        except Exception as error:
+            raise deploy.PodmanContextError(
+                "CTX_CONFIG_FAILURE", "private_context_creation", "artifact_verified",
+                expected="private_storage_config", observed="unavailable",
+            ) from error
+        context_progress("podman_environment", "private_context_created")
         storage_conf = context.storage_conf
         graphroot = context.graphroot
         runroot = context.runroot
-        env = private_env(workspace, context)
-        info = deploy.command_json(["podman", "info", "--format", "json"], env)
+        try:
+            env = private_env(workspace, context)
+        except RehearsalError as error:
+            raise deploy.PodmanContextError(
+                "CTX_CONFIG_FAILURE", "podman_environment", "private_context_created",
+                expected="private_workspace", observed="environment_mismatch",
+            ) from error
+        context_progress("podman_info", "private_environment_verified")
+        info = deploy.command_json(["podman", "info", "--format", "json"], env,
+                                   context_diagnostics=True)
+        context_progress("podman_store_validation", "podman_info_parsed")
         deploy.validate_podman_store(info, context, require_empty=True)
         PODMAN_CONTEXT_VERIFIED = True
+        context_progress("store_inventory", "podman_store_identity_verified")
         deploy.require_empty_podman_store(context, env)
-        uid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/uid_map"], env)
-        gid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/gid_map"], env)
-        for mapping in (uid_map, gid_map):
-            require(sum(int(line.split()[2]) for line in mapping.splitlines() if len(line.split()) == 3) >= 65_536,
-                    "Podman user namespace does not expose the required subordinate ID range")
+        context_progress("uid_gid_map_validation", "store_inventory_empty")
+        try:
+            uid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/uid_map"], env)
+        except deploy.DeployError as error:
+            raise deploy.PodmanContextError(
+                "CTX_IDMAP_INVALID", "uid_gid_map_validation", "store_inventory_empty",
+                exit_code=error.exit_code, expected="at_least_65536_numeric_mapping_ids", observed="command_failed",
+            ) from error
+        deploy.validate_user_namespace_map(uid_map, name="uid", last_completed_guard="store_inventory_empty")
+        context_progress("uid_gid_map_validation", "uid_map_verified")
+        try:
+            gid_map = deploy.command(["podman", "unshare", "cat", "/proc/self/gid_map"], env)
+        except deploy.DeployError as error:
+            raise deploy.PodmanContextError(
+                "CTX_IDMAP_INVALID", "uid_gid_map_validation", "uid_map_verified",
+                exit_code=error.exit_code, expected="at_least_65536_numeric_mapping_ids", observed="command_failed",
+            ) from error
+        deploy.validate_user_namespace_map(gid_map, name="gid", last_completed_guard="uid_map_verified")
+        context_progress("uid_gid_map_validation", "gid_map_verified")
+        REPORT["podman_context"]["status"] = "passed"
         REPORT["checks"]["podman_context"] = "private config, graphroot/runroot, metadata paths, VFS driver, empty inventory, rootless systemd cgroup v2, subordinate ID maps verified"
 
         image_ref = image_identity_for_release(deploy, release, workspace, context)
@@ -1124,6 +1207,7 @@ def rehearse(workspace: Path, diagnostics: Path,
 def main() -> int:
     global DIAGNOSTICS, PODMAN_CONTEXT_VERIFIED
     PODMAN_CONTEXT_VERIFIED = False
+    REPORT.pop("podman_context", None)
     runner_temp: Path | None = None
     workspace: Path | None = None
     diagnostics: Path | None = None
@@ -1141,6 +1225,7 @@ def main() -> int:
         rehearse(workspace, diagnostics, services, units_created, unit_dirs_created)
     except Exception as error:
         failure = error
+        retain_context_failure(error)
         REPORT["result"] = "failed"
         REPORT["failures"].append(failure_kind(error))
         if diagnostics is not None:
@@ -1156,10 +1241,14 @@ def main() -> int:
                 remove_created_unit_directories(unit_dirs_created)
                 cleanup_workspace(workspace, runner_temp, diagnostics)
                 REPORT["checks"]["cleanup"] = "run-scoped units stopped and disposable VFS workspace removed"
+                if isinstance(REPORT.get("podman_context"), dict):
+                    REPORT["podman_context"]["cleanup_status"] = "passed"
             except Exception as error:
                 cleanup_failure = error
                 REPORT["failures"].append(failure_kind(error))
                 REPORT["result"] = "failed_cleanup"
+                if isinstance(REPORT.get("podman_context"), dict):
+                    REPORT["podman_context"]["cleanup_status"] = "failed"
             try:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
             except OSError:

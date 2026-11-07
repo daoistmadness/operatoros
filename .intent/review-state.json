@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c047f7843fb6cfa76a0cf9a704bb296991e727263bd5570248912ba2da285654",
+      "fingerprint": "5c2694bf787b3166302efb19cf584ca3d6093c77888860699d19980d64f011a8",
       "snapshot": {
-        "CHANGELOG.md": "07122dbd0e057abbe47a41f2a4517cd0c10c221b36e63efccb05387572f214a5"
+        "CHANGELOG.md": "be9cfa2aa529bf9c707310c36fe3db012de0269346d5eaf673056a97e9928aad"
       },
-      "head": "5e807f1ad705c500eb3b4613d9c71796d9b609d7",
+      "head": "82536423bb8a84f4c3c7aaa11e600c07258b2b48",
       "outcome": "no-change",
-      "reason": "The changelog now records PR #366 for the same already-reviewed deployment and rehearsal correction; this user-facing release note does not change or contradict the registered Elysia guidance.",
+      "reason": "Reviewed the PR-number update to the Loop 62 changelog entry; it does not change agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5e807f1ad705c500eb3b4613d9c71796d9b609d7"
+        "Changed: CHANGELOG.md at 82536423bb8a84f4c3c7aaa11e600c07258b2b48"
       ]
     },
     "source:COMMANDS.md": {
@@ -9925,15 +9925,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "75bc48f371eef28e5e961686aaa082e40fdc121ad54a433d8d1ce0fce9a59ca3",
+      "fingerprint": "ddaf33c19e31b29e89f36f7de908fc7fdee9c1ea946b52c89fe3e3f62adec1df",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "8a5b3d5b7f21ddf2980298ece5c9eff4fb9cd04742c9a10744e6efa4e96389ba"
+        "docs/runbooks/release-bundles.md": "298f5daa4cecf3b77d79cdafbdfb3bdd6b92fc4284f0628748aee425af5fbca3"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: docs/runbooks/release-bundles.md at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "c03369cb8dd87c7c67666f445fb52ef98091a89f0772cddd4b3529b528e7e8a0",
+      "fingerprint": "a4ca9be34bb1238ae04d5381e8e60bd782c9a86390cd3838ee7b13224775a89d",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "b7f8a844b67d0927c4d794923a6d97f7c59f6064db9bf4e8a192032919f631f8"
+        "scripts/tests/test_release_bundle.py": "8d16600e3fadf45cf6144baa4505a4d6d4ff81637cdbb8fd5a6b0724b60a7393"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "ab09670894e71321b9c872170b965429dd2d38c2",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "Reviewed the workspace failure regression test; it covers rehearsal diagnostics without changing agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: scripts/tests/test_release_bundle.py at ab09670894e71321b9c872170b965429dd2d38c2"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "b36a059d34e5570fa8322d5792acfdaaf12d3014946545db53b569f8eb8805cc",
+      "fingerprint": "9ddd1a0b821c0b2ef49a5cefb2c40e0e0480beb01e9d2e9f928ce0b50c3e3a90",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "383120106c10d1bf1c0504135d7300fec9b4b8a6cc09b402d771243400ae8896"
+        "scripts/operatoros_deploy.py": "bf102eb3d553f0f41baa1df712f5d3456a476605ee65e4628e02eba812dcde4b"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: scripts/operatoros_deploy.py at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "a557805e595a8ebc5e34477c4f185116ad3970f766b83d2d7d3dacae25a692b7",
+      "fingerprint": "2d6daa1fcb0862f0a17313756f19fa8e18901126bf6123514e024d275b4a10fe",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "ff10e9d344e4a706a674a7638d89ce746527a2a07dadd0825ea99154e4ed67b0"
+        "scripts/tests/test_operatoros_deploy.py": "892764242b89b501ba0cf44710f115484d22219ce7c8b8fc5b16aa93f44e145c"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: scripts/tests/test_operatoros_deploy.py at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "bee6eecdc74cfce7fc546e9f21a7b5f9a3ce407bbd17867bcdbb6ca674d4bbdf",
+      "fingerprint": "5b76bf2b27d079d91f9a943aaff7b11d587ca1ef17107ed45f1310d2ea2b6d83",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "494ca6911a3837d19214b1bc38a0d9211ee172063a04e69bffc556f9db72fb53"
+        "scripts/deployment-rehearsal.py": "f8f5c94f4c8c16b917f1a085828754bc7264ff8c9f0e36b5786cf4b44077f5dc"
       },
-      "head": "afd4caa001eddc412ca3101cbff8716e38c7a05c",
+      "head": "c83c78db6ea2f0bcacc00a609460cd139503ed4c",
       "outcome": "no-change",
-      "reason": "The six changed files update deployment and rehearsal implementation, tests, changelog, and runbook only. They neither modify nor contradict the available @operatoros/agent-skills#elysiajs guidance, so no skill guidance change is required.",
+      "reason": "Reviewed the Loop 62 private Podman diagnostic code, documentation, and regression tests; these changes do not alter agent or Elysia skill guidance or maintainer planning records.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at afd4caa001eddc412ca3101cbff8716e38c7a05c"
+        "Changed: scripts/deployment-rehearsal.py at c83c78db6ea2f0bcacc00a609460cd139503ed4c"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
