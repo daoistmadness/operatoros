@@ -14,10 +14,60 @@ runs:
       with:
         path: ~/.cache/mise/downloads-cas
         key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-mise-2026.10.19-${{ hashFiles('mise.toml', 'mise.lock') }}
+    - name: Seed pinned mise from the GitHub release asset API
+      id: mise-bootstrap
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        mise_version=2026.10.19
+        asset_id=673156614
+        # Both digests are from this release's Minisign-verified SHASUMS256.txt.
+        archive_sha256=3ce275c5ba71bdb56b387e34992f833540bff8c973b93fbb505b6a169a2d81ea
+        binary_sha256=3162760f40b6b5f706c60641e4ef5ee7322bc6c54f72fc26a7111b337aa18d9d
+        mise_dir="$(mktemp -d "$RUNNER_TEMP/operatoros-mise.XXXXXX")"
+        download_dir="$(mktemp -d "$RUNNER_TEMP/operatoros-mise-download.XXXXXX")"
+        archive="$download_dir/mise-v${mise_version}-linux-x64.tar.zst"
+        bootstrap_ready=false
+
+        cleanup() {
+          rm -rf -- "$download_dir"
+          if [[ "$bootstrap_ready" != true ]]; then
+            rm -rf -- "$mise_dir"
+          fi
+        }
+        trap cleanup EXIT
+
+        curl --fail --location --silent --show-error \
+          --retry 3 --retry-all-errors \
+          -H 'Accept: application/octet-stream' \
+          "https://api.github.com/repos/jdx/mise/releases/assets/${asset_id}" \
+          --output "$archive"
+        printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum --check --status
+
+        mkdir "$mise_dir/bin"
+        tar --zstd --extract --to-stdout --file "$archive" mise/bin/mise > "$mise_dir/bin/mise"
+        chmod 0755 "$mise_dir/bin/mise"
+        printf '%s  %s\n' "$binary_sha256" "$mise_dir/bin/mise" | sha256sum --check --status
+
+        actual_version="$("$mise_dir/bin/mise" --version 2>/dev/null | awk 'NR == 1 { print $1 }')"
+        if [[ "$actual_version" != "$mise_version" ]]; then
+          echo "Downloaded mise version did not match the pinned version."
+          exit 1
+        fi
+
+        {
+          echo "mise_dir=$mise_dir"
+          echo "mise_version=$mise_version"
+          echo "mise_sha256=$binary_sha256"
+        } >> "$GITHUB_OUTPUT"
+        bootstrap_ready=true
     - name: Install mise toolchain
       uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
       with:
-        version: 2026.10.19
+        version: ${{ steps.mise-bootstrap.outputs.mise_version }}
+        sha256: ${{ steps.mise-bootstrap.outputs.mise_sha256 }}
+        mise_dir: ${{ steps.mise-bootstrap.outputs.mise_dir }}
         working_directory: ${{ github.workspace }}
         cache: false
       env:

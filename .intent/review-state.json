@@ -1306,15 +1306,15 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "2d005405b71d4687eb43b8a3169f99689749d7bb3ef14fef7ef1b83e1fefdcca",
+      "fingerprint": "1909aa85aacce7bdc3e864800138787a465bee96e71217142d209e5a57eddadb",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "bc7f7e9c8ebd7adfe52d6f82f9ed54d3393f9d8a2f78883cd51840949024a23f"
+        ".github/actions/setup-bun/action.yml": "4fe6bd9a51e4a5bc403fa5007da333c64cfc10706d6496cfe3262e7ef4ac9705"
       },
-      "head": "86866803a419dfcb2ddcc6a06c188ea4f776c672",
+      "head": "f52e3a6a05d8d757d2b22a294f2ff5609013715e",
       "outcome": "no-change",
-      "reason": "This PR changes only the shared CI setup action and CI operations documentation. The Elysia guidance, planning artifacts, and source guidance remain accurate; the maintainer scan reported no problems for these items.",
+      "reason": "The CI setup action change only alters pinned mise artifact retrieval and does not affect the Elysia skill.",
       "evidence": [
-        "Changed: .github/actions/setup-bun/action.yml at 86866803a419dfcb2ddcc6a06c188ea4f776c672"
+        "Changed: .github/actions/setup-bun/action.yml at f52e3a6a05d8d757d2b22a294f2ff5609013715e"
       ]
     },
     "source:Containerfile.podman": {
