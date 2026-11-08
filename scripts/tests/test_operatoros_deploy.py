@@ -335,30 +335,35 @@ class PodmanIsolationTests(unittest.TestCase):
     def test_schema_validation_exposes_only_allowlisted_database_rejection(self):
         data_dir = self.root / "synthetic-data"
         data_dir.mkdir(mode=0o700)
-        (data_dir / "operatoros.sqlite").write_bytes(b"synthetic database snapshot")
+        database = data_dir / "operatoros.sqlite"
+        database.write_bytes(b"synthetic database snapshot")
+        database.chmod(0o600)
         cfg = {
             "data_dir": data_dir,
             "storage_conf": self.context.storage_conf,
             "graphroot": self.context.graphroot,
             "runroot": self.context.runroot,
         }
-        result = subprocess.CompletedProcess(
-            ["podman", "run"], 1, "", "DATABASE_MIGRATION_REQUIRED: expected schema secret-marker\n",
-        )
+        for failure_code in deploy.SCHEMA_VALIDATION_FAILURE_CODES:
+            with self.subTest(failure_code=failure_code):
+                result = subprocess.CompletedProcess(
+                    ["podman", "run"], 1, "", f"{failure_code}: expected schema secret-marker\n",
+                )
+                with patch.object(deploy, "run_command", return_value=result):
+                    with self.assertRaises(deploy.SchemaValidationError) as raised:
+                        deploy.schema_validate("synthetic-image", cfg)
 
-        with patch.object(deploy, "run_command", return_value=result):
-            with self.assertRaises(deploy.SchemaValidationError) as raised:
-                deploy.schema_validate("synthetic-image", cfg)
-
-        self.assertEqual(raised.exception.failure_code, "DATABASE_MIGRATION_REQUIRED")
-        self.assertEqual(raised.exception.exit_code, 1)
-        self.assertNotIn("secret-marker", str(raised.exception))
-        self.assertNotIn("DATABASE_MIGRATION_REQUIRED", str(raised.exception))
+                self.assertEqual(raised.exception.failure_code, failure_code)
+                self.assertEqual(raised.exception.exit_code, 1)
+                self.assertNotIn("secret-marker", str(raised.exception))
+                self.assertNotIn(failure_code, str(raised.exception))
 
     def test_schema_validation_keeps_unrecognized_and_ambiguous_errors_generic(self):
         data_dir = self.root / "synthetic-data"
         data_dir.mkdir(mode=0o700)
-        (data_dir / "operatoros.sqlite").write_bytes(b"synthetic database snapshot")
+        database = data_dir / "operatoros.sqlite"
+        database.write_bytes(b"synthetic database snapshot")
+        database.chmod(0o600)
         cfg = {
             "data_dir": data_dir,
             "storage_conf": self.context.storage_conf,
@@ -368,6 +373,8 @@ class PodmanIsolationTests(unittest.TestCase):
         outputs = (
             "Podman failed after DATABASE_MIGRATION_REQUIRED: secret-marker\n",
             "DATABASE_MIGRATION_REQUIRED: expected schema\nDATABASE_SCHEMA_INVALID: secret-marker\n",
+            "DATABASE_CHECKSUM_MISMATCH: physical schema differs from the accepted schema\n",
+            "DATABASE_MIGRATION_REQUIRED: storage warning graphroot\n",
         )
         for stderr in outputs:
             with self.subTest(stderr=stderr):
@@ -377,6 +384,28 @@ class PodmanIsolationTests(unittest.TestCase):
                         deploy.schema_validate("synthetic-image", cfg)
                 self.assertNotIsInstance(raised.exception, getattr(deploy, "SchemaValidationError", type(None)))
                 self.assertNotIn("secret-marker", str(raised.exception))
+
+    def test_schema_validation_rejection_fails_if_sqlite_snapshot_changes(self):
+        data_dir = self.root / "synthetic-data"
+        data_dir.mkdir(mode=0o700)
+        database = data_dir / "operatoros.sqlite"
+        database.write_bytes(b"synthetic database snapshot")
+        database.chmod(0o600)
+        cfg = {
+            "data_dir": data_dir,
+            "storage_conf": self.context.storage_conf,
+            "graphroot": self.context.graphroot,
+            "runroot": self.context.runroot,
+        }
+        result = subprocess.CompletedProcess(
+            ["podman", "run"], 1, "", "DATABASE_MIGRATION_REQUIRED: expected schema\n",
+        )
+        with patch.object(deploy, "run_command", return_value=result), \
+             patch.object(deploy, "sha_db_snapshot", side_effect=[{"db": "before"}, {"db": "after"}]):
+            with self.assertRaisesRegex(deploy.DeployError, "SQLite main/WAL/SHM change") as raised:
+                deploy.schema_validate("synthetic-image", cfg)
+
+        self.assertNotIsInstance(raised.exception, deploy.SchemaValidationError)
 
     def test_default_overlay_database_override_is_rejected(self):
         value = self.info()

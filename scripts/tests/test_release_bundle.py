@@ -178,6 +178,24 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertEqual(failure['last_completed_guard'], previous_guard)
                 self.assertNotIn('sensitive detail', json.dumps(report))
 
+    def test_schema_validation_failure_reports_exact_operation_boundary_and_exit(self):
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress(
+                'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
+            )
+            error = rehearsal.RehearsalError('safe wrapper message')
+            error.exit_code = 1
+            rehearsal.retain_deployment_failure(error)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
+        self.assertEqual(failure['phase'], 'schema_validation_started')
+        self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
+        self.assertEqual(failure['exit_code'], 1)
+        self.assertNotIn('safe wrapper message', json.dumps(report))
+
     def test_synthetic_database_setup_fails_closed_on_preexisting_data_directory(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
             workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
