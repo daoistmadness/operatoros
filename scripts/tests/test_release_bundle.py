@@ -11,6 +11,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -1172,6 +1173,33 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def test_cleanup_removes_readonly_spa_tree_without_following_owned_symlink(self):
+        files = fixture()
+        release = SimpleNamespace(
+            files=files,
+            bundle_path=self.temp_parent / 'release.tar',
+            manifest=json.loads(files['manifest.json']),
+        )
+        releases = self.workspace / 'web/releases'
+        releases.mkdir(parents=True, mode=0o700)
+        spa = deploy.materialize_spa({'root': self.workspace}, release, 'legacy-' + SHA)
+        self.assertEqual(spa.joinpath('client').stat().st_mode & 0o777, 0o555)
+        self.assertEqual(spa.joinpath('client/assets').stat().st_mode & 0o777, 0o555)
+
+        outside = self.temp_parent / 'unrelated-release-target'
+        outside.mkdir(mode=0o700)
+        sentinel = outside / 'preserve-me'
+        sentinel.write_text('unrelated', encoding='utf-8')
+        (self.workspace / 'web/current').symlink_to(outside)
+
+        self.assertEqual(self.run_cleanup(), 0)
+
+        self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+        self.assertEqual(sentinel.read_text(encoding='utf-8'), 'unrelated')
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
 
     def test_cleanup_result_reports_log_created_during_cleanup(self):
         diagnostics = self.temp_parent / 'release-diagnostics'

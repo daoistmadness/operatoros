@@ -332,6 +332,52 @@ class PodmanIsolationTests(unittest.TestCase):
         deployment_environment = deploy.private_environment(self.context.storage_conf)
         self.assertEqual(deployment_environment["CONTAINERS_STORAGE_CONF"], str(self.context.storage_conf))
 
+    def test_schema_validation_exposes_only_allowlisted_database_rejection(self):
+        data_dir = self.root / "synthetic-data"
+        data_dir.mkdir(mode=0o700)
+        (data_dir / "operatoros.sqlite").write_bytes(b"synthetic database snapshot")
+        cfg = {
+            "data_dir": data_dir,
+            "storage_conf": self.context.storage_conf,
+            "graphroot": self.context.graphroot,
+            "runroot": self.context.runroot,
+        }
+        result = subprocess.CompletedProcess(
+            ["podman", "run"], 1, "", "DATABASE_MIGRATION_REQUIRED: expected schema secret-marker\n",
+        )
+
+        with patch.object(deploy, "run_command", return_value=result):
+            with self.assertRaises(deploy.SchemaValidationError) as raised:
+                deploy.schema_validate("synthetic-image", cfg)
+
+        self.assertEqual(raised.exception.failure_code, "DATABASE_MIGRATION_REQUIRED")
+        self.assertEqual(raised.exception.exit_code, 1)
+        self.assertNotIn("secret-marker", str(raised.exception))
+        self.assertNotIn("DATABASE_MIGRATION_REQUIRED", str(raised.exception))
+
+    def test_schema_validation_keeps_unrecognized_and_ambiguous_errors_generic(self):
+        data_dir = self.root / "synthetic-data"
+        data_dir.mkdir(mode=0o700)
+        (data_dir / "operatoros.sqlite").write_bytes(b"synthetic database snapshot")
+        cfg = {
+            "data_dir": data_dir,
+            "storage_conf": self.context.storage_conf,
+            "graphroot": self.context.graphroot,
+            "runroot": self.context.runroot,
+        }
+        outputs = (
+            "Podman failed after DATABASE_MIGRATION_REQUIRED: secret-marker\n",
+            "DATABASE_MIGRATION_REQUIRED: expected schema\nDATABASE_SCHEMA_INVALID: secret-marker\n",
+        )
+        for stderr in outputs:
+            with self.subTest(stderr=stderr):
+                result = subprocess.CompletedProcess(["podman", "run"], 1, "", stderr)
+                with patch.object(deploy, "run_command", return_value=result):
+                    with self.assertRaises(deploy.DeployError) as raised:
+                        deploy.schema_validate("synthetic-image", cfg)
+                self.assertNotIsInstance(raised.exception, getattr(deploy, "SchemaValidationError", type(None)))
+                self.assertNotIn("secret-marker", str(raised.exception))
+
     def test_default_overlay_database_override_is_rejected(self):
         value = self.info()
         value["store"].update({
