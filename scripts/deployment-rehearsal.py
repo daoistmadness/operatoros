@@ -20,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 from typing import Any
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
@@ -44,6 +45,28 @@ SQLITE_WAL_SETUP = (
     "if (journalMode !== 'wal') throw new Error('synthetic database did not enter WAL mode'); "
     "console.log(JSON.stringify({journal_mode: journalMode})); db.close();"
 )
+SQLITE_MARKER_SETUP = (
+    "import { Database } from 'bun:sqlite'; "
+    "const db = new Database(process.argv[1]); "
+    "const marker = process.argv[3]; "
+    "const username = process.argv[2]; "
+    "if (!marker || !username) throw new Error('synthetic preservation marker inputs are required'); "
+    "const schema = db.query('SELECT version FROM operatoros_schema_migrations "
+    "ORDER BY applied_at DESC, version DESC LIMIT 1').get(); "
+    "if (typeof schema?.version !== 'string' || schema.version.length === 0) "
+    "throw new Error('synthetic schema version is unavailable'); "
+    "db.query('INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, "
+    "entity_reference, operation, risk_level, source, success, metadata, schema_version) "
+    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(marker, username, 'admin', "
+    "'rehearsal_sqlite_preservation', 'REHEARSAL', marker, 'REHEARSAL_SQLITE_PRESERVATION', "
+    "'LOW', 'REHEARSAL', 1, JSON.stringify({marker}), schema.version); "
+    "const row = db.query('SELECT event_id, schema_version FROM operations_audit_events WHERE event_id = ? AND "
+    "entity_type = ? AND entity_reference = ? AND operation = ?').get(marker, 'REHEARSAL', marker, "
+    "'REHEARSAL_SQLITE_PRESERVATION'); "
+    "if (row?.event_id !== marker || row?.schema_version !== schema.version) "
+    "throw new Error('synthetic preservation marker was not inserted'); "
+    "console.log(JSON.stringify({marker_created: true, schema_version: schema.version})); db.close();"
+)
 SQLITE_ASSERTION = (
     "import { Database } from 'bun:sqlite'; "
     "const db = new Database(process.argv[1], {readonly: true}); "
@@ -51,10 +74,16 @@ SQLITE_ASSERTION = (
     "const foreignKeys = db.query('PRAGMA foreign_key_check').all(); "
     "const journalMode = db.query('PRAGMA journal_mode').get()?.journal_mode; "
     "const admin = db.query('SELECT username, role, is_active FROM users WHERE username=?').get(process.argv[2]); "
+    "const marker = process.argv[3]; "
+    "const preservation = marker ? db.query('SELECT event_id FROM operations_audit_events WHERE event_id = ? AND "
+    "entity_type = ? AND entity_reference = ? AND operation = ?').get(marker, 'REHEARSAL', marker, "
+    "'REHEARSAL_SQLITE_PRESERVATION') : null; "
     "if (integrity !== 'ok' || foreignKeys.length !== 0 || journalMode !== 'wal' || "
-    "admin?.role !== 'admin' || admin?.is_active !== 1) throw new Error('synthetic SQLite validation failed'); "
+    "admin?.role !== 'admin' || admin?.is_active !== 1 || (marker && preservation?.event_id !== marker)) "
+    "throw new Error('synthetic SQLite validation failed'); "
     "console.log(JSON.stringify({integrity_check: integrity, foreign_key_violations: foreignKeys.length, "
-    "journal_mode: journalMode, synthetic_admin_preserved: true})); db.close();"
+    "journal_mode: journalMode, synthetic_admin_preserved: true, "
+    "synthetic_preservation_marker: marker ? preservation?.event_id === marker : null})); db.close();"
 )
 WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
 MIN_FREE_BYTES = 5 * 1024**3
@@ -361,6 +390,10 @@ def retain_deployment_failure(error: BaseException) -> None:
     if not isinstance(record, dict) or record.get("status") != "in_progress":
         return
     phase = record.get("phase", "unknown")
+    phase_failure_codes = {
+        "sqlite_preservation_marker_setup_started": "DEPLOY_SQLITE_PRESERVATION_MARKER_SETUP_FAILED",
+        "interrupted_transaction_recovery_started": "DEPLOY_INTERRUPTED_TRANSACTION_RECOVERY_FAILED",
+    }
     expected = observed = None
     if isinstance(error, FileExistsError):
         code = "DEPLOY_PATH_COLLISION"
@@ -408,6 +441,7 @@ def retain_deployment_failure(error: BaseException) -> None:
     else:
         code, path_category = "DEPLOY_UNCLASSIFIED_FAILURE", None
         explanation = "A rehearsal deployment operation failed unexpectedly."
+    code = phase_failure_codes.get(phase, code)
     exit_code = getattr(error, "exit_code", None)
     if not isinstance(exit_code, int):
         exit_code = None
@@ -1553,6 +1587,22 @@ def rehearse(workspace: Path, diagnostics: Path,
         deployment_progress("synthetic_backup_verification_completed",
                             completed_guard="synthetic_backup_verified")
 
+        preservation_marker = str(uuid.uuid4())
+        deployment_progress("sqlite_preservation_marker_setup_started")
+        marker_setup = run(
+            ["bun", "-e", SQLITE_MARKER_SETUP, str(workspace / "data/operatoros.sqlite"),
+             admin_username, preservation_marker],
+            env=system_environment(), timeout=30,
+        )
+        require(json.loads(marker_setup.stdout).get("marker_created") is True,
+                "synthetic SQLite preservation marker was not created")
+        REPORT["checks"]["sqlite_preservation_marker_created"] = {
+            "table": "operations_audit_events",
+            "event_id": preservation_marker,
+        }
+        deployment_progress("sqlite_preservation_marker_setup_completed",
+                            completed_guard="post_backup_sqlite_marker_created")
+
         deployment_progress("quadlet_staging_started", quadlet_staging="started")
         (workspace / "deploy/Caddyfile").write_text(make_caddyfile(web_port, api_port), encoding="utf-8")
         (workspace / "deploy/Caddyfile").chmod(0o600)
@@ -1625,7 +1675,8 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["checks"]["unauthenticated_auth_me"] = 401
         login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
         sqlite_after_deploy = run(
-            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),
+             admin_username, preservation_marker],
             env=system_environment(), timeout=30,
         )
         REPORT["checks"]["sqlite_after_deploy"] = json.loads(sqlite_after_deploy.stdout)
@@ -1665,7 +1716,8 @@ def rehearse(workspace: Path, diagnostics: Path,
         wait_url(cfg["api_url"] + "/ready")
         login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
         sqlite_after_api_restart = run(
-            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),
+             admin_username, preservation_marker],
             env=system_environment(), timeout=30,
         )
         REPORT["checks"]["sqlite_after_api_restart"] = json.loads(sqlite_after_api_restart.stdout)
@@ -1733,7 +1785,8 @@ def rehearse(workspace: Path, diagnostics: Path,
                 "rollback did not restore the previous synthetic SPA")
         login_synthetic_admin(cfg["web_url"], admin_username, admin_password)
         sqlite_after_rollback = run(
-            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),
+             admin_username, preservation_marker],
             env=system_environment(), timeout=30,
         )
         REPORT["checks"]["sqlite_after_rollback"] = json.loads(sqlite_after_rollback.stdout)
@@ -1745,6 +1798,8 @@ def rehearse(workspace: Path, diagnostics: Path,
                             completed_guard="application_rollback_sqlite_preserved",
                             application_rollback="completed")
 
+        deployment_progress("interrupted_transaction_recovery_started",
+                            completed_guard="application_rollback_completed")
         interrupted_db_before = deploy.sha_db_snapshot(cfg["data_dir"])
         interrupted_db_identity = deploy.sqlite_main_identity(cfg["data_dir"])
         interrupted_previous = {
@@ -1782,7 +1837,8 @@ def rehearse(workspace: Path, diagnostics: Path,
                 final_status.get("current_release", {}).get("release_id") == legacy_release_id,
                 "interrupted transaction recovery did not restore a healthy previous application")
         sqlite_after_recovery = run(
-            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"), admin_username],
+            ["bun", "-e", SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),
+             admin_username, preservation_marker],
             env=system_environment(), timeout=30,
         )
         REPORT["checks"]["sqlite_after_interrupted_recovery"] = json.loads(sqlite_after_recovery.stdout)
@@ -1790,7 +1846,9 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["rollback_scope"] = (
             "same API image; rollback restored a distinct synthetic SPA target, not a second release artifact"
         )
-        REPORT["result"] = "synthetic deployment, application rollback, and interrupted recovery passed"
+        REPORT["result"] = "synthetic deployment, post-backup SQLite preservation, application rollback, and interrupted recovery passed"
+        deployment_progress("interrupted_transaction_recovery_completed",
+                            completed_guard="interrupted_transaction_recovered")
         deployment_progress("application_acceptance_completed", completed_guard="application_acceptance_passed",
                             application_acceptance="completed")
         REPORT["deployment"]["status"] = "passed"

@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "00858c3040732947f36578d9a4cc0000468ee32405a0428bf822426dda3426da",
+      "fingerprint": "c55023e225ab4a4d29799b10ef986cbe83db1e814d24cec677fbb7bde28c23b5",
       "snapshot": {
-        "CHANGELOG.md": "48059d19b9932d6e9c6cb0d9fdf35cc9d7f0b193440f15cac3cda9c1b3674e47"
+        "CHANGELOG.md": "d230f4426c856d083199ebb051fa4e09919e34ce3885d8dc18795d08dd9d759f"
       },
-      "head": "177f43cff46ad066d9d9364b0fba49a2ec0d2634",
+      "head": "f033c414088f7183712c89b8e97b0dbb3c6956c3",
       "outcome": "no-change",
-      "reason": "The PR number completes the changelog reference and does not change project skill guidance.",
+      "reason": "Adding the assigned PR number to the existing rehearsal changelog entry does not change installed skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 177f43cff46ad066d9d9364b0fba49a2ec0d2634"
+        "Changed: CHANGELOG.md at f033c414088f7183712c89b8e97b0dbb3c6956c3"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "955a9dda389bda2d0b110f34eda558c753e375ccd2bc6e04e5875578795762f7",
+      "fingerprint": "205549a72a0d3807fb36b1d81694f1efaeb751830996bd95dfb3ffd19a47e5d5",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "7f2a958d0f0fc8b8d16b7d104725090064945a14913aee8bc74048666f46eb0d"
+        "scripts/tests/test_release_bundle.py": "1a18bc38e6a9b49fb45e7327e748f9bcd44c78deaac5fff08091b7f0799a5305"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
       "outcome": "no-change",
-      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
+      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/tests/test_release_bundle.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "9517bc9d7edd1eb5cfeb91fbc3bed19fbf08f45bd87c55fdf0debd1af141565e",
+      "fingerprint": "2cc5f17b3e9c82403e27a6f542376c00d020ad1c0e831de054f4366577a04847",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "7846ea987449934381e52107f7e5c8d85e12e37ac157b8481b572f3cd49998e8"
+        "scripts/deployment-rehearsal.py": "194ec3b46bb6150362cff740039e98254c7c253fecd7a7becd5417574522d0e3"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43",
       "outcome": "no-change",
-      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
+      "reason": "The new rehearsal assertion and changelog entry do not change installed skill guidance; existing documented procedures remain accurate.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/deployment-rehearsal.py at 9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
