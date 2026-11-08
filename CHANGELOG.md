@@ -19,6 +19,7 @@ Notable user-facing changes are recorded here.
 - Bootstrap the synthetic database before creating backups and report setup operations and cleanup-log creation accurately (#371).
 - Preserve typed synthetic schema-rejection results and remove only validated read-only workspace directories during rehearsal cleanup (#372).
 - Preserve safe Podman failure categories in synthetic schema-validation evidence and redact executable paths from command errors (#373).
+- Use the verified private Podman context for synthetic schema validation.
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 
