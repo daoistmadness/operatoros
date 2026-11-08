@@ -55,15 +55,26 @@ PODMAN_STORAGE_WARNING_CLASSES = frozenset({
     "storage-driver-database-override", "additional-image-store-warning",
     "storage-path-warning", "storage-configuration-warning",
 })
+PODMAN_FAILURE_CLASSIFICATIONS = frozenset({
+    "additional-image-store-warning", "command_not_found", "container_command_failed",
+    "container_command_not_found", "container_command_not_invokable", "database_schema_rejected",
+    "empty_stderr", "filesystem_failure", "missing_path", "oci_runtime_failure",
+    "permission_rejected", "podman_engine_failure",
+    "storage-configuration-warning", "storage-driver-database-override", "storage-path-warning",
+    "sqlite_snapshot_changed", "subprocess_timeout", "unsupported_podman_option",
+})
 
 
 class DeployError(RuntimeError):
     def __init__(self, message: str, *, exit_code: int | None = None,
-                 diagnostic_code: str | None = None):
+                 diagnostic_code: str | None = None, failure_classification: str | None = None):
         if diagnostic_code is not None and diagnostic_code not in SCHEMA_VALIDATION_FAILURE_CODES:
             raise ValueError("invalid deployment diagnostic code")
+        if failure_classification is not None and failure_classification not in PODMAN_FAILURE_CLASSIFICATIONS:
+            raise ValueError("invalid deployment failure classification")
         self.exit_code = exit_code
         self.diagnostic_code = diagnostic_code
+        self.failure_classification = failure_classification
         super().__init__(message)
 
 
@@ -75,7 +86,8 @@ class SchemaValidationError(DeployError):
             exit_code == 0):
             raise ValueError("invalid schema validation rejection")
         self.failure_code = failure_code
-        super().__init__("read-only schema validation rejected the database", exit_code=exit_code)
+        super().__init__("read-only schema validation rejected the database", exit_code=exit_code,
+                         failure_classification="database_schema_rejected")
 
 
 def schema_validation_failure_code(stderr: str) -> str | None:
@@ -524,21 +536,58 @@ def stderr_classification(stderr: str) -> str:
     return "present"
 
 
+def safe_command_name(args: list[str]) -> str:
+    return Path(args[0]).name if args else "unknown_command"
+
+
+def podman_failure_classification(stderr: str, exit_code: int) -> str:
+    """Reduce Podman's stderr to a stable allowlisted category without retaining it."""
+    diagnostic = stderr_classification(stderr)
+    if diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
+        return diagnostic
+    if diagnostic == "empty":
+        return "empty_stderr"
+    value = stderr.casefold()
+    if any(marker in value for marker in ("unknown flag", "unknown option", "unrecognized option")):
+        return "unsupported_podman_option"
+    if "permission denied" in value or "eacces" in value:
+        return "permission_rejected"
+    if "no such file or directory" in value or "enoent" in value:
+        return "missing_path"
+    if any(marker in value for marker in ("oci runtime", "crun:", "runc:", "conmon")):
+        return "oci_runtime_failure"
+    if exit_code == 125:
+        return "podman_engine_failure"
+    if exit_code == 126:
+        return "container_command_not_invokable"
+    if exit_code == 127:
+        return "container_command_not_found"
+    return "container_command_failed"
+
+
 def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str], *,
                            schema_validation: bool = False) -> None:
+    command_name = safe_command_name(args)
     diagnostic = stderr_classification(result.stderr)
     if result.returncode != 0:
         failure_code = None
         if schema_validation and diagnostic not in PODMAN_STORAGE_WARNING_CLASSES:
             failure_code = schema_validation_failure_code(result.stderr)
-        raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})",
-                          exit_code=result.returncode, diagnostic_code=failure_code)
-    if args and Path(args[0]).name == "podman" and diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
-        raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})")
+        failure_classification = (
+            podman_failure_classification(result.stderr, result.returncode)
+            if command_name == "podman" else None
+        )
+        raise DeployError(f"command failed ({result.returncode}): {command_name} (stderr={diagnostic})",
+                          exit_code=result.returncode, diagnostic_code=failure_code,
+                          failure_classification=failure_classification)
+    if command_name == "podman" and diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
+        raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})",
+                          failure_classification=diagnostic)
 
 
 def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60,
                  context_diagnostics: bool = False) -> Any:
+    command_name = safe_command_name(args)
     try:
         result = run_command(args, env=env, timeout=timeout)
     except DeployError as error:
@@ -566,7 +615,7 @@ def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout:
                 "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
                 exit_code=result.returncode, expected="complete_private_store_identity", observed="empty_json",
             )
-        raise DeployError(f"{args[0]} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
+        raise DeployError(f"{command_name} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as error:
@@ -575,15 +624,27 @@ def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout:
                 "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
                 exit_code=result.returncode, expected="complete_private_store_identity", observed="malformed_json",
             ) from error
-        raise DeployError(f"{args[0]} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
+        raise DeployError(f"{command_name} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
 
 
 def run_command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> subprocess.CompletedProcess[str]:
+    command_name = safe_command_name(args)
     try:
         return subprocess.run(args, env=env if env is not None else system_environment(), text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as error:
-        raise DeployError(f"command failed to execute: {args[0]} ({type(error).__name__})") from error
+        failure_classification = None
+        if command_name == "podman":
+            if isinstance(error, FileNotFoundError):
+                failure_classification = "command_not_found"
+            elif isinstance(error, PermissionError):
+                failure_classification = "permission_rejected"
+            elif isinstance(error, subprocess.TimeoutExpired):
+                failure_classification = "subprocess_timeout"
+            else:
+                failure_classification = "filesystem_failure"
+        raise DeployError(f"command failed to execute: {command_name} ({type(error).__name__})",
+                          failure_classification=failure_classification) from error
 
 
 def sha256_file(path: Path) -> str:
@@ -1583,7 +1644,7 @@ def schema_validate(image: str, cfg: dict[str, Any]) -> None:
         if after != before:
             raise DeployError(
                 "read-only schema validation observed a SQLite main/WAL/SHM change; aborting for database activity review",
-                exit_code=error.exit_code,
+                exit_code=error.exit_code, failure_classification="sqlite_snapshot_changed",
             ) from error
         if error.diagnostic_code is not None:
             if error.exit_code is None:

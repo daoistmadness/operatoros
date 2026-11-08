@@ -1306,15 +1306,15 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "2d005405b71d4687eb43b8a3169f99689749d7bb3ef14fef7ef1b83e1fefdcca",
+      "fingerprint": "1909aa85aacce7bdc3e864800138787a465bee96e71217142d209e5a57eddadb",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "bc7f7e9c8ebd7adfe52d6f82f9ed54d3393f9d8a2f78883cd51840949024a23f"
+        ".github/actions/setup-bun/action.yml": "4fe6bd9a51e4a5bc403fa5007da333c64cfc10706d6496cfe3262e7ef4ac9705"
       },
-      "head": "86866803a419dfcb2ddcc6a06c188ea4f776c672",
+      "head": "f52e3a6a05d8d757d2b22a294f2ff5609013715e",
       "outcome": "no-change",
-      "reason": "This PR changes only the shared CI setup action and CI operations documentation. The Elysia guidance, planning artifacts, and source guidance remain accurate; the maintainer scan reported no problems for these items.",
+      "reason": "The CI setup action change only alters pinned mise artifact retrieval and does not affect the Elysia skill.",
       "evidence": [
-        "Changed: .github/actions/setup-bun/action.yml at 86866803a419dfcb2ddcc6a06c188ea4f776c672"
+        "Changed: .github/actions/setup-bun/action.yml at f52e3a6a05d8d757d2b22a294f2ff5609013715e"
       ]
     },
     "source:Containerfile.podman": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "8dfeca36ed6b970ff402653ece91cdc75ebc5fef2698b8573961c28dc68368bc",
+      "fingerprint": "6616c137de73005ed121a923e8f8d0a90f5fd360d651999577702102114b9902",
       "snapshot": {
-        "CHANGELOG.md": "54c7f1bfb16293a870ff9cfdcecd246cf9f54c5ce610e0ef50fe4888cdad9c37"
+        "CHANGELOG.md": "30fcc9139ef4356e69900b69db2eadc97c7735847203d50ea969fcbd237109be"
       },
-      "head": "975bdeaefc35dea68890554ed4e9bdc33c8b1f23",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "Loop 70 changes are confined to existing deployment/rehearsal failure handling and cleanup; no Intent guidance or skills were affected.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 975bdeaefc35dea68890554ed4e9bdc33c8b1f23"
+        "Changed: CHANGELOG.md at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "4ad7ecf16fda243069f21c9402fb456e8d0e5256bb8964b8988fe0dc499aaf03",
+      "fingerprint": "3cb5c42c2bca6e9079dfb123b10b47151f96a16af482bc2f439f07d4e2af7c8f",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "014420c8fc73e0c8660c85f756cb044a9be521a1ef07b8e3f89f9ee30a2e0016"
+        "scripts/tests/test_release_bundle.py": "c159a3b376652c4969b0dc60b0e1e4282c1f2989863ecbb44f695a109a81bc21"
       },
-      "head": "975bdeaefc35dea68890554ed4e9bdc33c8b1f23",
+      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
       "outcome": "no-change",
-      "reason": "Loop 70 changes are confined to existing deployment/rehearsal failure handling and cleanup; no Intent guidance or skills were affected.",
+      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 975bdeaefc35dea68890554ed4e9bdc33c8b1f23"
+        "Changed: scripts/tests/test_release_bundle.py at 510b131191af5efceaff3165619f61f63c5ae01d"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "d0bce3a7e194a3ff37cff5fd3797bc365bbcd785db01f8388939be6ea2fc3d8c",
+      "fingerprint": "3aba77862056c913755c9a71f18cfd74c71f56c08c9032271e558dc2781311ec",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "b30bef1c140c0c03432709391cd168add3b1eb193ab50e16dcbc23f9b0fb9d82"
+        "scripts/operatoros_deploy.py": "2753d4fc94cf2fac7138f357a5a17ed4b58ce7f24e2084c84c72cf7c44da21ab"
       },
-      "head": "975bdeaefc35dea68890554ed4e9bdc33c8b1f23",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "Loop 70 changes are confined to existing deployment/rehearsal failure handling and cleanup; no Intent guidance or skills were affected.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 975bdeaefc35dea68890554ed4e9bdc33c8b1f23"
+        "Changed: scripts/operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "2f21a7e1446da46141fe6eb09ac714eeccc15f8e5a923e676ac12f509f3e3b75",
+      "fingerprint": "7d3fd7879ae077c816d6e610c30b0296ce60160b863d86c15a112ae6534a7706",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "22214af6caad2d01988d38ba664fdacf0d174e5bab8c0cd85d1089dc630a54dc"
+        "scripts/tests/test_operatoros_deploy.py": "63d655606be646cfa583aad16d059ca0893dbe4d158825de6348acd95d722bb8"
       },
-      "head": "975bdeaefc35dea68890554ed4e9bdc33c8b1f23",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "Loop 70 changes are confined to existing deployment/rehearsal failure handling and cleanup; no Intent guidance or skills were affected.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 975bdeaefc35dea68890554ed4e9bdc33c8b1f23"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "8fc58b67132de90c0d9f3af81d8d112205fcd3c346847956ee6cb4520d79c410",
+      "fingerprint": "a6dcd6ead4b335fc8ab7ae2822b5dd5fcc275675f753c4861a73fe9380db84ac",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "574ee357d5daf35cb7f1467ca507197093d79868bce7cca5fc7ed4ad4b183ecf"
+        "scripts/deployment-rehearsal.py": "c27dd8e36e179e26c6175196c1928403f5d2fe7356ed6861631b6f5f55f906b4"
       },
-      "head": "975bdeaefc35dea68890554ed4e9bdc33c8b1f23",
+      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
       "outcome": "no-change",
-      "reason": "Loop 70 changes are confined to existing deployment/rehearsal failure handling and cleanup; no Intent guidance or skills were affected.",
+      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 975bdeaefc35dea68890554ed4e9bdc33c8b1f23"
+        "Changed: scripts/deployment-rehearsal.py at 510b131191af5efceaff3165619f61f63c5ae01d"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
