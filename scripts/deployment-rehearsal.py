@@ -701,6 +701,18 @@ def private_env(workspace: Path, context: Any) -> dict[str, str]:
     return result
 
 
+def schema_validation_config(workspace: Path, data_dir: Path, context: Any) -> dict[str, Any]:
+    return {
+        "root": workspace,
+        "profile": "rehearsal",
+        "data_dir": data_dir,
+        "storage_conf": context.storage_conf,
+        "graphroot": context.graphroot,
+        "runroot": context.runroot,
+        "_private_podman_context": context,
+    }
+
+
 def cleanup_environment(workspace: Path, context: Any) -> dict[str, str]:
     result = private_env(workspace, context)
     if os.environ.get("XDG_DATA_HOME"):
@@ -1449,7 +1461,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         deployment_progress("spa_staging_completed", completed_guard="previous_spa_staged")
 
         bad_data = workspace / "schema-negative/data"
-        bad_cfg = {"data_dir": bad_data, "storage_conf": storage_conf, "graphroot": graphroot, "runroot": runroot}
+        bad_cfg = schema_validation_config(workspace, bad_data, context)
         deployment_progress("schema_rejection_snapshot_started")
         before_bad = deploy.sha_db_snapshot(bad_data)
         deployment_progress("schema_rejection_snapshot_completed",

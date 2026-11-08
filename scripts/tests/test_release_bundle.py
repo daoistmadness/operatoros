@@ -715,6 +715,34 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
                 rehearsal.verify_quadlet_podman_environment(missing, context)
 
+    def test_schema_rejection_uses_the_verified_private_podman_context(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-schema-context-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            data_dir = workspace / 'schema-negative/data'
+            data_dir.mkdir(mode=0o700, parents=True)
+            database = data_dir / 'operatoros.sqlite'
+            database.write_bytes(b'synthetic database snapshot')
+            database.chmod(0o600)
+            cfg = rehearsal.schema_validation_config(workspace, data_dir, context)
+            captured = []
+
+            def reject_synthetic_schema(args, env=None, timeout=60):
+                captured.append(env)
+                return subprocess.CompletedProcess(
+                    args, 1, '', 'DATABASE_MIGRATION_REQUIRED: expected schema\n',
+                )
+
+            with patch.object(deploy, 'run_command', side_effect=reject_synthetic_schema):
+                with self.assertRaises(deploy.SchemaValidationError):
+                    deploy.schema_validate('synthetic-image', cfg)
+
+            self.assertEqual(captured, [deploy.private_environment(context.storage_conf, context)])
+            self.assertEqual(captured[0]['XDG_CONFIG_HOME'], str(context.xdg_config_home))
+            self.assertEqual(captured[0]['CONTAINERS_CONF'], str(context.containers_conf))
+            self.assertNotIn('CONTAINERS_STORAGE_CONF', captured[0])
+
     def test_synthetic_login_uses_memory_request_and_cookie_jar(self):
         class Response(io.BytesIO):
             status = 200
