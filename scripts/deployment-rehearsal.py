@@ -362,7 +362,10 @@ def retain_deployment_failure(error: BaseException) -> None:
     elif isinstance(error, OSError):
         code, path_category = "DEPLOY_FILESYSTEM_FAILURE", None
         explanation = "A rehearsal filesystem operation failed."
-    elif isinstance(error, RehearsalError):
+    elif isinstance(error, RehearsalError) or (
+        type(error).__name__ in {"DeployError", "SchemaValidationError"} and
+        hasattr(error, "exit_code")
+    ):
         code = {
             "release_staging_started": "DEPLOY_RELEASE_STAGING_FAILED",
             "oci_import_started": "DEPLOY_OCI_IMPORT_FAILED",
@@ -371,6 +374,12 @@ def retain_deployment_failure(error: BaseException) -> None:
             "synthetic_database_setup_started": "DEPLOY_SYNTHETIC_DATABASE_SETUP_FAILED",
             "sqlite_validation_started": "DEPLOY_SQLITE_VALIDATION_FAILED",
             "spa_staging_started": "DEPLOY_SPA_STAGING_FAILED",
+            "schema_rejection_snapshot_started": "DEPLOY_SCHEMA_REJECTION_SNAPSHOT_FAILED",
+            "schema_validation_started": "DEPLOY_SCHEMA_VALIDATION_FAILED",
+            "schema_validation_accepted_incompatible_database": "DEPLOY_SCHEMA_REJECTION_NOT_DETECTED",
+            "schema_rejection_snapshot_verification_started": "DEPLOY_SCHEMA_REJECTION_MUTATED_SQLITE",
+            "synthetic_backup_creation_started": "DEPLOY_SYNTHETIC_BACKUP_FAILED",
+            "synthetic_backup_verification_started": "DEPLOY_SYNTHETIC_BACKUP_VERIFICATION_FAILED",
             "quadlet_staging_started": "DEPLOY_QUADLET_STAGING_FAILED",
             "deployment_cli_preflight_started": "DEPLOY_CLI_PREFLIGHT_FAILED",
             "quadlet_lifecycle_validation_started": "DEPLOY_QUADLET_VALIDATION_FAILED",
@@ -422,6 +431,7 @@ def initial_deployment_record() -> dict[str, Any]:
         "quadlet_staging": "not_started",
         "application_start": "not_started",
         "application_acceptance": "not_started",
+        "schema_rejection": {"status": "not_started", "failure_code": None, "exit_code": None},
         "failure": None,
     }
 
@@ -1420,27 +1430,61 @@ def rehearse(workspace: Path, diagnostics: Path,
 
         bad_data = workspace / "schema-negative/data"
         bad_cfg = {"data_dir": bad_data, "storage_conf": storage_conf, "graphroot": graphroot, "runroot": runroot}
+        deployment_progress("schema_rejection_snapshot_started")
         before_bad = deploy.sha_db_snapshot(bad_data)
+        deployment_progress("schema_rejection_snapshot_completed",
+                            completed_guard="incompatible_database_snapshot_captured")
+        deployment_progress("schema_validation_started")
         try:
             deploy.schema_validate(release.manifest["image"]["image_id"], bad_cfg)
-        except deploy.DeployError as error:
-            require("DATABASE_MIGRATION_REQUIRED" in str(error) or
-                    "DATABASE_SCHEMA_INVALID" in str(error),
+        except deploy.SchemaValidationError as error:
+            require(error.failure_code in deploy.SCHEMA_VALIDATION_FAILURE_CODES,
                     "incompatible database was rejected for an unexpected reason")
+            REPORT["deployment"]["schema_rejection"] = {
+                "status": "rejected",
+                "failure_code": error.failure_code,
+                "exit_code": error.exit_code,
+            }
+            deployment_progress("schema_validation_rejected",
+                                completed_guard="incompatible_database_rejected")
             REPORT["checks"]["incompatible_schema_rejected_read_only"] = True
+        except deploy.DeployError as error:
+            REPORT["deployment"]["schema_rejection"] = {
+                "status": "failed",
+                "result": "unrecognized_validator_failure",
+                "exit_code": error.exit_code,
+            }
+            wrapped = RehearsalError("schema validator did not report a recognized database rejection")
+            wrapped.exit_code = error.exit_code
+            raise wrapped from error
         else:
+            REPORT["deployment"]["schema_rejection"] = {
+                "status": "failed",
+                "result": "incompatible_database_accepted",
+                "exit_code": 0,
+            }
+            deployment_progress("schema_validation_accepted_incompatible_database")
             raise RehearsalError("candidate API image accepted the incompatible synthetic schema")
+        deployment_progress("schema_rejection_snapshot_verification_started")
         require(deploy.sha_db_snapshot(bad_data) == before_bad,
                 "schema compatibility rejection modified its synthetic SQLite fixture")
+        deployment_progress("schema_rejection_snapshot_verification_completed",
+                            completed_guard="incompatible_schema_rejection_read_only")
 
         backup_env = env | api_environment(SOURCE_SHA, origin) | {
             "OPERATOROS_DATA_DIR": str(workspace / "data"),
             "AUTH_COOKIE_SECRET": cookie_secret,
             "BACKUP_ENCRYPTION_KEY": backup_key,
         }
+        deployment_progress("synthetic_backup_creation_started")
         run(["bun", "apps/api/src/backup-cli.ts", "backup"], env=backup_env, timeout=120)
+        deployment_progress("synthetic_backup_creation_completed",
+                            completed_guard="synthetic_backup_command_completed")
+        deployment_progress("synthetic_backup_verification_started")
         backups = list((workspace / "data/backups").glob("backup_*.sqlite3"))
         require(len(backups) == 1, "expected exactly one synthetic encrypted backup")
+        deployment_progress("synthetic_backup_verification_completed",
+                            completed_guard="synthetic_backup_verified")
 
         deployment_progress("quadlet_staging_started", quadlet_staging="started")
         (workspace / "deploy/Caddyfile").write_text(make_caddyfile(web_port, api_port), encoding="utf-8")

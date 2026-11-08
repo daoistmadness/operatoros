@@ -17,6 +17,7 @@ Notable user-facing changes are recorded here.
 - Use the standard private XDG storage config for rehearsal Podman and keep failure summaries synchronized with the rejected guard (#369).
 - Prevent duplicate synthetic data-directory creation and retain sanitized deployment and cleanup phase results in rehearsal evidence (#370).
 - Bootstrap the synthetic database before creating backups and report setup operations and cleanup-log creation accurately (#371).
+- Preserve typed synthetic schema-rejection results and remove only validated read-only workspace directories during rehearsal cleanup.
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 
