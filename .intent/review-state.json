@@ -10069,15 +10069,15 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "8c650c349f43b5c4fd64536c35d8ebca1d3142dd8e9ce49d513d7874f0c18f73",
+      "fingerprint": "7ba07083476b2952f5267099600e1ac63b727ecdc6fb3d4957d4f4df12093683",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "9f4c4283404b4235471d8f671231278d6367ea3cc5e6f7127d029f11445aadf1"
+        "scripts/operatoros_deploy.py": "efb8bf46d3d22e1329f910b7424c0c92ed0ebe06240f1839705643caea8973b0"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "3bb7267605155e3561ad9b8a47f79d93554e89f1",
       "outcome": "no-change",
-      "reason": "The rollback guard, rehearsal diagnostics, tests, and changelog do not change the installed Elysia skill guidance or any project skill.",
+      "reason": "The Python SQLite identity helper does not change installed skill guidance.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/operatoros_deploy.py at 3bb7267605155e3561ad9b8a47f79d93554e89f1"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
