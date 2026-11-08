@@ -1273,6 +1273,17 @@ def sha_db_snapshot(data_dir: Path) -> dict[str, tuple[int, int, int, int, int]]
     return snapshot
 
 
+def sqlite_main_identity(data_dir: Path) -> tuple[int, int]:
+    path = data_dir / "operatoros.sqlite"
+    try:
+        info = path.lstat()
+    except OSError as error:
+        raise DeployError("application SQLite database is unavailable") from error
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077):
+        raise DeployError("application SQLite database ownership or permissions are unsafe")
+    return info.st_dev, info.st_ino
+
+
 def validate_backup(cfg: dict[str, Any], backup_name: str) -> Path:
     if not re.fullmatch(r"backup_[A-Za-z0-9T._-]+\.sqlite3", backup_name):
         raise DeployError("backup must be selected by filename, not path")
@@ -1486,13 +1497,14 @@ def preflight(cfg: dict[str, Any], release: VerifiedRelease, backup_name: str) -
     backup = validate_backup(cfg, backup_name)
     check_capacity(cfg, release)
     db_before = sha_db_snapshot(cfg["data_dir"])
+    db_identity = sqlite_main_identity(cfg["data_dir"])
     check_loopback_services(cfg)
     isolated_schema_preflight(release, cfg)
     if sha_db_snapshot(cfg["data_dir"]) != db_before:
         raise DeployError("SQLite main/WAL/SHM changed during preflight; no application change was made")
     return {"old_release_path": str(old_release), "old_release_id": old_release_id, "old_image_ref": old_image_ref,
             "old_image_id": old_image_id, "old_commit": old_commit, "backup": backup.name,
-            "db_snapshot": db_before}
+            "db_snapshot": db_before, "db_identity": db_identity}
 
 
 def atomic_write(path: Path, data: bytes, mode: int = 0o600) -> None:
@@ -1888,8 +1900,9 @@ def deploy_release(cfg: dict[str, Any], request: ReleaseRequest, backup_name: st
                 service_call(cfg, "restart", cfg["caddy_service"])
                 update_transaction(tx_path, tx, "caddy_restarted")
                 wait_release_health(cfg)
-                if sha_db_snapshot(cfg["data_dir"]) != previous["db_snapshot"]:
-                    raise DeployError("database files changed during deployment; application data was not rolled back")
+                sha_db_snapshot(cfg["data_dir"])
+                if sqlite_main_identity(cfg["data_dir"]) != previous["db_identity"]:
+                    raise DeployError("primary SQLite database file was replaced during deployment")
                 current = {"release_id": request.release_id, "source_commit": request.source_sha,
                            "artifact_id": request.artifact_id, "artifact_name": request.artifact_name,
                            "artifact_envelope_sha256": release.envelope_sha256, "bundle_sha256": release.bundle_sha256,
@@ -1998,6 +2011,7 @@ def rollback_release(cfg: dict[str, Any], release_id: str) -> dict[str, Any]:
             labels.get(API_IMAGE_LABELS["source_dirty"]) != "false"):
             raise DeployError("retained API image is unavailable or its source identity differs")
         before = sha_db_snapshot(cfg["data_dir"])
+        database_identity = sqlite_main_identity(cfg["data_dir"])
         manager_state = command(["systemctl", "--user", "is-system-running"], timeout=20)
         if manager_state != "running":
             raise DeployError(f"systemd user manager is not fully running: {manager_state}")
@@ -2060,8 +2074,9 @@ def rollback_release(cfg: dict[str, Any], release_id: str) -> dict[str, Any]:
             update_transaction(tx_path, tx, "spa_switched")
             service_call(cfg, "restart", cfg["caddy_service"])
             wait_release_health(cfg)
-            if sha_db_snapshot(cfg["data_dir"]) != before:
-                raise DeployError("SQLite files changed during rollback; no database restore was attempted")
+            sha_db_snapshot(cfg["data_dir"])
+            if sqlite_main_identity(cfg["data_dir"]) != database_identity:
+                raise DeployError("primary SQLite database file was replaced during rollback")
             current = {"release_id": release_id, "source_commit": target["source_commit"],
                        "api_image_id": image_id, "api_manifest_digest": target.get("api_manifest_digest"),
                        "spa_path": str(spa), "rolled_back_at": datetime.now(timezone.utc).isoformat()}
