@@ -261,6 +261,77 @@ def assert_no_mounts_below(root: Path) -> None:
             raise CleanupError("Refusing cleanup while a mount exists below the consumer workspace.")
 
 
+def make_owned_workspace_directories_removable(workspace: Path, temp_parent: Path) -> int:
+    """Validate the complete workspace, then restore owner write/search on directories only."""
+    workspace, _temp_parent, _storage_conf = validate_workspace(str(workspace), str(temp_parent))
+    assert_no_mounts_below(workspace)
+    if not hasattr(os, "O_DIRECTORY") or not hasattr(os, "O_NOFOLLOW"):
+        raise CleanupError("Safe workspace directory handles are unavailable.")
+    uid = os.geteuid()
+    directory_records: list[tuple[Path, int, int]] = []
+    pending = [workspace]
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+    while pending:
+        directory = pending.pop()
+        try:
+            before = directory.lstat()
+            descriptor = os.open(directory, directory_flags)
+            current = os.fstat(descriptor)
+        except OSError as error:
+            raise CleanupError("Cannot safely inspect an owned workspace directory.") from error
+        try:
+            if (not stat.S_ISDIR(current.st_mode) or current.st_uid != uid or
+                (current.st_dev, current.st_ino) != (before.st_dev, before.st_ino)):
+                raise CleanupError("Refusing an unexpected workspace directory identity.")
+            directory_records.append((directory, current.st_dev, current.st_ino))
+            try:
+                with os.scandir(descriptor) as entries:
+                    for entry in entries:
+                        try:
+                            info = entry.stat(follow_symlinks=False)
+                        except OSError as error:
+                            raise CleanupError("Cannot safely inspect a workspace entry.") from error
+                        if info.st_uid != uid:
+                            raise CleanupError("Refusing a workspace entry owned by another user.")
+                        if stat.S_ISLNK(info.st_mode):
+                            # Symlink leaves are unlinked by rmtree without following their targets.
+                            continue
+                        if stat.S_ISDIR(info.st_mode):
+                            pending.append(directory / entry.name)
+                        elif stat.S_ISREG(info.st_mode):
+                            if info.st_nlink != 1:
+                                raise CleanupError("Refusing a hard-linked workspace file.")
+                        else:
+                            raise CleanupError("Refusing a special workspace file.")
+            except OSError as error:
+                raise CleanupError("Cannot safely scan an owned workspace directory.") from error
+        finally:
+            os.close(descriptor)
+
+    assert_no_mounts_below(workspace)
+    changed = 0
+    for directory, device, inode in directory_records:
+        try:
+            descriptor = os.open(directory, directory_flags)
+        except OSError as error:
+            raise CleanupError("Cannot safely prepare an owned workspace directory.") from error
+        try:
+            current = os.fstat(descriptor)
+            if (not stat.S_ISDIR(current.st_mode) or current.st_uid != uid or
+                (current.st_dev, current.st_ino) != (device, inode)):
+                raise CleanupError("Workspace directory identity changed during cleanup.")
+            if stat.S_IMODE(current.st_mode) & 0o700 != 0o700:
+                os.fchmod(descriptor, stat.S_IMODE(current.st_mode) | 0o700)
+                changed += 1
+        except OSError as error:
+            raise CleanupError("Cannot prepare an owned workspace directory for removal.") from error
+        finally:
+            os.close(descriptor)
+    assert_no_mounts_below(workspace)
+    return changed
+
+
 def diagnostic_log(path_value: str | None, temp_parent: Path, workspace: Path) -> Path | None:
     if path_value is None:
         return None
@@ -547,6 +618,9 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
             for key in residual_keys:
                 remove_host_owned_store_residual(workspace / str(profile[key]), workspace)
             assert_no_mounts_below(workspace)
+            changed_directories = make_owned_workspace_directories_removable(workspace, temp_parent)
+            if changed_directories:
+                append_log(log_path, f"Prepared {changed_directories} owned workspace directories for removal.")
             shutil.rmtree(workspace)
             result["resources_removed"].append("workspace")
             result["resources_remaining"] = []

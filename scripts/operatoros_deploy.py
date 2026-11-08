@@ -47,12 +47,44 @@ API_NAME = "operatoros-lite-api"
 CADDY_NAME = "operatoros-lite-caddy"
 CADDY_IMAGE = "docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5"
 REHEARSAL_WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
+SCHEMA_VALIDATION_FAILURE_CODES = frozenset({
+    "DATABASE_MIGRATION_REQUIRED",
+    "DATABASE_SCHEMA_INVALID",
+})
+PODMAN_STORAGE_WARNING_CLASSES = frozenset({
+    "storage-driver-database-override", "additional-image-store-warning",
+    "storage-path-warning", "storage-configuration-warning",
+})
 
 
 class DeployError(RuntimeError):
-    def __init__(self, message: str, *, exit_code: int | None = None):
+    def __init__(self, message: str, *, exit_code: int | None = None,
+                 diagnostic_code: str | None = None):
+        if diagnostic_code is not None and diagnostic_code not in SCHEMA_VALIDATION_FAILURE_CODES:
+            raise ValueError("invalid deployment diagnostic code")
         self.exit_code = exit_code
+        self.diagnostic_code = diagnostic_code
         super().__init__(message)
+
+
+class SchemaValidationError(DeployError):
+    """A sanitized, allowlisted rejection from the read-only database validator."""
+
+    def __init__(self, failure_code: str, *, exit_code: int):
+        if (failure_code not in SCHEMA_VALIDATION_FAILURE_CODES or type(exit_code) is not int or
+            exit_code == 0):
+            raise ValueError("invalid schema validation rejection")
+        self.failure_code = failure_code
+        super().__init__("read-only schema validation rejected the database", exit_code=exit_code)
+
+
+def schema_validation_failure_code(stderr: str) -> str | None:
+    """Recognize only one complete allowlisted database rejection line."""
+    lines = [line for line in stderr.splitlines() if line.strip()]
+    if len(lines) != 1:
+        return None
+    match = re.fullmatch(r"(DATABASE_MIGRATION_REQUIRED|DATABASE_SCHEMA_INVALID): [^\r\n]+", lines[0])
+    return match.group(1) if match is not None else None
 
 
 PODMAN_CONTEXT_FAILURES = {
@@ -492,15 +524,16 @@ def stderr_classification(stderr: str) -> str:
     return "present"
 
 
-def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str]) -> None:
+def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str], *,
+                           schema_validation: bool = False) -> None:
     diagnostic = stderr_classification(result.stderr)
     if result.returncode != 0:
+        failure_code = None
+        if schema_validation and diagnostic not in PODMAN_STORAGE_WARNING_CLASSES:
+            failure_code = schema_validation_failure_code(result.stderr)
         raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})",
-                          exit_code=result.returncode)
-    if args and Path(args[0]).name == "podman" and diagnostic in {
-        "storage-driver-database-override", "additional-image-store-warning", "storage-path-warning",
-        "storage-configuration-warning",
-    }:
+                          exit_code=result.returncode, diagnostic_code=failure_code)
+    if args and Path(args[0]).name == "podman" and diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
         raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})")
 
 
@@ -988,9 +1021,10 @@ def system_environment() -> dict[str, str]:
     return {name: os.environ[name] for name in names if name in os.environ}
 
 
-def command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> str:
+def command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60,
+            schema_validation: bool = False) -> str:
     result = run_command(args, env=env, timeout=timeout)
-    _assert_podman_command(result, args)
+    _assert_podman_command(result, args, schema_validation=schema_validation)
     return result.stdout.strip()
 
 
@@ -1542,7 +1576,20 @@ def schema_validate(image: str, cfg: dict[str, Any]) -> None:
             "--user=10000:10000", "--mount", f"type=bind,src={cfg['data_dir']},dst=/var/lib/operatoros/data,ro",
             "--env", "OPERATOROS_DATA_DIR=/var/lib/operatoros/data", "--entrypoint", "bun", image,
             "run", "packages/db/src/db-cli.ts", "validate", "--data-dir", "/var/lib/operatoros/data"]
-    command(args, podman_env(cfg), timeout=60)
+    try:
+        command(args, podman_env(cfg), timeout=60, schema_validation=True)
+    except DeployError as error:
+        after = sha_db_snapshot(cfg["data_dir"])
+        if after != before:
+            raise DeployError(
+                "read-only schema validation observed a SQLite main/WAL/SHM change; aborting for database activity review",
+                exit_code=error.exit_code,
+            ) from error
+        if error.diagnostic_code is not None:
+            if error.exit_code is None:
+                raise DeployError("schema validation rejection omitted its process exit status") from error
+            raise SchemaValidationError(error.diagnostic_code, exit_code=error.exit_code) from error
+        raise
     after = sha_db_snapshot(cfg["data_dir"])
     if after != before:
         raise DeployError("read-only schema validation observed a SQLite main/WAL/SHM change; aborting for database activity review")
