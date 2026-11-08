@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6616c137de73005ed121a923e8f8d0a90f5fd360d651999577702102114b9902",
+      "fingerprint": "692e0190d36d92c373d710f0a1190021d33c3a0873591fd40d61b83e23eeda43",
       "snapshot": {
-        "CHANGELOG.md": "30fcc9139ef4356e69900b69db2eadc97c7735847203d50ea969fcbd237109be"
+        "CHANGELOG.md": "1fbfdf2ab49962364983518dec94d38743076aede7318249cffeaaf0994b6ac7"
       },
-      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
+      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
       "outcome": "no-change",
-      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
+      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
+        "Changed: CHANGELOG.md at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "3cb5c42c2bca6e9079dfb123b10b47151f96a16af482bc2f439f07d4e2af7c8f",
+      "fingerprint": "76bb5be5a8ef15bf90d57882601784de6ca0cede7a539e35fa83bf2d8498fb93",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "c159a3b376652c4969b0dc60b0e1e4282c1f2989863ecbb44f695a109a81bc21"
+        "scripts/tests/test_release_bundle.py": "7e32234cb4ed53afc8be8fcf8ce327052e1199c1dc5b07146fabc47eb0747abd"
       },
-      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
+      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
       "outcome": "no-change",
-      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
+      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 510b131191af5efceaff3165619f61f63c5ae01d"
+        "Changed: scripts/tests/test_release_bundle.py at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "a6dcd6ead4b335fc8ab7ae2822b5dd5fcc275675f753c4861a73fe9380db84ac",
+      "fingerprint": "0a6301cba0b6c36c68910124d552a564449cd1b656453b814375ce17b3bee0c2",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "c27dd8e36e179e26c6175196c1928403f5d2fe7356ed6861631b6f5f55f906b4"
+        "scripts/deployment-rehearsal.py": "e644233ba6041b00ef6a191daeede301c96377030de1543b755c5c82b1b7b0bf"
       },
-      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
+      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
       "outcome": "no-change",
-      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
+      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 510b131191af5efceaff3165619f61f63c5ae01d"
+        "Changed: scripts/deployment-rehearsal.py at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
