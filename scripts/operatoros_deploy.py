@@ -536,6 +536,10 @@ def stderr_classification(stderr: str) -> str:
     return "present"
 
 
+def safe_command_name(args: list[str]) -> str:
+    return Path(args[0]).name if args else "unknown_command"
+
+
 def podman_failure_classification(stderr: str, exit_code: int) -> str:
     """Reduce Podman's stderr to a stable allowlisted category without retaining it."""
     diagnostic = stderr_classification(stderr)
@@ -563,6 +567,7 @@ def podman_failure_classification(stderr: str, exit_code: int) -> str:
 
 def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[str], *,
                            schema_validation: bool = False) -> None:
+    command_name = safe_command_name(args)
     diagnostic = stderr_classification(result.stderr)
     if result.returncode != 0:
         failure_code = None
@@ -570,18 +575,19 @@ def _assert_podman_command(result: subprocess.CompletedProcess[str], args: list[
             failure_code = schema_validation_failure_code(result.stderr)
         failure_classification = (
             podman_failure_classification(result.stderr, result.returncode)
-            if args and Path(args[0]).name == "podman" else None
+            if command_name == "podman" else None
         )
-        raise DeployError(f"command failed ({result.returncode}): {args[0]} (stderr={diagnostic})",
+        raise DeployError(f"command failed ({result.returncode}): {command_name} (stderr={diagnostic})",
                           exit_code=result.returncode, diagnostic_code=failure_code,
                           failure_classification=failure_classification)
-    if args and Path(args[0]).name == "podman" and diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
+    if command_name == "podman" and diagnostic in PODMAN_STORAGE_WARNING_CLASSES:
         raise DeployError(f"Podman reported an isolation warning (stderr={diagnostic})",
                           failure_classification=diagnostic)
 
 
 def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60,
                  context_diagnostics: bool = False) -> Any:
+    command_name = safe_command_name(args)
     try:
         result = run_command(args, env=env, timeout=timeout)
     except DeployError as error:
@@ -609,7 +615,7 @@ def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout:
                 "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
                 exit_code=result.returncode, expected="complete_private_store_identity", observed="empty_json",
             )
-        raise DeployError(f"{args[0]} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
+        raise DeployError(f"{command_name} returned empty JSON (exit={result.returncode}, stderr={stderr_classification(result.stderr)})")
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as error:
@@ -618,16 +624,17 @@ def command_json(args: list[str], env: dict[str, str] | None = None, *, timeout:
                 "CTX_PODMAN_INFO_INVALID_JSON", "podman_info_json", "podman_info_returned",
                 exit_code=result.returncode, expected="complete_private_store_identity", observed="malformed_json",
             ) from error
-        raise DeployError(f"{args[0]} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
+        raise DeployError(f"{command_name} returned malformed JSON (stderr={stderr_classification(result.stderr)})") from error
 
 
 def run_command(args: list[str], env: dict[str, str] | None = None, *, timeout: int = 60) -> subprocess.CompletedProcess[str]:
+    command_name = safe_command_name(args)
     try:
         return subprocess.run(args, env=env if env is not None else system_environment(), text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired) as error:
         failure_classification = None
-        if args and Path(args[0]).name == "podman":
+        if command_name == "podman":
             if isinstance(error, FileNotFoundError):
                 failure_classification = "command_not_found"
             elif isinstance(error, PermissionError):
@@ -636,7 +643,7 @@ def run_command(args: list[str], env: dict[str, str] | None = None, *, timeout: 
                 failure_classification = "subprocess_timeout"
             else:
                 failure_classification = "filesystem_failure"
-        raise DeployError(f"command failed to execute: {args[0]} ({type(error).__name__})",
+        raise DeployError(f"command failed to execute: {command_name} ({type(error).__name__})",
                           failure_classification=failure_classification) from error
 
 

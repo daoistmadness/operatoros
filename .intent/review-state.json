@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "59c22964800ff32c1da0add517ecf9d5d9ec4e6f56dc4a169d33419a612c5d4c",
+      "fingerprint": "6616c137de73005ed121a923e8f8d0a90f5fd360d651999577702102114b9902",
       "snapshot": {
-        "CHANGELOG.md": "eeebe72944e51f8ec65daadf70fd397d46fda513d3bb33e7a6a960ad6a7abfad"
+        "CHANGELOG.md": "30fcc9139ef4356e69900b69db2eadc97c7735847203d50ea969fcbd237109be"
       },
-      "head": "8d1d958544da5fef14e6829316932f369a7f66d1",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "PR number was added to the existing changelog bullet; no guidance or skill behavior changed.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 8d1d958544da5fef14e6829316932f369a7f66d1"
+        "Changed: CHANGELOG.md at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:COMMANDS.md": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "c19e82cdce33e3af1ab45cc3d02561a7cbe4e54b850ada5e5ef5fd14bd50f4c9",
+      "fingerprint": "3aba77862056c913755c9a71f18cfd74c71f56c08c9032271e558dc2781311ec",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "1ebae25544ea05167fc583d119e7e4c7d29cb2f1b5e2f495a27ba8510de7ee78"
+        "scripts/operatoros_deploy.py": "2753d4fc94cf2fac7138f357a5a17ed4b58ce7f24e2084c84c72cf7c44da21ab"
       },
-      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 510b131191af5efceaff3165619f61f63c5ae01d"
+        "Changed: scripts/operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "538a692e4356aba50ba4e0341e14ec082d3047354ffced5a32c318476c6df851",
+      "fingerprint": "7d3fd7879ae077c816d6e610c30b0296ce60160b863d86c15a112ae6534a7706",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "d72338e9ee97f26e767651f5fa3c6947240bf65c0e8eb5006b513a4180cf32cb"
+        "scripts/tests/test_operatoros_deploy.py": "63d655606be646cfa583aad16d059ca0893dbe4d158825de6348acd95d722bb8"
       },
-      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
+      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
       "outcome": "no-change",
-      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
+      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 510b131191af5efceaff3165619f61f63c5ae01d"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {

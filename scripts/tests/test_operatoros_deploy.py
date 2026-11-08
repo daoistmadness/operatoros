@@ -432,6 +432,26 @@ class PodmanIsolationTests(unittest.TestCase):
         self.assertEqual(raised.exception.failure_classification, "command_not_found")
         self.assertNotIn("/private/tool", str(raised.exception))
 
+        private_podman = "/runner/private/bin/podman"
+        with patch.object(deploy.subprocess, "run", side_effect=FileNotFoundError("/runner/private/bin/podman")):
+            with self.assertRaises(deploy.DeployError) as raised:
+                deploy.run_command([private_podman, "run"])
+        self.assertEqual(raised.exception.failure_classification, "command_not_found")
+        self.assertNotIn("/runner/private/bin", str(raised.exception))
+
+        result = subprocess.CompletedProcess([private_podman, "run"], 125, "", "/runner/private/data")
+        with patch.object(deploy, "run_command", return_value=result):
+            with self.assertRaises(deploy.DeployError) as raised:
+                deploy.command([private_podman, "run", "synthetic-image"], schema_validation=True)
+        self.assertEqual(raised.exception.failure_classification, "podman_engine_failure")
+        self.assertNotIn("/runner/private/bin", str(raised.exception))
+
+        empty = subprocess.CompletedProcess([private_podman, "info"], 0, "", "")
+        with patch.object(deploy, "run_command", return_value=empty):
+            with self.assertRaises(deploy.DeployError) as raised:
+                deploy.command_json([private_podman, "info"])
+        self.assertNotIn("/runner/private/bin", str(raised.exception))
+
     def test_schema_validation_preserves_podman_engine_failure_classification(self):
         data_dir = self.root / "synthetic-data"
         data_dir.mkdir(mode=0o700)
