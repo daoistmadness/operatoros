@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4837de09f507b34c445be481e4f7981e0743cebc2f3b9be46a10370b4668f682",
+      "fingerprint": "c55023e225ab4a4d29799b10ef986cbe83db1e814d24cec677fbb7bde28c23b5",
       "snapshot": {
-        "CHANGELOG.md": "dc345d0befe3c5f79c3bf752618bed0050fd5c3d45c0abfe1ea238b93a1214ef"
+        "CHANGELOG.md": "d230f4426c856d083199ebb051fa4e09919e34ce3885d8dc18795d08dd9d759f"
       },
-      "head": "9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43",
+      "head": "f033c414088f7183712c89b8e97b0dbb3c6956c3",
       "outcome": "no-change",
-      "reason": "The new rehearsal assertion and changelog entry do not change installed skill guidance; existing documented procedures remain accurate.",
+      "reason": "Adding the assigned PR number to the existing rehearsal changelog entry does not change installed skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43"
+        "Changed: CHANGELOG.md at f033c414088f7183712c89b8e97b0dbb3c6956c3"
       ]
     },
     "source:COMMANDS.md": {

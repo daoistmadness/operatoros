@@ -21,7 +21,7 @@ Notable user-facing changes are recorded here.
 - Preserve safe Podman failure categories in synthetic schema-validation evidence and redact executable paths from command errors (#373).
 - Use the verified private Podman context for synthetic schema validation (#374).
 - Preserve SQLite file identity across application transitions without treating normal WAL/SHM lifecycle changes as database replacement, and report rollback failures by operation (#375).
-- Verify post-backup SQLite preservation and report interrupted recovery failures by phase in the synthetic deployment rehearsal.
+- Verify post-backup SQLite preservation and report interrupted recovery failures by phase in the synthetic deployment rehearsal (#376).
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 
