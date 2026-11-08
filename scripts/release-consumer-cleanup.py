@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import pwd
@@ -39,10 +40,16 @@ WORKSPACE_PROFILES = {
     },
 }
 MAX_LOG_BYTES = 16_384
+CLEANUP_RESULT: dict[str, object] = {}
 
 
 class CleanupError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, code: str = "CLEANUP_OWNERSHIP_REJECTED",
+                 expected: str | None = None, observed: str | None = None):
+        super().__init__(message)
+        self.code = code
+        self.expected = expected
+        self.observed = observed
 
 
 def canonical_directory(value: str, label: str) -> Path:
@@ -174,8 +181,18 @@ def validate_workspace(workspace_value: str, temp_parent_value: str) -> tuple[Pa
             "TMPDIR": str(workspace / str(profile["image_tmp"])),
         }
         for name, expected in expected_environment.items():
-            if os.environ.get(name) != expected:
-                raise CleanupError("Rehearsal Podman environment differs from its private workspace.")
+            observed = os.environ.get(name)
+            if observed != expected:
+                observed_category = (
+                    "missing" if observed is None else
+                    "runner_temp" if Path(observed) == temp_parent else "other"
+                )
+                raise CleanupError(
+                    "Rehearsal Podman environment differs from its private workspace.",
+                    code="CLEANUP_PRIVATE_TMPDIR_MISMATCH" if name == "TMPDIR" else "CLEANUP_PRIVATE_ENVIRONMENT_MISMATCH",
+                    expected="workspace_" + name.lower(),
+                    observed=observed_category,
+                )
         config_directory = workspace / str(profile["xdg_containers"])
         try:
             config_files = {path.name for path in config_directory.iterdir()}
@@ -409,43 +426,90 @@ def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
 
 
 def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str | None = None) -> int:
+    CLEANUP_RESULT.clear()
+    result: dict[str, object] = {
+        "attempted": True,
+        "phase": "workspace_validation",
+        "failure_code": None,
+        "exit_code": 1,
+        "command_exit_code": None,
+        "ownership_validated": False,
+        "resources_removed": [],
+        "resources_remaining": ["workspace_and_private_store"],
+        "diagnostics_log_created": False,
+        "status": "failed",
+    }
+
+    def finish(code: str | None = None, *, phase: str | None = None,
+               exit_code: int = 1, remaining: list[str] | None = None) -> int:
+        if code is not None:
+            result["failure_code"] = code
+        if phase is not None:
+            result["phase"] = phase
+        if remaining is not None:
+            result["resources_remaining"] = remaining
+        result["exit_code"] = exit_code
+        result["status"] = "passed" if exit_code == 0 else "failed"
+        CLEANUP_RESULT.clear()
+        CLEANUP_RESULT.update(result)
+        return exit_code
+
     try:
         workspace, temp_parent, _ = validate_workspace(workspace_value, temp_parent_value)
     except CleanupError as error:
-        print(f"Refusing consumer cleanup: {error}", file=sys.stderr)
-        return 1
+        print(f"Refusing consumer cleanup: {type(error).__name__}", file=sys.stderr)
+        if error.expected is not None:
+            result["expected"] = error.expected
+        if error.observed is not None:
+            result["observed"] = error.observed
+        return finish(error.code, phase="workspace_validation")
 
+    result["ownership_validated"] = True
+    result["phase"] = "diagnostic_log_creation"
     failures = 0
     try:
         log_path = diagnostic_log(diagnostics_dir, temp_parent, workspace)
+        result["diagnostics_log_created"] = log_path is not None and log_path.exists()
     except (CleanupError, OSError) as error:
         print(f"Consumer cleanup diagnostics unavailable: {type(error).__name__}", file=sys.stderr)
         log_path = None
         failures += 1
+        result["failure_code"] = "CLEANUP_LOG_UNAVAILABLE"
 
     selected = workspace_profile(workspace)
     if selected is None:
         append_log(log_path, "Unknown disposable workspace profile; refusing cleanup.")
-        return 1
+        return finish("CLEANUP_PROFILE_UNKNOWN", phase="workspace_validation")
     _prefix, profile = selected
+    result["phase"] = "run_scoped_container_removal"
     removed = run_podman(["rm", "--force", "--ignore", *profile["containers"]], workspace, log_path)
     if removed is None or removed.returncode != 0:
         code = "unavailable" if removed is None else str(removed.returncode)
         append_log(log_path, f"Podman consumer container removal failed with exit={code}.")
         failures += 1
+        result["failure_code"] = "CLEANUP_PODMAN_REMOVE_FAILED"
+        result["command_exit_code"] = None if removed is None else removed.returncode
+    else:
+        result["resources_removed"].append("run_scoped_containers")
 
+    result["phase"] = "resource_inventory_verification"
     containers = run_podman(["ps", "--all", "--quiet"], workspace, log_path)
     # Rootless Podman requires mount inspection from its user namespace.
     mounts = run_podman(["unshare", "podman", "mount"], workspace, log_path)
     if containers is None or containers.returncode != 0 or containers.stdout.strip():
         append_log(log_path, "Podman container verification failed or found remaining containers.")
         append_log(log_path, "Refusing workspace removal: Podman reports remaining containers or cannot verify them.")
-        return 1
+        result["command_exit_code"] = None if containers is None else containers.returncode
+        return finish("CLEANUP_CONTAINERS_REMAIN_OR_UNKNOWN", phase="resource_inventory_verification",
+                      remaining=["containers_or_unverified_inventory", "workspace_and_private_store"])
     if mounts is None or mounts.returncode != 0 or mounts.stdout.strip():
         append_log(log_path, "Podman mount verification failed or found remaining mounts.")
         append_log(log_path, "Refusing workspace removal: Podman reports mounted containers or cannot verify mounts.")
-        return 1
+        result["command_exit_code"] = None if mounts is None else mounts.returncode
+        return finish("CLEANUP_MOUNTS_REMAIN_OR_UNKNOWN", phase="resource_inventory_verification",
+                      remaining=["mounts_or_unverified_inventory", "workspace_and_private_store"])
 
+    result["phase"] = "private_store_cleanup"
     helper = Path(__file__).resolve()
     unshare = run_podman(
         ["unshare", sys.executable, str(helper), "--remove-store", str(workspace), str(temp_parent)],
@@ -454,7 +518,12 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
     )
     if unshare is None or unshare.returncode != 0:
         failures += 1
+        result["failure_code"] = "CLEANUP_PRIVATE_STORE_FAILED"
+        result["command_exit_code"] = None if unshare is None else unshare.returncode
     else:
+        result["resources_removed"].append("private_store_contents")
+        result["resources_remaining"] = ["workspace"]
+        result["phase"] = "workspace_removal"
         try:
             validate_workspace(str(workspace), str(temp_parent))
             assert_no_mounts_below(workspace)
@@ -469,13 +538,20 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
                 remove_host_owned_store_residual(workspace / str(profile[key]), workspace)
             assert_no_mounts_below(workspace)
             shutil.rmtree(workspace)
+            result["resources_removed"].append("workspace")
+            result["resources_remaining"] = []
         except (CleanupError, OSError) as error:
             append_log(log_path, f"Host workspace cleanup failed: {type(error).__name__}")
             failures += 1
+            result["failure_code"] = "CLEANUP_WORKSPACE_REMOVAL_FAILED"
     if failures:
         append_log(log_path, "Consumer cleanup did not complete successfully.")
-        return 1
-    return 0
+        remaining = result.get("resources_remaining")
+        if not isinstance(remaining, list):
+            result["resources_remaining"] = ["workspace_or_private_store"]
+        return finish(str(result.get("failure_code") or "CLEANUP_INCOMPLETE"),
+                      phase=str(result["phase"]), remaining=result["resources_remaining"])
+    return finish(phase="complete", exit_code=0, remaining=[])
 
 
 def main() -> int:
@@ -493,7 +569,26 @@ def main() -> int:
             print(f"Refusing consumer workspace removal: {error}", file=sys.stderr)
             return 1
         return 0
-    return cleanup(args.workspace, args.temp_parent, args.diagnostics_dir)
+    try:
+        result = cleanup(args.workspace, args.temp_parent, args.diagnostics_dir)
+    except Exception as error:
+        CLEANUP_RESULT.clear()
+        CLEANUP_RESULT.update({
+            "attempted": True,
+            "phase": "cleanup_exception",
+            "failure_code": "CLEANUP_UNHANDLED_FAILURE",
+            "exit_code": 1,
+            "command_exit_code": None,
+            "ownership_validated": False,
+            "resources_removed": [],
+            "resources_remaining": ["workspace_or_private_store"],
+            "diagnostics_log_created": False,
+            "status": "failed",
+            "exception_class": type(error).__name__,
+        })
+        result = 1
+    print("OPERATOROS_CLEANUP_RESULT=" + json.dumps(CLEANUP_RESULT, sort_keys=True), flush=True)
+    return result
 
 
 if __name__ == "__main__":
