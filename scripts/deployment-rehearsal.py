@@ -72,18 +72,31 @@ DATABASE_SETUP_FAILURE_CODES = {
     "DB_SETUP_NEGATIVE_SCHEMA_MUTATION": "DB_SETUP_NEGATIVE_SCHEMA_MUTATION_FAILED",
     "DB_SETUP_COMPLETE": "DB_SETUP_COMPLETION_FAILED",
 }
-DATABASE_SETUP_FAILURE_CLASSES = frozenset({
+REHEARSAL_FAILURE_CLASSIFICATIONS = frozenset({
+    "additional-image-store-warning",
     "command_not_found",
     "container_command_failed",
+    "container_command_not_found",
+    "container_command_not_invokable",
     "database_already_exists",
+    "database_schema_rejected",
+    "empty_stderr",
     "filesystem_failure",
     "invalid_data_root",
     "missing_expected_file",
+    "missing_path",
     "nonzero_exit",
+    "oci_runtime_failure",
     "permission_rejected",
+    "podman_engine_failure",
     "schema_mismatch",
     "sqlite_initialization_failure",
+    "storage-configuration-warning",
+    "storage-driver-database-override",
+    "storage-path-warning",
+    "sqlite_snapshot_changed",
     "subprocess_timeout",
+    "unsupported_podman_option",
     "unexpected_existing_path",
     "unexpected_nonempty_data_root",
     "validation_rejected",
@@ -189,7 +202,7 @@ def log(event: str, *, exit_code: int | None = None, operation_id: str | None = 
             "started", "completed", "failed",
         }:
             raise RehearsalError("database setup diagnostic is not allowlisted")
-        if failure_class is not None and failure_class not in DATABASE_SETUP_FAILURE_CLASSES:
+        if failure_class is not None and failure_class not in REHEARSAL_FAILURE_CLASSIFICATIONS:
             raise RehearsalError("database setup failure classification is not allowlisted")
         parts = [event, f"operation={operation_id}", f"status={operation_status}"]
         if exit_code is not None:
@@ -222,7 +235,7 @@ def initial_synthetic_database_setup_record() -> dict[str, Any]:
 
 def setup_failure_class(error: BaseException) -> str:
     classified = getattr(error, "failure_class", None)
-    if classified in DATABASE_SETUP_FAILURE_CLASSES:
+    if classified in REHEARSAL_FAILURE_CLASSIFICATIONS:
         return classified
     if isinstance(error, FileExistsError):
         return "unexpected_existing_path"
@@ -419,6 +432,13 @@ def retain_deployment_failure(error: BaseException) -> None:
                 "database_initializer_started": setup.get("database_initializer_started"),
                 "schema_verification_completed": setup.get("schema_verification_completed"),
             })
+    if phase == "schema_validation_started":
+        schema_rejection = record.get("schema_rejection")
+        if isinstance(schema_rejection, dict) and schema_rejection.get("status") == "failed":
+            failure["operation"] = "schema_validation_container"
+            classification = schema_rejection.get("failure_classification")
+            if classification in REHEARSAL_FAILURE_CLASSIFICATIONS:
+                failure["operation_failure_classification"] = classification
     record["failure"] = failure
 
 
@@ -1453,9 +1473,11 @@ def rehearse(workspace: Path, diagnostics: Path,
                 "status": "failed",
                 "result": "unrecognized_validator_failure",
                 "exit_code": error.exit_code,
+                "failure_classification": error.failure_classification,
             }
             wrapped = RehearsalError("schema validator did not report a recognized database rejection")
             wrapped.exit_code = error.exit_code
+            wrapped.failure_classification = error.failure_classification
             raise wrapped from error
         else:
             REPORT["deployment"]["schema_rejection"] = {

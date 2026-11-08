@@ -201,6 +201,32 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertEqual(failure['exit_code'], 1)
                 self.assertNotIn(str(error), json.dumps(report))
 
+    def test_schema_validation_failure_retains_only_allowlisted_podman_classification(self):
+        self.assertTrue(deploy.PODMAN_FAILURE_CLASSIFICATIONS.issubset(
+            rehearsal.REHEARSAL_FAILURE_CLASSIFICATIONS,
+        ))
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        report['deployment']['schema_rejection'] = {
+            'status': 'failed',
+            'result': 'unrecognized_validator_failure',
+            'exit_code': 125,
+            'failure_classification': 'podman_engine_failure',
+        }
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress(
+                'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
+            )
+            failure_error = rehearsal.RehearsalError('safe wrapper message')
+            failure_error.exit_code = 125
+            rehearsal.retain_deployment_failure(failure_error)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
+        self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
+        self.assertEqual(failure['operation_failure_classification'], 'podman_engine_failure')
+        self.assertEqual(failure['operation'], 'schema_validation_container')
+
     def test_synthetic_database_setup_fails_closed_on_preexisting_data_directory(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
             workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'

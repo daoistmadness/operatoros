@@ -406,6 +406,54 @@ class PodmanIsolationTests(unittest.TestCase):
                 deploy.schema_validate("synthetic-image", cfg)
 
         self.assertNotIsInstance(raised.exception, deploy.SchemaValidationError)
+        self.assertEqual(raised.exception.failure_classification, "sqlite_snapshot_changed")
+
+    def test_podman_run_failure_classification_is_allowlisted_and_sanitized(self):
+        cases = (
+            (125, "Error: unknown flag: --synthetic-private-path /secret", "unsupported_podman_option"),
+            (125, "Error: permission denied: /runner/private/data", "permission_rejected"),
+            (125, "Error: OCI runtime failed at /runner/private/data", "oci_runtime_failure"),
+            (125, "Error: container setup failed for /runner/private/data", "podman_engine_failure"),
+            (1, "synthetic application failure at /runner/private/data", "container_command_failed"),
+        )
+        for exit_code, stderr, expected in cases:
+            with self.subTest(expected=expected):
+                result = subprocess.CompletedProcess(["podman", "run"], exit_code, "", stderr)
+                with patch.object(deploy, "run_command", return_value=result):
+                    with self.assertRaises(deploy.DeployError) as raised:
+                        deploy.command(["podman", "run", "synthetic-image"], schema_validation=True)
+                self.assertEqual(raised.exception.failure_classification, expected)
+                self.assertNotIn("/runner/private/data", str(raised.exception))
+                self.assertNotIn("/secret", str(raised.exception))
+
+        with patch.object(deploy.subprocess, "run", side_effect=FileNotFoundError("/private/tool")):
+            with self.assertRaises(deploy.DeployError) as raised:
+                deploy.run_command(["podman", "run"])
+        self.assertEqual(raised.exception.failure_classification, "command_not_found")
+        self.assertNotIn("/private/tool", str(raised.exception))
+
+    def test_schema_validation_preserves_podman_engine_failure_classification(self):
+        data_dir = self.root / "synthetic-data"
+        data_dir.mkdir(mode=0o700)
+        database = data_dir / "operatoros.sqlite"
+        database.write_bytes(b"synthetic database snapshot")
+        database.chmod(0o600)
+        cfg = {
+            "data_dir": data_dir,
+            "storage_conf": self.context.storage_conf,
+            "graphroot": self.context.graphroot,
+            "runroot": self.context.runroot,
+        }
+        result = subprocess.CompletedProcess(
+            ["podman", "run"], 125, "", "Error: container setup failed for /runner/private/data",
+        )
+        with patch.object(deploy, "run_command", return_value=result):
+            with self.assertRaises(deploy.DeployError) as raised:
+                deploy.schema_validate("synthetic-image", cfg)
+
+        self.assertEqual(raised.exception.exit_code, 125)
+        self.assertEqual(raised.exception.failure_classification, "podman_engine_failure")
+        self.assertNotIn("/runner/private/data", str(raised.exception))
 
     def test_default_overlay_database_override_is_rejected(self):
         value = self.info()
