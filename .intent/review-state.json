@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "763866c2882977e5ba33ecc8d99ffb4e026c3ee2460577ba4da97403daec69fc",
+      "fingerprint": "7d29f91aff66766d0aafd5a0b8fca2e382d1036722da49888f1feab0fd5d9314",
       "snapshot": {
-        "CHANGELOG.md": "c5717af31c113557407a4df0c98f04f2c47644ea6ab2034a004f1a6e4799f65f"
+        "CHANGELOG.md": "437dca3a42fece2872f0945965c233368037a40a86dd23284276dc26828053e3"
       },
-      "head": "3a7eaf9e0dcc60c3171cca52a12349b41ef18156",
+      "head": "5f20c4d2b267d3ea955c55a06373220686dd965d",
       "outcome": "no-change",
-      "reason": "Loop 69 changes correct existing synthetic-database bootstrap ordering and add operation-level rehearsal diagnostics/tests; the repository has no applicable deployment skill or guidance files to update.",
+      "reason": "PR #371 identifier added to the Unreleased changelog entry; it changes release metadata only and does not affect project guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 3a7eaf9e0dcc60c3171cca52a12349b41ef18156"
+        "Changed: CHANGELOG.md at 5f20c4d2b267d3ea955c55a06373220686dd965d"
       ]
     },
     "source:COMMANDS.md": {
