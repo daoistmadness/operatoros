@@ -1062,7 +1062,8 @@ class DeploymentFixture(unittest.TestCase):
         db_snapshot = deploy.sha_db_snapshot(self.data)
         previous = {"old_release_path": str(self.web_releases / ("b" * 40)), "old_release_id": "b" * 40,
                     "old_image_ref": "localhost/operatoros-api:" + "b" * 40, "old_image_id": self.old_id,
-                    "old_commit": "b" * 40, "backup": self.backup.name, "db_snapshot": db_snapshot}
+                    "old_commit": "b" * 40, "backup": self.backup.name, "db_snapshot": db_snapshot,
+                    "db_identity": deploy.sqlite_main_identity(self.data)}
         new_spa = self.web_releases / request.release_id
 
         def materialize(*_args):
@@ -1101,6 +1102,45 @@ class DeploymentFixture(unittest.TestCase):
         self.assertFalse(deploy.active_transaction(self.cfg).exists())
         self.assertEqual(deploy.sha_db_snapshot(self.data), db_before)
         self.assertEqual(unrelated.read_text(encoding="utf-8"), "preserve")
+
+    def test_deployment_allows_wal_sidecar_lifecycle_without_replacing_database(self):
+        database_identity = deploy.sqlite_main_identity(self.data)
+
+        def service_effect(_cfg, action, service):
+            if action == "restart" and service == self.cfg["api_service"]:
+                for name in ("operatoros.sqlite-wal", "operatoros.sqlite-shm"):
+                    sidecar = self.data / name
+                    sidecar.write_bytes(b"synthetic WAL runtime sidecar")
+                    sidecar.chmod(0o600)
+
+        self.run_deployment(service_effect=service_effect)
+
+        self.assertEqual(deploy.sqlite_main_identity(self.data), database_identity)
+        self.assertTrue((self.data / "operatoros.sqlite-wal").is_file())
+        self.assertTrue((self.data / "operatoros.sqlite-shm").is_file())
+
+    def test_deployment_rejects_replaced_primary_database_file(self):
+        database_identity = deploy.sqlite_main_identity(self.data)
+        replacement_created = False
+
+        def service_effect(_cfg, action, service):
+            nonlocal replacement_created
+            if action == "restart" and service == self.cfg["api_service"] and not replacement_created:
+                replacement = self.data / ".replacement.sqlite"
+                replacement.write_bytes(b"different synthetic database")
+                replacement.chmod(0o600)
+                os.replace(replacement, self.data / "operatoros.sqlite")
+                replacement_created = True
+
+        with self.assertRaisesRegex(
+            deploy.DeployError,
+            "deployment failed and previous application release was restored.*primary SQLite database file was replaced",
+        ):
+            self.run_deployment(service_effect=service_effect)
+
+        self.assertNotEqual(deploy.sqlite_main_identity(self.data), database_identity)
+        self.assertEqual(os.readlink(self.web / "current"), str(self.web_releases / ("b" * 40)))
+        self.assertFalse(deploy.active_transaction(self.cfg).exists())
 
     def test_wal_reader_preserves_database_snapshot_and_wal_writes_change_it(self):
         database = self.data / "operatoros.sqlite"
@@ -1247,6 +1287,55 @@ class DeploymentFixture(unittest.TestCase):
         self.assertEqual(result["release_id"], release_id)
         self.assertEqual(Path(os.readlink(self.web / "current")), spa)
         self.assertEqual(deploy.sha_db_snapshot(self.data), db_before)
+        self.assertFalse(deploy.active_transaction(self.cfg).exists())
+
+    def test_operator_rollback_allows_wal_sidecar_lifecycle_without_replacing_database(self):
+        release_id, spa, _target_ref, _current_spa, image_identity = self.prepare_rollback()
+        database_identity = deploy.sqlite_main_identity(self.data)
+
+        def service_effect(_cfg, action, service):
+            if action == "restart" and service == self.cfg["api_service"]:
+                for name in ("operatoros.sqlite-wal", "operatoros.sqlite-shm"):
+                    sidecar = self.data / name
+                    sidecar.write_bytes(b"synthetic WAL runtime sidecar")
+                    sidecar.chmod(0o600)
+
+        with patch.object(deploy, "inspect_podman_context"), patch.object(deploy, "verify_runtime_units"), \
+             patch.object(deploy, "verify_quadlet_service"), patch.object(deploy, "command", return_value="running"), \
+             patch.object(deploy, "local_image_identity", side_effect=image_identity), \
+             patch.object(deploy, "schema_validate"), patch.object(deploy, "service_call", side_effect=service_effect), \
+             patch.object(deploy, "wait_release_health"):
+            result = deploy.rollback_release(self.cfg, release_id)
+
+        self.assertEqual(result["release_id"], release_id)
+        self.assertEqual(Path(os.readlink(self.web / "current")), spa)
+        self.assertEqual(deploy.sqlite_main_identity(self.data), database_identity)
+        self.assertTrue((self.data / "operatoros.sqlite-wal").is_file())
+        self.assertTrue((self.data / "operatoros.sqlite-shm").is_file())
+        self.assertFalse(deploy.active_transaction(self.cfg).exists())
+
+    def test_operator_rollback_rejects_replaced_primary_database_file(self):
+        release_id, _spa, _target_ref, current_spa, image_identity = self.prepare_rollback()
+        replaced = False
+
+        def service_effect(_cfg, action, service):
+            nonlocal replaced
+            if action == "restart" and service == self.cfg["api_service"] and not replaced:
+                replacement = self.data / ".replacement.sqlite"
+                replacement.write_bytes(b"different synthetic database")
+                replacement.chmod(0o600)
+                os.replace(replacement, self.data / "operatoros.sqlite")
+                replaced = True
+
+        with patch.object(deploy, "inspect_podman_context"), patch.object(deploy, "verify_runtime_units"), \
+             patch.object(deploy, "verify_quadlet_service"), patch.object(deploy, "command", return_value="running"), \
+             patch.object(deploy, "local_image_identity", side_effect=image_identity), \
+             patch.object(deploy, "schema_validate"), patch.object(deploy, "service_call", side_effect=service_effect), \
+             patch.object(deploy, "wait_release_health"):
+            with self.assertRaisesRegex(deploy.DeployError, "primary SQLite database file was replaced"):
+                deploy.rollback_release(self.cfg, release_id)
+
+        self.assertEqual(Path(os.readlink(self.web / "current")), current_spa)
         self.assertFalse(deploy.active_transaction(self.cfg).exists())
 
     def test_selected_rollback_failure_restores_current_application_and_keeps_db(self):

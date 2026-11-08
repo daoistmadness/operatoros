@@ -178,6 +178,63 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertEqual(failure['last_completed_guard'], previous_guard)
                 self.assertNotIn('sensitive detail', json.dumps(report))
 
+    def test_rollback_failure_retains_operation_and_sanitized_exit_classification(self):
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        private_output = 'permission denied token=synthetic-private-token'
+        completed = subprocess.CompletedProcess(
+            ['operatoros-deploy.sh', 'rollback'], 23, '', private_output,
+        )
+        with patch.object(rehearsal, 'REPORT', report), patch.object(rehearsal, 'log'), \
+             patch.object(rehearsal.subprocess, 'run', return_value=completed):
+            rehearsal.deployment_progress(
+                'application_rollback_started', completed_guard='locked_application_state_unchanged',
+                application_rollback='started',
+            )
+            with self.assertRaises(rehearsal.RehearsalError) as caught:
+                rehearsal.run_cli(
+                    ['operatoros-deploy.sh', 'rollback'], operation_id='application_rollback',
+                )
+            rehearsal.retain_deployment_failure(caught.exception)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_APPLICATION_ROLLBACK_FAILED')
+        self.assertEqual(failure['phase'], 'application_rollback_started')
+        self.assertEqual(failure['last_completed_guard'], 'locked_application_state_unchanged')
+        self.assertEqual(failure['exit_code'], 23)
+        self.assertEqual(failure['operation_id'], 'application_rollback')
+        self.assertEqual(failure['operation_failure_classification'], 'permission_rejected')
+        self.assertNotIn(private_output, json.dumps(report))
+
+    def test_rollback_launch_failure_retains_sanitized_exception_classification(self):
+        failures = (
+            (FileNotFoundError('private executable path'), 'command_not_found'),
+            (subprocess.TimeoutExpired('private executable path', 300), 'subprocess_timeout'),
+        )
+        for cause, classification in failures:
+            with self.subTest(exception=type(cause).__name__):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report), patch.object(rehearsal, 'log'), \
+                     patch.object(rehearsal.subprocess, 'run', side_effect=cause):
+                    rehearsal.deployment_progress(
+                        'application_rollback_started', completed_guard='locked_application_state_unchanged',
+                        application_rollback='started',
+                    )
+                    with self.assertRaises(rehearsal.RehearsalError) as caught:
+                        rehearsal.run_cli(
+                            ['operatoros-deploy.sh', 'rollback'], operation_id='application_rollback',
+                        )
+                    rehearsal.retain_deployment_failure(caught.exception)
+
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], 'DEPLOY_APPLICATION_ROLLBACK_FAILED')
+                self.assertEqual(failure['exit_code'], None)
+                self.assertEqual(failure['operation_id'], 'application_rollback')
+                self.assertEqual(failure['operation_failure_classification'], classification)
+                self.assertEqual(failure['subprocess_exception_class'], type(cause).__name__)
+                self.assertNotIn(str(cause), json.dumps(report))
+
     def test_schema_validation_failure_reports_exact_operation_boundary_and_exit(self):
         errors = (
             rehearsal.RehearsalError('safe wrapper message'),

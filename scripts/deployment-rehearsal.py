@@ -340,7 +340,8 @@ def retain_context_failure(error: BaseException) -> None:
 def deployment_progress(phase: str, *, completed_guard: str | None = None,
                         oci_import: str | None = None, quadlet_staging: str | None = None,
                         application_start: str | None = None,
-                        application_acceptance: str | None = None) -> None:
+                        application_acceptance: str | None = None,
+                        application_rollback: str | None = None) -> None:
     record = REPORT.get("deployment")
     if not isinstance(record, dict):
         return
@@ -349,7 +350,8 @@ def deployment_progress(phase: str, *, completed_guard: str | None = None,
         record["last_completed_guard"] = completed_guard
     for name, value in (("oci_import", oci_import), ("quadlet_staging", quadlet_staging),
                         ("application_start", application_start),
-                        ("application_acceptance", application_acceptance)):
+                        ("application_acceptance", application_acceptance),
+                        ("application_rollback", application_rollback)):
         if value is not None:
             record[name] = value
 
@@ -399,6 +401,7 @@ def retain_deployment_failure(error: BaseException) -> None:
             "deployment_cli_deploy_started": "DEPLOY_CLI_DEPLOY_FAILED",
             "application_start_started": "DEPLOY_APPLICATION_START_FAILED",
             "application_acceptance_started": "DEPLOY_APPLICATION_ACCEPTANCE_FAILED",
+            "application_rollback_started": "DEPLOY_APPLICATION_ROLLBACK_FAILED",
         }.get(phase, "DEPLOY_OPERATION_FAILED")
         path_category = None
         explanation = "A rehearsal deployment operation failed."
@@ -420,6 +423,9 @@ def retain_deployment_failure(error: BaseException) -> None:
         "observed": observed,
         "explanation": explanation,
     }
+    subprocess_exception_class = getattr(error, "subprocess_exception_class", None)
+    if subprocess_exception_class in {"FileNotFoundError", "PermissionError", "TimeoutExpired", "OSError"}:
+        failure["subprocess_exception_class"] = subprocess_exception_class
     setup = REPORT.get("synthetic_database_setup")
     if phase == "synthetic_database_setup_started" and isinstance(setup, dict):
         detail = setup.get("failure")
@@ -439,6 +445,12 @@ def retain_deployment_failure(error: BaseException) -> None:
             classification = schema_rejection.get("failure_classification")
             if classification in REHEARSAL_FAILURE_CLASSIFICATIONS:
                 failure["operation_failure_classification"] = classification
+    operation_id = getattr(error, "operation_id", None)
+    if operation_id == "application_rollback":
+        failure["operation_id"] = operation_id
+        classification = getattr(error, "failure_classification", None)
+        if classification in REHEARSAL_FAILURE_CLASSIFICATIONS:
+            failure["operation_failure_classification"] = classification
     record["failure"] = failure
 
 
@@ -451,6 +463,7 @@ def initial_deployment_record() -> dict[str, Any]:
         "quadlet_staging": "not_started",
         "application_start": "not_started",
         "application_acceptance": "not_started",
+        "application_rollback": "not_started",
         "schema_rejection": {"status": "not_started", "failure_code": None, "exit_code": None},
         "failure": None,
     }
@@ -1108,7 +1121,10 @@ def deployment_command(config: Path, action: str, *, backup_name: str | None = N
 
 
 def run_cli(args: list[str], *, expect_success: bool = True,
-            needs_token: bool = False) -> subprocess.CompletedProcess[str]:
+            needs_token: bool = False,
+            operation_id: str | None = None) -> subprocess.CompletedProcess[str]:
+    require(operation_id in (None, "application_rollback"),
+            "deployment CLI operation identifier is not allowlisted")
     env = system_environment()
     for name in ("GITHUB_ACTIONS", "GITHUB_REPOSITORY", "GITHUB_REF", "GITHUB_EVENT_NAME",
                  "GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT", "RUNNER_TEMP"):
@@ -1117,10 +1133,27 @@ def run_cli(args: list[str], *, expect_success: bool = True,
     env["OPERATOROS_REHEARSAL_CONFIRMED"] = "true"
     if needs_token:
         env["OPERATOROS_RELEASE_TOKEN"] = os.environ["OPERATOROS_RELEASE_TOKEN"]
-    result = subprocess.run(args, env=env, capture_output=True, text=True, timeout=300, check=False)
+    try:
+        result = subprocess.run(args, env=env, capture_output=True, text=True, timeout=300, check=False)
+    except (OSError, subprocess.TimeoutExpired) as cause:
+        error = RehearsalError("deployment CLI could not complete; inspect the non-secret rehearsal log")
+        error.failure_classification = classify_subprocess_failure(
+            args, exception_class=type(cause).__name__,
+        )
+        error.subprocess_exception_class = type(cause).__name__
+        if operation_id is not None:
+            error.operation_id = operation_id
+        raise error from cause
     log("deployment_cli", exit_code=result.returncode)
     if expect_success and result.returncode != 0:
-        raise RehearsalError("deployment CLI failed; inspect the non-secret rehearsal log")
+        error = RehearsalError("deployment CLI failed; inspect the non-secret rehearsal log")
+        error.exit_code = result.returncode
+        error.failure_classification = classify_subprocess_failure(
+            args, result.stdout + "\n" + result.stderr,
+        )
+        if operation_id is not None:
+            error.operation_id = operation_id
+        raise error
     if not expect_success and result.returncode == 0:
         raise RehearsalError("deployment CLI accepted an invalid test input")
     return result
@@ -1563,7 +1596,7 @@ def rehearse(workspace: Path, diagnostics: Path,
         deployment_progress("application_start_completed", completed_guard="services_ready",
                             application_start="completed")
 
-        before_deploy = deploy.sha_db_snapshot(cfg["data_dir"])
+        before_deploy_identity = deploy.sqlite_main_identity(cfg["data_dir"])
         wrong = run_cli(deployment_command(config, "verify", wrong_source=True),
                         expect_success=False, needs_token=True)
         require("artifact name does not identify" in wrong.stderr,
@@ -1572,8 +1605,9 @@ def rehearse(workspace: Path, diagnostics: Path,
 
         deployment_progress("deployment_cli_deploy_started")
         run_cli(deployment_command(config, "deploy", backup_name=backups[0].name), needs_token=True)
-        require(deploy.sha_db_snapshot(cfg["data_dir"]) == before_deploy,
-                "SQLite main/WAL/SHM changed during the real deployment")
+        deploy.sha_db_snapshot(cfg["data_dir"])
+        require(deploy.sqlite_main_identity(cfg["data_dir"]) == before_deploy_identity,
+                "primary SQLite database file was replaced during the real deployment")
         report = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
                                      "--config", str(config)]).stdout)
         require(report.get("state") == "healthy", "deployed release status is not healthy")
@@ -1681,13 +1715,17 @@ def rehearse(workspace: Path, diagnostics: Path,
         REPORT["checks"]["concurrent_lock_rejected"] = True
         REPORT["checks"]["locked_application_state_unchanged"] = True
 
-        before_rollback = deploy.sha_db_snapshot(cfg["data_dir"])
+        before_rollback_identity = deploy.sqlite_main_identity(cfg["data_dir"])
+        deployment_progress("application_rollback_started",
+                            completed_guard="locked_application_state_unchanged",
+                            application_rollback="started")
         rollback = run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "rollback", legacy_release_id,
-                            "--config", str(config), "--yes"])
+                            "--config", str(config), "--yes"], operation_id="application_rollback")
         require(rollback.returncode == 0 and "rolled_back" in rollback.stdout,
                 "application-only rollback failed")
-        require(deploy.sha_db_snapshot(cfg["data_dir"]) == before_rollback,
-                "SQLite main/WAL/SHM changed during application-only rollback")
+        deploy.sha_db_snapshot(cfg["data_dir"])
+        require(deploy.sqlite_main_identity(cfg["data_dir"]) == before_rollback_identity,
+                "primary SQLite database file was replaced during application-only rollback")
         wait_url(cfg["web_url"] + "/", 200)
         shell_response = subprocess.run(["curl", "--silent", "--show-error", "--max-time", "10", cfg["web_url"] + "/"],
                                         env=system_environment(), capture_output=True, text=True, check=False)
@@ -1703,8 +1741,12 @@ def rehearse(workspace: Path, diagnostics: Path,
                                                  "--config", str(config)]).stdout)
         require(rolled_back_status.get("state") == "healthy", "rollback did not restore a healthy application state")
         REPORT["checks"]["application_rollback_sqlite_preserved"] = True
+        deployment_progress("application_rollback_completed",
+                            completed_guard="application_rollback_sqlite_preserved",
+                            application_rollback="completed")
 
         interrupted_db_before = deploy.sha_db_snapshot(cfg["data_dir"])
+        interrupted_db_identity = deploy.sqlite_main_identity(cfg["data_dir"])
         interrupted_previous = {
             "old_release_path": str(previous_spa.resolve(strict=True)),
             "old_release_id": previous_spa.name,
@@ -1731,8 +1773,9 @@ def rehearse(workspace: Path, diagnostics: Path,
                              "--config", str(config), "--yes"])
         require(recovered.returncode == 0 and "rolled_back" in recovered.stdout,
                 "interrupted deployment could not restore its recorded previous release")
-        require(deploy.sha_db_snapshot(cfg["data_dir"]) == interrupted_db_before,
-                "SQLite main/WAL/SHM changed during interrupted transaction recovery")
+        deploy.sha_db_snapshot(cfg["data_dir"])
+        require(deploy.sqlite_main_identity(cfg["data_dir"]) == interrupted_db_identity,
+                "primary SQLite database file was replaced during interrupted transaction recovery")
         final_status = json.loads(run_cli([str(ROOT / "scripts/operatoros-deploy.sh"), "status",
                                            "--config", str(config)]).stdout)
         require(final_status.get("state") == "healthy" and

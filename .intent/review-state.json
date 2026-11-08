@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "de18b06df7381211886d5dcb93e50e72c9e958a4bcab8c68fd42b8c7da7d3da7",
+      "fingerprint": "00858c3040732947f36578d9a4cc0000468ee32405a0428bf822426dda3426da",
       "snapshot": {
-        "CHANGELOG.md": "45b62a9fef449e9624af27ed24dcaf5aa15db20009cca72aab22467e0eda3ca4"
+        "CHANGELOG.md": "48059d19b9932d6e9c6cb0d9fdf35cc9d7f0b193440f15cac3cda9c1b3674e47"
       },
-      "head": "403765694c8ebe5f9e472c157d1bda5620c0607e",
+      "head": "177f43cff46ad066d9d9364b0fba49a2ec0d2634",
       "outcome": "no-change",
-      "reason": "The changelog now identifies this PR; this rehearsal-only correction still does not change installed reusable skill guidance.",
+      "reason": "The PR number completes the changelog reference and does not change project skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 403765694c8ebe5f9e472c157d1bda5620c0607e"
+        "Changed: CHANGELOG.md at 177f43cff46ad066d9d9364b0fba49a2ec0d2634"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "76bb5be5a8ef15bf90d57882601784de6ca0cede7a539e35fa83bf2d8498fb93",
+      "fingerprint": "955a9dda389bda2d0b110f34eda558c753e375ccd2bc6e04e5875578795762f7",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "7e32234cb4ed53afc8be8fcf8ce327052e1199c1dc5b07146fabc47eb0747abd"
+        "scripts/tests/test_release_bundle.py": "7f2a958d0f0fc8b8d16b7d104725090064945a14913aee8bc74048666f46eb0d"
       },
-      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
+      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
       "outcome": "no-change",
-      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
+      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
+        "Changed: scripts/tests/test_release_bundle.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "3aba77862056c913755c9a71f18cfd74c71f56c08c9032271e558dc2781311ec",
+      "fingerprint": "7ba07083476b2952f5267099600e1ac63b727ecdc6fb3d4957d4f4df12093683",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "2753d4fc94cf2fac7138f357a5a17ed4b58ce7f24e2084c84c72cf7c44da21ab"
+        "scripts/operatoros_deploy.py": "efb8bf46d3d22e1329f910b7424c0c92ed0ebe06240f1839705643caea8973b0"
       },
-      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
+      "head": "3bb7267605155e3561ad9b8a47f79d93554e89f1",
       "outcome": "no-change",
-      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
+      "reason": "The Python SQLite identity helper does not change installed skill guidance.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
+        "Changed: scripts/operatoros_deploy.py at 3bb7267605155e3561ad9b8a47f79d93554e89f1"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "7d3fd7879ae077c816d6e610c30b0296ce60160b863d86c15a112ae6534a7706",
+      "fingerprint": "89ec4e32a8f84a8e4366ca4fee0ac42b971cdf601a4fb0d133418cf341a1db21",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "63d655606be646cfa583aad16d059ca0893dbe4d158825de6348acd95d722bb8"
+        "scripts/tests/test_operatoros_deploy.py": "f1fdcab830d67de28101131a4fa25495045e0526222176b62c40082cd5719eb1"
       },
-      "head": "19bafe77a4418c81b2f9b007cd4153e08a1ec6cf",
+      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
       "outcome": "no-change",
-      "reason": "PR #373 now also redacts executable paths from existing deployment error messages; no skill guidance or behavior changed.",
+      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 19bafe77a4418c81b2f9b007cd4153e08a1ec6cf"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "0a6301cba0b6c36c68910124d552a564449cd1b656453b814375ce17b3bee0c2",
+      "fingerprint": "9517bc9d7edd1eb5cfeb91fbc3bed19fbf08f45bd87c55fdf0debd1af141565e",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "e644233ba6041b00ef6a191daeede301c96377030de1543b755c5c82b1b7b0bf"
+        "scripts/deployment-rehearsal.py": "7846ea987449934381e52107f7e5c8d85e12e37ac157b8481b572f3cd49998e8"
       },
-      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
+      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
       "outcome": "no-change",
-      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
+      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
+        "Changed: scripts/deployment-rehearsal.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
