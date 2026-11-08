@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b2cecf88ae768141f3a9e62f4f1fe819eeac8e2d5740fca7904a1779e13cca45",
+      "fingerprint": "7d29f91aff66766d0aafd5a0b8fca2e382d1036722da49888f1feab0fd5d9314",
       "snapshot": {
-        "CHANGELOG.md": "eee0d3a83c67b8a1ae0a65730625884d70d3681d210ba5cc36d2bd72d4fb70dc"
+        "CHANGELOG.md": "437dca3a42fece2872f0945965c233368037a40a86dd23284276dc26828053e3"
       },
-      "head": "543dbc04f2e6e8f447958aa8adb6176b457f2e62",
+      "head": "5f20c4d2b267d3ea955c55a06373220686dd965d",
       "outcome": "no-change",
-      "reason": "PR #370 adds its assigned identifier to the Unreleased changelog bullet; no project skill guidance applies or changed.",
+      "reason": "PR #371 identifier added to the Unreleased changelog entry; it changes release metadata only and does not affect project guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 543dbc04f2e6e8f447958aa8adb6176b457f2e62"
+        "Changed: CHANGELOG.md at 5f20c4d2b267d3ea955c55a06373220686dd965d"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "161df9e8132330945fda8b48807f3ed046ca4bd8177c39408674b78818da745e",
+      "fingerprint": "508332ec95914c7cd81ec47d4f706e735c52ac3e9d34c3e5f2992b11e4e5ac45",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "b9ef5ead52a48c7e8ac9c505f3c96242d0da01e7763ef25b147fa9163f2a61e8"
+        "scripts/tests/test_release_bundle.py": "31d715f90386fec8c6dd6f41e7d4877d9cf2098e8084e08565718cd3d9f78c56"
       },
-      "head": "5e40948b214c792fd4763b15798d563801ce1633",
+      "head": "3a7eaf9e0dcc60c3171cca52a12349b41ef18156",
       "outcome": "no-change",
-      "reason": "Loop 66 changes are limited to deployment rehearsal, cleanup diagnostics, and regression tests; no existing skill guidance applies or changed.",
+      "reason": "Loop 69 changes correct existing synthetic-database bootstrap ordering and add operation-level rehearsal diagnostics/tests; the repository has no applicable deployment skill or guidance files to update.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 5e40948b214c792fd4763b15798d563801ce1633"
+        "Changed: scripts/tests/test_release_bundle.py at 3a7eaf9e0dcc60c3171cca52a12349b41ef18156"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10045,15 +10045,15 @@
       ]
     },
     "source:scripts/release-consumer-cleanup.py": {
-      "fingerprint": "10168083192fc6ff96ebcf667f2dc722f5317e7ee43083da8c089e44c110f138",
+      "fingerprint": "7a98c00729ec77986c64df63a993ece2e5065f7bff604b25045fc8f0b3be2420",
       "snapshot": {
-        "scripts/release-consumer-cleanup.py": "ecf4260c0ee49159c98b702b41a8b699dca186a10ca6e6b506b7306a6e98177b"
+        "scripts/release-consumer-cleanup.py": "1784ccfe02438ceca63a58c2fc089c12c63a08ed2ab2b2d453cbba4210b5425a"
       },
-      "head": "5e40948b214c792fd4763b15798d563801ce1633",
+      "head": "3a7eaf9e0dcc60c3171cca52a12349b41ef18156",
       "outcome": "no-change",
-      "reason": "Loop 66 changes are limited to deployment rehearsal, cleanup diagnostics, and regression tests; no existing skill guidance applies or changed.",
+      "reason": "Loop 69 changes correct existing synthetic-database bootstrap ordering and add operation-level rehearsal diagnostics/tests; the repository has no applicable deployment skill or guidance files to update.",
       "evidence": [
-        "Changed: scripts/release-consumer-cleanup.py at 5e40948b214c792fd4763b15798d563801ce1633"
+        "Changed: scripts/release-consumer-cleanup.py at 3a7eaf9e0dcc60c3171cca52a12349b41ef18156"
       ]
     },
     "source:scripts/operatoros-deploy.sh": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "d57dcdc578abc7785167a2e6a76779e65060a451057a459eeeadf21fe7ffcc9b",
+      "fingerprint": "42318ee7260d4dc94b91e6e29a12971d173ad62e8d7ff5bce699f050dd610e55",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "c55373af1262ca519ea42445bf2c6bce72edeb3b0bfe0a2aa757e61a35505a10"
+        "scripts/deployment-rehearsal.py": "f459f00dea51641c555b74ebccef64e3e4070fe86e2d369a7c5e4ff2ee304296"
       },
-      "head": "5e40948b214c792fd4763b15798d563801ce1633",
+      "head": "3a7eaf9e0dcc60c3171cca52a12349b41ef18156",
       "outcome": "no-change",
-      "reason": "Loop 66 changes are limited to deployment rehearsal, cleanup diagnostics, and regression tests; no existing skill guidance applies or changed.",
+      "reason": "Loop 69 changes correct existing synthetic-database bootstrap ordering and add operation-level rehearsal diagnostics/tests; the repository has no applicable deployment skill or guidance files to update.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 5e40948b214c792fd4763b15798d563801ce1633"
+        "Changed: scripts/deployment-rehearsal.py at 3a7eaf9e0dcc60c3171cca52a12349b41ef18156"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
