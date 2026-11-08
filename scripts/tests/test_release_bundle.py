@@ -179,22 +179,27 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertNotIn('sensitive detail', json.dumps(report))
 
     def test_schema_validation_failure_reports_exact_operation_boundary_and_exit(self):
-        report = {'deployment': rehearsal.initial_deployment_record()}
-        report['deployment']['status'] = 'in_progress'
-        with patch.object(rehearsal, 'REPORT', report):
-            rehearsal.deployment_progress(
-                'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
-            )
-            error = rehearsal.RehearsalError('safe wrapper message')
-            error.exit_code = 1
-            rehearsal.retain_deployment_failure(error)
+        errors = (
+            rehearsal.RehearsalError('safe wrapper message'),
+            deploy.DeployError('safe command failure', exit_code=1),
+        )
+        errors[0].exit_code = 1
+        for error in errors:
+            with self.subTest(error_class=type(error).__name__):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report):
+                    rehearsal.deployment_progress(
+                        'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
+                    )
+                    rehearsal.retain_deployment_failure(error)
 
-        failure = report['deployment']['failure']
-        self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
-        self.assertEqual(failure['phase'], 'schema_validation_started')
-        self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
-        self.assertEqual(failure['exit_code'], 1)
-        self.assertNotIn('safe wrapper message', json.dumps(report))
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
+                self.assertEqual(failure['phase'], 'schema_validation_started')
+                self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
+                self.assertEqual(failure['exit_code'], 1)
+                self.assertNotIn(str(error), json.dumps(report))
 
     def test_synthetic_database_setup_fails_closed_on_preexisting_data_directory(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
@@ -1217,6 +1222,26 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
         self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
         self.assertEqual(sentinel.read_text(encoding='utf-8'), 'unrelated')
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+
+    def test_cleanup_rejects_hardlinked_workspace_entry_before_changing_directory_modes(self):
+        files = fixture()
+        release = SimpleNamespace(
+            files=files,
+            bundle_path=self.temp_parent / 'release.tar',
+            manifest=json.loads(files['manifest.json']),
+        )
+        releases = self.workspace / 'web/releases'
+        releases.mkdir(parents=True, mode=0o700)
+        spa = deploy.materialize_spa({'root': self.workspace}, release, 'legacy-' + SHA)
+        os.link(self.external, self.workspace / 'unexpected-hardlink')
+
+        self.assertEqual(self.run_cleanup(), 1)
+
+        self.assertTrue(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_WORKSPACE_REMOVAL_FAILED')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], ['workspace'])
+        self.assertEqual(spa.joinpath('client').stat().st_mode & 0o777, 0o555)
         self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
 
     def test_cleanup_result_reports_log_created_during_cleanup(self):

@@ -344,7 +344,7 @@ class PodmanIsolationTests(unittest.TestCase):
             "graphroot": self.context.graphroot,
             "runroot": self.context.runroot,
         }
-        for failure_code in deploy.SCHEMA_VALIDATION_FAILURE_CODES:
+        for failure_code in sorted(deploy.SCHEMA_VALIDATION_FAILURE_CODES):
             with self.subTest(failure_code=failure_code):
                 result = subprocess.CompletedProcess(
                     ["podman", "run"], 1, "", f"{failure_code}: expected schema secret-marker\n",
