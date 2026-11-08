@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "692e0190d36d92c373d710f0a1190021d33c3a0873591fd40d61b83e23eeda43",
+      "fingerprint": "de18b06df7381211886d5dcb93e50e72c9e958a4bcab8c68fd42b8c7da7d3da7",
       "snapshot": {
-        "CHANGELOG.md": "1fbfdf2ab49962364983518dec94d38743076aede7318249cffeaaf0994b6ac7"
+        "CHANGELOG.md": "45b62a9fef449e9624af27ed24dcaf5aa15db20009cca72aab22467e0eda3ca4"
       },
-      "head": "5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea",
+      "head": "403765694c8ebe5f9e472c157d1bda5620c0607e",
       "outcome": "no-change",
-      "reason": "This focused rehearsal-only Podman context fix does not change the installed Elysia skill or any other reusable skill guidance.",
+      "reason": "The changelog now identifies this PR; this rehearsal-only correction still does not change installed reusable skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5e2c15ff2e05f97c8e6dee5390d5a092fec7eaea"
+        "Changed: CHANGELOG.md at 403765694c8ebe5f9e472c157d1bda5620c0607e"
       ]
     },
     "source:COMMANDS.md": {
