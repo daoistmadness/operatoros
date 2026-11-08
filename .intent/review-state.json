@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "1bfa2bfe002b2d3c8f6778790385cba68fe0c47fad16881574bcd0254848ad9d",
+      "fingerprint": "59c22964800ff32c1da0add517ecf9d5d9ec4e6f56dc4a169d33419a612c5d4c",
       "snapshot": {
-        "CHANGELOG.md": "5901f23fcf857a915bb1ca90a64cc502161dd00717a4f494cb8c9d6e6cf5c49e"
+        "CHANGELOG.md": "eeebe72944e51f8ec65daadf70fd397d46fda513d3bb33e7a6a960ad6a7abfad"
       },
-      "head": "510b131191af5efceaff3165619f61f63c5ae01d",
+      "head": "8d1d958544da5fef14e6829316932f369a7f66d1",
       "outcome": "no-change",
-      "reason": "Loop 70 follow-up adds safe command failure classifications to existing deployment diagnostics; no guidance or skill behavior changed.",
+      "reason": "PR number was added to the existing changelog bullet; no guidance or skill behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 510b131191af5efceaff3165619f61f63c5ae01d"
+        "Changed: CHANGELOG.md at 8d1d958544da5fef14e6829316932f369a7f66d1"
       ]
     },
     "source:COMMANDS.md": {
