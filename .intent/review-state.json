@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "00858c3040732947f36578d9a4cc0000468ee32405a0428bf822426dda3426da",
+      "fingerprint": "4837de09f507b34c445be481e4f7981e0743cebc2f3b9be46a10370b4668f682",
       "snapshot": {
-        "CHANGELOG.md": "48059d19b9932d6e9c6cb0d9fdf35cc9d7f0b193440f15cac3cda9c1b3674e47"
+        "CHANGELOG.md": "dc345d0befe3c5f79c3bf752618bed0050fd5c3d45c0abfe1ea238b93a1214ef"
       },
-      "head": "177f43cff46ad066d9d9364b0fba49a2ec0d2634",
+      "head": "9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43",
       "outcome": "no-change",
-      "reason": "The PR number completes the changelog reference and does not change project skill guidance.",
+      "reason": "The new rehearsal assertion and changelog entry do not change installed skill guidance; existing documented procedures remain accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at 177f43cff46ad066d9d9364b0fba49a2ec0d2634"
+        "Changed: CHANGELOG.md at 9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43"
       ]
     },
     "source:COMMANDS.md": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "f9de8306b81e733316abf06172c163abaaa1fe5b0770a6134ea3677feb42276a",
+      "fingerprint": "2cc5f17b3e9c82403e27a6f542376c00d020ad1c0e831de054f4366577a04847",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "bc620479c45437966de01a873af08fb5c964a167a962283edd6f48a8d66fd4c0"
+        "scripts/deployment-rehearsal.py": "194ec3b46bb6150362cff740039e98254c7c253fecd7a7becd5417574522d0e3"
       },
-      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
+      "head": "9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43",
       "outcome": "no-change",
-      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
+      "reason": "The new rehearsal assertion and changelog entry do not change installed skill guidance; existing documented procedures remain accurate.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
+        "Changed: scripts/deployment-rehearsal.py at 9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
