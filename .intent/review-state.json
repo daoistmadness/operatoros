@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "955a9dda389bda2d0b110f34eda558c753e375ccd2bc6e04e5875578795762f7",
+      "fingerprint": "205549a72a0d3807fb36b1d81694f1efaeb751830996bd95dfb3ffd19a47e5d5",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "7f2a958d0f0fc8b8d16b7d104725090064945a14913aee8bc74048666f46eb0d"
+        "scripts/tests/test_release_bundle.py": "1a18bc38e6a9b49fb45e7327e748f9bcd44c78deaac5fff08091b7f0799a5305"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
       "outcome": "no-change",
-      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
+      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/tests/test_release_bundle.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "9517bc9d7edd1eb5cfeb91fbc3bed19fbf08f45bd87c55fdf0debd1af141565e",
+      "fingerprint": "f9de8306b81e733316abf06172c163abaaa1fe5b0770a6134ea3677feb42276a",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "7846ea987449934381e52107f7e5c8d85e12e37ac157b8481b572f3cd49998e8"
+        "scripts/deployment-rehearsal.py": "bc620479c45437966de01a873af08fb5c964a167a962283edd6f48a8d66fd4c0"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
       "outcome": "no-change",
-      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
+      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/deployment-rehearsal.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {

@@ -130,6 +130,125 @@ class BundleTests(unittest.TestCase):
 
 
 class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_sqlite_preservation_requires_a_post_backup_audit_marker(self):
+        bun = shutil.which('bun')
+        if bun is None:
+            self.skipTest('Bun is required to exercise the rehearsal SQLite snippets')
+
+        with tempfile.TemporaryDirectory(prefix='operatoros-sqlite-preservation-') as temporary:
+            database = Path(temporary) / 'operatoros.sqlite'
+            fixture_setup = (
+                "import { Database } from 'bun:sqlite'; "
+                "const db = new Database(process.argv[1]); "
+                "db.exec(`CREATE TABLE users (username TEXT PRIMARY KEY, role TEXT NOT NULL, "
+                "is_active INTEGER NOT NULL); "
+                "CREATE TABLE operations_audit_events (id INTEGER PRIMARY KEY, event_id TEXT NOT NULL UNIQUE, "
+                "occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, actor_id TEXT NOT NULL, "
+                "actor_role TEXT NOT NULL, capability TEXT NOT NULL, entity_type TEXT NOT NULL, "
+                "entity_reference TEXT NOT NULL, operation TEXT NOT NULL, risk_level TEXT NOT NULL, "
+                "source TEXT NOT NULL, success INTEGER NOT NULL, metadata TEXT NOT NULL, "
+                "schema_version TEXT NOT NULL); "
+                "CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, predecessor TEXT, "
+                "schema_fingerprint TEXT NOT NULL, protected_fingerprints TEXT NOT NULL, "
+                "approved_by TEXT NOT NULL, applied_at TEXT NOT NULL); "
+                "INSERT INTO users VALUES ('synthetic-admin', 'admin', 1);`); db.close();"
+            )
+            setup = subprocess.run([bun, '-e', fixture_setup, str(database)], capture_output=True, text=True)
+            self.assertEqual(setup.returncode, 0, setup.stderr)
+
+            marker_without_schema = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_MARKER_SETUP, str(database),
+                 'synthetic-admin', '9e8726e5-4250-4353-9635-0c5e42d96e75'],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(marker_without_schema.returncode, 0)
+            audit_count = subprocess.run(
+                [bun, '-e', "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1], {readonly:true}); "
+                 "console.log(db.query('SELECT count(*) AS count FROM operations_audit_events').get().count); db.close();",
+                 str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(audit_count.returncode, 0, audit_count.stderr)
+            self.assertEqual(audit_count.stdout.strip(), '0')
+
+            add_schema_versions = (
+                "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1]); "
+                "db.query('INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?, ?)').run("
+                "'20261026_s53', null, 'old', '[]', 'test', '2026-10-26T00:00:00Z'); "
+                "db.query('INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?, ?)').run("
+                "'20261027_s54', '20261026_s53', 'current', '[]', 'test', '2026-10-27T00:00:00Z'); "
+                "db.close();"
+            )
+            migration_setup = subprocess.run(
+                [bun, '-e', add_schema_versions, str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(migration_setup.returncode, 0, migration_setup.stderr)
+
+            wal = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_WAL_SETUP, str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(wal.returncode, 0, wal.stderr)
+
+            marker = '92a9c0d2-b20e-4bea-9bce-39ea24c83a25'
+            marker_setup = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_MARKER_SETUP, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(marker_setup.returncode, 0, marker_setup.stderr)
+            self.assertEqual(json.loads(marker_setup.stdout), {
+                'marker_created': True,
+                'schema_version': '20261027_s54',
+            })
+
+            assertion = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(assertion.returncode, 0, assertion.stderr)
+            self.assertEqual(json.loads(assertion.stdout), {
+                'integrity_check': 'ok',
+                'foreign_key_violations': 0,
+                'journal_mode': 'wal',
+                'synthetic_admin_preserved': True,
+                'synthetic_preservation_marker': True,
+            })
+
+            # Losing this in-place write leaves the seeded admin, integrity,
+            # and WAL checks intact, matching the blind spot in the old test.
+            remove_marker = (
+                "import { Database } from 'bun:sqlite'; "
+                "const db = new Database(process.argv[1]); "
+                "db.query('DELETE FROM operations_audit_events WHERE event_id = ?').run(process.argv[2]); "
+                "db.close();"
+            )
+            removed = subprocess.run(
+                [bun, '-e', remove_marker, str(database), marker], capture_output=True, text=True,
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            old_assertion = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin'],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(old_assertion.returncode, 0, old_assertion.stderr)
+            self.assertIsNone(json.loads(old_assertion.stdout)['synthetic_preservation_marker'])
+            lost_marker = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(lost_marker.returncode, 0)
+
+    def test_sqlite_marker_setup_follows_verified_backup_and_precedes_deployment(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
+        rehearsal_body = script.split('def rehearse(', 1)[1]
+        backup_verified = rehearsal_body.index('deployment_progress("synthetic_backup_verification_completed"')
+        marker_started = rehearsal_body.index('deployment_progress("sqlite_preservation_marker_setup_started"')
+        quadlet_started = rehearsal_body.index('deployment_progress("quadlet_staging_started"')
+        self.assertLess(backup_verified, marker_started)
+        self.assertLess(marker_started, quadlet_started)
+        self.assertEqual(rehearsal_body.count(
+            'SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),\n'
+            '             admin_username, preservation_marker]'
+        ), 4)
+
     def test_rehearsal_workspace_scaffold_leaves_synthetic_data_to_its_initializer(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-scaffold-') as temporary:
             runner_temp = Path(temporary).resolve()
@@ -165,6 +284,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             ('quadlet_staging_started', 'DEPLOY_QUADLET_STAGING_FAILED', 'synthetic_database_ready'),
             ('application_start_started', 'DEPLOY_APPLICATION_START_FAILED', 'quadlet_files_staged'),
             ('application_acceptance_started', 'DEPLOY_APPLICATION_ACCEPTANCE_FAILED', 'deployed_application_healthy'),
+            ('sqlite_preservation_marker_setup_started',
+             'DEPLOY_SQLITE_PRESERVATION_MARKER_SETUP_FAILED', 'synthetic_backup_verified'),
         )
         for phase, expected_code, previous_guard in cases:
             with self.subTest(phase=phase):
@@ -177,6 +298,29 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertEqual(failure['code'], expected_code)
                 self.assertEqual(failure['last_completed_guard'], previous_guard)
                 self.assertNotIn('sensitive detail', json.dumps(report))
+
+    def test_interrupted_recovery_failure_has_its_own_sanitized_phase_and_code(self):
+        private_detail = 'failed at /private/runner/deploy/operatoros.sqlite token=synthetic-secret'
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        error = rehearsal.RehearsalError(private_detail)
+        error.exit_code = 23
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress(
+                'interrupted_transaction_recovery_started',
+                completed_guard='application_rollback_completed',
+            )
+            rehearsal.retain_deployment_failure(error)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_INTERRUPTED_TRANSACTION_RECOVERY_FAILED')
+        self.assertEqual(failure['phase'], 'interrupted_transaction_recovery_started')
+        self.assertEqual(failure['last_completed_guard'], 'application_rollback_completed')
+        self.assertEqual(failure['exit_code'], 23)
+        rendered = json.dumps(report)
+        self.assertNotIn(private_detail, rendered)
+        self.assertNotIn('/private/runner', rendered)
+        self.assertNotIn('synthetic-secret', rendered)
 
     def test_rollback_failure_retains_operation_and_sanitized_exit_classification(self):
         report = {'deployment': rehearsal.initial_deployment_record()}
