@@ -181,11 +181,132 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
             workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
             workspace.mkdir(mode=0o700)
-            (workspace / 'data').mkdir(mode=0o700)
-            with patch.object(rehearsal, 'create_podman_secret') as create_secret:
+            data = workspace / 'data'
+            data.mkdir(mode=0o700)
+            marker = data / 'preserve-me'
+            marker.write_text('unrelated synthetic marker', encoding='utf-8')
+            report = {}
+            environment = {
+                'GITHUB_RUN_ID': '123456789',
+                'GITHUB_RUN_ATTEMPT': '1',
+                'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                'PATH': '/usr/bin:/bin',
+            }
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, environment, clear=True), \
+                 patch.object(rehearsal, 'create_podman_secret') as create_secret:
                 with self.assertRaises(FileExistsError):
                     rehearsal.setup_synthetic_database(workspace, SHA, None)
             create_secret.assert_not_called()
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'unrelated synthetic marker')
+            failure = report['synthetic_database_setup']['failure']
+            self.assertEqual(failure['code'], 'DB_SETUP_DATA_ROOT_CREATE_FAILED')
+            self.assertEqual(failure['classification'], 'unexpected_existing_path')
+            self.assertFalse(report['synthetic_database_setup']['database_initializer_started'])
+
+    def test_database_setup_rejects_missing_run_identity_before_creating_data_root(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-invalid-input-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, {
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                 }, clear=True), \
+                 patch.object(rehearsal, 'create_podman_secret') as create_secret:
+                with self.assertRaises(rehearsal.RehearsalError):
+                    rehearsal.setup_synthetic_database(workspace, SHA, None)
+
+            create_secret.assert_not_called()
+            self.assertFalse((workspace / 'data').exists())
+            setup = report['synthetic_database_setup']
+            self.assertEqual(setup['failure']['code'], 'DB_SETUP_INPUTS_VALIDATION_FAILED')
+            self.assertEqual(setup['failure']['classification'], 'validation_rejected')
+            self.assertEqual(setup['last_completed_operation'], 'none')
+
+    def test_database_setup_bootstrap_failure_identifies_operation_without_raw_output(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-bootstrap-failure-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'deploy').mkdir(mode=0o700)
+            context = private_context(workspace)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            report = {'deployment': rehearsal.initial_deployment_record()}
+            report['deployment'].update({
+                'status': 'in_progress',
+                'phase': 'synthetic_database_setup_started',
+                'last_completed_guard': 'runtime_image_pulled',
+            })
+            calls = []
+            private_output = 'DATA_DIR_NOT_EMPTY /private/runner/path'
+
+            def fail_bootstrap(args, **kwargs):
+                calls.append((args, kwargs))
+                if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
+                    return subprocess.CompletedProcess(args, 1, '', private_output)
+                return subprocess.CompletedProcess(args, 0, '', '')
+
+            environment = {
+                'GITHUB_RUN_ID': '123456789',
+                'GITHUB_RUN_ATTEMPT': '1',
+                'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                'PATH': '/usr/bin:/bin',
+            }
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, environment, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=fail_bootstrap):
+                with self.assertRaises(rehearsal.RehearsalError) as raised:
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
+                rehearsal.retain_deployment_failure(raised.exception)
+
+            setup = report['synthetic_database_setup']
+            self.assertEqual(len(calls), 3)
+            self.assertEqual(setup['current_operation'], 'DB_SETUP_DATABASE_BOOTSTRAP')
+            self.assertEqual(setup['last_completed_operation'], 'DB_SETUP_API_ENV_STAGE')
+            self.assertTrue(setup['database_initializer_started'])
+            self.assertFalse(setup['database_initializer_completed'])
+            self.assertFalse(setup['schema_verification_completed'])
+            self.assertEqual(setup['failure'], {
+                'code': 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED',
+                'operation_id': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                'exception_class': 'SubprocessExit',
+                'exit_code': 1,
+                'classification': 'unexpected_nonempty_data_root',
+            })
+            deployment_failure = report['deployment']['failure']
+            self.assertEqual(deployment_failure['code'], 'DEPLOY_SYNTHETIC_DATABASE_SETUP_FAILED')
+            self.assertEqual(deployment_failure['operation_failure_code'], 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED')
+            self.assertEqual(deployment_failure['last_completed_operation'], 'DB_SETUP_API_ENV_STAGE')
+            rendered = json.dumps(report)
+            self.assertNotIn(private_output, rendered)
+            self.assertNotIn('/private/runner/path', rendered)
+            log_text = (diagnostics / 'rehearsal.log').read_text(encoding='utf-8')
+            self.assertIn('operation=DB_SETUP_DATABASE_BOOTSTRAP status=failed exit=1', log_text)
+            self.assertIn('classification=unexpected_nonempty_data_root', log_text)
+            self.assertNotIn(private_output, log_text)
+            self.assertNotIn('/private/runner/path', log_text)
+
+    def test_subprocess_failure_classification_is_allowlisted_and_distinguishes_causes(self):
+        cases = (
+            (['bun'], '', 'FileNotFoundError', 'command_not_found'),
+            (['bun'], 'Permission denied', None, 'permission_rejected'),
+            (['podman', 'secret', 'create'], 'unexpected failure', None, 'container_command_failed'),
+            (['bun'], 'DATA_DIR_NOT_EMPTY', None, 'unexpected_nonempty_data_root'),
+            (['bun'], 'DATABASE_ALREADY_EXISTS', None, 'database_already_exists'),
+            (['bun'], 'BOOTSTRAP_SCHEMA_MISMATCH', None, 'schema_mismatch'),
+            (['bun'], 'SQLiteError: database is locked', None, 'sqlite_initialization_failure'),
+            (['bun'], 'Cannot find module', None, 'working_directory_or_script_unavailable'),
+            (['bun'], 'No such file or directory', None, 'missing_expected_file'),
+            (['bun'], 'unclassified child output', None, 'nonzero_exit'),
+        )
+        for args, output, exception_class, expected in cases:
+            with self.subTest(expected=expected):
+                self.assertEqual(
+                    rehearsal.classify_subprocess_failure(args, output, exception_class), expected,
+                )
 
     def test_cleanup_environment_keeps_private_image_temp_directory(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cleanup-env-') as temporary:
@@ -421,16 +542,22 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
+            report = {}
             calls = []
 
             def successful_process(args, **kwargs):
                 calls.append((args, kwargs))
                 if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
                     data_dir = Path(kwargs['env']['OPERATOROS_DATA_DIR'])
+                    self.assertEqual(
+                        list(data_dir.iterdir()), [],
+                        'db-cli bootstrap requires an empty synthetic data directory',
+                    )
                     (data_dir / 'operatoros.sqlite').write_bytes(b'synthetic database')
                 return subprocess.CompletedProcess(args, 0, child_output, child_output)
 
             with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal, 'REPORT', report), \
                  patch.dict(os.environ, {
                      'GITHUB_RUN_ID': '123456789',
                      'GITHUB_RUN_ATTEMPT': '1',
@@ -442,6 +569,8 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                     rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 5)
+            self.assertTrue(report['synthetic_database_setup']['schema_verification_completed'])
+            self.assertEqual(report['synthetic_database_setup']['status'], 'completed')
             secret_calls = calls[:2]
             self.assertEqual(secret_calls[0][0], ['podman', 'secret', 'create', auth_name, '-'])
             self.assertEqual(secret_calls[1][0], ['podman', 'secret', 'create', backup_name, '-'])
@@ -577,6 +706,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
+            report = {}
             calls = []
 
             def fail_second_secret(args, **kwargs):
@@ -587,6 +717,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 )
 
             with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal, 'REPORT', report), \
                  patch.dict(os.environ, {
                      'GITHUB_RUN_ID': '123456789',
                      'GITHUB_RUN_ATTEMPT': '1',
@@ -598,6 +729,10 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                     rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 2)
+            setup = report['synthetic_database_setup']
+            self.assertEqual(setup['failure']['operation_id'], 'DB_SETUP_BACKUP_SECRET_CREATE')
+            self.assertEqual(setup['failure']['code'], 'DB_SETUP_BACKUP_SECRET_CREATE_FAILED')
+            self.assertEqual(setup['failure']['classification'], 'container_command_failed')
             secret_values = [call[1]['input'] for call in calls]
             for args, kwargs in calls:
                 self.assertEqual(args[-1], '-')
@@ -613,7 +748,9 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertFalse(any(value.encode() in contents for contents in file_contents))
             diagnostic = (diagnostics / 'rehearsal.log').read_text()
             self.assertIn('subprocess exit=23', diagnostic)
+            self.assertIn('operation=DB_SETUP_BACKUP_SECRET_CREATE status=failed exit=23', diagnostic)
             self.assertNotIn('synthetic-podman-output-marker', diagnostic)
+            self.assertNotIn('synthetic-podman-output-marker', json.dumps(report))
             for value in secret_values:
                 self.assertNotIn(value, diagnostic)
 
@@ -686,6 +823,60 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertEqual(retained['deployment']['failure']['last_completed_guard'], 'podman_context_accepted')
             self.assertEqual(retained['cleanup']['failure_code'], 'CLEANUP_WORKSPACE_FAILED')
             self.assertEqual(retained['cleanup']['status'], 'failed')
+
+    def test_main_records_cleanup_outcome_alongside_database_setup_failure(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-database-cleanup-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 2, 'checks': {}, 'failures': []}
+
+            def fail_database_setup(*_args):
+                report['deployment'] = rehearsal.initial_deployment_record()
+                report['deployment'].update({
+                    'status': 'in_progress',
+                    'phase': 'synthetic_database_setup_started',
+                    'last_completed_guard': 'runtime_image_pulled',
+                })
+                report['synthetic_database_setup'] = rehearsal.initial_synthetic_database_setup_record()
+                report['synthetic_database_setup'].update({
+                    'status': 'failed',
+                    'current_operation': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                    'last_completed_operation': 'DB_SETUP_API_ENV_STAGE',
+                    'database_initializer_started': True,
+                    'failure': {
+                        'code': 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED',
+                        'operation_id': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                        'exception_class': 'SubprocessExit',
+                        'exit_code': 1,
+                        'classification': 'unexpected_nonempty_data_root',
+                    },
+                })
+                error = rehearsal.RehearsalError('synthetic database setup failed')
+                error.exit_code = 1
+                raise error
+
+            def cleanup_succeeds(*_args):
+                report['cleanup'] = {'attempted': True, 'status': 'passed', 'exit_code': 0}
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_database_setup), \
+                 patch.object(rehearsal, 'cleanup_workspace', side_effect=cleanup_succeeds):
+                self.assertEqual(rehearsal.main(), 1)
+
+            retained = json.loads((diagnostics / 'rehearsal-evidence.json').read_text())
+            self.assertEqual(retained['deployment']['failure']['operation_failure_code'],
+                             'DB_SETUP_DATABASE_BOOTSTRAP_FAILED')
+            self.assertEqual(retained['synthetic_database_setup']['cleanup_status'], 'passed')
+            self.assertEqual(retained['cleanup']['status'], 'passed')
 
     def test_main_retains_structured_context_failure_and_cleanup_status(self):
         secret = 'synthetic-podman-output-secret'
@@ -981,6 +1172,23 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         finally:
             process.terminate()
             process.wait(timeout=5)
+
+    def test_cleanup_result_reports_log_created_during_cleanup(self):
+        diagnostics = self.temp_parent / 'release-diagnostics'
+        def logged_fake_podman(arguments, workspace, log_path):
+            result = self.fake_podman(arguments, workspace, log_path)
+            if arguments[0] == 'rm':
+                cleanup.append_log(log_path, 'synthetic container removal completed')
+            return result
+
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman', side_effect=logged_fake_podman):
+            self.assertEqual(cleanup.cleanup(
+                str(self.workspace), str(self.temp_parent), str(diagnostics),
+            ), 0)
+
+        self.assertTrue((diagnostics / 'consumer-cleanup.log').is_file())
+        self.assertTrue(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
 
     def test_deployment_rehearsal_profile_cleans_only_its_scoped_containers(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'

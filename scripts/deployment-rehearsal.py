@@ -59,6 +59,36 @@ SQLITE_ASSERTION = (
 WORKSPACE_PREFIX = "operatoros-deployment-rehearsal."
 MIN_FREE_BYTES = 5 * 1024**3
 MIN_FREE_INODES = 20_000
+DATABASE_SETUP_FAILURE_CODES = {
+    "DB_SETUP_INPUTS_VALIDATION": "DB_SETUP_INPUTS_VALIDATION_FAILED",
+    "DB_SETUP_DATA_ROOT_CREATE": "DB_SETUP_DATA_ROOT_CREATE_FAILED",
+    "DB_SETUP_PODMAN_ENV_VALIDATE": "DB_SETUP_PODMAN_ENV_VALIDATE_FAILED",
+    "DB_SETUP_AUTH_SECRET_CREATE": "DB_SETUP_AUTH_SECRET_CREATE_FAILED",
+    "DB_SETUP_BACKUP_SECRET_CREATE": "DB_SETUP_BACKUP_SECRET_CREATE_FAILED",
+    "DB_SETUP_API_ENV_STAGE": "DB_SETUP_API_ENV_STAGE_FAILED",
+    "DB_SETUP_DATABASE_BOOTSTRAP": "DB_SETUP_DATABASE_BOOTSTRAP_FAILED",
+    "DB_SETUP_DATABASE_SEED": "DB_SETUP_DATABASE_SEED_FAILED",
+    "DB_SETUP_NEGATIVE_FIXTURE_CREATE": "DB_SETUP_NEGATIVE_FIXTURE_CREATE_FAILED",
+    "DB_SETUP_NEGATIVE_SCHEMA_MUTATION": "DB_SETUP_NEGATIVE_SCHEMA_MUTATION_FAILED",
+    "DB_SETUP_COMPLETE": "DB_SETUP_COMPLETION_FAILED",
+}
+DATABASE_SETUP_FAILURE_CLASSES = frozenset({
+    "command_not_found",
+    "container_command_failed",
+    "database_already_exists",
+    "filesystem_failure",
+    "invalid_data_root",
+    "missing_expected_file",
+    "nonzero_exit",
+    "permission_rejected",
+    "schema_mismatch",
+    "sqlite_initialization_failure",
+    "subprocess_timeout",
+    "unexpected_existing_path",
+    "unexpected_nonempty_data_root",
+    "validation_rejected",
+    "working_directory_or_script_unavailable",
+})
 
 
 class RehearsalError(RuntimeError):
@@ -72,17 +102,68 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def classify_subprocess_failure(args: list[str], output: str = "",
+                                exception_class: str | None = None) -> str:
+    if exception_class == "FileNotFoundError":
+        return "command_not_found"
+    if exception_class == "PermissionError":
+        return "permission_rejected"
+    if exception_class == "TimeoutExpired":
+        return "subprocess_timeout"
+    if exception_class is not None:
+        return "filesystem_failure"
+
+    normalized = output.lower()
+    if "data_dir_not_empty" in normalized:
+        return "unexpected_nonempty_data_root"
+    if "data_dir_path_rejected" in normalized or "protected_database_forbidden" in normalized:
+        return "invalid_data_root"
+    if "database_already_exists" in normalized:
+        return "database_already_exists"
+    if any(marker in normalized for marker in (
+        "bootstrap_schema_mismatch", "database_schema_invalid", "database_migration_required",
+        "schema_fingerprint", "schema mismatch",
+    )):
+        return "schema_mismatch"
+    if "permission denied" in normalized or "eacces" in normalized:
+        return "permission_rejected"
+    if any(marker in normalized for marker in (
+        "cannot find module", "module not found", "could not resolve", "cannot resolve",
+    )):
+        return "working_directory_or_script_unavailable"
+    if "no such file or directory" in normalized or "enoent" in normalized:
+        return "missing_expected_file"
+    if "sqlite" in normalized or "database is locked" in normalized:
+        return "sqlite_initialization_failure"
+    if args and args[0] == "podman":
+        return "container_command_failed"
+    if any(marker in normalized for marker in ("file exists", "already exists", "eexist")):
+        return "unexpected_existing_path"
+    return "nonzero_exit"
+
+
 def run(args: list[str], *, env: dict[str, str] | None = None, timeout: int = 60,
         check: bool = True, input_data: str | None = None) -> subprocess.CompletedProcess[str]:
     try:
         result = subprocess.run(args, env=env if env is not None else system_environment(), capture_output=True, text=True,
                                 input=input_data, timeout=timeout, check=False)
-    except (OSError, subprocess.TimeoutExpired) as error:
-        raise RehearsalError(f"subprocess could not complete ({type(error).__name__})") from error
+    except subprocess.TimeoutExpired as error:
+        failure = RehearsalError("subprocess could not complete (TimeoutExpired)")
+        failure.failure_class = classify_subprocess_failure(args, exception_class="TimeoutExpired")
+        failure.subprocess_exception_class = "TimeoutExpired"
+        raise failure from error
+    except OSError as error:
+        exception_class = type(error).__name__
+        failure = RehearsalError(f"subprocess could not complete ({exception_class})")
+        failure.failure_class = classify_subprocess_failure(args, exception_class=exception_class)
+        failure.subprocess_exception_class = exception_class
+        raise failure from error
     log("subprocess", exit_code=result.returncode)
     if check and result.returncode != 0:
         error = RehearsalError(f"subprocess failed with exit code {result.returncode}")
         error.exit_code = result.returncode
+        error.failure_class = classify_subprocess_failure(args, result.stdout + "\n" + result.stderr)
+        error.subprocess_exception_class = "SubprocessExit"
         raise error
     return result
 
@@ -97,16 +178,107 @@ def system_environment() -> dict[str, str]:
     return {name: os.environ[name] for name in names if name in os.environ}
 
 
-def log(event: str, *, exit_code: int | None = None) -> None:
-    if event not in {"subprocess", "deployment_cli", "cleanup"}:
+def log(event: str, *, exit_code: int | None = None, operation_id: str | None = None,
+        operation_status: str | None = None, failure_class: str | None = None) -> None:
+    if event not in {"subprocess", "deployment_cli", "cleanup", "database_setup"}:
         raise RehearsalError("diagnostic event is not allowlisted")
     if exit_code is not None and not isinstance(exit_code, int):
         raise RehearsalError("diagnostic exit code must be an integer")
-    message = event if exit_code is None else f"{event} exit={exit_code}"
+    if event == "database_setup":
+        if operation_id not in DATABASE_SETUP_FAILURE_CODES or operation_status not in {
+            "started", "completed", "failed",
+        }:
+            raise RehearsalError("database setup diagnostic is not allowlisted")
+        if failure_class is not None and failure_class not in DATABASE_SETUP_FAILURE_CLASSES:
+            raise RehearsalError("database setup failure classification is not allowlisted")
+        parts = [event, f"operation={operation_id}", f"status={operation_status}"]
+        if exit_code is not None:
+            parts.append(f"exit={exit_code}")
+        if failure_class is not None:
+            parts.append(f"classification={failure_class}")
+        message = " ".join(parts)
+    else:
+        if operation_id is not None or operation_status is not None or failure_class is not None:
+            raise RehearsalError("diagnostic event fields are not valid for this event")
+        message = event if exit_code is None else f"{event} exit={exit_code}"
     print(message, flush=True)
     if DIAGNOSTICS is not None:
         with (DIAGNOSTICS / "rehearsal.log").open("a", encoding="utf-8") as output:
             output.write(message.replace(str(DIAGNOSTICS.parent), "<runner-temp>")[:2_000] + "\n")
+
+
+def initial_synthetic_database_setup_record() -> dict[str, Any]:
+    return {
+        "status": "not_started",
+        "current_operation": None,
+        "last_completed_operation": "none",
+        "database_initializer_started": False,
+        "database_initializer_completed": False,
+        "schema_verification_completed": False,
+        "cleanup_status": "not_started",
+        "failure": None,
+    }
+
+
+def setup_failure_class(error: BaseException) -> str:
+    classified = getattr(error, "failure_class", None)
+    if classified in DATABASE_SETUP_FAILURE_CLASSES:
+        return classified
+    if isinstance(error, FileExistsError):
+        return "unexpected_existing_path"
+    if isinstance(error, PermissionError):
+        return "permission_rejected"
+    if isinstance(error, FileNotFoundError):
+        return "missing_expected_file"
+    if isinstance(error, RehearsalError):
+        return "validation_rejected"
+    if isinstance(error, OSError):
+        return "filesystem_failure"
+    return "nonzero_exit"
+
+
+def database_setup_step(operation_id: str, action: Any) -> Any:
+    record = REPORT.get("synthetic_database_setup")
+    if not isinstance(record, dict) or operation_id not in DATABASE_SETUP_FAILURE_CODES:
+        raise RehearsalError("synthetic database setup operation is not initialized")
+    record["status"] = "in_progress"
+    record["current_operation"] = operation_id
+    if operation_id == "DB_SETUP_DATABASE_BOOTSTRAP":
+        record["database_initializer_started"] = True
+    log("database_setup", operation_id=operation_id, operation_status="started")
+    try:
+        value = action()
+    except Exception as error:
+        failure_class = setup_failure_class(error)
+        raw_exception_class = getattr(error, "subprocess_exception_class", type(error).__name__)
+        exception_class = raw_exception_class if raw_exception_class in {
+            "FileNotFoundError", "PermissionError", "TimeoutExpired", "SubprocessExit",
+            "RehearsalError", "FileExistsError", "OSError",
+        } else "OtherError"
+        exit_code = getattr(error, "exit_code", None)
+        if not isinstance(exit_code, int) or isinstance(exit_code, bool):
+            exit_code = None
+        failure = {
+            "code": DATABASE_SETUP_FAILURE_CODES[operation_id],
+            "operation_id": operation_id,
+            "exception_class": exception_class,
+            "exit_code": exit_code,
+            "classification": failure_class,
+        }
+        record.update({"status": "failed", "failure": failure})
+        log("database_setup", operation_id=operation_id, operation_status="failed",
+            exit_code=exit_code, failure_class=failure_class)
+        raise
+    record["last_completed_operation"] = operation_id
+    record["current_operation"] = None
+    if operation_id == "DB_SETUP_DATABASE_BOOTSTRAP":
+        record["database_initializer_completed"] = True
+        # db-cli bootstrap validates the schema before returning success.
+        record["schema_verification_completed"] = True
+    if operation_id == "DB_SETUP_COMPLETE":
+        record["status"] = "completed"
+    log("database_setup", operation_id=operation_id, operation_status="completed")
+    return value
 
 
 def require(condition: bool, message: str) -> None:
@@ -215,7 +387,7 @@ def retain_deployment_failure(error: BaseException) -> None:
     if not isinstance(exit_code, int):
         exit_code = None
     record["status"] = "failed"
-    record["failure"] = {
+    failure = {
         "code": code,
         "phase": phase,
         "last_completed_guard": record.get("last_completed_guard", "none"),
@@ -226,6 +398,19 @@ def retain_deployment_failure(error: BaseException) -> None:
         "observed": observed,
         "explanation": explanation,
     }
+    setup = REPORT.get("synthetic_database_setup")
+    if phase == "synthetic_database_setup_started" and isinstance(setup, dict):
+        detail = setup.get("failure")
+        if isinstance(detail, dict):
+            failure.update({
+                "operation_id": detail.get("operation_id"),
+                "operation_failure_code": detail.get("code"),
+                "operation_failure_classification": detail.get("classification"),
+                "last_completed_operation": setup.get("last_completed_operation"),
+                "database_initializer_started": setup.get("database_initializer_started"),
+                "schema_verification_completed": setup.get("schema_verification_completed"),
+            })
+    record["failure"] = failure
 
 
 def initial_deployment_record() -> dict[str, Any]:
@@ -249,6 +434,39 @@ def command_text(args: list[str], *, env: dict[str, str] | None = None, timeout:
 def create_podman_secret(name: str, value: str, env: dict[str, str]) -> None:
     run(["podman", "secret", "create", name, "-"], env=env,
         input_data=value)
+
+
+def validate_synthetic_database_setup_inputs(workspace: Path, source_sha: str) -> None:
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "")
+    origin = os.environ.get("OPERATOROS_REHEARSAL_ORIGIN", "")
+    require(re.fullmatch(r"[0-9a-f]{40}", source_sha) is not None,
+            "synthetic database setup source identity is invalid")
+    require(re.fullmatch(r"[1-9][0-9]{5,19}", run_id) is not None and
+            re.fullmatch(r"[1-9][0-9]{0,8}", attempt) is not None,
+            "synthetic database setup run identity is invalid")
+    require(re.fullmatch(r"http://127\.0\.0\.1:[1-9][0-9]{0,4}", origin) is not None,
+            "synthetic database setup origin is invalid")
+    try:
+        info = workspace.lstat()
+        canonical_workspace = workspace.resolve(strict=True)
+    except OSError as error:
+        raise RehearsalError("synthetic rehearsal workspace is unavailable") from error
+    require(canonical_workspace == workspace and stat.S_ISDIR(info.st_mode) and
+            not stat.S_ISLNK(info.st_mode) and info.st_uid == os.getuid() and
+            stat.S_IMODE(info.st_mode) == 0o700 and not os.path.ismount(workspace),
+            "synthetic rehearsal workspace ownership is invalid")
+
+
+def create_synthetic_data_root(workspace: Path) -> Path:
+    data_dir = workspace / "data"
+    data_dir.mkdir(mode=0o700)
+    info = data_dir.lstat()
+    require(data_dir.resolve(strict=True) == data_dir and stat.S_ISDIR(info.st_mode) and
+            not stat.S_ISLNK(info.st_mode) and info.st_uid == os.getuid() and
+            stat.S_IMODE(info.st_mode) == 0o700 and not os.path.ismount(data_dir),
+            "synthetic database root ownership is invalid")
+    return data_dir
 
 
 def require_subid_file(path: Path, username: str, uid: int) -> None:
@@ -735,10 +953,11 @@ def api_environment(source_sha: str, origin: str) -> dict[str, str]:
 
 
 def setup_synthetic_database(workspace: Path, source_sha: str, context: Any) -> tuple[str, str, str, str, str, str]:
-    data_dir = workspace / "data"
-    backup_dir = data_dir / "backups"
-    data_dir.mkdir(mode=0o700)
-    backup_dir.mkdir(mode=0o700)
+    REPORT["synthetic_database_setup"] = initial_synthetic_database_setup_record()
+    database_setup_step("DB_SETUP_INPUTS_VALIDATION",
+                        lambda: validate_synthetic_database_setup_inputs(workspace, source_sha))
+    data_dir = database_setup_step("DB_SETUP_DATA_ROOT_CREATE",
+                                   lambda: create_synthetic_data_root(workspace))
     cookie_secret = secrets.token_hex(64)
     backup_key = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
     admin_username = "operatoros_rehearsal_" + os.environ["GITHUB_RUN_ID"]
@@ -746,30 +965,55 @@ def setup_synthetic_database(workspace: Path, source_sha: str, context: Any) -> 
     secret_prefix = "operatoros-rehearsal-" + os.environ["GITHUB_RUN_ID"] + "-" + os.environ["GITHUB_RUN_ATTEMPT"]
     auth_secret_name = secret_prefix + "-auth-cookie"
     backup_secret_name = secret_prefix + "-backup-key"
-    podman_environment = private_env(workspace, context)
-    create_podman_secret(auth_secret_name, cookie_secret, podman_environment)
-    create_podman_secret(backup_secret_name, backup_key, podman_environment)
+    podman_environment = database_setup_step(
+        "DB_SETUP_PODMAN_ENV_VALIDATE", lambda: private_env(workspace, context),
+    )
+    database_setup_step(
+        "DB_SETUP_AUTH_SECRET_CREATE",
+        lambda: create_podman_secret(auth_secret_name, cookie_secret, podman_environment),
+    )
+    database_setup_step(
+        "DB_SETUP_BACKUP_SECRET_CREATE",
+        lambda: create_podman_secret(backup_secret_name, backup_key, podman_environment),
+    )
     api_env = workspace / "deploy/api.env"
     env_values = api_environment(source_sha, os.environ["OPERATOROS_REHEARSAL_ORIGIN"])
-    atomic_text(api_env, "".join(f"{key}={value}\n" for key, value in env_values.items()))
+    database_setup_step(
+        "DB_SETUP_API_ENV_STAGE",
+        lambda: atomic_text(api_env, "".join(f"{key}={value}\n" for key, value in env_values.items())),
+    )
     base_env = system_environment()
     db_env = base_env | {"OPERATOROS_DATA_DIR": str(data_dir)}
-    run(["bun", "packages/db/src/db-cli.ts", "bootstrap", "--data-dir", str(data_dir)],
-        env=db_env, timeout=120)
+    database_setup_step(
+        "DB_SETUP_DATABASE_BOOTSTRAP",
+        lambda: run(["bun", "packages/db/src/db-cli.ts", "bootstrap", "--data-dir", str(data_dir)],
+                    env=db_env, timeout=120),
+    )
     seed_env = db_env | {"OPERATOROS_E2E_ADMIN_USERNAME": admin_username,
                          "OPERATOROS_E2E_ADMIN_PASSWORD": admin_password}
-    run(["bun", "e2e/helpers/seed-test-database.ts", "--database", str(data_dir / "operatoros.sqlite"),
-         "--runtime-root", str(workspace)], env=seed_env, timeout=120)
+    database_setup_step(
+        "DB_SETUP_DATABASE_SEED",
+        lambda: run(["bun", "e2e/helpers/seed-test-database.ts", "--database",
+                     str(data_dir / "operatoros.sqlite"), "--runtime-root", str(workspace)],
+                    env=seed_env, timeout=120),
+    )
 
     incompatible = workspace / "schema-negative/data"
-    incompatible.mkdir(mode=0o700, parents=True)
-    shutil.copy2(data_dir / "operatoros.sqlite", incompatible / "operatoros.sqlite")
-    if (data_dir / "operatoros.sqlite-wal").exists():
-        shutil.copy2(data_dir / "operatoros.sqlite-wal", incompatible / "operatoros.sqlite-wal")
-    if (data_dir / "operatoros.sqlite-shm").exists():
-        shutil.copy2(data_dir / "operatoros.sqlite-shm", incompatible / "operatoros.sqlite-shm")
-    run(["bun", "-e", "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1]); db.query(\"UPDATE operatoros_schema_migrations SET version = 'invalid-rehearsal-schema'\").run(); db.close();",
-         str(incompatible / "operatoros.sqlite")], env=base_env, timeout=30)
+    def create_incompatible_fixture() -> None:
+        incompatible.mkdir(mode=0o700, parents=True)
+        shutil.copy2(data_dir / "operatoros.sqlite", incompatible / "operatoros.sqlite")
+        if (data_dir / "operatoros.sqlite-wal").exists():
+            shutil.copy2(data_dir / "operatoros.sqlite-wal", incompatible / "operatoros.sqlite-wal")
+        if (data_dir / "operatoros.sqlite-shm").exists():
+            shutil.copy2(data_dir / "operatoros.sqlite-shm", incompatible / "operatoros.sqlite-shm")
+
+    database_setup_step("DB_SETUP_NEGATIVE_FIXTURE_CREATE", create_incompatible_fixture)
+    database_setup_step(
+        "DB_SETUP_NEGATIVE_SCHEMA_MUTATION",
+        lambda: run(["bun", "-e", "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1]); db.query(\"UPDATE operatoros_schema_migrations SET version = 'invalid-rehearsal-schema'\").run(); db.close();",
+                     str(incompatible / "operatoros.sqlite")], env=base_env, timeout=30),
+    )
+    database_setup_step("DB_SETUP_COMPLETE", lambda: None)
     return admin_username, admin_password, cookie_secret, backup_key, auth_secret_name, backup_secret_name
 
 
@@ -1513,6 +1757,13 @@ def main() -> int:
                     REPORT["cleanup"]["run_scoped_units"] = "removed_or_not_created"
                 if isinstance(REPORT.get("podman_context"), dict):
                     REPORT["podman_context"]["cleanup_status"] = "passed"
+            setup_record = REPORT.get("synthetic_database_setup")
+            cleanup_record = REPORT.get("cleanup")
+            if isinstance(setup_record, dict):
+                setup_record["cleanup_status"] = (
+                    cleanup_record.get("status", "not_started")
+                    if isinstance(cleanup_record, dict) else "not_started"
+                )
             try:
                 write_json(diagnostics / "rehearsal-evidence.json", REPORT)
             except OSError:

@@ -426,6 +426,7 @@ def remove_host_owned_store_residual(path: Path, workspace: Path) -> None:
 
 
 def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str | None = None) -> int:
+    log_path: Path | None = None
     CLEANUP_RESULT.clear()
     result: dict[str, object] = {
         "attempted": True,
@@ -450,6 +451,16 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
             result["resources_remaining"] = remaining
         result["exit_code"] = exit_code
         result["status"] = "passed" if exit_code == 0 else "failed"
+        if log_path is not None:
+            try:
+                log_info = log_path.lstat()
+            except OSError:
+                result["diagnostics_log_created"] = False
+            else:
+                result["diagnostics_log_created"] = (
+                    stat.S_ISREG(log_info.st_mode) and not stat.S_ISLNK(log_info.st_mode) and
+                    log_info.st_nlink == 1 and log_info.st_uid == os.geteuid()
+                )
         CLEANUP_RESULT.clear()
         CLEANUP_RESULT.update(result)
         return exit_code
@@ -469,7 +480,6 @@ def cleanup(workspace_value: str, temp_parent_value: str, diagnostics_dir: str |
     failures = 0
     try:
         log_path = diagnostic_log(diagnostics_dir, temp_parent, workspace)
-        result["diagnostics_log_created"] = log_path is not None and log_path.exists()
     except (CleanupError, OSError) as error:
         print(f"Consumer cleanup diagnostics unavailable: {type(error).__name__}", file=sys.stderr)
         log_path = None
