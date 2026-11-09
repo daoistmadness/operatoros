@@ -84,8 +84,9 @@ Use the reviewed D1 templates in [`deploy/podman`](../../deploy/podman/):
 `operatoros-d1-api.container.in`, `operatoros-d1-caddy.container.in`,
 `operatoros-d1-storage.conf.example`, `operatoros-d1-config.toml.example`,
 `operatoros-d1-api.env.example`, and `operatoros-d1-Caddyfile.example`. The
-storage UUID placeholder and capacity floor must be replaced only after fresh
-mount and payload measurements. The API environment example contains invalid
+storage UUID placeholder must be replaced only after fresh mount verification.
+The deployment preflight enforces measured clean-start capacity reserves. The
+API environment example contains invalid
 placeholders by design; `storage-check` rejects it until distinct synthetic
 secrets are generated and all required values are set. Install API/Caddy unit
 files as `operatoros-lite-api.container` and `operatoros-lite-caddy.container`
@@ -138,26 +139,22 @@ root and paths in the table below, service names `operatoros-lite-api.service`
 and `operatoros-lite-caddy.service`, API URL `http://127.0.0.1:18190`, web URL
 `http://127.0.0.1:18188`, `storage_mountpoint="/mnt/podman-data"`, the verified
 filesystem UUID, `storage_fstype="ext4"`, and `storage_driver="overlay"`.
-Set `min_free_bytes=5368709120`, `min_free_inodes=20000`,
-`root_min_free_bytes=16106127360`, and `backup_max_age_seconds=86400`. Replace
-the UUID only with the value returned by the execution-time `findmnt` check.
-Keep this config owned by UID 1002 with mode 0600.
+Set the ongoing runtime floors to `min_free_bytes=7516192768` (7 GiB),
+`min_free_inodes=50000`, `root_min_free_bytes=16106127360` (15 GiB), and
+`backup_max_age_seconds=86400`. Before the first write, require the separate
+clean-start thresholds of 9 GiB and 80,000 free inodes on the data filesystem,
+plus 16 GiB free on `/`. The deployment preflight enforces 2 GiB and 30,000
+inodes of operation headroom above the configured data floors, and 1 GiB above
+the root floor. Replace the UUID only with the value returned by the
+execution-time `findmnt` check. Keep this config owned by UID 1002 with mode
+0600.
 
-The accepted artifact metadata reports an 80,788,986-byte outer archive. Loop
-75's preparation notes record inner bundle, OCI layer, Caddy, SPA, and staging
-sizes, but its command inventory also says the payload-size download probe
-timed out. A Loop 76 retry of the retained artifact likewise timed out before
-producing a file. Treat those inner sizes as unverified until the exact
-artifact is measured on the trusted workstation; do not rebuild it. Before any
-host write, measure the release archive and extracted OCI/SPA footprint,
-Podman image metadata, synthetic SQLite/WAL/SHM, a synthetic backup and restore
-working copy, retained previous release, logs, and inodes. Require at least
-5 GiB and 20,000 free inodes to remain after that measured footprint and the
-approved synthetic reserve. These limits apply to the data filesystem. Keep at
-least 15 GiB free on `/` for verifier staging under `/tmp` and journald. The
-latest same-day observation found 20 GiB free on `/`. Treat 15 GiB as a host
-safety reserve, not a measured workload footprint. Recheck both filesystems
-before each write.
+The exact retained artifact was downloaded and independently verified on the
+trusted workstation without rebuilding. The measured release, image, SPA,
+staging, synthetic SQLite, backup/restore, and rollback peaks are recorded in
+the capacity table below. Recheck both filesystems before each write; do not
+rebuild the release or treat the local Podman measurement as OPRSERVER
+qualification.
 
 No UID 1002 Podman 5.7.0 runtime or Quadlet has been started. D1 still requires
 separate host execution authorization and must finish with the UID 1002 API and
@@ -461,8 +458,12 @@ allocation commands are:
 ~~~sh
 groupadd --gid 1002 operatoros-runtime
 useradd --uid 1002 --gid 1002 --home-dir /home/operatoros-runtime \
-  --create-home --shell /usr/sbin/nologin operatoros-runtime
-usermod --add-subuids 231072-296607 --add-subgids 231072-296607 operatoros-runtime
+  --create-home --shell /usr/sbin/nologin \
+  --key SUB_UID_MIN=231072 --key SUB_UID_MAX=296607 --key SUB_UID_COUNT=65536 \
+  --key SUB_GID_MIN=231072 --key SUB_GID_MAX=296607 --key SUB_GID_COUNT=65536 \
+  operatoros-runtime
+awk -F: '$1 == "operatoros-runtime" { if ($2 != 231072 || $3 != 65536) exit 1; count++ } END { if (count != 1) exit 1 }' /etc/subuid
+awk -F: '$1 == "operatoros-runtime" { if ($2 != 231072 || $3 != 65536) exit 1; count++ } END { if (count != 1) exit 1 }' /etc/subgid
 chmod 0700 /home/operatoros-runtime
 ~~~
 
@@ -639,8 +640,9 @@ effective grants are verified. Do not substitute a historical tailnet suffix.
 
 Create a mode-0600 `deploy/api.env` with newly generated synthetic values for
 `AUTH_COOKIE_SECRET`, `BACKUP_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_KEY_ID`, and
-`ASTRYX_SETUP_TOKEN`. Use different random values for the cookie and backup
-keys. Never put them in Git, a unit file, a command argument, or evidence.
+`ASTRYX_SETUP_TOKEN`. Use distinct random values; the setup token must be at
+least 32 URL-safe characters. Never put them in Git, a unit file, a command
+argument, or evidence.
 
 For loopback HTTP tests, set `ALLOWED_ORIGINS=http://127.0.0.1:18188`,
 `COOKIE_SECURE=false`, and `ENABLE_DESTRUCTIVE_OPERATIONS=false`. Leave

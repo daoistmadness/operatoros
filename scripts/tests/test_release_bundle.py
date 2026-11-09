@@ -887,6 +887,50 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertEqual(rendered.count(f'Environment={name}={value}'), 3)
             self.assertNotIn('XDG_RUNTIME_DIR=', rendered)
 
+    def test_rehearsal_quadlets_pass_the_shared_runtime_verifier_without_relaxing_host_guards(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-verifier-test-') as temporary:
+            parent = Path(temporary)
+            workspace = parent / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            deploy_dir = workspace / 'deploy'
+            deploy_dir.mkdir(mode=0o700)
+            (workspace / 'data').mkdir(mode=0o700)
+            (workspace / 'web/current/client').mkdir(mode=0o700, parents=True)
+            unit_dir = parent / 'units'
+            unit_dir.mkdir(mode=0o700)
+            context = private_context(workspace)
+            api_port, web_port = 18081, 18080
+            (deploy_dir / 'api.env').write_text('synthetic rehearsal environment\n', encoding='utf-8')
+            (deploy_dir / 'api.env').chmod(0o600)
+            (deploy_dir / 'Caddyfile').write_text(
+                rehearsal.make_caddyfile(web_port, api_port), encoding='utf-8',
+            )
+            (deploy_dir / 'Caddyfile').chmod(0o600)
+            api_unit, caddy_unit, _ = rehearsal.write_quadlets(
+                workspace, unit_dir, 'operatoros-rehearsal-api.service',
+                'operatoros-rehearsal-caddy.service', api_port, web_port,
+                'localhost/operatoros-api:' + SHA,
+                'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(), context,
+            )
+            cfg = {
+                'profile': 'rehearsal',
+                'root': workspace,
+                'data_dir': workspace / 'data',
+                'api_unit': api_unit,
+                'caddy_unit': caddy_unit,
+                'api_service': 'operatoros-rehearsal-api.service',
+                'caddy_service': 'operatoros-rehearsal-caddy.service',
+                'api_url': f'http://127.0.0.1:{api_port}',
+                'web_url': f'http://127.0.0.1:{web_port}',
+            }
+
+            deploy.verify_runtime_units(cfg)
+            caddy_text = caddy_unit.read_text(encoding='utf-8')
+            self.assertEqual(deploy.unit_values(caddy_text, 'AddCapability'), ['net_bind_service'])
+            caddy_unit.write_text(caddy_text + 'AddCapability=SYS_ADMIN\n', encoding='utf-8')
+            with self.assertRaisesRegex(deploy.DeployError, 'unexpected capability'):
+                deploy.verify_runtime_units(cfg)
+
     def test_effective_quadlet_environment_must_match_private_podman_context(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-unit-env-') as temporary:
             workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'

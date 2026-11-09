@@ -769,6 +769,7 @@ class DeploymentFixture(unittest.TestCase):
         (self.deploy_dir / "api.env").write_text(
             "AUTH_COOKIE_SECRET=" + "a" * 40 + "\n" +
             "BACKUP_ENCRYPTION_KEY=" + base64.b64encode(b"b" * 32).decode("ascii") + "\n" +
+            "ASTRYX_SETUP_TOKEN=" + "c" * 40 + "\n" +
             "BACKUP_ENCRYPTION_KEY_ID=operatoros-d1-synthetic\n" +
             "ALLOWED_ORIGINS=http://127.0.0.1:18188\nCOOKIE_SECURE=false\n"
             "ENABLE_DESTRUCTIVE_OPERATIONS=false\n",
@@ -881,6 +882,14 @@ class DeploymentFixture(unittest.TestCase):
     def test_d1_capacity_floor_matches_measured_peak_contract(self):
         self.assertEqual(deploy.HOST_DATA_FREE_FLOOR, 7 * 1024**3)
         self.assertEqual(deploy.HOST_MIN_FREE_INODES, 50_000)
+        self.assertEqual(deploy.HOST_DATA_OPERATION_HEADROOM_BYTES, 2 * 1024**3)
+        self.assertEqual(deploy.HOST_OPERATION_HEADROOM_INODES, 30_000)
+        self.assertEqual(deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES, 1 * 1024**3)
+        self.assertEqual(deploy.HOST_DATA_FREE_FLOOR + deploy.HOST_DATA_OPERATION_HEADROOM_BYTES,
+                         9 * 1024**3)
+        self.assertEqual(deploy.HOST_MIN_FREE_INODES + deploy.HOST_OPERATION_HEADROOM_INODES, 80_000)
+        self.assertEqual(deploy.HOST_ROOT_FREE_FLOOR + deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES,
+                         16 * 1024**3)
         example = tomllib.loads((ROOT / "deploy/podman/operatoros-d1-config.toml.example").read_text())
         self.assertEqual(example["min_free_bytes"], deploy.HOST_DATA_FREE_FLOOR)
         self.assertEqual(example["min_free_inodes"], deploy.HOST_MIN_FREE_INODES)
@@ -1042,6 +1051,29 @@ class DeploymentFixture(unittest.TestCase):
                 path.write_text(value, encoding="utf-8")
                 deploy.verify_host_api_environment(self.host_cfg)
             self.assertNotIn("duplicate-value-that-must-not-be-logged", str(raised.exception))
+        path.write_text(valid, encoding="utf-8")
+
+    def test_host_api_environment_requires_a_distinct_strong_first_admin_setup_token(self):
+        path = self.deploy_dir / "api.env"
+        valid = path.read_text(encoding="utf-8")
+        deploy.verify_host_api_environment(self.host_cfg)
+        invalid = (
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40 + "\n", ""),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=short-token"),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40,
+                          "ASTRYX_SETUP_TOKEN=GENERATE_SYNTHETIC_TOKEN_AT_INSTALL"),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=" + "a" * 40),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40,
+                          "ASTRYX_SETUP_TOKEN=" + base64.b64encode(b"b" * 32).decode("ascii")),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=" + "c" * 39 + "="),
+        )
+        for value in invalid:
+            with self.subTest(environment=value), self.assertRaisesRegex(
+                deploy.DeployError, "API environment file"
+            ) as raised:
+                path.write_text(value, encoding="utf-8")
+                deploy.verify_host_api_environment(self.host_cfg)
+            self.assertNotIn("c" * 40, str(raised.exception))
         path.write_text(valid, encoding="utf-8")
 
     def test_d1_quadlet_templates_match_the_host_deployment_validator(self):
@@ -1376,6 +1408,30 @@ class DeploymentFixture(unittest.TestCase):
             with self.assertRaisesRegex(deploy.DeployError, "insufficient disk"):
                 deploy.check_candidate_capacity(self.cfg, release)
             run_preflight.assert_not_called()
+
+    def test_host_candidate_capacity_requires_measured_clean_start_headroom(self):
+        release = fake_release()
+        data_minimum = deploy.HOST_DATA_FREE_FLOOR + deploy.HOST_DATA_OPERATION_HEADROOM_BYTES
+        inode_minimum = deploy.HOST_MIN_FREE_INODES + deploy.HOST_OPERATION_HEADROOM_INODES
+        root_minimum = deploy.HOST_ROOT_FREE_FLOOR + deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES
+
+        def check(data_free=data_minimum, free_inodes=inode_minimum, root_free=root_minimum):
+            def usage(path):
+                free = root_free if Path(path) == Path("/") else data_free
+                return type("Usage", (), {"free": free})()
+
+            with patch.object(deploy.shutil, "disk_usage", side_effect=usage), \
+                 patch.object(deploy.os, "statvfs", return_value=type("StatVFS", (), {"f_favail": free_inodes})()):
+                deploy.check_candidate_capacity(self.host_cfg, release)
+
+        check()
+        for kwargs in (
+            {"data_free": data_minimum - 1},
+            {"free_inodes": inode_minimum - 1},
+            {"root_free": root_minimum - 1},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaisesRegex(deploy.DeployError, "insufficient"):
+                check(**kwargs)
 
     def test_import_uses_verified_image_id_without_assigning_a_mutable_release_tag(self):
         release = fake_release()

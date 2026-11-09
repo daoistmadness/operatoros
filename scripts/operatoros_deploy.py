@@ -47,6 +47,9 @@ MAX_SPA_BYTES = 256 * 1024 * 1024
 HOST_ROOT_FREE_FLOOR = 15 * 1024 * 1024 * 1024
 HOST_DATA_FREE_FLOOR = 7 * 1024 * 1024 * 1024
 HOST_MIN_FREE_INODES = 50_000
+HOST_DATA_OPERATION_HEADROOM_BYTES = 2 * 1024 * 1024 * 1024
+HOST_OPERATION_HEADROOM_INODES = 30_000
+HOST_ROOT_OPERATION_HEADROOM_BYTES = 1 * 1024 * 1024 * 1024
 HOST_DATA_MOUNTPOINT = Path("/mnt/podman-data")
 HOST_D1_ROOT_NAME = "operatoros-d1-synthetic"
 HOST_D1_UID = 1002
@@ -1533,7 +1536,8 @@ def verify_host_api_environment(cfg: dict[str, Any]) -> None:
     path = cfg["root"] / "deploy/api.env"
     require_regular_owned(path, os.getuid(), "API environment file", 0o077)
     required = {"AUTH_COOKIE_SECRET", "BACKUP_ENCRYPTION_KEY", "BACKUP_ENCRYPTION_KEY_ID",
-                "ALLOWED_ORIGINS", "COOKIE_SECURE", "ENABLE_DESTRUCTIVE_OPERATIONS"}
+                "ALLOWED_ORIGINS", "COOKIE_SECURE", "ENABLE_DESTRUCTIVE_OPERATIONS",
+                "ASTRYX_SETUP_TOKEN"}
     values: dict[str, str] = {}
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
@@ -1549,17 +1553,21 @@ def verify_host_api_environment(cfg: dict[str, Any]) -> None:
         values[name] = value
     cookie_secret = values.get("AUTH_COOKIE_SECRET", "")
     backup_key = values.get("BACKUP_ENCRYPTION_KEY", "")
+    setup_token = values.get("ASTRYX_SETUP_TOKEN", "")
     try:
         decoded_key = base64.b64decode(backup_key, validate=True)
     except (ValueError, base64.binascii.Error):
         decoded_key = b""
     if (set(values) != required or len(cookie_secret.strip()) < 32 or cookie_secret != cookie_secret.strip() or
+        re.fullmatch(r"[A-Za-z0-9_-]{32,256}", setup_token) is None or
+        setup_token in (cookie_secret, backup_key) or
         not decoded_key or len(decoded_key) != 32 or base64.b64encode(decoded_key).decode("ascii") != backup_key or
         backup_key == cookie_secret or
         not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", values.get("BACKUP_ENCRYPTION_KEY_ID", "")) or
         values.get("ALLOWED_ORIGINS") != cfg["web_url"] or values.get("COOKIE_SECURE") != "false" or
         values.get("ENABLE_DESTRUCTIVE_OPERATIONS") != "false" or
-        any(marker in (cookie_secret + backup_key).upper() for marker in ("REPLACE", "GENERATE", "PLACEHOLDER"))):
+        any(marker in (cookie_secret + backup_key + setup_token).upper()
+            for marker in ("REPLACE", "GENERATE", "PLACEHOLDER"))):
         raise DeployError("API environment file is missing valid synthetic-only D1 configuration")
 
 
@@ -1584,11 +1592,14 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
         "NoNewPrivileges": "true",
         "DropCapability": "all",
         "EnvironmentFile": str(cfg["root"] / "deploy/api.env"),
-        "HealthCmd": "/usr/local/bin/operatoros-api-healthcheck",
-        "HealthInterval": "30s",
-        "LogDriver": "journald",
         "Volume": f"{cfg['data_dir']}:/var/lib/operatoros/data:rw",
     }
+    if cfg.get("profile") == "host":
+        expected_api.update({
+            "HealthCmd": "/usr/local/bin/operatoros-api-healthcheck",
+            "HealthInterval": "30s",
+            "LogDriver": "journald",
+        })
     for key, expected in expected_api.items():
         if unit_values(api_text, key) != [expected]:
             raise DeployError(f"API Quadlet {key} does not match the approved loopback and persistent-data contract")
@@ -1611,12 +1622,15 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
         "ReadOnly": "true",
         "NoNewPrivileges": "true",
         "DropCapability": "all",
-        "LogDriver": "journald",
     }
+    if cfg.get("profile") == "host":
+        expected_caddy["LogDriver"] = "journald"
     for key, expected in expected_caddy.items():
         if unit_values(caddy_text, key) != [expected]:
             raise DeployError(f"Caddy Quadlet {key} does not match the approved loopback proxy contract")
-    if unit_values(caddy_text, "AddCapability"):
+    capabilities = unit_values(caddy_text, "AddCapability")
+    if ((cfg.get("profile") == "host" and capabilities) or
+        (cfg.get("profile") == "rehearsal" and capabilities != ["net_bind_service"])):
         raise DeployError("Caddy Quadlet grants an unexpected capability")
     required_mounts = {
         f"{cfg['root']}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro",
@@ -1677,10 +1691,17 @@ def check_loopback_services(cfg: dict[str, Any]) -> None:
 def check_capacity(cfg: dict[str, Any], release: VerifiedRelease) -> None:
     roots = (cfg["root"], cfg["graphroot"])
     required = max(cfg["min_free_bytes"], len(release.files["operatoros-api.oci.tar"]) * 2)
+    required_inodes = cfg["min_free_inodes"]
+    if cfg.get("profile") == "host":
+        required += HOST_DATA_OPERATION_HEADROOM_BYTES
+        required_inodes += HOST_OPERATION_HEADROOM_INODES
+        root_required = cfg["root_min_free_bytes"] + HOST_ROOT_OPERATION_HEADROOM_BYTES
+        if shutil.disk_usage(Path("/")).free < root_required:
+            raise DeployError("insufficient root filesystem capacity for deployment staging")
     for root in roots:
         usage = shutil.disk_usage(root)
         statvfs = os.statvfs(root)
-        if usage.free < required or statvfs.f_favail < cfg["min_free_inodes"]:
+        if usage.free < required or statvfs.f_favail < required_inodes:
             raise DeployError(f"insufficient disk bytes or inodes at {root}")
 
 
@@ -2003,8 +2024,13 @@ def check_candidate_capacity(cfg: dict[str, Any], release: VerifiedRelease) -> N
     check_capacity(cfg, release)
     web_free = shutil.disk_usage(cfg["root"] / "web").free
     spa_size = len(release.files["operatoros-web-client.tar.gz"])
-    if (web_free < max(cfg["min_free_bytes"], spa_size * 2) or
-        os.statvfs(cfg["root"] / "web").f_favail < cfg["min_free_inodes"]):
+    required_bytes = max(cfg["min_free_bytes"], spa_size * 2)
+    required_inodes = cfg["min_free_inodes"]
+    if cfg.get("profile") == "host":
+        required_bytes += HOST_DATA_OPERATION_HEADROOM_BYTES
+        required_inodes += HOST_OPERATION_HEADROOM_INODES
+    if (web_free < required_bytes or
+        os.statvfs(cfg["root"] / "web").f_favail < required_inodes):
         raise DeployError("insufficient storage for staged SPA release")
 
 

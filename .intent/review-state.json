@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "dac16e619b94138883eaa20b33f01023d16bce8dcacd0e8cff01e428d66aa79e",
+      "fingerprint": "797a86dd77e0687b003d39665b5183d952d2850772ff4919ab675606eff87d22",
       "snapshot": {
-        "CHANGELOG.md": "4aeaf57634bef597e027412c25722996dddb0294d6ea66ac5bae881dd3c037ae"
+        "CHANGELOG.md": "522ad7d96ab57a372a7d7ad9bdc039b725af7834b194dbc42d7dd0aba0917efa"
       },
-      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: CHANGELOG.md at 03e8138aba840f5ba917f7c668c59c5841b320c4"
+        "Changed: CHANGELOG.md at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:COMMANDS.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "b03668dfdbe6e2580496aa791d9124e67d34712794e97aa82aa4d6ea07abcfe9",
+      "fingerprint": "dcb952199b8f8d598632e9659ab007bf7f32f882c5de55e1cadad6dd11c7beed",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "a61abb61b58be0d9dc39465c9f2272b5ef2f67f53eb543b3f6743f0e3a24fd60"
+        "docs/runbooks/ubuntu-server-deployment.md": "c741a1da58e1fd7ecdbd4e8a1dde3a4b67749a18f79df908596b124a43a8de49"
       },
-      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 03e8138aba840f5ba917f7c668c59c5841b320c4"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "205549a72a0d3807fb36b1d81694f1efaeb751830996bd95dfb3ffd19a47e5d5",
+      "fingerprint": "99e23083ab9e92966927c6ce79502ac7bc72d48e5dd48822bcf0cab8f452afe2",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "1a18bc38e6a9b49fb45e7327e748f9bcd44c78deaac5fff08091b7f0799a5305"
+        "scripts/tests/test_release_bundle.py": "379910b57b83d6e036aeca1b6c1970161b0ceef286b7e979d1f0820f43ec0e05"
       },
-      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
+        "Changed: scripts/tests/test_release_bundle.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "7c3f1ba23c4aa56f18ab95a49469f156945499653e1ff80153f9d48b42ec1b7a",
+      "fingerprint": "84ee8c7d562568af5a1f3649ee91b2e1c2f9cff020accf78e0b19e19da47050e",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "504c2cd7a36e53c0c99247a522e6b4cc02dcb0f3d30153b159eca95049d19a34"
+        "scripts/operatoros_deploy.py": "1071ad166a802a8cd4f4d3c25d3dfcb81daf196638db049dcd0e5c53888478c6"
       },
-      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 03e8138aba840f5ba917f7c668c59c5841b320c4"
+        "Changed: scripts/operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "f199c1a41e1be7e5a7183322cd385a2135637cc786fbba5e776e363835a2fee4",
+      "fingerprint": "291b3fb0216471f2c76b4734a9f3a96c6f8ac206108528e0be44c23141327abd",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "943c9dbaa45381c15702c8e035889db43d2e59267ae01f86287df47410821fa5"
+        "scripts/tests/test_operatoros_deploy.py": "7f5f3f5d69cdbc22707589590844483387ec8d972a2ae0373f0203932f944c7d"
       },
-      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 03e8138aba840f5ba917f7c668c59c5841b320c4"
+        "Changed: scripts/tests/test_operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10165,15 +10165,15 @@
       ]
     },
     "source:deploy/podman/operatoros-d1-api.env.example": {
-      "fingerprint": "ff5536780f938698dfdde1c2683358b99aaab14057729889f3438e4dd86b8d39",
+      "fingerprint": "aa8306a2e40e494b832f3e7cb3de62f765311e2587b7378a4f2848c189c63803",
       "snapshot": {
-        "deploy/podman/operatoros-d1-api.env.example": "c94cca2667422aff301155dade588948b99eaf28455f64d6a85e2544a8147b3b"
+        "deploy/podman/operatoros-d1-api.env.example": "618230b7dfefa4f0203cf35b8800b922c0574a9abea8295933394cd5d5bf95d2"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: deploy/podman/operatoros-d1-api.env.example at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: deploy/podman/operatoros-d1-api.env.example at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:deploy/podman/operatoros-d1-caddy.container.in": {
@@ -10189,15 +10189,15 @@
       ]
     },
     "source:deploy/podman/operatoros-d1-config.toml.example": {
-      "fingerprint": "d533a6c0b11f512fc08d9c5da13d16d794014b9846689ca5178af6dace595880",
+      "fingerprint": "37fb2e012774a23d569088024afc747c64fee80b9c27bcf8483b3e8c41e82177",
       "snapshot": {
-        "deploy/podman/operatoros-d1-config.toml.example": "f2ca875eeeb4648b77e26a1188e5e085bc501a3ac140a4b66a1acc880a9d2b09"
+        "deploy/podman/operatoros-d1-config.toml.example": "a01a1fb52e8e1becaff3289390ca4b32c0831cb0d2439a70d95e77a90170059d"
       },
-      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: deploy/podman/operatoros-d1-config.toml.example at 03e8138aba840f5ba917f7c668c59c5841b320c4"
+        "Changed: deploy/podman/operatoros-d1-config.toml.example at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:deploy/podman/operatoros-d1-storage.conf.example": {
