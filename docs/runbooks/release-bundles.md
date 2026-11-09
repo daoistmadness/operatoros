@@ -268,9 +268,10 @@ one and the deployment verifier must never treat such an artifact as accepted.
 
 The existing synthetic host uses two rootless Quadlet containers: API and Caddy.
 Caddy serves static SPA files and proxies the API. SQLite stays in a host-mounted
-data directory. Access is loopback/private. The draft production decision still
-proposes host Caddy; production topology, public ingress/TLS, Ubuntu rehearsal,
-and operational approvals remain unresolved. See the [deployment proposal](../decisions/podman-deployment.md).
+data directory. Access is loopback/private. Candidate B is accepted for the
+parallel D1 synthetic runtime; the host implementation and Tailscale Serve
+remain unauthorized. Production activation remains NO-GO. See the
+[deployment decision](../decisions/podman-deployment.md).
 
 ## Repository-managed deployment interface
 

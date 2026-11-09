@@ -1,0 +1,32 @@
+[Unit]
+Description=OperatorOS D1 synthetic Caddy ingress
+RequiresMountsFor=/mnt/podman-data
+ConditionPathIsMountPoint=/mnt/podman-data
+Requires=operatoros-lite-api.service
+After=operatoros-lite-api.service
+
+[Service]
+Environment=CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf
+ExecStartPre=/usr/bin/install -d -m 0700 /run/user/1002/operatoros-podman-runroot
+ExecStartPre=/usr/bin/python3 /mnt/podman-data/operatoros-d1-synthetic/deploy/operatoros_deploy.py storage-check --config /mnt/podman-data/operatoros-d1-synthetic/deploy/config/operatoros.toml
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=120
+TimeoutStopSec=30
+MemoryMax=512M
+CPUQuota=50%
+
+[Container]
+Image=docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+Pull=never
+ContainerName=operatoros-lite-caddy
+Network=host
+User=1000:1000
+UserNS=keep-id:uid=1000,gid=1000
+ReadOnly=true
+ReadOnlyTmpfs=true
+NoNewPrivileges=true
+DropCapability=all
+LogDriver=journald
+Volume=/mnt/podman-data/operatoros-d1-synthetic/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+Volume=/mnt/podman-data/operatoros-d1-synthetic/web/current/client:/srv/operatoros/current/client:ro

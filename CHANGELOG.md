@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Pin the host deployment profile to the isolated D1 root, UID 1002, and approved loopback ports; fail closed on mount, overlay-store, subordinate-ID, user-manager, and Quadlet mismatches.
 - Record a public summary of the read-only host integration findings and the missing attested release for the reviewed main baseline (#363).
 - Report and fail closed on an invalid rootless Podman storage context in `operatoros-deploy status`, so a default-store listing cannot be mistaken for the deployed stack (#364).
 - Document the two ingress candidates with an evidence-backed container recommendation, the deployment-root/data/container-mount distinction, and Tailscale route ownership (#364).
