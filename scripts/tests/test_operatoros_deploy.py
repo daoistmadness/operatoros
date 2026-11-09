@@ -777,6 +777,7 @@ class DeploymentFixture(unittest.TestCase):
         )
         (self.deploy_dir / "api.env").chmod(0o600)
         (self.deploy_dir / "Caddyfile").write_text(
+            "{\n admin off\n}\n"
             "http://127.0.0.1:18188 {\n bind 127.0.0.1\n"
             " @api path /api /api/* /health /ready /openapi /openapi/*\n"
             " handle @api { reverse_proxy 127.0.0.1:18190 }\n"
@@ -1338,8 +1339,16 @@ class DeploymentFixture(unittest.TestCase):
     def test_runtime_unit_contract_accepts_repository_caddyfile_nested_blocks(self):
         caddyfile = (ROOT / "deploy/podman/Caddyfile").read_text(encoding="utf-8")
         caddyfile = caddyfile.replace(":8088", ":18188").replace(":8090", ":18190")
+        caddyfile = "{\n\tadmin off\n}\n\n" + caddyfile
         (self.deploy_dir / "Caddyfile").write_text(caddyfile, encoding="utf-8")
         deploy.verify_runtime_units(self.host_cfg)
+
+    def test_runtime_unit_contract_rejects_caddy_admin_endpoint_enabled(self):
+        caddyfile = self.deploy_dir / "Caddyfile"
+        config = caddyfile.read_text(encoding="utf-8")
+        caddyfile.write_text(config.replace(" admin off\n", ""), encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "Caddy admin endpoint must be disabled"):
+            deploy.verify_runtime_units(self.host_cfg)
 
     def test_isolated_schema_preflight_checks_mounts_in_rootless_user_namespace(self):
         release = fake_release()

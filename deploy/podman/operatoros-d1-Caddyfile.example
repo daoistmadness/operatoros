@@ -1,3 +1,7 @@
+{
+    admin off
+}
+
 http://127.0.0.1:18188 {
 	bind 127.0.0.1
 	encode zstd gzip

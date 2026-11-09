@@ -1640,6 +1640,11 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
     caddyfile = cfg["root"] / "deploy/Caddyfile"
     require_regular_owned(caddyfile, os.getuid(), "Caddy configuration", 0o022)
     caddy_config = caddyfile.read_text(encoding="utf-8")
+    global_options = re.match(r"\s*\{(?P<options>[^{}]*)\}", caddy_config, flags=re.DOTALL)
+    admin_directives = re.findall(r"(?m)^\s*admin\s+(.+?)\s*$", caddy_config)
+    if (global_options is None or admin_directives != ["off"] or
+        re.search(r"(?m)^\s*admin\s+off\s*$", global_options.group("options")) is None):
+        raise DeployError("Caddy admin endpoint must be disabled")
     web_port = urlparse(cfg["web_url"]).port
     required_config = (f"http://127.0.0.1:{web_port} {{", "bind 127.0.0.1",
                        f"reverse_proxy 127.0.0.1:{api_port}", "@dotfiles path_regexp dotfiles",

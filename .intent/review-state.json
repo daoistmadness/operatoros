@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c6e67e7d1feab1e8bf1dd146be0c7def31051009d4d905386b35ec9ff69d7567",
+      "fingerprint": "125c8bc7997fa64eb7ea3431839b9d72cdf7ec1f9ef43e8d10e8881e701bf0d2",
       "snapshot": {
-        "CHANGELOG.md": "f034f9b6dbec26d5dd88b444af81c3b77f33a9fc270b1470c641a30e49c3f50a"
+        "CHANGELOG.md": "66a9df8c111c2e6a3d8e6ce0f42665fda26d8b364b380e4f58ffa5c5e7aa2fbe"
       },
-      "head": "6161600291af236e00722e9fd006b38533cf94b2",
+      "head": "5526f367ead096c47fad930054ece99a8b64fecb",
       "outcome": "no-change",
-      "reason": "Adding the assigned PR number does not change Elysia implementation guidance; the registered skill remains accurate.",
+      "reason": "Adding the assigned PR number to the D1 Caddy changelog entry does not change the registered Elysia guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 6161600291af236e00722e9fd006b38533cf94b2"
+        "Changed: CHANGELOG.md at 5526f367ead096c47fad930054ece99a8b64fecb"
       ]
     },
     "source:COMMANDS.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "52e389361c5d9dad01846b042ba30c4a8faaa8aa268d22de0d5f3aa179732762",
+      "fingerprint": "5e4a12cace0a6a4490ca6c427fce8fef4f39d048be7984364f30b3ea170872fa",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "43afd90c1450c8a29efe9c6791865b7d10f275327ccd191321090dced48aa613"
+        "docs/runbooks/ubuntu-server-deployment.md": "cb42ab7eec4d027333128ec8704f4e9780ecea4b8fb3d008c6a61eaba0ce3efc"
       },
-      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
+      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
       "outcome": "no-change",
-      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
+      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at d45c505871fa2b8e3044940bcb26c933c615a8d5"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 396c34e8ca6cd88a76cc54134605ee9509db541e"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "cb9481bd98040732ea94ae08edc44d936d6542eae1081d80473e7bed1dac4cbe",
+      "fingerprint": "a274408b42095c819d14557bcccbebe04b5cf28d8113f387125c8996829f09c7",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "a9b53ba217fdcdd9f0428295868f4b315627af5e804d5a4b260b95576f83d1b3"
+        "scripts/operatoros_deploy.py": "1d6d3a4d1b8e086ab94b0623298eb131911d3f5b08496ad4b1b0a9413c375b95"
       },
-      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
+      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
       "outcome": "no-change",
-      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
+      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at d45c505871fa2b8e3044940bcb26c933c615a8d5"
+        "Changed: scripts/operatoros_deploy.py at 396c34e8ca6cd88a76cc54134605ee9509db541e"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "84f91ba381025b51425779db2d3285222b703980a7dcddfeedbe6456cda62b80",
+      "fingerprint": "7deeb8174911c9eb109bba22eb9a3e8372de4edbbb87c0ff15c0f498e40df416",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "f5b8e5c936aebc88461d5c22b139307413051caa144fbde5ef781e1f0432ad4e"
+        "scripts/tests/test_operatoros_deploy.py": "0cab573f4f357809b4213933d5cbd8e6e87a9948d56405746f60ab13b09352b9"
       },
-      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
+      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
       "outcome": "no-change",
-      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
+      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at d45c505871fa2b8e3044940bcb26c933c615a8d5"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 396c34e8ca6cd88a76cc54134605ee9509db541e"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10105,15 +10105,15 @@
       ]
     },
     "source:scripts/deployment-rehearsal.py": {
-      "fingerprint": "2cc5f17b3e9c82403e27a6f542376c00d020ad1c0e831de054f4366577a04847",
+      "fingerprint": "ceb6a1e83f7f5a32b36e7a9818d1a14cbf4356494d0913eead1f7fbd8f142dd1",
       "snapshot": {
-        "scripts/deployment-rehearsal.py": "194ec3b46bb6150362cff740039e98254c7c253fecd7a7becd5417574522d0e3"
+        "scripts/deployment-rehearsal.py": "727cd99d111b880f6b8baec7ccfef9179556ea348310bbf477a21f47f1161f53"
       },
-      "head": "9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43",
+      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
       "outcome": "no-change",
-      "reason": "The new rehearsal assertion and changelog entry do not change installed skill guidance; existing documented procedures remain accurate.",
+      "reason": "The D1 and rehearsal Caddy admin-listener change affects deployment configuration only and does not change the registered Elysia skill guidance.",
       "evidence": [
-        "Changed: scripts/deployment-rehearsal.py at 9c1fb76708c8c075d2ee6e2bbdeca843a4e1ef43"
+        "Changed: scripts/deployment-rehearsal.py at 396c34e8ca6cd88a76cc54134605ee9509db541e"
       ]
     },
     "source:docs/audits/oprserver-integration-2026-11-06.md": {
@@ -10141,15 +10141,15 @@
       ]
     },
     "source:deploy/podman/operatoros-d1-Caddyfile.example": {
-      "fingerprint": "8de465a0364f8dd24281c24a5fcf42204274ca26f889694e5947d301da3f7c6f",
+      "fingerprint": "b0b1866d5107ea6bbcd52bdff7b7eeb0796aacf794669987dccd1c1ff0ed4306",
       "snapshot": {
-        "deploy/podman/operatoros-d1-Caddyfile.example": "2217b3d9fb5ec2111551cf248a8fb5bb1dd9817f8da383e5b7c4538a3cc03011"
+        "deploy/podman/operatoros-d1-Caddyfile.example": "3fa02982c5bbf82aedbfc321b3713343b60ced6c8a6ea1e72572b3b9343c7a11"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
       "evidence": [
-        "Changed: deploy/podman/operatoros-d1-Caddyfile.example at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: deploy/podman/operatoros-d1-Caddyfile.example at 396c34e8ca6cd88a76cc54134605ee9509db541e"
       ]
     },
     "source:deploy/podman/operatoros-d1-api.container.in": {
