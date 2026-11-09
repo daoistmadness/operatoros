@@ -865,7 +865,11 @@ def create_unit_directory(unit_dir: Path, created: list[Path]) -> None:
 
 
 def make_caddyfile(web_port: int, api_port: int) -> str:
-    return f'''http://127.0.0.1:{web_port} {{
+    return f'''{{
+    admin off
+}}
+
+http://127.0.0.1:{web_port} {{
     bind 127.0.0.1
     encode zstd gzip
     @dotfiles path_regexp dotfiles (^|/)\\.[^/]+(/|$)

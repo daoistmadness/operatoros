@@ -567,11 +567,17 @@ Keep the new account's user manager and Podman store separate from UID 1000.
 Run Caddy as a separate rootless container with `Network=host`. Bind the
 service to `127.0.0.1:18188`, serve the versioned SPA read-only, and proxy API
 requests to `127.0.0.1:18190`. Pin the approved Caddy image digest. Do not install
-a host Caddy package or change the current Caddy service.
+a host Caddy package or change the current Caddy service. Disable Caddy's admin
+endpoint because the existing UID 1000 Caddy process owns loopback port 2019.
+The D1 service uses systemd restarts and does not need the admin endpoint.
 
 Use this D1 Caddyfile:
 
 ~~~caddyfile
+{
+    admin off
+}
+
 http://127.0.0.1:18188 {
     bind 127.0.0.1
     encode zstd gzip
