@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "dcb952199b8f8d598632e9659ab007bf7f32f882c5de55e1cadad6dd11c7beed",
+      "fingerprint": "6eb7715771d2e8d7a63691adc860174df7b0f4ba02f67569f0a7366d3ad83392",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "c741a1da58e1fd7ecdbd4e8a1dde3a4b67749a18f79df908596b124a43a8de49"
+        "docs/runbooks/ubuntu-server-deployment.md": "46f557c4c6845966fd12861b070338cce948742c20528c8f666113a037590982"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "Loop 77 updates only the Ubuntu deployment runbook to distinguish historical UID/subordinate-ID evidence from fresh host verification; no installed skill guidance changed.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
