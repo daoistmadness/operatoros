@@ -32,10 +32,11 @@ records on it. Production encryption, backup, recovery, and administrator
 access decisions remain open.
 
 The proposed account is `operatoros-runtime` with UID/GID 1002 and subordinate
-UID/GID range `231072:65536`. These values were available in the latest read-only
-inventory but are not reserved; recheck them and allocation policy before
-creating the account. Use its own home, user manager, Quadlet directory, and
-Podman store. Proposed listeners are `127.0.0.1:18188` for Caddy and
+UID/GID range `231072:65536`. A historical Loop 75 read-only inventory found
+these values available, but they have not been freshly rechecked and are not
+reserved. Recheck them and allocation policy before creating the account. Use
+its own home, user manager, Quadlet directory, and Podman store. Proposed
+listeners are `127.0.0.1:18188` for Caddy and
 `127.0.0.1:18190` for the API. Do not change Tailscale Serve during D1.
 
 The host config must record the approved mountpoint, filesystem UUID and type,
