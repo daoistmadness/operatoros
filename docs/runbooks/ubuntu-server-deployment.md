@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-06
+last_reviewed: 2026-11-09
 ---
 
 # Ubuntu server deployment runbook
@@ -10,24 +10,170 @@ last_reviewed: 2026-11-06
 The existing synthetic host runs both Elysia API and Caddy in separate rootless
 Podman containers supervised by user Quadlet services. Caddy serves the static
 SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
-access remains loopback/private. The existing manual helper consumes verified
-archives without rebuilding on the host. This differs from the future host-Caddy
-proposal below. Production topology and public ingress/TLS remain unresolved.
-See [CI release bundles](../runbooks/release-bundles.md) for the proposed artifact
-handoff and the reviewed helper-adoption boundary.
+access remains loopback/private. The existing stack uses a historical
+`deploy.sh`; D1 does not use it as evidence or as the deployment interface.
+Candidate B is approved for isolated synthetic qualification. Production
+activation and private HTTPS ingress remain pending. See [CI release
+bundles](../runbooks/release-bundles.md) for repository-managed artifact
+verification and deployment.
 
 ## Status and scope
 
-This remains a draft procedure for a single Ubuntu host. It follows the proposed [Podman deployment architecture](../decisions/podman-deployment.md). Local rootless Podman validation passed on Ubuntu 26.04.1 with synthetic data. This does not approve or validate an EC2/Ubuntu 24.04 host or production deployment.
+This runbook covers OPRSERVER. It follows the accepted [Podman deployment architecture](../decisions/podman-deployment.md). Local rootless Podman validation passed on Ubuntu 26.04.1 with synthetic data. The new UID 1002 runtime has not been qualified, and no production deployment is approved.
+
+## D1 isolated synthetic qualification
+
+The approved D1 design uses Candidate B under a new rootless identity and a
+separate root at `/mnt/podman-data/operatoros-d1-synthetic`. The existing
+`/mnt/podman-data/operatoros` tree, UID 1000 services and data, and protected UID
+1001 data remain outside this scope. The data filesystem is unencrypted; this
+exception applies to synthetic qualification only. Do not place business
+records on it. Production encryption, backup, recovery, and administrator
+access decisions remain open.
+
+The proposed account is `operatoros-runtime` with UID/GID 1002 and subordinate
+UID/GID range `231072:65536`. A historical Loop 75 read-only inventory found
+these values available, but they have not been freshly rechecked and are not
+reserved. Recheck them and allocation policy before creating the account. Use
+its own home, user manager, Quadlet directory, and Podman store. Proposed
+listeners are `127.0.0.1:18188` for Caddy and
+`127.0.0.1:18190` for the API. Do not change Tailscale Serve during D1.
+
+The host config must record the approved mountpoint, filesystem UUID and type,
+and the `overlay` storage driver. The proposed config uses the kernel's native
+rootless overlay support and does not assume `fuse-overlayfs` is installed.
+The D1 test must prove the configured driver on the actual Podman 5.7.0 host;
+if it fails, stop and request a separately reviewed storage change. Do not
+switch to VFS or install a storage package during D1. The `storage-check` CLI
+action checks the mount identity, capacity reserves, explicit storage config,
+user-manager context, reviewed Quadlets, and SPA pointer without invoking
+Podman. Both Quadlets must use
+`RequiresMountsFor`, run `storage-check` as `ExecStartPre`, and explicitly select
+the same `CONTAINERS_STORAGE_CONF`. Loop 74 found Podman's transient
+user-systemd health-check service used the manager's default store and returned
+exit 125 (“no such container”), even while the API health routes returned 200.
+A unit-level environment setting does not set the user manager's environment.
+A user-manager `environment.d` setting must carry the exact storage config so
+the transient health-check service sees the same store. `status` reports an
+invalid manager context, and deployment and rollback refuse it. A wrong or
+absent mount must prevent service startup and deployment.
+
+Use this rootless storage config:
+
+~~~toml
+[storage]
+driver = "overlay"
+graphroot = "/mnt/podman-data/operatoros-d1-synthetic/podman-rootless/graphroot"
+runroot = "/run/user/1002/operatoros-podman-runroot"
+~~~
+
+Set `CONTAINERS_STORAGE_CONF` to
+`/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf` in
+`/home/operatoros-runtime/.config/environment.d/90-operatoros-podman.conf` and
+in both Quadlet `[Service]` sections. Own the file by UID/GID 1002 with mode
+0600. Create the `environment.d` file before starting the user manager. Leave
+`XDG_CONFIG_HOME` unset.
+
+Install the reviewed `scripts/operatoros_deploy.py` and
+`scripts/release-bundle.py` from the approved repository revision under the D1
+`deploy/` directory, owned by UID/GID 1002 with mode 0600. The Quadlets invoke
+the first file for `storage-check`; the deployment CLI loads the second for
+release verification. Do not install a host wrapper or use the retired
+`deploy.sh`.
+
+Use the reviewed D1 templates in [`deploy/podman`](../../deploy/podman/):
+`operatoros-d1-api.container.in`, `operatoros-d1-caddy.container.in`,
+`operatoros-d1-storage.conf.example`, `operatoros-d1-config.toml.example`,
+`operatoros-d1-api.env.example`, and `operatoros-d1-Caddyfile.example`. The
+storage UUID placeholder must be replaced only after fresh mount verification.
+The deployment preflight enforces measured clean-start capacity reserves. The
+API environment example contains invalid
+placeholders by design; `storage-check` rejects it until distinct synthetic
+secrets are generated and all required values are set. Install API/Caddy unit
+files as `operatoros-lite-api.container` and `operatoros-lite-caddy.container`
+under the dedicated account's Quadlet directory, and retain the API unit copy
+at `deploy/operatoros-lite-api.container` for CLI integrity checking.
+
+The first install requires a one-time synthetic bootstrap because the normal
+deployment CLI is an upgrade path and expects an existing database/backup and
+current release state. On a trusted workstation, set the authorized short-lived
+`OPERATOROS_RELEASE_TOKEN` in the process environment, then run:
+
+~~~sh
+scripts/operatoros-deploy.sh verify \
+  --source-sha b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84 \
+  --run-id 42181508155 --run-attempt 1 \
+  --artifact-id 13485579515 \
+  --artifact-name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
+  --envelope-sha256 0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4
+~~~
+
+Download the same run and name to a mode-0700 staging directory with
+`gh run download 42181508155 --repo daoistmadness/operatoros --name
+operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1
+--dir <staging>`. Require inner bundle SHA-256
+`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`, then run
+`python3 scripts/release-bundle.py verify <staging>/operatoros-release.tar
+b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`. Extract only fixed member names
+`operatoros-api.oci.tar` and `operatoros-web-client.tar.gz` with `tar -xOf`,
+compare both against signed `manifest.json` artifact hashes, and transfer only
+those files plus the manifest. Recheck hashes on OPRSERVER. The accepted SPA
+SHA-256 is
+`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc`.
+Never rebuild the release or use the upgrade command as a first install.
+
+Install the reviewed deployment CLI and verifier from the approved PR head.
+Extract the SPA into an immutable versioned directory and create the relative
+`web/current` pointer before calling `storage-check`. Bootstrap only the new
+empty synthetic SQLite root from the exact OCI image with networking disabled.
+
+After authorization, verify Podman storage before importing anything. Require
+`podman info --format json` to report `rootless=true`, the exact config file,
+graphroot, runroot, and `graphDriverName=overlay`, with an empty
+`additionalImageStores` list. Require the dedicated store's container, image,
+and volume inventories to be empty. `podman unshare cat /proc/self/uid_map` and
+`gid_map` must each report exactly `0 1002 1` and `1 231072 65536`. A mismatch
+stops D1; do not reset or repair any store.
+
+The private `deploy/config/operatoros.toml` must set `expected_uid=1002`, the
+root and paths in the table below, service names `operatoros-lite-api.service`
+and `operatoros-lite-caddy.service`, API URL `http://127.0.0.1:18190`, web URL
+`http://127.0.0.1:18188`, `storage_mountpoint="/mnt/podman-data"`, the verified
+filesystem UUID, `storage_fstype="ext4"`, and `storage_driver="overlay"`.
+Set the ongoing runtime floors to `min_free_bytes=7516192768` (7 GiB),
+`min_free_inodes=50000`, `root_min_free_bytes=16106127360` (15 GiB), and
+`backup_max_age_seconds=86400`. Before the first write, require the separate
+clean-start thresholds of 9 GiB and 80,000 free inodes on the data filesystem,
+plus 16 GiB free on `/`. The deployment preflight enforces 2 GiB and 30,000
+inodes of operation headroom above the configured data floors, and 1 GiB above
+the root floor. Replace the UUID only with the value returned by the
+execution-time `findmnt` check. Keep this config owned by UID 1002 with mode
+0600.
+
+The exact retained artifact was downloaded and independently verified on the
+trusted workstation without rebuilding. The measured release, image, SPA,
+staging, synthetic SQLite, backup/restore, and rollback peaks are recorded in
+the capacity table below. Recheck both filesystems before each write; do not
+rebuild the release or treat the local Podman measurement as OPRSERVER
+qualification.
+
+No UID 1002 Podman 5.7.0 runtime or Quadlet has been started. D1 still requires
+separate host execution authorization and must finish with the UID 1002 API and
+Caddy services stopped and not enabled. A passing D1 qualification does not
+authorize production data or close Gate D2, Gate E, or Gate F.
 
 ## Version-controlled release interface
 
 The repository now contains `scripts/operatoros-deploy.sh` and
-`scripts/operatoros_deploy.py`, a reviewed implementation for the existing
-two-container synthetic host topology. It does not install itself, replace the
+`scripts/operatoros_deploy.py`, a reviewed implementation for the two-container
+synthetic topology. It does not install itself, replace the
 live `/mnt/podman-data/operatoros/deploy/deploy.sh`, or change either Quadlet.
-This code has not been run against that host. Copying it or its private config
-to a host and invoking `deploy` requires separate authorization.
+The D1 host profile also requires `storage_mountpoint`, `storage_uuid`,
+`storage_fstype`, `storage_driver`, and `root_min_free_bytes`. Its
+`storage-check` action verifies the mounted filesystem and user-manager store
+without invoking Podman. This code has not been run against the new UID 1002
+runtime. Copying it or its private config to OPRSERVER requires separate
+authorization.
 
 The interface is:
 
@@ -38,6 +184,8 @@ scripts/operatoros-deploy.sh verify \
   --envelope-sha256 SHA256
 
 scripts/operatoros-deploy.sh status --config /private/operatoros-deploy.toml
+
+scripts/operatoros-deploy.sh storage-check --config /private/operatoros-deploy.toml
 ~~~
 
 After an explicit deployment decision and host-specific review, the operator
@@ -60,9 +208,9 @@ read-only schema compatibility, snapshots application configuration, imports
 the image without rebuilding, switches the SPA atomically, and checks health,
 readiness, API proxying and a nested SPA route. It records artifact provenance
 and incomplete transactions. Rollback restores only the previous API image
-configuration and SPA target; it never restores SQLite. The CLI is not yet
-installed or validated on Ubuntu 24.04, and it does not close rootless systemd
-reboot recovery, backup ownership, or production topology approval.
+configuration and SPA target; it never restores SQLite. The CLI is not installed
+or validated under the new UID 1002 manager. D1 does not qualify Podman 5.7.0,
+reboot recovery, backup ownership, or production access.
 
 ### Podman storage context
 
@@ -96,61 +244,55 @@ cgroup v2, supported temporary storage, and measured capacity; the job checks
 these at runtime and stops before creating services if any check fails. See
 [CI release bundles](release-bundles.md#isolated-deployment-rehearsal-prepared-not-executed).
 
-Do not modify an EC2 or production host from this document until the host owner approves the exact target, change scope, network policy, package sources, recovery policy, reviewers, and execution window.
+Do not run host-changing commands from this draft. Gate D1 requires a separate
+authorization for the exact UID 1002 synthetic resources. Production remains
+NO-GO.
 
-The repository now contains the production API Containerfile, Quadlet template, host Caddyfile, placeholder-only environment example, digest renderer, and local deploy/teardown harness under `deploy/podman/` and `scripts/podman-local-*.sh`. The local harness was exercised against synthetic data. It does not activate a user systemd service, test a reboot, publish/sign artifacts, install host packages, or validate Ubuntu 24.04 compatibility.
+The repository contains the API Containerfile, Quadlet template, Caddyfile,
+placeholder-only environment example, digest renderer, and local
+deploy/teardown harness under `deploy/podman/` and `scripts/podman-local-*.sh`.
+The local harness does not create the separate UID 1002 runtime or qualify its
+user manager, health-check context, or reboot recovery.
 
 ## Target services
 
 | Component | Target |
 | --- | --- |
 | Browser app | TanStack Start SPA client files built under `apps/web/build/client` |
-| Static and reverse proxy | Loopback Caddy ingress (host service or container; not yet accepted) |
+| Static and reverse proxy | Rootless Caddy container on loopback; Candidate B is accepted |
 | API | One rootless Podman container managed by a Quadlet-generated user systemd service |
 | Database | SQLite files in the persistent host data directory, mounted at `/var/lib/operatoros/data` |
 | Development stack | Native local Elysia and Vite; Podman dev launcher remains optional |
 
 The SPA has no production server process. Do not run Vite preview or the Start build output under `build/server` in production.
 
-These are rehearsal proposals, not the deployed values. The API binds to
-`0.0.0.0:8090` inside the container and is published only on the host loopback
-address. The deployed host uses two-container Quadlet units with API `18090` and
-Caddy `18088`; the host-Caddy variant uses `8090` and `8088`. Do not copy either
-set without the host inventory and approval that this section requires.
+The API binds to `0.0.0.0:8090` inside its container. The current UID 1000
+synthetic stack uses loopback API and Caddy ports `18090` and `18088`. The
+approved D1 instance uses `18190` and `18188`. Do not change the current stack
+or reuse its ports.
 
-## Required decisions before installation
+## Production gates
 
-Record these values in the release record before the host gate:
+The host inventory found Ubuntu 26.04.1, Podman 5.7.0, and systemd 259.9.
+Recheck those values and the actual Quadlet generator before D1 writes. Do not
+install or upgrade packages in D1. Use the pinned Caddy container image; do not
+install a host Caddy service.
 
-- Disposable host ID, cloud region, owner, Ubuntu release and patch level, resources, architecture, and access method.
-- Administrator, approved SSH source, key owner, and artifact transfer destination.
-- Attached network interfaces, IPv4 and IPv6 security groups, network ACLs, routes, host firewall, and current listeners.
-- Approved Podman and Caddy package sources, exact package versions, upgrade policy, and Caddy service-start suppression method.
-- Rootless service account, staging account if required, subordinate UID/GID ranges, data directory owner and mapping.
-- Browser access profile, exact origins, TLS and certificate ownership, and allowed ingress.
-- Backup destination, separate encryption-key custody, retention, RPO, RTO, restore owner, and reboot permission.
-- Runtime, data-integrity, security, operations/recovery, browser E2E, and final approval owners.
+Gate D2 still needs a tailnet administrator to verify effective grants and
+approve the HTTPS endpoint and Serve change. Gate E still needs an encrypted
+production storage plan, off-host restore, recovery evidence, cross-release
+rollback, and a Bun/SQLite security disposition. Gate F requires separate
+production deployment approval after those gates pass.
 
-No host fact or approval is implied by a proposed value in this runbook.
+## Release artifact and future builds
 
-Package source and version remain host decisions. No Podman or Caddy APT
-package was installed for this local validation. On the named target, record
-`apt-cache policy podman caddy`, verify Quadlet options against the installed
-Podman package, and pin exact approved versions. Caddy `2.11.7` was used only
-from a digest-pinned container image for local config and route checks; this
-does not establish the official APT candidate. Ubuntu's Noble package catalog
-lists Podman `4.9.3+ds1-1ubuntu0.2` in noble-updates; this is catalog evidence,
-not proof of the target host's configured candidate or installed version. The
-Noble Quadlet manual documents the selected `Pull=never`, `UserNS`, health,
-read-only, capability, environment-file, and published-port keys. Verify the
-actual installed package and generated unit on Ubuntu 24.04 before accepting
-it.
+For D1, use the already verified release source and artifact. Do not run the
+release build workflow or substitute another artifact.
 
-## Prepare a release
+Build the API image and SPA artifact from one reviewed commit after the release
+gate passes.
 
-Build the API image and SPA artifact from one reviewed commit after the release gate passes.
-
-`deploy/podman/Containerfile.api` builds a production API image from the workspace lockfile. It pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and pins the required `flock` and `lsof` APK packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. A fresh Trivy scan found no Alpine OS or Node-package findings, but Bun's bundled SQLite 3.53.4 remains affected by CVE-2026-119373. Image promotion is blocked pending a supported runtime fix or an explicit time-bounded security decision. See the [current integration audit](../audits/host-integration-2026-11-06.md).
+`deploy/podman/Containerfile.api` pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and the required `flock` and `lsof` packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. The accepted Gate C artifact passed its configured Trivy inventory. The embedded Bun/SQLite 3.53.4 assessment for CVE-2026-119373 remains open. Do not treat the scan as closing that issue. See the [current integration audit](../audits/host-integration-2026-11-06.md).
 
 Record these immutable release identifiers:
 
@@ -221,111 +363,227 @@ temporary secret and cookie files. If interrupted, run
 workspace marker and removes only exact matching run-labeled containers. It
 never removes the workspace, images, or unrelated containers.
 
-This harness uses the local host's Podman and Quadlet generator. It has not
-started the generated user service because the current systemd user manager is
-degraded. The current host is Ubuntu 26.04.1, not the target Ubuntu 24.04.5;
-user lingering, service restart automation, Caddy APT installation, and reboot
-survival remain host-rehearsal gates.
+This harness uses the local host's Podman and Quadlet generator. It does not
+qualify the new UID 1002 user manager, its health-check storage context,
+restart behavior, or reboot recovery.
 
-## Host preparation
+## D1 host preparation
 
-Run these commands only after the host owner approves the exact target and package policy.
+Run these checks again immediately before a separately authorized D1 change.
+Stop if any result differs from the approved contract.
 
-1. Verify the host OS, disk, cgroup mode, ports, network interfaces, attached cloud rules, and existing workloads. Stop if the host contains data or services that must be preserved.
-2. Install the approved Podman package version. Verify that cgroup v2, rootless networking, subordinate UID/GID ranges, and the Quadlet generator work for the approved service account.
-3. Configure the rootless systemd user manager to survive logout and start at boot. Rehearse `loginctl enable-linger operatoros` and the service-account UID mapping before mounting the data root.
-4. Inspect whether a Caddy package, unit, or service-start policy already
-   exists. Stop for owner review if it does; do not replace an existing Caddy
-   configuration or `/usr/sbin/policy-rc.d`. On a confirmed clean disposable
-   host, place a temporary runtime mask on `caddy.service` before installing
-   the exact approved Caddy package. Verify that installation left Caddy
-   inactive and created no listener. Install the reviewed Caddyfile, run
-   `caddy validate`, remove only the runtime mask created by this procedure,
-   then explicitly enable and start Caddy. Prove this sequence against the
-   exact package in the disposable VM before using it on the rehearsal target.
-5. Create separate application, configuration, data, and backup locations. Keep the application release and OCI image storage outside the data directory.
-6. Apply least-privilege ownership. Caddy reads the static release; only the API service account can write the SQLite root; Caddy cannot read the database or API environment file.
-7. Verify no LAN or public listener exists. The initial profile has only loopback listeners on ports 8088 and 8090. Do not change SSH access or cloud firewall rules as part of this procedure.
+1. Confirm that `/mnt/podman-data` is mounted from the approved UUID as the
+   expected writable ext4 filesystem. Record free bytes and inodes.
+2. Confirm that `/mnt/podman-data/operatoros-d1-synthetic` is absent. Do not
+   follow a symlink or reuse any existing directory. Confirm relevant unit,
+   storage, and backup metadata do not reference the target.
+3. Confirm that UID/GID `1002:1002`, the account name, and subordinate range
+   `231072:65536` remain free and policy-approved.
+4. Confirm that ports `18188` and `18190` have no listeners. Preserve the
+   existing UID 1000 services on `18088` and `18090`.
+5. Before the first write, require at least 9 GiB free and 80,000 free inodes
+   on the data filesystem and 16 GiB free on `/`. The runtime config enforces
+   ongoing floors of 7 GiB and 50,000 inodes on the data filesystem, plus
+   15 GiB on `/`.
+6. On the trusted workstation, verify the exact release source, run, attempt,
+   artifact ID, bundle checksum, OCI manifest digest, and SPA checksum with the
+   repository-managed verifier. Confirm the current host still exceeds the
+   measured thresholds before any host writes. Stop if a capacity measurement
+   or the post-write reserves fail. Do not rebuild or substitute the artifact.
 
-After authorization, verify the package candidates before installing:
+The Loop 77 D1 capacity model measured the retained release without rebuilding:
+
+| Measurement | Bytes | Evidence |
+| --- | ---: | --- |
+| GitHub artifact envelope | 80,788,986 | GitHub artifact API digest and successful release upload log; the outer ZIP was not retained for a second local hash |
+| Inner release bundle | 81,510,400 | Downloaded bundle SHA-256 matched the signed release manifest |
+| API OCI archive | 80,566,784 | Signed bundle member checksum |
+| API compressed OCI layers | 80,524,201 | OCI archive inspection |
+| API expanded layer tar streams | 224,819,200 | OCI archive inspection |
+| API regular-file layer payload | 216,933,685 | OCI archive inspection |
+| API rootless graphroot increment | 217,732,932 | Isolated local Podman 5.7.0 overlay store after import |
+| SPA archive | 624,292 | Signed bundle member checksum |
+| Expanded SPA | 2,349,148 | Isolated archive inspection; 213 regular files |
+| Caddy rootless graphroot increment | 66,422,902 | Pinned image loaded into the same isolated local Podman store |
+| API and Caddy graphroot together | 284,155,834 | Isolated local Podman 5.7.0 overlay store |
+
+The release verifier keeps the envelope, bundle, API archive, and SPA archive
+in its temporary directory together: 243,490,462 bytes at the measured sizes.
+During upgrade preflight, it also copies the API archive into an isolated
+Podman store and loads the API image there. The measured preflight copy and
+store add 298,299,716 bytes. The upgrade model includes the existing API and
+Caddy store, a second API image without assuming layer deduplication, two
+expanded SPA releases, one synthetic database and encrypted backup, and a
+64-MiB logs/evidence allowance. A separate backup/restore phase allows three
+64-MiB SQLite-sized files: source database/WAL/SHM, encrypted backup, and
+restore workspace. Stop D1 if the combined synthetic database plus WAL/SHM
+exceeds 64 MiB; this is a test-only cap, not a production database limit. A
+synthetic 16-MiB WAL write produced an 18,813,176-byte database/WAL/SHM family,
+an 18,632,704-byte SQLite backup-sized copy, and an equal restore copy. These
+were capacity probes; the application backup command remains the D1
+verification path.
+
+| Peak state | Modeled bytes, including 20% growth allowance |
+| --- | ---: |
+| Initial artifact verification and isolated schema preflight | 812,588,343 |
+| Active synthetic runtime | 585,397,889 |
+| Upgrade with rollback retention | 1,238,365,080 |
+| Separate synthetic backup and restore | 668,747,504 |
+
+The upgrade/rollback state is the largest. The configured 7-GiB data free-space
+floor plus that peak rounds up to a 9-GiB clean-start requirement. Inode
+planning counts the measured 10,661-file/directory current store, another
+store of the same size for an API image without layer sharing, two SPA file
+trees, up to 2,000 transaction/log/evidence entries, and 20% growth. That
+28,509-inode peak plus the configured 50,000-inode floor rounds up to an
+80,000-inode clean-start requirement. The 16-GiB root preflight leaves the
+15-GiB configured reserve after allowing for user configuration and journal
+growth. Podman measurements are local, not OPRSERVER qualification. Recheck
+actual free bytes, inodes, and Podman 5.7.0 behavior on OPRSERVER before host
+implementation.
+
+The data filesystem is unencrypted. Use it only for synthetic D1 records and
+synthetic keys. Do not put school data on this filesystem. Do not provision,
+format, or resize a disk as part of D1.
+
+The new identity is `operatoros-runtime` with UID/GID `1002:1002`, home
+`/home/operatoros-runtime`, shell `/usr/sbin/nologin`, and no sudo access. Add
+the subordinate UID/GID range `231072:296607` only after the host administrator
+approves its allocation. The current administrator can still use unrestricted
+sudo to read the SQLite file. UID separation does not protect data from that
+administrator.
+
+Only after separate Gate D1 execution authorization, the approved account
+allocation commands are:
 
 ~~~sh
-apt-cache policy podman caddy
+groupadd --gid 1002 operatoros-runtime
+useradd --uid 1002 --gid 1002 --home-dir /home/operatoros-runtime \
+  --create-home --shell /usr/sbin/nologin \
+  --key SUB_UID_MIN=231072 --key SUB_UID_MAX=296607 --key SUB_UID_COUNT=65536 \
+  --key SUB_GID_MIN=231072 --key SUB_GID_MAX=296607 --key SUB_GID_COUNT=65536 \
+  operatoros-runtime
+awk -F: '$1 == "operatoros-runtime" { if ($2 != 231072 || $3 != 65536) exit 1; count++ } END { if (count != 1) exit 1 }' /etc/subuid
+awk -F: '$1 == "operatoros-runtime" { if ($2 != 231072 || $3 != 65536) exit 1; count++ } END { if (count != 1) exit 1 }' /etc/subgid
+chmod 0700 /home/operatoros-runtime
 ~~~
 
-Install only the owner-approved exact versions from the approved repositories.
-On the clean disposable host, after confirming no existing Caddy unit or
-`policy-rc.d` needs preservation, suppress the Caddy package's automatic
-service start with a runtime systemd mask:
+Recheck account, group, UID/GID, and subordinate range availability and policy
+before any of these commands. Do not add sudo privileges. Create the home
+`environment.d` file and user Quadlets before `loginctl enable-linger
+operatoros-runtime`, so the manager starts with the private storage selector.
+The approved rootless manager command context is:
 
 ~~~sh
-sudo systemctl mask --runtime caddy.service
-sudo apt-get install --no-install-recommends 'caddy=<approved-package-version>'
+sudo -u operatoros-runtime env \
+  HOME=/home/operatoros-runtime \
+  XDG_RUNTIME_DIR=/run/user/1002 \
+  DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1002/bus \
+  CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf \
+  systemctl --user status operatoros-lite-api.service
 ~~~
 
-Confirm `caddy.service` is masked/inactive and ports 80, 443, and 8088 have no
-unexpected listener. Stage and validate the reviewed config before unmasking:
+Use the same explicit context for `systemctl --user daemon-reload`, `start`,
+`stop`, and `status`. Never call the UID 1000 manager for the D1 units.
 
-~~~sh
-sudo caddy validate --config /etc/caddy/Caddyfile
-sudo systemctl unmask --runtime caddy.service
-sudo systemctl enable --now caddy.service
-~~~
+Create only `/mnt/podman-data/operatoros-d1-synthetic` after confirming the
+filesystem identity. Keep the existing `/mnt/podman-data/operatoros` tree and
+all UID 1000 and UID 1001 data unchanged. If the data mount is absent, the
+runtime must not write into its backing directory. The user Quadlets require
+the mount, and their `ExecStartPre` command runs the deployment CLI's exact
+UUID and filesystem check before Podman starts.
 
-Test this suppression and activation sequence against the exact Caddy package
-in a disposable VM first. If an existing unit, service-start policy, or port
-owner is found, stop for review instead of replacing it.
+The host profile accepts only this exact root and its `deploy/storage.conf`,
+`podman-rootless/graphroot`, `data/sqlite`, and `/run/user/1002/operatoros-podman-runroot`
+paths. It also requires UID 1002 and loopback URLs `http://127.0.0.1:18190`
+and `http://127.0.0.1:18188`. It rejects the existing `/mnt/podman-data/operatoros`
+tree and the prior `18090`/`18088` listeners as deployment targets.
 
-Proposed paths:
+Use these D1 paths after the owner authorizes their creation:
 
-| Purpose | Path | Access |
+| Purpose | Path | Owner and mode |
 | --- | --- | --- |
-| Static releases | `/srv/operatoros/releases/<release-id>/client` | Root-owned, Caddy read-only |
-| Current static release | `/srv/operatoros/current` | Atomic pointer to one immutable release |
-| API environment | `/etc/operatoros/api.env` | Root-owned, readable by API service account only |
-| Persistent data root | `/var/lib/operatoros/data` | Writable by API service account only |
-| Host Caddy config | `/etc/caddy/Caddyfile` | Root-owned |
-| Rootless Quadlet | `~operatoros/.config/containers/systemd/operatoros-api.container` | Owned by API service account |
-| Encrypted backup staging | Host-approved path | Restricted; final copies off-host |
+| Deployment root | `/mnt/podman-data/operatoros-d1-synthetic` | UID/GID 1002, mode 0700 |
+| Podman config | `deploy/storage.conf` | UID/GID 1002, mode 0600 |
+| Podman graphroot | `podman-rootless/graphroot` | UID/GID 1002, mode 0700 |
+| Podman runroot | `/run/user/1002/operatoros-podman-runroot` | UID/GID 1002, mode 0700 |
+| SQLite and backups | `data/sqlite` | UID/GID 1002, mode 0700 |
+| Versioned SPA | `web/releases/<release-id>/client` | UID/GID 1002; Caddy read-only mount |
+| API environment | `deploy/api.env` | UID/GID 1002, mode 0600 |
+| User Quadlets | `/home/operatoros-runtime/.config/containers/systemd` | UID/GID 1002, mode 0700 |
+| Deployment lock and records | `deploy/` | UID/GID 1002, mode 0700 |
 
-Confirm the directory layout and account mapping before first bootstrap. Do not recursively change ownership of an existing data path.
+The `data/sqlite` directory maps to `/var/lib/operatoros/data` in the API
+container. It must contain no copied database or other pre-existing records.
 
 ## Configure the API container
 
-Use one API container per data root. `deploy/podman/operatoros-api.container.in` is the canonical Quadlet template. It runs Elysia as UID/GID `10000:10000`, uses `UserNS=keep-id:uid=10000,gid=10000`, sets `Pull=never`, publishes only `127.0.0.1:8090`, reads `/etc/operatoros/api.env`, mounts `/var/lib/operatoros/data`, enables a health check, and sets `Restart=on-failure`. Verify the exact image digest is already in that service account's local store before starting the unit. The API has no boot-time outbound network requirement, so the rootless unit does not depend on system `network-online.target`.
+Create the D1 Quadlet under
+`/home/operatoros-runtime/.config/containers/systemd/operatoros-lite-api.container`.
+The existing local template uses different ports and is not a D1 host unit.
+Keep the API image pinned to the verified config ID and set `Pull=never`.
 
-The local Podman 5.7.0 generator adds `Wants=` and `After=` for
-`podman-user-wait-network-online.service` even with `Pull=never`. The Noble
-4.9.3 Quadlet docs do not describe that helper. Inspect the generated service
-on the target package and confirm whether it adds a network wait; do not add a
-system `network-online.target` dependency to a rootless unit by hand.
+The API container listens on `0.0.0.0:8090` inside its network namespace. Publish
+only `127.0.0.1:18190:8090` on the host. Run the process as `10000:10000` with
+`UserNS=keep-id:uid=10000,gid=10000`. Use a read-only root filesystem, a
+read-only `/tmp`, `NoNewPrivileges=true`, and `DropCapability=all`.
 
-Render it with a SHA-256-pinned image reference:
+Mount only `/mnt/podman-data/operatoros-d1-synthetic/data/sqlite` at
+`/var/lib/operatoros/data`. Set `OPERATOROS_DATA_DIR` to that container path.
+Use `/mnt/podman-data/operatoros-d1-synthetic/deploy/api.env` as the mode-0600
+environment file. The file contains synthetic credentials only.
 
-~~~sh
-scripts/render-operatoros-quadlet.sh \
-  'localhost/operatoros-api@sha256:<64-lowercase-hex-digest>' \
-  /home/operatoros/.config/containers/systemd/operatoros-api.container
+Set the API health command to `/usr/local/bin/operatoros-api-healthcheck` with
+a 30-second interval. Send logs to journald. Set `Restart=on-failure`,
+`RestartSec=5s`, `TimeoutStartSec=600`, and `TimeoutStopSec=45`. The reviewed
+resource ceilings are `MemoryMax=6G` and `CPUQuota=250%`. These ceilings are
+provisional until the host test checks cgroup delegation and memory headroom.
+
+Put these mount and storage guards in both Quadlets:
+
+~~~ini
+[Unit]
+RequiresMountsFor=/mnt/podman-data
+ConditionPathIsMountPoint=/mnt/podman-data
+
+[Service]
+Environment=CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf
+ExecStartPre=/usr/bin/install -d -m 0700 /run/user/1002/operatoros-podman-runroot
+ExecStartPre=/usr/bin/python3 /mnt/podman-data/operatoros-d1-synthetic/deploy/operatoros_deploy.py storage-check --config /mnt/podman-data/operatoros-d1-synthetic/deploy/config/operatoros.toml
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=600
+TimeoutStopSec=45
+MemoryMax=6G
+CPUQuota=250%
 ~~~
 
-The renderer rejects unpinned images and symlink output paths. The local test confirmed that the template renders with the Podman Quadlet generator and passes `systemd-analyze verify`. This only validates syntax. The local user manager was not used to start the service; automatic restart and reboot behavior remain unverified. Do not assume an unhealthy status restarts a still-running container.
-
-Add a second API unit only for a different, separately isolated data root. Never scale the service horizontally against one SQLite database.
+Do not add an `[Install]` section for D1. Start the units explicitly for
+qualification. Leave both services stopped and not enabled when the test ends.
+Keep the new account's user manager and Podman store separate from UID 1000.
 
 ## Configure Caddy
 
-Install the Caddy configuration only after the API port, static release path, and access profile have been reviewed.
+Run Caddy as a separate rootless container with `Network=host`. Bind the
+service to `127.0.0.1:18188`, serve the versioned SPA read-only, and proxy API
+requests to `127.0.0.1:18190`. Pin the approved Caddy image digest. Do not install
+a host Caddy package or change the current Caddy service.
 
-The initial loopback Caddyfile candidate is:
+Use this D1 Caddyfile:
 
 ~~~caddyfile
-http://127.0.0.1:8088 {
+http://127.0.0.1:18188 {
     bind 127.0.0.1
     encode zstd gzip
 
+    @dotfiles path_regexp dotfiles (^|/)\.[^/]+(/|$)
+    handle @dotfiles {
+        respond 404
+    }
+
     @api path /api /api/* /health /ready /openapi /openapi/*
     handle @api {
-        reverse_proxy 127.0.0.1:8090
+        reverse_proxy 127.0.0.1:18190
     }
 
     @root path /
@@ -349,7 +607,19 @@ http://127.0.0.1:8088 {
 }
 ~~~
 
-`deploy/podman/Caddyfile` is the canonical tested config. The pinned Caddy 2.11.7 test image validated it and served the API, shell, nested routes, and assets locally. A missing asset returned 404. The updated config denies dotfile paths; the local harness validates it with a present synthetic `.vite/manifest.json` canary. The local harness confirmed loopback listeners with `ss`. The host Caddy APT package and package-install service suppression were not tested.
+Mount the D1 Caddyfile and versioned SPA at `/etc/caddy/Caddyfile` and
+`/srv/operatoros/current/client`, both read-only. Do not mount the SQLite
+directory or API environment file into Caddy. Set `User=1000:1000` and
+`UserNS=keep-id:uid=1000,gid=1000`. Use `ReadOnly=true`,
+`NoNewPrivileges=true`, `DropCapability=all`, and journald logging. Do not add
+capabilities. Port 18188 does not need a privileged-port capability.
+Set `MemoryMax=512M` and `CPUQuota=50%` as provisional resource ceilings.
+
+The existing Caddy file and API unit are validated by the deployment CLI. The
+D1 copy changes only the documented paths and ports. Preserve `/api`, `/health`,
+`/ready`, `/openapi`, dotfile rejection, SPA fallback, and missing-asset 404
+behavior. The rootless D1 Caddy container is not the Tailscale Serve backend
+until Gate D2 receives separate approval.
 
 The route tests must prove:
 
@@ -361,101 +631,228 @@ The route tests must prove:
 
 For a later HTTPS profile, replace the loopback site address only after the owner approves DNS, TLS, firewall, ingress, exact `ALLOWED_ORIGINS`, and `COOKIE_SECURE=true`. Do not add public or LAN exposure as a side effect of this rehearsal.
 
+The D1 loopback origin is `http://127.0.0.1:18188` with
+`COOKIE_SECURE=false`. Gate D2 must set `ALLOWED_ORIGINS` to the exact approved
+HTTPS origin and `COOKIE_SECURE=true`; the proposed hostname remains
+`https://oprserver.<approved-tailnet>.ts.net:8445` until the tailnet name and
+effective grants are verified. Do not substitute a historical tailnet suffix.
+
 ## Configure secrets and bootstrap data
 
-Generate synthetic rehearsal secrets for this host only. Never reuse production credentials or key material.
+Create a mode-0600 `deploy/api.env` with newly generated synthetic values for
+`AUTH_COOKIE_SECRET`, `BACKUP_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_KEY_ID`, and
+`ASTRYX_SETUP_TOKEN`. Use distinct random values; the setup token must be at
+least 32 URL-safe characters. Never put them in Git, a unit file, a command
+argument, or evidence.
 
-Store `AUTH_COOKIE_SECRET` and `BACKUP_ENCRYPTION_KEY` in the approved secret file or secret manager. Use separate random values. Keep the file out of the release directory, image, shell history, and logs. Set the exact browser origin in `ALLOWED_ORIGINS`. Set `TRUSTED_PROXY_ADDRESSES` only after observing the API's direct peer address through the selected Podman network path.
+For loopback HTTP tests, set `ALLOWED_ORIGINS=http://127.0.0.1:18188`,
+`COOKIE_SECURE=false`, and `ENABLE_DESTRUCTIVE_OPERATIONS=false`. Leave
+`TRUSTED_PROXY_ADDRESSES` unset until the API's direct peer address is observed.
+This profile tests synthetic loopback behavior only. It does not prove
+HTTPS-only secure-cookie behavior. Gate D2 must set the approved HTTPS origin
+and `COOKIE_SECURE=true`.
 
-The API requires an auth cookie secret. New backups require a valid AES-256-GCM backup key that differs from the auth cookie secret. Set `ENABLE_DESTRUCTIVE_OPERATIONS=false` during normal service operation.
+The existing deployment CLI does not bootstrap a first install. Use the
+repository-managed `verify` command and the existing `scripts/release-bundle.py`
+verifier on the trusted operator workstation, then transfer the verified bundle
+to the host through the approved channel. Recheck the bundle SHA-256 on the
+host before extracting only the OCI archive and SPA archive. Retain the verified
+source, run, attempt, artifact ID, bundle checksum, OCI manifest digest, and SPA
+checksum in the deployment record. Import the API OCI archive without
+rebuilding, and pull only the pinned Caddy image digest into the dedicated UID
+1002 store.
 
-For a fresh synthetic rehearsal database only:
+For this release, the trusted workstation command uses source
+`b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, run `42181508155`, attempt `1`,
+artifact `13485579515`, artifact name
+`operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1`,
+and envelope SHA-256
+`0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4`:
 
 ~~~sh
-install -d -m 0700 -o operatoros -g operatoros /var/lib/operatoros/data
-OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  podman run --rm \
-  --entrypoint bun \
-  --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --volume /var/lib/operatoros/data:/var/lib/operatoros/data:rw \
-  <approved-image-reference>@sha256:<image-digest> \
-  run packages/db/src/db-cli.ts bootstrap --data-dir /var/lib/operatoros/data
+scripts/operatoros-deploy.sh verify \
+  --source-sha b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84 \
+  --run-id 42181508155 --run-attempt 1 --artifact-id 13485579515 \
+  --artifact-name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
+  --envelope-sha256 0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4
+
+gh run download 42181508155 --repo daoistmadness/operatoros \
+  --name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
+  --dir /staging/operatoros-release
+sha256sum /staging/operatoros-release/operatoros-release.tar
+python3 scripts/release-bundle.py verify \
+  /staging/operatoros-release/operatoros-release.tar \
+  b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84
 ~~~
 
-The production image includes the database CLI source. Validate the newly bootstrapped result with `--entrypoint bun <image> run packages/db/src/db-cli.ts validate --data-dir /var/lib/operatoros/data`. Fresh schema output must identify `20261027_s54`. Never bootstrap, migrate, or validate the protected S4.3 database.
+Require bundle SHA-256
+`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`, OCI
+manifest `sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`,
+API config ID
+`sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6`, and
+SPA SHA-256
+`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc` before
+copying the verified bundle to the OPRSERVER staging directory. The transfer
+must preserve the bundle checksum.
 
-Ordinary API startup validates an existing database and does not migrate it. A migration requires a separate exact-target authorization and a rehearsed wrapper, fresh verified encrypted backup, lock, and recovery path.
+Bootstrap only the new empty `data/sqlite` directory. The API image includes
+`packages/db/src/db-cli.ts`; use its `bootstrap` action in a one-time container
+with `--network=none`, `--read-only`, `--read-only-tmpfs`,
+`--cap-drop=all`, `--security-opt=no-new-privileges`, `--user 10000:10000`,
+`--userns=keep-id:uid=10000,gid=10000`, the exact API image config ID, and only
+the D1 data bind mount. Do not call `migrate-existing`. Validate the fresh
+schema as `20261027_s54` before starting the API. Never mount, copy, bootstrap,
+migrate, or validate the UID 1000 database or the protected UID 1001 S4.3
+database.
+
+The one-time bootstrap commands, run as `operatoros-runtime` with its explicit
+`CONTAINERS_STORAGE_CONF`, are:
+
+~~~sh
+D1_ROOT=/mnt/podman-data/operatoros-d1-synthetic
+API_IMAGE=sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6
+
+podman load --input "$D1_ROOT/deploy/staging/operatoros-api.oci.tar"
+podman pull docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
+
+podman run --rm --network=none --read-only --read-only-tmpfs \
+  --cap-drop=all --security-opt=no-new-privileges \
+  --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
+  --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
+  --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
+  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts bootstrap \
+  --data-dir /var/lib/operatoros/data
+
+podman run --rm --network=none --read-only --read-only-tmpfs \
+  --cap-drop=all --security-opt=no-new-privileges \
+  --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
+  --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
+  --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
+  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts validate \
+  --data-dir /var/lib/operatoros/data
+~~~
+
+The `podman load` input must come from the attested bundle that passed the
+repository verifier and the execution-time SHA-256 check. Do not save another
+image or rebuild. The bootstrap must print `BOOTSTRAPPED 20261027_s54`, and
+validation must print `VALID 20261027_s54`.
+
+The initial state also needs a seed application release because the current
+`deploy` command requires a healthy API/Caddy pair, current SPA pointer, and
+recent backup before it changes an application release. For this first
+synthetic qualification only, stage the exact verified SPA as
+`web/releases/legacy-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84/client`, set
+`web/current` to that directory, and install reviewed UID 1002 API/Caddy
+Quadlets that reference the exact imported API config ID and pinned Caddy
+digest. Start those two units, verify health and exact storage context, then
+create and validate a synthetic encrypted backup using the API image's
+`apps/api/src/backup-cli.ts backup` command with the private `api.env` values.
+Only after this seed state is verified should the operator run the existing
+`scripts/operatoros-deploy.sh deploy` command with the exact release identity,
+private config, synthetic backup filename, and `--yes`. This managed no-op
+promotion exercises locking, staging, readiness, and application rollback
+within the same release identity. It does not test cross-release rollback.
+Keep the initial seed and this one-time bootstrap inside the explicit D1
+authorization; do not treat them as production activation.
 
 ## Start and verify services
 
-After reviewers approve the generated systemd unit and Caddy configuration:
+Run every command as `operatoros-runtime` with the correct user manager and
+`CONTAINERS_STORAGE_CONF`. Start the API first and Caddy second. Do not start
+Tailscale Serve.
 
-1. Place the Quadlet file in the approved service account's rootless systemd directory.
-2. Run `systemctl --user daemon-reload` as that account.
-3. Confirm the generated service appears and its `[Install] WantedBy=default.target` dependency is present in the user manager. Quadlet-generated services are transient; do not run `systemctl --user enable`. Run `systemctl --user start operatoros-api.service` to start it. With explicit host-owner approval, configure user lingering so the user manager starts at boot without an interactive login.
-4. Confirm the single container uses the expected image digest, UID mapping, data mount, and loopback-only published port.
-5. Run `curl -fsS http://127.0.0.1:8090/health`; expect `{"status":"ok"}`.
-6. Run `curl -fsS http://127.0.0.1:8090/ready`; expect `ready: true` and `persistence: "sqlite"`.
-7. Run `caddy validate --config /etc/caddy/Caddyfile`.
-8. Start or reload Caddy only after validation. Verify the route tests through `http://127.0.0.1:8088`.
-9. Run the browser E2E suite against the Caddy origin through an approved SSH tunnel. Use synthetic accounts and database data.
-10. Restart the API, simulate a process crash using an approved test procedure, and reboot only with explicit host-owner permission. Verify systemd recovery, session behavior, and SQLite persistence.
-11. Confirm `podman ps`, `systemctl --user status`, host listeners, and firewall rules show exactly the approved profile.
+The authorized D1 qualification must verify the following:
 
-Do not use `vite preview` as a production server.
+- Podman reports version 5.7.0, `rootless=true`, the explicit storage config,
+  the configured overlay graphroot/runroot, and no additional image stores.
+- The API and Caddy Quadlet source matches the reviewed files. The generated
+  user services carry the expected manager environment and mount precheck.
+- The API listens only on `127.0.0.1:18190`. Caddy listens only on
+  `127.0.0.1:18188`. No wildcard, LAN, or Tailscale interface owns either port.
+- `/health` and `/ready` return success. Caddy serves the SPA shell and nested
+  routes, returns 404 for missing assets and dotfiles, and proxies API paths.
+- Authentication accepts only the exact synthetic loopback Origin and rejects
+  other Origins. Use synthetic credentials and test that cookies follow the
+  HTTP-only D1 setting.
+- `systemctl --user show-environment` contains exactly the expected
+  `CONTAINERS_STORAGE_CONF` value; capture only that variable. With the explicit
+  D1 environment, `podman healthcheck run operatoros-lite-api` succeeds with
+  exit 0. Its automatic health-check service also succeeds under UID 1002. Run
+  `storage-check` once with the exact config path and once with a deliberately
+  wrong process-level `CONTAINERS_STORAGE_CONF`; the correct call returns 0 and
+  the wrong context returns 1 before invoking Podman. With the correct store
+  selected, `podman healthcheck run operatoros-d1-missing` returns 125. Capture
+  only exit codes and sanitized error text; never include secret values.
+- Rootless Podman reports version 5.7.0 and the configured native `overlay`
+  store, exact graphroot/runroot, and dedicated `storage.conf`. If the host
+  cannot use native overlay, stop; VFS or package changes require separate
+  review.
+- SQLite integrity, WAL behavior, and database identity remain valid across an
+  API service restart. Do not run a host reboot or power-loss test in D1.
+- Deployment locking, invalid-input rejection, interrupted-transaction
+  reporting, and same-artifact application rollback work inside the D1 root.
+  Cross-release rollback remains untested.
+
+Finish with `operatoros-lite-api.service` and
+`operatoros-lite-caddy.service` stopped and not enabled. Keep the approved
+linger setting enabled so the dedicated manager can run after boot; this does
+not enable either Quadlet service. Keep the UID 1002 account, store, synthetic
+database, image, configuration, and evidence for review. Do not delete them
+during automatic cleanup.
 
 ## Back up and restore
 
-The current API creates an encrypted snapshot by checkpointing and serializing SQLite, running integrity and foreign-key checks, encrypting with AES-256-GCM, and publishing an artifact plus a checksum metadata file. It does not back up a live database by copying the database and WAL files.
+The D1 test may create and restore an encrypted backup made only from synthetic
+records inside the new D1 tree. Do not change the current backup timers or
+repositories. The Loop 74 audit did not prove application coverage, encryption
+of the host Restic set, or off-host recovery. Keep those items open for Gate E.
 
-For rehearsal:
+Use the application backup flow, which checkpoints and serializes SQLite,
+checks integrity and foreign keys, encrypts with AES-256-GCM, and writes a
+checksum manifest. Do not copy a live database file or raw WAL sidecar.
+Preserve the synthetic backup and its key reference for D1 review. Do not place
+backup key material in evidence.
 
-1. Create synthetic records through the application.
-2. Create a backup with the API or the guarded `scripts/backup.sh` flow.
-3. Verify the artifact and metadata pair. Copy both to the approved off-host destination using the approved encrypted transfer.
-4. Restore the pair into a separate empty data root. Keep the production-equivalent data root unchanged.
-5. Run `PRAGMA integrity_check`, foreign-key checks, schema validation, and an application-level login/read workflow on the restored copy.
-6. Measure elapsed time from restore start through application usability. Record the achieved RPO/RTO against owner-approved targets.
-7. Keep the backup encryption key outside the host and verify that the designated restore owner can retrieve it under the approved procedure.
+## Rollback and cleanup
 
-Retention is currently count-based at ten complete generations. It does not implement the provisional seven-day policy. A separate off-host retention process must be selected and tested before accepting a time-based commitment.
+On failure, stop only the API and Caddy services in the UID 1002 user manager.
+Confirm their exact service names, manager UID, and Podman storage config first.
+Preserve the new synthetic database, image store, transaction records, logs,
+and evidence. Do not remove the account or delete any D1 files automatically.
+If the change window requires restoring the prior linger state, disable
+lingering only after confirming both D1 services are stopped and no other UID
+1002 services exist; otherwise stop for owner review.
 
-Do not copy a live SQLite file or raw WAL sidecar as a backup. Stop API writers and use the guarded restore procedure for offline restore. The API and CLI share the data-root lock. Preserve the encrypted off-host backup until restore review passes.
+Never run global Podman cleanup commands. Do not touch UID 1000 or UID 1001
+services or data. Do not modify the existing `operatoros` tree, Tailscale
+routes, backup services, firewall, or developer state. Stop and request owner
+review if any action would cross those boundaries.
 
-## Restart, upgrade, and rollback
-
-For a release upgrade:
-
-1. Record the current static path and API image digest.
-2. Create and verify a pre-change encrypted backup.
-3. Check the current schema with `bun run db:validate`. Confirm that the new API accepts it.
-4. Stage the new immutable SPA artifact and API image without changing the active release pointer or service.
-5. Validate the candidate image and Caddyfile.
-6. Update the API image digest and static pointer as one reviewed release.
-7. Restart the API, reload Caddy, and run health, readiness, auth, deep-link, asset, and E2E checks.
-8. Keep the previous image and static release until reviewers accept the result.
-
-To roll back the application, restore the prior API image digest and static pointer only if the prior API supports the current schema. Local validation did not include a previous application image, so rollback compatibility remains unverified. Do not assume that application rollback reverses a schema migration. If any schema change occurred, use only the approved database recovery decision.
-
-Define objective stop and rollback thresholds before production authorization. During rehearsal, stop on an unapproved listener, multiple API processes for one data root, failed integrity check, missing encryption key, failed route test, failed auth/CSRF test, or unexplained data change.
+Gate D2 separately approves tailnet grants, the HTTPS endpoint and Tailscale
+Serve changes. Gate E separately qualifies encrypted production storage,
+off-host restore, host recovery, crash/reboot behavior, cross-release rollback,
+and the Bun/SQLite finding. Gate F remains NO-GO until those gates pass and the
+owner authorizes a production deployment.
 
 ## Logs and troubleshooting
 
-- API unit: `systemctl --user status operatoros-api` and `journalctl --user -u operatoros-api`.
-- Container: `podman ps`, `podman inspect operatoros-api`, and bounded `podman logs --since <time> operatoros-api`.
-- Caddy: `systemctl status caddy`, `journalctl -u caddy`, and `caddy validate --config /etc/caddy/Caddyfile`.
-- Ports: inspect `ss -ltnp` and verify both published service ports bind to loopback only.
-- SQLite: stop the API before an offline CLI operation. Confirm only one API process owns the data root and inspect the data-root lock status.
-- Outage: distinguish API `/health` from `/ready`. `/health` reports process status; `/ready` reports route registration and SQLite configuration. Neither proves that a representative database-backed request succeeds, so run the approved application smoke check after restart.
+- Run these commands as `operatoros-runtime`; do not use the UID 1000 manager:
+  `CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf python3 /mnt/podman-data/operatoros-d1-synthetic/deploy/operatoros_deploy.py storage-check --config /mnt/podman-data/operatoros-d1-synthetic/deploy/config/operatoros.toml`.
+- Query the API unit with `systemctl --user status operatoros-lite-api.service` and `journalctl --user -u operatoros-lite-api.service`.
+- Query Caddy with `systemctl --user status operatoros-lite-caddy.service` and `journalctl --user -u operatoros-lite-caddy.service`.
+- Select the D1 store explicitly for Podman commands with `CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf`. Never use a bare Podman command to determine whether these containers exist.
+- Inspect ports with `ss -ltn` and confirm that `18188` and `18190` bind only to loopback.
+- Stop the API before an offline SQLite operation. Preserve the data-root lock and confirm that only the UID 1002 API owns this data root.
+- `/health` reports process status. `/ready` reports route registration and SQLite configuration. Neither proves a representative database-backed request, so run the approved synthetic smoke check after restart.
 - Do not expose credentials, cookies, database contents, or unsanitized logs in tickets or release records.
 
 ## References
 
-- [Podman deployment proposal](../decisions/podman-deployment.md).
-- [Ubuntu Noble Podman package](https://packages.ubuntu.com/noble/podman).
-- [Ubuntu Noble Podman 4.9.3 package details](https://packages.ubuntu.com/en/noble/amd64/podman).
-- [Podman 4.9.3 Quadlet unit reference](https://docs.podman.io/en/v4.9.3/markdown/podman-systemd.unit.5.html).
-- [Caddy official package installation](https://caddyserver.com/docs/install).
+- [Podman single-host deployment](../decisions/podman-deployment.md).
+- [Podman 5.7 CLI reference](https://docs.podman.io/en/v5.7.0/markdown/podman.1.html).
+- [Podman 5.7 Quadlet reference](https://docs.podman.io/en/v5.7.0/markdown/podman-systemd.unit.5.html).
+- [Podman 5.7 health-check exit codes](https://docs.podman.io/en/v5.7.0/markdown/podman-healthcheck-run.1.html).
+- [Container storage configuration reference](https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md).
 - [Database operations](database-operations.md).
 - [Backup and restore](backup-restore.md).
 - [Secret rotation](secret-rotation.md).

@@ -1,0 +1,33 @@
+http://127.0.0.1:18188 {
+	bind 127.0.0.1
+	encode zstd gzip
+
+	@dotfiles path_regexp dotfiles (^|/)\.[^/]+(/|$)
+	handle @dotfiles {
+		respond 404
+	}
+
+	@api path /api /api/* /health /ready /openapi /openapi/*
+	handle @api {
+		reverse_proxy 127.0.0.1:18190
+	}
+
+	@root path /
+	handle @root {
+		root * /srv/operatoros/current/client
+		rewrite * /_shell.html
+		file_server
+	}
+
+	@static_file path_regexp static_file \.[^/]+$
+	handle @static_file {
+		root * /srv/operatoros/current/client
+		file_server
+	}
+
+	handle {
+		root * /srv/operatoros/current/client
+		try_files {path} /_shell.html
+		file_server
+	}
+}

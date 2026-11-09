@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "060c9bcf7ce92eb13a97f19c9dbec241dd915333cbbc132cd0ea7a4fddbe503b",
+      "fingerprint": "f4763666bb0529f3f9f1986805d1d1ec481f833d0baff7470f4e331d1588b9a8",
       "snapshot": {
-        "docs/README.md": "8d4dade5f8e3eed3bcc5c84958f27d865aa16da3eb5ebd0a9fcba047085dc6c1"
+        "docs/README.md": "7e3eed82dcbc798407e407e69ac7b13a3e87b390c8787e297435fcd095cd5310"
       },
-      "head": "c9ea33de8df13d154fde0f7c3dabe92f68c80ded",
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
       "outcome": "no-change",
-      "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
       "evidence": [
-        "Changed: docs/README.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
+        "Changed: docs/README.md at 989837e3547074c5b4569aab51c928610bacc064"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c55023e225ab4a4d29799b10ef986cbe83db1e814d24cec677fbb7bde28c23b5",
+      "fingerprint": "797a86dd77e0687b003d39665b5183d952d2850772ff4919ab675606eff87d22",
       "snapshot": {
-        "CHANGELOG.md": "d230f4426c856d083199ebb051fa4e09919e34ce3885d8dc18795d08dd9d759f"
+        "CHANGELOG.md": "522ad7d96ab57a372a7d7ad9bdc039b725af7834b194dbc42d7dd0aba0917efa"
       },
-      "head": "f033c414088f7183712c89b8e97b0dbb3c6956c3",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Adding the assigned PR number to the existing rehearsal changelog entry does not change installed skill guidance.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: CHANGELOG.md at f033c414088f7183712c89b8e97b0dbb3c6956c3"
+        "Changed: CHANGELOG.md at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:COMMANDS.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "4ade57084d31cef4d760e349d13014ebacac94debd666a9538e33910c522982b",
+      "fingerprint": "6eb7715771d2e8d7a63691adc860174df7b0f4ba02f67569f0a7366d3ad83392",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "7b77ebaae2abced03a24b75e843f3f12f22d7402abed71aac508224e87ac51f9"
+        "docs/runbooks/ubuntu-server-deployment.md": "46f557c4c6845966fd12861b070338cce948742c20528c8f666113a037590982"
       },
-      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
+      "head": "6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2",
       "outcome": "no-change",
-      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
+      "reason": "Loop 77 updates only the Ubuntu deployment runbook to distinguish historical UID/subordinate-ID evidence from fresh host verification; no installed skill guidance changed.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at e3fb995130ff18c085d8973c12db2a7875569735"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9745,15 +9745,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "1b9cd756e7c6fac5056cdc4ee3729fd95a795048f4bf72f1c990aa45356d6163",
+      "fingerprint": "9f8e7a73aab780da653b9fcd1ee72f3edd0324dd950e12a6f85c30ae6d42c7e9",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "9f964f98ea6d2cee5eb90ffac67d57b24a7f26a55a2be3cd687a237601ced87a"
+        "docs/decisions/podman-deployment.md": "9491db7b3cfecec716968ae6d34194dd4ce64694e2c75cfac5684c9fda993568"
       },
-      "head": "e3fb995130ff18c085d8973c12db2a7875569735",
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
       "outcome": "no-change",
-      "reason": "Reviewed PR #364 runtime identity, explicit Podman store validation, related deployment guidance, and focused regression tests. These changes do not alter reusable skill guidance or planning records, so no skill update is warranted.",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at e3fb995130ff18c085d8973c12db2a7875569735"
+        "Changed: docs/decisions/podman-deployment.md at 989837e3547074c5b4569aab51c928610bacc064"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9925,15 +9925,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "7f5d23cccb36e9b3e81a88e66a2e519928b9503101fdd9cee485cd8477e64f44",
+      "fingerprint": "df2b3ebdde4fe359d85511f6d62b0be9ef068a9a3a7ade3e4aeb329bec9b011d",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "ccf3be93ce373e040a38a5fea100bb0d1fa119954d5efeb222cc0bae208a3138"
+        "docs/runbooks/release-bundles.md": "1bfbc8eed8ed499007277860071d899f26bdff72bcc3729d8fb705fcaa3c4562"
       },
-      "head": "148fc60be7e5809f289c9c455acef4454f787158",
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
       "outcome": "no-change",
-      "reason": "No installed OperatorOS skill covers the Python rootless-Podman rehearsal; the Elysia skill is unrelated. Review found no guidance that should change for these files.",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 148fc60be7e5809f289c9c455acef4454f787158"
+        "Changed: docs/runbooks/release-bundles.md at 989837e3547074c5b4569aab51c928610bacc064"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "205549a72a0d3807fb36b1d81694f1efaeb751830996bd95dfb3ffd19a47e5d5",
+      "fingerprint": "99e23083ab9e92966927c6ce79502ac7bc72d48e5dd48822bcf0cab8f452afe2",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "1a18bc38e6a9b49fb45e7327e748f9bcd44c78deaac5fff08091b7f0799a5305"
+        "scripts/tests/test_release_bundle.py": "379910b57b83d6e036aeca1b6c1970161b0ceef286b7e979d1f0820f43ec0e05"
       },
-      "head": "1d2d8d6dfe168b1cf70442e4a99b49b222c793c3",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "The synthetic deployment rehearsal changes do not alter installed project skills or agent guidance.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1d2d8d6dfe168b1cf70442e4a99b49b222c793c3"
+        "Changed: scripts/tests/test_release_bundle.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "7ba07083476b2952f5267099600e1ac63b727ecdc6fb3d4957d4f4df12093683",
+      "fingerprint": "84ee8c7d562568af5a1f3649ee91b2e1c2f9cff020accf78e0b19e19da47050e",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "efb8bf46d3d22e1329f910b7424c0c92ed0ebe06240f1839705643caea8973b0"
+        "scripts/operatoros_deploy.py": "1071ad166a802a8cd4f4d3c25d3dfcb81daf196638db049dcd0e5c53888478c6"
       },
-      "head": "3bb7267605155e3561ad9b8a47f79d93554e89f1",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "The Python SQLite identity helper does not change installed skill guidance.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 3bb7267605155e3561ad9b8a47f79d93554e89f1"
+        "Changed: scripts/operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "89ec4e32a8f84a8e4366ca4fee0ac42b971cdf601a4fb0d133418cf341a1db21",
+      "fingerprint": "291b3fb0216471f2c76b4734a9f3a96c6f8ac206108528e0be44c23141327abd",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "f1fdcab830d67de28101131a4fa25495045e0526222176b62c40082cd5719eb1"
+        "scripts/tests/test_operatoros_deploy.py": "7f5f3f5d69cdbc22707589590844483387ec8d972a2ae0373f0203932f944c7d"
       },
-      "head": "7bff8e9d536e35ae98cfb23a46119aef4f766209",
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
       "outcome": "no-change",
-      "reason": "Python rehearsal and deployment changes add rollback safety, sanitized failure evidence, and regression coverage; no project skill guidance applies.",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 7bff8e9d536e35ae98cfb23a46119aef4f766209"
+        "Changed: scripts/tests/test_operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10138,6 +10138,78 @@
       "reason": "These documentation-only changes publish a redacted host integration summary, label the prior deployment audit as historical, and update its index and runbook links; no reusable skill or agent guidance changes.",
       "evidence": [
         "Changed: docs/audits/host-integration-2026-11-06.md at c9ea33de8df13d154fde0f7c3dabe92f68c80ded"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-Caddyfile.example": {
+      "fingerprint": "8de465a0364f8dd24281c24a5fcf42204274ca26f889694e5947d301da3f7c6f",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-Caddyfile.example": "2217b3d9fb5ec2111551cf248a8fb5bb1dd9817f8da383e5b7c4538a3cc03011"
+      },
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "outcome": "no-change",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-Caddyfile.example at 989837e3547074c5b4569aab51c928610bacc064"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-api.container.in": {
+      "fingerprint": "ea5145a3a44f7742f7cd0269a5ff5bfeac6220bf32e3116a656fac4b38cc7ce1",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-api.container.in": "fdaaeef5a0ac7a71a77025744419a8d16959394b9dbd6f88cdcea049bd1d41da"
+      },
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "outcome": "no-change",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-api.container.in at 989837e3547074c5b4569aab51c928610bacc064"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-api.env.example": {
+      "fingerprint": "aa8306a2e40e494b832f3e7cb3de62f765311e2587b7378a4f2848c189c63803",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-api.env.example": "618230b7dfefa4f0203cf35b8800b922c0574a9abea8295933394cd5d5bf95d2"
+      },
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "outcome": "no-change",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-api.env.example at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-caddy.container.in": {
+      "fingerprint": "4b884529ca9eaada956ad6ce5f4caba05cf894e9cef82ef2af6afa6103a888fa",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-caddy.container.in": "5ab8bc2d09e50ef2a25bad85d65182716b9e8798332764ca99a7cbfe5c25af00"
+      },
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "outcome": "no-change",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-caddy.container.in at 989837e3547074c5b4569aab51c928610bacc064"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-config.toml.example": {
+      "fingerprint": "37fb2e012774a23d569088024afc747c64fee80b9c27bcf8483b3e8c41e82177",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-config.toml.example": "a01a1fb52e8e1becaff3289390ca4b32c0831cb0d2439a70d95e77a90170059d"
+      },
+      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "outcome": "no-change",
+      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-config.toml.example at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+      ]
+    },
+    "source:deploy/podman/operatoros-d1-storage.conf.example": {
+      "fingerprint": "60ee0d6ca8a1735fba6ac8f6de8439f24cdb154fca832c2c55fe696237cd30a6",
+      "snapshot": {
+        "deploy/podman/operatoros-d1-storage.conf.example": "0d69e40d5a548a267644af042940690cebcc7b2323cf79111f71ad2336a1c980"
+      },
+      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "outcome": "no-change",
+      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "evidence": [
+        "Changed: deploy/podman/operatoros-d1-storage.conf.example at 989837e3547074c5b4569aab51c928610bacc064"
       ]
     }
   }

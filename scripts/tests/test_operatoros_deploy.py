@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import importlib.util
 import io
@@ -9,6 +10,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 import zipfile
 from datetime import datetime, timedelta, timezone
@@ -81,7 +83,7 @@ def podman_info_fixture(test):
             "configFile": str(test.storage_conf),
             "graphRoot": str(test.graphroot),
             "runRoot": str(test.runroot),
-            "graphDriverName": "vfs",
+            "graphDriverName": "overlay",
         },
     }
 
@@ -679,16 +681,31 @@ class DeploymentFixture(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="operatoros-deploy-state-test-")
         self.base = Path(self.temp.name).resolve()
-        self.root = self.base / "operatoros"
+        self.mount_override = patch.object(deploy, "HOST_DATA_MOUNTPOINT", self.base)
+        self.mount_override.start()
+        self.addCleanup(self.mount_override.stop)
+        self.uid_override = patch.object(deploy, "HOST_D1_UID", os.getuid())
+        self.uid_override.start()
+        self.addCleanup(self.uid_override.stop)
+        self.home = self.base / "home"
+        self.home.mkdir(mode=0o700)
+        self.home_override = patch.object(Path, "home", return_value=self.home)
+        self.home_override.start()
+        self.addCleanup(self.home_override.stop)
+        self.runroot_override = patch.object(deploy, "host_runroot", return_value=self.base / "runtime-runroot")
+        self.runroot_override.start()
+        self.addCleanup(self.runroot_override.stop)
+        self.root = self.base / deploy.HOST_D1_ROOT_NAME
         self.deploy_dir = self.root / "deploy"
-        self.data = self.root / "data"
+        self.config_dir = self.deploy_dir / "config"
+        self.data = self.root / "data/sqlite"
         self.backups = self.data / "backups"
         self.web = self.root / "web"
         self.web_releases = self.web / "releases"
         self.graphroot = self.root / "podman-rootless/graphroot"
-        self.runroot = self.root / "podman-rootless/runroot"
+        self.runroot = self.base / "runtime-runroot"
         self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
-        for path in (self.deploy_dir, self.backups, self.web_releases, self.graphroot, self.runroot):
+        for path in (self.deploy_dir, self.config_dir, self.backups, self.web_releases, self.graphroot, self.runroot):
             path.mkdir(mode=0o700, parents=True, exist_ok=True)
             path.chmod(0o700)
         for path in (self.root, self.deploy_dir, self.data, self.backups, self.web, self.web_releases,
@@ -696,20 +713,37 @@ class DeploymentFixture(unittest.TestCase):
             path.chmod(0o700)
         self.data.joinpath("operatoros.sqlite").write_bytes(b"synthetic SQLite fixture placeholder")
         self.data.joinpath("operatoros.sqlite").chmod(0o600)
+        self.config_file = self.config_dir / "operatoros.toml"
+        self.runtime_cli = self.deploy_dir / "operatoros_deploy.py"
+        self.runtime_cli.write_bytes((ROOT / "scripts/operatoros_deploy.py").read_bytes())
+        self.runtime_cli.chmod(0o600)
+        self.release_verifier = self.deploy_dir / "release-bundle.py"
+        self.release_verifier.write_bytes((ROOT / "scripts/release-bundle.py").read_bytes())
+        self.release_verifier.chmod(0o600)
         old_sha = "b" * 40
         self.old_id = "sha256:" + "1" * 64
         old_release = self.web_releases / old_sha
         (old_release / "client").mkdir(mode=0o700, parents=True)
         (old_release / "client/_shell.html").write_text("previous shell", encoding="utf-8")
         self.web.joinpath("current").symlink_to(old_release)
-        user_units = self.base / "home/.config/containers/systemd"
+        user_units = self.home / ".config/containers/systemd"
         user_units.mkdir(mode=0o700, parents=True)
+        service_guards = (
+            "[Unit]\nRequiresMountsFor=" + str(self.base) + "\n"
+            "ConditionPathIsMountPoint=" + str(self.base) + "\n"
+            "[Service]\nEnvironment=CONTAINERS_STORAGE_CONF=" + str(self.deploy_dir / "storage.conf") + "\n"
+            "ExecStartPre=/usr/bin/install -d -m 0700 " + str(self.runroot) + "\n"
+            "ExecStartPre=/usr/bin/python3 " + str(self.runtime_cli) +
+            " storage-check --config " + str(self.config_file) + "\n"
+            "Restart=on-failure\n"
+        )
         self.api_unit = user_units / "operatoros-lite-api.container"
         self.api_unit.write_text(
-            "[Container]\nImage=localhost/operatoros-api:" + old_sha + "\n"
-            "Pull=never\nContainerName=operatoros-lite-api\nPublishPort=127.0.0.1:18090:8090\n"
+            service_guards + "[Container]\nImage=localhost/operatoros-api:" + old_sha + "\n"
+            "Pull=never\nContainerName=operatoros-lite-api\nPublishPort=127.0.0.1:18190:8090\n"
             "User=10000:10000\nUserNS=keep-id:uid=10000,gid=10000\nReadOnly=true\nReadOnlyTmpfs=true\n"
-            "NoNewPrivileges=true\nDropCapability=all\nEnvironmentFile=" + str(self.root / "deploy/api.env") + "\n"
+            "NoNewPrivileges=true\nDropCapability=all\nLogDriver=journald\nEnvironmentFile=" + str(self.root / "deploy/api.env") + "\n"
+            "HealthCmd=/usr/local/bin/operatoros-api-healthcheck\nHealthInterval=30s\n"
             "Volume=" + str(self.data) + ":/var/lib/operatoros/data:rw\n", encoding="utf-8")
         self.api_unit.chmod(0o600)
         self.api_copy = self.deploy_dir / self.api_unit.name
@@ -717,21 +751,35 @@ class DeploymentFixture(unittest.TestCase):
         self.api_copy.chmod(0o600)
         self.caddy_unit = user_units / "operatoros-lite-caddy.container"
         self.caddy_unit.write_text(
-            "[Container]\nImage=" + deploy.CADDY_IMAGE + "\nPull=never\nContainerName=operatoros-lite-caddy\n"
-            "Network=host\nUser=1000:1000\nUserNS=keep-id:uid=1000,gid=1000\nReadOnly=true\n"
-            "NoNewPrivileges=true\nDropCapability=all\nAddCapability=net_bind_service\n"
+            service_guards + "[Container]\nImage=" + deploy.CADDY_IMAGE + "\nPull=never\nContainerName=operatoros-lite-caddy\n"
+            "Network=host\nUser=1000:1000\nUserNS=keep-id:uid=1000,gid=1000\nLogDriver=journald\nReadOnly=true\n"
+            "NoNewPrivileges=true\nDropCapability=all\n"
             "Volume=" + str(self.root / "deploy/Caddyfile") + ":/etc/caddy/Caddyfile:ro\n"
             "Volume=" + str(self.web / "current/client") + ":/srv/operatoros/current/client:ro\n", encoding="utf-8")
         self.caddy_unit.chmod(0o600)
         self.storage_conf = self.deploy_dir / "storage.conf"
-        self.storage_conf.write_text("[storage]\ndriver=\"vfs\"\n", encoding="utf-8")
+        self.storage_conf.write_text(
+            "[storage]\n"
+            "driver = \"overlay\"\n"
+            f"graphroot = {json.dumps(str(self.graphroot))}\n"
+            f"runroot = {json.dumps(str(self.runroot))}\n",
+            encoding="utf-8",
+        )
         self.storage_conf.chmod(0o600)
-        (self.deploy_dir / "api.env").write_text("AUTH_COOKIE_SECRET=synthetic-only\n", encoding="utf-8")
+        (self.deploy_dir / "api.env").write_text(
+            "AUTH_COOKIE_SECRET=" + "a" * 40 + "\n" +
+            "BACKUP_ENCRYPTION_KEY=" + base64.b64encode(b"b" * 32).decode("ascii") + "\n" +
+            "ASTRYX_SETUP_TOKEN=" + "c" * 40 + "\n" +
+            "BACKUP_ENCRYPTION_KEY_ID=operatoros-d1-synthetic\n" +
+            "ALLOWED_ORIGINS=http://127.0.0.1:18188\nCOOKIE_SECURE=false\n"
+            "ENABLE_DESTRUCTIVE_OPERATIONS=false\n",
+            encoding="utf-8",
+        )
         (self.deploy_dir / "api.env").chmod(0o600)
         (self.deploy_dir / "Caddyfile").write_text(
-            "http://127.0.0.1:18088 {\n bind 127.0.0.1\n"
+            "http://127.0.0.1:18188 {\n bind 127.0.0.1\n"
             " @api path /api /api/* /health /ready /openapi /openapi/*\n"
-            " handle @api { reverse_proxy 127.0.0.1:18090 }\n"
+            " handle @api { reverse_proxy 127.0.0.1:18190 }\n"
             " @dotfiles path_regexp dotfiles (^|/)\\.[^/]+(/|$)\n"
             " handle @dotfiles { respond 404 }\n"
             " @static_file path_regexp static_file \\.[^/]+$\n"
@@ -751,6 +799,10 @@ class DeploymentFixture(unittest.TestCase):
         self.cfg = {
             "root": self.root,
             "expected_uid": os.getuid(),
+            "storage_mountpoint": self.base,
+            "storage_uuid": "9a106071-0188-4a1b-924c-65a34413fcb3",
+            "storage_fstype": "ext4",
+            "storage_driver": "overlay",
             "storage_conf": self.storage_conf,
             "graphroot": self.graphroot,
             "runroot": self.runroot,
@@ -761,15 +813,18 @@ class DeploymentFixture(unittest.TestCase):
             "caddy_unit": self.caddy_unit,
             "api_service": "operatoros-lite-api.service",
             "caddy_service": "operatoros-lite-caddy.service",
-            "api_url": "http://127.0.0.1:18090",
-            "web_url": "http://127.0.0.1:18088",
-            "min_free_bytes": 1,
-            "min_free_inodes": 1,
+            "api_url": "http://127.0.0.1:18190",
+            "web_url": "http://127.0.0.1:18188",
+            "min_free_bytes": deploy.HOST_DATA_FREE_FLOOR,
+            "min_free_inodes": deploy.HOST_MIN_FREE_INODES,
             "backup_max_age_seconds": 86400,
+            "root_min_free_bytes": deploy.HOST_ROOT_FREE_FLOOR,
         }
-        self.config_file = self.base / "deploy.toml"
+        self.host_cfg = self.cfg | {"profile": "host"}
         lines = []
         for key, value in self.cfg.items():
+            if key == "profile":
+                continue
             if isinstance(value, Path):
                 value = str(value)
             lines.append(f"{key} = {json.dumps(value)}")
@@ -786,8 +841,35 @@ class DeploymentFixture(unittest.TestCase):
         self.assertEqual(deploy.validate_backup(cfg, self.backup.name), self.backup)
         with self.assertRaises(deploy.DeployError):
             deploy.validate_backup(cfg, "../backup_synthetic.sqlite3")
+
+        wrong_root = self.base / "operatoros"
+        wrong_root.mkdir(mode=0o700)
+        invalid_context = json.loads(json.dumps(self.cfg, default=str))
+        invalid_context["root"] = str(wrong_root)
+        invalid_context["api_url"] = "http://127.0.0.1:18090"
+        self.config_file.write_text(
+            "\n".join(f"{key} = {json.dumps(value)}" for key, value in invalid_context.items()) + "\n"
+        )
+        self.config_file.chmod(0o600)
+        with self.assertRaisesRegex(deploy.DeployError, "isolated D1 contract"):
+            deploy.load_config(self.config_file)
+
+        self.config_file.write_text(
+            "\n".join(f"{key} = {json.dumps(str(value) if isinstance(value, Path) else value)}"
+                      for key, value in self.cfg.items()) + "\n"
+        )
+        self.config_file.chmod(0o600)
+        low_reserve = json.loads(json.dumps(self.cfg, default=str))
+        low_reserve["min_free_bytes"] = deploy.HOST_DATA_FREE_FLOOR - 1
+        self.config_file.write_text(
+            "\n".join(f"{key} = {json.dumps(value)}" for key, value in low_reserve.items()) + "\n"
+        )
+        self.config_file.chmod(0o600)
+        with self.assertRaisesRegex(deploy.DeployError, "capacity floors"):
+            deploy.load_config(self.config_file)
+
         config = json.loads(json.dumps(self.cfg, default=str))
-        config["api_url"] = "http://operator:secret@127.0.0.1:18090"
+        config["api_url"] = "http://operator:secret@127.0.0.1:18190"
         self.config_file.write_text("\n".join(f"{key} = {json.dumps(value)}" for key, value in config.items()) + "\n")
         self.config_file.chmod(0o600)
         with self.assertRaisesRegex(deploy.DeployError, "api_url must be an explicit loopback"):
@@ -796,6 +878,253 @@ class DeploymentFixture(unittest.TestCase):
         self.config_file.chmod(0o644)
         with self.assertRaisesRegex(deploy.DeployError, "mode 0600"):
             deploy.load_config(self.config_file)
+
+    def test_d1_capacity_floor_matches_measured_peak_contract(self):
+        self.assertEqual(deploy.HOST_DATA_FREE_FLOOR, 7 * 1024**3)
+        self.assertEqual(deploy.HOST_MIN_FREE_INODES, 50_000)
+        self.assertEqual(deploy.HOST_DATA_OPERATION_HEADROOM_BYTES, 2 * 1024**3)
+        self.assertEqual(deploy.HOST_OPERATION_HEADROOM_INODES, 30_000)
+        self.assertEqual(deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES, 1 * 1024**3)
+        self.assertEqual(deploy.HOST_DATA_FREE_FLOOR + deploy.HOST_DATA_OPERATION_HEADROOM_BYTES,
+                         9 * 1024**3)
+        self.assertEqual(deploy.HOST_MIN_FREE_INODES + deploy.HOST_OPERATION_HEADROOM_INODES, 80_000)
+        self.assertEqual(deploy.HOST_ROOT_FREE_FLOOR + deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES,
+                         16 * 1024**3)
+        example = tomllib.loads((ROOT / "deploy/podman/operatoros-d1-config.toml.example").read_text())
+        self.assertEqual(example["min_free_bytes"], deploy.HOST_DATA_FREE_FLOOR)
+        self.assertEqual(example["min_free_inodes"], deploy.HOST_MIN_FREE_INODES)
+
+    def test_host_storage_mount_requires_the_configured_mount_uuid_type_and_rw_state(self):
+        filesystem = {"target": str(self.base), "uuid": self.cfg["storage_uuid"],
+                      "fstype": "ext4", "options": "rw,relatime"}
+        valid = subprocess.CompletedProcess([], 0, json.dumps({"filesystems": [filesystem]}), "")
+        enough_root_space = type("Usage", (), {"free": deploy.HOST_ROOT_FREE_FLOOR})()
+        with patch.object(deploy, "run_command", return_value=valid) as run, \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_root_space):
+            deploy.verify_storage_mount(self.host_cfg)
+        self.assertEqual(run.call_args.args[0][:3], ["findmnt", "--json", "--target"])
+
+        enough_data_space = type("Usage", (), {"free": deploy.HOST_DATA_FREE_FLOOR})()
+        low_root_space = type("Usage", (), {"free": deploy.HOST_ROOT_FREE_FLOOR - 1})()
+        with patch.object(deploy, "run_command", return_value=valid), \
+             patch.object(deploy.shutil, "disk_usage", side_effect=[enough_data_space, low_root_space]):
+            with self.assertRaisesRegex(deploy.DeployError, "root filesystem"):
+                deploy.verify_storage_mount(self.host_cfg)
+
+        low_data_space = type("Usage", (), {"free": deploy.HOST_DATA_FREE_FLOOR - 1})()
+        with patch.object(deploy, "run_command", return_value=valid), \
+             patch.object(deploy.shutil, "disk_usage", return_value=low_data_space):
+            with self.assertRaisesRegex(deploy.DeployError, "data filesystem"):
+                deploy.verify_storage_mount(self.host_cfg)
+
+        enough_data_space = type("Usage", (), {"free": deploy.HOST_DATA_FREE_FLOOR})()
+        low_inode_count = type("StatVFS", (), {"f_favail": deploy.HOST_MIN_FREE_INODES - 1})()
+        with patch.object(deploy, "run_command", return_value=valid), \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_data_space), \
+             patch.object(deploy.os, "statvfs", return_value=low_inode_count):
+            with self.assertRaisesRegex(deploy.DeployError, "data filesystem"):
+                deploy.verify_storage_mount(self.host_cfg)
+
+        invalid_filesystems = (
+            {**filesystem, "uuid": "00000000-0000-0000-0000-000000000000"},
+            {**filesystem, "target": str(self.base.parent)},
+            {**filesystem, "fstype": "xfs"},
+            {**filesystem, "options": "ro,relatime"},
+            {**filesystem, "options": "relatime"},
+        )
+        for mounted in invalid_filesystems:
+            with self.subTest(mounted=mounted), patch.object(
+                deploy, "run_command",
+                return_value=subprocess.CompletedProcess([], 0, json.dumps({"filesystems": [mounted]}), ""),
+            ), self.assertRaisesRegex(deploy.DeployError, "identity or writable"):
+                deploy.verify_storage_mount(self.host_cfg)
+
+        with patch.object(deploy, "run_command", return_value=subprocess.CompletedProcess([], 0, "{}", "")):
+            with self.assertRaisesRegex(deploy.DeployError, "cannot verify"):
+                deploy.verify_storage_mount(self.host_cfg)
+
+    def test_host_storage_configuration_rejects_driver_or_path_override(self):
+        deploy.verify_host_storage_config(self.host_cfg)
+        original = self.storage_conf.read_text(encoding="utf-8")
+        for invalid in (
+            original.replace('driver = "overlay"', 'driver = "vfs"'),
+            original.replace(str(self.graphroot), str(self.root / "other-graphroot")),
+            original + "\n[storage.options.overlay]\nmount_program = \"/unexpected\"\n",
+        ):
+            with self.subTest(config=invalid):
+                self.storage_conf.write_text(invalid, encoding="utf-8")
+                with self.assertRaisesRegex(deploy.DeployError, "only the approved D1 overlay store"):
+                    deploy.verify_host_storage_config(self.host_cfg)
+        self.storage_conf.write_text(original, encoding="utf-8")
+
+    def test_user_manager_storage_context_is_exact_and_never_echoes_other_environment(self):
+        expected = str(self.storage_conf)
+        with patch.object(deploy, "command", return_value=(
+            "CONTAINERS_STORAGE_CONF=" + expected + "\nLANG=C.UTF-8\n"
+        )) as run:
+            deploy.verify_user_manager_storage_context(self.host_cfg)
+        self.assertEqual(run.call_args.args[0], ["systemctl", "--user", "show-environment"])
+
+        for manager_environment in (
+            "AUTH_COOKIE_SECRET=synthetic-secret\n",
+            "CONTAINERS_STORAGE_CONF=/wrong/private/path\n",
+            "CONTAINERS_STORAGE_CONF=" + expected + "\nCONTAINER_HOST=ssh://remote\n",
+            "CONTAINERS_STORAGE_CONF=" + expected + "\nGH_TOKEN=synthetic-secret\n",
+            "CONTAINERS_STORAGE_CONF=" + expected + "\nAUTH_COOKIE_SECRET=synthetic-secret\n",
+        ):
+            with self.subTest(manager_environment=manager_environment), patch.object(
+                deploy, "command", return_value=manager_environment
+            ):
+                with self.assertRaises(deploy.DeployError) as raised:
+                    deploy.verify_user_manager_storage_context(self.host_cfg)
+                self.assertNotIn("synthetic-secret", str(raised.exception))
+                self.assertNotIn("/wrong/private/path", str(raised.exception))
+
+    def test_host_podman_environment_checks_mount_and_manager_before_selection(self):
+        filesystem = {"target": str(self.base), "uuid": self.cfg["storage_uuid"],
+                      "fstype": "ext4", "options": "rw,relatime"}
+        result = subprocess.CompletedProcess([], 0, json.dumps({"filesystems": [filesystem]}), "")
+        enough_root_space = type("Usage", (), {"free": deploy.HOST_ROOT_FREE_FLOOR})()
+        with patch.object(deploy, "run_command", return_value=result), \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_root_space), \
+             patch.object(deploy, "command", return_value=(
+                 "CONTAINERS_STORAGE_CONF=" + str(self.storage_conf) + "\n"
+             )), \
+             patch.dict(os.environ, {"CONTAINERS_STORAGE_CONF": str(self.storage_conf)}, clear=False):
+            environment = deploy.podman_env(self.host_cfg)
+        self.assertEqual(environment["CONTAINERS_STORAGE_CONF"], str(self.storage_conf))
+
+        with patch.object(deploy, "run_command", return_value=result), \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_root_space), \
+             patch.object(deploy, "command", return_value="CONTAINERS_STORAGE_CONF=/wrong/path\n"), \
+             patch.dict(os.environ, {}, clear=False):
+            with self.assertRaisesRegex(deploy.DeployError, "user manager"):
+                deploy.podman_env(self.host_cfg)
+
+        with patch.object(deploy, "run_command", return_value=result) as run_command, \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_root_space), \
+             patch.object(deploy, "command", return_value=(
+                 "CONTAINERS_STORAGE_CONF=" + str(self.storage_conf) + "\n"
+             )), \
+             patch.dict(os.environ, {"CONTAINERS_STORAGE_CONF": "/wrong/private/path"}, clear=False):
+            with self.assertRaisesRegex(deploy.DeployError, "process does not select"):
+                deploy.podman_env(self.host_cfg)
+        self.assertEqual(run_command.call_args.args[0][0], "findmnt")
+        self.assertNotIn("podman", run_command.call_args.args[0])
+
+    def test_host_storage_check_requires_one_explicit_process_context(self):
+        expected = str(self.storage_conf)
+        with patch.dict(os.environ, {"CONTAINERS_STORAGE_CONF": expected}, clear=True):
+            deploy.verify_process_storage_context(self.host_cfg, require_explicit=True)
+
+        for environment in (
+            {"CONTAINERS_STORAGE_CONF": "/wrong/private/path"},
+            {},
+            {"CONTAINERS_STORAGE_CONF": expected, "CONTAINERS_CONF_OVERRIDE": "/wrong/containers.conf"},
+        ):
+            with self.subTest(environment=environment), patch.dict(os.environ, environment, clear=True):
+                with self.assertRaisesRegex(deploy.DeployError, "process does not select") as raised:
+                    deploy.verify_process_storage_context(self.host_cfg, require_explicit=True)
+                self.assertNotIn("/wrong/private/path", str(raised.exception))
+
+        with patch.dict(os.environ, {}, clear=True):
+            deploy.verify_process_storage_context(self.host_cfg)
+
+    def test_host_api_environment_rejects_unset_or_unsafe_synthetic_configuration(self):
+        path = self.deploy_dir / "api.env"
+        valid = path.read_text(encoding="utf-8")
+        deploy.verify_host_api_environment(self.host_cfg)
+        invalid = (
+            valid.replace("AUTH_COOKIE_SECRET=" + "a" * 40, "AUTH_COOKIE_SECRET="),
+            valid.replace("ALLOWED_ORIGINS=http://127.0.0.1:18188", "ALLOWED_ORIGINS=http://localhost:5173"),
+            valid.replace("COOKIE_SECURE=false", "COOKIE_SECURE=true"),
+            valid.replace("ENABLE_DESTRUCTIVE_OPERATIONS=false", "ENABLE_DESTRUCTIVE_OPERATIONS=true"),
+            valid.replace("BACKUP_ENCRYPTION_KEY=" + base64.b64encode(b"b" * 32).decode("ascii"),
+                          "BACKUP_ENCRYPTION_KEY=not-base64"),
+            valid + "AUTH_COOKIE_SECRET=duplicate-value-that-must-not-be-logged\n",
+            valid.replace("AUTH_COOKIE_SECRET=" + "a" * 40, "AUTH_COOKIE_SECRET=REPLACE_WITH_REAL_SECRET_VALUE"),
+        )
+        for value in invalid:
+            with self.subTest(environment=value), self.assertRaisesRegex(
+                deploy.DeployError, "API environment file"
+            ) as raised:
+                path.write_text(value, encoding="utf-8")
+                deploy.verify_host_api_environment(self.host_cfg)
+            self.assertNotIn("duplicate-value-that-must-not-be-logged", str(raised.exception))
+        path.write_text(valid, encoding="utf-8")
+
+    def test_host_api_environment_requires_a_distinct_strong_first_admin_setup_token(self):
+        path = self.deploy_dir / "api.env"
+        valid = path.read_text(encoding="utf-8")
+        deploy.verify_host_api_environment(self.host_cfg)
+        invalid = (
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40 + "\n", ""),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=short-token"),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40,
+                          "ASTRYX_SETUP_TOKEN=GENERATE_SYNTHETIC_TOKEN_AT_INSTALL"),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=" + "a" * 40),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40,
+                          "ASTRYX_SETUP_TOKEN=" + base64.b64encode(b"b" * 32).decode("ascii")),
+            valid.replace("ASTRYX_SETUP_TOKEN=" + "c" * 40, "ASTRYX_SETUP_TOKEN=" + "c" * 39 + "="),
+        )
+        for value in invalid:
+            with self.subTest(environment=value), self.assertRaisesRegex(
+                deploy.DeployError, "API environment file"
+            ) as raised:
+                path.write_text(value, encoding="utf-8")
+                deploy.verify_host_api_environment(self.host_cfg)
+            self.assertNotIn("c" * 40, str(raised.exception))
+        path.write_text(valid, encoding="utf-8")
+
+    def test_d1_quadlet_templates_match_the_host_deployment_validator(self):
+        templates = ROOT / "deploy/podman"
+        replacements = (
+            ("/mnt/podman-data/operatoros-d1-synthetic", str(self.root)),
+            ("/run/user/1002/operatoros-podman-runroot", str(self.runroot)),
+            ("/mnt/podman-data", str(self.base)),
+        )
+        api = (templates / "operatoros-d1-api.container.in").read_text(encoding="utf-8")
+        caddy = (templates / "operatoros-d1-caddy.container.in").read_text(encoding="utf-8")
+        for before, after in replacements:
+            api = api.replace(before, after)
+            caddy = caddy.replace(before, after)
+        self.api_unit.write_text(api, encoding="utf-8")
+        self.api_copy.write_text(api, encoding="utf-8")
+        self.caddy_unit.write_text(caddy, encoding="utf-8")
+        self.api_unit.chmod(0o600)
+        self.api_copy.chmod(0o600)
+        self.caddy_unit.chmod(0o600)
+        caddyfile = self.deploy_dir / "Caddyfile"
+        caddyfile.write_text(
+            (templates / "operatoros-d1-Caddyfile.example").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        caddyfile.chmod(0o600)
+        deploy.verify_runtime_units(self.host_cfg)
+        self.assertIn("Requires=operatoros-lite-api.service", caddy)
+        self.assertIn("After=operatoros-lite-api.service", caddy)
+        self.assertIn("MemoryMax=6G", api)
+        self.assertIn("MemoryMax=512M", caddy)
+        self.assertNotIn("AddCapability=", api + caddy)
+
+    def test_deployment_lock_fails_before_creating_a_lock_on_wrong_mount(self):
+        with patch.object(deploy, "verify_storage_mount", side_effect=deploy.DeployError("wrong mount")):
+            with self.assertRaisesRegex(deploy.DeployError, "wrong mount"):
+                with deploy.deployment_lock(self.host_cfg):
+                    self.fail("deployment lock must not be acquired")
+        self.assertFalse((self.deploy_dir / ".operatoros-deploy.lock").exists())
+
+        filesystem = {"target": str(self.base), "uuid": self.cfg["storage_uuid"],
+                      "fstype": "ext4", "options": "rw,relatime"}
+        mounted = subprocess.CompletedProcess([], 0, json.dumps({"filesystems": [filesystem]}), "")
+        enough_root_space = type("Usage", (), {"free": deploy.HOST_ROOT_FREE_FLOOR})()
+        with patch.object(deploy, "run_command", return_value=mounted), \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_root_space), \
+             patch.object(deploy, "command", return_value="CONTAINERS_STORAGE_CONF=/wrong/path\n"):
+            with self.assertRaisesRegex(deploy.DeployError, "user manager"):
+                with deploy.deployment_lock(self.host_cfg):
+                    self.fail("deployment lock must not be acquired")
+        self.assertFalse((self.deploy_dir / ".operatoros-deploy.lock").exists())
 
     def test_rehearsal_profile_is_bound_to_unique_github_run_paths_and_services(self):
         with tempfile.TemporaryDirectory(prefix="operatoros-rehearsal-profile-test-") as temp:
@@ -845,11 +1174,13 @@ class DeploymentFixture(unittest.TestCase):
         release = fake_release()
         api_before = self.api_unit.read_bytes()
         current_before = os.readlink(self.web / "current")
+        enough_space = type("Usage", (), {"free": deploy.HOST_DATA_FREE_FLOOR})()
         with patch.object(deploy, "inspect_podman_context"), patch.object(deploy, "verify_runtime_units"), patch.object(deploy, "verify_quadlet_service"), \
              patch.object(deploy, "command", return_value="running"), \
              patch.object(deploy, "local_image_identity", return_value=("sha256:" + "1" * 64, {deploy.API_IMAGE_LABELS["revision"]: "b" * 40})), \
              patch.object(deploy, "check_loopback_services"), patch.object(deploy, "isolated_schema_preflight", side_effect=deploy.DeployError("schema incompatible")), \
-             patch.object(deploy, "validate_backup", return_value=self.backup):
+             patch.object(deploy, "validate_backup", return_value=self.backup), \
+             patch.object(deploy.shutil, "disk_usage", return_value=enough_space):
             with self.assertRaisesRegex(deploy.DeployError, "schema incompatible"):
                 deploy.preflight(self.cfg, release, self.backup.name)
         self.assertEqual(self.api_unit.read_bytes(), api_before)
@@ -904,41 +1235,105 @@ class DeploymentFixture(unittest.TestCase):
 
     def test_host_store_validator_requires_the_configured_graphroot_runroot_and_config(self):
         info = podman_info_fixture(self)
-        self.assertEqual(deploy.validate_host_podman_store(info, self.cfg)["graph_driver"], "vfs")
+        self.assertEqual(deploy.validate_host_podman_store(info, self.host_cfg)["graph_driver"], "overlay")
         cases = (
             ("graphRoot", str(self.base / "other-graphroot"), "configured rootless"),
             ("runRoot", str(self.base / "other-runroot"), "configured rootless"),
-            ("configFile", str(self.base / "other-storage.conf"), "different storage configuration"),
+            ("configFile", str(self.base / "other-storage.conf"), "configured rootless storage config"),
         )
         for key, value, message in cases:
             with self.subTest(key=key):
                 variant = {**info, "store": {**info["store"], key: value}}
                 with self.assertRaisesRegex(deploy.DeployError, message):
-                    deploy.validate_host_podman_store(variant, self.cfg)
+                    deploy.validate_host_podman_store(variant, self.host_cfg)
         rootful = {**info, "host": {"security": {"rootless": False}}}
         with self.assertRaisesRegex(deploy.DeployError, "configured rootless"):
-            deploy.validate_host_podman_store(rootful, self.cfg)
+            deploy.validate_host_podman_store(rootful, self.host_cfg)
         relative = {**info, "store": {**info["store"], "graphRoot": "relative/graphroot"}}
         with self.assertRaisesRegex(deploy.DeployError, "configured rootless"):
-            deploy.validate_host_podman_store(relative, self.cfg)
+            deploy.validate_host_podman_store(relative, self.host_cfg)
+        wrong_driver = {**info, "store": {**info["store"], "graphDriverName": "vfs"}}
+        with self.assertRaisesRegex(deploy.DeployError, "storage driver"):
+            deploy.validate_host_podman_store(wrong_driver, self.host_cfg)
+        for storage in (
+            {**info["store"], "configFile": None},
+            {**info["store"], "additionalImageStores": ["/other/store"]},
+        ):
+            with self.subTest(storage=storage):
+                with self.assertRaises(deploy.DeployError):
+                    deploy.validate_host_podman_store({**info, "store": storage}, self.host_cfg)
+
+    def test_host_podman_subordinate_id_maps_match_the_approved_range(self):
+        expected = f"0 {os.getuid()} 1\n1 231072 65536\n"
+        deploy.validate_host_subid_map(expected, uid=os.getuid(), name="uid")
+        for invalid in (
+            f"0 {os.getuid()} 1\n1 165536 65536\n",
+            f"0 {os.getuid()} 1\n1 231072 65535\n",
+            "malformed\n",
+        ):
+            with self.subTest(mapping=invalid), self.assertRaisesRegex(
+                deploy.DeployError, "does not match|malformed"
+            ):
+                deploy.validate_host_subid_map(invalid, uid=os.getuid(), name="uid")
 
     def test_runtime_unit_contract_rejects_public_api_binding_and_unpinned_caddy(self):
-        deploy.verify_runtime_units(self.cfg)
+        deploy.verify_runtime_units(self.host_cfg)
         api_before = self.api_unit.read_text(encoding="utf-8")
-        self.api_unit.write_text(api_before.replace("127.0.0.1:18090:8090", "0.0.0.0:18090:8090"), encoding="utf-8")
+        bad_api = api_before.replace("127.0.0.1:18190:8090", "0.0.0.0:18190:8090")
+        self.api_unit.write_text(bad_api, encoding="utf-8")
+        self.api_copy.write_text(bad_api, encoding="utf-8")
         with self.assertRaisesRegex(deploy.DeployError, "API Quadlet PublishPort"):
-            deploy.verify_runtime_units(self.cfg)
+            deploy.verify_runtime_units(self.host_cfg)
         self.api_unit.write_text(api_before, encoding="utf-8")
+        self.api_copy.write_text(api_before, encoding="utf-8")
+        for capability in ("net_bind_service", "net_admin"):
+            with self.subTest(api_capability=capability):
+                bad_api = api_before + f"AddCapability={capability}\n"
+                self.api_unit.write_text(bad_api, encoding="utf-8")
+                self.api_copy.write_text(bad_api, encoding="utf-8")
+                with self.assertRaisesRegex(deploy.DeployError, "API Quadlet grants an unexpected capability"):
+                    deploy.verify_runtime_units(self.host_cfg)
+        self.api_unit.write_text(api_before, encoding="utf-8")
+        self.api_copy.write_text(api_before, encoding="utf-8")
+        bad_api = api_before.replace(
+            "RequiresMountsFor=" + str(self.base), "RequiresMountsFor=/tmp"
+        )
+        self.api_unit.write_text(bad_api, encoding="utf-8")
+        self.api_copy.write_text(bad_api, encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "verify the approved mount"):
+            deploy.verify_runtime_units(self.host_cfg)
+        self.api_unit.write_text(api_before, encoding="utf-8")
+        self.api_copy.write_text(api_before, encoding="utf-8")
+        bad_api = api_before.replace(
+            "ConditionPathIsMountPoint=" + str(self.base), "ConditionPathIsMountPoint=/tmp"
+        )
+        self.api_unit.write_text(bad_api, encoding="utf-8")
+        self.api_copy.write_text(bad_api, encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "verify the approved mount"):
+            deploy.verify_runtime_units(self.host_cfg)
+        self.api_unit.write_text(api_before, encoding="utf-8")
+        self.api_copy.write_text(api_before, encoding="utf-8")
         caddy_before = self.caddy_unit.read_text(encoding="utf-8")
         self.caddy_unit.write_text(caddy_before.replace(deploy.CADDY_IMAGE, "docker.io/library/caddy:latest"), encoding="utf-8")
         with self.assertRaisesRegex(deploy.DeployError, "Caddy Quadlet Image"):
-            deploy.verify_runtime_units(self.cfg)
+            deploy.verify_runtime_units(self.host_cfg)
+
+        for capability in ("net_bind_service", "net_admin"):
+            with self.subTest(capability=capability):
+                self.caddy_unit.write_text(caddy_before + f"AddCapability={capability}\n", encoding="utf-8")
+                with self.assertRaisesRegex(deploy.DeployError, "unexpected capability"):
+                    deploy.verify_runtime_units(self.host_cfg)
+
+        self.api_unit.write_text(api_before + "[Install]\nAlias=operatoros-api.service\n", encoding="utf-8")
+        self.api_copy.write_text(api_before + "[Install]\nAlias=operatoros-api.service\n", encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "mount and Podman context"):
+            deploy.verify_runtime_units(self.host_cfg)
 
     def test_runtime_unit_contract_accepts_repository_caddyfile_nested_blocks(self):
         caddyfile = (ROOT / "deploy/podman/Caddyfile").read_text(encoding="utf-8")
-        caddyfile = caddyfile.replace(":8088", ":18088").replace(":8090", ":18090")
+        caddyfile = caddyfile.replace(":8088", ":18188").replace(":8090", ":18190")
         (self.deploy_dir / "Caddyfile").write_text(caddyfile, encoding="utf-8")
-        deploy.verify_runtime_units(self.cfg)
+        deploy.verify_runtime_units(self.host_cfg)
 
     def test_isolated_schema_preflight_checks_mounts_in_rootless_user_namespace(self):
         release = fake_release()
@@ -1013,6 +1408,30 @@ class DeploymentFixture(unittest.TestCase):
             with self.assertRaisesRegex(deploy.DeployError, "insufficient disk"):
                 deploy.check_candidate_capacity(self.cfg, release)
             run_preflight.assert_not_called()
+
+    def test_host_candidate_capacity_requires_measured_clean_start_headroom(self):
+        release = fake_release()
+        data_minimum = deploy.HOST_DATA_FREE_FLOOR + deploy.HOST_DATA_OPERATION_HEADROOM_BYTES
+        inode_minimum = deploy.HOST_MIN_FREE_INODES + deploy.HOST_OPERATION_HEADROOM_INODES
+        root_minimum = deploy.HOST_ROOT_FREE_FLOOR + deploy.HOST_ROOT_OPERATION_HEADROOM_BYTES
+
+        def check(data_free=data_minimum, free_inodes=inode_minimum, root_free=root_minimum):
+            def usage(path):
+                free = root_free if Path(path) == Path("/") else data_free
+                return type("Usage", (), {"free": free})()
+
+            with patch.object(deploy.shutil, "disk_usage", side_effect=usage), \
+                 patch.object(deploy.os, "statvfs", return_value=type("StatVFS", (), {"f_favail": free_inodes})()):
+                deploy.check_candidate_capacity(self.host_cfg, release)
+
+        check()
+        for kwargs in (
+            {"data_free": data_minimum - 1},
+            {"free_inodes": inode_minimum - 1},
+            {"root_free": root_minimum - 1},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaisesRegex(deploy.DeployError, "insufficient"):
+                check(**kwargs)
 
     def test_import_uses_verified_image_id_without_assigning_a_mutable_release_tag(self):
         release = fake_release()

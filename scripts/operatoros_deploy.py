@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -43,6 +44,19 @@ MAX_OUTER_MEMBERS = 4
 MAX_TAR_MEMBERS = 16
 MAX_SPA_MEMBERS = 10_000
 MAX_SPA_BYTES = 256 * 1024 * 1024
+HOST_ROOT_FREE_FLOOR = 15 * 1024 * 1024 * 1024
+HOST_DATA_FREE_FLOOR = 7 * 1024 * 1024 * 1024
+HOST_MIN_FREE_INODES = 50_000
+HOST_DATA_OPERATION_HEADROOM_BYTES = 2 * 1024 * 1024 * 1024
+HOST_OPERATION_HEADROOM_INODES = 30_000
+HOST_ROOT_OPERATION_HEADROOM_BYTES = 1 * 1024 * 1024 * 1024
+HOST_DATA_MOUNTPOINT = Path("/mnt/podman-data")
+HOST_D1_ROOT_NAME = "operatoros-d1-synthetic"
+HOST_D1_UID = 1002
+HOST_D1_SUBID_START = 231072
+HOST_D1_SUBID_COUNT = 65_536
+HOST_D1_API_URL = "http://127.0.0.1:18190"
+HOST_D1_WEB_URL = "http://127.0.0.1:18188"
 API_NAME = "operatoros-lite-api"
 CADDY_NAME = "operatoros-lite-caddy"
 CADDY_IMAGE = "docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5"
@@ -1000,6 +1014,104 @@ def deployment_profile(cfg: dict[str, Any], root: Path) -> str:
     return "rehearsal"
 
 
+def host_runroot(uid: int) -> Path:
+    return Path(f"/run/user/{uid}/operatoros-podman-runroot")
+
+
+def verify_storage_mount(cfg: dict[str, Any]) -> None:
+    """Require the configured host deployment root to live on its exact filesystem."""
+    if cfg.get("profile") != "host":
+        return
+    mountpoint = cfg["storage_mountpoint"]
+    root = cfg["root"]
+    if not root.is_relative_to(mountpoint) or root == mountpoint:
+        raise DeployError("deployment root must be below the approved data mountpoint")
+    try:
+        result = run_command(
+            ["findmnt", "--json", "--target", str(root), "--output", "TARGET,UUID,FSTYPE,OPTIONS"],
+            env=system_environment(), timeout=15,
+        )
+        if result.returncode != 0:
+            raise DeployError("cannot verify the configured data filesystem mount")
+        filesystems = json.loads(result.stdout).get("filesystems")
+    except (DeployError, json.JSONDecodeError, AttributeError, TypeError) as error:
+        raise DeployError("cannot verify the configured data filesystem mount") from error
+    if not isinstance(filesystems, list) or len(filesystems) != 1 or not isinstance(filesystems[0], dict):
+        raise DeployError("cannot verify the configured data filesystem mount")
+    mounted = filesystems[0]
+    options = set(str(mounted.get("options", "")).split(","))
+    if (mounted.get("target") != str(mountpoint) or mounted.get("uuid") != cfg["storage_uuid"] or
+        mounted.get("fstype") != cfg["storage_fstype"] or "rw" not in options or "ro" in options):
+        raise DeployError("data filesystem identity or writable mount state does not match deployment config")
+    usage = shutil.disk_usage(cfg["root"])
+    statvfs = os.statvfs(cfg["root"])
+    if usage.free < cfg["min_free_bytes"] or statvfs.f_favail < cfg["min_free_inodes"]:
+        raise DeployError("data filesystem is below the configured free-space or inode reserve")
+    if shutil.disk_usage(Path("/")).free < cfg["root_min_free_bytes"]:
+        raise DeployError("root filesystem is below the configured free-space reserve")
+
+
+def verify_host_storage_config(cfg: dict[str, Any]) -> None:
+    if cfg.get("profile") != "host":
+        return
+    for directory, label in (
+        (cfg["root"], "D1 deployment root"),
+        (cfg["root"] / "deploy", "D1 deployment directory"),
+        (cfg["root"] / "deploy/config", "D1 private config directory"),
+        (cfg["root"] / "podman-rootless", "D1 Podman storage parent"),
+        (cfg["graphroot"], "rootless Podman graphroot"),
+        (cfg["data_dir"], "D1 SQLite directory"),
+        (cfg["root"] / "web", "D1 web directory"),
+        (cfg["root"] / "web/releases", "D1 web releases directory"),
+    ):
+        require_directory(directory, os.getuid(), label, 0o077)
+    require_regular_owned(cfg["storage_conf"], os.getuid(), "Podman storage config", 0o077)
+    require_directory(cfg["runroot"], os.getuid(), "rootless Podman runroot", 0o077)
+    try:
+        value = tomllib.loads(cfg["storage_conf"].read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError) as error:
+        raise DeployError("Podman storage config is unreadable or malformed") from error
+    expected = {"storage": {"driver": cfg["storage_driver"],
+                             "graphroot": str(cfg["graphroot"]),
+                             "runroot": str(cfg["runroot"])}}
+    if value != expected:
+        raise DeployError("Podman storage config must select only the approved D1 overlay store")
+
+
+def verify_user_manager_storage_context(cfg: dict[str, Any]) -> None:
+    """Check only the Podman selectors in the user manager environment; never log its contents."""
+    if cfg.get("profile") != "host":
+        return
+    try:
+        output = command(["systemctl", "--user", "show-environment"], timeout=20)
+    except DeployError as error:
+        raise DeployError("cannot verify the user manager Podman storage context") from error
+    selected = {"CONTAINERS_STORAGE_CONF", "CONTAINERS_CONF", "CONTAINERS_CONF_OVERRIDE",
+                "CONTAINER_HOST", "CONTAINER_CONNECTION", "DOCKER_HOST", "STORAGE_DRIVER", "STORAGE_OPTS",
+                "GH_TOKEN", "GITHUB_TOKEN", "OPERATOROS_RELEASE_TOKEN", "AUTH_COOKIE_SECRET",
+                "BACKUP_ENCRYPTION_KEY", "ASTRYX_SETUP_TOKEN"}
+    values: dict[str, list[str]] = {}
+    for line in output.splitlines():
+        name, separator, value = line.partition("=")
+        if separator and name in selected:
+            values.setdefault(name, []).append(value)
+    expected = str(cfg["storage_conf"])
+    if values.get("CONTAINERS_STORAGE_CONF") != [expected] or any(
+        name in values for name in selected - {"CONTAINERS_STORAGE_CONF"}
+    ):
+        raise DeployError("user manager does not select the configured rootless Podman storage context")
+
+
+def verify_process_storage_context(cfg: dict[str, Any], *, require_explicit: bool = False) -> None:
+    if cfg.get("profile") != "host":
+        return
+    selected = os.environ.get("CONTAINERS_STORAGE_CONF")
+    expected = str(cfg["storage_conf"])
+    if ((selected != expected if require_explicit else selected not in (None, expected)) or
+        any(os.environ.get(name) for name in ("CONTAINERS_CONF", "CONTAINERS_CONF_OVERRIDE"))):
+        raise DeployError("process does not select the configured rootless Podman storage context")
+
+
 def load_config(path: Path) -> dict[str, Any]:
     try:
         info = path.lstat()
@@ -1012,9 +1124,18 @@ def load_config(path: Path) -> dict[str, Any]:
     required = {"root", "expected_uid", "storage_conf", "graphroot", "runroot", "data_dir", "backup_dir",
                 "api_unit", "api_unit_copy", "caddy_unit", "api_service", "caddy_service", "api_url", "web_url",
                 "min_free_bytes", "min_free_inodes", "backup_max_age_seconds"}
-    if set(cfg) != required:
+    host_mount_keys = {"storage_mountpoint", "storage_uuid", "storage_fstype", "storage_driver",
+                       "root_min_free_bytes"}
+    host_services = (cfg.get("api_service"), cfg.get("caddy_service")) == (
+        "operatoros-lite-api.service", "operatoros-lite-caddy.service"
+    )
+    expected_keys = required | host_mount_keys if host_services else required
+    if set(cfg) != expected_keys:
         raise DeployError("deployment config keys differ from the documented schema")
-    if any(type(cfg[key]) is not int for key in ("expected_uid", "min_free_bytes", "min_free_inodes", "backup_max_age_seconds")):
+    numeric_settings = ["expected_uid", "min_free_bytes", "min_free_inodes", "backup_max_age_seconds"]
+    if host_services:
+        numeric_settings.append("root_min_free_bytes")
+    if any(type(cfg[key]) is not int for key in numeric_settings):
         raise DeployError("numeric deployment settings have invalid types")
     if (cfg["min_free_bytes"] < 0 or cfg["min_free_inodes"] < 0 or
         not isinstance(cfg["backup_max_age_seconds"], int) or cfg["backup_max_age_seconds"] < 1):
@@ -1033,17 +1154,50 @@ def load_config(path: Path) -> dict[str, Any]:
             parsed.path not in ("", "/") or parsed.query or parsed.fragment):
             raise DeployError(f"{key} must be an explicit loopback HTTP URL with a port")
     paths = ("root", "storage_conf", "graphroot", "runroot", "data_dir", "backup_dir", "api_unit", "api_unit_copy", "caddy_unit")
+    if host_services:
+        paths += ("storage_mountpoint",)
     for key in paths:
         cfg[key] = path_from_config(cfg[key], key)
     root = cfg["root"].resolve(strict=True)
     cfg["profile"] = deployment_profile(cfg, root)
+    if cfg["profile"] == "host":
+        if (not isinstance(cfg["storage_uuid"], str) or
+            not re.fullmatch(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", cfg["storage_uuid"]) or
+            not isinstance(cfg["storage_fstype"], str) or not re.fullmatch(r"[A-Za-z0-9_-]+", cfg["storage_fstype"])):
+            raise DeployError("configured data filesystem identity is invalid")
+        if not cfg["storage_mountpoint"].is_dir():
+            raise DeployError("configured data mountpoint must be a directory")
+        if cfg["storage_driver"] != "overlay":
+            raise DeployError("the D1 host runtime requires the configured overlay storage driver")
+        if (cfg["min_free_bytes"] < HOST_DATA_FREE_FLOOR or
+            cfg["min_free_inodes"] < HOST_MIN_FREE_INODES or
+            cfg["root_min_free_bytes"] < HOST_ROOT_FREE_FLOOR):
+            raise DeployError("host storage reserves are below the reviewed D1 capacity floors")
+        expected_root = cfg["storage_mountpoint"] / HOST_D1_ROOT_NAME
+        expected_paths = {
+            "root": expected_root,
+            "storage_conf": expected_root / "deploy/storage.conf",
+            "graphroot": expected_root / "podman-rootless/graphroot",
+            "runroot": host_runroot(cfg["expected_uid"]),
+            "data_dir": expected_root / "data/sqlite",
+            "backup_dir": expected_root / "data/sqlite/backups",
+            "api_unit": Path.home() / ".config/containers/systemd/operatoros-lite-api.container",
+            "caddy_unit": Path.home() / ".config/containers/systemd/operatoros-lite-caddy.container",
+            "api_unit_copy": expected_root / "deploy/operatoros-lite-api.container",
+        }
+        if (cfg["expected_uid"] != HOST_D1_UID or
+            cfg["api_url"] != HOST_D1_API_URL or cfg["web_url"] != HOST_D1_WEB_URL or
+            cfg["storage_mountpoint"] != HOST_DATA_MOUNTPOINT or
+            any(cfg[key].resolve(strict=True) != expected.resolve() for key, expected in expected_paths.items()) or
+            path.resolve(strict=True) != expected_root / "deploy/config/operatoros.toml"):
+            raise DeployError("host deployment configuration must match the isolated D1 contract")
     for key in ("storage_conf", "graphroot"):
         if not cfg[key].resolve(strict=True).is_relative_to(root):
             raise DeployError(f"{key} must remain inside the configured rootless OperatorOS storage root")
     for key in ("data_dir", "backup_dir"):
         if not cfg[key].resolve(strict=True).is_relative_to(root):
             raise DeployError(f"{key} must be inside the configured OperatorOS root")
-    runtime_runroot = Path(f"/run/user/{cfg['expected_uid']}") / "operatoros-podman-runroot"
+    runtime_runroot = host_runroot(cfg["expected_uid"])
     if (not cfg["storage_conf"].resolve(strict=True).is_relative_to(root / "deploy") or
         not cfg["graphroot"].resolve(strict=True).is_relative_to(root / "podman-rootless") or
         not (cfg["runroot"].resolve(strict=True).is_relative_to(root / "podman-rootless") or
@@ -1137,6 +1291,11 @@ def podman_env(cfg: dict[str, Any]) -> dict[str, str]:
         for key, expected in configured_paths:
             if Path(cfg[key]).resolve(strict=True) != expected.resolve(strict=True):
                 raise DeployError(f"Podman {key} does not identify the current private workspace")
+    elif cfg.get("profile") == "host":
+        verify_storage_mount(cfg)
+        verify_host_storage_config(cfg)
+        verify_user_manager_storage_context(cfg)
+        verify_process_storage_context(cfg)
     elif any(os.environ.get(name) for name in ("CONTAINERS_CONF", "CONTAINERS_STORAGE_CONF")):
         raise DeployError("unexpected alternate Podman configuration is set")
     return env
@@ -1155,15 +1314,35 @@ def validate_host_podman_store(info: Any, cfg: dict[str, Any]) -> dict[str, str]
         raise DeployError("Podman is not using the configured rootless graphroot/runroot")
     if graphroot.resolve() != cfg["graphroot"].resolve() or runroot.resolve() != cfg["runroot"].resolve():
         raise DeployError("Podman is not using the configured rootless graphroot/runroot")
+    graph_driver = str(store.get("graphDriverName") or "unknown")
+    if cfg.get("profile") == "host" and graph_driver != cfg["storage_driver"]:
+        raise DeployError("Podman is not using the configured rootless storage driver")
     config_file = store.get("configFile")
+    if cfg.get("profile") == "host" and (
+        not isinstance(config_file, str) or Path(config_file).resolve() != cfg["storage_conf"].resolve()
+    ):
+        raise DeployError("Podman is not using the configured rootless storage config")
     if config_file and Path(config_file).resolve() != cfg["storage_conf"].resolve():
         raise DeployError("Podman is reading a different storage configuration file")
+    additional_stores = store.get("additionalImageStores", [])
+    if cfg.get("profile") == "host" and additional_stores:
+        raise DeployError("Podman exposes an additional image store outside the isolated D1 context")
     return {
         "storage_conf": str(cfg["storage_conf"]),
         "graphroot": str(graphroot),
         "runroot": str(runroot),
-        "graph_driver": str(store.get("graphDriverName") or "unknown"),
+        "graph_driver": graph_driver,
     }
+
+
+def validate_host_subid_map(mapping: str, *, uid: int, name: str) -> None:
+    expected = [(0, uid, 1), (1, HOST_D1_SUBID_START, HOST_D1_SUBID_COUNT)]
+    try:
+        observed = [tuple(map(int, line.split())) for line in mapping.splitlines() if line.strip()]
+    except ValueError as error:
+        raise DeployError(f"Podman rootless {name} mapping is malformed") from error
+    if observed != expected:
+        raise DeployError(f"Podman rootless {name} mapping does not match the approved D1 subordinate range")
 
 
 def inspect_podman_context(cfg: dict[str, Any]) -> dict[str, str]:
@@ -1187,7 +1366,12 @@ def inspect_podman_context(cfg: dict[str, Any]) -> dict[str, str]:
             "runroot": str(context.runroot),
             "graph_driver": str(info["store"].get("graphDriverName") or "unknown"),
         }
-    return validate_host_podman_store(info, cfg)
+    storage = validate_host_podman_store(info, cfg)
+    if cfg.get("profile") == "host":
+        for name in ("uid", "gid"):
+            mapping = command(["podman", "unshare", "cat", f"/proc/self/{name}_map"], env)
+            validate_host_subid_map(mapping, uid=cfg["expected_uid"], name=name)
+    return storage
 
 
 def require_empty_podman_store(context: PrivatePodmanContext, env: dict[str, str]) -> None:
@@ -1321,8 +1505,81 @@ def unit_values(text: str, key: str) -> list[str]:
     return re.findall(r"(?m)^" + re.escape(key) + r"=(.*)$", text)
 
 
+def unit_section_values(text: str, section: str, key: str) -> list[str]:
+    current = ""
+    values: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("[") and line.endswith("]"):
+            current = line[1:-1]
+        elif current == section and line.startswith(key + "="):
+            values.append(line[len(key) + 1:])
+    return values
+
+
+def verify_host_unit_storage_guards(text: str, cfg: dict[str, Any]) -> None:
+    if cfg.get("profile") != "host":
+        return
+    cli = cfg["root"] / "deploy/operatoros_deploy.py"
+    config = cfg["root"] / "deploy/config/operatoros.toml"
+    expected_check = f"/usr/bin/python3 {cli} storage-check --config {config}"
+    expected_runroot = f"/usr/bin/install -d -m 0700 {cfg['runroot']}"
+    if (unit_section_values(text, "Unit", "RequiresMountsFor") != [str(cfg["storage_mountpoint"])] or
+        unit_section_values(text, "Unit", "ConditionPathIsMountPoint") != [str(cfg["storage_mountpoint"])] or
+        unit_section_values(text, "Service", "Environment") != [f"CONTAINERS_STORAGE_CONF={cfg['storage_conf']}"] or
+        unit_section_values(text, "Service", "ExecStartPre") != [expected_runroot, expected_check] or
+        unit_section_values(text, "Service", "Restart") != ["on-failure"] or
+        "[Install]" in text):
+        raise DeployError("Quadlet must verify the approved mount and Podman context before service startup")
+
+
+def verify_host_api_environment(cfg: dict[str, Any]) -> None:
+    path = cfg["root"] / "deploy/api.env"
+    require_regular_owned(path, os.getuid(), "API environment file", 0o077)
+    required = {"AUTH_COOKIE_SECRET", "BACKUP_ENCRYPTION_KEY", "BACKUP_ENCRYPTION_KEY_ID",
+                "ALLOWED_ORIGINS", "COOKIE_SECURE", "ENABLE_DESTRUCTIVE_OPERATIONS",
+                "ASTRYX_SETUP_TOKEN"}
+    values: dict[str, str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as error:
+        raise DeployError("API environment file is unavailable") from error
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        name, separator, value = line.partition("=")
+        if not separator or not re.fullmatch(r"[A-Z][A-Z0-9_]*", name) or name in values:
+            raise DeployError("API environment file must use unique KEY=value entries")
+        values[name] = value
+    cookie_secret = values.get("AUTH_COOKIE_SECRET", "")
+    backup_key = values.get("BACKUP_ENCRYPTION_KEY", "")
+    setup_token = values.get("ASTRYX_SETUP_TOKEN", "")
+    try:
+        decoded_key = base64.b64decode(backup_key, validate=True)
+    except (ValueError, base64.binascii.Error):
+        decoded_key = b""
+    if (set(values) != required or len(cookie_secret.strip()) < 32 or cookie_secret != cookie_secret.strip() or
+        re.fullmatch(r"[A-Za-z0-9_-]{32,256}", setup_token) is None or
+        setup_token in (cookie_secret, backup_key) or
+        not decoded_key or len(decoded_key) != 32 or base64.b64encode(decoded_key).decode("ascii") != backup_key or
+        backup_key == cookie_secret or
+        not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", values.get("BACKUP_ENCRYPTION_KEY_ID", "")) or
+        values.get("ALLOWED_ORIGINS") != cfg["web_url"] or values.get("COOKIE_SECURE") != "false" or
+        values.get("ENABLE_DESTRUCTIVE_OPERATIONS") != "false" or
+        any(marker in (cookie_secret + backup_key + setup_token).upper()
+            for marker in ("REPLACE", "GENERATE", "PLACEHOLDER"))):
+        raise DeployError("API environment file is missing valid synthetic-only D1 configuration")
+
+
 def verify_runtime_units(cfg: dict[str, Any]) -> None:
     api_text = cfg["api_unit"].read_text(encoding="utf-8")
+    verify_host_unit_storage_guards(api_text, cfg)
+    if cfg.get("profile") == "host":
+        require_regular_owned(cfg["root"] / "deploy/operatoros_deploy.py", os.getuid(), "deployment CLI", 0o077)
+        require_regular_owned(cfg["root"] / "deploy/release-bundle.py", os.getuid(), "release bundle verifier", 0o077)
+        require_regular_owned(cfg["api_unit_copy"], os.getuid(), "managed API Quadlet copy", 0o077)
+        if cfg["api_unit"].read_bytes() != cfg["api_unit_copy"].read_bytes():
+            raise DeployError("active API Quadlet differs from its reviewed deployment copy")
     api_port = urlparse(cfg["api_url"]).port
     expected_api = {
         "ContainerName": API_NAME,
@@ -1337,12 +1594,24 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
         "EnvironmentFile": str(cfg["root"] / "deploy/api.env"),
         "Volume": f"{cfg['data_dir']}:/var/lib/operatoros/data:rw",
     }
+    if cfg.get("profile") == "host":
+        expected_api.update({
+            "HealthCmd": "/usr/local/bin/operatoros-api-healthcheck",
+            "HealthInterval": "30s",
+            "LogDriver": "journald",
+        })
     for key, expected in expected_api.items():
         if unit_values(api_text, key) != [expected]:
             raise DeployError(f"API Quadlet {key} does not match the approved loopback and persistent-data contract")
-    require_regular_owned(cfg["root"] / "deploy/api.env", os.getuid(), "API environment file", 0o077)
+    if unit_values(api_text, "AddCapability"):
+        raise DeployError("API Quadlet grants an unexpected capability")
+    if cfg.get("profile") == "host":
+        verify_host_api_environment(cfg)
+    else:
+        require_regular_owned(cfg["root"] / "deploy/api.env", os.getuid(), "API environment file", 0o077)
 
     caddy_text = cfg["caddy_unit"].read_text(encoding="utf-8")
+    verify_host_unit_storage_guards(caddy_text, cfg)
     expected_caddy = {
         "Image": CADDY_IMAGE,
         "ContainerName": CADDY_NAME,
@@ -1353,11 +1622,16 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
         "ReadOnly": "true",
         "NoNewPrivileges": "true",
         "DropCapability": "all",
-        "AddCapability": "net_bind_service",
     }
+    if cfg.get("profile") == "host":
+        expected_caddy["LogDriver"] = "journald"
     for key, expected in expected_caddy.items():
         if unit_values(caddy_text, key) != [expected]:
             raise DeployError(f"Caddy Quadlet {key} does not match the approved loopback proxy contract")
+    capabilities = unit_values(caddy_text, "AddCapability")
+    if ((cfg.get("profile") == "host" and capabilities) or
+        (cfg.get("profile") == "rehearsal" and capabilities != ["net_bind_service"])):
+        raise DeployError("Caddy Quadlet grants an unexpected capability")
     required_mounts = {
         f"{cfg['root']}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro",
         f"{cfg['root']}/web/current/client:/srv/operatoros/current/client:ro",
@@ -1417,10 +1691,17 @@ def check_loopback_services(cfg: dict[str, Any]) -> None:
 def check_capacity(cfg: dict[str, Any], release: VerifiedRelease) -> None:
     roots = (cfg["root"], cfg["graphroot"])
     required = max(cfg["min_free_bytes"], len(release.files["operatoros-api.oci.tar"]) * 2)
+    required_inodes = cfg["min_free_inodes"]
+    if cfg.get("profile") == "host":
+        required += HOST_DATA_OPERATION_HEADROOM_BYTES
+        required_inodes += HOST_OPERATION_HEADROOM_INODES
+        root_required = cfg["root_min_free_bytes"] + HOST_ROOT_OPERATION_HEADROOM_BYTES
+        if shutil.disk_usage(Path("/")).free < root_required:
+            raise DeployError("insufficient root filesystem capacity for deployment staging")
     for root in roots:
         usage = shutil.disk_usage(root)
         statvfs = os.statvfs(root)
-        if usage.free < required or statvfs.f_favail < cfg["min_free_inodes"]:
+        if usage.free < required or statvfs.f_favail < required_inodes:
             raise DeployError(f"insufficient disk bytes or inodes at {root}")
 
 
@@ -1743,8 +2024,13 @@ def check_candidate_capacity(cfg: dict[str, Any], release: VerifiedRelease) -> N
     check_capacity(cfg, release)
     web_free = shutil.disk_usage(cfg["root"] / "web").free
     spa_size = len(release.files["operatoros-web-client.tar.gz"])
-    if (web_free < max(cfg["min_free_bytes"], spa_size * 2) or
-        os.statvfs(cfg["root"] / "web").f_favail < cfg["min_free_inodes"]):
+    required_bytes = max(cfg["min_free_bytes"], spa_size * 2)
+    required_inodes = cfg["min_free_inodes"]
+    if cfg.get("profile") == "host":
+        required_bytes += HOST_DATA_OPERATION_HEADROOM_BYTES
+        required_inodes += HOST_OPERATION_HEADROOM_INODES
+    if (web_free < required_bytes or
+        os.statvfs(cfg["root"] / "web").f_favail < required_inodes):
         raise DeployError("insufficient storage for staged SPA release")
 
 
@@ -1754,6 +2040,9 @@ def active_transaction(cfg: dict[str, Any]) -> Path:
 
 @contextmanager
 def deployment_lock(cfg: dict[str, Any]):
+    verify_storage_mount(cfg)
+    verify_host_storage_config(cfg)
+    verify_user_manager_storage_context(cfg)
     deploy_dir = cfg["root"] / "deploy"
     require_directory(deploy_dir, os.getuid(), "deployment directory")
     lock_path = deploy_dir / ".operatoros-deploy.lock"
@@ -2095,6 +2384,7 @@ def rollback_release(cfg: dict[str, Any], release_id: str) -> dict[str, Any]:
 
 
 def status(cfg: dict[str, Any]) -> dict[str, Any]:
+    verify_storage_mount(cfg)
     active = active_transaction(cfg)
     transaction = None
     if active.exists() or active.is_symlink():
@@ -2180,7 +2470,7 @@ def parse_args() -> argparse.Namespace:
             command_parser.add_argument("--config", type=Path, required=True)
             command_parser.add_argument("--backup-name", required=True)
             command_parser.add_argument("--yes", action="store_true", help="confirm the requested application deployment")
-    for action in ("status", "rollback"):
+    for action in ("status", "rollback", "storage-check"):
         command_parser = sub.add_parser(action)
         command_parser.add_argument("--config", type=Path, required=True)
         if action == "rollback":
@@ -2214,6 +2504,15 @@ def main() -> int:
                                   "spa_sha256": release.manifest["artifacts"]["operatoros-web-client.tar.gz"]}, indent=2))
             return 0
         cfg = load_config(args.config)
+        if args.action == "storage-check":
+            verify_storage_mount(cfg)
+            verify_host_storage_config(cfg)
+            verify_user_manager_storage_context(cfg)
+            verify_process_storage_context(cfg, require_explicit=True)
+            verify_runtime_units(cfg)
+            current_spa(cfg)
+            print(json.dumps({"result": "storage_ready"}))
+            return 0
         if args.action == "status":
             print(json.dumps(status(cfg), indent=2))
             return 0
