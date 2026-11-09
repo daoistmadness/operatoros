@@ -383,16 +383,66 @@ Stop if any result differs from the approved contract.
    `231072:65536` remain free and policy-approved.
 4. Confirm that ports `18188` and `18190` have no listeners. Preserve the
    existing UID 1000 services on `18088` and `18090`.
-5. Require at least 5 GiB and 20,000 free inodes on the data filesystem, and
-   at least 15 GiB free on `/` after measuring staging, OCI/SPA payloads, two
-   SPA versions, SQLite/WAL/SHM, synthetic backup and restore space, Podman
-   metadata, and journal growth.
+5. Before the first write, require at least 9 GiB free and 80,000 free inodes
+   on the data filesystem and 16 GiB free on `/`. The runtime config enforces
+   ongoing floors of 7 GiB and 50,000 inodes on the data filesystem, plus
+   15 GiB on `/`.
 6. On the trusted workstation, verify the exact release source, run, attempt,
    artifact ID, bundle checksum, OCI manifest digest, and SPA checksum with the
-   repository-managed verifier. Measure the exact staging and expanded OCI/SPA
-   payload before any host writes. Stop if measurement is unavailable or the
-   post-import reserve would fall below the thresholds above. Do not rebuild or
-   substitute the artifact.
+   repository-managed verifier. Confirm the current host still exceeds the
+   measured thresholds before any host writes. Stop if a capacity measurement
+   or the post-write reserves fail. Do not rebuild or substitute the artifact.
+
+The Loop 77 D1 capacity model measured the retained release without rebuilding:
+
+| Measurement | Bytes | Evidence |
+| --- | ---: | --- |
+| GitHub artifact envelope | 80,788,986 | GitHub artifact API digest and successful release upload log; the outer ZIP was not retained for a second local hash |
+| Inner release bundle | 81,510,400 | Downloaded bundle SHA-256 matched the signed release manifest |
+| API OCI archive | 80,566,784 | Signed bundle member checksum |
+| API compressed OCI layers | 80,524,201 | OCI archive inspection |
+| API expanded layer tar streams | 224,819,200 | OCI archive inspection |
+| API regular-file layer payload | 216,933,685 | OCI archive inspection |
+| API rootless graphroot increment | 217,732,932 | Isolated local Podman 5.7.0 overlay store after import |
+| SPA archive | 624,292 | Signed bundle member checksum |
+| Expanded SPA | 2,349,148 | Isolated archive inspection; 213 regular files |
+| Caddy rootless graphroot increment | 66,422,902 | Pinned image loaded into the same isolated local Podman store |
+| API and Caddy graphroot together | 284,155,834 | Isolated local Podman 5.7.0 overlay store |
+
+The release verifier keeps the envelope, bundle, API archive, and SPA archive
+in its temporary directory together: 243,490,462 bytes at the measured sizes.
+During upgrade preflight, it also copies the API archive into an isolated
+Podman store and loads the API image there. The measured preflight copy and
+store add 298,299,716 bytes. The upgrade model includes the existing API and
+Caddy store, a second API image without assuming layer deduplication, two
+expanded SPA releases, one synthetic database and encrypted backup, and a
+64-MiB logs/evidence allowance. A separate backup/restore phase allows three
+64-MiB SQLite-sized files: source database/WAL/SHM, encrypted backup, and
+restore workspace. Stop D1 if the combined synthetic database plus WAL/SHM
+exceeds 64 MiB; this is a test-only cap, not a production database limit. A
+synthetic 16-MiB WAL write produced an 18,813,176-byte database/WAL/SHM family,
+an 18,632,704-byte SQLite backup-sized copy, and an equal restore copy. These
+were capacity probes; the application backup command remains the D1
+verification path.
+
+| Peak state | Modeled bytes, including 20% growth allowance |
+| --- | ---: |
+| Initial artifact verification and isolated schema preflight | 812,588,343 |
+| Active synthetic runtime | 585,397,889 |
+| Upgrade with rollback retention | 1,238,365,080 |
+| Separate synthetic backup and restore | 668,747,504 |
+
+The upgrade/rollback state is the largest. The configured 7-GiB data free-space
+floor plus that peak rounds up to a 9-GiB clean-start requirement. Inode
+planning counts the measured 10,661-file/directory current store, another
+store of the same size for an API image without layer sharing, two SPA file
+trees, up to 2,000 transaction/log/evidence entries, and 20% growth. That
+28,509-inode peak plus the configured 50,000-inode floor rounds up to an
+80,000-inode clean-start requirement. The 16-GiB root preflight leaves the
+15-GiB configured reserve after allowing for user configuration and journal
+growth. Podman measurements are local, not OPRSERVER qualification. Recheck
+actual free bytes, inodes, and Podman 5.7.0 behavior on OPRSERVER before host
+implementation.
 
 The data filesystem is unencrypted. Use it only for synthetic D1 records and
 synthetic keys. Do not put school data on this filesystem. Do not provision,

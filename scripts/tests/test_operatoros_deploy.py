@@ -10,6 +10,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 import zipfile
 from datetime import datetime, timedelta, timezone
@@ -876,6 +877,13 @@ class DeploymentFixture(unittest.TestCase):
         self.config_file.chmod(0o644)
         with self.assertRaisesRegex(deploy.DeployError, "mode 0600"):
             deploy.load_config(self.config_file)
+
+    def test_d1_capacity_floor_matches_measured_peak_contract(self):
+        self.assertEqual(deploy.HOST_DATA_FREE_FLOOR, 7 * 1024**3)
+        self.assertEqual(deploy.HOST_MIN_FREE_INODES, 50_000)
+        example = tomllib.loads((ROOT / "deploy/podman/operatoros-d1-config.toml.example").read_text())
+        self.assertEqual(example["min_free_bytes"], deploy.HOST_DATA_FREE_FLOOR)
+        self.assertEqual(example["min_free_inodes"], deploy.HOST_MIN_FREE_INODES)
 
     def test_host_storage_mount_requires_the_configured_mount_uuid_type_and_rw_state(self):
         filesystem = {"target": str(self.base), "uuid": self.cfg["storage_uuid"],

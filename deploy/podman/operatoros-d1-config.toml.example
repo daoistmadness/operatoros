@@ -1,6 +1,6 @@
 # Copy only after mount identity and capacity are freshly verified.
-# Set min_free_bytes from measured payload plus the approved reserve. The
-# 5-GiB value is only the minimum floor, not an approved capacity calculation.
+# Loop 77 measured a 1,238,365,080-byte upgrade/rollback peak, including a
+# 20% allowance. Keep at least 7 GiB free and 50,000 inodes during D1.
 root = "/mnt/podman-data/operatoros-d1-synthetic"
 expected_uid = 1002
 storage_mountpoint = "/mnt/podman-data"
@@ -19,7 +19,7 @@ api_service = "operatoros-lite-api.service"
 caddy_service = "operatoros-lite-caddy.service"
 api_url = "http://127.0.0.1:18190"
 web_url = "http://127.0.0.1:18188"
-min_free_bytes = 5368709120
-min_free_inodes = 20000
+min_free_bytes = 7516192768
+min_free_inodes = 50000
 backup_max_age_seconds = 86400
 root_min_free_bytes = 16106127360
