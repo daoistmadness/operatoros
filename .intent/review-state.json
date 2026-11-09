@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a255d01cc844e40c540c4501685079a2c7bb461f974db6b4a8ff83e575dac24d",
+      "fingerprint": "dac16e619b94138883eaa20b33f01023d16bce8dcacd0e8cff01e428d66aa79e",
       "snapshot": {
-        "CHANGELOG.md": "d7ac49cc66f79f9c03f4df658529aabe721b72d2780c2655e2bebd9332d13094"
+        "CHANGELOG.md": "4aeaf57634bef597e027412c25722996dddb0294d6ea66ac5bae881dd3c037ae"
       },
-      "head": "601a10c519e1c7f2e62ccd491ddf436d47bbfbda",
+      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
       "outcome": "no-change",
-      "reason": "The changelog PR-number correction does not change agent-skill guidance or scope.",
+      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 601a10c519e1c7f2e62ccd491ddf436d47bbfbda"
+        "Changed: CHANGELOG.md at 03e8138aba840f5ba917f7c668c59c5841b320c4"
       ]
     },
     "source:COMMANDS.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "3f04903227d3b8ed9d05a47c1c92606fa131f89fe7d1431302598efe04600055",
+      "fingerprint": "b03668dfdbe6e2580496aa791d9124e67d34712794e97aa82aa4d6ea07abcfe9",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "7b285dcb0df13c80081b2c8428ae6d88a4e8c13542be7c7a39496c0ff49437c3"
+        "docs/runbooks/ubuntu-server-deployment.md": "a61abb61b58be0d9dc39465c9f2272b5ef2f67f53eb543b3f6743f0e3a24fd60"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 03e8138aba840f5ba917f7c668c59c5841b320c4"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "b6c94e972c52f27e323d7fe2346ca85aaef3262b061bb540e07090b32b2e581d",
+      "fingerprint": "7c3f1ba23c4aa56f18ab95a49469f156945499653e1ff80153f9d48b42ec1b7a",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "b7433e9aac985ceed2637d79eed9548f4c773c7d8101ddafc7c78103b776d3d8"
+        "scripts/operatoros_deploy.py": "504c2cd7a36e53c0c99247a522e6b4cc02dcb0f3d30153b159eca95049d19a34"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: scripts/operatoros_deploy.py at 03e8138aba840f5ba917f7c668c59c5841b320c4"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "3e2364b78bcea855614df4416e8fe7903d09c7e6e6ba5e5d59b37cee0bac2bbe",
+      "fingerprint": "f199c1a41e1be7e5a7183322cd385a2135637cc786fbba5e776e363835a2fee4",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "19ec7309184f82be42ee0d17be38d87788e5e08191ae7fe50a0d2da74b40c04d"
+        "scripts/tests/test_operatoros_deploy.py": "943c9dbaa45381c15702c8e035889db43d2e59267ae01f86287df47410821fa5"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: scripts/tests/test_operatoros_deploy.py at 03e8138aba840f5ba917f7c668c59c5841b320c4"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10189,15 +10189,15 @@
       ]
     },
     "source:deploy/podman/operatoros-d1-config.toml.example": {
-      "fingerprint": "43a0a9c9b61aec718b2a80cdaf6caa23188d40e2cdcdbb814964f00781f172b5",
+      "fingerprint": "d533a6c0b11f512fc08d9c5da13d16d794014b9846689ca5178af6dace595880",
       "snapshot": {
-        "deploy/podman/operatoros-d1-config.toml.example": "0ad6fc76c2b09466431c87593d7467ea1b8a299e388f65036dbf8ffeb41dc990"
+        "deploy/podman/operatoros-d1-config.toml.example": "f2ca875eeeb4648b77e26a1188e5e085bc501a3ac140a4b66a1acc880a9d2b09"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "03e8138aba840f5ba917f7c668c59c5841b320c4",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "Loop 77 changes only D1 deployment capacity enforcement, tests, and deployment documentation; these are outside the Elysia skill guidance, so no skill guidance update is needed.",
       "evidence": [
-        "Changed: deploy/podman/operatoros-d1-config.toml.example at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: deploy/podman/operatoros-d1-config.toml.example at 03e8138aba840f5ba917f7c668c59c5841b320c4"
       ]
     },
     "source:deploy/podman/operatoros-d1-storage.conf.example": {
