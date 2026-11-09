@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b1ca3b154a2a000aa4812f62f85ecb7719b6d185ab6acbb5b79ed0fa2aae2d4c",
+      "fingerprint": "125c8bc7997fa64eb7ea3431839b9d72cdf7ec1f9ef43e8d10e8881e701bf0d2",
       "snapshot": {
-        "CHANGELOG.md": "87567eeb1f81e171a8b4f929364b4ae63f068f7846d7d539dd6ceec823b92996"
+        "CHANGELOG.md": "66a9df8c111c2e6a3d8e6ce0f42665fda26d8b364b380e4f58ffa5c5e7aa2fbe"
       },
-      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
+      "head": "5526f367ead096c47fad930054ece99a8b64fecb",
       "outcome": "no-change",
-      "reason": "The D1 and rehearsal Caddy admin-listener change affects deployment configuration only and does not change the registered Elysia skill guidance.",
+      "reason": "Adding the assigned PR number to the D1 Caddy changelog entry does not change the registered Elysia guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 396c34e8ca6cd88a76cc54134605ee9509db541e"
+        "Changed: CHANGELOG.md at 5526f367ead096c47fad930054ece99a8b64fecb"
       ]
     },
     "source:COMMANDS.md": {
