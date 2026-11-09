@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "aa8e52ecf3bfd5813f9da39549e47687f8a964deb25e7b11f0ac3f184859dc36",
+      "fingerprint": "a255d01cc844e40c540c4501685079a2c7bb461f974db6b4a8ff83e575dac24d",
       "snapshot": {
-        "CHANGELOG.md": "30091873dea742945fe4b7ed670e2768c00a924df8cb0d77238cdacfde1a8424"
+        "CHANGELOG.md": "d7ac49cc66f79f9c03f4df658529aabe721b72d2780c2655e2bebd9332d13094"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "601a10c519e1c7f2e62ccd491ddf436d47bbfbda",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "The changelog PR-number correction does not change agent-skill guidance or scope.",
       "evidence": [
-        "Changed: CHANGELOG.md at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: CHANGELOG.md at 601a10c519e1c7f2e62ccd491ddf436d47bbfbda"
       ]
     },
     "source:COMMANDS.md": {
