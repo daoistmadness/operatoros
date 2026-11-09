@@ -611,8 +611,13 @@ Mount the D1 Caddyfile and versioned SPA at `/etc/caddy/Caddyfile` and
 `/srv/operatoros/current/client`, both read-only. Do not mount the SQLite
 directory or API environment file into Caddy. Set `User=1000:1000` and
 `UserNS=keep-id:uid=1000,gid=1000`. Use `ReadOnly=true`,
-`NoNewPrivileges=true`, `DropCapability=all`, and journald logging. Do not add
-capabilities. Port 18188 does not need a privileged-port capability.
+`NoNewPrivileges=true`, `DropCapability=all`, and journald logging. Add only
+`AddCapability=net_bind_service`: the pinned Caddy image marks `/usr/bin/caddy`
+with that file capability, and Linux rejects its execution when the capability
+is absent from the container's bounding set. `NoNewPrivileges=true` remains
+enabled, and the service binds only unprivileged loopback port 18188; every
+other capability stays dropped. The deployment validator requires this exact
+capability and rejects additional or duplicate entries.
 Set `MemoryMax=512M` and `CPUQuota=50%` as provisional resource ceilings.
 
 The existing Caddy file and API unit are validated by the deployment CLI. The
