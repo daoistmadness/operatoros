@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "797a86dd77e0687b003d39665b5183d952d2850772ff4919ab675606eff87d22",
+      "fingerprint": "c6e67e7d1feab1e8bf1dd146be0c7def31051009d4d905386b35ec9ff69d7567",
       "snapshot": {
-        "CHANGELOG.md": "522ad7d96ab57a372a7d7ad9bdc039b725af7834b194dbc42d7dd0aba0917efa"
+        "CHANGELOG.md": "f034f9b6dbec26d5dd88b444af81c3b77f33a9fc270b1470c641a30e49c3f50a"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "6161600291af236e00722e9fd006b38533cf94b2",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "Adding the assigned PR number does not change Elysia implementation guidance; the registered skill remains accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: CHANGELOG.md at 6161600291af236e00722e9fd006b38533cf94b2"
       ]
     },
     "source:COMMANDS.md": {
@@ -4821,15 +4821,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "6eb7715771d2e8d7a63691adc860174df7b0f4ba02f67569f0a7366d3ad83392",
+      "fingerprint": "52e389361c5d9dad01846b042ba30c4a8faaa8aa268d22de0d5f3aa179732762",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "46f557c4c6845966fd12861b070338cce948742c20528c8f666113a037590982"
+        "docs/runbooks/ubuntu-server-deployment.md": "43afd90c1450c8a29efe9c6791865b7d10f275327ccd191321090dced48aa613"
       },
-      "head": "6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2",
+      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
       "outcome": "no-change",
-      "reason": "Loop 77 updates only the Ubuntu deployment runbook to distinguish historical UID/subordinate-ID evidence from fresh host verification; no installed skill guidance changed.",
+      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 6e16edf83c839cc96dec5ec85ae8f6a2a00e0aa2"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at d45c505871fa2b8e3044940bcb26c933c615a8d5"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -10069,27 +10069,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "84ee8c7d562568af5a1f3649ee91b2e1c2f9cff020accf78e0b19e19da47050e",
+      "fingerprint": "cb9481bd98040732ea94ae08edc44d936d6542eae1081d80473e7bed1dac4cbe",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "1071ad166a802a8cd4f4d3c25d3dfcb81daf196638db049dcd0e5c53888478c6"
+        "scripts/operatoros_deploy.py": "a9b53ba217fdcdd9f0428295868f4b315627af5e804d5a4b260b95576f83d1b3"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: scripts/operatoros_deploy.py at d45c505871fa2b8e3044940bcb26c933c615a8d5"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "291b3fb0216471f2c76b4734a9f3a96c6f8ac206108528e0be44c23141327abd",
+      "fingerprint": "84f91ba381025b51425779db2d3285222b703980a7dcddfeedbe6456cda62b80",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "7f5f3f5d69cdbc22707589590844483387ec8d972a2ae0373f0203932f944c7d"
+        "scripts/tests/test_operatoros_deploy.py": "f5b8e5c936aebc88461d5c22b139307413051caa144fbde5ef781e1f0432ad4e"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: scripts/tests/test_operatoros_deploy.py at d45c505871fa2b8e3044940bcb26c933c615a8d5"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10177,15 +10177,15 @@
       ]
     },
     "source:deploy/podman/operatoros-d1-caddy.container.in": {
-      "fingerprint": "4b884529ca9eaada956ad6ce5f4caba05cf894e9cef82ef2af6afa6103a888fa",
+      "fingerprint": "0ceeea22bb4ec7af271e53c3e940c0d1f2adfa92cf6827b6aa4e44f83f74b27a",
       "snapshot": {
-        "deploy/podman/operatoros-d1-caddy.container.in": "5ab8bc2d09e50ef2a25bad85d65182716b9e8798332764ca99a7cbfe5c25af00"
+        "deploy/podman/operatoros-d1-caddy.container.in": "b78a2c9ad03d291658c1d81270341b8b448f6ab716d764d1f3459c0dcd6f12d1"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "d45c505871fa2b8e3044940bcb26c933c615a8d5",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "The Caddy capability correction changes the D1 service contract, not Elysia implementation guidance; the only registered skill remains accurate.",
       "evidence": [
-        "Changed: deploy/podman/operatoros-d1-caddy.container.in at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: deploy/podman/operatoros-d1-caddy.container.in at d45c505871fa2b8e3044940bcb26c933c615a8d5"
       ]
     },
     "source:deploy/podman/operatoros-d1-config.toml.example": {

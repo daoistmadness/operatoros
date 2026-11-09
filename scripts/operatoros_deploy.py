@@ -1629,8 +1629,7 @@ def verify_runtime_units(cfg: dict[str, Any]) -> None:
         if unit_values(caddy_text, key) != [expected]:
             raise DeployError(f"Caddy Quadlet {key} does not match the approved loopback proxy contract")
     capabilities = unit_values(caddy_text, "AddCapability")
-    if ((cfg.get("profile") == "host" and capabilities) or
-        (cfg.get("profile") == "rehearsal" and capabilities != ["net_bind_service"])):
+    if capabilities != ["net_bind_service"]:
         raise DeployError("Caddy Quadlet grants an unexpected capability")
     required_mounts = {
         f"{cfg['root']}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro",

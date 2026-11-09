@@ -27,6 +27,7 @@ ReadOnly=true
 ReadOnlyTmpfs=true
 NoNewPrivileges=true
 DropCapability=all
+AddCapability=net_bind_service
 LogDriver=journald
 Volume=/mnt/podman-data/operatoros-d1-synthetic/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
 Volume=/mnt/podman-data/operatoros-d1-synthetic/web/current/client:/srv/operatoros/current/client:ro

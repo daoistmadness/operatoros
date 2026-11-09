@@ -753,7 +753,7 @@ class DeploymentFixture(unittest.TestCase):
         self.caddy_unit.write_text(
             service_guards + "[Container]\nImage=" + deploy.CADDY_IMAGE + "\nPull=never\nContainerName=operatoros-lite-caddy\n"
             "Network=host\nUser=1000:1000\nUserNS=keep-id:uid=1000,gid=1000\nLogDriver=journald\nReadOnly=true\n"
-            "NoNewPrivileges=true\nDropCapability=all\n"
+            "NoNewPrivileges=true\nDropCapability=all\nAddCapability=net_bind_service\n"
             "Volume=" + str(self.root / "deploy/Caddyfile") + ":/etc/caddy/Caddyfile:ro\n"
             "Volume=" + str(self.web / "current/client") + ":/srv/operatoros/current/client:ro\n", encoding="utf-8")
         self.caddy_unit.chmod(0o600)
@@ -1105,7 +1105,8 @@ class DeploymentFixture(unittest.TestCase):
         self.assertIn("After=operatoros-lite-api.service", caddy)
         self.assertIn("MemoryMax=6G", api)
         self.assertIn("MemoryMax=512M", caddy)
-        self.assertNotIn("AddCapability=", api + caddy)
+        self.assertNotIn("AddCapability=", api)
+        self.assertIn("AddCapability=net_bind_service\n", caddy)
 
     def test_deployment_lock_fails_before_creating_a_lock_on_wrong_mount(self):
         with patch.object(deploy, "verify_storage_mount", side_effect=deploy.DeployError("wrong mount")):
@@ -1323,6 +1324,11 @@ class DeploymentFixture(unittest.TestCase):
                 self.caddy_unit.write_text(caddy_before + f"AddCapability={capability}\n", encoding="utf-8")
                 with self.assertRaisesRegex(deploy.DeployError, "unexpected capability"):
                     deploy.verify_runtime_units(self.host_cfg)
+
+        self.caddy_unit.write_text(caddy_before.replace("AddCapability=net_bind_service\n", ""), encoding="utf-8")
+        with self.assertRaisesRegex(deploy.DeployError, "unexpected capability"):
+            deploy.verify_runtime_units(self.host_cfg)
+        self.caddy_unit.write_text(caddy_before, encoding="utf-8")
 
         self.api_unit.write_text(api_before + "[Install]\nAlias=operatoros-api.service\n", encoding="utf-8")
         self.api_copy.write_text(api_before + "[Install]\nAlias=operatoros-api.service\n", encoding="utf-8")
