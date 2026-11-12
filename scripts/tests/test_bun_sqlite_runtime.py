@@ -1,9 +1,10 @@
 import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location(
@@ -25,6 +26,28 @@ class RuntimeAssessmentTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(gate.RuntimeGateError, "3.54.0 or later"):
             gate.assess_runtime(runtime)
+
+    def test_blocked_report_retains_exact_embedded_runtime_identity(self):
+        runtime = {
+            "bun": "1.4.4",
+            "sqlite": "3.53.4",
+            "sqliteSourceId": "embedded-source-id",
+            "fts5CompileOption": True,
+            "fts5Probe": True,
+            "fts5ProbeError": None,
+        }
+        output = io.StringIO()
+        with (
+            patch.object(gate, "inspect_image", side_effect=lambda _: gate.assess_runtime(runtime)),
+            patch("sys.stdout", output),
+        ):
+            self.assertEqual(gate.main(["local-image-id"]), 1)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertEqual(report["bun"], "1.4.4")
+        self.assertEqual(report["sqlite"], "3.53.4")
+        self.assertEqual(report["sqliteSourceId"], "embedded-source-id")
+        self.assertTrue(report["fts5"])
 
     def test_accepts_fixed_embedded_sqlite_with_fts5(self):
         runtime = {

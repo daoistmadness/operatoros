@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "eebb236f08343eba180ba096eec3540a9b3904162e380e3b0423b842ac5eaa76",
+      "fingerprint": "43c83fa752fb3f8653d5fa28a73cb12b8dbd2706726e955510c8efd57560bf6e",
       "snapshot": {
-        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "c0f8fb306971f2d29943421d38fc572a32218629cc56723efcff97d271bf1594",
+        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
+        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "979c70536215d1c8737c34096728c32f321dc50a03ab20ac7c3fe30455226343",
+      "fingerprint": "d3a4f0c524a9356455e3703675d9285adf53f8985c8cebd973b261920fa04ed7",
       "snapshot": {
-        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "c0f8fb306971f2d29943421d38fc572a32218629cc56723efcff97d271bf1594",
+        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
+        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "16e50dde1097687346b8379a47f9af15b4b31868e78058eacd464cd9331a35b6",
+      "fingerprint": "b8f92268e2e1bc531910a757d8a63c838eeff3d2277ab4b0993deebefb19c6da",
       "snapshot": {
-        "CHANGELOG.md": "66174faa8652e4da210397b0695b063bbb7ecc3b378a5b519fadaad96fb2e91c"
+        "CHANGELOG.md": "dbf3ba6e7282c02c9297861fb3258cff3e9e08b1ef513eacf7c5bbb1096d4293"
       },
-      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
+        "Changed: CHANGELOG.md at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:COMMANDS.md": {
@@ -9961,15 +9961,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "99e23083ab9e92966927c6ce79502ac7bc72d48e5dd48822bcf0cab8f452afe2",
+      "fingerprint": "58f36a07029cc29396aa7446003c1aebb02b13c752554198c6f19f1bcb30da43",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "379910b57b83d6e036aeca1b6c1970161b0ceef286b7e979d1f0820f43ec0e05"
+        "scripts/tests/test_release_bundle.py": "312e4027e54dd3481263e985bb71b2ee2afeb50965ab8175ba94a0cd69c56402"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: scripts/tests/test_release_bundle.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10213,27 +10213,27 @@
       ]
     },
     "source:scripts/check-bun-sqlite-runtime.py": {
-      "fingerprint": "3818e67c78e22f3bf072c22f136a15006eed18d718fa1782920fc8bf04796149",
+      "fingerprint": "97dcbf055a4ea4f64d1a86ad753632ae72375f19d3680ed6bf90f30256a84609",
       "snapshot": {
-        "scripts/check-bun-sqlite-runtime.py": "c8c1efb9a18ab9961b342bd18e02c09ffc51b33aa0ae9a0a9bbc38221d2d97cd"
+        "scripts/check-bun-sqlite-runtime.py": "8a5205ca47dc203bcfa5915e3b7c36ecef90ab71408719dbb6c2de325ea04d21"
       },
-      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: scripts/check-bun-sqlite-runtime.py at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
+        "Changed: scripts/check-bun-sqlite-runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:scripts/tests/test_bun_sqlite_runtime.py": {
-      "fingerprint": "f64288358109b82765283df4769492a6050f54fc0609e203eca053f7d82826c3",
+      "fingerprint": "d62f09045b945c3974ae0ac5ae853bbc79fb3a56386bfdf8f544dca1e3e0faf8",
       "snapshot": {
-        "scripts/tests/test_bun_sqlite_runtime.py": "de6e6c8bf711d0c953defe7c0ed1bc745c0e0aef649cba7e77fe1eb6ba74e933"
+        "scripts/tests/test_bun_sqlite_runtime.py": "0dd92a2d75c393bf558bade550461d1a271a9d176f988aea47eef00ba5620a9f"
       },
-      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
+        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     }
   }

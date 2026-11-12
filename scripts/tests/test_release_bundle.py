@@ -1943,3 +1943,32 @@ class RehearsalUnitCleanupTests(unittest.TestCase):
             self.assertFalse(caddy_unit.exists())
             self.assertTrue(api_copy.is_file())
             self.assertTrue(unrelated.is_file())
+
+
+class ReleaseQualificationWorkflowTests(unittest.TestCase):
+    def test_embedded_runtime_gate_runs_before_provenance_attestation(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        release_job = workflow.split('  release-bundle:\n', 1)[1]
+        qualification = release_job.index('Qualify embedded Bun SQLite before signing')
+        attestation = release_job.index('Attest the complete release bundle')
+        consumer = release_job.index('Verify provenance and start an isolated consumer')
+        self.assertLess(qualification, attestation)
+        self.assertLess(attestation, consumer)
+
+    def test_candidate_qualification_requires_manual_non_main_dispatch_and_is_unattested(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
+            '\n\n  release-bundle:', 1
+        )[0]
+        self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
+        self.assertIn("github.ref != 'refs/heads/main'", candidate)
+        self.assertIn('contents: read', candidate)
+        self.assertIn('scripts/check-bun-sqlite-runtime.py', candidate)
+        self.assertIn('release.scan_image(', candidate)
+        self.assertIn('actions/upload-artifact@', candidate)
+        self.assertNotIn('id-token: write', candidate)
+        self.assertNotIn('attest-build-provenance', candidate)
+        self.assertNotIn('podman push', candidate)
+        retained = candidate.split('      - name: Retain non-image candidate reports', 1)[1]
+        self.assertNotIn('image.oci.tar', retained)
+        self.assertIn('Enforcement test: `PASS`', candidate)

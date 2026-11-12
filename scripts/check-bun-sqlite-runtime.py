@@ -38,6 +38,10 @@ db.close();'''
 class RuntimeGateError(ValueError):
     """The image runtime cannot be qualified for the embedded SQLite CVE."""
 
+    def __init__(self, message: str, runtime: dict[str, Any] | None = None):
+        super().__init__(message)
+        self.runtime = runtime
+
 
 def parse_version(value: Any) -> tuple[int, int, int]:
     if not isinstance(value, str) or not re.fullmatch(r"\d+\.\d+\.\d+", value):
@@ -84,7 +88,8 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
     }
     if fts5 and version < MINIMUM_SQLITE_VERSION:
         raise RuntimeGateError(
-            f"SQLite {sqlite} includes affected FTS5 code; require SQLite 3.54.0 or later"
+            f"SQLite {sqlite} includes affected FTS5 code; require SQLite 3.54.0 or later",
+            runtime=result,
         )
     return result
 
@@ -134,7 +139,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         report = inspect_image(args[0])
     except (RuntimeGateError, subprocess.TimeoutExpired) as error:
-        print(json.dumps({"status": "BLOCKED", "reason": str(error)}))
+        report = {"status": "BLOCKED", "reason": str(error)}
+        if isinstance(error, RuntimeGateError) and error.runtime is not None:
+            report.update(error.runtime)
+        print(json.dumps(report, sort_keys=True))
         return 1
     print(json.dumps({"status": "PASS", **report}, sort_keys=True))
     return 0
