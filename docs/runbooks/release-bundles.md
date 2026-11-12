@@ -15,6 +15,14 @@ Scheduled validation, PRs, and ordinary pushes cannot create release bundles.
 The validation and bundle jobs explicitly check out the event's full commit SHA;
 a later movement of main does not change the candidate. Bundle creation is serialized.
 
+A manual dispatch on a non-main branch performs nonpublishing qualification. It
+runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
+checks the embedded Bun/SQLite runtime before retaining non-image reports for
+seven days. The image is discarded with the runner and receives no signature,
+attestation, or release-bundle upload. A workflow success means the rejection
+guard behaved correctly; the report can still say that the candidate is
+blocked.
+
 The existing locked setup action supplies Bun and Node. The runner installs
 Ubuntu's Podman package and records its actual version. The API uses the existing
 Linux amd64 Containerfile, digest-pinned base and production lockfile install.

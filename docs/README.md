@@ -15,6 +15,12 @@ Dated session logs and the reusable session template are exempt from the index.
 - Package-owned and generated docs remain beside their source.
 - The protected Dapodik design remains at its required path.
 
+## Program status
+
+- [Master stability checklist](../MASTER_CHECKLIST.md).
+- [Stability decisions](../DECISIONS.md).
+- [Current stability report](../STABILITY_REPORT.md).
+
 ## Architecture
 
 - [Analytics architecture](architecture/analytics.md).

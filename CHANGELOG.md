@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Bind the embedded Bun/SQLite CycloneDX inventory to the exact OCI image and source, and reject release evidence with an unqualified runtime.
 - Gate release images on embedded Bun/SQLite evidence before signing and provide a nonpublishing candidate qualification path.
 - Disable the D1 and rehearsal Caddy admin listeners to avoid conflicts with the existing Caddy service. (#379)
 - Allow the pinned D1 Caddy image to start with only its required `net_bind_service` capability while retaining `NoNewPrivileges` and dropping all others. (#378)
