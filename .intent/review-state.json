@@ -10235,39 +10235,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "8a1e548a901f8264a942b73f0c12c4c630b3c37601b41c667552e89137818834",
+      "fingerprint": "ecf267a8c045e2b425cba4c3063777128388e257db254507c5159bae01657e9d",
       "snapshot": {
-        "DECISIONS.md": "0858086e955d39a8e81d624d8171d4d5fb82caecc4bdaed34563404da525b0f4"
+        "DECISIONS.md": "4d134114bf19235a39113cc47009e9dce2b64cc4ffd920f78e4da6cc7e0fb38a"
       },
-      "head": "cd106c33c4fad82dc4bcdb2ddd9cd2e0e57503eb",
+      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
       "outcome": "no-change",
-      "reason": "These edits update PR and CI status in existing tracking documents; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
       "evidence": [
-        "Changed: DECISIONS.md at cd106c33c4fad82dc4bcdb2ddd9cd2e0e57503eb"
+        "Changed: DECISIONS.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "b43e264726fe2f13ff5ef495ef5445a1782a5cf1f319908ca5dad18f4a904d01",
+      "fingerprint": "e8129567e2df830a12e77f383d99e10368b1aeee75e8a68401f61cb4de3aaff8",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "60c700fed44e8ce42cf6d95d9645614519574d907cceaa580bb8b7cf184a5508"
+        "MASTER_CHECKLIST.md": "71d77fec4b5709f8f8e0714cbbc4be93649b22805e048ddc3e6d39d9dc928830"
       },
-      "head": "e894eb93b65e3a89345d23ac3f9966ee85033b65",
+      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
       "outcome": "no-change",
-      "reason": "These edits update verified PR merge and CI status in existing tracking documents; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at e894eb93b65e3a89345d23ac3f9966ee85033b65"
+        "Changed: MASTER_CHECKLIST.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "63dfa00be7034745168b5f0d6364c5ee2a80c629bba7abe47341a6815ca6f4e7",
+      "fingerprint": "03fb0ba07c1a4a350e8f76fc6430b9d1452ab94d72c62e9be7530fb3b652581f",
       "snapshot": {
-        "STABILITY_REPORT.md": "1aa55a7077db6a290d4534e58b7f7f4a120971763c036f602d8b93ae0c06f93d"
+        "STABILITY_REPORT.md": "222d0f971948ea5aeae7fb0becced696f5931073843d900ec50314a64a8510be"
       },
-      "head": "e894eb93b65e3a89345d23ac3f9966ee85033b65",
+      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
       "outcome": "no-change",
-      "reason": "These edits update verified PR merge and CI status in existing tracking documents; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at e894eb93b65e3a89345d23ac3f9966ee85033b65"
+        "Changed: STABILITY_REPORT.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
