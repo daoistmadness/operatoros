@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "f219bc847333d9ff08dc33e6ac7a88bc3eabc26aed32c24ac51baab6b1e2fdac",
+      "fingerprint": "fbbf6573acfeb347d5ffa38bf91bf83235f12f018a1130feb824d86c95f89a3e",
       "snapshot": {
-        "CHANGELOG.md": "633dc9f9d5e9e4d2f515e6a192b953c3eb118e80cd8d16c82083590305cfeaa5"
+        "CHANGELOG.md": "158f058ce469297bf0156bf84b2a8968568dd0a4b409e361fef6338301cd39bb"
       },
-      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
+      "head": "0eb077bd07bfdb4c0021fecd72a94738826ea6bb",
       "outcome": "no-change",
-      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
+      "reason": "Readiness changelog entry records no installed skill guidance changes.",
       "evidence": [
-        "Changed: CHANGELOG.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
+        "Changed: CHANGELOG.md at 0eb077bd07bfdb4c0021fecd72a94738826ea6bb"
       ]
     },
     "source:COMMANDS.md": {
