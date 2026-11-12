@@ -1,24 +1,53 @@
 ---
 status: current
-last_reviewed: 2026-11-12
+last_reviewed: 2026-11-13
 ---
 
 # OperatorOS stability decisions
 
 ## Decisions from the 25 most recent pull requests
 
-- Keep security gates fail-closed when hosted evidence finds a runtime or
-  artifact problem. Do not turn a blocked release green by suppressing the
-  finding.
-- Bind rehearsal and release evidence to the exact source commit, image digest,
-  and bytes that were actually tested. A local smoke test cannot stand in for
-  an exact-artifact rehearsal.
-- Preserve sanitized stage and guard diagnostics. Do not retain raw secrets,
-  database files, private paths, or unbounded command output.
-- Verify data across migration, backup, restore, restart, and rollback
-  transitions. Startup health alone does not prove preservation.
-- Treat prepared host procedures and synthetic tests as preparation. They do
-  not prove target-host, independent-device, or off-host recovery acceptance.
+Reviewed the 25 newest GitHub PRs returned on 2026-11-12: #357–#381, including
+the open Phase 7 follow-up #381. Their descriptions and recorded hosted/local
+failure evidence show these recurring lessons:
+
+- **Keep release gates fail-closed and evidence tied to the artifact.** PRs
+  #358, #360, #366, #380, and #381 bind verification to source, run, artifact,
+  and image identity. Keep the embedded SQLite finding in the SBOM and block
+  attestation while G3 is open; scanner scope or an adapter smoke test is not a
+  security disposition.
+- **Test state changes, not only health.** PRs #360, #375, and #376 distinguish
+  application rollback from database recovery and preserve a unique write made
+  after backup across restart, rollback, and interrupted recovery. Require the
+  same invariant in future rehearsal evidence; a healthy endpoint or
+  pre-backup row is insufficient.
+- **Carry one verified runtime context through every operation.** PRs #362,
+  #369, #371, and #374 exposed storage configuration drift, a non-empty
+  bootstrap root, and a validator that lost the accepted private Podman
+  context. Pass the validated context to validators and units, assert effective
+  identity and paths, and do not loosen a guard to make a mismatched runner
+  pass.
+- **Make failures and cleanup auditable without leaking internals.** PRs
+  #359, #367, #368, #370, #372, #373, and #375 show that stale stage names,
+  missing exit/operation identity, combined stdout/stderr, and incomplete
+  cleanup can hide the first failure. Keep stable allowlisted failure classes,
+  the last completed guard, operation and exit status, and cleanup status. Keep
+  raw stderr, secrets, database files, private paths, and shared stores out of
+  retained evidence.
+- **Keep privileges and host acceptance narrow.** PRs #363, #377, #378, and
+  #379 separate preparation from live host changes, allow only the Caddy
+  capability required by the pinned image, and disable the unused Caddy admin
+  endpoint. Synthetic runner success still does not prove target-host,
+  independent-device, or off-host recovery acceptance.
+- **Prefer small, measured changes.** PR #357 consolidated duplicate UI
+  ownership but measured no meaningful bundle-size improvement. Retain such a
+  change for simpler dependency ownership, not as a performance claim; avoid
+  broad migrations without measured benefit and end-to-end acceptance.
+
+The resulting order is to qualify the runtime, build one exact candidate, run
+the isolated lifecycle and recovery checks against that digest, then verify
+independent recovery and access controls before any production decision. Keep
+the single-server SQLite architecture and production NO-GO boundary in place.
 
 ## Current decisions
 

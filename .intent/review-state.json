@@ -10235,39 +10235,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "ecf267a8c045e2b425cba4c3063777128388e257db254507c5159bae01657e9d",
+      "fingerprint": "c3a32ec8f58bfe274bb3d9c4c05513819fc7cb6fb8d8387c26d39625941c84a8",
       "snapshot": {
-        "DECISIONS.md": "4d134114bf19235a39113cc47009e9dce2b64cc4ffd920f78e4da6cc7e0fb38a"
+        "DECISIONS.md": "c73a4c194d4e02bcc4caef3c7a3afa3b3c438c673b3faa487d4d54b8ee5b037e"
       },
-      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
+      "head": "5fe3f10b1045b250b72c0e795210de2010e97d82",
       "outcome": "no-change",
-      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "Reviewed the 25 newest PRs and refreshed runtime/readiness evidence; no installed skill guidance changed.",
       "evidence": [
-        "Changed: DECISIONS.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
+        "Changed: DECISIONS.md at 5fe3f10b1045b250b72c0e795210de2010e97d82"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "e8129567e2df830a12e77f383d99e10368b1aeee75e8a68401f61cb4de3aaff8",
+      "fingerprint": "d3a6c68d572c50a63fad5de105f836dcec04a3062bed9d841e0797c752684fd4",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "71d77fec4b5709f8f8e0714cbbc4be93649b22805e048ddc3e6d39d9dc928830"
+        "MASTER_CHECKLIST.md": "5269ad3fb9f82029d9f0be88cd51c6bcf3dfa7208791eed2c5a54a649e51ba75"
       },
-      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
+      "head": "5fe3f10b1045b250b72c0e795210de2010e97d82",
       "outcome": "no-change",
-      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "Reviewed the 25 newest PRs and refreshed runtime/readiness evidence; no installed skill guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
+        "Changed: MASTER_CHECKLIST.md at 5fe3f10b1045b250b72c0e795210de2010e97d82"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "03fb0ba07c1a4a350e8f76fc6430b9d1452ab94d72c62e9be7530fb3b652581f",
+      "fingerprint": "024b9d1a82874b959d2425d14f576f2426610ed20ded800161b71483556481ec",
       "snapshot": {
-        "STABILITY_REPORT.md": "222d0f971948ea5aeae7fb0becced696f5931073843d900ec50314a64a8510be"
+        "STABILITY_REPORT.md": "9ebe3725c15e4b84ae8af288366e0f7c78a2a4851a3915eb4a0d31b58259bf9f"
       },
-      "head": "44d85bbcc46bb86dcc28bb040d9b4740ff60fb29",
+      "head": "5fe3f10b1045b250b72c0e795210de2010e97d82",
       "outcome": "no-change",
-      "reason": "These edits record the exact nonpublishing runtime evidence and live squash-only repository setting; they do not change library skills, guidance, examples, or package behavior.",
+      "reason": "Reviewed the 25 newest PRs and refreshed runtime/readiness evidence; no installed skill guidance changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 44d85bbcc46bb86dcc28bb040d9b4740ff60fb29"
+        "Changed: STABILITY_REPORT.md at 5fe3f10b1045b250b72c0e795210de2010e97d82"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
