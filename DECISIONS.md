@@ -69,8 +69,11 @@ the single-server SQLite architecture and production NO-GO boundary in place.
   or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
   feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
   and does not pass the current runtime gate. Do not pursue that migration as a
-  G3 fix without a reviewed disposition for the embedded component. No security
-  exception is active.
+  G3 fix without a reviewed disposition for the embedded component. Bun's
+  [Bun v1.4.4 SQLite documentation](https://github.com/oven-sh/bun/blob/bun-v1.4.4/docs/runtime/sqlite.mdx)
+  confirms Linux and Windows statically link SQLite and `Database.setCustomSQLite()`
+  is unavailable on those platforms. A system SQLite installation cannot replace
+  the embedded runtime library. No security exception is active.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

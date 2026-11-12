@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4d3b3ad010d76766e962f61577640675968a52b1d5a39f37ad43336893110f02",
+      "fingerprint": "404214adafed69cda352576bfd7d7159ad3446ba69e9678edebdf3ff125d30fd",
       "snapshot": {
-        "CHANGELOG.md": "d306c841c724cf91b3cebfa4257c7f4e6c49179c43bccc12def335d1160fb5f9"
+        "CHANGELOG.md": "5fe813ef0ab3af9bc57798d0daf5b54950c01080a88941efefaf988b5fefa151"
       },
-      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
       "outcome": "no-change",
-      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
+        "Changed: CHANGELOG.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:COMMANDS.md": {
@@ -10233,39 +10233,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "60563cd6ed9bd7134bf34dce394a242ad472f2152e2655122c34678c7fe6b7a3",
+      "fingerprint": "6236ce4f3df06f066c06a8fabe97c546fbb560633872286bcc655cf83aaea4f6",
       "snapshot": {
-        "DECISIONS.md": "44f16a3af6f5a8808b23c197f49fc987ae5a45045f754a14343222d09cf62c12"
+        "DECISIONS.md": "1113431ec1c2f0c42d458c7305d34d5c6ae64ce85169c7f55df8a8778cb32cb4"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
       "outcome": "no-change",
-      "reason": "Linked the CI rate-limit decision and bootstrap endpoint rationale to official GitHub documentation; no skill guidance changed.",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: DECISIONS.md at 211af06f913725a9c7570941248b69b0738e57a0"
+        "Changed: DECISIONS.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "d833a655c5d72ae9518e8e25113b572e2ea8071a176a3696dfa98a91b65e5d44",
+      "fingerprint": "44d489a75f043d4ca10c82721b8eedb484062eb502a6509172d882aa4ec6d494",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "908349132cc312b6db8651891fd7adb0c6b172d3e730ae5f1658b03c8de838d6"
+        "MASTER_CHECKLIST.md": "fa8caa5121c9ea71e93b6a087a70ce9bbfed88557fd40c09d5b5cb3624a5575a"
       },
-      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
       "outcome": "no-change",
-      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
+        "Changed: MASTER_CHECKLIST.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "23f6131ff62fac7fecd4c316978d4cfbdc2fd310027a687200a12d534e356d18",
+      "fingerprint": "682657b76a1204312e87181d62fdfc2b862af7a2a329cf691112e93d8fbdb0f9",
       "snapshot": {
-        "STABILITY_REPORT.md": "06f9662db033fd53cfc2b3c4b0ad83c6e508eb3cf61d602d86604b5e7d599e2a"
+        "STABILITY_REPORT.md": "064f3f78db0e0cd25556a0676d29f01d39a8e7422752079fd97b68df913c3aef"
       },
-      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
       "outcome": "no-change",
-      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
+        "Changed: STABILITY_REPORT.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
