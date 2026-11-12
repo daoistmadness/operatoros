@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "0a82f654ac2a7fe2447c0a0267b1064038d600cc43dcf6287dc93fd36a8ec1f5",
+      "fingerprint": "43c83fa752fb3f8653d5fa28a73cb12b8dbd2706726e955510c8efd57560bf6e",
       "snapshot": {
-        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "9a78812c60f838560f3e92f09047a02e52e4a26937e930dc4a25a707ccc02f6b",
+        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
+        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "28d071403405769b751c3fac83ef62cbd6eba686ef5ba485f33022a5160c58db",
+      "fingerprint": "d3a4f0c524a9356455e3703675d9285adf53f8985c8cebd973b261920fa04ed7",
       "snapshot": {
-        ".github/CI.md": "24f774dc5208680b9b2c8f08335f50c9146f303a87ab52a6d8f575a469aaa6b9",
-        ".github/workflows/ci.yml": "9a78812c60f838560f3e92f09047a02e52e4a26937e930dc4a25a707ccc02f6b",
+        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
+        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
         "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2945,15 +2945,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "125c8bc7997fa64eb7ea3431839b9d72cdf7ec1f9ef43e8d10e8881e701bf0d2",
+      "fingerprint": "b8f92268e2e1bc531910a757d8a63c838eeff3d2277ab4b0993deebefb19c6da",
       "snapshot": {
-        "CHANGELOG.md": "66a9df8c111c2e6a3d8e6ce0f42665fda26d8b364b380e4f58ffa5c5e7aa2fbe"
+        "CHANGELOG.md": "dbf3ba6e7282c02c9297861fb3258cff3e9e08b1ef513eacf7c5bbb1096d4293"
       },
-      "head": "5526f367ead096c47fad930054ece99a8b64fecb",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "Adding the assigned PR number to the D1 Caddy changelog entry does not change the registered Elysia guidance.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5526f367ead096c47fad930054ece99a8b64fecb"
+        "Changed: CHANGELOG.md at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:COMMANDS.md": {
@@ -7397,15 +7397,15 @@
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": {
-      "fingerprint": "08b195f64872ca98a412bea86a9f3cf584f8e9223d8ba69708eac5651b68c8e7",
+      "fingerprint": "599b4d16560f614f190818e5a1fc1fa96d61c650d1d7d9ba8ac889ea444cfa78",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "70e6fb0ef591cc19c9e24511ffcb6f4e858b9203d0ae4cdb875ec8514fcb891e"
+        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "3041bae8872038a2bd99d1edfc29a497f9a623c25e17599bf9dfd7063c481c14"
       },
-      "head": "f41d9000d619472a0ae61392fc176b6fab1c5239",
+      "head": "5b8b4c041a7d3d9841bd73485bc79677001e6471",
       "outcome": "no-change",
-      "reason": "Updated the synthetic navigation search test to provide its opener after the callback ref attaches, matching production state and avoiding a render timing dependency. No Elysia skill source or guidance changed.",
+      "reason": "Reviewed the pending frontend focus-test timing and Alpine zlib package pin; neither changes Elysia guidance or the existing skill set.",
       "evidence": [
-        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at f41d9000d619472a0ae61392fc176b6fab1c5239"
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at 5b8b4c041a7d3d9841bd73485bc79677001e6471"
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.tsx": {
@@ -9685,15 +9685,15 @@
       ]
     },
     "source:deploy/podman/Containerfile.api": {
-      "fingerprint": "9920a7b4e05b7152ddd547a68d5a118ce9eab1f10e8373f8a5db1718ea8d2973",
+      "fingerprint": "3add9ff8d5f2ff626434e34f570ccefc069e042cf8e0b394f450aa5e625937de",
       "snapshot": {
-        "deploy/podman/Containerfile.api": "6b1af8f8f7350f44eecf6beff1994b1dab89801289cf4c5a2cae8567cba9c0ba"
+        "deploy/podman/Containerfile.api": "4b68b0a0aeb22b248c287a97350456fbf8cfaf4be44186379f28c245433ea61b"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "5b8b4c041a7d3d9841bd73485bc79677001e6471",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the pending frontend focus-test timing and Alpine zlib package pin; neither changes Elysia guidance or the existing skill set.",
       "evidence": [
-        "Changed: deploy/podman/Containerfile.api at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: deploy/podman/Containerfile.api at 5b8b4c041a7d3d9841bd73485bc79677001e6471"
       ]
     },
     "source:deploy/podman/api-healthcheck.sh": {
@@ -9949,27 +9949,27 @@
       ]
     },
     "source:scripts/test-release-consumer.sh": {
-      "fingerprint": "2cb57be061b03d3f39738795cad97bc0276daea809968c5051785f74b7350cd0",
+      "fingerprint": "c0f0fa5d25748a4587f90a4816bfa641771bd8a2844bb8e6e82c08f77579a910",
       "snapshot": {
-        "scripts/test-release-consumer.sh": "7ef4c38b49bedb1a05f61042878b28173d7a58fbc7baa92687b6e7c81bbe12f4"
+        "scripts/test-release-consumer.sh": "27a53160e351be9f189c1a9ab0b88b71c26a63b7a9223d21dcbbd4a5a54a817a"
       },
-      "head": "02879a18efda292f72f96f1314fb05ab266715e6",
+      "head": "94de8be66f2a14b1cf84b4cc2f985d83fac19490",
       "outcome": "no-change",
-      "reason": "The change is limited to the isolated release-consumer harness, its cleanup tests, CI opt-in, and runbook text. It does not change Elysia runtime APIs, agent-skill guidance, or an architecture/planning decision; the existing guidance remains accurate.",
+      "reason": "This change adds CI and release-consumer validation for the embedded Bun SQLite runtime; it does not change the Elysia skill, skill package, or planning guidance, so all pending skill/planning reviews remain unchanged.",
       "evidence": [
-        "Changed: scripts/test-release-consumer.sh at 02879a18efda292f72f96f1314fb05ab266715e6"
+        "Changed: scripts/test-release-consumer.sh at 94de8be66f2a14b1cf84b4cc2f985d83fac19490"
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "99e23083ab9e92966927c6ce79502ac7bc72d48e5dd48822bcf0cab8f452afe2",
+      "fingerprint": "58f36a07029cc29396aa7446003c1aebb02b13c752554198c6f19f1bcb30da43",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "379910b57b83d6e036aeca1b6c1970161b0ceef286b7e979d1f0820f43ec0e05"
+        "scripts/tests/test_release_bundle.py": "312e4027e54dd3481263e985bb71b2ee2afeb50965ab8175ba94a0cd69c56402"
       },
-      "head": "df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b",
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
       "outcome": "no-change",
-      "reason": "Loop 77 D1 code, examples, tests, and runbook changes do not change the installed Elysia skill guidance; account/storage/runbook behavior stays in its existing owners.",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at df1f12a3e8ca1e081f9783f8c17f6ebe193d3e0b"
+        "Changed: scripts/tests/test_release_bundle.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10210,6 +10210,30 @@
       "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
       "evidence": [
         "Changed: deploy/podman/operatoros-d1-storage.conf.example at 989837e3547074c5b4569aab51c928610bacc064"
+      ]
+    },
+    "source:scripts/check-bun-sqlite-runtime.py": {
+      "fingerprint": "97dcbf055a4ea4f64d1a86ad753632ae72375f19d3680ed6bf90f30256a84609",
+      "snapshot": {
+        "scripts/check-bun-sqlite-runtime.py": "8a5205ca47dc203bcfa5915e3b7c36ecef90ab71408719dbb6c2de325ea04d21"
+      },
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "outcome": "no-change",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "evidence": [
+        "Changed: scripts/check-bun-sqlite-runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+      ]
+    },
+    "source:scripts/tests/test_bun_sqlite_runtime.py": {
+      "fingerprint": "d62f09045b945c3974ae0ac5ae853bbc79fb3a56386bfdf8f544dca1e3e0faf8",
+      "snapshot": {
+        "scripts/tests/test_bun_sqlite_runtime.py": "0dd92a2d75c393bf558bade550461d1a271a9d176f988aea47eef00ba5620a9f"
+      },
+      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "outcome": "no-change",
+      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "evidence": [
+        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
       ]
     }
   }

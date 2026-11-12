@@ -96,8 +96,7 @@ describe('navigation command search', () => {
     expect(close).not.toBeNull();
     if (!close) throw new Error('Expected the dialog close button.');
     await act(async () => close.click());
-    await act(async () => await Promise.resolve());
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(document.activeElement).toBe(document.getElementById('return-focus'));
+    await expect.poll(() => document.activeElement).toBe(document.getElementById('return-focus'));
   });
 });

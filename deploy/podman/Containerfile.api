@@ -12,7 +12,7 @@ RUN bun install --frozen-lockfile --production --filter '@operatoros/api'
 
 FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS runtime
 
-RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0
+RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0 zlib=1.4-r0
 
 WORKDIR /app
 

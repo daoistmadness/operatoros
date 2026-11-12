@@ -8,6 +8,16 @@ Pull-request label changes also trigger the workflow so `skip-changelog` takes e
 
 The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs preflight before the complete browser/API smoke suite. Scheduled release and audit jobs do not depend on preflight. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
 
+A manual dispatch on a non-main ref builds that exact source commit as an
+ephemeral OCI image, generates Trivy SBOM/scan reports, and exercises the
+embedded Bun/SQLite gate. This path retains only
+image metadata and JSON reports for seven days; it does not upload the OCI
+image, sign or attest it, or deploy it. If the known vulnerable SQLite/FTS5
+combination is present, the workflow records the embedded runtime identity,
+reports the expected security-gate rejection as an enforcement test PASS, and
+marks the candidate blocked. A runtime-gate PASS still does not make the
+unsigned candidate a release artifact.
+
 The `preflight` job validates Markdown links and organization, validates agent skills, runs the Intent maintainer check against the event base, and checks the pull-request changelog. It fetches the pull-request, merge-group, or push base before the maintainer check. A first push with an all-zero `before` SHA falls back to the event SHA. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset requires `preflight` so a failed gate cannot pass as a successful skipped check.
 
 The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.4's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates docs structure and the index, tests documentation checker fixtures, checks current developer commands, and verifies every package file in the agent-skills tarball. It installs the tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter after preflight passes: every browser scenario, API smoke check, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
@@ -63,8 +73,9 @@ Use the [contributor PR procedure](../CONTRIBUTING.md) for merge and recovery. A
 
 The `Manual release bundle` job runs only on a main-branch manual dispatch after
 full release validation and E2E acceptance. It builds the API OCI image and SPA
-from the event SHA, attests the bundle, tests an isolated consumer, and retains
-it for 90 days. No scheduled, push, or PR event publishes a bundle. See the
+from the event SHA, runs the embedded Bun/SQLite gate before signing, attests
+the bundle, tests an isolated consumer, and retains it for 90 days. No
+scheduled, push, or PR event publishes a bundle. See the
 [release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
 security limitations, helper adoption, and CI rollback.
 
