@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a29681c7986a74256f9fb550672bc128e9d5e5967e177d72497724163c02b2f5",
+      "fingerprint": "be650c50d87c4a61353256059201973b9b637653702c2306be3215bdb8231232",
       "snapshot": {
-        "CHANGELOG.md": "02372ff4b2abe257723da03babe01bf1b3890cd2ebf8a2dc2b6de425ad9f1418"
+        "CHANGELOG.md": "420ccd9e2737d97748893a26fb199781fdbd20f8bdf083e9db438445cfac55b6"
       },
-      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "head": "fec5b3b2de9475aef48c6739256b37b72a204d85",
       "outcome": "no-change",
       "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
+        "Changed: CHANGELOG.md at fec5b3b2de9475aef48c6739256b37b72a204d85"
       ]
     },
     "source:COMMANDS.md": {
