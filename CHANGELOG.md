@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Fail release-consumer qualification when embedded Bun SQLite has vulnerable FTS5 support or an inconclusive FTS5 probe.
 - Disable the D1 and rehearsal Caddy admin listeners to avoid conflicts with the existing Caddy service. (#379)
 - Allow the pinned D1 Caddy image to start with only its required `net_bind_service` capability while retaining `NoNewPrivileges` and dropping all others. (#378)
 - Pin the host deployment profile to the isolated D1 root, UID 1002, measured capacity reserves, first-admin setup token, and approved loopback ports; keep rehearsal and host Quadlet validation distinct and allocate subordinate IDs deterministically (#377).
