@@ -7397,15 +7397,15 @@
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": {
-      "fingerprint": "08b195f64872ca98a412bea86a9f3cf584f8e9223d8ba69708eac5651b68c8e7",
+      "fingerprint": "599b4d16560f614f190818e5a1fc1fa96d61c650d1d7d9ba8ac889ea444cfa78",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "70e6fb0ef591cc19c9e24511ffcb6f4e858b9203d0ae4cdb875ec8514fcb891e"
+        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "3041bae8872038a2bd99d1edfc29a497f9a623c25e17599bf9dfd7063c481c14"
       },
-      "head": "f41d9000d619472a0ae61392fc176b6fab1c5239",
+      "head": "5b8b4c041a7d3d9841bd73485bc79677001e6471",
       "outcome": "no-change",
-      "reason": "Updated the synthetic navigation search test to provide its opener after the callback ref attaches, matching production state and avoiding a render timing dependency. No Elysia skill source or guidance changed.",
+      "reason": "Reviewed the pending frontend focus-test timing and Alpine zlib package pin; neither changes Elysia guidance or the existing skill set.",
       "evidence": [
-        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at f41d9000d619472a0ae61392fc176b6fab1c5239"
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at 5b8b4c041a7d3d9841bd73485bc79677001e6471"
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.tsx": {
@@ -9685,15 +9685,15 @@
       ]
     },
     "source:deploy/podman/Containerfile.api": {
-      "fingerprint": "9920a7b4e05b7152ddd547a68d5a118ce9eab1f10e8373f8a5db1718ea8d2973",
+      "fingerprint": "3add9ff8d5f2ff626434e34f570ccefc069e042cf8e0b394f450aa5e625937de",
       "snapshot": {
-        "deploy/podman/Containerfile.api": "6b1af8f8f7350f44eecf6beff1994b1dab89801289cf4c5a2cae8567cba9c0ba"
+        "deploy/podman/Containerfile.api": "4b68b0a0aeb22b248c287a97350456fbf8cfaf4be44186379f28c245433ea61b"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "5b8b4c041a7d3d9841bd73485bc79677001e6471",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the pending frontend focus-test timing and Alpine zlib package pin; neither changes Elysia guidance or the existing skill set.",
       "evidence": [
-        "Changed: deploy/podman/Containerfile.api at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: deploy/podman/Containerfile.api at 5b8b4c041a7d3d9841bd73485bc79677001e6471"
       ]
     },
     "source:deploy/podman/api-healthcheck.sh": {
