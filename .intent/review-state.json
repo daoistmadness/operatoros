@@ -2943,11 +2943,11 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "32453617a29e00b8d88aaf925aa9a3d21b4e02cdcb39ea0217bcb07e38e59522",
+      "fingerprint": "a11d69166cbcfde13d3d66f98a12d1afe38921e41f43b0594cd145353c671c22",
       "snapshot": {
-        "CHANGELOG.md": "af38c8d6c86a13ca9ce5594397ad2f97717c52a860e8bd4523e47ea17a1f703e"
+        "CHANGELOG.md": "adc565373788d823d2e0555769bf57a4be4b6474b1df339394cef07a9ca5b7d3"
       },
-      "head": "0f821e9af7438e6e34dddfc50ee8f649c20bbbde",
+      "head": "bb8c10e981d36b1778343fbc5ebe256bd837e5d8",
       "outcome": "out-of-scope",
       "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
       "evidence": [
