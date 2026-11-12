@@ -13,7 +13,7 @@ close a real host, device, recovery, or deployment gate.
 |---|---|---|---|
 | 1 | Resolve PR #380 | BLOCKED | PR #380 is open at `a43d9e170e32f2dd95d10f2f7de9c2474d30e142`; required checks pass and manual qualification rejects the vulnerable candidate. No review decision is recorded. A maintainer must review the exact head. |
 | 2 | Fix Bun/SQLite security issue (G3) | BLOCKED | Exact candidate evidence reports Bun 1.4.4, SQLite 3.53.4, and FTS5 enabled. No supported Bun build with the required SQLite fix has been verified. Keep the gate closed until a supported fix or reviewed, qualified alternative is available. |
-| 3 | Complete Phase 7 follow-up PR | IN PROGRESS | Local commit `c5ce85c43d8d05e54044f6c40965f731811bbf5d` passed 94 focused Python tests with one environment-specific skip and the full local release tier. Publish the separate follow-up, run remote checks on its final head, and obtain review. |
+| 3 | Complete Phase 7 follow-up PR | IN PROGRESS | [PR #381](https://github.com/daoistmadness/operatoros/pull/381) is open at head `940bc4eac66fb16eeb96f0584b9cb93e4c5b53a5`, stacked on #380. Local focused and full release checks passed. Hosted API/E2E checks are pending; the hosted full-release job is skipped for this PR event. Maintainer review remains required. |
 | 4 | Verify independent Windows backup restoration | BLOCKED | The prepared package manifest and seven file hashes passed in the prior Phase 7 report. Restore on an authorized Windows client with independently escrowed OneDrive and Restic access, encrypted destination, returned result JSON, and measured duration. |
 | 5 | Complete real-device Tailscale Identity A/B tests (D2) | BLOCKED | Effective grants and distinct-device access results are not verified. Run the positive Identity A and negative separate non-admin Identity B checks, including DNS, TLS/HTTP, and expected port 443 denial. |
 | 6 | Verify s48 rollback and SQLite data preservation | PARTIAL | Twenty synthetic migration and backup tests passed with 266 assertions. The s48-compatible source candidate has not been proven relaunchable with a restored s48 database. Real operational data was not read or changed. |
@@ -25,8 +25,7 @@ close a real host, device, recovery, or deployment gate.
 
 ## Safe next actions
 
-1. Submit the Phase 7 follow-up as a separate reviewable PR and run its final
-   remote checks.
+1. Complete the exact-head checks and obtain maintainer review on [PR #381](https://github.com/daoistmadness/operatoros/pull/381); keep [PR #380](https://github.com/daoistmadness/operatoros/pull/380) open pending its maintainer decision.
 2. Verify an s48 rollback source against synthetic restored data, while keeping
    live databases and services untouched.
 3. Run the Windows restore and Identity A/B procedures when the required client,
