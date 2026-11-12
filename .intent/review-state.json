@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "43c83fa752fb3f8653d5fa28a73cb12b8dbd2706726e955510c8efd57560bf6e",
+      "fingerprint": "2bf1098b770fa05725513776959631ca1804e9b8ce86ef360d483995fb55c123",
       "snapshot": {
-        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
-        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
-        "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
+        ".github/CI.md": "d1f41f167f63abd21b0030f933b3cb07488c2fc7955d6c1c7ab6ebd3e8b46ae4",
+        ".github/workflows/ci.yml": "953245e777b71b33257a4b7ee513061b94a63253057a730c994680b62d14e5c6",
+        "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "6990f7d7bd2a814c9f6cc7e49e3a08a5ae87f89d00172f69cac5145ba1ce2904",
         "bun.lock": "65d6ab2e982200460c0805ed36e1d22f9d2b086d28ffcf56dbb3d346e6b2a3ec",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: .github/CI.md, .github/workflows/ci.yml, AGENTS.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "d3a4f0c524a9356455e3703675d9285adf53f8985c8cebd973b261920fa04ed7",
+      "fingerprint": "73c9bee5c798ce5da0d82486865e49c1b71e452707012693ef9e945593246928",
       "snapshot": {
-        ".github/CI.md": "9c43220065f823e3549b837bc9b45b6ebd82a94bca9b272f7ee40b1689cce96c",
-        ".github/workflows/ci.yml": "e536cbebfb410126959d97695e03293756cce0cbd7b7480e1f661e2e91c67078",
-        "AGENTS.md": "442625c12823f581e76af21ff35efd5fb63379f75770e4c5b000d98f2cd1f066",
+        ".github/CI.md": "d1f41f167f63abd21b0030f933b3cb07488c2fc7955d6c1c7ab6ebd3e8b46ae4",
+        ".github/workflows/ci.yml": "953245e777b71b33257a4b7ee513061b94a63253057a730c994680b62d14e5c6",
+        "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: .github/CI.md, .github/workflows/ci.yml, AGENTS.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1718,15 +1718,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "f4763666bb0529f3f9f1986805d1d1ec481f833d0baff7470f4e331d1588b9a8",
+      "fingerprint": "a4e2e2d4ba4d6937b2dc7a01a3ce61d93d4b9dc8dcb4cf89bda6d2df98e0b1ce",
       "snapshot": {
-        "docs/README.md": "7e3eed82dcbc798407e407e69ac7b13a3e87b390c8787e297435fcd095cd5310"
+        "docs/README.md": "b2cdf6c61e8281152a9746ac08a868ac75219e762ef2c0452953e20a9e4bb5e4"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: docs/README.md at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: docs/README.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2905,29 +2905,27 @@
       ]
     },
     "source:.github/scripts/check-markdown-links.ts": {
-      "fingerprint": "a6bc797e30a7ac030fce03f7715e347eadbef119b244eb989c234f0cac6b96e3",
+      "fingerprint": "fcfb0c4c292a7c5849cf20c86b38b727bed8c598c358d9c1bd1d7146f11c2945",
       "snapshot": {
-        ".github/scripts/check-markdown-links.ts": "bd6324f15cec352c2a20d7197978a1b75e073778aa936ad67c4a5e073b101013"
+        ".github/scripts/check-markdown-links.ts": "eee4ee1eae8f1c8ab6ed8459b8925968031ba54407fcd747f6ef8094e5569329"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: .github/scripts/check-markdown-links.ts at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:.github/scripts/check-markdown-organization.ts": {
-      "fingerprint": "808f8c2cdc04efd4fb8493e76038332d716c18fd2c0fe142dbd9846faed5ddf6",
+      "fingerprint": "fb6749a7ba8108de89db2fda1e798b30f169bc15299a5158d04090c93b8d9f11",
       "snapshot": {
-        ".github/scripts/check-markdown-organization.ts": "50f6ebd35840a152fb4f493f35466a9f167f90664949b647a3e4b99966bad648"
+        ".github/scripts/check-markdown-organization.ts": "ff79fd79d1fb26d320d4d6bba438539bf5e6e68e04ec5b62866544dc86d65532"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: .github/scripts/check-markdown-organization.ts at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: .github/scripts/check-markdown-organization.ts at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:ATTENDANCE_IMPORT_PREVIEW_DESIGN.md": {
@@ -2945,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b8f92268e2e1bc531910a757d8a63c838eeff3d2277ab4b0993deebefb19c6da",
+      "fingerprint": "b99b7e46b940fe13230c6e58a620a6dc8ce6a043b0a60c9d1945d586a9aed03d",
       "snapshot": {
-        "CHANGELOG.md": "dbf3ba6e7282c02c9297861fb3258cff3e9e08b1ef513eacf7c5bbb1096d4293"
+        "CHANGELOG.md": "deec6f4bcd69f8b2ee9e1f9512590af6fd4914cb4c4eb8fed9719278e47a2111"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: CHANGELOG.md at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: CHANGELOG.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:COMMANDS.md": {
@@ -3449,15 +3447,15 @@
       ]
     },
     "source:docs/decisions/documentation-system.md": {
-      "fingerprint": "0b0f439ad462d27b8440bb1e7c7e9a5205f0404a6f01748a18640d385273d85a",
+      "fingerprint": "3cc7ca917936f9d1f78a4e59cbd0685f09a203d0f40ee962a5f3f99bffe6a23f",
       "snapshot": {
-        "docs/decisions/documentation-system.md": "da0fde94f3273a8e0d9d4715c3b867e8e86919275fd1be17bd82e272e21f86ae"
+        "docs/decisions/documentation-system.md": "91276882716e198ee1e6db07d4828063c22663a145f71dcf1f2f4fed65ecc1d4"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: docs/decisions/documentation-system.md at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: docs/decisions/documentation-system.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:docs/decisions/git-history-data-remediation.md": {
@@ -5041,15 +5039,15 @@
       ]
     },
     "source:scripts/tests/docs-checkers.test.ts": {
-      "fingerprint": "bde8e7bf3e5a726d3f4af702377e3b5d4378bb63b64269a17c9f0adf151f8f2f",
+      "fingerprint": "6bf7de3e87b3877dfd732babf49ef7aa2ed0798cad2c0937d635ee85fa596543",
       "snapshot": {
-        "scripts/tests/docs-checkers.test.ts": "cde0be61df90bd0fdb60d9ee6f392b02729fcaf49a5202b097eff785e2e7250c"
+        "scripts/tests/docs-checkers.test.ts": "1ef96c69cdc4e888d4533007a4514618669db91bcffa3773e538766f38d42fca"
       },
-      "head": "3971f1f1baf3983df620328bc8fee6670ebda16e",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Dependency optimization changed manifests, web code, and audit docs; no Elysia skill or planning guidance changed. The Elysia skill examples compile, and workspace typechecks pass.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/tests/docs-checkers.test.ts at 3971f1f1baf3983df620328bc8fee6670ebda16e"
+        "Changed: scripts/tests/docs-checkers.test.ts at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:.audit/docs-restructure-decisions.tsv": {
@@ -9865,15 +9863,15 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "81060b6628a9ca5b6f0111de3072d0c7e1b72085fca17c92802c91c81e21e182",
+      "fingerprint": "cb4e28de500a0b898302e110db15e3c9faa1eb57fdd53033c44388650d13b658",
       "snapshot": {
-        "scripts/check": "dd7405303b1f699e30ee6031a47a7c4d94cf924407c1e11d2eb09d7a35da20dc"
+        "scripts/check": "859c5f700139c844809be2a1d8bac928691435cfb3d389da5bc81d575cbc2fe6"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/check at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: scripts/check at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:scripts/dev": {
@@ -9925,27 +9923,27 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "df2b3ebdde4fe359d85511f6d62b0be9ef068a9a3a7ade3e4aeb329bec9b011d",
+      "fingerprint": "a156e27321485d996bfe087a6a69b7e87b3eefed0457dae2a3bae7b4ada2756c",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "1bfbc8eed8ed499007277860071d899f26bdff72bcc3729d8fb705fcaa3c4562"
+        "docs/runbooks/release-bundles.md": "d8b095d742dcef97b200b7af57a3442176132353e3cb6c3ed03131c4ae998711"
       },
-      "head": "989837e3547074c5b4569aab51c928610bacc064",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "D1 deployment validation, configuration templates, and runbooks do not alter agent-skill guidance or scope.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 989837e3547074c5b4569aab51c928610bacc064"
+        "Changed: docs/runbooks/release-bundles.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:scripts/release-bundle.py": {
-      "fingerprint": "db3785fb9d8834c0090faf03c4222d62230da1be3a0fdaaf3b613bca167be532",
+      "fingerprint": "3942bf4cab7bd56aa8d5e5cf8d8bd9250345ef724a4f2aff8f442d10f7b3a06c",
       "snapshot": {
-        "scripts/release-bundle.py": "9b173a1cbff91e706047750f3072e913f137b3fef29bc82177053b5f8295225d"
+        "scripts/release-bundle.py": "5cea0baa2dd3ad9378d4fbe3bed896f530aa22b692952a67c6e46da58d20d97b"
       },
-      "head": "d5df033111d45ac22bb414b21c10db1bb7dafb29",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "This change adds CI artifact scanning and release-bundle validation, plus its tests and runbook. It does not alter the Elysia runtime, routes, authorization, schema, or Elysia v1 guidance; no agent skill or maintainer planning artifact requires an update.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/release-bundle.py at d5df033111d45ac22bb414b21c10db1bb7dafb29"
+        "Changed: scripts/release-bundle.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:scripts/test-release-consumer.sh": {
@@ -9961,15 +9959,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "58f36a07029cc29396aa7446003c1aebb02b13c752554198c6f19f1bcb30da43",
+      "fingerprint": "d32689798ca0267b28c654e8a7d8e623d9df7195d3d89b91737ff54f2a812a58",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "312e4027e54dd3481263e985bb71b2ee2afeb50965ab8175ba94a0cd69c56402"
+        "scripts/tests/test_release_bundle.py": "90d46627c26ff71b176838d317a09e9e8fc0fe602456d26387c7a58724ab5ea6"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: scripts/tests/test_release_bundle.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10213,27 +10211,87 @@
       ]
     },
     "source:scripts/check-bun-sqlite-runtime.py": {
-      "fingerprint": "97dcbf055a4ea4f64d1a86ad753632ae72375f19d3680ed6bf90f30256a84609",
+      "fingerprint": "08ffb2e1b4ca32b1ca6a98d62de04b7ab8597706d04fda6c71f225d54e53c6f7",
       "snapshot": {
-        "scripts/check-bun-sqlite-runtime.py": "8a5205ca47dc203bcfa5915e3b7c36ecef90ab71408719dbb6c2de325ea04d21"
+        "scripts/check-bun-sqlite-runtime.py": "dadc085d17bf128ff3f3e5a05d5f683acb7ca67f2bd4fe87a1a2a57987244a98"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/check-bun-sqlite-runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: scripts/check-bun-sqlite-runtime.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     },
     "source:scripts/tests/test_bun_sqlite_runtime.py": {
-      "fingerprint": "d62f09045b945c3974ae0ac5ae853bbc79fb3a56386bfdf8f544dca1e3e0faf8",
+      "fingerprint": "2ed859940c89613dd74d4dd8db01218a81053ebc2b9f70c81b3742f6e674150f",
       "snapshot": {
-        "scripts/tests/test_bun_sqlite_runtime.py": "0dd92a2d75c393bf558bade550461d1a271a9d176f988aea47eef00ba5620a9f"
+        "scripts/tests/test_bun_sqlite_runtime.py": "fc5539ba2f98168e49274734875d0e5677364833ae441c9101f9c8f9977f870c"
       },
-      "head": "2d861c709593f17cfa9271d4ec150e3d85ab1c2d",
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
       "outcome": "no-change",
-      "reason": "Reviewed release qualification workflow, docs, and runtime gate changes; they do not alter Elysia guidance or Intent planning guidance.",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
       "evidence": [
-        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 2d861c709593f17cfa9271d4ec150e3d85ab1c2d"
+        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+      ]
+    },
+    "source:DECISIONS.md": {
+      "fingerprint": "13fa617d75c88e3ef42b09c076ea85c057d51eaa538e6934ed97f91f121a5b2c",
+      "snapshot": {
+        "DECISIONS.md": "cb5689826df6aff33151204950b5c009ada4c62273e49eb8f8bc34d7e3213fe0"
+      },
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "evidence": [
+        "Changed: DECISIONS.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+      ]
+    },
+    "source:MASTER_CHECKLIST.md": {
+      "fingerprint": "471616810b9f09c5aa83e7dba7b716ac1be2968fdc5ea6502235698aff6c56cc",
+      "snapshot": {
+        "MASTER_CHECKLIST.md": "13a6ab365f757874cd02e6d1756fa8675b2964656f926c1679e9d98734b4fb94"
+      },
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "evidence": [
+        "Changed: MASTER_CHECKLIST.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+      ]
+    },
+    "source:STABILITY_REPORT.md": {
+      "fingerprint": "664cd5024cd8b8c95732d974d411fc723de55980639fe7471387c36dcb548118",
+      "snapshot": {
+        "STABILITY_REPORT.md": "e22788f33c2cee1225d291c2523945f0cfa820da397ef29737bbf26e9743467b"
+      },
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "evidence": [
+        "Changed: STABILITY_REPORT.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+      ]
+    },
+    "source:scripts/record-embedded-runtime.py": {
+      "fingerprint": "bc01c825de7c7be029c5c99fa527b14c2951353d9c35926b7ca41cba71b9952f",
+      "snapshot": {
+        "scripts/record-embedded-runtime.py": "fcc0b18a1cfe17ce7967c97ac80aa0a3c73ac7937439376dd1c016e400699261"
+      },
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "evidence": [
+        "Changed: scripts/record-embedded-runtime.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+      ]
+    },
+    "source:scripts/tests/test_embedded_runtime.py": {
+      "fingerprint": "42e2cf293f4d1c0fc4680fdbd50003d840d4dd863b7e0c82ff281396e4c7e749",
+      "snapshot": {
+        "scripts/tests/test_embedded_runtime.py": "3d6b67b604dd228af2c946de55266b00fc83a8da596ade235506c0413a0e88e8"
+      },
+      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "outcome": "no-change",
+      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "evidence": [
+        "Changed: scripts/tests/test_embedded_runtime.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
       ]
     }
   }
