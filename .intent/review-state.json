@@ -10235,39 +10235,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "13fa617d75c88e3ef42b09c076ea85c057d51eaa538e6934ed97f91f121a5b2c",
+      "fingerprint": "b8ae41b265da5e358fbd6c76351e80818f9ff88990ff56d2158019dfd04a9b63",
       "snapshot": {
-        "DECISIONS.md": "cb5689826df6aff33151204950b5c009ada4c62273e49eb8f8bc34d7e3213fe0"
+        "DECISIONS.md": "bf1ff74687b97d2c5a2b0e3684161d9818e24df6779f9cce66d42942e05316d1"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "0cd5d05e35c42d3461e27a13141e43c3d23c3d75",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "These status records update current PR checks, the SQLite runtime probe, and the completed source-surface audit. They do not change installed skill guidance, examples, metadata, or package behavior.",
       "evidence": [
-        "Changed: DECISIONS.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: DECISIONS.md at 0cd5d05e35c42d3461e27a13141e43c3d23c3d75"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "fad89d1ed3840e41b52423936bd53a8a3f4bf19ceb309f9eed072c5998112411",
+      "fingerprint": "660555447842e04c4d46ccccc42420693502d13399c28fd7975752be5c58fd81",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "ca04f1754330bb29c1ea4c53cf68ef1f1f010fa73cc7bd0dbc58cc918c5e6313"
+        "MASTER_CHECKLIST.md": "28484f1eaf8a69fbec05e50de0145f13ec1f37d4904eb357f62c6c1dc28371cb"
       },
-      "head": "7ac65e3e5737b2cd32a04bedfd416461e867ae1b",
+      "head": "0cd5d05e35c42d3461e27a13141e43c3d23c3d75",
       "outcome": "no-change",
-      "reason": "This update only corrects the status report with previously verified synthetic rollback evidence and PR check state; installed skills and package guidance are unchanged.",
+      "reason": "These status records update current PR checks, the SQLite runtime probe, and the completed source-surface audit. They do not change installed skill guidance, examples, metadata, or package behavior.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 7ac65e3e5737b2cd32a04bedfd416461e867ae1b"
+        "Changed: MASTER_CHECKLIST.md at 0cd5d05e35c42d3461e27a13141e43c3d23c3d75"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "c0e86e9a02a5fa783574210cc8465a04ae53ddc089ca457ec878a7814b388899",
+      "fingerprint": "75003d70af8cd61f7961eaef412b777ff9da1e1cf89581d9adfbb1aa8b4e6935",
       "snapshot": {
-        "STABILITY_REPORT.md": "146d25901f9b60c5c36bfdcf7b61db95afc755c1a9bf1053991931d3ecdf18de"
+        "STABILITY_REPORT.md": "7623ea8def02d8311b91ac95b11267a555657d15f53038880e99cc40079da6c5"
       },
-      "head": "7ac65e3e5737b2cd32a04bedfd416461e867ae1b",
+      "head": "0cd5d05e35c42d3461e27a13141e43c3d23c3d75",
       "outcome": "no-change",
-      "reason": "This update only corrects the status report with previously verified synthetic rollback evidence and PR check state; installed skills and package guidance are unchanged.",
+      "reason": "These status records update current PR checks, the SQLite runtime probe, and the completed source-surface audit. They do not change installed skill guidance, examples, metadata, or package behavior.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 7ac65e3e5737b2cd32a04bedfd416461e867ae1b"
+        "Changed: STABILITY_REPORT.md at 0cd5d05e35c42d3461e27a13141e43c3d23c3d75"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {

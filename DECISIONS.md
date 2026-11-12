@@ -27,9 +27,12 @@ last_reviewed: 2026-11-12
   migration without evidence and review.
 - Keep PR #380 open for maintainer review. Its checks and nonpublishing
   qualification passed, but no review decision is recorded.
-- Keep G3 blocked. The embedded SQLite finding remains open; an adapter smoke
-  test does not replace Bun's embedded database. No security exception is
-  active.
+- Keep G3 blocked. A source audit found 19 production modules using `bun:sqlite`
+  or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
+  feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
+  and does not pass the current runtime gate. Do not pursue that migration as a
+  G3 fix without a reviewed disposition for the embedded component. No security
+  exception is active.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.
