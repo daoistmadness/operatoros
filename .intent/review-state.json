@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "404214adafed69cda352576bfd7d7159ad3446ba69e9678edebdf3ff125d30fd",
+      "fingerprint": "3661b04da63df7288522cdd179b616ca2b689d8cd86f6480b0ef46fda209bf7e",
       "snapshot": {
-        "CHANGELOG.md": "5fe813ef0ab3af9bc57798d0daf5b54950c01080a88941efefaf988b5fefa151"
+        "CHANGELOG.md": "ff44dcc0076af9a8f4849a7ac4ac112610dbf599b267885e1ed6df03fc7e4750"
       },
-      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "head": "ed7512e7ca4d443fb4ea4540e4d1369632372620",
       "outcome": "no-change",
-      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
+      "reason": "This PR records program-level readiness evidence only; it changes no library behavior, Elysia source guidance, or skill plan.",
       "evidence": [
-        "Changed: CHANGELOG.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
+        "Changed: CHANGELOG.md at ed7512e7ca4d443fb4ea4540e4d1369632372620"
       ]
     },
     "source:COMMANDS.md": {
@@ -10245,27 +10245,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "44d489a75f043d4ca10c82721b8eedb484062eb502a6509172d882aa4ec6d494",
+      "fingerprint": "95e26eb32c6b130133f14074eb7c8387191c1f80e96f68e67ed211624b958e1a",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "fa8caa5121c9ea71e93b6a087a70ce9bbfed88557fd40c09d5b5cb3624a5575a"
+        "MASTER_CHECKLIST.md": "caf369f10bc9ccfcdfe71c6e1fc6b4d7691f56ba448a7404c48c3abe27b63c39"
       },
-      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "head": "ed7512e7ca4d443fb4ea4540e4d1369632372620",
       "outcome": "no-change",
-      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
+      "reason": "This PR records program-level readiness evidence only; it changes no library behavior, Elysia source guidance, or skill plan.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
+        "Changed: MASTER_CHECKLIST.md at ed7512e7ca4d443fb4ea4540e4d1369632372620"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "682657b76a1204312e87181d62fdfc2b862af7a2a329cf691112e93d8fbdb0f9",
+      "fingerprint": "1ce09788dd21c1231f6a50a1c97239d6a24c967ed93fa4b722d644e49673ef48",
       "snapshot": {
-        "STABILITY_REPORT.md": "064f3f78db0e0cd25556a0676d29f01d39a8e7422752079fd97b68df913c3aef"
+        "STABILITY_REPORT.md": "267d7c567834c23fc0b2acdc43983a0b5e4fde2f40e07cb9ab73393ca4632215"
       },
-      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "head": "ed7512e7ca4d443fb4ea4540e4d1369632372620",
       "outcome": "no-change",
-      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
+      "reason": "This PR records program-level readiness evidence only; it changes no library behavior, Elysia source guidance, or skill plan.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
+        "Changed: STABILITY_REPORT.md at ed7512e7ca4d443fb4ea4540e4d1369632372620"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
