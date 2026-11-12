@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Record disposable Ubuntu log-rotation validation and fail-closed Windows access-test requirements while keeping real-device recovery and Identity A/B gates open.
+- Record disposable Ubuntu log-rotation validation and fail-closed Windows access-test requirements while keeping real-device recovery and Identity A/B gates open. (#383)
 - Refresh runtime qualification, recovery, and cutover readiness evidence after Phase 7, with the unresolved SQLite and independent-recovery gates recorded.
 - Bind the embedded Bun/SQLite CycloneDX inventory to the exact OCI image and source, and reject release evidence with an unqualified runtime. (#381)
 - Gate release images on embedded Bun/SQLite evidence before signing and provide a nonpublishing candidate qualification path.

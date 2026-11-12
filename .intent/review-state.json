@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "bae73f6af7df925bc354f0d7eceee5c905484cd2d669cbd35da02e4e4887cfb5",
+      "fingerprint": "913353aa1e87b723641a941876ea1a706202b6d444cc3c663bd5108a18396746",
       "snapshot": {
-        "CHANGELOG.md": "f8d7bdcf5a46423fbce5da4d8d40fed5118971201ab226818e7f1091e6b8936b"
+        "CHANGELOG.md": "a86d63ded67d57d1fbde280b31f3b4689fb6ad05f609be18b723f22f50eeb4cd"
       },
-      "head": "e156a4a934b412d50eb7e5afb166274283a7ef9a",
+      "head": "a459310a3e00aa73312b0720741feb696b273608",
       "outcome": "no-change",
-      "reason": "Gate G status and runbook evidence update; no installed skill guidance changed.",
+      "reason": "Added the assigned PR number to the existing Unreleased changelog entry; no skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at e156a4a934b412d50eb7e5afb166274283a7ef9a"
+        "Changed: CHANGELOG.md at a459310a3e00aa73312b0720741feb696b273608"
       ]
     },
     "source:COMMANDS.md": {
