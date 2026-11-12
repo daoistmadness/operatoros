@@ -10247,27 +10247,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "f64d9eff6db659b84dbe9225a065e5dc340244a97f776d786b60736c2b2cfaf3",
+      "fingerprint": "c2fe627585d0db272ccc1f9d1c83157371396b56d1c822ecc0a3aa1db3814f29",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "363f00e17a210546ea4dc71f19b543e18f59333b5c851f9c354e02c1fc955886"
+        "MASTER_CHECKLIST.md": "064ec90b5b1910807df0927f7b20206241773580a4eae4591f20c06657580758"
       },
-      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
+      "head": "ca5ef926829652bd5bae8718d4172065161d1156",
       "outcome": "no-change",
-      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
+      "reason": "The checklist and stability report now record completed PR CI and synthetic s48 recovery evidence; these documentation updates do not change skill guidance, examples, metadata, or package behavior.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
+        "Changed: MASTER_CHECKLIST.md at ca5ef926829652bd5bae8718d4172065161d1156"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "3fe813ad2e3b4264bbe7e94a4da23efb00c88320e61c49ed6507d55589d4462d",
+      "fingerprint": "c58b7c6e71d2f7da33d1cafdecad71ce692f77106dbf3f05f4d86559dd126a8f",
       "snapshot": {
-        "STABILITY_REPORT.md": "d039fc90ce8fcc8b20a3915d2ac997e665fd745c5634f0223be76384bf8ad9df"
+        "STABILITY_REPORT.md": "b990ae1092c4ed2dcb2636d8bc992a06ed3051a2e7afd5ec048aba2cc05cd1db"
       },
-      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
+      "head": "ca5ef926829652bd5bae8718d4172065161d1156",
       "outcome": "no-change",
-      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
+      "reason": "The checklist and stability report now record completed PR CI and synthetic s48 recovery evidence; these documentation updates do not change skill guidance, examples, metadata, or package behavior.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
+        "Changed: STABILITY_REPORT.md at ca5ef926829652bd5bae8718d4172065161d1156"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {

@@ -13,12 +13,12 @@ attestation, import, or deployment was created by the evidence below.
 | Area | Evidence | Result |
 |---|---|---|
 | PR #380 source | Exact head `a43d9e170e32f2dd95d10f2f7de9c2474d30e142`; workflow run `43185020624` completed full release validation and E2E successfully. | Required checks pass; no review decision recorded. |
-| Phase 7 follow-up PR | [PR #381](https://github.com/daoistmadness/operatoros/pull/381) is stacked on #380 at head `940bc4eac66fb16eeb96f0584b9cb93e4c5b53a5`. CI run `43251276276` has preflight and frontend passing; API and E2E were still running when this report was updated. Full release validation and audit jobs were skipped by the PR event conditions. | Exact-head hosted validation and maintainer review remain pending. |
+| Phase 7 follow-up PR | [PR #381](https://github.com/daoistmadness/operatoros/pull/381) is stacked on #380 at head `ca5ef926829652bd5bae8718d4172065161d1156`. CI run `43251930124` reports 6 passed, 0 failed, and 4 skipped. | Hosted API and E2E passed on this head. Full release validation, audit, and nonpublishing candidate qualification were skipped by PR event conditions. No maintainer review is recorded. |
 | Candidate runtime | The nonpublishing qualification report binds to the exact PR source and OCI image. It reports Bun 1.4.4, SQLite 3.53.4, source ID `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`, and FTS5 enabled. | Runtime status is BLOCKED. The gate enforcement passed; no image was published or signed. |
 | Phase 7 code | `python3 -m unittest scripts.tests.test_bun_sqlite_runtime scripts.tests.test_embedded_runtime scripts.tests.test_release_bundle` ran 94 tests. | 94 passed, one environment-specific test skipped. Hosted full-release validation is skipped on the PR event; the previous main-eligible manual run evaluated the parent source, not this follow-up. |
 | Full local release tier | `mise run check:full` completed successfully in the isolated test tier. | Two API passes each ran 437 tests and 4,163 assertions; 593 web tests passed; E2E smoke passed with 8 backend and 67 browser tests; 3 readiness tests passed. |
-| Documentation and Gate G | `scripts/tests/docs-checkers.test.ts`, Markdown link/organization checks, and current developer documentation check were run after updating the root status-doc policy and candidate-qualification guidance. | Eight documentation checker tests passed; all three documentation checks passed. PR #381 hosted API/E2E checks and maintainer review remain pending. |
-| s48 preservation | `bun test packages/db/tests/migrate-existing.test.ts apps/api/tests/backup-cli-migration.test.ts` used synthetic temporary databases. | 20 passed, 266 assertions. This is not a live rollback or independent restore. |
+| Documentation and Gate G | `scripts/tests/docs-checkers.test.ts`, Markdown link/organization checks, and current developer documentation check were run after updating the root status-doc policy and candidate-qualification guidance. | Eight documentation checker tests passed; all three documentation checks passed. PR #381 checks passed on its published head; maintainer review remains pending. |
+| s48 preservation | `bun test packages/db/tests/migrate-existing.test.ts apps/api/tests/backup-cli-migration.test.ts` used synthetic temporary databases; a second isolated run bootstrapped s48, made a SQLite backup, migrated a copy to s54, and restored the s48 snapshot for the rollback source. | 20 tests passed, 266 assertions. Source `dd72bbafbf4b9cd493cb07415ac16433c8ed4289` started twice on loopback under Bun 1.4.4; both `/health` calls returned 200, both processes stopped cleanly, and the restored DB stayed at `20261002_s48` with integrity `ok` and the sentinel preserved. This remains synthetic, not production recovery. Structured evidence is in `~/data/operatoros-run-artifacts/2026-11-12/phase7-runtime-recovery-20261112/s48-rollback-verification-20261112.json`. |
 | Windows package | Prior Phase 7 evidence reports its manifest and seven file hashes passed. | Independent restore has not run; no returned Windows result JSON or duration exists. |
 | Active host state | The prior same-day report recorded a healthy local API and a frontend 404. No service, database, firewall, Tailscale policy, or route was changed. | Development cutover remains not ready; do not treat health of one endpoint as acceptance. |
 
@@ -31,8 +31,8 @@ attestation, import, or deployment was created by the evidence below.
   selecting a remediation build.
 - No independent Windows restore or real-device Identity A/B result is
   available.
-- The s48 source candidate and synthetic migration tests do not yet prove a
-  relaunchable rollback using a restored s48 database.
+- The s48 source candidate now relaunches with a restored synthetic s48
+  database. Real operational data remains untested and untouched.
 - Gate E still lacks independent off-host restore, full host recovery, crash or
   reboot recovery, cross-release rollback, and named monitoring ownership and
   retention.
