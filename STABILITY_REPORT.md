@@ -28,7 +28,8 @@ attestation, import, or deployment was created by the evidence below.
 | Windows recovery package | The original external package's manifest SHA-256 and seven listed file hashes were reverified. Static review found that its network test could pass with TCP 443 reachable or an offline Identity B client, and its restore wrapper did not reject reparse-point destinations before recursive ACL changes. A separate hardened replacement now has all seven listed file hashes and source-level assertions verified; PowerShell was unavailable, so no Windows code was executed. | Independent restore remains NOT VERIFIED. The replacement is not accepted for execution until it passes on Windows and returns structured evidence. It records hashed device/user IDs for comparison but cannot establish which approved identity each fingerprint represents. |
 | Tailscale host observation | Read-only local status saw one Windows peer online; Serve reported HTTPS listeners on 8443, 8444, 8446, 8447, and 8449, with no 443 mapping. | No Windows peer was contacted. Effective grants, identity assignment, and Windows client reachability remain NOT VERIFIED; no route or policy changed. |
 | Log rotation and journald | Ubuntu 26.04.1 `logrotate` 3.22.0 passed debug syntax and forced rotation on disposable JSONL files with the documented `copytruncate` policy. Archive content, inode, mode, post-rotation append, and `missingok` behavior passed. `logrotate.timer` is active; `/etc/logrotate.d/operatoros` is absent and no explicit journald retention overrides were found. | No service or real audit log was rotated and no host config changed. The runbook remains draft pending installed policy, retention and monitoring ownership, and a service-level write check. |
-| Active host state | Read-only checks found the prior local API/frontend state was not re-tested in this pass. No service, database, firewall, Tailscale policy, or route was changed. | Development cutover remains not ready; do not treat health of one endpoint as acceptance. |
+| Gate E monitoring and recovery timers | Read-only OPRSERVER status on 2026-11-13 found Beszel and Uptime Kuma systemd units active, with backup-monitor, backup, backup-check, restore-test, and OperatorOS Lite health timers scheduled. The backup-monitor one-shot last exited 0; backup and restore-test one-shots also report exit 0, but their contents and restore results were not inspected. The root filesystem was 72.5% used. | The default Podman listing returned no Beszel/Uptime Kuma container names while systemd reported both services active, leaving runtime context unresolved. Alert coverage, thresholds, notification delivery, monitor ownership, and actual restore contents/duration remain unverified. No database, backup repository, or monitoring console was accessed. Evidence: external `gate-e-monitoring-readonly-20261113.json`. |
+| Active host state | Read-only checks found the prior local API/frontend state was not re-tested in this pass. No application service, database, firewall, Tailscale policy, or route was changed. | Development cutover remains not ready; do not treat health of one endpoint as acceptance. |
 
 ## Remaining evidence gaps
 
@@ -44,9 +45,11 @@ attestation, import, or deployment was created by the evidence below.
 - The s48 source candidate now relaunches with a restored synthetic s48
   database. Real operational data remains untested and untouched.
 - Gate E still lacks independent off-host restore, full host recovery, crash or
-  reboot recovery, cross-release rollback, and named monitoring ownership and
-  retention. The logrotate timer is active, but the OperatorOS policy is not
-  installed and journald uses default retention settings.
+  reboot recovery, cross-release rollback, and verified monitoring coverage,
+  alert delivery, named ownership, and retention. Monitoring units and timers
+  exist, but a default Podman query did not see the active systemd-managed
+  monitoring containers. The logrotate timer is active, but the OperatorOS
+  policy is not installed and journald uses default retention settings.
 - No exact qualified artifact exists for target Podman/Quadlet rehearsal,
   final immutable release verification, or production deployment.
 

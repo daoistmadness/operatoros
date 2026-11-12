@@ -149,9 +149,13 @@ involved.
 
 The host's `logrotate.timer` is active, but `/etc/logrotate.d/operatoros` is
 absent. No explicit journald retention overrides were found; systemd defaults
-apply. This policy test does not validate host installation, service writes,
-journald retention, disk alerts, or an assigned monitoring owner. Keep this
-runbook in draft until those operational boundaries are verified.
+apply. A read-only OPRSERVER check on 2026-11-13 found active Beszel and Uptime
+Kuma systemd units and scheduled backup-related timers. The default Podman
+listing did not show matching monitoring containers while those units were
+active, so the runtime context needs reconciliation. This observation does not
+verify disk/log coverage, alert thresholds or delivery, service writes,
+journald retention, or an assigned monitoring owner. Keep this runbook in
+draft until those operational boundaries are verified.
 
 ## Backup disk-space checks
 

@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "913353aa1e87b723641a941876ea1a706202b6d444cc3c663bd5108a18396746",
+      "fingerprint": "94a4108dfe6c59b00c65883390354f7cde8400c5dddcfbbf6d516faf11b1f9d8",
       "snapshot": {
-        "CHANGELOG.md": "a86d63ded67d57d1fbde280b31f3b4689fb6ad05f609be18b723f22f50eeb4cd"
+        "CHANGELOG.md": "87a42f05e739c4155aee6bdc56f124a831c93c9a6bb9ae9b4dd3afd40520e293"
       },
-      "head": "a459310a3e00aa73312b0720741feb696b273608",
+      "head": "3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c",
       "outcome": "no-change",
-      "reason": "Added the assigned PR number to the existing Unreleased changelog entry; no skill guidance changed.",
+      "reason": "Added read-only Gate E host service/timer evidence and explicit Podman-context and alert-coverage limits; no skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at a459310a3e00aa73312b0720741feb696b273608"
+        "Changed: CHANGELOG.md at 3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c"
       ]
     },
     "source:COMMANDS.md": {
@@ -4777,15 +4777,15 @@
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
-      "fingerprint": "af3b7c9a11e285ece1f60ef6cdd5c22ccf50938ad5e306071a5a9e6735043e7c",
+      "fingerprint": "1deb5d1eab0672111af1e74d01b4c6dacd028123243aaa2a67515367ef66b033",
       "snapshot": {
-        "docs/runbooks/log-rotation.md": "5db5fc66fcff3c12de0a281f3e7e717e357b7413924d75fae1f81f56a5960a35"
+        "docs/runbooks/log-rotation.md": "bea764e14a2f47d746c97a187eabab3cdf3d33dfd8e2c09223ac0721dcd84827"
       },
-      "head": "e156a4a934b412d50eb7e5afb166274283a7ef9a",
+      "head": "3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c",
       "outcome": "no-change",
-      "reason": "Gate G status and runbook evidence update; no installed skill guidance changed.",
+      "reason": "Added read-only Gate E host service/timer evidence and explicit Podman-context and alert-coverage limits; no skill guidance changed.",
       "evidence": [
-        "Changed: docs/runbooks/log-rotation.md at e156a4a934b412d50eb7e5afb166274283a7ef9a"
+        "Changed: docs/runbooks/log-rotation.md at 3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c"
       ]
     },
     "source:docs/runbooks/runtime-operations.md": {
@@ -10245,27 +10245,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "6e5aa24b1ef9d2908e952a5c049e8aa10bc0c8cc381f652c34d5273e051ee2f4",
+      "fingerprint": "4b0fcf12626ee417b80fbc57b49756f74e2e1166806bfda22dff1410365bd7e8",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "e057cbc7f31ac4755b0b929af012e143ea6383d5b4ac92c8bf18f1204e8d134e"
+        "MASTER_CHECKLIST.md": "177677cb48a36ed9e5af8c263563af5318dd53a7a80157087777aea91b062eb7"
       },
-      "head": "e156a4a934b412d50eb7e5afb166274283a7ef9a",
+      "head": "3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c",
       "outcome": "no-change",
-      "reason": "Readiness decisions and runbook evidence update; no installed skill guidance changed.",
+      "reason": "Added read-only Gate E host service/timer evidence and explicit Podman-context and alert-coverage limits; no skill guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at e156a4a934b412d50eb7e5afb166274283a7ef9a"
+        "Changed: MASTER_CHECKLIST.md at 3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "d9595bfdb4c5049a971535a8951274f3397c5778f948dfc32713966ac6b94f57",
+      "fingerprint": "39394501941ed6bb1df271f76238bcad911a67ec3d2512253ea5b060ce398c43",
       "snapshot": {
-        "STABILITY_REPORT.md": "f91929d58537ef1b4829d72c754ee6d4afea5a2131d9494790d132f0a69cd185"
+        "STABILITY_REPORT.md": "76e8c4d4339acdeb0d8d8b89b04b6fa8caa885d7e0445d87956e1ac8221d2f23"
       },
-      "head": "e156a4a934b412d50eb7e5afb166274283a7ef9a",
+      "head": "3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c",
       "outcome": "no-change",
-      "reason": "Readiness decisions and runbook evidence update; no installed skill guidance changed.",
+      "reason": "Added read-only Gate E host service/timer evidence and explicit Podman-context and alert-coverage limits; no skill guidance changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at e156a4a934b412d50eb7e5afb166274283a7ef9a"
+        "Changed: STABILITY_REPORT.md at 3dd1f7e8fc9adc9f54a592bea3a9d634ea857c4c"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
