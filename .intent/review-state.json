@@ -2943,17 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a11d69166cbcfde13d3d66f98a12d1afe38921e41f43b0594cd145353c671c22",
+      "fingerprint": "a29681c7986a74256f9fb550672bc128e9d5e5967e177d72497724163c02b2f5",
       "snapshot": {
-        "CHANGELOG.md": "adc565373788d823d2e0555769bf57a4be4b6474b1df339394cef07a9ca5b7d3"
+        "CHANGELOG.md": "02372ff4b2abe257723da03babe01bf1b3890cd2ebf8a2dc2b6de425ad9f1418"
       },
-      "head": "bb8c10e981d36b1778343fbc5ebe256bd837e5d8",
-      "outcome": "out-of-scope",
-      "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
+      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "outcome": "no-change",
+      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "AGENTS.md documentation rules",
-        "docs/decisions/documentation-system.md:22-27",
-        "STABILITY_REPORT.md"
+        "Changed: CHANGELOG.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
       ]
     },
     "source:COMMANDS.md": {
@@ -10247,29 +10245,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "260d41242c23b7a30200c5f7d3cd9d110d9d0ad6a39ce77042df981ca89760bf",
+      "fingerprint": "f6e15da39970a03f973a53b0e616a0a5f0011b43a8da4e5d0991f373c5427830",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "f77e4a6f79f9e68cc41e66a149070508fdf439c69720ff668241f04d8f0cd466"
+        "MASTER_CHECKLIST.md": "0724eabca5dd072fae2cd38755f77fa97250b87252c2957fe0d28e244e80945e"
       },
-      "head": "176ad525f6419f5cd648032911e0266595b0877e",
-      "outcome": "out-of-scope",
-      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
+      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "outcome": "no-change",
+      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "intent list",
-        "docs/decisions/documentation-system.md"
+        "Changed: MASTER_CHECKLIST.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "c4a93736a66a1a164d71519407f8687021ca7f6f444a89e47d946729652da974",
+      "fingerprint": "cda3c2557a8d91180c672780b77f8e23ee34cf6b35f7728ba4112f643a03b814",
       "snapshot": {
-        "STABILITY_REPORT.md": "e7abfd43d6641b871c17ad48d97242fbf6b733a0cdc53de6150a20933bebeb3c"
+        "STABILITY_REPORT.md": "130f2bbec090e684fc605ae2c91b1faa9c9b3aa2acc11e8587b906be72c55354"
       },
-      "head": "176ad525f6419f5cd648032911e0266595b0877e",
-      "outcome": "out-of-scope",
-      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
+      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "outcome": "no-change",
+      "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "intent list",
-        "docs/decisions/documentation-system.md"
+        "Changed: STABILITY_REPORT.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
