@@ -60,6 +60,11 @@ the single-server SQLite architecture and production NO-GO boundary in place.
 - Enforce squash-only merges in both the repository settings and the active
   `main` ruleset. Strict status checks, no-bypass enforcement, and branch
   deletion/force-push protection remain enabled.
+- Fetch the checksum-pinned mise release asset using the workflow's
+  read-only `contents` token. Anonymous GitHub API traffic shares a 60-request
+  hourly limit by originating IP ([GitHub rate-limit policy](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api));
+  keep the release asset ID and archive and binary checksums pinned, and do not
+  grant the bootstrap write permissions.
 - Keep G3 blocked. A source audit found 19 production modules using `bun:sqlite`
   or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
   feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
@@ -71,6 +76,14 @@ the single-server SQLite architecture and production NO-GO boundary in place.
   tests, a fresh backup is verified, and development cutover is authorized.
 - Do not change Tailscale, firewall, production routes, host services, or
   production data as part of readiness work.
+- D2 access evidence must come from separate online Windows Tailscale sessions.
+  Compare device and user fingerprints, have a tailnet administrator map them
+  to the approved identities and verify effective grants, and require TCP 443
+  to fail for both identities. A command-line identity label or an offline
+  device is not authorization evidence.
+- Keep the proposed audit-log rotation policy in draft until its host config,
+  retention, disk budget, and named monitoring owner are accepted. A synthetic
+  logrotate drill does not authorize changes to host logging configuration.
 - Keep production NO-GO until all mandatory gates pass and the owner explicitly
   authorizes deployment.
 

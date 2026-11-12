@@ -63,8 +63,10 @@ test("CI preserves successful E2E reset evidence for artifact upload", () => {
   expect(workflow).toContain("e2e-results/database-after.json");
   expect(workflow).toContain("e2e-results/junit/");
 });
-test("CI setup reads mise's version field and installs dependencies before checking Turbo", () => {
+test("CI setup authenticates its pinned mise asset and installs dependencies before checking Turbo", () => {
   const setup = readFileSync(join(repository, ".github/actions/setup-bun/action.yml"), "utf8");
+  expect(setup).toContain("OPERATOROS_MISE_BOOTSTRAP_TOKEN: ${{ github.token }}");
+  expect(setup).toContain('-H "Authorization: Bearer ${OPERATOROS_MISE_BOOTSTRAP_TOKEN}"');
   expect(setup).toContain("mise --version | awk '{print $1}'");
   expect(setup.indexOf("bun install --frozen-lockfile")).toBeLessThan(setup.indexOf("bun run turbo:version"));
 });
