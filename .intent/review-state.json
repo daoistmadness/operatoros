@@ -2943,15 +2943,17 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "5026146710f1208ab8988d4a7aeb7f760b82b8cea5a8c307182ebeaba11b0c7d",
+      "fingerprint": "a11d69166cbcfde13d3d66f98a12d1afe38921e41f43b0594cd145353c671c22",
       "snapshot": {
-        "CHANGELOG.md": "70c961ab0d3134313648254019c0779194fa11e5a2d844614160c09b0652b0ea"
+        "CHANGELOG.md": "adc565373788d823d2e0555769bf57a4be4b6474b1df339394cef07a9ca5b7d3"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
-      "outcome": "no-change",
-      "reason": "Authenticated the existing pinned mise asset request with the workflow read-only token and documented current CI and Gate E evidence; no skill guidance changed.",
+      "head": "bb8c10e981d36b1778343fbc5ebe256bd837e5d8",
+      "outcome": "out-of-scope",
+      "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
       "evidence": [
-        "Changed: CHANGELOG.md at 211af06f913725a9c7570941248b69b0738e57a0"
+        "AGENTS.md documentation rules",
+        "docs/decisions/documentation-system.md:22-27",
+        "STABILITY_REPORT.md"
       ]
     },
     "source:COMMANDS.md": {
@@ -10245,27 +10247,29 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "1f45ddf71c6bac2800c6799dffb0773f32cea1045a9ee6dd7d1e8be4789bc181",
+      "fingerprint": "260d41242c23b7a30200c5f7d3cd9d110d9d0ad6a39ce77042df981ca89760bf",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "1d059fb33e038b5ee30063864eb8cc8ccf1c5af93239d72723cd001c7702c3fb"
+        "MASTER_CHECKLIST.md": "f77e4a6f79f9e68cc41e66a149070508fdf439c69720ff668241f04d8f0cd466"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
-      "outcome": "no-change",
-      "reason": "Authenticated the existing pinned mise asset request with the workflow read-only token and documented current CI and Gate E evidence; no skill guidance changed.",
+      "head": "176ad525f6419f5cd648032911e0266595b0877e",
+      "outcome": "out-of-scope",
+      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 211af06f913725a9c7570941248b69b0738e57a0"
+        "intent list",
+        "docs/decisions/documentation-system.md"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "15725973e8c56af920f70ff8c1e06bac935659146410caca4f6b315f9fe0173b",
+      "fingerprint": "c4a93736a66a1a164d71519407f8687021ca7f6f444a89e47d946729652da974",
       "snapshot": {
-        "STABILITY_REPORT.md": "3db7cd6739151626b2cbe5d09218ee6924ff0afbd580bdd4a6cbdabeddb8cd5f"
+        "STABILITY_REPORT.md": "e7abfd43d6641b871c17ad48d97242fbf6b733a0cdc53de6150a20933bebeb3c"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
-      "outcome": "no-change",
-      "reason": "Linked the CI rate-limit decision and bootstrap endpoint rationale to official GitHub documentation; no skill guidance changed.",
+      "head": "176ad525f6419f5cd648032911e0266595b0877e",
+      "outcome": "out-of-scope",
+      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 211af06f913725a9c7570941248b69b0738e57a0"
+        "intent list",
+        "docs/decisions/documentation-system.md"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
