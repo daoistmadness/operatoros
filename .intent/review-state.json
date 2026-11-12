@@ -10247,31 +10247,29 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "debc4f2cdf78ff7084c350dd754b502b1ab3b652fa7a526cbcfdf4bc46a2e036",
+      "fingerprint": "ca3715a635b09c5f376c9efffdb962b79b9154298042c41c8587ae660632e118",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "3ec7f723ec67b0df6f4ef74be9a2bd79e17ebcb971fa34b05192acb39bbbcb13"
+        "MASTER_CHECKLIST.md": "803742fc1097f471ac64b2c761a86e76bc0145bca2dcc761468af370b23c0170"
       },
-      "head": "0f821e9af7438e6e34dddfc50ee8f649c20bbbde",
+      "head": "31f156cdeee04d19d5ddc2d1715cd525a0522a04",
       "outcome": "out-of-scope",
-      "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
+      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
       "evidence": [
-        "AGENTS.md documentation rules",
-        "docs/decisions/documentation-system.md:22-27",
-        "STABILITY_REPORT.md"
+        "intent list",
+        "docs/decisions/documentation-system.md"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "5389e36d8de19f15bf2a83a8dc45752bf5488bd3d5ebc908e7bdc3c5682fc164",
+      "fingerprint": "4381c504bee76fd674931a94aa0a94c483260afa9dd33ffbc0a31ce2bb497efe",
       "snapshot": {
-        "STABILITY_REPORT.md": "963ff6e0c3b24df9824d8804ef614f6d99dc0e6b237c39ff94258c78a82bad06"
+        "STABILITY_REPORT.md": "7381d99c753e252bf8c3c6457cfce0a98c2940f96c829b198bef952bdb6bca51"
       },
-      "head": "0f821e9af7438e6e34dddfc50ee8f649c20bbbde",
+      "head": "31f156cdeee04d19d5ddc2d1715cd525a0522a04",
       "outcome": "out-of-scope",
-      "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
+      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
       "evidence": [
-        "AGENTS.md documentation rules",
-        "docs/decisions/documentation-system.md:22-27",
-        "STABILITY_REPORT.md"
+        "intent list",
+        "docs/decisions/documentation-system.md"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
