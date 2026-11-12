@@ -79,6 +79,13 @@ scheduled, push, or PR event publishes a bundle. See the
 [release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
 security limitations, helper adoption, and CI rollback.
 
+A manual dispatch on a non-main branch runs full validation and builds an
+ephemeral API candidate for Trivy scanning and embedded Bun/SQLite
+qualification. The candidate is not uploaded, signed, or published; sanitized
+reports are retained for seven days. An unqualified embedded runtime must
+produce a verifiable rejection, so a successful workflow can still report the
+candidate as blocked.
+
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.
 Failed compatibility or release build/scan steps retain only allowlisted

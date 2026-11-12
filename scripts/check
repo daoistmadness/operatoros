@@ -36,4 +36,5 @@ mise exec -- bun test \
   scripts/tests/dev-scripts.test.ts
 
 python3 -m unittest discover -s scripts/tests -p test_release_bundle.py
+python3 -m unittest discover -s scripts/tests -p test_embedded_runtime.py
 python3 -m unittest discover -s scripts/tests -p test_operatoros_deploy.py

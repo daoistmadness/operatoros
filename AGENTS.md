@@ -143,6 +143,10 @@ docs/. Use one topic per kebab-case page, add status and last_reviewed front
 matter, and link every maintained page from the index. The protected Dapodik
 design is the explicit content and front-matter exception. Keep package-owned,
 generated, release, and contributor docs with their existing owners.
+The program-level status deliverables `MASTER_CHECKLIST.md`, `DECISIONS.md`, and
+`STABILITY_REPORT.md` are explicit root exceptions. Give each status and
+last_reviewed front matter, link each once from docs/README.md, and keep
+canonical architecture and operational procedures in their existing docs pages.
 
 Session logs belong only in docs/session/; they are non-authoritative.
 Promote durable facts into their canonical page. Add one user-facing

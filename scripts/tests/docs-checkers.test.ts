@@ -11,7 +11,10 @@ function fixture() {
   const root = mkdtempSync(join(tmpdir(), "operatoros-doc-checkers-")); roots.push(root);
   const write = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
   for (const path of ["README.md", "AGENTS.md", "CHANGELOG.md", "COMMANDS.md", "CONVENTIONS.md", "MEMORY.md", "ERRORS.md", ".github/CI.md", ".github/pull_request_template.md", "packages/agent-skills/docs/elysiajs.md", "packages/agent-skills/skills/elysiajs/SKILL.md", "backend/README.md", "apps/web/README.md", "CONTRIBUTING.md"]) write(path, "");
-  write("docs/README.md", "# Docs\n\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n");
+  write("MASTER_CHECKLIST.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Stability checklist\n");
+  write("DECISIONS.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Stability decisions\n");
+  write("STABILITY_REPORT.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Stability report\n");
+  write("docs/README.md", "# Docs\n\n[Master checklist](../MASTER_CHECKLIST.md)\n[Decisions](../DECISIONS.md)\n[Stability report](../STABILITY_REPORT.md)\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n");
   for (const path of ["docs/guides/development.md", "docs/guides/testing.md"]) write(path, "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Guide\n");
   write("docs/session/README.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Session logs\n");
   write("docs/reference/student-data/academic-mapping-contract.md", "---\nstatus: current\nlast_reviewed: 2026-10-26\n---\n\n# Academic mapping contract\n");
@@ -35,9 +38,17 @@ test("documentation checkers pass an aligned controlled repository", () => {
 });
 test("organization checker accepts an indexed audit page", () => {
   const f = fixture();
-  f.write("docs/README.md", "# Docs\n\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n[Audit](audits/dependency-optimization.md)\n");
+  f.write("docs/README.md", "# Docs\n\n[Master checklist](../MASTER_CHECKLIST.md)\n[Decisions](../DECISIONS.md)\n[Stability report](../STABILITY_REPORT.md)\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n[Audit](audits/dependency-optimization.md)\n");
   f.write("docs/audits/dependency-optimization.md", "---\nstatus: current\nlast_reviewed: 2026-10-28\n---\n\n# Dependency optimization audit\n");
   expect(check(f.root, "organization")).toEqual({ code: 0, stdout: "Markdown organization looks valid.\n", stderr: "" });
+});
+test("organization checker requires indexed root status documents and metadata", () => {
+  const f = fixture();
+  f.write("STABILITY_REPORT.md", "# Missing metadata\n");
+  f.write("docs/README.md", "# Docs\n\n[Master checklist](../MASTER_CHECKLIST.md)\n[Decisions](../DECISIONS.md)\n[Development](guides/development.md)\n[Testing](guides/testing.md)\n[Session logs](session/README.md)\n[Academic mapping](reference/student-data/academic-mapping-contract.md)\n");
+  const problems = markdownOrganizationProblems(f.root);
+  expect(problems).toContain("STABILITY_REPORT.md needs status and last_reviewed front matter");
+  expect(problems).toContain("STABILITY_REPORT.md must appear exactly once in docs/README.md (found 0)");
 });
 test("links preserve exclusions, URL/query/fragment handling, image rules, and diagnostic ordering", () => {
   const f = fixture(); f.write("README.md", "[valid](docs/README.md#section?x=1) [query](docs/README.md?x=1#section) [remote](https://example.invalid) [mail](mailto:test@example.invalid) [anchor](#section) [missing](missing.md) ![image](missing.png) ![](empty-alt.png)");

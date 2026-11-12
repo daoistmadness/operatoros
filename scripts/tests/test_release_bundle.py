@@ -59,8 +59,52 @@ def fixture():
     manifest['mediaType'] = 'application/vnd.oci.image.manifest.v1+json'
     blobs['oci-layout'] = b'{"imageLayoutVersion":"1.0.0"}'
     blobs['index.json'] = json.dumps({'schemaVersion': 2, 'manifests': [manifest]}).encode()
-    files = {'operatoros-api.oci.tar': archive(blobs), 'operatoros-web-client.tar.gz': archive({'client/_shell.html': b'shell', 'client/assets/app.js': b'app', 'client/release.json': json.dumps({'source_commit': SHA}).encode()}), 'sbom.cdx.json': b'{"bomFormat":"CycloneDX"}', 'scan.json': b'{"Results":[]}'}
-    manifest = {'schema_version': 1, 'lockfiles': {'bun.lock': 'a' * 64, 'mise.lock': 'b' * 64}, 'source_commit': SHA, 'repository': m.REPO, 'workflow': m.WORKFLOW, 'source_ref': 'refs/heads/main', 'run_id': '123', 'run_attempt': '1', 'image': m.image_metadata(files['operatoros-api.oci.tar'], SHA), 'artifacts': {name: m.digest(data) for name, data in files.items()}}
+    api_archive = archive(blobs)
+    image = m.image_metadata(api_archive, SHA)
+    bun_hash = 'c' * 64
+    source_id = '2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76'
+    bun_ref = 'urn:operatoros:runtime:bun:' + bun_hash
+    sqlite_ref = 'urn:operatoros:runtime:sqlite:' + 'd' * 64
+    base_image = 'docker.io/oven/bun:0.0.0-alpine@sha256:' + 'f' * 64
+    sbom = {
+        'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'components': [{
+            'type': 'application', 'name': 'Bun JavaScript runtime', 'version': '0.0.0',
+            'bom-ref': bun_ref, 'hashes': [{'alg': 'SHA-256', 'content': bun_hash}],
+            'properties': [{'name': 'operatoros:runtime:origin', 'value': base_image}],
+            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
+                {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
+                {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
+                {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+            ]}],
+        }],
+        'dependencies': [{'ref': bun_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}],
+        'vulnerabilities': [{'id': 'CVE-2026-119373', 'analysis': {'state': 'resolved'}, 'affects': [{'ref': sqlite_ref}]}],
+        'metadata': {
+            'component': {'properties': [{'name': 'aquasecurity:trivy:ImageID', 'value': image['image_id']}]},
+            'properties': [
+                {'name': 'operatoros:source:commit', 'value': SHA},
+                {'name': 'operatoros:artifact:oci-manifest-digest', 'value': image['manifest_digest']},
+                {'name': 'operatoros:artifact:oci-archive-sha256', 'value': m.digest(api_archive)},
+                {'name': 'operatoros:runtime:qualification', 'value': 'PASS'},
+            ],
+        },
+    }
+    runtime = {
+        'schema_version': 1, 'qualification_status': 'PASS',
+        'source': {'repository': 'daoistmadness/operatoros', 'commit': SHA, 'containerfile': 'deploy/podman/Containerfile.api', 'containerfile_sha256': 'e' * 64, 'pinned_base_images': [base_image]},
+        'artifact': {'oci_manifest_digest': image['manifest_digest'], 'image_config_digest': image['image_id'], 'oci_archive_sha256': m.digest(api_archive)},
+        'runtime': {'name': 'Bun', 'version': '0.0.0', 'binary_sha256': bun_hash, 'origin': base_image, 'embedded_component': 'SQLite', 'sqlite_version': '3.54.1', 'sqlite_source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True},
+        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite embedded in the Bun executable', 'status': 'RESOLVED_BY_FIXED_VERSION', 'qualification_floor': 'SQLite 3.54.0 or later, or a verified equivalent backport', 'runtime_gate_reason': None},
+    }
+    files = {
+        'operatoros-api.oci.tar': api_archive,
+        'operatoros-web-client.tar.gz': archive({'client/_shell.html': b'shell', 'client/assets/app.js': b'app', 'client/release.json': json.dumps({'source_commit': SHA}).encode()}),
+        'sbom.cdx.json': json.dumps(sbom).encode(),
+        'scan.json': json.dumps({'Results': [], 'Metadata': {'ImageID': image['image_id']}}).encode(),
+        'embedded-runtime.json': json.dumps(runtime).encode(),
+    }
+    manifest = {'schema_version': 1, 'lockfiles': {'bun.lock': 'a' * 64, 'mise.lock': 'b' * 64}, 'source_commit': SHA, 'repository': m.REPO, 'workflow': m.WORKFLOW, 'source_ref': 'refs/heads/main', 'run_id': '123', 'run_attempt': '1', 'image': image, 'artifacts': {name: m.digest(data) for name, data in files.items()}}
     files['manifest.json'] = json.dumps(manifest).encode()
     checksums(files)
     return files
@@ -1949,9 +1993,10 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
     def test_embedded_runtime_gate_runs_before_provenance_attestation(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
         release_job = workflow.split('  release-bundle:\n', 1)[1]
-        qualification = release_job.index('Qualify embedded Bun SQLite before signing')
+        qualification = release_job.index('Verify embedded runtime and mandatory evidence before signing')
         attestation = release_job.index('Attest the complete release bundle')
         consumer = release_job.index('Verify provenance and start an isolated consumer')
+        self.assertLess(release_job.index('Build and inspect release artifacts'), qualification)
         self.assertLess(qualification, attestation)
         self.assertLess(attestation, consumer)
 
@@ -1964,6 +2009,8 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertIn("github.ref != 'refs/heads/main'", candidate)
         self.assertIn('contents: read', candidate)
         self.assertIn('scripts/check-bun-sqlite-runtime.py', candidate)
+        self.assertIn('scripts/record-embedded-runtime.py', candidate)
+        self.assertIn('reports/embedded-runtime.json', candidate)
         self.assertIn('release.scan_image(', candidate)
         self.assertIn('actions/upload-artifact@', candidate)
         self.assertNotIn('id-token: write', candidate)
