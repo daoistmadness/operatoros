@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-13
 ---
 
 # Audit log rotation and retention
@@ -137,6 +137,21 @@ Run on a disposable host or a disposable data root first.
    moment and compare the last rotated entry with the first new entry.
 6. Confirm state tracking: Ubuntu keeps rotation state in
    `/var/lib/logrotate/status`; the next daily timer run applies the schedules.
+
+## Disposable policy validation
+
+On 2026-11-13, the proposed directives passed `logrotate --debug` and a forced
+rotation using disposable JSONL files on Ubuntu 26.04.1 with logrotate 3.22.0.
+The check verified compressed archive contents, preservation of the live file
+inode and mode, a successful append after truncation, and `missingok` for an
+absent restore audit file. No application service or real audit log was
+involved.
+
+The host's `logrotate.timer` is active, but `/etc/logrotate.d/operatoros` is
+absent. No explicit journald retention overrides were found; systemd defaults
+apply. This policy test does not validate host installation, service writes,
+journald retention, disk alerts, or an assigned monitoring owner. Keep this
+runbook in draft until those operational boundaries are verified.
 
 ## Backup disk-space checks
 

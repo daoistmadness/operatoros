@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-13
 ---
 
 # Ubuntu server deployment runbook
@@ -283,6 +283,33 @@ approve the HTTPS endpoint and Serve change. Gate E still needs an encrypted
 production storage plan, off-host restore, recovery evidence, cross-release
 rollback, and a Bun/SQLite security disposition. Gate F requires separate
 production deployment approval after those gates pass.
+
+### Gate D2 identity acceptance
+
+Run access checks from two real Windows devices and sessions: authorized
+Identity A and a separate non-admin Identity B. Do not change Serve, grants,
+firewall rules, or routes during the test. A `-Identity` argument or a process
+running without administrator privileges does not prove which tailnet identity
+is being tested.
+
+Before counting either result, verify that the Windows Tailscale client reports
+`BackendState=Running`, its own node is online, and the result contains distinct
+device and user fingerprints. Compare the A and B fingerprints, then have the
+tailnet administrator map them to the approved identities and verify the
+effective grants. The fingerprints are comparison evidence; they do not prove
+authorization by themselves.
+
+Identity A must reach the approved private TCP services on ports 22, 53, 8443,
+8444, 8446, 8447, and 8449, resolve DNS over UDP and TCP, and complete HTTPS
+requests with certificate validation enabled. Identity B must be unable to
+reach those ports or resolve through the host DNS service. TCP 443 must be
+unreachable from both identities. Keep the structured results and their
+checksums in the approved private evidence channel. A 404 on port 8444 is an
+application defect even when the TLS and HTTP transport checks succeed.
+
+These client checks do not approve a Serve or grant change and do not prove
+production HTTPS readiness. Keep production NO-GO until D2, the other mandatory
+gates, and explicit deployment authorization are complete.
 
 ## Release artifact and future builds
 

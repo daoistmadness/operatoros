@@ -71,6 +71,14 @@ the single-server SQLite architecture and production NO-GO boundary in place.
   tests, a fresh backup is verified, and development cutover is authorized.
 - Do not change Tailscale, firewall, production routes, host services, or
   production data as part of readiness work.
+- D2 access evidence must come from separate online Windows Tailscale sessions.
+  Compare device and user fingerprints, have a tailnet administrator map them
+  to the approved identities and verify effective grants, and require TCP 443
+  to fail for both identities. A command-line identity label or an offline
+  device is not authorization evidence.
+- Keep the proposed audit-log rotation policy in draft until its host config,
+  retention, disk budget, and named monitoring owner are accepted. A synthetic
+  logrotate drill does not authorize changes to host logging configuration.
 - Keep production NO-GO until all mandatory gates pass and the owner explicitly
   authorizes deployment.
 
