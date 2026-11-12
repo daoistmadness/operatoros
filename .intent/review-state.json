@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "be650c50d87c4a61353256059201973b9b637653702c2306be3215bdb8231232",
+      "fingerprint": "4d3b3ad010d76766e962f61577640675968a52b1d5a39f37ad43336893110f02",
       "snapshot": {
-        "CHANGELOG.md": "420ccd9e2737d97748893a26fb199781fdbd20f8bdf083e9db438445cfac55b6"
+        "CHANGELOG.md": "d306c841c724cf91b3cebfa4257c7f4e6c49179c43bccc12def335d1160fb5f9"
       },
-      "head": "fec5b3b2de9475aef48c6739256b37b72a204d85",
+      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
       "outcome": "no-change",
       "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at fec5b3b2de9475aef48c6739256b37b72a204d85"
+        "Changed: CHANGELOG.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
       ]
     },
     "source:COMMANDS.md": {
@@ -10245,27 +10245,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "f6e15da39970a03f973a53b0e616a0a5f0011b43a8da4e5d0991f373c5427830",
+      "fingerprint": "d833a655c5d72ae9518e8e25113b572e2ea8071a176a3696dfa98a91b65e5d44",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "0724eabca5dd072fae2cd38755f77fa97250b87252c2957fe0d28e244e80945e"
+        "MASTER_CHECKLIST.md": "908349132cc312b6db8651891fd7adb0c6b172d3e730ae5f1658b03c8de838d6"
       },
-      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
       "outcome": "no-change",
       "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
+        "Changed: MASTER_CHECKLIST.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "cda3c2557a8d91180c672780b77f8e23ee34cf6b35f7728ba4112f643a03b814",
+      "fingerprint": "23f6131ff62fac7fecd4c316978d4cfbdc2fd310027a687200a12d534e356d18",
       "snapshot": {
-        "STABILITY_REPORT.md": "130f2bbec090e684fc605ae2c91b1faa9c9b3aa2acc11e8587b906be72c55354"
+        "STABILITY_REPORT.md": "06f9662db033fd53cfc2b3c4b0ad83c6e508eb3cf61d602d86604b5e7d599e2a"
       },
-      "head": "758982ff40751b26567d2b4c0a4aa8040a033c9d",
+      "head": "0041b36418b7b319c00dcca6057e5a9d3adb986b",
       "outcome": "no-change",
       "reason": "Root readiness evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 758982ff40751b26567d2b4c0a4aa8040a033c9d"
+        "Changed: STABILITY_REPORT.md at 0041b36418b7b319c00dcca6057e5a9d3adb986b"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
