@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Refresh runtime qualification, recovery, and cutover readiness evidence after Phase 7, with the unresolved SQLite and independent-recovery gates recorded.
 - Bind the embedded Bun/SQLite CycloneDX inventory to the exact OCI image and source, and reject release evidence with an unqualified runtime. (#381)
 - Gate release images on embedded Bun/SQLite evidence before signing and provide a nonpublishing candidate qualification path.
 - Disable the D1 and rehearsal Caddy admin listeners to avoid conflicts with the existing Caddy service. (#379)
