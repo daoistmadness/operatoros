@@ -25,8 +25,9 @@ last_reviewed: 2026-11-12
 - Keep the existing single-server design: Elysia API, browser frontend, and
   file-backed SQLite. Do not add a database service or broaden the runtime
   migration without evidence and review.
-- Keep PR #380 open for maintainer review. Its checks and nonpublishing
-  qualification passed, but no review decision is recorded.
+- PR #380 was squash-merged at `e410a562bce588e70573cc8eb0d0d83b6e0e9106`
+  after all seven required checks passed. Keep the embedded-runtime release
+  gate in force; the merge does not qualify the current Bun/SQLite runtime.
 - Keep G3 blocked. A source audit found 19 production modules using `bun:sqlite`
   or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
   feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
