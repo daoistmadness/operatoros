@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3661b04da63df7288522cdd179b616ca2b689d8cd86f6480b0ef46fda209bf7e",
+      "fingerprint": "d54b010f6374b3bed1907246d8702adc51b1fe67daa79019c50282dc7824b49b",
       "snapshot": {
-        "CHANGELOG.md": "ff44dcc0076af9a8f4849a7ac4ac112610dbf599b267885e1ed6df03fc7e4750"
+        "CHANGELOG.md": "64ca34461262ae05ae824f44a37712441d2e74ed3c7ce3bcc1a5db2641015af4"
       },
-      "head": "ed7512e7ca4d443fb4ea4540e4d1369632372620",
+      "head": "c9be2deb029e31f4617d02fae37690981c7cee1d",
       "outcome": "no-change",
       "reason": "This PR records program-level readiness evidence only; it changes no library behavior, Elysia source guidance, or skill plan.",
       "evidence": [
-        "Changed: CHANGELOG.md at ed7512e7ca4d443fb4ea4540e4d1369632372620"
+        "Changed: CHANGELOG.md at c9be2deb029e31f4617d02fae37690981c7cee1d"
       ]
     },
     "source:COMMANDS.md": {
