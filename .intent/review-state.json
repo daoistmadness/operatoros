@@ -2943,15 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b99b7e46b940fe13230c6e58a620a6dc8ce6a043b0a60c9d1945d586a9aed03d",
+      "fingerprint": "f219bc847333d9ff08dc33e6ac7a88bc3eabc26aed32c24ac51baab6b1e2fdac",
       "snapshot": {
-        "CHANGELOG.md": "deec6f4bcd69f8b2ee9e1f9512590af6fd4914cb4c4eb8fed9719278e47a2111"
+        "CHANGELOG.md": "633dc9f9d5e9e4d2f515e6a192b953c3eb118e80cd8d16c82083590305cfeaa5"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: CHANGELOG.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
       ]
     },
     "source:COMMANDS.md": {
@@ -10247,27 +10247,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "471616810b9f09c5aa83e7dba7b716ac1be2968fdc5ea6502235698aff6c56cc",
+      "fingerprint": "f64d9eff6db659b84dbe9225a065e5dc340244a97f776d786b60736c2b2cfaf3",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "13a6ab365f757874cd02e6d1756fa8675b2964656f926c1679e9d98734b4fb94"
+        "MASTER_CHECKLIST.md": "363f00e17a210546ea4dc71f19b543e18f59333b5c851f9c354e02c1fc955886"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: MASTER_CHECKLIST.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "664cd5024cd8b8c95732d974d411fc723de55980639fe7471387c36dcb548118",
+      "fingerprint": "3fe813ad2e3b4264bbe7e94a4da23efb00c88320e61c49ed6507d55589d4462d",
       "snapshot": {
-        "STABILITY_REPORT.md": "e22788f33c2cee1225d291c2523945f0cfa820da397ef29737bbf26e9743467b"
+        "STABILITY_REPORT.md": "d039fc90ce8fcc8b20a3915d2ac997e665fd745c5634f0223be76384bf8ad9df"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "ed141ad79a9e389e638cc506c715d5bcd69da59e",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "These checklist, stability report, and changelog updates record PR status and test evidence; they do not change installed skill guidance, skill metadata, examples, or package behavior.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: STABILITY_REPORT.md at ed141ad79a9e389e638cc506c715d5bcd69da59e"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
