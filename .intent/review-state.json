@@ -10247,27 +10247,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "c2fe627585d0db272ccc1f9d1c83157371396b56d1c822ecc0a3aa1db3814f29",
+      "fingerprint": "fad89d1ed3840e41b52423936bd53a8a3f4bf19ceb309f9eed072c5998112411",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "064ec90b5b1910807df0927f7b20206241773580a4eae4591f20c06657580758"
+        "MASTER_CHECKLIST.md": "ca04f1754330bb29c1ea4c53cf68ef1f1f010fa73cc7bd0dbc58cc918c5e6313"
       },
-      "head": "ca5ef926829652bd5bae8718d4172065161d1156",
+      "head": "7ac65e3e5737b2cd32a04bedfd416461e867ae1b",
       "outcome": "no-change",
-      "reason": "The checklist and stability report now record completed PR CI and synthetic s48 recovery evidence; these documentation updates do not change skill guidance, examples, metadata, or package behavior.",
+      "reason": "This update only corrects the status report with previously verified synthetic rollback evidence and PR check state; installed skills and package guidance are unchanged.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at ca5ef926829652bd5bae8718d4172065161d1156"
+        "Changed: MASTER_CHECKLIST.md at 7ac65e3e5737b2cd32a04bedfd416461e867ae1b"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "c58b7c6e71d2f7da33d1cafdecad71ce692f77106dbf3f05f4d86559dd126a8f",
+      "fingerprint": "c0e86e9a02a5fa783574210cc8465a04ae53ddc089ca457ec878a7814b388899",
       "snapshot": {
-        "STABILITY_REPORT.md": "b990ae1092c4ed2dcb2636d8bc992a06ed3051a2e7afd5ec048aba2cc05cd1db"
+        "STABILITY_REPORT.md": "146d25901f9b60c5c36bfdcf7b61db95afc755c1a9bf1053991931d3ecdf18de"
       },
-      "head": "ca5ef926829652bd5bae8718d4172065161d1156",
+      "head": "7ac65e3e5737b2cd32a04bedfd416461e867ae1b",
       "outcome": "no-change",
-      "reason": "The checklist and stability report now record completed PR CI and synthetic s48 recovery evidence; these documentation updates do not change skill guidance, examples, metadata, or package behavior.",
+      "reason": "This update only corrects the status report with previously verified synthetic rollback evidence and PR check state; installed skills and package guidance are unchanged.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at ca5ef926829652bd5bae8718d4172065161d1156"
+        "Changed: STABILITY_REPORT.md at 7ac65e3e5737b2cd32a04bedfd416461e867ae1b"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
