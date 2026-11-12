@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Record successful hosted validation for PR #383 and a read-only Podman record mismatch in Gate E; keep recovery and alert-delivery gates open.
 - Authenticate the checksum-pinned mise bootstrap and record Gate E monitoring, log-rotation, and Windows access-test evidence while keeping real-device recovery and Identity A/B gates open. (#383)
 - Refresh runtime qualification, recovery, and cutover readiness evidence after Phase 7, with the unresolved SQLite and independent-recovery gates recorded.
 - Bind the embedded Bun/SQLite CycloneDX inventory to the exact OCI image and source, and reject release evidence with an unqualified runtime. (#381)
