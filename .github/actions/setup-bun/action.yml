@@ -17,6 +17,8 @@ runs:
     - name: Seed pinned mise from the GitHub release asset API
       id: mise-bootstrap
       shell: bash
+      env:
+        OPERATOROS_MISE_BOOTSTRAP_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
 
@@ -41,6 +43,7 @@ runs:
         curl --fail --location --silent --show-error \
           --retry 3 --retry-all-errors \
           -H 'Accept: application/octet-stream' \
+          -H "Authorization: Bearer ${OPERATOROS_MISE_BOOTSTRAP_TOKEN}" \
           "https://api.github.com/repos/jdx/mise/releases/assets/${asset_id}" \
           --output "$archive"
         printf '%s  %s\n' "$archive_sha256" "$archive" | sha256sum --check --status

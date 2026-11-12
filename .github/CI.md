@@ -28,7 +28,7 @@ All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the 
 
 ## Toolchain and dependency setup
 
-[`actions/setup-bun`](actions/setup-bun/action.yml) uses mise 2026.10.19 to install the tools in [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock). It verifies Bun 1.4.4, Node 24.19.0, hk 2.8.1, and Turbo 2.11.4 before it runs `bun install --frozen-lockfile` from the repository root. The action works in jobs with a different default working directory.
+[`actions/setup-bun`](actions/setup-bun/action.yml) downloads the pinned mise 2026.10.19 release asset with the workflow's read-only `contents` token and verifies both the archive and extracted binary checksums. It then installs the tools in [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.4, Node 24.19.0, hk 2.8.1, and Turbo 2.11.4, and runs `bun install --frozen-lockfile` from the repository root. The action works in jobs with a different default working directory.
 
 External actions use verified full commit SHAs. The workflow pins `actions/checkout` v7.0.1, `jdx/mise-action` v5.1.1, `actions/cache` v6.1.0, and `actions/upload-artifact` v6.0.0. Dependabot checks GitHub Actions references weekly.
 
