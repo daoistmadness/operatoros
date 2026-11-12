@@ -131,6 +131,7 @@ jobs:
           OPERATOROS_TEST_ROOTLESS_PODMAN: "1"
         run: |
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
+          python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
       - name: Embedded Bun SQLite release gate tests
         working-directory: ${{ github.workspace }}
@@ -491,6 +492,13 @@ jobs:
           python3 scripts/check-bun-sqlite-runtime.py "$CANDIDATE_IMAGE" > "$CANDIDATE_ROOT/runtime-gate.json" 2>&1
           gate_status=$?
           set -e
+          python3 scripts/record-embedded-runtime.py \
+            --runtime "$CANDIDATE_ROOT/runtime-gate.json" \
+            --image "$CANDIDATE_ROOT/image.json" \
+            --archive "$CANDIDATE_ROOT/reports/archive.json" \
+            --containerfile deploy/podman/Containerfile.api \
+            --sbom "$CANDIDATE_ROOT/reports/sbom.cdx.json" \
+            --output "$CANDIDATE_ROOT/reports/embedded-runtime.json"
           python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$gate_status" "$GITHUB_STEP_SUMMARY" <<'PY'
           import json
           import pathlib
@@ -526,9 +534,11 @@ jobs:
               summary.write(f"- OCI manifest digest: `{image['manifest_digest']}`\n")
               summary.write(f"- Qualification outcome: `{outcome}`\n")
               summary.write(f"- Bun: `{report.get('bun', 'unavailable')}`\n")
+              summary.write(f"- Bun binary SHA-256: `{report.get('bunBinarySha256', 'unavailable')}`\n")
               summary.write(f"- Embedded SQLite: `{report.get('sqlite', 'unavailable')}`\n")
               summary.write(f"- SQLite source ID: `{report.get('sqliteSourceId', 'unavailable')}`\n")
               summary.write(f"- FTS5 active: `{report.get('fts5', 'unavailable')}`\n")
+              summary.write("- Embedded native runtime inventory is included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
               if outcome == "EXPECTED_VULNERABLE_RUNTIME_REJECTION":
                   summary.write("- Enforcement test: `PASS`; candidate release status: `BLOCKED`.\n")
               else:
@@ -536,6 +546,7 @@ jobs:
               summary.write("\n")
           PY
       - name: Retain non-image candidate reports
+        if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: operatoros-candidate-reports-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -543,9 +554,10 @@ jobs:
             ${{ runner.temp }}/operatoros-candidate/image.json
             ${{ runner.temp }}/operatoros-candidate/runtime-gate.json
             ${{ runner.temp }}/operatoros-candidate/reports/archive.json
+            ${{ runner.temp }}/operatoros-candidate/reports/embedded-runtime.json
             ${{ runner.temp }}/operatoros-candidate/reports/sbom.cdx.json
             ${{ runner.temp }}/operatoros-candidate/reports/scan.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
 
 
@@ -580,22 +592,11 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 scripts/release-bundle.py build "$RELEASE_OUTPUT"
-      - name: Qualify embedded Bun SQLite before signing
+      - name: Verify embedded runtime and mandatory evidence before signing
         env:
-          RELEASE_IMAGE: operatoros-api:release-${{ github.sha }}
-          RELEASE_DIAGNOSTICS: ${{ runner.temp }}/release-diagnostics
+          RELEASE_OUTPUT: ${{ runner.temp }}/operatoros-release.tar
         run: |
-          set -euo pipefail
-          mkdir -p "$RELEASE_DIAGNOSTICS"
-          set +e
-          python3 scripts/check-bun-sqlite-runtime.py "$RELEASE_IMAGE" > "$RELEASE_DIAGNOSTICS/sqlite-runtime-gate.json" 2>&1
-          gate_status=$?
-          set -e
-          cat "$RELEASE_DIAGNOSTICS/sqlite-runtime-gate.json"
-          if [[ "$gate_status" -ne 0 ]]; then
-            echo "Embedded Bun/SQLite qualification failed; release signing and publication are blocked." >> "$GITHUB_STEP_SUMMARY"
-            exit "$gate_status"
-          fi
+          python3 scripts/release-bundle.py verify-evidence "$RELEASE_OUTPUT" "$GITHUB_SHA"
       - name: Attest the complete release bundle
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:

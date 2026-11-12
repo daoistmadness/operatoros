@@ -11,11 +11,15 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 MINIMUM_SQLITE_VERSION = (3, 54, 0)
-PROBE = r'''import { Database } from "bun:sqlite";
+PROBE = r'''import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { Database } from "bun:sqlite";
 const db = new Database(":memory:");
 const sqlite = db.query("SELECT sqlite_version() AS version").get().version;
 const sqliteSourceId = db.query("SELECT sqlite_source_id() AS sourceId").get().sourceId;
 const options = db.query("PRAGMA compile_options").all().map((row) => row.compile_options);
+const hash = createHash("sha256");
+for await (const chunk of createReadStream(process.execPath)) hash.update(chunk);
 let fts5Probe = false;
 let fts5ProbeError = null;
 try {
@@ -26,6 +30,7 @@ try {
 }
 console.log(JSON.stringify({
   bun: Bun.version,
+  bunBinarySha256: hash.digest("hex"),
   sqlite,
   sqliteSourceId,
   fts5CompileOption: options.includes("ENABLE_FTS5"),
@@ -53,6 +58,7 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
     if not isinstance(runtime, dict):
         raise RuntimeGateError("SQLite runtime probe did not return an object")
     bun = runtime.get("bun")
+    binary_sha256 = runtime.get("bunBinarySha256")
     sqlite = runtime.get("sqlite")
     source_id = runtime.get("sqliteSourceId")
     compiled = runtime.get("fts5CompileOption")
@@ -60,6 +66,8 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
     probe_error = runtime.get("fts5ProbeError")
     if not isinstance(bun, str) or not bun.strip():
         raise RuntimeGateError("Bun runtime version is missing")
+    if not isinstance(binary_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", binary_sha256):
+        raise RuntimeGateError("Bun executable SHA-256 is missing or malformed")
     if not isinstance(source_id, str) or not source_id.strip():
         raise RuntimeGateError("SQLite source identity is missing")
     if not isinstance(compiled, bool) or not isinstance(probed, bool):
@@ -80,9 +88,12 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
     fts5 = compiled or probed
     result = {
         "bun": bun,
+        "bunBinarySha256": binary_sha256,
         "sqlite": sqlite,
         "sqliteSourceId": source_id,
         "fts5": fts5,
+        "fts5CompileOption": compiled,
+        "fts5Probe": probed,
         "minimumSqlite": "3.54.0",
         "cve": "CVE-2026-119373",
     }
@@ -121,6 +132,28 @@ def inspect_image(
         "-e",
         PROBE,
     )
+    inspect_command: Sequence[str] = ("podman", "image", "inspect", image)
+
+    def inspected_id() -> str:
+        inspected = runner(inspect_command, capture_output=True, text=True, check=False, timeout=15)
+        if inspected.returncode != 0:
+            raise RuntimeGateError("Local OCI image identity could not be verified")
+        try:
+            rows = json.loads(inspected.stdout)
+        except json.JSONDecodeError as error:
+            raise RuntimeGateError("Local OCI image identity returned invalid JSON") from error
+        if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict):
+            raise RuntimeGateError("Local OCI image identity is missing or ambiguous")
+        value = rows[0].get("Id")
+        if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+            return "sha256:" + value
+        if isinstance(value, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            return value
+        raise RuntimeGateError("Local OCI image identity is malformed")
+
+    before = inspected_id()
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", before):
+        raise RuntimeGateError("Local OCI image identity could not be verified")
     completed = runner(command, capture_output=True, text=True, check=False, timeout=30)
     if completed.returncode != 0:
         raise RuntimeGateError("Isolated Bun/SQLite probe failed")
@@ -128,7 +161,16 @@ def inspect_image(
         report = json.loads(completed.stdout.strip().splitlines()[-1])
     except (IndexError, json.JSONDecodeError) as error:
         raise RuntimeGateError("Isolated Bun/SQLite probe returned invalid JSON") from error
-    return assess_runtime(report)
+    after = inspected_id()
+    if after != before:
+        raise RuntimeGateError("Local OCI image changed during the runtime probe")
+    try:
+        assessed = assess_runtime(report)
+    except RuntimeGateError as error:
+        if error.runtime is not None:
+            error.runtime["imageId"] = before
+        raise
+    return {**assessed, "imageId": before}
 
 
 def main(argv: Sequence[str] | None = None) -> int:
