@@ -2943,17 +2943,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a11d69166cbcfde13d3d66f98a12d1afe38921e41f43b0594cd145353c671c22",
+      "fingerprint": "404214adafed69cda352576bfd7d7159ad3446ba69e9678edebdf3ff125d30fd",
       "snapshot": {
-        "CHANGELOG.md": "adc565373788d823d2e0555769bf57a4be4b6474b1df339394cef07a9ca5b7d3"
+        "CHANGELOG.md": "5fe813ef0ab3af9bc57798d0daf5b54950c01080a88941efefaf988b5fefa151"
       },
-      "head": "bb8c10e981d36b1778343fbc5ebe256bd837e5d8",
-      "outcome": "out-of-scope",
-      "reason": "These project-level status and changelog files do not contain Elysia skill guidance or library documentation. They record merged CI and read-only host evidence. The documentation-system decision names the root status files as program-level exceptions.",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "outcome": "no-change",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "AGENTS.md documentation rules",
-        "docs/decisions/documentation-system.md:22-27",
-        "STABILITY_REPORT.md"
+        "Changed: CHANGELOG.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:COMMANDS.md": {
@@ -10235,41 +10233,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "60563cd6ed9bd7134bf34dce394a242ad472f2152e2655122c34678c7fe6b7a3",
+      "fingerprint": "6236ce4f3df06f066c06a8fabe97c546fbb560633872286bcc655cf83aaea4f6",
       "snapshot": {
-        "DECISIONS.md": "44f16a3af6f5a8808b23c197f49fc987ae5a45045f754a14343222d09cf62c12"
+        "DECISIONS.md": "1113431ec1c2f0c42d458c7305d34d5c6ae64ce85169c7f55df8a8778cb32cb4"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
       "outcome": "no-change",
-      "reason": "Linked the CI rate-limit decision and bootstrap endpoint rationale to official GitHub documentation; no skill guidance changed.",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "Changed: DECISIONS.md at 211af06f913725a9c7570941248b69b0738e57a0"
+        "Changed: DECISIONS.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "260d41242c23b7a30200c5f7d3cd9d110d9d0ad6a39ce77042df981ca89760bf",
+      "fingerprint": "44d489a75f043d4ca10c82721b8eedb484062eb502a6509172d882aa4ec6d494",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "f77e4a6f79f9e68cc41e66a149070508fdf439c69720ff668241f04d8f0cd466"
+        "MASTER_CHECKLIST.md": "fa8caa5121c9ea71e93b6a087a70ce9bbfed88557fd40c09d5b5cb3624a5575a"
       },
-      "head": "176ad525f6419f5cd648032911e0266595b0877e",
-      "outcome": "out-of-scope",
-      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "outcome": "no-change",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "intent list",
-        "docs/decisions/documentation-system.md"
+        "Changed: MASTER_CHECKLIST.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "c4a93736a66a1a164d71519407f8687021ca7f6f444a89e47d946729652da974",
+      "fingerprint": "682657b76a1204312e87181d62fdfc2b862af7a2a329cf691112e93d8fbdb0f9",
       "snapshot": {
-        "STABILITY_REPORT.md": "e7abfd43d6641b871c17ad48d97242fbf6b733a0cdc53de6150a20933bebeb3c"
+        "STABILITY_REPORT.md": "064f3f78db0e0cd25556a0676d29f01d39a8e7422752079fd97b68df913c3aef"
       },
-      "head": "176ad525f6419f5cd648032911e0266595b0877e",
-      "outcome": "out-of-scope",
-      "reason": "These root-level readiness reports record host and release evidence. They do not contain Elysia skill guidance or library documentation, and no installed Intent skill matches this documentation change.",
+      "head": "b2a8b12c62c48f5dcfa366343a190861ef6b2f65",
+      "outcome": "no-change",
+      "reason": "Root runtime-gate evidence only; no skill guidance or library behavior changed.",
       "evidence": [
-        "intent list",
-        "docs/decisions/documentation-system.md"
+        "Changed: STABILITY_REPORT.md at b2a8b12c62c48f5dcfa366343a190861ef6b2f65"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
