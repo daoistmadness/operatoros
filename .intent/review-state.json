@@ -1716,15 +1716,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "a4e2e2d4ba4d6937b2dc7a01a3ce61d93d4b9dc8dcb4cf89bda6d2df98e0b1ce",
+      "fingerprint": "74dd7545fd406e1b82271feefe8f7bcc27e27f104ea302d7bb8448ff5b9aecb2",
       "snapshot": {
-        "docs/README.md": "b2cdf6c61e8281152a9746ac08a868ac75219e762ef2c0452953e20a9e4bb5e4"
+        "docs/README.md": "75ac43d856c9ea1606441df560af2d3b8c9225d4e83bf0d412be6e6c6b8bbbdb"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "ee576b0d1c80038435277bf63a5f92dd0718eae5",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "This docs index update clarifies hosted rehearsal status only; no library source or skill guidance changed.",
       "evidence": [
-        "Changed: docs/README.md at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: docs/README.md at ee576b0d1c80038435277bf63a5f92dd0718eae5"
       ]
     },
     "source:docs/development/tailscale.md": {
