@@ -80,6 +80,16 @@ production NO-GO boundary in place.
   remains on SQLite 3.53.4 and is not included in the image. The artifact is
   not imported to OPRSERVER; host rehearsal, recovery, and access-control gates
   remain open. No security exception or deployment authorization is active.
+- PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`. Post-merge
+  CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal
+  [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+  used signed artifact `14028942446` on disposable Ubuntu 24.04 and passed its
+  synthetic deployment, SQLite preservation, rollback, and interrupted-recovery
+  checks. The retained evidence artifact is `14034070389`;
+  `rehearsal-evidence.json` SHA-256 is
+  `b7c6953b5d7306d598ba4a2c71ad0a2f874dad92c13effb418a1a9fdea8f4301`. This
+  does not qualify OPRSERVER or close Windows recovery, D2, or Gate E. No
+  production data or host service was touched.
 - Enforce squash-only merges in both the repository settings and the active
   `main` ruleset. Strict status checks, no-bypass enforcement, and branch
   deletion/force-push protection remain enabled.
