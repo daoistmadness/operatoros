@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Run the API OCI image on a patched Node.js runtime and qualify both embedded SQLite copies independently.
+- Use the patched Node.js runtime for the API OCI candidate, inventory both embedded SQLite copies, and verify graceful shutdown and encrypted restore.
 - Verify interactive shell startup, record a same-host isolated Restic restore, and document Bun's SQLite runtime limitation. (#385)
 - Record successful hosted validation for PR #383 and a read-only Podman record mismatch in Gate E; keep recovery and alert-delivery gates open. (#384)
 - Authenticate the checksum-pinned mise bootstrap and record Gate E monitoring, log-rotation, and Windows access-test evidence while keeping real-device recovery and Identity A/B gates open. (#383)

@@ -84,6 +84,15 @@ production NO-GO boundary in place.
   This candidate is local evidence only; it does not qualify a release artifact
   or production host. Bun remains the local build/development tool. No security
   exception is active.
+- The first local Node-image lifecycle run exposed a shutdown bug: closing the
+  raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
+  scheduler and employee-retention timer active while SQLite closed. The timer
+  then queried a closed database, and SIGTERM did not exit cleanly. The server
+  now calls `app.stop(true)` for both adapters so lifecycle hooks run before
+  the database and operation lock close. The corrected exact-source image
+  passed three clean SIGTERM stops, API readiness, encrypted backup and active
+  restore, schema/integrity validation, and pre/post-backup sentinel checks on
+  synthetic data. Evidence is recorded in the [stability report](STABILITY_REPORT.md).
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.
