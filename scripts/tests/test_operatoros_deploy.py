@@ -334,6 +334,30 @@ class PodmanIsolationTests(unittest.TestCase):
         deployment_environment = deploy.private_environment(self.context.storage_conf)
         self.assertEqual(deployment_environment["CONTAINERS_STORAGE_CONF"], str(self.context.storage_conf))
 
+    def test_schema_validation_uses_node_bundled_database_cli(self):
+        cfg = {
+            "data_dir": self.root / "synthetic-data",
+            "storage_conf": self.context.storage_conf,
+            "graphroot": self.context.graphroot,
+            "runroot": self.context.runroot,
+        }
+        result = subprocess.CompletedProcess(["podman", "run"], 0, "VALID 20261027_s54\n", "")
+        captured = {}
+
+        def capture_command(arguments, *_args, **_kwargs):
+            captured["arguments"] = arguments
+            return result
+
+        with patch.object(deploy, "run_command", side_effect=capture_command), \
+             patch.object(deploy, "sha_db_snapshot", return_value={"db": "unchanged"}):
+            deploy.schema_validate("synthetic-image", cfg)
+
+        arguments = captured["arguments"]
+        self.assertEqual(arguments[arguments.index("--entrypoint") + 1], "node")
+        self.assertEqual(arguments[-4:], [
+            "apps/api/dist/db-cli.mjs", "validate", "--data-dir", "/var/lib/operatoros/data",
+        ])
+
     def test_schema_validation_exposes_only_allowlisted_database_rejection(self):
         data_dir = self.root / "synthetic-data"
         data_dir.mkdir(mode=0o700)

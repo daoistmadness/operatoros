@@ -734,8 +734,9 @@ copying the verified bundle to the OPRSERVER staging directory. The transfer
 must preserve the bundle checksum.
 
 Bootstrap only the new empty `data/sqlite` directory. The API image includes
-`packages/db/src/db-cli.ts`; use its `bootstrap` action in a one-time container
-with `--network=none`, `--read-only`, `--read-only-tmpfs`,
+the compiled database CLI at `/app/apps/api/dist/db-cli.mjs`; invoke it with
+Node's `--entrypoint node` in a one-time container using `--network=none`,
+`--read-only`, `--read-only-tmpfs`,
 `--cap-drop=all`, `--security-opt=no-new-privileges`, `--user 10000:10000`,
 `--userns=keep-id:uid=10000,gid=10000`, the exact API image config ID, and only
 the D1 data bind mount. Do not call `migrate-existing`. Validate the fresh
@@ -758,7 +759,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts bootstrap \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs bootstrap \
   --data-dir /var/lib/operatoros/data
 
 podman run --rm --network=none --read-only --read-only-tmpfs \
@@ -766,7 +767,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts validate \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs validate \
   --data-dir /var/lib/operatoros/data
 ~~~
 

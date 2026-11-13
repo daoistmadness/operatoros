@@ -3,6 +3,7 @@ import io
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -63,6 +64,7 @@ class NodeImageLifecycleTests(unittest.TestCase):
         with (
             patch.object(sys, "argv", argv),
             patch.object(lifecycle, "command", side_effect=fake_command),
+            patch.object(lifecycle, "build_node_excel_smoke"),
             patch.object(tempfile, "tempdir", str(tmp_path)),
             contextlib.redirect_stdout(io.StringIO()),
         ):
@@ -83,9 +85,38 @@ class NodeImageLifecycleTests(unittest.TestCase):
             exit_code, report = self.run_until_source_check(Path(temporary), "false")
 
         self.assertEqual(exit_code, 1)
-        self.assertEqual(report["failed_stage"], "bootstrap_synthetic_database")
+        self.assertEqual(report["failed_stage"], "node_excel_runtime_smoke")
         self.assertEqual(report["failure_code"], "stop_after_source_check")
         self.assertEqual(report["stages"]["verify_image_identity"]["status"], "PASS")
+
+    def test_node_excel_smoke_build_uses_clean_environment_and_node_target(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "apps/api/tests/node-runtime-smoke.ts"
+            source.parent.mkdir(parents=True)
+            source.write_text("synthetic source", encoding="utf-8")
+            output = root / "scratch/node-excel-runtime-smoke.mjs"
+            output.parent.mkdir()
+            home = root / "scratch/home"
+            home.mkdir(parents=True)
+            result = subprocess.CompletedProcess(["bun", "build"], 0, "", "")
+
+            def build(arguments, **kwargs):
+                Path(arguments[-1].removeprefix("--outfile=")).write_text("synthetic bundle", encoding="utf-8")
+                return result
+
+            with patch.dict(lifecycle.os.environ, {"PATH": "/tool/bin", "GITHUB_TOKEN": "secret-marker"}, clear=True), \
+                 patch.object(lifecycle.shutil, "which", return_value="/tool/bin/bun"), \
+                 patch.object(lifecycle.subprocess, "run", side_effect=build) as run:
+                lifecycle.build_node_excel_smoke(root, output, home)
+
+            arguments = run.call_args.args[0]
+            environment = run.call_args.kwargs["env"]
+            self.assertIn("--target=node", arguments)
+            self.assertIn("--packages=bundle", arguments)
+            self.assertEqual(environment, {"PATH": "/tool/bin", "HOME": str(home), "CI": "true"})
+            self.assertEqual(output.read_text(encoding="utf-8"), "synthetic bundle")
+            self.assertEqual(output.stat().st_mode & 0o777, 0o600)
 
 
 if __name__ == "__main__":
