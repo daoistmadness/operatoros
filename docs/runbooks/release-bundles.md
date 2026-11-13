@@ -163,20 +163,20 @@ private empty registry-auth file prevents the public digest-pinned Caddy pull
 from reading credentials from the runner user's normal Podman auth file.
 
 The rehearsal pins the verified release from source
-`b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, workflow run `42181508155`
-(attempt 1), artifact `13485579515`. The artifact name is
-`operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1`.
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`, workflow run `43408580871`
+(attempt 1), artifact `14028942446`. The artifact name is
+`operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1`.
 Its envelope SHA-256 is
-`0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4`, and its
+`146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09`, and its
 inner bundle SHA-256 is
-`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`. The
+`d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`. The
 signed manifest records OCI digest
-`sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`,
+`sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`,
 image config ID
-`sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6`,
+`sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede`,
 and SPA SHA-256
-`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc`. The
-artifact expires on 2027-02-04 07:32:13 UTC. The rehearsal verifies each
+`6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79`. The
+artifact expires on 2027-02-11 10:22:21 UTC. The rehearsal verifies each
 identity before initializing its private Podman store or importing the image.
 
 Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS

@@ -69,6 +69,17 @@ production NO-GO boundary in place.
 - PR #380 was squash-merged at `e410a562bce588e70573cc8eb0d0d83b6e0e9106`
   after all seven required checks passed. Keep the embedded-runtime release
   gate in force; the merge does not qualify the current Bun/SQLite runtime.
+- PR #387 was squash-merged at `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`.
+  Main release run [43408580871](https://github.com/daoistmadness/operatoros/actions/runs/43408580871)
+  produced an attested, immutable bundle; its exact-source verifier, Node/SQLite
+  gate, Trivy scan, SBOM, and isolated consumer all passed. The signed OCI uses
+  Node 24.22.3 and SQLite 3.54.1 in both providers. Bundle SHA-256 is
+  `d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`; OCI
+  manifest is `sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`.
+  This closes G3 for the release artifact. The local Bun development runtime
+  remains on SQLite 3.53.4 and is not included in the image. The artifact is
+  not imported to OPRSERVER; host rehearsal, recovery, and access-control gates
+  remain open. No security exception or deployment authorization is active.
 - Enforce squash-only merges in both the repository settings and the active
   `main` ruleset. Strict status checks, no-bypass enforcement, and branch
   deletion/force-push protection remain enabled.
@@ -77,8 +88,8 @@ production NO-GO boundary in place.
   hourly limit by originating IP ([GitHub rate-limit policy](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api));
   keep the release asset ID and archive and binary checksums pinned, and do not
   grant the bootstrap write permissions.
-- Keep the released source G3 gate closed until the exact reviewed candidate
-  passes hosted CI, SBOM/scan/provenance checks, and signing. The local OCI
+- Historical G3 candidate runs 43381159685–43396108609 record the source and
+  artifact iterations before release. The local OCI
   candidate now uses Node 24.22.3 and `better-sqlite3` 13.1.1 with SQLite 3.54.1
   in both `node:sqlite` and the native addon; the final image contains no Bun
   runtime. The image base digest is pinned, the Node binary and both SQLite
