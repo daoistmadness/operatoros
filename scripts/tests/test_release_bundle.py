@@ -49,7 +49,7 @@ def fixture():
         key = m.digest(data)
         blobs['blobs/sha256/' + key] = data
         return {'digest': 'sha256:' + key, 'size': len(data)}
-    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n', 'lib/apk/db/installed': b'P:musl\nV:1.2.6-r3\nA:x86_64\nL:MIT\nT:musl C library\n\n'})
+    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n'})
     layer_hash = m.digest(layer_data)
     blobs['blobs/sha256/' + layer_hash] = layer_data
     layer = {'mediaType': 'application/vnd.oci.image.layer.v1.tar', 'digest': 'sha256:' + layer_hash, 'size': len(layer_data)}

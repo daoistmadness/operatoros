@@ -9955,15 +9955,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "bd2fe9a2b674ebc797a31422149064694e69e3697ce010b13b14f3d4689f9da2",
+      "fingerprint": "269ab70a24bce1ffbec2c161c03e0ed292dbc96801c479f9bb7b9d8d94631422",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "4869bd3d635a367e1a688e45156b42d2c55038ca065191c994e708383f94c7fb"
+        "scripts/tests/test_release_bundle.py": "74bddd194b40edcc3899d07a86edde62e0ed6662c76d9e8c4dca7ad0c160a840"
       },
-      "head": "1297e196d9773780f2bb0f09dfdd8dddf6a05c1c",
+      "head": "49cf7052170d06e71d4ddc7ce57b35f46ca1601c",
       "outcome": "no-change",
-      "reason": "The change updates only the synthetic musl package version in the OCI scanner regression fixture so the new severity gate can scan a nonvulnerable test image; Elysia guidance and planning records need no change.",
+      "reason": "The synthetic OCI scanner fixture now contains only os-release metadata and no package database, isolating the archive-format regression from vulnerability fixtures; independent unit tests still cover High/Critical rejection, and Elysia guidance needs no change.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 1297e196d9773780f2bb0f09dfdd8dddf6a05c1c"
+        "Changed: scripts/tests/test_release_bundle.py at 49cf7052170d06e71d4ddc7ce57b35f46ca1601c"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
