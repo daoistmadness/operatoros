@@ -111,6 +111,15 @@ production NO-GO boundary in place.
   Node targets. The embedded-runtime report marks CVE-2026-119373 resolved.
   All eight lifecycle stages, E2E, and full release validation passed. The
   run took 678 seconds. The candidate remained ephemeral and unsigned.
+  The next exact-source run [43392577115](https://github.com/daoistmadness/operatoros/actions/runs/43392577115)
+  passed on `224741a0f7af2046a572724e2c8d808bca0e6a48`. Node 24.22.3 and both
+  SQLite providers reported 3.54.1 with FTS5; Trivy found zero vulnerabilities
+  in the Alpine and Node targets; CycloneDX and embedded-runtime evidence mark
+  CVE-2026-119373 resolved. All eight lifecycle stages, E2E, and full release
+  validation passed in 662 seconds. Manifest `sha256:81676cfcfd87dc9383391f6755f4a706c261567dc1841d492d7a81cd699122ac`,
+  config `sha256:9d301cc684212d1a9eec0fb1e652f405bc4f16291f5101fe0014ec11eba2d40a`,
+  and archive SHA-256 `44eef8d5614e10da23caa0805811549c240902a2af4adc56254500b740a9325b`.
+  The manual bundle was skipped; the candidate remains ephemeral and unsigned.
 - The first local Node-image lifecycle run exposed a shutdown bug: closing the
   raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
   scheduler and employee-retention timer active while SQLite closed. The timer
