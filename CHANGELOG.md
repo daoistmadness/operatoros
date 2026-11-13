@@ -9,6 +9,7 @@ Notable user-facing changes are recorded here.
 - Record the exact signed-artifact hosted rehearsal result and keep OPRSERVER acceptance open. (#389)
 - Pin the isolated deployment rehearsal to the signed Node and SQLite release artifact and refresh the deployment instructions. (#388)
 - Qualify the API image on patched Node and SQLite, remove unused npm, block unresolved High or Critical findings, and verify exact-image readiness, clean restart, encrypted backup, and isolated restore. (#387)
+- Record successful post-merge CI and CodeQL validation for PR #385. (#386)
 - Verify interactive shell startup, record a same-host isolated Restic restore, and document Bun's SQLite runtime limitation. (#385)
 - Record successful hosted validation for PR #383 and a read-only Podman record mismatch in Gate E; keep recovery and alert-delivery gates open. (#384)
 - Authenticate the checksum-pinned mise bootstrap and record Gate E monitoring, log-rotation, and Windows access-test evidence while keeping real-device recovery and Identity A/B gates open. (#383)

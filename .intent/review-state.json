@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9b3bf09bee52ebe995b8753def98f8df39fce1f5e4fd02cb5a572085daf8d68c",
+      "fingerprint": "8efbbed8a9b164c6d3096e794d23ab3292ff8625edd2179ed68f9af4526d40d3",
       "snapshot": {
-        "CHANGELOG.md": "5be6fb36250af7a455315f839f76902659a1da1ea052f7c0f45af1b65e5790ca"
+        "CHANGELOG.md": "bd893d0eb0c4742b670853c73cac3b26baad05c6aed38bb31b4661475a0ce91e"
       },
-      "head": "251d44223dd93355b207286086aa06543f82a7da",
+      "head": "a31df96957beec46a1b3df4954d831a924b14146",
       "outcome": "no-change",
-      "reason": "Assigned PR #391 to the status-only changelog entry; no skill sources or guidance changed.",
+      "reason": "Program-level stability evidence and changelog update only; no package source, library documentation, or skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 251d44223dd93355b207286086aa06543f82a7da"
+        "Changed: CHANGELOG.md at a31df96957beec46a1b3df4954d831a924b14146"
       ]
     },
     "source:COMMANDS.md": {
@@ -10243,27 +10243,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "ff6312591913634aa9689b7c0af015344efd4e5ec8ac5a528130fb27de339e23",
+      "fingerprint": "112e8fe3aab05cb65c0653ba61ff1cb0db8ad77e313e3007235cabf565d87f85",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "800a312b81d18c188892b808f418cfcdc2b07e40f0a17226f760e15dc94327a2"
+        "MASTER_CHECKLIST.md": "18b646be2751c83f7f3266461248c9f58ae9cb5efc13153bef78d7a81f1b2998"
       },
-      "head": "b3e35e36d5deb2a20fe77b207990c63349572f42",
+      "head": "a31df96957beec46a1b3df4954d831a924b14146",
       "outcome": "no-change",
-      "reason": "Gate G checklist and changelog status update only; no skill sources or guidance changed.",
+      "reason": "Program-level stability evidence and changelog update only; no package source, library documentation, or skill guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at b3e35e36d5deb2a20fe77b207990c63349572f42"
+        "Changed: MASTER_CHECKLIST.md at a31df96957beec46a1b3df4954d831a924b14146"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "d8b61d24c07d336acd8117d61d512c2288e2b36ba525f1811e509a585c95f430",
+      "fingerprint": "553c0433747159692e7943e6ccd75a27387259c229b2bdcd4d2783c125136346",
       "snapshot": {
-        "STABILITY_REPORT.md": "e6868af0c784e38bfd83a1e3220bc1c22ab8a1c34a39e1ec75acc69a7ea147b1"
+        "STABILITY_REPORT.md": "06bc7aeb46b578ed2ff8d052af12788d155cc0d353f46028b27c8904df85e27a"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "a31df96957beec46a1b3df4954d831a924b14146",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "Program-level stability evidence and changelog update only; no package source, library documentation, or skill guidance changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "Changed: STABILITY_REPORT.md at a31df96957beec46a1b3df4954d831a924b14146"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
