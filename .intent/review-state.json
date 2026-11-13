@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "64a7efd9fadf97f4cc89a3676246354f289a98f74defe406a910f1473c97ece4",
+      "fingerprint": "cc6d859f06fe5eaf33458bceca9538885ad5a4533908141f53cc33a421cb8996",
       "snapshot": {
-        "CHANGELOG.md": "9bbc3128d992a6ebcae4ac1b3ecede9167abb66e07552438dbea48ef3b8cde52"
+        "CHANGELOG.md": "e130f185bf7f9226207dcf58021b26f21958b8be4ce4e05c34d14f0c86ecef7b"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "46f2266500404437dc7c2b8d62908f1fd898cad4",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "The post-creation edit assigns PR #389 in the changelog only; no library source or skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "Changed: CHANGELOG.md at 46f2266500404437dc7c2b8d62908f1fd898cad4"
       ]
     },
     "source:COMMANDS.md": {
