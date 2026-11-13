@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6ff1387e21f028db8723cc24c48d64ae416c76861421a8cfacb123ae72619f1b",
+      "fingerprint": "9b3bf09bee52ebe995b8753def98f8df39fce1f5e4fd02cb5a572085daf8d68c",
       "snapshot": {
-        "CHANGELOG.md": "958b1942d4b9d1c7f40eafa2abfbe1f2ecd6aa0aa6d8bf5c8e7b03355e223ecc"
+        "CHANGELOG.md": "5be6fb36250af7a455315f839f76902659a1da1ea052f7c0f45af1b65e5790ca"
       },
-      "head": "b3e35e36d5deb2a20fe77b207990c63349572f42",
+      "head": "251d44223dd93355b207286086aa06543f82a7da",
       "outcome": "no-change",
-      "reason": "Gate G checklist and changelog status update only; no skill sources or guidance changed.",
+      "reason": "Assigned PR #391 to the status-only changelog entry; no skill sources or guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at b3e35e36d5deb2a20fe77b207990c63349572f42"
+        "Changed: CHANGELOG.md at 251d44223dd93355b207286086aa06543f82a7da"
       ]
     },
     "source:COMMANDS.md": {
