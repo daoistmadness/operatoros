@@ -49,6 +49,11 @@ The recurring lessons are:
   #367–#376 added isolated rehearsal checks after recorded hosted failures.
   Keep a small regression test for each reproduced failure and run the exact
   image or host boundary that unit tests cannot cover.
+- **Run lifecycle checks on the scanned image.** PR #387 now binds isolated
+  API startup, clean stop/restart, encrypted backup, and disposable restore to
+  the candidate image config ID and source revision covered by runtime and scan
+  reports. A locally rebuilt image helps debug the harness; only the hosted
+  same-image result qualifies that candidate.
 
 The resulting order is to qualify the final image runtime, run exact-source CI,
 bind the SBOM and provenance to one digest, exercise lifecycle and recovery
@@ -81,9 +86,16 @@ production NO-GO boundary in place.
   encrypted-backup, and restore checks passed. Node 24.22.3
   is the official security release ([release](https://nodejs.org/en/blog/release/v24.22.3),
   [security advisory](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)).
-  This candidate is local evidence only; it does not qualify a release artifact
-  or production host. Bun remains the local build/development tool. No security
-  exception is active.
+  Exact-source candidate run [43373811564](https://github.com/daoistmadness/operatoros/actions/runs/43373811564)
+  passed runtime and scan gates with zero Trivy findings on source `789c2a33`;
+  the image was ephemeral and unsigned. PR #387 adds a same-image API lifecycle
+  and encrypted restore gate, which still needs hosted validation on the updated
+  PR source. The official [Bun release list](https://github.com/oven-sh/bun/releases)
+  still showed v1.4.4 on 2026-11-13, and the active host probe reports SQLite
+  3.53.4. No supported patched Bun runtime was found; SQLite 3.54.1 is listed
+  in the [official release history](https://www.sqlite.org/chronology.html).
+  Bun remains the local build/development tool. This candidate does not qualify
+  a release artifact or production host. No security exception is active.
 - The first local Node-image lifecycle run exposed a shutdown bug: closing the
   raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
   scheduler and employee-retention timer active while SQLite closed. The timer
@@ -100,7 +112,9 @@ production NO-GO boundary in place.
   runtime. Remove npm and its `npm`/`npx` shims from the final image, and make
   the shared candidate and release verifier reject any unresolved High or Critical
   Trivy finding. Keep all scan findings in the retained SBOM/report; do not
-  suppress them. The exact-source rescan remains pending.
+  suppress them. The exact-source scan on `789c2a33` passed with zero Trivy
+  findings after npm was removed. The updated candidate lifecycle step still
+  needs to pass on the current PR head before it can support release review.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

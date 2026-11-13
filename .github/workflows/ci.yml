@@ -535,6 +535,38 @@ jobs:
               summary.write("- Runtime gate passed. Candidate remains unsigned, unattested, and unpublished.\n")
               summary.write("\n")
           PY
+      - name: Exercise exact candidate lifecycle and encrypted restore
+        env:
+          CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-node-image-lifecycle.py \
+            --image "$CANDIDATE_IMAGE" \
+            --image-metadata "$CANDIDATE_ROOT/image.json" \
+            --archive-metadata "$CANDIDATE_ROOT/reports/archive.json" \
+            --source "$GITHUB_SHA" \
+            --output "$CANDIDATE_ROOT/lifecycle.json"
+          python3 - "$CANDIDATE_ROOT/lifecycle.json" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          if report.get("status") != "PASS":
+              raise SystemExit("exact candidate lifecycle report did not pass")
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Exact candidate API lifecycle\n\n")
+              summary.write(f"- Source commit: `{report['source_commit']}`\n")
+              summary.write(f"- OCI manifest digest: `{report['oci_manifest_digest']}`\n")
+              summary.write(f"- Image config digest: `{report['image_config_digest']}`\n")
+              summary.write(f"- OCI archive SHA-256: `{report['oci_archive_sha256']}`\n")
+              for name, evidence in report["stages"].items():
+                  summary.write(f"- `{name}`: `{evidence['status']}`\n")
+              summary.write(f"- Encrypted backup SHA-256: `{report['stages']['restore_encrypted_backup']['backup_sha256']}`\n")
+              summary.write(f"- Restored backup metadata SHA-256: `{report['stages']['restore_encrypted_backup']['metadata_sha256']}`\n")
+              summary.write(f"- Duration: `{report['duration_seconds']}` seconds\n\n")
+          PY
       - name: Retain non-image candidate reports
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -547,6 +579,7 @@ jobs:
             ${{ runner.temp }}/operatoros-candidate/reports/embedded-runtime.json
             ${{ runner.temp }}/operatoros-candidate/reports/sbom.cdx.json
             ${{ runner.temp }}/operatoros-candidate/reports/scan.json
+            ${{ runner.temp }}/operatoros-candidate/lifecycle.json
           if-no-files-found: warn
           retention-days: 7
 
