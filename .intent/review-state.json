@@ -4815,15 +4815,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "6afd57e58db50731c499a5bdc69a677824f3b0dd9b6ee3941efcb4484860ce49",
+      "fingerprint": "12d507d4effe02fc0a5e87dba6e2e6219d6490c20110283657f0cb16ed65d825",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "01bc40e1e75a7ab2144dd51a1027c0da65c81eb1572c3b097b8b3f203dcd83e1"
+        "docs/runbooks/ubuntu-server-deployment.md": "4bfaf9b16a30cd8bca4fedf2419a2bbe0e7dd5b0df71282a57e3c4f4247dec21"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at c11f199ecf99272d372ce9e66e885898a592109a"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -10063,27 +10063,27 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "a274408b42095c819d14557bcccbebe04b5cf28d8113f387125c8996829f09c7",
+      "fingerprint": "84e42417673a5628715324bb7289ebe3ad65f3e809d6137d039e3bbb25387fbe",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "1d6d3a4d1b8e086ab94b0623298eb131911d3f5b08496ad4b1b0a9413c375b95"
+        "scripts/operatoros_deploy.py": "cf9f8de7ede2097a680b86ec2481092662839108d14fc8f388b6cdde58b9b07d"
       },
-      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
+      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
       "outcome": "no-change",
-      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
+      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at 396c34e8ca6cd88a76cc54134605ee9509db541e"
+        "Changed: scripts/operatoros_deploy.py at c11f199ecf99272d372ce9e66e885898a592109a"
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "7deeb8174911c9eb109bba22eb9a3e8372de4edbbb87c0ff15c0f498e40df416",
+      "fingerprint": "db1f5b712c99f3dda3b96fd9bb67cd4217ea0a49c122ae9ad921d3f3af58fe72",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "0cab573f4f357809b4213933d5cbd8e6e87a9948d56405746f60ab13b09352b9"
+        "scripts/tests/test_operatoros_deploy.py": "c2e46c3195508bfe5b6e79b3f9d1a3f5988fae2c9ab955338842acb31f795841"
       },
-      "head": "396c34e8ca6cd88a76cc54134605ee9509db541e",
+      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
       "outcome": "no-change",
-      "reason": "D1 Caddy runtime validation and admin-listener documentation do not change Elysia guidance",
+      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at 396c34e8ca6cd88a76cc54134605ee9509db541e"
+        "Changed: scripts/tests/test_operatoros_deploy.py at c11f199ecf99272d372ce9e66e885898a592109a"
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10663,27 +10663,27 @@
       ]
     },
     "source:scripts/verify-node-image-lifecycle.py": {
-      "fingerprint": "c793330a540f588caec2397a5b9f913a3313bd3c13576c4cc9436d7e5b8ca13a",
+      "fingerprint": "acca95e7de66d8b9d987ecf82977f43a1e3e5bd32d765e260bcf9e4fda997436",
       "snapshot": {
-        "scripts/verify-node-image-lifecycle.py": "ba5c3c40d748ea807c947c6d14812ad4c9b3837b404e24e1aec4c6f8e6a98d87"
+        "scripts/verify-node-image-lifecycle.py": "61eee280b383d4cb7b07790be66596f3879cb34e8db13a86622cd426b6122277"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
       "outcome": "no-change",
-      "reason": "Reviewed the file change; it requires no Intent skill guidance update.",
+      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
       "evidence": [
-        "PR #387 commit 0e454b8; isolated Markdown and source syntax checks passed"
+        "Changed: scripts/verify-node-image-lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
       ]
     },
     "source:scripts/tests/test_node_image_lifecycle.py": {
-      "fingerprint": "4965c5fba0f92bb51729833e87ca1245d373e41d041fdab7861eccd57518e478",
+      "fingerprint": "8fafc95720527c4e6f2ca2a550d800525aaf067dfd123f52015e808d72249c10",
       "snapshot": {
-        "scripts/tests/test_node_image_lifecycle.py": "f0c0726993b08ef451391444e11bc83206076e093bf5b3743d30c7d9bc0f46e8"
+        "scripts/tests/test_node_image_lifecycle.py": "0d34ccada9e8b16bc19a3f2eac845bd52692c01c706243d9828fb9d49918a9d1"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
       "evidence": [
-        "Changed: scripts/tests/test_node_image_lifecycle.py at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "Changed: scripts/tests/test_node_image_lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
       ]
     }
   }
