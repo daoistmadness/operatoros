@@ -9955,15 +9955,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "2d814dd35e5a54d72397b0973ace1da011b451d11c2b5974714f9b34baf57285",
+      "fingerprint": "bd2fe9a2b674ebc797a31422149064694e69e3697ce010b13b14f3d4689f9da2",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "25890057c4d6d11ef27d7db10d8cf06be1f31f482613d9c542acab98bf121c23"
+        "scripts/tests/test_release_bundle.py": "4869bd3d635a367e1a688e45156b42d2c55038ca065191c994e708383f94c7fb"
       },
-      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
-      "outcome": "out-of-scope",
-      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
+      "head": "1297e196d9773780f2bb0f09dfdd8dddf6a05c1c",
+      "outcome": "no-change",
+      "reason": "The change updates only the synthetic musl package version in the OCI scanner regression fixture so the new severity gate can scan a nonvulnerable test image; Elysia guidance and planning records need no change.",
       "evidence": [
-        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
+        "Changed: scripts/tests/test_release_bundle.py at 1297e196d9773780f2bb0f09dfdd8dddf6a05c1c"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10660,18 +10660,6 @@
       "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
       "evidence": [
         "Changed: scripts/tests/test_node_sqlite_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
-      ]
-    },
-    "source:.audit/operatoros-stability-loop.tsv": {
-      "fingerprint": "c86adfbf55e8a36cf0bb6e8dd8456576bf7fc15f77b53d4b162b69acb34d3028",
-      "snapshot": {
-        ".audit/operatoros-stability-loop.tsv": "d9b0b5ed0d3237b4fe7c783461771a83a82ced52f3c29a024019be89fef51c0f"
-      },
-      "head": "aa9131f8cf3bd89882e3ff7b166eb31f9fcb7051",
-      "outcome": "out-of-scope",
-      "reason": "The local decision trail is not an Intent skill source and does not change packaged guidance.",
-      "evidence": [
-        "Local audit TSV; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
       ]
     }
   }
