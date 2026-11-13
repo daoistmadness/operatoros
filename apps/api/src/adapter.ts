@@ -13,7 +13,7 @@ export class ElysiaCandidateAdapter {
         const res = await fetch(`${base}/health`);
         if (res.ok) return;
       } catch {}
-      await Bun.sleep(25);
+      await new Promise((resolve) => setTimeout(resolve, 25));
     }
     await this.stop();
     throw new Error("Elysia candidate failed readiness check");

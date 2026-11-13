@@ -13,6 +13,7 @@ export interface BackendConfig {
   environment: "production" | "development" | "test";
   databasePath?: string;
   auth?: Partial<import("./auth/service").AuthConfig>;
+  passwordVerifier?: (password: string, passwordHash: string) => Promise<boolean>;
   databaseHandle?: import("@operatoros/db").DatabaseHandle;
   destructiveOperationsEnabled?: boolean;
   backupDir?: string;

@@ -18,13 +18,13 @@ function seedUsers(path: string, includeUsers = true): void {
   if (includeUsers) createAccountFixture(path, "golden"); else createFreshDatabase(path);
 }
 
-function setup(label: string, includeUsers = true, authOverrides: Record<string, unknown> = {}) {
+function setup(label: string, includeUsers = true, authOverrides: Record<string, unknown> = {}, passwordVerifier?: (password: string, passwordHash: string) => Promise<boolean>) {
   const path = pathFor(label);
   const auditDir = join(tmpdir(), `operatoros-auth-audit-${process.pid}-${Date.now()}`);
   mkdirSync(auditDir, { recursive: true });
   seedUsers(path, includeUsers);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir, ...authOverrides } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir, ...authOverrides }, passwordVerifier });
   return { path, auditDir, database, app };
 }
 
@@ -155,21 +155,18 @@ describe("authentication parity", () => {
   }, 30000);
 
   it("does not let a valid login clear a lock established while its password is verifying", async () => {
-    const value = setup("concurrent-lock-race");
-    const originalVerify = Bun.password.verify;
     let releaseVerification!: () => void;
     let markVerificationStarted!: () => void;
     const verificationGate = new Promise<void>((resolve) => { releaseVerification = resolve; });
     const verificationStarted = new Promise<void>((resolve) => { markVerificationStarted = resolve; });
-    let correctAttempt: Promise<Response> | undefined;
-
-    Bun.password.verify = async (password, passwordHash) => {
+    const value = setup("concurrent-lock-race", true, {}, async (password, passwordHash) => {
       if (password === "golden-staff-pass-1") {
         markVerificationStarted();
         await verificationGate;
       }
-      return originalVerify.call(Bun.password, password, passwordHash);
-    };
+      return Bun.password.verify(password, passwordHash);
+    });
+    let correctAttempt: Promise<Response> | undefined;
 
     try {
       correctAttempt = value.app.handle(new Request("http://local/api/auth/login", {
@@ -193,7 +190,6 @@ describe("authentication parity", () => {
     } finally {
       releaseVerification();
       await correctAttempt?.catch(() => undefined);
-      Bun.password.verify = originalVerify;
       cleanup(value);
     }
   }, 30000);

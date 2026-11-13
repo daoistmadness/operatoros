@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 
@@ -72,7 +71,7 @@ describe("admin recovery CLI", () => {
   it("successful admin recovery clears lock, revokes sessions, updates hash, and audits", async () => {
     const value = setup("success");
     try {
-      const db = value.database.client as unknown as Database;
+      const db = value.database.client;
       // Create admin user with old password and lockout + session
       const oldHash = await Bun.password.hash("old-admin-pass-123", "argon2id");
       db.run("INSERT INTO users (username, password_hash, role, is_active, created_at, updated_at, failed_login_attempts, locked_until) VALUES (?, ?, 'admin', 1, ?, ?, 5, ?)", [
@@ -157,7 +156,7 @@ describe("admin recovery CLI", () => {
   it("wrong/nonexistent user denied, non-admin target denied, password policy enforced", async () => {
     const value = setup("policy");
     try {
-      const db = value.database.client as unknown as Database;
+      const db = value.database.client;
       const staffHash = await Bun.password.hash("staff-pass-12345", "argon2id");
       db.run("INSERT INTO users (username, password_hash, role, is_active, created_at, updated_at, failed_login_attempts) VALUES (?, ?, 'staff', 1, ?, ?, 0)", [
         "staff-user",
@@ -195,7 +194,7 @@ describe("admin recovery CLI", () => {
   it("secret absent from logs and old credential rejected", async () => {
     const value = setup("secret");
     try {
-      const db = value.database.client as unknown as Database;
+      const db = value.database.client;
       const oldHash = await Bun.password.hash("old-secret-pass-123", "argon2id");
       db.run("INSERT INTO users (username, password_hash, role, is_active, created_at, updated_at, failed_login_attempts) VALUES (?, ?, 'admin', 1, ?, ?, 0)", [
         "secret-admin",

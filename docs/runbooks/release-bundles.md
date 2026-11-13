@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-07
+last_reviewed: 2026-11-13
 ---
 
 # CI release bundles
@@ -17,11 +17,11 @@ a later movement of main does not change the candidate. Bundle creation is seria
 
 A manual dispatch on a non-main branch performs nonpublishing qualification. It
 runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
-checks the embedded Bun/SQLite runtime before retaining non-image reports for
-seven days. The image is discarded with the runner and receives no signature,
-attestation, or release-bundle upload. A workflow success means the rejection
-guard behaved correctly; the report can still say that the candidate is
-blocked.
+checks SQLite in both Node.js `node:sqlite` and the `better-sqlite3` native
+addon before retaining non-image reports for seven days. The image is
+discarded with the runner and receives no signature, attestation, or
+release-bundle upload. A workflow success means the rejection guard behaved
+correctly; the report can still say that the candidate is blocked.
 
 The existing locked setup action supplies Bun and Node. The runner installs
 Ubuntu's Podman package and records its actual version. The API uses the existing
@@ -96,6 +96,9 @@ layout files into an isolated temporary directory. Trivy scans that directory
 through a read-only mount. JSON and CycloneDX must each identify the archive's
 same config ID, and the layout/archive bytes must remain unchanged after scans.
 Missing, malformed or mismatched reports and scanner errors fail packaging.
+The shared verifier rejects any unresolved Trivy HIGH or CRITICAL finding in
+candidate scans and release bundles. It has no ignore-list bypass; lower
+severities remain in the reports for review.
 The release OCI archive and static SPA formats are unchanged.
 
 Run the real scanner compatibility test with
@@ -109,10 +112,11 @@ Build/scan failure uploads only non-sensitive JSON/log/text diagnostics for seve
 days: source/tool context, scanner version/error, archive size/hash/image identity,
 build/export logs, and available scan reports. Raw OCI/SPA archives, credentials,
 consumer environment files and databases are excluded. An incomplete bundle is
-never uploaded as a release. Full bundle retention remains 90 days. Scan findings remain visible; producing a report does not
-approve security risk. Trivy may omit libraries statically linked into Bun.
-Bun 1.4.4's embedded SQLite/FTS5 finding remains a separate security assessment;
-the new bundle is not production authorization or a security exception.
+never uploaded as a release. Full bundle retention remains 90 days. Scan
+findings remain visible; producing a report does not approve security risk.
+Trivy may omit SQLite code statically linked into Node.js or the native addon.
+The runtime gate probes both copies and CycloneDX records each SQLite component.
+The local Node candidate remains unsigned and does not authorize production.
 
 The GitHub attestation signs the complete bundle digest. It requires job-scoped
 `id-token: write` and `attestations: write`; default permissions remain

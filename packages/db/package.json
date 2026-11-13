@@ -11,9 +11,11 @@
     "db:validate": "bun src/db-cli.ts validate"
   },
   "dependencies": {
+    "better-sqlite3": "13.1.1",
     "drizzle-orm": "0.45.2"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "9.6.0",
     "bun-types": "1.4.0"
   },
   "exports": {

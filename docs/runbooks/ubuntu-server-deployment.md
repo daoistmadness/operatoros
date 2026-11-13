@@ -281,7 +281,7 @@ install a host Caddy service.
 Gate D2 still needs a tailnet administrator to verify effective grants and
 approve the HTTPS endpoint and Serve change. Gate E still needs an encrypted
 production storage plan, off-host restore, recovery evidence, cross-release
-rollback, and a Bun/SQLite security disposition. Gate F requires separate
+rollback, and release qualification for the API runtime. Gate F requires separate
 production deployment approval after those gates pass.
 
 ### Gate D2 identity acceptance
@@ -319,7 +319,7 @@ release build workflow or substitute another artifact.
 Build the API image and SPA artifact from one reviewed commit after the release
 gate passes.
 
-`deploy/podman/Containerfile.api` pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and the required `flock` and `lsof` packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. The accepted Gate C artifact passed its configured Trivy inventory. The embedded Bun/SQLite 3.53.4 assessment for CVE-2026-119373 remains open. Do not treat the scan as closing that issue. See the [current integration audit](../audits/host-integration-2026-11-06.md).
+The Gate C artifact used a Bun 1.4.4 Linux/amd64 Alpine final image and passed its configured Trivy inventory. It contained SQLite 3.53.4 with FTS5 and remains blocked by CVE-2026-119373. The current `Containerfile.api` uses Bun only in its build stage and Node.js 24.22.3 in the final stage. A local image candidate passed exact-image probes for SQLite 3.54.1 in both `node:sqlite` and `better-sqlite3`, but exact-source hosted checks, signed release evidence, and target-host rehearsal remain pending. The candidate does not authorize deployment. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. See the [current integration audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
 
 Record these immutable release identifiers:
 
@@ -328,7 +328,7 @@ Record these immutable release identifiers:
 - Production API image digest from the final registry, signature/attestation, and source/lockfile provenance. A loopback-only local registry test verified push/pull by the registry digest into a separate consumer store; this does not establish a production registry or signer.
 - Verify the OCI source-tree label and `/usr/share/operatoros/build-provenance` file match the external source-file manifest.
 - SPA client archive SHA-256.
-- Caddy, Podman, Bun, Ubuntu, and systemd versions.
+- Caddy, Podman, Bun, Node.js, better-sqlite3, both SQLite source IDs, Ubuntu, and systemd versions.
 - Build and audit command results.
 
 The SPA is not currently byte-for-byte reproducible: controlled builds differ
@@ -734,8 +734,9 @@ copying the verified bundle to the OPRSERVER staging directory. The transfer
 must preserve the bundle checksum.
 
 Bootstrap only the new empty `data/sqlite` directory. The API image includes
-`packages/db/src/db-cli.ts`; use its `bootstrap` action in a one-time container
-with `--network=none`, `--read-only`, `--read-only-tmpfs`,
+the compiled database CLI at `/app/apps/api/dist/db-cli.mjs`; invoke it with
+Node's `--entrypoint node` in a one-time container using `--network=none`,
+`--read-only`, `--read-only-tmpfs`,
 `--cap-drop=all`, `--security-opt=no-new-privileges`, `--user 10000:10000`,
 `--userns=keep-id:uid=10000,gid=10000`, the exact API image config ID, and only
 the D1 data bind mount. Do not call `migrate-existing`. Validate the fresh
@@ -758,7 +759,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts bootstrap \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs bootstrap \
   --data-dir /var/lib/operatoros/data
 
 podman run --rm --network=none --read-only --read-only-tmpfs \
@@ -766,7 +767,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts validate \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs validate \
   --data-dir /var/lib/operatoros/data
 ~~~
 
@@ -869,7 +870,7 @@ review if any action would cross those boundaries.
 Gate D2 separately approves tailnet grants, the HTTPS endpoint and Tailscale
 Serve changes. Gate E separately qualifies encrypted production storage,
 off-host restore, host recovery, crash/reboot behavior, cross-release rollback,
-and the Bun/SQLite finding. Gate F remains NO-GO until those gates pass and the
+and release qualification for both SQLite runtime copies. Gate F remains NO-GO until those gates pass and the
 owner authorizes a production deployment.
 
 ## Logs and troubleshooting

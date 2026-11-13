@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { Value } from "@sinclair/typebox/value";
 import { TermAttendanceResponseSchema } from "@operatoros/contracts/analytics";
 import { termAttendance } from "../src/domains/term-attendance";
 
 function fixture() {
-  const client = new Database(":memory:");
+  const client = openTestDatabase(":memory:").client;
   client.run("CREATE TABLE academic_years (id INTEGER PRIMARY KEY, label TEXT, start_date TEXT, end_date TEXT)");
   client.run("CREATE TABLE academic_term_configs (id INTEGER PRIMARY KEY, academic_year_id INTEGER, term_number INTEGER, label TEXT, start_date TEXT, end_date TEXT)");
   client.run("CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT)");

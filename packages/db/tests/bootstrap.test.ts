@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
+import { openSqliteConnection } from "../src/sqlite-client";
 
-describe("Bun S5.4 fresh bootstrap", () => {
+describe("SQLite S5.4 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -92,7 +92,7 @@ describe("Bun S5.4 fresh bootstrap", () => {
         expect(() => insertAssignment("staff-1", firstUnit, "2026-09-01", "2026-08-31")).toThrow();
         expect(() => insertAssignment("staff-1", thirdUnit, "2026-11-01", "2026-11-30")).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_MUST_START_OPEN");
 
-        const assignmentId = Number(db.query<{ id: number }, [number]>("SELECT id FROM staff_school_unit_assignment_versions WHERE school_unit_id=? ORDER BY id LIMIT 1").get(firstUnit)?.id);
+        const assignmentId = Number(db.query<{ id: number }>("SELECT id FROM staff_school_unit_assignment_versions WHERE school_unit_id=? ORDER BY id LIMIT 1").get(firstUnit)?.id);
         db.run("UPDATE staff_school_unit_assignment_versions SET effective_to='2026-10-30',closed_reason='Synthetic close',closed_by='synthetic-admin',closed_at=CURRENT_TIMESTAMP WHERE id=?", [assignmentId]);
         expect(() => db.run("UPDATE staff_school_unit_assignment_versions SET effective_to='2026-10-29' WHERE id=?", [assignmentId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
         expect(() => db.run("UPDATE staff_school_unit_assignment_versions SET ptk_applicability='APPLICABLE' WHERE id=?", [assignmentId])).toThrow("STAFF_SCHOOL_UNIT_ASSIGNMENT_IMMUTABLE");
@@ -117,11 +117,11 @@ describe("Bun S5.4 fresh bootstrap", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
     try {
-      const db = new Database(path);
+      const db = openSqliteConnection(path).client;
       db.run("CREATE TABLE preserve_me (id INTEGER PRIMARY KEY)");
       db.close();
       expect(() => createFreshDatabase(path)).toThrow("DATABASE_ALREADY_EXISTS");
-      const reopened = new Database(path, { readonly: true });
+      const reopened = openSqliteConnection(path, { readonly: true }).client;
       expect(reopened.query("SELECT name FROM sqlite_master WHERE name = 'preserve_me'").get()).toEqual({ name: "preserve_me" });
       reopened.close();
     } finally {

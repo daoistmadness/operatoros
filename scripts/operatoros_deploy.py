@@ -1932,8 +1932,8 @@ def schema_validate(image: str, cfg: dict[str, Any]) -> None:
     args = ["podman", "run", "--rm", "--network=none", "--read-only", "--read-only-tmpfs",
             "--cap-drop=all", "--security-opt=no-new-privileges", "--userns=keep-id:uid=10000,gid=10000",
             "--user=10000:10000", "--mount", f"type=bind,src={cfg['data_dir']},dst=/var/lib/operatoros/data,ro",
-            "--env", "OPERATOROS_DATA_DIR=/var/lib/operatoros/data", "--entrypoint", "bun", image,
-            "run", "packages/db/src/db-cli.ts", "validate", "--data-dir", "/var/lib/operatoros/data"]
+            "--env", "OPERATOROS_DATA_DIR=/var/lib/operatoros/data", "--entrypoint", "node", image,
+            "apps/api/dist/db-cli.mjs", "validate", "--data-dir", "/var/lib/operatoros/data"]
     try:
         command(args, podman_env(cfg), timeout=60, schema_validation=True)
     except DeployError as error:

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
 import { mkdirSync, rmSync } from "node:fs";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
@@ -40,7 +39,7 @@ describe("E3-A pilot onboarding technical readiness", () => {
   it("verifies create/update/duplicate/pending_review/class/enrollment/attendance/import/rollback/audit/transaction", async () => {
     const value = setup("pilot");
     try {
-      const db = value.database.client as unknown as Database;
+      const db = value.database.client;
 
       // Create admin for pilot test
       const adminHash = await Bun.password.hash("pilot-admin-pass-12345", "argon2id");

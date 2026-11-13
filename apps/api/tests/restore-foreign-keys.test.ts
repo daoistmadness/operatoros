@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { readFileSync, mkdtempSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
@@ -38,7 +38,7 @@ async function prepare(sourceState: SourceState = "clean") {
     rename: (from, to) => {
       if (injectPostSwapViolation && from.endsWith(".candidate") && to === path) {
         injectPostSwapViolation = false;
-        const candidate = new Database(from, { readwrite: true, create: false });
+        const candidate = openTestDatabase(from).client;
         try {
           candidate.run("PRAGMA foreign_keys = OFF");
           candidate.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop101-post-swap-violation', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
@@ -71,7 +71,7 @@ async function prepare(sourceState: SourceState = "clean") {
     if (sourceState !== "clean") {
       const plaintextPath = join(root, "synthetic-source.sqlite");
       writeFileSync(plaintextPath, decryptBackup(readFileSync(artifactPath), backupEncryption), { mode: 0o600 });
-      const source = new Database(plaintextPath);
+      const source = openTestDatabase(plaintextPath).client;
       let plaintext: Uint8Array;
       try {
         if (sourceState === "check-error") {
@@ -193,7 +193,7 @@ describe("restore foreign-key validation", () => {
     try {
       const plaintext = decryptBackup(readFileSync(value.artifactPath), value.backupEncryption);
       writeFileSync(plaintextPath, plaintext, { mode: 0o600 });
-      const incomplete = new Database(plaintextPath);
+      const incomplete = openTestDatabase(plaintextPath).client;
       let damaged: Uint8Array;
       try { incomplete.run("DROP TABLE attendance"); damaged = incomplete.serialize(); } finally { incomplete.close(); }
       const artifact = encryptBackup(damaged!, value.backupEncryption);

@@ -9,13 +9,13 @@ Pull-request label changes also trigger the workflow so `skip-changelog` takes e
 The Monday schedule runs the dependency audit. The Wednesday schedule and manual dispatch run full release validation, including the dependency audit; manual dispatch also runs preflight before the complete browser/API smoke suite. Scheduled release and audit jobs do not depend on preflight. CodeQL, Dependabot Updates, and Dependency Graph are separate GitHub-managed workflows and remain enabled.
 
 A manual dispatch on a non-main ref builds that exact source commit as an
-ephemeral OCI image, generates Trivy SBOM/scan reports, and exercises the
-embedded Bun/SQLite gate. This path retains only
-image metadata and JSON reports for seven days; it does not upload the OCI
-image, sign or attest it, or deploy it. If the known vulnerable SQLite/FTS5
-combination is present, the workflow records the embedded runtime identity,
-reports the expected security-gate rejection as an enforcement test PASS, and
-marks the candidate blocked. A runtime-gate PASS still does not make the
+ephemeral OCI image, generates Trivy SBOM/scan reports, and probes SQLite in
+both the Node.js `node:sqlite` module and the `better-sqlite3` native addon.
+This path retains image metadata and JSON reports for seven days. It does not
+upload the OCI image, sign or attest it, or deploy it. If either SQLite copy
+contains affected FTS5 code below 3.54.0, the workflow records the runtime
+identity, reports the expected security-gate rejection as an enforcement test
+PASS, and marks the candidate blocked. A runtime-gate PASS does not make the
 unsigned candidate a release artifact.
 
 The `preflight` job validates Markdown links and organization, validates agent skills, runs the Intent maintainer check against the event base, and checks the pull-request changelog. It fetches the pull-request, merge-group, or push base before the maintainer check. A first push with an all-zero `before` SHA falls back to the event SHA. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset requires `preflight` so a failed gate cannot pass as a successful skipped check.
@@ -73,18 +73,17 @@ Use the [contributor PR procedure](../CONTRIBUTING.md) for merge and recovery. A
 
 The `Manual release bundle` job runs only on a main-branch manual dispatch after
 full release validation and E2E acceptance. It builds the API OCI image and SPA
-from the event SHA, runs the embedded Bun/SQLite gate before signing, attests
+from the event SHA, qualifies both Node.js SQLite copies before signing, attests
 the bundle, tests an isolated consumer, and retains it for 90 days. No
 scheduled, push, or PR event publishes a bundle. See the
 [release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
 security limitations, helper adoption, and CI rollback.
 
 A manual dispatch on a non-main branch runs full validation and builds an
-ephemeral API candidate for Trivy scanning and embedded Bun/SQLite
-qualification. The candidate is not uploaded, signed, or published; sanitized
-reports are retained for seven days. An unqualified embedded runtime must
-produce a verifiable rejection, so a successful workflow can still report the
-candidate as blocked.
+ephemeral API candidate for Trivy scanning and Node.js SQLite qualification.
+The candidate is not uploaded, signed, or published; sanitized reports are
+retained for seven days. An unqualified SQLite copy must produce a verifiable
+rejection, so a successful workflow can still report the candidate as blocked.
 
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.
