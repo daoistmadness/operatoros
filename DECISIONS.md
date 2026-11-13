@@ -86,11 +86,15 @@ production NO-GO boundary in place.
   encrypted-backup, and restore checks passed. Node 24.22.3
   is the official security release ([release](https://nodejs.org/en/blog/release/v24.22.3),
   [security advisory](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)).
-  Exact-source candidate run [43373811564](https://github.com/daoistmadness/operatoros/actions/runs/43373811564)
-  passed runtime and scan gates with zero Trivy findings on source `789c2a33`;
-  the image was ephemeral and unsigned. PR #387 adds a same-image API lifecycle
-  and encrypted restore gate, which still needs hosted validation on the updated
-  PR source. The official [Bun release list](https://github.com/oven-sh/bun/releases)
+  Exact-source candidate run [43381159685](https://github.com/daoistmadness/operatoros/actions/runs/43381159685)
+  passed runtime, scan, and same-image lifecycle gates on source `7231cdf`.
+  Full release validation and E2E also passed; the main-only release bundle was
+  skipped. The image was ephemeral and unsigned.
+  The hosted lifecycle check covers clean source identity, API readiness,
+  restart, encrypted backup, and isolated restore.
+  Both clean-source acceptance and dirty-source rejection now have focused
+  tests. The official
+  [Bun release list](https://github.com/oven-sh/bun/releases)
   still showed v1.4.4 on 2026-11-13, and the active host probe reports SQLite
   3.53.4. No supported patched Bun runtime was found; SQLite 3.54.1 is listed
   in the [official release history](https://www.sqlite.org/chronology.html).
@@ -113,8 +117,15 @@ production NO-GO boundary in place.
   the shared candidate and release verifier reject any unresolved High or Critical
   Trivy finding. Keep all scan findings in the retained SBOM/report; do not
   suppress them. The exact-source scan on `789c2a33` passed with zero Trivy
-  findings after npm was removed. The updated candidate lifecycle step still
-  needs to pass on the current PR head before it can support release review.
+  findings after npm was removed. Candidate run 43381159685 then passed the
+  lifecycle step on source `7231cdf`. That evidence is tied to its source;
+  later test or report changes need their own exact-source checks.
+  The pinned-scanner compatibility fixture checks OCI normalization, report
+  identity, and corrupt-archive rejection; its minimal image is not a current
+  vulnerability-detection positive control. Real Trivy run 43365066088 did
+  report 19 findings in the removed npm tree, and unit tests verify that the
+  release gate rejects injected High/Critical findings. Keep these scopes
+  distinct when describing scanner evidence.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

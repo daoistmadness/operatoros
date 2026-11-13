@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "85c0b7ea0dcdc278631850c946a69708223d082f825bdda67e59b49b0c7a1832",
+      "fingerprint": "634e0bd4ed730cdb0120a2582eb786af3a7e251c8f7a570f16bb49ce94096c5b",
       "snapshot": {
         ".github/CI.md": "adcacb65b7d22c9daca26ddbf9af39ecf2ad697618d6d8dc3802f970368e3710",
-        ".github/workflows/ci.yml": "1d7c1d2f27f6931dbd773dee9f400d4f1d4cab9c4769e58a47ffe02e8416bc5b",
+        ".github/workflows/ci.yml": "b044446b78d134249b568cad439ebaa8ac8a74b4e2d148e0ed89ec983bff85b0",
         "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "62df9caddc1e04493eb8d153cb9a28d62eacb0fc9c465eac6fbc6311286787ae",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "The CI addition runs the exact candidate lifecycle; it does not change Elysia guidance or examples.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "mise run check:full on the PR worktree; Elysia skill files unchanged"
+        "Changed: .github/workflows/ci.yml at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "f1052e30fedb112c1f0cf2ff269231b4e56d41c38236d72d9d4821e79cc875f9",
+      "fingerprint": "2ffbc735bbd1512e7767db0f3d775d99a6e82ee6532bca443143be4a8ac0465f",
       "snapshot": {
         ".github/CI.md": "adcacb65b7d22c9daca26ddbf9af39ecf2ad697618d6d8dc3802f970368e3710",
-        ".github/workflows/ci.yml": "1d7c1d2f27f6931dbd773dee9f400d4f1d4cab9c4769e58a47ffe02e8416bc5b",
+        ".github/workflows/ci.yml": "b044446b78d134249b568cad439ebaa8ac8a74b4e2d148e0ed89ec983bff85b0",
         "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "This change is a runtime verification follow-up, not an Intent skill batch or library change.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "scripts/verify-node-image-lifecycle.py; .github/workflows/ci.yml"
+        "Changed: .github/workflows/ci.yml at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -9859,15 +9859,15 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "cb4e28de500a0b898302e110db15e3c9faa1eb57fdd53033c44388650d13b658",
+      "fingerprint": "2b6c04825169c4ca6e296ffb920254a42740a9a22b01284961274263b0f8214f",
       "snapshot": {
-        "scripts/check": "859c5f700139c844809be2a1d8bac928691435cfb3d389da5bc81d575cbc2fe6"
+        "scripts/check": "9bacfdde09f23b75f465ae1aa9a34dfc8f9e6819283920cb8cee3a26f652adbc"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "Changed: scripts/check at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "Changed: scripts/check at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "source:scripts/dev": {
@@ -10231,39 +10231,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "b8b43316eb50a3a1655142ad2476416bf7a0f2418d19874b26021e832fb67c39",
+      "fingerprint": "910eddb043af6a58383cd4076b67b015a1ae17ee8368a871ed68b1c92faa8b2c",
       "snapshot": {
-        "DECISIONS.md": "5ddcaffde02310f552fb6470a5217e4eb4ba46e17191663f3951422e44a6bd83"
+        "DECISIONS.md": "f26e534c10f3e9b557a1c6640a9323f5b30b446909d258bfeb9ef1a825f4f007"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "Reviewed the file change; it requires no Intent skill guidance update.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "PR #387 commit 0e454b8; isolated Markdown and source syntax checks passed"
+        "Changed: DECISIONS.md at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "dae6a3eb4eeb5844c3b4da4af592e46075e2878ca39c81ec1b89d96617c3ab50",
+      "fingerprint": "15a0b8b0e9aaaf80e853d26505a274ae862e790c65e290c000a4bbff0ab5658d",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "8d34db390a773554f14dda5b1c37dcd9bdc0e677584f9b22bc86b6f37bcd6c7b"
+        "MASTER_CHECKLIST.md": "55dd7de19be7188f55f66cfef00c9cc91c98d78b6a92359bc7a09bf2d06fd335"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "Reviewed the file change; it requires no Intent skill guidance update.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "PR #387 commit 0e454b8; isolated Markdown and source syntax checks passed"
+        "Changed: MASTER_CHECKLIST.md at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "9b8d48f341c22f086e98e6d460ad7269ac97c495f1cab886511d2c4b9d11d9e3",
+      "fingerprint": "066ff68c10ae60dc9eefb49f1d9ada20742c2db18b9d0ab5bc708f83c466498f",
       "snapshot": {
-        "STABILITY_REPORT.md": "4bd52f7b96f9f85bb593dbbda7822b525846d8f47f8d666efd13eacc8cb402ef"
+        "STABILITY_REPORT.md": "6a195cb6f681349c1726efe27274affe45a82b7c0f7b5e0e493fb109ba5f86f1"
       },
-      "head": "0e454b8645d2fb4b9865715b1cb6c2cf4042f7e8",
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
       "outcome": "no-change",
-      "reason": "Reviewed the file change; it requires no Intent skill guidance update.",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
       "evidence": [
-        "PR #387 commit 0e454b8; isolated Markdown and source syntax checks passed"
+        "Changed: STABILITY_REPORT.md at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
@@ -10672,6 +10672,18 @@
       "reason": "Reviewed the file change; it requires no Intent skill guidance update.",
       "evidence": [
         "PR #387 commit 0e454b8; isolated Markdown and source syntax checks passed"
+      ]
+    },
+    "source:scripts/tests/test_node_image_lifecycle.py": {
+      "fingerprint": "4965c5fba0f92bb51729833e87ca1245d373e41d041fdab7861eccd57518e478",
+      "snapshot": {
+        "scripts/tests/test_node_image_lifecycle.py": "f0c0726993b08ef451391444e11bc83206076e093bf5b3743d30c7d9bc0f46e8"
+      },
+      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "outcome": "no-change",
+      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "evidence": [
+        "Changed: scripts/tests/test_node_image_lifecycle.py at 7231cdf32abae1d54636143fdafbed83f521f815"
       ]
     }
   }
