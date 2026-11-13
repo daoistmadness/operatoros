@@ -10231,39 +10231,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "910eddb043af6a58383cd4076b67b015a1ae17ee8368a871ed68b1c92faa8b2c",
+      "fingerprint": "8537ce0d2599456ef23ed4b91f9ab4d745333b1b4cd9ac0b056bcf6fc52f2c21",
       "snapshot": {
-        "DECISIONS.md": "f26e534c10f3e9b557a1c6640a9323f5b30b446909d258bfeb9ef1a825f4f007"
+        "DECISIONS.md": "68611641c0b137bf72cfde3d1fe00d58d290feeccf3db6f4702888c955e39734"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
       "evidence": [
-        "Changed: DECISIONS.md at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "Changed: DECISIONS.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "15a0b8b0e9aaaf80e853d26505a274ae862e790c65e290c000a4bbff0ab5658d",
+      "fingerprint": "bc64403492435c79fc1e82692dbb86348754ea82357d31c8b9facde66fb7ee08",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "55dd7de19be7188f55f66cfef00c9cc91c98d78b6a92359bc7a09bf2d06fd335"
+        "MASTER_CHECKLIST.md": "663beb22ae0d92b17d2df81395de0c52693a3b1531b5fa0e0f7f98f7b8fe3e25"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "Changed: MASTER_CHECKLIST.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "066ff68c10ae60dc9eefb49f1d9ada20742c2db18b9d0ab5bc708f83c466498f",
+      "fingerprint": "aea1ec642c2f6f115e0174ee74dce079c726c2a17f1c62cd2774a2dab18cba97",
       "snapshot": {
-        "STABILITY_REPORT.md": "6a195cb6f681349c1726efe27274affe45a82b7c0f7b5e0e493fb109ba5f86f1"
+        "STABILITY_REPORT.md": "d9aef7192265d1018142791bcc66fa845a33a55ddea28747464fa48a5a744354"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "Changed: STABILITY_REPORT.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {

@@ -100,6 +100,11 @@ production NO-GO boundary in place.
   in the [official release history](https://www.sqlite.org/chronology.html).
   Bun remains the local build/development tool. This candidate does not qualify
   a release artifact or production host. No security exception is active.
+  The later exact-source run [43385232734](https://github.com/daoistmadness/operatoros/actions/runs/43385232734)
+  passed runtime, scan, and all eight lifecycle stages on `c4b6cf6`; full
+  release validation passed in 569 seconds and E2E passed. The manual bundle
+  remained skipped on the non-main dispatch. The image remains ephemeral and
+  unsigned; PR review, signed provenance, and target-host rehearsal remain.
 - The first local Node-image lifecycle run exposed a shutdown bug: closing the
   raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
   scheduler and employee-retention timer active while SQLite closed. The timer
@@ -126,6 +131,14 @@ production NO-GO boundary in place.
   report 19 findings in the removed npm tree, and unit tests verify that the
   release gate rejects injected High/Critical findings. Keep these scopes
   distinct when describing scanner evidence.
+- A read-only OPRSERVER recheck found the Beszel agent and Uptime Kuma Quadlet
+  units active with live conmon and application payload processes. Their
+  loopback responses were 200 and 302. Podman 5.7.0 rootless default and
+  external listings still omit both containers, and `podman container exists`
+  rejects their live IDs. Do not sync, repair, or restart the state while the
+  services are running. The cause and alert delivery/ownership remain unknown;
+  retain this as a Gate E blocker until an owner-approved recovery path is
+  established. Evidence: external `gate-e-monitoring-state-recheck-20261113.json`.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.
