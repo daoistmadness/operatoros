@@ -120,6 +120,15 @@ production NO-GO boundary in place.
   config `sha256:9d301cc684212d1a9eec0fb1e652f405bc4f16291f5101fe0014ec11eba2d40a`,
   and archive SHA-256 `44eef8d5614e10da23caa0805811549c240902a2af4adc56254500b740a9325b`.
   The manual bundle was skipped; the candidate remains ephemeral and unsigned.
+  Exact-source workflow [43396108609](https://github.com/daoistmadness/operatoros/actions/runs/43396108609)
+  then passed on `1dc7f7bde84b14d32112477891c1ea0fee955332`. Both SQLite
+  providers reported 3.54.1 with FTS5, Trivy found zero Alpine/Node
+  vulnerabilities, and all eight lifecycle stages passed. Full release
+  validation and E2E passed in 585 seconds and 3m 2s respectively. Manifest
+  `sha256:8e6a808660948822f2c9f0e0bdb406e72ac78e01ba41e9100b7a514518b0cfc8`,
+  image config `sha256:c62521e9fb8d38aeb5b0eba0c8ca3463ca440b556f0a46c8716ba079aa36bd2f`,
+  and archive SHA-256 `82d1638403b1fc7ae0aeee4fc67947f33067e7578b08db820ae746f0f26c737f`.
+  The release bundle was skipped; the candidate remains ephemeral and unsigned.
 - The first local Node-image lifecycle run exposed a shutdown bug: closing the
   raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
   scheduler and employee-retention timer active while SQLite closed. The timer
