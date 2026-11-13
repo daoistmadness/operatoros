@@ -10243,27 +10243,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "031dfd6c6ae77ef9ae38c580cb7e443d5b7763791e116594a8ad0e41d3935fdb",
+      "fingerprint": "0ab17ea91ac9afb75c281f8ffc830c775d9fdd7ee44d2060c617e21bb3b72531",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "2e5e72a91c87dfc1b5c0c1821b7b89edec7c9540c1a03af213251a040c5f184a"
+        "MASTER_CHECKLIST.md": "a0c21638ec3fbcb99d92868abdfcc2d4406cfb9287ecff9fe3d27ee3c44b5942"
       },
-      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
+      "head": "32ce7c5a045f4f4bdce7bae53c5ce10ce4bc2836",
       "outcome": "no-change",
-      "reason": "The checklist only updates stability task evidence and links PR #387; it does not change skill or library guidance.",
+      "reason": "The checklist records a PR link and the requirement to verify hosted results against its current head; it does not change skill or library guidance.",
       "evidence": [
-        "MASTER_CHECKLIST.md records hosted-run state and existing blockers; no packages/agent-skills files changed."
+        "MASTER_CHECKLIST.md updates G3 and Gate G evidence only; no packages/agent-skills files changed."
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "aeb66b415df19a99f52675553a803d59cf162a3622807b73c2011a56c5afdce4",
+      "fingerprint": "3b727c103bfca994857e4d31f6050b8a09d2672a7f7e67b3517a868c1627e0b4",
       "snapshot": {
-        "STABILITY_REPORT.md": "b4eec339ec367d317003480d7412d7bbd0e21dadbfa448fad1c09fb4a6b7456f"
+        "STABILITY_REPORT.md": "718ed272e91ede374bc12b084d2102cf3e2ce50bf695a5ca1f39bb467f19875e"
       },
-      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
+      "head": "32ce7c5a045f4f4bdce7bae53c5ce10ce4bc2836",
       "outcome": "no-change",
-      "reason": "The report records exact-source hosted validation status; installed skill and library guidance remain accurate.",
+      "reason": "The report makes the current-head verification requirement explicit; installed skill and library guidance remain accurate.",
       "evidence": [
-        "STABILITY_REPORT.md records PR #387 and in-progress run 43364236788; no packages/agent-skills files changed."
+        "STABILITY_REPORT.md records PR #387 without pinning a superseded head or run; no packages/agent-skills files changed."
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
