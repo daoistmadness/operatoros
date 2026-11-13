@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "81b876bde0198ab0ac0adbddc6c3aa09951faffed0eec0b16b8682c5bab6e5d7",
+      "fingerprint": "50d9805045acb7b03c4357719a81dc70e566c8654a2f539c4a134549a9da1053",
       "snapshot": {
-        "CHANGELOG.md": "d652a4160cedc1425793228016546bd4dcb5477e0944770c3be11a79fc15505c"
+        "CHANGELOG.md": "0b85c26e4963c1131c68781547d8e588fedc3704924c28d83621f6b7d1c423de"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The entry records the Node OCI candidate and links this PR; it does not change skill or library guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "CHANGELOG.md records the runtime candidate and PR #387; no packages/agent-skills files changed."
       ]
     },
     "source:COMMANDS.md": {
@@ -10243,27 +10243,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "560e68d003810936e6bd00fb191340f248889e3c8d2628d32bcc5c58b9720056",
+      "fingerprint": "031dfd6c6ae77ef9ae38c580cb7e443d5b7763791e116594a8ad0e41d3935fdb",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "4802444208e7a85221760f056a1c001e4f5c6f7d3f0fe82ac5c9fd2a9bc53675"
+        "MASTER_CHECKLIST.md": "2e5e72a91c87dfc1b5c0c1821b7b89edec7c9540c1a03af213251a040c5f184a"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The checklist only updates stability task evidence and links PR #387; it does not change skill or library guidance.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "MASTER_CHECKLIST.md records hosted-run state and existing blockers; no packages/agent-skills files changed."
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "d5d9e42e311160c6a0e0ecd232063856a710cdec19ab247efd1c4371d1eaf433",
+      "fingerprint": "aeb66b415df19a99f52675553a803d59cf162a3622807b73c2011a56c5afdce4",
       "snapshot": {
-        "STABILITY_REPORT.md": "c8504ec1d82c9779abc0ed9d4a075e6343aac4c4563c0bd9f84a4ca70ab66fbf"
+        "STABILITY_REPORT.md": "b4eec339ec367d317003480d7412d7bbd0e21dadbfa448fad1c09fb4a6b7456f"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
       "outcome": "no-change",
-      "reason": "STABILITY_REPORT.md records the exact-source Node runtime gate, graceful shutdown and encrypted restore evidence, and complete local release-tier results. It changes no Elysia or agent-skill guidance; the behavior is verified by the lifecycle tests, exact-image smoke, and repository checks.",
+      "reason": "The report records exact-source hosted validation status; installed skill and library guidance remain accurate.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "STABILITY_REPORT.md records PR #387 and in-progress run 43364236788; no packages/agent-skills files changed."
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
