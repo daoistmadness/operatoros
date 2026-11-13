@@ -10663,15 +10663,15 @@
       ]
     },
     "source:.audit/operatoros-stability-loop.tsv": {
-      "fingerprint": "d3f9eb2fd08ccb7e961b64f81de4bf02c1cf3e9412d8eb53b4eabae97f3ddcf1",
+      "fingerprint": "c86adfbf55e8a36cf0bb6e8dd8456576bf7fc15f77b53d4b162b69acb34d3028",
       "snapshot": {
-        ".audit/operatoros-stability-loop.tsv": "bc83814ae137b96f735880e1af5cc9d51fae98a84ddfc78035d080f958e3a525"
+        ".audit/operatoros-stability-loop.tsv": "d9b0b5ed0d3237b4fe7c783461771a83a82ced52f3c29a024019be89fef51c0f"
       },
-      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "head": "aa9131f8cf3bd89882e3ff7b166eb31f9fcb7051",
       "outcome": "out-of-scope",
-      "reason": "OperatorOS runtime, release, checklist, report, and local audit changes do not alter packaged Intent skill guidance or metadata.",
+      "reason": "The local decision trail is not an Intent skill source and does not change packaged guidance.",
       "evidence": [
-        "Current diff; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
+        "Local audit TSV; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
       ]
     }
   }
