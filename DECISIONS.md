@@ -93,6 +93,14 @@ production NO-GO boundary in place.
   passed three clean SIGTERM stops, API readiness, encrypted backup and active
   restore, schema/integrity validation, and pre/post-backup sentinel checks on
   synthetic data. Evidence is recorded in the [stability report](STABILITY_REPORT.md).
+- The hosted Node candidate scan on source `5dece3befffcdf3b4015918643b499d37ccb7255`
+  found 19 CVEs: 6 High, 12 Medium, and 1 Low. Trivy located every finding in
+  the Node base image's unused npm tree at
+  `/usr/local/lib/node_modules/npm`; the application does not invoke npm at
+  runtime. Remove npm and its `npm`/`npx` shims from the final image, and make
+  the shared candidate and release verifier reject any unresolved High or Critical
+  Trivy finding. Keep all scan findings in the retained SBOM/report; do not
+  suppress them. The exact-source rescan remains pending.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

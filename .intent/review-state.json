@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "50d9805045acb7b03c4357719a81dc70e566c8654a2f539c4a134549a9da1053",
+      "fingerprint": "9db52b3ff977b657f51808a1470bb2a87f23cdafe530660f8d2ad96d06af823d",
       "snapshot": {
-        "CHANGELOG.md": "0b85c26e4963c1131c68781547d8e588fedc3704924c28d83621f6b7d1c423de"
+        "CHANGELOG.md": "0d11ca01bdc688d4f578b4e6579a667f574699bc980636f4cdc0a19e224794fa"
       },
-      "head": "3a092e45b0aec9debe5d21e974d743ebbcbf681d",
-      "outcome": "no-change",
-      "reason": "The entry records the Node OCI candidate and links this PR; it does not change skill or library guidance.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "CHANGELOG.md records the runtime candidate and PR #387; no packages/agent-skills files changed."
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:COMMANDS.md": {
@@ -9679,15 +9679,15 @@
       ]
     },
     "source:deploy/podman/Containerfile.api": {
-      "fingerprint": "bb6042a61c9bdf9fe11b27c74b523fa54921c8b95410f3920e69079e963dd90b",
+      "fingerprint": "bf2a9a67a4b21902e2c60320061ac3a857c207547e5e09c387e4650c881b389b",
       "snapshot": {
-        "deploy/podman/Containerfile.api": "23f8a628bf9f90f6532cb2aa2e3caf5b0a3cd4d6ae4d9bc729a54b5ea135a894"
+        "deploy/podman/Containerfile.api": "3f2c30ae3dbffc4508c1e2ef2c98d518b860724d48855b65b929cf7ca05567f1"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, report, and local audit changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "Changed: deploy/podman/Containerfile.api at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Current diff; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
       ]
     },
     "source:deploy/podman/api-healthcheck.sh": {
@@ -9919,27 +9919,27 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "90821a8b8c4c86daabe67b4f64e185d3d247db1e1e95295dbe8235e93ae19178",
+      "fingerprint": "06929a3d1c73d5322e5359ca90358e93d2fb00c73a19d44e8bbd3e1f9e29a533",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "86085e80049b1d6e24e6f5e8fe148a299580172f82361af6d536f9627be03803"
+        "docs/runbooks/release-bundles.md": "69f263f2e451f16557429ab127b158486fe35b330b4aad7533efd874d71ac008"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, report, and local audit changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Current diff; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
       ]
     },
     "source:scripts/release-bundle.py": {
-      "fingerprint": "1961181429785102407a10bdd7aefe2b94fb7cd5acc1f31adcb0eb5ed836e889",
+      "fingerprint": "6c7994ae4927b8a7972cfcb8f1cfca4c32dc08e3a586756b157078399e31a5fb",
       "snapshot": {
-        "scripts/release-bundle.py": "2098dc8d54eca24d689758ca0927f7ea2cbc6851b4a81a6c4fbb99c2378ff05b"
+        "scripts/release-bundle.py": "9b90f9a8588720644a730c89490f1885350aa6d9f8424b762731d74de01a815e"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "Changed: scripts/release-bundle.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:scripts/test-release-consumer.sh": {
@@ -9955,15 +9955,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "cfb1ad789f225596cdb8ff3c5a36d410cf96f00c674f0543d83978ec3708e37e",
+      "fingerprint": "2d814dd35e5a54d72397b0973ace1da011b451d11c2b5974714f9b34baf57285",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "b51d7ab13886ba04b1ebf0950197f5d4fc702a456b727bf2a837acdaeb5dcd92"
+        "scripts/tests/test_release_bundle.py": "25890057c4d6d11ef27d7db10d8cf06be1f31f482613d9c542acab98bf121c23"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10231,39 +10231,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "704fa59d9567cc5d2f8c281291bad5dd5795eddc30b77762285119690b0a7c54",
+      "fingerprint": "877ee34f29d5b79d3cee43055b7ad483369f3e6c00b72009aa88987f6f588a85",
       "snapshot": {
-        "DECISIONS.md": "bdf356e7270faa540a19ccaf11a7a14dfb330135bbf8444c23bbc9bac92890b0"
+        "DECISIONS.md": "cc10a37489a8b6bda7ecca72c5b27d93dd829f62cb6714a513f21088a9bab49c"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "Changed: DECISIONS.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "0ab17ea91ac9afb75c281f8ffc830c775d9fdd7ee44d2060c617e21bb3b72531",
+      "fingerprint": "71ef17d5dbad22eadb82ff01824b8d64429ddd73f73529bb211a1a3b304395e8",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "a0c21638ec3fbcb99d92868abdfcc2d4406cfb9287ecff9fe3d27ee3c44b5942"
+        "MASTER_CHECKLIST.md": "9b9d37292d1d62c4e7dd85777326c05668663e1cf5023152dc5d62fb4b2c0fc2"
       },
-      "head": "32ce7c5a045f4f4bdce7bae53c5ce10ce4bc2836",
-      "outcome": "no-change",
-      "reason": "The checklist records a PR link and the requirement to verify hosted results against its current head; it does not change skill or library guidance.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "MASTER_CHECKLIST.md updates G3 and Gate G evidence only; no packages/agent-skills files changed."
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "3b727c103bfca994857e4d31f6050b8a09d2672a7f7e67b3517a868c1627e0b4",
+      "fingerprint": "d1a052fb88523cb9089fb2298eacb54c1b98a3405453965c3ba99960b83b5354",
       "snapshot": {
-        "STABILITY_REPORT.md": "718ed272e91ede374bc12b084d2102cf3e2ce50bf695a5ca1f39bb467f19875e"
+        "STABILITY_REPORT.md": "a1da77c7ffe50373b11e1efa322f0ac2bff54a2c6a4fba89464ff99548fcea55"
       },
-      "head": "32ce7c5a045f4f4bdce7bae53c5ce10ce4bc2836",
-      "outcome": "no-change",
-      "reason": "The report makes the current-head verification requirement explicit; installed skill and library guidance remain accurate.",
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
       "evidence": [
-        "STABILITY_REPORT.md records PR #387 without pinning a superseded head or run; no packages/agent-skills files changed."
+        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
@@ -10660,6 +10660,18 @@
       "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
       "evidence": [
         "Changed: scripts/tests/test_node_sqlite_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+      ]
+    },
+    "source:.audit/operatoros-stability-loop.tsv": {
+      "fingerprint": "d3f9eb2fd08ccb7e961b64f81de4bf02c1cf3e9412d8eb53b4eabae97f3ddcf1",
+      "snapshot": {
+        ".audit/operatoros-stability-loop.tsv": "bc83814ae137b96f735880e1af5cc9d51fae98a84ddfc78035d080f958e3a525"
+      },
+      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
+      "outcome": "out-of-scope",
+      "reason": "OperatorOS runtime, release, checklist, report, and local audit changes do not alter packaged Intent skill guidance or metadata.",
+      "evidence": [
+        "Current diff; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
       ]
     }
   }

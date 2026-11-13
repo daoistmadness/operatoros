@@ -79,11 +79,41 @@ def logged(command, path, **kwargs):
     result.check_returncode()
 
 
+def reject_unresolved_high_critical_findings(scan):
+    findings = []
+    results = scan.get('Results')
+    if not isinstance(results, list):
+        raise ValueError('vulnerability scan results are malformed')
+    for result in results:
+        if not isinstance(result, dict):
+            raise ValueError('vulnerability scan result is malformed')
+        vulnerabilities = result.get('Vulnerabilities')
+        if vulnerabilities is None:
+            continue
+        if not isinstance(vulnerabilities, list):
+            raise ValueError('vulnerability scan findings are malformed')
+        for vulnerability in vulnerabilities:
+            if not isinstance(vulnerability, dict):
+                raise ValueError('vulnerability scan finding is malformed')
+            raw_severity = vulnerability.get('Severity')
+            if not isinstance(raw_severity, str) or not raw_severity.strip():
+                raise ValueError('vulnerability scan finding is malformed')
+            severity = raw_severity.strip().upper()
+            if severity in {'HIGH', 'CRITICAL'}:
+                identifier = vulnerability.get('VulnerabilityID')
+                if not isinstance(identifier, str) or not identifier:
+                    raise ValueError('high/critical vulnerability is missing its identifier')
+                findings.append(f'{severity} {identifier}')
+    if findings:
+        raise ValueError('Trivy scan contains unresolved HIGH/CRITICAL findings: ' + ', '.join(findings))
+
+
 def security_reports(reports, expected_image):
     scan = json.loads((reports / 'scan.json').read_bytes())
     sbom = json.loads((reports / 'sbom.cdx.json').read_bytes())
-    if not isinstance(scan.get('Results'), list) or scan.get('Metadata', {}).get('ImageID') != expected_image['image_id']:
+    if scan.get('Metadata', {}).get('ImageID') != expected_image['image_id']:
         raise ValueError('scan report image identity/results mismatch')
+    reject_unresolved_high_critical_findings(scan)
     properties = sbom.get('metadata', {}).get('component', {}).get('properties', [])
     image_ids = [p.get('value') for p in properties if p.get('name') == 'aquasecurity:trivy:ImageID']
     if sbom.get('bomFormat') != 'CycloneDX' or not isinstance(sbom.get('components'), list) or image_ids != [expected_image['image_id']]:
@@ -204,6 +234,7 @@ def validate(files, sha):
     scan = json.loads(files['scan.json'])
     if scan.get('Metadata', {}).get('ImageID') != manifest['image']['image_id']:
         raise ValueError('vulnerability scan image identity mismatch')
+    reject_unresolved_high_critical_findings(scan)
     trivy_image_ids = [p.get('value') for p in sbom.get('metadata', {}).get('component', {}).get('properties', []) if p.get('name') == 'aquasecurity:trivy:ImageID']
     if trivy_image_ids != [manifest['image']['image_id']]:
         raise ValueError('SBOM image identity mismatch')

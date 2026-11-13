@@ -96,6 +96,9 @@ layout files into an isolated temporary directory. Trivy scans that directory
 through a read-only mount. JSON and CycloneDX must each identify the archive's
 same config ID, and the layout/archive bytes must remain unchanged after scans.
 Missing, malformed or mismatched reports and scanner errors fail packaging.
+The shared verifier rejects any unresolved Trivy HIGH or CRITICAL finding in
+candidate scans and release bundles. It has no ignore-list bypass; lower
+severities remain in the reports for review.
 The release OCI archive and static SPA formats are unchanged.
 
 Run the real scanner compatibility test with

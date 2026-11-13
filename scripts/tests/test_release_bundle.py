@@ -1385,6 +1385,67 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             (root / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': expected['image_id']}}))
             with self.assertRaises(ValueError): m.security_reports(root, expected)
 
+    def test_security_report_rejects_unresolved_high_or_critical_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan = {
+                    'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}],
+                    'Metadata': {'ImageID': image['image_id']},
+                }
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.security_reports(root, image)
+
+    def test_security_report_allows_medium_and_low_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            scan = {
+                'Results': [{'Vulnerabilities': [
+                    {'VulnerabilityID': 'CVE-2026-12345', 'Severity': 'MEDIUM'},
+                    {'VulnerabilityID': 'CVE-2026-54321', 'Severity': 'LOW'},
+                ]}],
+                'Metadata': {'ImageID': image['image_id']},
+            }
+            (root / 'scan.json').write_text(json.dumps(scan))
+            (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+            m.security_reports(root, image)
+
+    def test_security_report_rejects_malformed_vulnerability_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        malformed_scans = (
+            {'Results': [{'Vulnerabilities': ''}]},
+            {'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': ' '}]}]},
+        )
+        for scan in malformed_scans:
+            with self.subTest(scan=scan), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan['Metadata'] = {'ImageID': image['image_id']}
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, 'malformed'):
+                    m.security_reports(root, image)
+
+    def test_release_validation_rejects_unresolved_high_or_critical_findings(self):
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity):
+                files = fixture()
+                scan = json.loads(files['scan.json'])
+                scan['Results'] = [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}]
+                files['scan.json'] = json.dumps(scan).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['scan.json'] = m.digest(files['scan.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.validate(files, SHA)
+
     def test_failure_upload_contains_only_diagnostics_not_failed_bundles(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text()
         job = workflow.split('  release-bundle:\n')[1].split('\n  changes:')[0]
