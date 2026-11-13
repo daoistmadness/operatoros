@@ -242,13 +242,16 @@ Release artifacts are retained by GitHub Actions for a fixed window (currently
 90 days). Keep the imported image, the verified bundle, and the release record
 for every deployment so rollback does not depend on an expired artifact.
 
-The repository also prepares a separate, manually confirmed GitHub-hosted
-deployment rehearsal using one retained release artifact and run-scoped
-Quadlet names. That workflow is not a host deployment path and has not been
-executed. It requires a working user systemd manager, rootless UID/GID maps,
-cgroup v2, supported temporary storage, and measured capacity; the job checks
-these at runtime and stops before creating services if any check fails. See
-[CI release bundles](release-bundles.md#isolated-deployment-rehearsal-prepared-not-executed).
+The manually confirmed GitHub-hosted rehearsal passed in run
+[43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+on 2026-11-13. It used the exact signed release artifact in a disposable
+synthetic deployment with run-scoped Quadlet names. This workflow is not a host
+deployment path and does not qualify OPRSERVER or production data. Checks on
+the target host remain open. The hosted job requires a working user systemd
+manager, rootless UID/GID maps, cgroup v2, supported temporary storage, and
+measured capacity. It checks these at runtime and stops before creating services
+if any check fails. See [CI release bundles](release-bundles.md#isolated-deployment-rehearsal)
+for the run evidence and workflow controls.
 
 Do not run host-changing commands from this draft. Gate D1 requires a separate
 authorization for the exact UID 1002 synthetic resources. Production remains
@@ -325,7 +328,7 @@ release build workflow or substitute another artifact.
 Build the API image and SPA artifact from one reviewed commit after the release
 gate passes.
 
-The Gate C artifact used a Bun 1.4.4 Linux/amd64 Alpine final image and passed its configured Trivy inventory. It contained SQLite 3.53.4 with FTS5 and remains blocked by CVE-2026-119373. The current `Containerfile.api` uses Bun only in its build stage and Node.js 24.22.3 in the final stage. A local image candidate passed exact-image probes for SQLite 3.54.1 in both `node:sqlite` and `better-sqlite3`, but exact-source hosted checks, signed release evidence, and target-host rehearsal remain pending. The candidate does not authorize deployment. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. See the [current integration audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
+The Gate C artifact used a Bun 1.4.4 Linux/amd64 Alpine final image and passed its configured Trivy inventory. It contained SQLite 3.53.4 with FTS5 and remains blocked by CVE-2026-119373. The current `Containerfile.api` uses Bun only in its build stage and Node.js 24.22.3 in the final stage. A local image candidate passed exact-image probes for SQLite 3.54.1 in both `node:sqlite` and `better-sqlite3`. At that time, exact-source hosted checks and signed release evidence remained pending. PR #387 later qualified and signed the Node image, and hosted rehearsal [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002) passed on the exact artifact. OPRSERVER target-host rehearsal remains pending; the artifact does not authorize deployment. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. See the [current integration audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
 
 Record these immutable release identifiers:
 

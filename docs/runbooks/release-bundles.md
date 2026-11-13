@@ -148,7 +148,7 @@ command status and bounded Podman output only; container storage, database,
 environment files, and runtime data are never uploaded. This is not a live
 Quadlet, reboot, or production-host test.
 
-## Isolated deployment rehearsal (prepared, not executed)
+## Isolated deployment rehearsal
 
 The separate `.github/workflows/deployment-rehearsal.yml` workflow is prepared
 to test the repository-managed deployment CLI on a disposable GitHub-hosted
@@ -178,6 +178,20 @@ and SPA SHA-256
 `6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79`. The
 artifact expires on 2027-02-11 10:22:21 UTC. The rehearsal verifies each
 identity before initializing its private Podman store or importing the image.
+
+Hosted run [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+completed on 2026-11-13 from workflow source
+`37bfa038b3054bf2a113bbd58925320cd6b2c55f`. It used the signed release above
+on Ubuntu 24.04 with rootless Podman 4.9.3. The result reports successful
+synthetic deployment, post-backup SQLite preservation, application rollback,
+and interrupted recovery. All seven boolean guards were true, the run reported
+25 check entries and no failures, and the harness exited with code 0. SQLite
+integrity was `ok`, foreign-key violations were zero, journal mode was WAL, and
+the synthetic marker survived each transition. Cleanup passed with no remaining
+resources. GitHub retained evidence artifact `14034070389` through
+`2026-11-27T11:48:41Z`; `rehearsal-evidence.json` SHA-256 is
+`b7c6953b5d7306d598ba4a2c71ad0a2f874dad92c13effb418a1a9fdea8f4301`. This
+run did not access OPRSERVER or production data.
 
 Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS
 run-scoped Podman configuration and storage, random synthetic-only
@@ -261,9 +275,10 @@ rejection, simulated health-check failure, and rollback failure. The workflow
 retains only allowlisted event names, exit codes, `rehearsal-evidence.json`,
 and the cleanup tool's bounded diagnostics for 14 days. It does not retain
 arbitrary subprocess output or deployment CLI output, and never uploads the
-bundle, database, environment file, secrets, or container storage. This
-preparation has not run the workflow or exercised the hosted runner's actual
-service manager.
+bundle, database, environment file, secrets, or container storage. Run
+43419441002 exercised the hosted runner's user systemd manager, rootless Quadlet
+startup and restart, and cleanup. It did not exercise OPRSERVER or its data.
+Target-host service-manager, reboot, crash, and storage acceptance remain open.
 
 When private Podman-context qualification fails, `podman_context` records the
 failing stage, last completed guard, stable failure code, optional process exit
