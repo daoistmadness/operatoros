@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-09
+last_reviewed: 2026-11-13
 ---
 
 # Podman single-host deployment
@@ -41,7 +41,7 @@ handoff and the reviewed helper-adoption boundary.
 
 ## Status
 
-**Candidate B is accepted for the D1 synthetic runtime.** This decision does not authorize host changes or production data. Gate C passed with harness `b328987fa25338ea518dd15600ea3628fc00449e` and release source `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`. OPRSERVER qualification on Podman 5.7.0 has not run. Production remains NO-GO while encryption, backup recovery, administrator access, private access, and the Bun/SQLite assessment remain open.
+**Candidate B is accepted for the D1 synthetic runtime.** This decision does not authorize host changes or production data. Gate C passed with harness `b328987fa25338ea518dd15600ea3628fc00449e` and release source `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`. OPRSERVER qualification on Podman 5.7.0 has not run. A local API image candidate now uses Node.js 24.22.3 with SQLite 3.54.1 in both `node:sqlite` and `better-sqlite3`; its exact-image probes passed. The candidate has no hosted checks, signature, or target-host rehearsal. Production remains NO-GO while encryption, backup recovery, administrator access, private access, and release qualification remain open.
 
 Gate C source baseline: harness `b328987fa25338ea518dd15600ea3628fc00449e`, with release source `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`.
 
@@ -66,7 +66,7 @@ flowchart LR
   Browser["Authorized tailnet device"]
   Serve["Tailscale Serve HTTPS<br/>Gate D2 pending"]
   Caddy["Rootless Caddy container<br/>static client files + reverse proxy"]
-  API["Rootless Podman API container<br/>Elysia + Bun"]
+  API["Rootless Podman API container<br/>Elysia + Node.js candidate"]
   Data[("Persistent host directory<br/>SQLite + API-owned files")]
   Backup["Approved off-host encrypted backup"]
 
@@ -115,7 +115,7 @@ Use Quadlet-generated systemd services for the API container. It keeps process s
 
 The application image must run as a non-root numeric user. Test the exact user-namespace mapping and bind-mount ownership before using a production data path. Do not use Podman's recursive ownership option on an existing database. Start the rehearsal with synthetic data only.
 
-Bun's JavaScriptCore runtime may need writable-executable memory for its JIT. Do not add a systemd or container memory-execution restriction until the exact production image passes runtime tests.
+The API image candidate uses Node.js and V8; the local development runtime remains Bun. Do not add a systemd or container memory-execution restriction until the exact release image passes runtime tests.
 
 ## Ingress topology comparison
 
@@ -174,7 +174,7 @@ Rootful Podman is not the default. It can simplify host networking, but gives th
 
 Build the API image and static client from the same reviewed source commit. Pin the API image by immutable OCI digest. Record the source commit, build tool versions, base image digest, lockfile checksum, image digest, static archive checksum, and build attestations in one release record.
 
-The repository has a production API Containerfile and Quadlet template under `deploy/podman/`, a Caddyfile for the rootless Caddy container, and a local synthetic validation harness. Do not reuse the development image. The accepted release uses a digest-pinned Bun 1.4.4 Alpine Linux/amd64 base and exact `apk` versions for `flock` and `lsof`. Gate C's configured Trivy inventory passed, but it does not resolve the embedded Bun/SQLite assessment for CVE-2026-119373. The target Ubuntu package candidates, production registry/signer, and host installation procedure remain unverified.
+The repository has a production API Containerfile and Quadlet template under `deploy/podman/`, a Caddyfile for the rootless Caddy container, and a local synthetic validation harness. Do not reuse the development image. The current Containerfile uses Bun 1.4.4 only in its build stage and Node.js 24.22.3 in the final image. Both images are digest-pinned, and the final stage pins exact `apk` versions for `flock` and `lsof`. The local Node candidate reports SQLite 3.54.1 in `node:sqlite` and `better-sqlite3`, with FTS5 enabled in both. It is not a release artifact. Exact-source CI, CycloneDX/Trivy evidence, signature, provenance, and target Ubuntu rehearsal remain unverified.
 
 The API image records the source revision, dirty-tree state, and source-manifest
 SHA-256 in OCI labels and `/usr/share/operatoros/build-provenance`. The local
@@ -221,11 +221,10 @@ lifecycle, API health and authentication, SPA routing, WAL and integrity
 checks, locking, invalid-input rejection, interrupted-transaction recovery,
 application rollback, and scoped cleanup.
 
-Gate C does not prove cross-release rollback between distinct API images,
+Gate C used the earlier Bun-based image and does not prove cross-release rollback between distinct API images,
 recovery after a real process or host crash, compatibility with OPRSERVER's
 live configuration, independent off-host database recovery, effective tailnet
-grants, or resolution of the embedded Bun 1.4.4 and SQLite 3.53.4 security
-assessment for CVE-2026-119373. OPRSERVER runs Ubuntu 26.04.1 and Podman 5.7.0.
+grants, or release qualification of the newer Node.js candidate. OPRSERVER runs Ubuntu 26.04.1 and Podman 5.7.0.
 The UID 1002 runtime has not been created or tested. D1 must use only synthetic
 data on the existing unencrypted data filesystem. Production remains NO-GO.
 
@@ -243,6 +242,8 @@ Before rollback, verify that the prior API version accepts the current schema. T
 - [Ubuntu Noble Podman package](https://packages.ubuntu.com/noble/podman)
 - [Caddy official package installation](https://caddyserver.com/docs/install)
 - [Caddy route directive](https://caddyserver.com/docs/caddyfile/directives/route)
+- [Node.js 24.22.3 security release](https://nodejs.org/en/blog/release/v24.22.3)
+- [SQLite 3.54.1 release history](https://www.sqlite.org/changes.html)
 - [Caddy file server](https://caddyserver.com/docs/caddyfile/directives/file_server)
 - [Ubuntu deployment runbook](../runbooks/ubuntu-server-deployment.md)
 - [Backup and restore](../runbooks/backup-restore.md)

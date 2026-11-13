@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Database } from "bun:sqlite";
+import type { SqliteClient } from "./sqlite-client";
 
 type ObjectRow = { type: string; name: string; tbl_name: string; sql: string };
 
@@ -12,7 +12,7 @@ function legacyString(value: string): string {
   return `${quote}${escaped}${quote}`;
 }
 
-export function legacySchemaFingerprint(client: Database): string {
+export function legacySchemaFingerprint(client: SqliteClient): string {
   const objects = client.query(
     "SELECT type, name, tbl_name, COALESCE(sql, '') AS sql FROM sqlite_master " +
     "WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations') ORDER BY type, name",

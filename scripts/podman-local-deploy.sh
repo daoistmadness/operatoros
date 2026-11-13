@@ -140,18 +140,9 @@ podman run --rm --entrypoint /bin/sh "$image_tag" -ec '
   test -f /usr/share/operatoros/build-provenance
   test -z "$(find /app -type f \( -name "*.sqlite" -o -name "*.db" -o -name "*.pem" -o -name ".env" \) -print -quit)"
 ' >"$workspace/image-content-policy.log"
-podman run --rm --workdir /app/apps/api --entrypoint bun "$image_tag" -e '
-  import { createWorkbook, readXlsxWorkbook, writeXlsxWorkbook, readLegacyXlsRows, writeLegacyXlsRows } from "@operatoros/excel";
-  const workbook = createWorkbook({ exportType: "podman-image-smoke" });
-  const sheet = workbook.addWorksheet("Synthetic");
-  sheet.addRow(["student_identifier", "student_name"]);
-  sheet.addRow(["SYN-001", "Synthetic Student"]);
-  const xlsx = await readXlsxWorkbook(await writeXlsxWorkbook(workbook));
-  if (xlsx.sheets[0]?.rows[0]?.values[1] !== "Synthetic Student") throw new Error("XLSX round trip failed");
-  const xls = readLegacyXlsRows(writeLegacyXlsRows([["SYN-001", "Synthetic Student"]], ["student_identifier", "student_name"], "Synthetic"));
-  if (xls.rows[0]?.[1] !== "Synthetic Student") throw new Error("legacy XLS round trip failed");
-  console.log("PASS XLSX and legacy XLS synthetic round trips");
-' | tee "$workspace/excel-image-smoke.log"
+"$bun_bin" build "$source_root/apps/api/tests/node-runtime-smoke.ts" --target=node --packages=bundle --outfile="$workspace/node-excel-runtime-smoke.mjs"
+podman run --rm --volume "$workspace/node-excel-runtime-smoke.mjs:/app/apps/api/dist/node-excel-runtime-smoke.mjs:ro" \
+  --entrypoint node "$image_tag" /app/apps/api/dist/node-excel-runtime-smoke.mjs | tee "$workspace/excel-image-smoke.log"
 
 quadlet="$workspace/quadlet-xdg/containers/systemd/operatoros-api.container"
 "$source_root/scripts/render-operatoros-quadlet.sh" "localhost/operatoros-api@$image_digest" "$quadlet"
@@ -337,12 +328,12 @@ podman run --rm --name "operatoros-restore-cli-$run_id" --label "$run_label" \
   --cap-drop all --security-opt no-new-privileges --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m \
   --volume "$workspace/backup-source:/var/lib/operatoros/data:rw" \
   --volume "$workspace/restore-target:/tmp/operatoros-restore:rw" --env-file "$workspace/api.env" \
-  --entrypoint bun "$image_tag" run apps/api/src/backup-cli.ts restore-disposable "$backup_filename" /tmp/operatoros-restore \
+  --entrypoint node "$image_tag" apps/api/dist/backup-cli.mjs restore-disposable "$backup_filename" /tmp/operatoros-restore \
   | tee "$workspace/restore.log"
 podman run --rm --userns keep-id:uid=10000,gid=10000 --user 10000:10000 --read-only --read-only-tmpfs=true \
   --cap-drop all --security-opt no-new-privileges --volume "$workspace/restore-target:/var/lib/operatoros/data:rw" \
-  --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data --entrypoint bun "$image_tag" \
-  run packages/db/src/db-cli.ts validate --data-dir /var/lib/operatoros/data | tee "$workspace/restore-validate.log"
+  --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data --entrypoint node "$image_tag" \
+  apps/api/dist/db-cli.mjs validate --data-dir /var/lib/operatoros/data | tee "$workspace/restore-validate.log"
 
 podman rm --force "$api_name" >/dev/null
 podman run --detach --name "operatoros-restore-api-$run_id" --label "$run_label" \

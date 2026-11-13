@@ -1,4 +1,4 @@
-import { Elysia, t } from "elysia";
+import { Elysia, t, type ElysiaAdapter } from "elysia";
 import { dirname } from "node:path";
 import { openapi } from "@elysiajs/openapi";
 import { DEFAULT_STUDENT_IOM_MAX_FILE_SIZE_BYTES, DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES, type BackendConfig } from "./config";
@@ -61,13 +61,13 @@ function errorBody(code: string, message: string) {
   return { error: { code, message } };
 }
 
-export function createApp(_config: Partial<BackendConfig> = {}) {
+export function createApp(_config: Partial<BackendConfig> = {}, adapter?: ElysiaAdapter) {
   if ((_config.environment ?? process.env.NODE_ENV) !== "test") assertAuthCookieSecret(_config.auth?.authCookieSecret);
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const securityConfig = defaultAuthConfig(_config.auth);
-  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
+  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, passwordVerifier: _config.passwordVerifier, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
   let applicationRoutesRegistered = false;
-  const app = new Elysia({ name: "operatoros-api" })
+  const app = new Elysia({ name: "operatoros-api", ...(adapter ? { adapter } : {}) })
     .onError(({ code, set }) => {
       set.headers["content-type"] = "application/json";
       if (code === "VALIDATION") {

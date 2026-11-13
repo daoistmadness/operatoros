@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-13
 ---
 
 # Dependency audit exceptions
@@ -15,13 +15,17 @@ The `minimatch` paths resolve to patched `11.0.1`, including the ExcelJS /
 Archiver production path and development tooling. The root scoped overrides and
 consumer compatibility tests remain in place.
 
-`bun audit` does not scan Bun's embedded SQLite runtime. Bun 1.4.4 embeds
-SQLite 3.53.4 with FTS5 enabled; [CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373)
-affects SQLite versions before 3.54.0. This remains a separate unresolved
-runtime finding. The API and database source scan found no FTS5 table creation
-or `MATCH` query, but the runtime itself is still affected. See the
-[deployment readiness audit](../audits/podman-deployment-readiness.md) for the
-current runtime and image assessment.
+`bun audit` does not scan Bun's embedded SQLite runtime. The local Bun 1.4.4
+runtime still embeds SQLite 3.53.4 with FTS5 enabled.
+[CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373) affects
+SQLite versions before 3.54.0. The API container candidate now uses Node.js
+24.22.3 with SQLite 3.54.1 in both `node:sqlite` and the `better-sqlite3`
+native addon. The exact local image passed version, source ID, compile-option,
+and FTS5 feature probes for both copies. Exact-source hosted checks, the
+release SBOM, signature, and deployment rehearsal remain pending, so this
+candidate does not close release qualification. No security exception is
+active. See the [stability report](../../STABILITY_REPORT.md) for its image
+identity and evidence limits.
 
 | Advisory | Package and range | Reason | Compensating control | Owner | Review date |
 | --- | --- | --- | --- | --- | --- |

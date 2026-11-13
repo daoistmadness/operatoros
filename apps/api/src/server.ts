@@ -1,3 +1,6 @@
+import { node } from "@elysiajs/node";
+import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { createApp } from "./app";
 import { assertAuthCookieSecret } from "./auth/service";
 import { loadConfig } from "./config";
@@ -20,6 +23,17 @@ export async function startServer(overrides: Partial<import("./config").BackendC
   let operationLock: Awaited<ReturnType<typeof acquireBackupOperationLock>> | undefined;
   let databaseHandle = config.databaseHandle;
   let app: ReturnType<typeof createApp> | undefined;
+  let serverInfo: {
+    port: number;
+    hostname: string;
+    raw?: {
+      ready?(): Promise<unknown>;
+      close?(closeActiveConnections?: boolean): Promise<void>;
+      node?: { server?: import("node:http").Server };
+      bun?: { server?: { port: number; address?: { port: number } } };
+    };
+    stop(closeActiveConnections?: boolean): Promise<void>;
+  } | undefined;
   let stopping: Promise<void> | undefined;
   let operationLockLost = false;
   try {
@@ -30,12 +44,26 @@ export async function startServer(overrides: Partial<import("./config").BackendC
       cleanupInterruptedBackupScratch(dataPaths.databasePath, dataPaths.backupDir);
     }
     databaseHandle ??= config.databasePath ? openDatabase(config.databasePath) : undefined;
-    app = createApp({ ...config, databaseHandle });
-    app.listen({ hostname: config.hostname, port: config.port === 0 ? 0 : config.port });
-    const bunServer = app.server as unknown as { port: number };
-    if (!bunServer) throw new Error("Elysia did not expose a Bun server");
+    app = createApp({ ...config, databaseHandle }, process.versions.bun ? undefined : node());
+    app.listen({ hostname: config.hostname, port: config.port }, (value) => {
+      serverInfo = value as unknown as typeof serverInfo;
+      app!.server = value;
+      const close = serverInfo!.raw?.close;
+      if (close) serverInfo!.stop = (closeActiveConnections = false) => close.call(serverInfo!.raw, closeActiveConnections);
+    });
+    if (!serverInfo) throw new Error("Elysia Node adapter did not expose its server");
+    await serverInfo.raw?.ready?.();
+    const listener = serverInfo.raw?.node?.server;
+    const address = listener?.address();
+    const port = address && typeof address !== "string"
+      ? address.port
+      : serverInfo.raw?.bun?.server?.address?.port ?? serverInfo.raw?.bun?.server?.port ?? serverInfo.port;
+    if (!port) throw new Error("Elysia adapter did not expose its bound TCP port");
     const stop = (): Promise<void> => stopping ??= (async () => {
-      try { await app!.stop(true); }
+      try {
+        if (process.versions.bun) await app!.stop(true);
+        else await serverInfo!.stop(true);
+      }
       finally {
         databaseHandle?.close();
         await operationLock?.release();
@@ -44,7 +72,7 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     operationLock?.onLost(() => { operationLockLost = true; void stop(); });
     if (operationLockLost) throw Object.assign(new Error("BACKUP_OPERATION_LOCK_UNAVAILABLE"), { code: "BACKUP_OPERATION_LOCK_UNAVAILABLE" });
     return {
-      port: bunServer.port,
+      port,
       hostname: config.hostname,
       paths: config.dataPaths,
       stop,
@@ -52,7 +80,12 @@ export async function startServer(overrides: Partial<import("./config").BackendC
   } catch (error) {
     if (stopping) await stopping;
     else {
-      try { await app?.stop(true); }
+      try {
+        if (serverInfo) {
+          if (process.versions.bun) await app?.stop(true);
+          else await serverInfo.stop(true);
+        }
+      }
       finally {
         databaseHandle?.close();
         await operationLock?.release();
@@ -62,7 +95,7 @@ export async function startServer(overrides: Partial<import("./config").BackendC
   }
 }
 
-if (import.meta.main) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   const config = loadConfig();
   const instance = await startServer(config);
   if (instance.paths) {
@@ -70,6 +103,7 @@ if (import.meta.main) {
   }
   console.log(`OperatorOS security\n  Backup encryption: ${config.backupEncryption ? "configured" : "not configured"}\n  Active backup key ID: ${config.backupEncryption?.activeKeyId ?? "none"}\n  Trusted proxy: ${config.auth?.trustedProxyAddresses?.length ? "enabled" : "disabled"}\n  Allowed origins: ${config.auth?.allowedOrigins?.length ?? 0}`);
   console.log(`operatoros-api listening on 127.0.0.1:${instance.port}`);
-  process.on("SIGINT", () => { void instance.stop(); });
-  process.on("SIGTERM", () => { void instance.stop(); });
+  const shutdown = () => { void instance.stop().catch((error) => { console.error("OperatorOS API shutdown failed.", error); process.exitCode = 1; }); };
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
 }

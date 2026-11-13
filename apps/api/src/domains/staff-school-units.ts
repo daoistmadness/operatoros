@@ -1,4 +1,4 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding, SqliteClient } from "@operatoros/db";
 import type { StaffSchoolUnitAssignmentDto } from "@operatoros/contracts/staff";
 
 type AssignmentRow = {
@@ -24,7 +24,7 @@ export type StaffSchoolUnitEligibility = { staff_member_id: string; school_unit_
 
 export function appendCurrentSchoolUnitFilter(
   where: string[],
-  params: SQLQueryBindings[],
+  params: SqliteBinding[],
   schoolUnitId: string | undefined,
   asOfDate: string,
 ): boolean {
@@ -36,7 +36,7 @@ export function appendCurrentSchoolUnitFilter(
   return true;
 }
 
-function assignmentRows(db: Database, staffMemberId: string, currentDate?: string): StaffSchoolUnitAssignmentDto[] {
+function assignmentRows(db: SqliteClient, staffMemberId: string, currentDate?: string): StaffSchoolUnitAssignmentDto[] {
   const currentFilter = currentDate === undefined ? "" : " AND a.cancelled_at IS NULL AND (a.effective_to IS NULL OR a.effective_to>=?)";
   const params = currentDate === undefined ? [staffMemberId] : [staffMemberId, currentDate];
   const assignments = db.query(`
@@ -55,18 +55,18 @@ function assignmentRows(db: Database, staffMemberId: string, currentDate?: strin
 }
 
 export function staffSchoolUnitAssignments(
-  db: Database,
+  db: SqliteClient,
   staffMemberId: string,
   asOfDate: string,
 ): StaffSchoolUnitAssignmentDto[] {
   return assignmentRows(db, staffMemberId, asOfDate);
 }
 
-export function staffSchoolUnitAssignmentHistory(db: Database, staffMemberId: string): StaffSchoolUnitAssignmentDto[] {
+export function staffSchoolUnitAssignmentHistory(db: SqliteClient, staffMemberId: string): StaffSchoolUnitAssignmentDto[] {
   return assignmentRows(db, staffMemberId);
 }
 
-export function eligibleStaffBySchoolUnitForMonth(db: Database, monthStart: string, monthEnd: string): StaffSchoolUnitEligibility[] {
+export function eligibleStaffBySchoolUnitForMonth(db: SqliteClient, monthStart: string, monthEnd: string): StaffSchoolUnitEligibility[] {
   return db.query(`
     SELECT DISTINCT staff_member_id, school_unit_id
     FROM staff_school_unit_assignment_versions

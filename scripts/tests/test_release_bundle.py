@@ -61,25 +61,41 @@ def fixture():
     blobs['index.json'] = json.dumps({'schemaVersion': 2, 'manifests': [manifest]}).encode()
     api_archive = archive(blobs)
     image = m.image_metadata(api_archive, SHA)
-    bun_hash = 'c' * 64
+    node_hash = 'c' * 64
     source_id = '2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76'
-    bun_ref = 'urn:operatoros:runtime:bun:' + bun_hash
+    node_ref = 'urn:operatoros:runtime:node:' + node_hash
+    driver_ref = 'urn:operatoros:native-addon:better-sqlite3:' + '1' * 64
     sqlite_ref = 'urn:operatoros:runtime:sqlite:' + 'd' * 64
-    base_image = 'docker.io/oven/bun:0.0.0-alpine@sha256:' + 'f' * 64
+    node_sqlite_ref = 'urn:operatoros:runtime:sqlite:' + '2' * 64
+    base_image = 'docker.io/library/node:24.22.3-alpine3.24@sha256:' + 'f' * 64
     sbom = {
         'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'components': [{
-            'type': 'application', 'name': 'Bun JavaScript runtime', 'version': '0.0.0',
-            'bom-ref': bun_ref, 'hashes': [{'alg': 'SHA-256', 'content': bun_hash}],
+            'type': 'application', 'name': 'Node.js runtime', 'version': '24.22.3',
+            'bom-ref': node_ref, 'hashes': [{'alg': 'SHA-256', 'content': node_hash}],
             'properties': [{'name': 'operatoros:runtime:origin', 'value': base_image}],
-            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
-                {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                'components': [{'type': 'library', 'name': 'better-sqlite3', 'version': '13.1.1',
+                'bom-ref': driver_ref, 'purl': 'pkg:npm/better-sqlite3@13.1.1',
+                'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
+                    {'name': 'operatoros:component:distribution', 'value': 'bundled-native-addon'},
+                    {'name': 'operatoros:sqlite:provider', 'value': 'better-sqlite3'},
+                    {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                    {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
+                    {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
+                    {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+                    {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
+                ]}],
+            }, {'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': node_sqlite_ref, 'properties': [
+                {'name': 'operatoros:component:distribution', 'value': 'statically-linked-node-builtin'},
+                {'name': 'operatoros:sqlite:provider', 'value': 'node:sqlite'},
+                {'name': 'operatoros:sqlite:source-id', 'value': 'node-builtin-source-id'},
                 {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+                {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
             ]}],
         }],
-        'dependencies': [{'ref': bun_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}],
-        'vulnerabilities': [{'id': 'CVE-2026-119373', 'analysis': {'state': 'resolved'}, 'affects': [{'ref': sqlite_ref}]}],
+        'dependencies': [{'ref': node_ref, 'dependsOn': [driver_ref, node_sqlite_ref]}, {'ref': driver_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}, {'ref': node_sqlite_ref, 'dependsOn': []}],
+        'vulnerabilities': [{'id': 'CVE-2026-119373', 'analysis': {'state': 'resolved'}, 'affects': [{'ref': sqlite_ref}, {'ref': node_sqlite_ref}]}],
         'metadata': {
             'component': {'properties': [{'name': 'aquasecurity:trivy:ImageID', 'value': image['image_id']}]},
             'properties': [
@@ -91,11 +107,17 @@ def fixture():
         },
     }
     runtime = {
-        'schema_version': 1, 'qualification_status': 'PASS',
+        'schema_version': 2, 'qualification_status': 'PASS',
         'source': {'repository': 'daoistmadness/operatoros', 'commit': SHA, 'containerfile': 'deploy/podman/Containerfile.api', 'containerfile_sha256': 'e' * 64, 'pinned_base_images': [base_image]},
         'artifact': {'oci_manifest_digest': image['manifest_digest'], 'image_config_digest': image['image_id'], 'oci_archive_sha256': m.digest(api_archive)},
-        'runtime': {'name': 'Bun', 'version': '0.0.0', 'binary_sha256': bun_hash, 'origin': base_image, 'embedded_component': 'SQLite', 'sqlite_version': '3.54.1', 'sqlite_source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True},
-        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite embedded in the Bun executable', 'status': 'RESOLVED_BY_FIXED_VERSION', 'qualification_floor': 'SQLite 3.54.0 or later, or a verified equivalent backport', 'runtime_gate_reason': None},
+        'runtime': {'name': 'Node.js', 'version': '24.22.3', 'binary_sha256': node_hash, 'origin': base_image, 'sqlite_driver': 'better-sqlite3', 'sqlite_driver_version': '13.1.1', 'sqlite_distribution': 'bundled-native-addon', 'sqlite_libraries': [
+            {'provider': 'better-sqlite3', 'distribution': 'bundled-native-addon', 'version': '3.54.1', 'source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION'},
+            {'provider': 'node:sqlite', 'distribution': 'statically-linked-node-builtin', 'version': '3.54.1', 'source_id': 'node-builtin-source-id', 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION'},
+        ]},
+        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite bundled in better-sqlite3 and Node.js node:sqlite', 'status': 'RESOLVED_BY_FIXED_VERSION', 'components': [
+            {'provider': 'better-sqlite3', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+            {'provider': 'node:sqlite', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+        ], 'qualification_floor': 'SQLite 3.54.0 or later, or a verified equivalent backport', 'runtime_gate_reason': None},
     }
     files = {
         'operatoros-api.oci.tar': api_archive,
@@ -117,6 +139,31 @@ def checksums(files):
 class BundleTests(unittest.TestCase):
     def test_consistent_bundle(self):
         self.assertEqual(m.validate(fixture(), SHA)['source_commit'], SHA)
+
+    def test_release_bundle_requires_both_sqlite_runtime_identities(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['runtime']['sqlite_libraries'].pop()
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'omits one or more SQLite runtime identities'):
+            m.validate(files, SHA)
+
+    def test_release_bundle_rejects_extra_cve_affected_component(self):
+        files = fixture()
+        sbom = json.loads(files['sbom.cdx.json'])
+        cve = next(item for item in sbom['vulnerabilities'] if item['id'] == 'CVE-2026-119373')
+        cve['affects'].append({'ref': 'pkg:apk/alpine/sqlite@3.54.1'})
+        files['sbom.cdx.json'] = json.dumps(sbom).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['sbom.cdx.json'] = m.digest(files['sbom.cdx.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'security disposition'):
+            m.validate(files, SHA)
 
     def test_corruption_and_missing_artifacts(self):
         for name in m.FILES:
@@ -2008,7 +2055,7 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
         self.assertIn("github.ref != 'refs/heads/main'", candidate)
         self.assertIn('contents: read', candidate)
-        self.assertIn('scripts/check-bun-sqlite-runtime.py', candidate)
+        self.assertIn('scripts/check-node-sqlite-runtime.py', candidate)
         self.assertIn('scripts/record-embedded-runtime.py', candidate)
         self.assertIn('reports/embedded-runtime.json', candidate)
         self.assertIn('release.scan_image(', candidate)
@@ -2018,4 +2065,4 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertNotIn('podman push', candidate)
         retained = candidate.split('      - name: Retain non-image candidate reports', 1)[1]
         self.assertNotIn('image.oci.tar', retained)
-        self.assertIn('Enforcement test: `PASS`', candidate)
+        self.assertIn('RUNTIME_GATE_PASS', candidate)

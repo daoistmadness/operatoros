@@ -7,47 +7,54 @@ last_reviewed: 2026-11-13
 
 ## Decisions from the 25 most recent pull requests
 
-Reviewed the 25 newest GitHub PRs returned on 2026-11-12: #357–#381, including
-the open Phase 7 follow-up #381. Their descriptions and recorded hosted/local
-failure evidence show these recurring lessons:
+Reviewed the 25 newest GitHub PRs returned on 2026-11-13: #362–#386. PR #386
+was open; #362–#385 were merged. Review covered titles, descriptions, changed
+files, and the hosted/local failure and validation evidence recorded in the PRs.
+The recurring lessons are:
 
-- **Keep release gates fail-closed and evidence tied to the artifact.** PRs
-  #358, #360, #366, #380, and #381 bind verification to source, run, artifact,
-  and image identity. Keep the embedded SQLite finding in the SBOM and block
-  attestation while G3 is open; scanner scope or an adapter smoke test is not a
-  security disposition.
-- **Test state changes, not only health.** PRs #360, #375, and #376 distinguish
-  application rollback from database recovery and preserve a unique write made
-  after backup across restart, rollback, and interrupted recovery. Require the
-  same invariant in future rehearsal evidence; a healthy endpoint or
-  pre-backup row is insufficient.
+- **Bind each release result to its source and artifact.** PRs #366, #380, and
+  #381 bind qualification to source, run, artifact, and image identity. PRs
+  #382, #384, #385, and #386 show why those records also need exact merge and
+  post-merge CI/CodeQL commits, with skipped release jobs reported as skipped.
+  Keep signing fail-closed until the runtime inventory, scan, and security
+  disposition match the same source and image digest.
+- **Test state changes, not only health.** PRs #375 and #376 preserve a unique
+  write made after backup across restart, rollback, and interrupted recovery.
+  Require the same invariant in future rehearsal evidence; a healthy endpoint
+  or pre-backup row is insufficient.
 - **Carry one verified runtime context through every operation.** PRs #362,
   #369, #371, and #374 exposed storage configuration drift, a non-empty
   bootstrap root, and a validator that lost the accepted private Podman
-  context. Pass the validated context to validators and units, assert effective
-  identity and paths, and do not loosen a guard to make a mismatched runner
-  pass.
-- **Make failures and cleanup auditable without leaking internals.** PRs
-  #359, #367, #368, #370, #372, #373, and #375 show that stale stage names,
-  missing exit/operation identity, combined stdout/stderr, and incomplete
-  cleanup can hide the first failure. Keep stable allowlisted failure classes,
-  the last completed guard, operation and exit status, and cleanup status. Keep
-  raw stderr, secrets, database files, private paths, and shared stores out of
-  retained evidence.
-- **Keep privileges and host acceptance narrow.** PRs #363, #377, #378, and
-  #379 separate preparation from live host changes, allow only the Caddy
-  capability required by the pinned image, and disable the unused Caddy admin
-  endpoint. Synthetic runner success still does not prove target-host,
-  independent-device, or off-host recovery acceptance.
-- **Prefer small, measured changes.** PR #357 consolidated duplicate UI
-  ownership but measured no meaningful bundle-size improvement. Retain such a
-  change for simpler dependency ownership, not as a performance claim; avoid
-  broad migrations without measured benefit and end-to-end acceptance.
+  context. PR #383 found active systemd-managed monitors missing from the
+  queried Podman listing, so that runtime context still needs reconciliation.
+  Pass the verified context to validators and units, and assert effective
+  identity and paths.
+- **Make failures and cleanup auditable without leaking internals.** PRs #367
+  through #375 show how stale stage names, missing operation identity, combined
+  stdout/stderr, and incomplete cleanup can hide the first failure. Keep stable
+  allowlisted failure classes, the last completed guard, operation and exit
+  status, and cleanup status. Keep raw stderr, secrets, databases, private
+  paths, and shared stores out of retained evidence.
+- **Keep privileges and host acceptance narrow.** PRs #363 and #377–#379
+  separate preparation from host changes, allow only the Caddy capability
+  required by the pinned image, and disable its unused admin endpoint. PR #383
+  hardened Windows checks but left the actual restore and Identity A/B results
+  unverified. Static checks do not replace an authorized Windows run.
+- **Make CI prerequisites deterministic.** PR #383 authenticated the existing
+  checksum-pinned mise asset request with the workflow's read-only token after
+  hosted bootstrap failures. Keep both asset and extracted-binary hashes
+  pinned, and grant only `contents: read`.
+- **Close each fix at the boundary that failed.** PRs #365 and #378–#379 added
+  checks for the actual GitHub response shape and pinned image behavior; PRs
+  #367–#376 added isolated rehearsal checks after recorded hosted failures.
+  Keep a small regression test for each reproduced failure and run the exact
+  image or host boundary that unit tests cannot cover.
 
-The resulting order is to qualify the runtime, build one exact candidate, run
-the isolated lifecycle and recovery checks against that digest, then verify
-independent recovery and access controls before any production decision. Keep
-the single-server SQLite architecture and production NO-GO boundary in place.
+The resulting order is to qualify the final image runtime, run exact-source CI,
+bind the SBOM and provenance to one digest, exercise lifecycle and recovery
+against that image, then verify independent recovery and access controls before
+any production decision. Keep the single-server SQLite architecture and
+production NO-GO boundary in place.
 
 ## Current decisions
 
@@ -65,15 +72,18 @@ the single-server SQLite architecture and production NO-GO boundary in place.
   hourly limit by originating IP ([GitHub rate-limit policy](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api));
   keep the release asset ID and archive and binary checksums pinned, and do not
   grant the bootstrap write permissions.
-- Keep G3 blocked. A source audit found 19 production modules using `bun:sqlite`
-  or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
-  feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
-  and does not pass the current runtime gate. Do not pursue that migration as a
-  G3 fix without a reviewed disposition for the embedded component. Bun's
-  [Bun v1.4.4 SQLite documentation](https://github.com/oven-sh/bun/blob/bun-v1.4.4/docs/runtime/sqlite.mdx)
-  confirms Linux and Windows statically link SQLite and `Database.setCustomSQLite()`
-  is unavailable on those platforms. A system SQLite installation cannot replace
-  the embedded runtime library. No security exception is active.
+- Keep the released source G3 gate closed until the exact reviewed candidate
+  passes hosted CI, SBOM/scan/provenance checks, and signing. The local OCI
+  candidate now uses Node 24.22.3 and `better-sqlite3` 13.1.1 with SQLite 3.54.1
+  in both `node:sqlite` and the native addon; the final image contains no Bun
+  runtime. The image base digest is pinned, the Node binary and both SQLite
+  copies are probed from the image, and local synthetic API, worker, restart,
+  encrypted-backup, and restore checks passed. Node 24.22.3
+  is the official security release ([release](https://nodejs.org/en/blog/release/v24.22.3),
+  [security advisory](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)).
+  This candidate is local evidence only; it does not qualify a release artifact
+  or production host. Bun remains the local build/development tool. No security
+  exception is active.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

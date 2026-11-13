@@ -133,9 +133,9 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
           python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
-      - name: Embedded Bun SQLite release gate tests
+      - name: Node SQLite release gate tests
         working-directory: ${{ github.workspace }}
-        run: python3 -m unittest discover -s scripts/tests -p "test_bun_sqlite_runtime.py"
+        run: python3 -m unittest discover -s scripts/tests -p "test_node_sqlite_runtime.py"
       - name: Pinned Trivy OCI compatibility regression
         working-directory: ${{ github.workspace }}
         env:
@@ -481,7 +481,7 @@ jobs:
               summary.write(f"- Trivy findings by severity: `{json.dumps(counts, sort_keys=True)}`\n")
               summary.write("- The candidate OCI image stays on the ephemeral runner and is not uploaded.\n\n")
           PY
-      - name: Require the embedded runtime gate to pass or reject for the known SQLite floor
+      - name: Require both Node SQLite runtimes to pass
         env:
           CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
           CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
@@ -489,7 +489,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$CANDIDATE_ROOT"
           set +e
-          python3 scripts/check-bun-sqlite-runtime.py "$CANDIDATE_IMAGE" > "$CANDIDATE_ROOT/runtime-gate.json" 2>&1
+          python3 scripts/check-node-sqlite-runtime.py "$CANDIDATE_IMAGE" > "$CANDIDATE_ROOT/runtime-gate.json" 2>&1
           gate_status=$?
           set -e
           python3 scripts/record-embedded-runtime.py \
@@ -511,38 +511,28 @@ jobs:
           with (root / "runtime-gate.json").open(encoding="utf-8") as handle:
               report = json.load(handle)
           image = json.loads((root / "image.json").read_text())
-          if status == 0 and report.get("status") == "PASS":
-              outcome = "RUNTIME_GATE_PASS"
-          else:
-              match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(report.get("sqlite", "")))
+          libraries = report.get("sqliteRuntimes")
+          providers = {item.get("provider") for item in libraries if isinstance(item, dict)} if isinstance(libraries, list) else set()
+          if status != 0 or report.get("status") != "PASS" or providers != {"better-sqlite3", "node:sqlite"} or len(libraries) != 2:
+              raise SystemExit("candidate Node SQLite runtimes did not pass qualification")
+          for library in libraries:
+              match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(library.get("version", "")))
               version = tuple(map(int, match.groups())) if match else ()
-              if not (
-                  status != 0
-                  and report.get("status") == "BLOCKED"
-                  and report.get("fts5") is True
-                  and version
-                  and version < (3, 54, 0)
-                  and isinstance(report.get("bun"), str)
-                  and isinstance(report.get("sqliteSourceId"), str)
-                  and report["sqliteSourceId"].strip()
-              ):
-                  raise SystemExit("candidate was blocked without verifiable vulnerable-runtime evidence")
-              outcome = "EXPECTED_VULNERABLE_RUNTIME_REJECTION"
+              if not version or (library.get("fts5") is True and version < (3, 54, 0)):
+                  raise SystemExit(f"candidate SQLite runtime is below the fixed version in {library.get('provider', 'unknown')}")
+          outcome = "RUNTIME_GATE_PASS"
           with open(sys.argv[4], "a", encoding="utf-8") as summary:
-              summary.write("## Embedded Bun/SQLite qualification\n\n")
+              summary.write("## Node.js and SQLite driver qualification\n\n")
               summary.write(f"- Source commit: `{source}`\n")
               summary.write(f"- OCI manifest digest: `{image['manifest_digest']}`\n")
               summary.write(f"- Qualification outcome: `{outcome}`\n")
-              summary.write(f"- Bun: `{report.get('bun', 'unavailable')}`\n")
-              summary.write(f"- Bun binary SHA-256: `{report.get('bunBinarySha256', 'unavailable')}`\n")
-              summary.write(f"- Embedded SQLite: `{report.get('sqlite', 'unavailable')}`\n")
-              summary.write(f"- SQLite source ID: `{report.get('sqliteSourceId', 'unavailable')}`\n")
-              summary.write(f"- FTS5 active: `{report.get('fts5', 'unavailable')}`\n")
-              summary.write("- Embedded native runtime inventory is included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
-              if outcome == "EXPECTED_VULNERABLE_RUNTIME_REJECTION":
-                  summary.write("- Enforcement test: `PASS`; candidate release status: `BLOCKED`.\n")
-              else:
-                  summary.write("- Runtime gate passed. Candidate remains unsigned, unattested, and unpublished.\n")
+              summary.write(f"- Node.js: `{report.get('node', 'unavailable')}`\n")
+              summary.write(f"- Node.js binary SHA-256: `{report.get('nodeBinarySha256', 'unavailable')}`\n")
+              summary.write(f"- better-sqlite3: `{report.get('betterSqlite3', 'unavailable')}`\n")
+              for library in libraries:
+                  summary.write(f"- `{library['provider']}` SQLite: `{library['version']}`; source ID `{library['sourceId']}`; FTS5 `{library['fts5']}`\n")
+              summary.write("- Node.js built-in and better-sqlite3 SQLite components are included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
+              summary.write("- Runtime gate passed. Candidate remains unsigned, unattested, and unpublished.\n")
               summary.write("\n")
           PY
       - name: Retain non-image candidate reports
