@@ -105,6 +105,12 @@ production NO-GO boundary in place.
   release validation passed in 569 seconds and E2E passed. The manual bundle
   remained skipped on the non-main dispatch. The image remains ephemeral and
   unsigned; PR review, signed provenance, and target-host rehearsal remain.
+  Exact-source run [43388751408](https://github.com/daoistmadness/operatoros/actions/runs/43388751408)
+  then passed on `a5fc398`. Node 24.22.3 and both SQLite providers reported
+  3.54.1 with FTS5; Trivy found zero vulnerabilities across its Alpine and
+  Node targets. The embedded-runtime report marks CVE-2026-119373 resolved.
+  All eight lifecycle stages, E2E, and full release validation passed. The
+  run took 678 seconds. The candidate remained ephemeral and unsigned.
 - The first local Node-image lifecycle run exposed a shutdown bug: closing the
   raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
   scheduler and employee-retention timer active while SQLite closed. The timer
@@ -139,6 +145,12 @@ production NO-GO boundary in place.
   services are running. The cause and alert delivery/ownership remain unknown;
   retain this as a Gate E blocker until an owner-approved recovery path is
   established. Evidence: external `gate-e-monitoring-state-recheck-20261113.json`.
+  A further read-only probe found that both conmon processes use the
+  configured graph and run roots, but their bundle paths and overlay-container
+  metadata directories are absent while the units and payloads stay active.
+  The cause remains unknown. No repair or restart was attempted. Evidence:
+  external `gate-e-monitoring-orphaned-state-probe-20261113.json` and its
+  SHA-256 file.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

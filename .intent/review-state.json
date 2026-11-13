@@ -10231,39 +10231,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "8537ce0d2599456ef23ed4b91f9ab4d745333b1b4cd9ac0b056bcf6fc52f2c21",
+      "fingerprint": "e84e679dccc4cedda3d3f52bd25d142871bc3af7cdc7f6928f87cf8ea8a1594f",
       "snapshot": {
-        "DECISIONS.md": "68611641c0b137bf72cfde3d1fe00d58d290feeccf3db6f4702888c955e39734"
+        "DECISIONS.md": "30ff01e5e716b58d8647b355d13a2617aa645769867e8e6af33dff221d067cde"
       },
-      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
+      "head": "a5fc39831e35e387e02903853e37520dc4817667",
       "outcome": "no-change",
-      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
+      "reason": "These edits update current evidence and checklist status; no library or skill guidance changed.",
       "evidence": [
-        "Changed: DECISIONS.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
+        "Changed: DECISIONS.md at a5fc39831e35e387e02903853e37520dc4817667"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "bc64403492435c79fc1e82692dbb86348754ea82357d31c8b9facde66fb7ee08",
+      "fingerprint": "24945f42f344c18d270090219c592f38f239593f7dfcc1388b085bbd29cfb2cd",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "663beb22ae0d92b17d2df81395de0c52693a3b1531b5fa0e0f7f98f7b8fe3e25"
+        "MASTER_CHECKLIST.md": "31437fa4c2a8f1ee2af5e148e67f85e04149c2e06111b80190c272fec368491a"
       },
-      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
+      "head": "a5fc39831e35e387e02903853e37520dc4817667",
       "outcome": "no-change",
-      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
+      "reason": "These edits update current evidence and checklist status; no library or skill guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
+        "Changed: MASTER_CHECKLIST.md at a5fc39831e35e387e02903853e37520dc4817667"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "aea1ec642c2f6f115e0174ee74dce079c726c2a17f1c62cd2774a2dab18cba97",
+      "fingerprint": "7f6898b42653db773045fbefc8fc0c57f10545bf33baf877d97121032c7edda7",
       "snapshot": {
-        "STABILITY_REPORT.md": "d9aef7192265d1018142791bcc66fa845a33a55ddea28747464fa48a5a744354"
+        "STABILITY_REPORT.md": "44ed5cc860fafdd596c2bec6978f8c88eef68deb11c3fe32b4d909c29966246a"
       },
-      "head": "c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b",
+      "head": "a5fc39831e35e387e02903853e37520dc4817667",
       "outcome": "no-change",
-      "reason": "These changes update checklist, decision, and evidence summaries; no library guidance changed.",
+      "reason": "These edits update current evidence and checklist status; no library or skill guidance changed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at c4b6cf66d90d6b53e5e2595e415cb67cbc2aab2b"
+        "Changed: STABILITY_REPORT.md at a5fc39831e35e387e02903853e37520dc4817667"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
