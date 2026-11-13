@@ -28,11 +28,9 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     hostname: string;
     raw?: {
       ready?(): Promise<unknown>;
-      close?(closeActiveConnections?: boolean): Promise<void>;
       node?: { server?: import("node:http").Server };
       bun?: { server?: { port: number; address?: { port: number } } };
     };
-    stop(closeActiveConnections?: boolean): Promise<void>;
   } | undefined;
   let stopping: Promise<void> | undefined;
   let operationLockLost = false;
@@ -48,8 +46,6 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     app.listen({ hostname: config.hostname, port: config.port }, (value) => {
       serverInfo = value as unknown as typeof serverInfo;
       app!.server = value;
-      const close = serverInfo!.raw?.close;
-      if (close) serverInfo!.stop = (closeActiveConnections = false) => close.call(serverInfo!.raw, closeActiveConnections);
     });
     if (!serverInfo) throw new Error("Elysia Node adapter did not expose its server");
     await serverInfo.raw?.ready?.();
@@ -61,8 +57,7 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     if (!port) throw new Error("Elysia adapter did not expose its bound TCP port");
     const stop = (): Promise<void> => stopping ??= (async () => {
       try {
-        if (process.versions.bun) await app!.stop(true);
-        else await serverInfo!.stop(true);
+        await app!.stop(true);
       }
       finally {
         databaseHandle?.close();
@@ -81,10 +76,7 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     if (stopping) await stopping;
     else {
       try {
-        if (serverInfo) {
-          if (process.versions.bun) await app?.stop(true);
-          else await serverInfo.stop(true);
-        }
+        if (serverInfo) await app?.stop(true);
       }
       finally {
         databaseHandle?.close();
