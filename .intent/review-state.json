@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "cc6d859f06fe5eaf33458bceca9538885ad5a4533908141f53cc33a421cb8996",
+      "fingerprint": "322921c19b0e54cf39296d49600da1579ec55712bea6b2fde29f8438ab08d4cb",
       "snapshot": {
-        "CHANGELOG.md": "e130f185bf7f9226207dcf58021b26f21958b8be4ce4e05c34d14f0c86ecef7b"
+        "CHANGELOG.md": "2bb2a25e200defd4b38aeb0f419932cb7a4749039da329c1c91aaa0517f2682a"
       },
-      "head": "46f2266500404437dc7c2b8d62908f1fd898cad4",
+      "head": "330d16fbd69aae6209ce57078df215a58bf30bc6",
       "outcome": "no-change",
-      "reason": "The post-creation edit assigns PR #389 in the changelog only; no library source or skill guidance changed.",
+      "reason": "This changelog entry accompanies a documentation index clarification only; no library source or skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 46f2266500404437dc7c2b8d62908f1fd898cad4"
+        "Changed: CHANGELOG.md at 330d16fbd69aae6209ce57078df215a58bf30bc6"
       ]
     },
     "source:COMMANDS.md": {
