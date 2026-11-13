@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "75408bab5009e081cfc4dfb265de23a6e55c0ac085ed252cc49103a55d80a89a",
+      "fingerprint": "64a7efd9fadf97f4cc89a3676246354f289a98f74defe406a910f1473c97ece4",
       "snapshot": {
-        "CHANGELOG.md": "6922137c8ee4117edc003e9330a6201e4f5e0716396d482f34c99188b0e4428d"
+        "CHANGELOG.md": "9bbc3128d992a6ebcae4ac1b3ecede9167abb66e07552438dbea48ef3b8cde52"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "Adding the assigned PR number updates release-history metadata only and does not change any developer task covered by the repository Elysia skill.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "CHANGELOG.md adds PR #388 to the already reviewed release-rehearsal entry; the rehearsal implementation and guidance are unchanged. Markdown and changelog validation passed on the same entry before assigning the PR number."
+        "Changed: CHANGELOG.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:COMMANDS.md": {
@@ -4815,15 +4815,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "2e053793c0f0bf2b3b933da391f86c87646ca3deba219ddbcf79ecb6c6666831",
+      "fingerprint": "bdd0170f468fecf1a07921bb64b3a83d614096d5e3ac4e20c6450e30e14f58e3",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "633344028cec09cccb93624b677991e7aeb62e30145a1d3b886ade486f92cfb5"
+        "docs/runbooks/ubuntu-server-deployment.md": "36b02e7425a95bb39f2e03af0a9babdbd3215769b64305d36f303fdbf296e30a"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9739,15 +9739,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "479e58567e0b9c13b721a28ec5f60d45c707968f7fd603740c884fd1fe2401c0",
+      "fingerprint": "4e23a27aa2470db77604d6198bfdfa8ee40f07da84872a4970a2a8824a72a3fe",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "c8a57c28ad0aa630051608b1f8c78cc095146474094bfc9f61699c8a0930977e"
+        "docs/decisions/podman-deployment.md": "38bc47e0fdceee21b8350556591a5015335f0944e036c767750dd5e2d2db8833"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: docs/decisions/podman-deployment.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9919,15 +9919,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "d138056fc7fca9c34b127a404d251fde6576e046b89799f33e1ed4cabc3b4b93",
+      "fingerprint": "fa7e1b689e8548c94f4efb12941eeef3135ca16ccf98cf29ef58dbd9604d2847",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "40b7bca684ff94b629184418f1e01f242ec4a639a47c7b468f7a5d4302e012a4"
+        "docs/runbooks/release-bundles.md": "c4f1ff2becfe5aa6486b3099160fdd20015ef5bc040a7a5f654d258884c52a6c"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: docs/runbooks/release-bundles.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10231,39 +10231,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "feb88dfca192b447b892a9ab05eaff4623728c93ff202c9f9cbac88ed375c2fc",
+      "fingerprint": "7171b42bb9e14530644e757819b9b430b8430fe25573e6762ea8742bfcd048ba",
       "snapshot": {
-        "DECISIONS.md": "77bc7c68b40cdb86807f03e4ffa812439bd4639904f9b4b4bc4dd70ff530e71e"
+        "DECISIONS.md": "0e6d22ec3b1c32521f46a6381bce86ceaf91c16d01e65db6ed9f77775fd62d32"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: DECISIONS.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "15df20831b81c03e07d474aab64eee8dff9cc6f0caa7e8a7a7ec0333229959db",
+      "fingerprint": "bf89ebda3b5a07891430f99616b3486c0949dfa87535eff1f76fe1a57593c47c",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "f7bd1ad9e4da9d68335fc818c32d97d5c0a775e91ca50b7c66db447e7c61e313"
+        "MASTER_CHECKLIST.md": "b6a7bac8d131a446de9e9d56443bc35441dd5d57992b4c6ea1b3f21855afef08"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: MASTER_CHECKLIST.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "6b6de9676129358cf92cac7697f89e1b4a137b2302d0580f9070cfd14fe8eea2",
+      "fingerprint": "d8b61d24c07d336acd8117d61d512c2288e2b36ba525f1811e509a585c95f430",
       "snapshot": {
-        "STABILITY_REPORT.md": "f179c8c7d3143666fd8824d25466a35a46ddb52820a256476aed07d98ec682d3"
+        "STABILITY_REPORT.md": "e6868af0c784e38bfd83a1e3220bc1c22ab8a1c34a39e1ec75acc69a7ea147b1"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "outcome": "no-change",
+      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "Changed: STABILITY_REPORT.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
