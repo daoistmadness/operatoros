@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding } from "@operatoros/db";
 import { t } from "elysia";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
@@ -21,8 +21,8 @@ const SENSITIVE_FIELDS = ["birth_place", "birth_date", "nik", "email", "phone", 
 const STAFF_IMPORT_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const identifierRules: Record<string, RegExp> = { NIP: /^(?:\d{8}|\d{18})$/, NIK: /^\d{16}$/, NUPTK: /^\d{16}$/ };
 
-function rows(context: AuthContext, sql: string, params: SQLQueryBindings[] = []): Row[] { return context.database.client.query(sql).all(...params) as Row[]; }
-function row(context: AuthContext, sql: string, params: SQLQueryBindings[] = []): Row | null { return (context.database.client.query(sql).get(...params) as Row | null) ?? null; }
+function rows(context: AuthContext, sql: string, params: SqliteBinding[] = []): Row[] { return context.database.client.query(sql).all(...params) as Row[]; }
+function row(context: AuthContext, sql: string, params: SqliteBinding[] = []): Row | null { return (context.database.client.query(sql).get(...params) as Row | null) ?? null; }
 function value(value: unknown): string | null { if (value == null) return null; return String(value).trim().replace(/\s+/g, " ") || null; }
 function validDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -80,8 +80,8 @@ function duplicateIdentifier(context: AuthContext, type: string, id: string | nu
     : "SELECT id FROM staff_identifiers WHERE identifier_type=? AND normalized_value=? LIMIT 1";
   return Boolean(row(context, query, exclude ? [type, id, exclude] : [type, id]));
 }
-function safeProfile(body: Row): { assignments: Array<[string, SQLQueryBindings]>; changed: string[]; identity: Record<string, string | null> } {
-  const assignments: Array<[string, SQLQueryBindings]> = [];
+function safeProfile(body: Row): { assignments: Array<[string, SqliteBinding]>; changed: string[]; identity: Record<string, string | null> } {
+  const assignments: Array<[string, SqliteBinding]> = [];
   const changed: string[] = [];
   const identity: Record<string, string | null> = {};
   const fields: Array<[string, string]> = [
@@ -123,9 +123,9 @@ function saveIdentifiers(context: AuthContext, staffId: string, identity: Record
   const contact = ["email", "phone", "address"].some((field) => Object.hasOwn(identity, field));
   if (contact) context.database.client.run("INSERT INTO staff_contact_details (staff_member_id,address,email,phone) VALUES (?,?,?,?) ON CONFLICT(staff_member_id) DO UPDATE SET address=CASE WHEN ? THEN excluded.address ELSE staff_contact_details.address END,email=CASE WHEN ? THEN excluded.email ELSE staff_contact_details.email END,phone=CASE WHEN ? THEN excluded.phone ELSE staff_contact_details.phone END,updated_at=CURRENT_TIMESTAMP", [staffId, identity.address ?? null, identity.email ?? null, identity.phone ?? null, Number(Object.hasOwn(identity, "address")), Number(Object.hasOwn(identity, "email")), Number(Object.hasOwn(identity, "phone"))]);
 }
-function buildFilters(query: Row, prefix = "s", canSearchEmail = false, schoolUnitAsOfDate = schoolLocalDate(new Date())): { where: string[]; params: SQLQueryBindings[]; visible: Record<string, unknown> } {
+function buildFilters(query: Row, prefix = "s", canSearchEmail = false, schoolUnitAsOfDate = schoolLocalDate(new Date())): { where: string[]; params: SqliteBinding[]; visible: Record<string, unknown> } {
   const where: string[] = [];
-  const params: SQLQueryBindings[] = [];
+  const params: SqliteBinding[] = [];
   const status = String(query.status ?? "ACTIVE");
   if (!new Set(["ACTIVE", "FORMER", "UNKNOWN", "REVIEW_REQUIRED", "ALL"]).has(status)) throw new StaffImportError(422, "Invalid employee status filter.");
   if (status !== "ALL") { where.push(`${prefix}.employment_status=?`); params.push(status); }

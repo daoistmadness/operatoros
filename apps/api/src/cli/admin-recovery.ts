@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 /**
  * Local operator-controlled admin recovery CLI
@@ -6,15 +6,16 @@
  * Uses application service/data layer, canonical password hashing, clears lock, revokes sessions, creates audit
  */
 
-import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
-import { isAbsolute, basename, resolve, join } from "node:path";
-import { PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
+import { isAbsolute, basename, dirname, resolve, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { openDatabase, PROTECTED_DATABASE_BASENAME } from "@operatoros/db";
+import { hashPassword } from "../auth/password";
 import { loadConfig } from "../config";
 import { promptHiddenValues } from "./prompt-hidden";
 
-const USAGE = `Usage: bun run admin-recovery --user <username>
+const USAGE = `Usage: node admin-recovery.js --user <username>
   Prompts securely for new password via TTY (not argv)
   Requires execution as operatoros-prod or with access to production DB
   Options:
@@ -56,7 +57,7 @@ async function main(): Promise<void> {
   if (trimmedUsername.length > 255) fail("Username too long", 2);
 
   // Load config to get DB path
-  const root = resolve(import.meta.dir, "../../../");
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../");
   // Try to load via process.env, but allow explicit DATABASE_URL
   const config = loadConfig({ ...process.env, OPERATOROS_REPOSITORY_ROOT: root } as any);
   const dbPath = (config as any).databasePath as string | undefined;
@@ -75,11 +76,10 @@ async function main(): Promise<void> {
   if (password.length > 1024) fail("Password too long (max 1024).", 2);
   if (!password) fail("Password must not be empty", 2);
 
-  // Hash with canonical argon2id via Bun
-  const hash = await Bun.password.hash(password, "argon2id");
+  const hash = await hashPassword(password);
 
   // Open DB
-  const db = new Database(dbPath);
+  const db = openDatabase(dbPath).client;
   try {
     // Verify user exists and is active admin
     const user = db.query("SELECT id, username, role, is_active FROM users WHERE username = ?").get(trimmedUsername) as

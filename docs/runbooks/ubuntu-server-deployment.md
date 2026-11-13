@@ -101,28 +101,34 @@ current release state. On a trusted workstation, set the authorized short-lived
 
 ~~~sh
 scripts/operatoros-deploy.sh verify \
-  --source-sha b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84 \
-  --run-id 42181508155 --run-attempt 1 \
-  --artifact-id 13485579515 \
-  --artifact-name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
-  --envelope-sha256 0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4
+  --source-sha fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98 \
+  --run-id 43408580871 --run-attempt 1 \
+  --artifact-id 14028942446 \
+  --artifact-name operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1 \
+  --envelope-sha256 146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09
 ~~~
 
-Download the same run and name to a mode-0700 staging directory with
-`gh run download 42181508155 --repo daoistmadness/operatoros --name
-operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1
---dir <staging>`. Require inner bundle SHA-256
-`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`, then run
+Download the same run and name to a mode-0700 staging directory:
+
+~~~sh
+gh run download 43408580871 --repo daoistmadness/operatoros \
+  --name operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1 \
+  --dir <staging>
+~~~
+
+Require the inner bundle SHA-256
+`d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`, then run
 `python3 scripts/release-bundle.py verify <staging>/operatoros-release.tar
-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`. Extract only fixed member names
+fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. Extract only fixed member names
 `operatoros-api.oci.tar` and `operatoros-web-client.tar.gz` with `tar -xOf`,
 compare both against signed `manifest.json` artifact hashes, and transfer only
 those files plus the manifest. Recheck hashes on OPRSERVER. The accepted SPA
 SHA-256 is
-`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc`.
+`6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79`.
 Never rebuild the release or use the upgrade command as a first install.
 
-Install the reviewed deployment CLI and verifier from the approved PR head.
+Install the reviewed deployment CLI and verifier from release source
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`.
 Extract the SPA into an immutable versioned directory and create the relative
 `web/current` pointer before calling `storage-check`. Bootstrap only the new
 empty synthetic SQLite root from the exact OCI image with networking disabled.
@@ -236,13 +242,16 @@ Release artifacts are retained by GitHub Actions for a fixed window (currently
 90 days). Keep the imported image, the verified bundle, and the release record
 for every deployment so rollback does not depend on an expired artifact.
 
-The repository also prepares a separate, manually confirmed GitHub-hosted
-deployment rehearsal using one retained release artifact and run-scoped
-Quadlet names. That workflow is not a host deployment path and has not been
-executed. It requires a working user systemd manager, rootless UID/GID maps,
-cgroup v2, supported temporary storage, and measured capacity; the job checks
-these at runtime and stops before creating services if any check fails. See
-[CI release bundles](release-bundles.md#isolated-deployment-rehearsal-prepared-not-executed).
+The manually confirmed GitHub-hosted rehearsal passed in run
+[43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+on 2026-11-13. It used the exact signed release artifact in a disposable
+synthetic deployment with run-scoped Quadlet names. This workflow is not a host
+deployment path and does not qualify OPRSERVER or production data. Checks on
+the target host remain open. The hosted job requires a working user systemd
+manager, rootless UID/GID maps, cgroup v2, supported temporary storage, and
+measured capacity. It checks these at runtime and stops before creating services
+if any check fails. See [CI release bundles](release-bundles.md#isolated-deployment-rehearsal)
+for the run evidence and workflow controls.
 
 Do not run host-changing commands from this draft. Gate D1 requires a separate
 authorization for the exact UID 1002 synthetic resources. Production remains
@@ -281,7 +290,7 @@ install a host Caddy service.
 Gate D2 still needs a tailnet administrator to verify effective grants and
 approve the HTTPS endpoint and Serve change. Gate E still needs an encrypted
 production storage plan, off-host restore, recovery evidence, cross-release
-rollback, and a Bun/SQLite security disposition. Gate F requires separate
+rollback, and release qualification for the API runtime. Gate F requires separate
 production deployment approval after those gates pass.
 
 ### Gate D2 identity acceptance
@@ -319,7 +328,7 @@ release build workflow or substitute another artifact.
 Build the API image and SPA artifact from one reviewed commit after the release
 gate passes.
 
-`deploy/podman/Containerfile.api` pins the Bun 1.4.4 Linux/amd64 Alpine base image by digest and the required `flock` and `lsof` packages. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. The accepted Gate C artifact passed its configured Trivy inventory. The embedded Bun/SQLite 3.53.4 assessment for CVE-2026-119373 remains open. Do not treat the scan as closing that issue. See the [current integration audit](../audits/host-integration-2026-11-06.md).
+The Gate C artifact used a Bun 1.4.4 Linux/amd64 Alpine final image and passed its configured Trivy inventory. It contained SQLite 3.53.4 with FTS5 and remains blocked by CVE-2026-119373. The current `Containerfile.api` uses Bun only in its build stage and Node.js 24.22.3 in the final stage. A local image candidate passed exact-image probes for SQLite 3.54.1 in both `node:sqlite` and `better-sqlite3`. At that time, exact-source hosted checks and signed release evidence remained pending. PR #387 later qualified and signed the Node image, and hosted rehearsal [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002) passed on the exact artifact. OPRSERVER target-host rehearsal remains pending; the artifact does not authorize deployment. The image uses filtered production dependencies, runs as UID/GID `10000:10000`, and excludes web files, test data, databases, environment files, private keys, and Git metadata. See the [current integration audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
 
 Record these immutable release identifiers:
 
@@ -328,7 +337,7 @@ Record these immutable release identifiers:
 - Production API image digest from the final registry, signature/attestation, and source/lockfile provenance. A loopback-only local registry test verified push/pull by the registry digest into a separate consumer store; this does not establish a production registry or signer.
 - Verify the OCI source-tree label and `/usr/share/operatoros/build-provenance` file match the external source-file manifest.
 - SPA client archive SHA-256.
-- Caddy, Podman, Bun, Ubuntu, and systemd versions.
+- Caddy, Podman, Bun, Node.js, better-sqlite3, both SQLite source IDs, Ubuntu, and systemd versions.
 - Build and audit command results.
 
 The SPA is not currently byte-for-byte reproducible: controlled builds differ
@@ -700,42 +709,43 @@ checksum in the deployment record. Import the API OCI archive without
 rebuilding, and pull only the pinned Caddy image digest into the dedicated UID
 1002 store.
 
-For this release, the trusted workstation command uses source
-`b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, run `42181508155`, attempt `1`,
-artifact `13485579515`, artifact name
-`operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1`,
+For the signed release, the trusted workstation command uses source
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`, run `43408580871`, attempt `1`,
+artifact `14028942446`, artifact name
+`operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1`,
 and envelope SHA-256
-`0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4`:
+`146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09`:
 
 ~~~sh
 scripts/operatoros-deploy.sh verify \
-  --source-sha b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84 \
-  --run-id 42181508155 --run-attempt 1 --artifact-id 13485579515 \
-  --artifact-name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
-  --envelope-sha256 0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4
+  --source-sha fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98 \
+  --run-id 43408580871 --run-attempt 1 --artifact-id 14028942446 \
+  --artifact-name operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1 \
+  --envelope-sha256 146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09
 
-gh run download 42181508155 --repo daoistmadness/operatoros \
-  --name operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1 \
+gh run download 43408580871 --repo daoistmadness/operatoros \
+  --name operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1 \
   --dir /staging/operatoros-release
 sha256sum /staging/operatoros-release/operatoros-release.tar
 python3 scripts/release-bundle.py verify \
   /staging/operatoros-release/operatoros-release.tar \
-  b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84
+  fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98
 ~~~
 
 Require bundle SHA-256
-`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`, OCI
-manifest `sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`,
+`d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`, OCI
+manifest `sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`,
 API config ID
-`sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6`, and
+`sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede`, and
 SPA SHA-256
-`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc` before
+`6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79` before
 copying the verified bundle to the OPRSERVER staging directory. The transfer
 must preserve the bundle checksum.
 
 Bootstrap only the new empty `data/sqlite` directory. The API image includes
-`packages/db/src/db-cli.ts`; use its `bootstrap` action in a one-time container
-with `--network=none`, `--read-only`, `--read-only-tmpfs`,
+the compiled database CLI at `/app/apps/api/dist/db-cli.mjs`; invoke it with
+Node's `--entrypoint node` in a one-time container using `--network=none`,
+`--read-only`, `--read-only-tmpfs`,
 `--cap-drop=all`, `--security-opt=no-new-privileges`, `--user 10000:10000`,
 `--userns=keep-id:uid=10000,gid=10000`, the exact API image config ID, and only
 the D1 data bind mount. Do not call `migrate-existing`. Validate the fresh
@@ -748,7 +758,7 @@ The one-time bootstrap commands, run as `operatoros-runtime` with its explicit
 
 ~~~sh
 D1_ROOT=/mnt/podman-data/operatoros-d1-synthetic
-API_IMAGE=sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6
+API_IMAGE=sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede
 
 podman load --input "$D1_ROOT/deploy/staging/operatoros-api.oci.tar"
 podman pull docker.io/library/caddy@sha256:e70b164da81ef698b3ad19af799ea6086ce6d9e48ed4079eb9fe26f6fbf14ee5
@@ -758,7 +768,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts bootstrap \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs bootstrap \
   --data-dir /var/lib/operatoros/data
 
 podman run --rm --network=none --read-only --read-only-tmpfs \
@@ -766,7 +776,7 @@ podman run --rm --network=none --read-only --read-only-tmpfs \
   --user 10000:10000 --userns=keep-id:uid=10000,gid=10000 \
   --volume "$D1_ROOT/data/sqlite:/var/lib/operatoros/data:rw" \
   --env OPERATOROS_DATA_DIR=/var/lib/operatoros/data \
-  --entrypoint bun "$API_IMAGE" run packages/db/src/db-cli.ts validate \
+  --entrypoint node "$API_IMAGE" apps/api/dist/db-cli.mjs validate \
   --data-dir /var/lib/operatoros/data
 ~~~
 
@@ -779,13 +789,16 @@ The initial state also needs a seed application release because the current
 `deploy` command requires a healthy API/Caddy pair, current SPA pointer, and
 recent backup before it changes an application release. For this first
 synthetic qualification only, stage the exact verified SPA as
-`web/releases/legacy-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84/client`, set
+`web/releases/legacy-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98/client`, set
 `web/current` to that directory, and install reviewed UID 1002 API/Caddy
 Quadlets that reference the exact imported API config ID and pinned Caddy
-digest. Start those two units, verify health and exact storage context, then
-create and validate a synthetic encrypted backup using the API image's
-`apps/api/src/backup-cli.ts backup` command with the private `api.env` values.
-Only after this seed state is verified should the operator run the existing
+digest. Start those two units, verify health and exact storage context, and
+complete first-admin setup with the synthetic `ASTRYX_SETUP_TOKEN`. Create a
+backup through the authenticated `POST /api/admin/backups` route. The route
+returns the encrypted backup filename and checksum. Record that filename for
+the deployment command below. Do not run the standalone backup CLI while the
+API is active because the API holds the data-root backup lock. Only after this
+seed state is verified should the operator run the existing
 `scripts/operatoros-deploy.sh deploy` command with the exact release identity,
 private config, synthetic backup filename, and `--yes`. This managed no-op
 promotion exercises locking, staging, readiness, and application rollback
@@ -869,7 +882,7 @@ review if any action would cross those boundaries.
 Gate D2 separately approves tailnet grants, the HTTPS endpoint and Tailscale
 Serve changes. Gate E separately qualifies encrypted production storage,
 off-host restore, host recovery, crash/reboot behavior, cross-release rollback,
-and the Bun/SQLite finding. Gate F remains NO-GO until those gates pass and the
+and release qualification for both SQLite runtime copies. Gate F remains NO-GO until those gates pass and the
 owner authorizes a production deployment.
 
 ## Logs and troubleshooting

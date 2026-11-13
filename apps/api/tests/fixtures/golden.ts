@@ -1,5 +1,5 @@
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
-import type { Database } from "bun:sqlite";
+import type { SqliteClient } from "@operatoros/db";
 import { seedFixtureDefaults, seedGradeDefaults } from "./defaults";
 
 /** Maintained fixture data used by current API tests, independent of migration evidence. */
@@ -21,7 +21,7 @@ export function createGoldenFixture(path: string, kind: "academic" | "reports" |
   } finally { handle.close(); }
 }
 
-function academic(client: Database): void {
+function academic(client: SqliteClient): void {
   const oldYear = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2025/2026-academic','2025-07-01','2026-06-30','upcoming',0)").lastInsertRowid);
   const year = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-academic','2026-07-01','2027-06-30','upcoming',0)").lastInsertRowid);
   const jenjang = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SMP','SMP','junior')").lastInsertRowid);
@@ -39,7 +39,7 @@ function academic(client: Database): void {
   client.run("INSERT INTO student_enrollments (student_master_id,academic_year_id,jenjang_id,academic_class_id,class_name,class_assigned,lifecycle_state,effective_from) VALUES (?,?,?,?,'7A',0,'ACTIVE','2026-07-01')", [masters[0]!, year, jenjang, academicClass]);
 }
 
-function reports(client: Database): void {
+function reports(client: SqliteClient): void {
   const year = Number(client.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('2026/2027-reports','2026-07-01','2027-06-30','upcoming',0)").lastInsertRowid);
   const smp = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SMP','SMP','junior')").lastInsertRowid);
   const sd = Number(client.run("INSERT INTO jenjangs (name,code,level) VALUES ('SD','SD','primary')").lastInsertRowid);

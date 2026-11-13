@@ -1,9 +1,9 @@
-import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
 import { assertDatabasePath, assertOrdinarySchemaObjects, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, schemaFingerprint, validateDatabase } from "../src/index";
 import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
+import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
 
 describe("@operatoros/db", () => {
   it("exports the accepted persistence schema", () => {
@@ -23,7 +23,7 @@ describe("@operatoros/db", () => {
   });
 
   it("preserves immediate transaction rollback semantics", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     client.run("CREATE TABLE values_for_test (value INTEGER NOT NULL)");
     try {
       expect(() => inTransaction(client, () => {
@@ -61,7 +61,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     expect(declared.length).toBeGreaterThan(0);
   });
 
-  function buildValidSchema(client: Database, ledgerRows: [string, string, string][]): void {
+  function buildValidSchema(client: SqliteClient, ledgerRows: [string, string, string][]): void {
     client.run("CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, predecessor TEXT, schema_fingerprint TEXT NOT NULL, protected_fingerprints TEXT NOT NULL, approved_by TEXT NOT NULL, applied_at TEXT NOT NULL)");
     for (const table of REQUIRED_TABLES) {
       if (table === "operatoros_schema_migrations") continue;
@@ -76,7 +76,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   }
 
   it("accepts a current-version ledger whose timestamps are not wall-clock ordered", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     installS47Schema(client);
     installS48EmployeeSchema(client);
     installS49SchoolUnitSchema(client);
@@ -106,7 +106,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   });
 
   it("rejects virtual and shadow objects before reading snapshot tables", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     try {
       client.run("CREATE VIRTUAL TABLE synthetic_fts USING fts5(content)");
       expect(() => assertOrdinarySchemaObjects(client)).toThrow("DATABASE_SCHEMA_INVALID");
@@ -117,7 +117,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   });
 
   it("keeps monthly activity periods and transition history immutable", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     client.exec("PRAGMA foreign_keys=ON");
     installS47Schema(client);
     installS48EmployeeSchema(client);
@@ -148,7 +148,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   });
 
   it("fails closed when the ledger reports a newer schema than the application knows", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     buildValidSchema(client, [
       ["20260725_s43", CURRENT_SCHEMA_FINGERPRINT, "2026-08-29T10:00:00+00:00"],
       ["20990101_s99", "future", "2026-08-29T10:00:01+00:00"],
@@ -161,7 +161,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
   });
 
   it("fails closed when a schema-declared table is missing, listing the gap safely", () => {
-    const client = new Database(":memory:");
+    const { client } = openSqliteConnection(":memory:");
     client.run("CREATE TABLE operatoros_schema_migrations (version TEXT, schema_fingerprint TEXT, applied_at TEXT)");
     client.run("CREATE TABLE users (id INTEGER PRIMARY KEY)");
     try {

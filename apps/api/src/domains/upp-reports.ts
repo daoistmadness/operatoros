@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { SQLQueryBindings } from "bun:sqlite";
+import { createReadStream } from "node:fs";
+import { Readable } from "node:stream";
+import type { SqliteBinding } from "@operatoros/db";
 import { t } from "elysia";
 import { inTransaction } from "@operatoros/db";
 import { UppReportDetailResponse, UppReportListQuery, UppReportListResponse, UppReportStatusChangeRequest, UppReportSummary, type UppSubmissionStatusDto } from "@operatoros/contracts/upp-reports";
@@ -130,7 +132,7 @@ export function uppReportRoutes(app: any, context: AuthContext | null, config: U
     const rawUnitId = ctx.query.school_unit_id;
     const unitId = rawUnitId === undefined ? undefined : Number(rawUnitId);
     if (unitId !== undefined && (!Number.isSafeInteger(unitId) || unitId <= 0)) return fail(ctx.set, 422, "INVALID_SCHOOL_UNIT_ID", "Choose a valid school unit.");
-    const params: SQLQueryBindings[] = [period.year, period.monthNumber];
+    const params: SqliteBinding[] = [period.year, period.monthNumber];
     const unitClause = unitId === undefined ? "" : " AND u.id=?";
     if (unitId !== undefined) params.push(unitId);
     const units = context.database.client.query(`SELECT u.id, u.name, r.id AS report_id
@@ -327,7 +329,7 @@ export function uppReportRoutes(app: any, context: AuthContext | null, config: U
         month: String(report.month), school_unit_id: Number(report.school_unit_id), file_size_bytes: Number(file.file_size_bytes),
         file_sha256: String(file.file_sha256), ...(versionId === undefined ? {} : { version_id: versionId }),
       });
-      return new Response(Bun.file(path).stream(), { headers: {
+      return new Response(Readable.toWeb(createReadStream(path)), { headers: {
         "content-type": evidence ? "application/octet-stream" : XLSX_MIME_TYPE,
         "content-disposition": `attachment; filename="${filename}"`,
         "content-length": String(file.file_size_bytes),

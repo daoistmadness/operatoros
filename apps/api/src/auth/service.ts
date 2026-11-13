@@ -2,13 +2,14 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { appendFileSync, chmodSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { isIP } from "node:net";
-import type { Database } from "bun:sqlite";
+import type { SqliteClient } from "@operatoros/db";
 import { inTransaction, type DatabaseHandle } from "@operatoros/db";
 import { resolveOperatorOSPaths } from "@operatoros/db";
 import { capabilitiesForRole } from "./capabilities";
 import { DEFAULT_LOGIN_RATE_LIMIT, type LoginRateLimitConfig, normalizeLoginAccount } from "./rate-limit";
 import { isAllowedOrigin } from "../security/http";
 import { isFirstAdminSetupRequired } from "./admin-state";
+import { hashPassword, hashPasswordSync, verifyPassword as verifyArgon2Password } from "./password";
 import { isAccountUnlocked, parseSqliteDate } from "./sqlite-date";
 
 export const SESSION_COOKIE_NAME = "astyx_session";
@@ -21,7 +22,7 @@ export class InvalidCredentialsError extends Error {
     this.name = "InvalidCredentialsError";
   }
 }
-const DUMMY_PASSWORD_HASH = Bun.password.hashSync("astryx-dummy-password-not-an-account", "argon2id");
+const DUMMY_PASSWORD_HASH = hashPasswordSync("astryx-dummy-password-not-an-account");
 
 export interface AuthConfig {
   authCookieSecret: string;
@@ -61,6 +62,7 @@ export interface SessionRow {
 export interface AuthContext {
   database: DatabaseHandle;
   config: AuthConfig;
+  passwordVerifier?: (password: string, passwordHash: string) => Promise<boolean>;
   loginRateLimiter?: import("./rate-limit").LoginRateLimiter;
   now?: () => Date;
 }
@@ -126,7 +128,7 @@ function forwardedAddress(request: Request): string | null {
 }
 
 export function clientIp(request: Request, server: { requestIP(request: Request): { address: string } | null } | null, trustedProxyAddresses: string[] = []): string | null {
-  const direct = server?.requestIP(request)?.address ?? null;
+  const direct = (request as Request & { ip?: string | null }).ip ?? server?.requestIP(request)?.address ?? null;
   if (!direct) return null;
   if (trustedProxyAddresses.includes(direct)) return forwardedAddress(request) ?? direct;
   return direct;
@@ -163,20 +165,20 @@ function userResponse(user: CurrentUser): CurrentUser {
   return user;
 }
 
-function findUser(client: Database, username: string): UserRow | null {
+function findUser(client: SqliteClient, username: string): UserRow | null {
   return client.query<UserRow, string>(
     "SELECT id, username, password_hash, role, is_active, failed_login_attempts, locked_until, last_login_at FROM users WHERE username = ?",
   ).get(username) ?? null;
 }
 
-function currentUser(client: Database, id: number): UserRow | null {
+function currentUser(client: SqliteClient, id: number): UserRow | null {
   return client.query<UserRow, number>(
     "SELECT id, username, password_hash, role, is_active, failed_login_attempts, locked_until, last_login_at FROM users WHERE id = ?",
   ).get(id) ?? null;
 }
 
-async function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  return Bun.password.verify(password, passwordHash);
+async function verifyPassword(context: AuthContext, password: string, passwordHash: string): Promise<boolean> {
+  return (context.passwordVerifier ?? verifyArgon2Password)(password, passwordHash);
 }
 
 export async function authenticate(
@@ -187,7 +189,7 @@ export async function authenticate(
   const client = context.database.client;
   const user = findUser(client, username);
   if (!user) {
-    await verifyPassword(input.password, DUMMY_PASSWORD_HASH);
+    await verifyPassword(context, input.password, DUMMY_PASSWORD_HASH);
     audit(context, "login_failed", { username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "invalid_credentials" });
     throw new InvalidCredentialsError();
   }
@@ -199,7 +201,7 @@ export async function authenticate(
     audit(context, "login_failed", { userId: user.id, username: user.username, userAgent: input.userAgent, ipAddress: input.ipAddress, reason: "account_locked" });
     throw new InvalidCredentialsError();
   }
-  if (!(await verifyPassword(input.password, user.password_hash))) {
+  if (!(await verifyPassword(context, input.password, user.password_hash))) {
     const now = nowSqlite();
     const updated = inTransaction(client, () => client.query<Pick<UserRow, "failed_login_attempts" | "locked_until" | "is_active">, [number, string, number, string]>(
       `UPDATE users
@@ -338,7 +340,7 @@ function localOrigin(origin: string | null, allowedOrigins: string[]): boolean {
 }
 
 export function issueSetupAuthorization(context: AuthContext, request: Request, server: { requestIP(request: Request): { address: string } | null } | null): string {
-  const address = server?.requestIP(request)?.address;
+  const address = (request as Request & { ip?: string | null }).ip ?? server?.requestIP(request)?.address;
   if (!context.config.managedDevSetup || !address || !["127.0.0.1", "::1", "localhost"].includes(address) || !localOrigin(request.headers.get("origin"), context.config.allowedOrigins)) {
     throw { code: "SETUP_AUTHORIZATION_UNAVAILABLE", message: "Initial setup authorization is unavailable.", status: 403 } satisfies ProvisioningErrorShape;
   }
@@ -378,7 +380,7 @@ export async function provisionFirstAdmin(
     }
   }
   if (input.password.length < 12) throw { code: "PASSWORD_POLICY_FAILED", message: "Password must be at least 12 characters long.", status: 400 } satisfies ProvisioningErrorShape;
-  const hash = await Bun.password.hash(input.password, "argon2id");
+  const hash = await hashPassword(input.password);
   const client = context.database.client;
   let created: { id: number; username: string; role: string } | null = null;
   inTransaction(client, () => {

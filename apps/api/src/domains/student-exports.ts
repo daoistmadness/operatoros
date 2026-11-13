@@ -1,5 +1,5 @@
 import { addWorksheet, appendRow, createWorkbook, safeExportFilename, styleHeader, writeXlsxWorkbook } from "@operatoros/excel";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
@@ -32,8 +32,8 @@ function pythonFilters(filters: Row): string {
 }
 
 function checksum(scope: string, profile: string, count: number, filters: Row): string {
-  const filterHash = new Bun.CryptoHasher("sha256").update(pythonFilters(filters)).digest("hex").slice(0, 16);
-  return new Bun.CryptoHasher("sha256").update(`${scope}:${profile}:${count}:${filterHash}`).digest("hex");
+  const filterHash = createHash("sha256").update(pythonFilters(filters)).digest("hex").slice(0, 16);
+  return createHash("sha256").update(`${scope}:${profile}:${count}:${filterHash}`).digest("hex");
 }
 
 function audit(context: AuthContext, user: Row, capability: string, operation: string, scope: string, success: boolean, metadata: Row, failureCode: string | null = null): void {

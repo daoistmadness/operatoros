@@ -1,8 +1,8 @@
-import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { getTableName, is, Table } from "drizzle-orm";
-import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
+import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
+import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 import {
   CURRENT_SCHEMA_FINGERPRINT,
   CURRENT_SCHEMA_VERSION,
@@ -19,10 +19,10 @@ export const REQUIRED_TABLES: readonly string[] = Object.values(schema)
   .map(getTableName)
   .sort();
 
-export type AppDatabase = BunSQLiteDatabase<typeof schema>;
+export type AppDatabase = BetterSQLite3Database<typeof schema>;
 
 /** Reject views and virtual/shadow tables before validating or reading a database snapshot. */
-export function assertOrdinarySchemaObjects(client: Database): void {
+export function assertOrdinarySchemaObjects(client: SqliteClient): void {
   const objects = client.query("PRAGMA main.table_list").all() as { schema: string; type: string }[];
   if (objects.some((object) => object.schema === "main" && object.type !== "table")) {
     fail("DATABASE_SCHEMA_INVALID", "unsupported SQLite schema objects are present");
@@ -30,7 +30,7 @@ export function assertOrdinarySchemaObjects(client: Database): void {
 }
 
 export interface DatabaseHandle {
-  readonly client: Database;
+  readonly client: SqliteClient;
   readonly db: AppDatabase;
   readonly path: string;
   reopen(): void;
@@ -49,7 +49,7 @@ const MIGRATION_LEDGER_LAYOUT = [
   { name: "applied_at", affinity: "TEXT", notnull: 1, pk: 0 },
 ] as const;
 
-export function schemaFingerprint(client: Database): string {
+export function schemaFingerprint(client: SqliteClient): string {
   const objects = client.query(
     "SELECT type, name, tbl_name, COALESCE(sql, '') AS sql FROM sqlite_master " +
     "WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations') ORDER BY type, name",
@@ -70,7 +70,7 @@ function sqliteAffinity(type: string): string {
   return "NUMERIC";
 }
 
-export function assertMigrationLedgerShape(client: Database): void {
+export function assertMigrationLedgerShape(client: SqliteClient): void {
   const columns = client.query("PRAGMA main.table_xinfo(operatoros_schema_migrations)").all() as LedgerColumn[];
   if (columns.length !== MIGRATION_LEDGER_LAYOUT.length || columns.some((column, index) => {
     const expected = MIGRATION_LEDGER_LAYOUT[index]!;
@@ -87,7 +87,7 @@ export function assertDatabasePath(path: string): void {
   }
 }
 
-function validateSchema(client: Database): void {
+function validateSchema(client: SqliteClient): void {
   assertOrdinarySchemaObjects(client);
 
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check?: string } | null;
@@ -140,39 +140,42 @@ function validateSchema(client: Database): void {
 
 export function openDatabase(path: string, options: { readonly?: boolean; validate?: boolean } = {}): DatabaseHandle {
   assertDatabasePath(path);
-  let client = openClient(path, options);
+  let connection = openClient(path, options);
   let closed = false;
-  const close = () => { if (!closed) { client.close(); closed = true; } };
+  const close = () => { if (!closed) { connection.client.close(); closed = true; } };
   const reopen = () => {
     close();
-    client = openClient(path, options);
+    connection = openClient(path, options);
     closed = false;
   };
   return {
-    get client() { return client; },
-    get db() { return drizzle({ client, schema }); },
+    get client() { return connection.client; },
+    get db() { return drizzle({ client: connection.database, schema }); },
     path,
     reopen,
     close,
   };
 }
 
-function openClient(path: string, options: { readonly?: boolean; validate?: boolean }): Database {
-  const client = new Database(path, options.readonly ? { readonly: true } : { readwrite: true, create: false });
+function openClient(path: string, options: { readonly?: boolean; validate?: boolean }) {
+  const connection = openSqliteConnection(path, {
+    readonly: options.readonly ?? false,
+    fileMustExist: path !== ":memory:",
+  });
   try {
-    client.run("PRAGMA foreign_keys = ON");
-    if (options.validate !== false) validateSchema(client);
-    return client;
+    connection.client.run("PRAGMA foreign_keys = ON");
+    if (options.validate !== false) validateSchema(connection.client);
+    return connection;
   } catch (error) {
-    client.close();
+    connection.client.close();
     throw error;
   }
 }
 
-export function validateDatabase(client: Database): void {
+export function validateDatabase(client: SqliteClient): void {
   validateSchema(client);
 }
 
-export function inTransaction<T>(client: Database, callback: () => T): T {
+export function inTransaction<T>(client: SqliteClient, callback: () => T): T {
   return client.transaction(callback).immediate();
 }

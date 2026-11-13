@@ -32,7 +32,7 @@ with tarfile.open(root / 'operatoros-web-client.tar.gz') as archive:
 PY
 podman load -i "$workspace/operatoros-api.oci.tar"
 image=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["image"]["image_id"])' "$workspace/manifest.json")
-python3 scripts/check-bun-sqlite-runtime.py "$image"
+python3 scripts/check-node-sqlite-runtime.py "$image"
 mkdir "$workspace/state"
 bun packages/db/src/db-cli.ts bootstrap --data-dir "$workspace/state"
 api_port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])')

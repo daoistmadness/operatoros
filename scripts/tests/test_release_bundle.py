@@ -49,7 +49,7 @@ def fixture():
         key = m.digest(data)
         blobs['blobs/sha256/' + key] = data
         return {'digest': 'sha256:' + key, 'size': len(data)}
-    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n', 'lib/apk/db/installed': b'P:musl\nV:1.2.5-r10\nA:x86_64\nL:MIT\nT:musl C library\n\n'})
+    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n'})
     layer_hash = m.digest(layer_data)
     blobs['blobs/sha256/' + layer_hash] = layer_data
     layer = {'mediaType': 'application/vnd.oci.image.layer.v1.tar', 'digest': 'sha256:' + layer_hash, 'size': len(layer_data)}
@@ -61,25 +61,41 @@ def fixture():
     blobs['index.json'] = json.dumps({'schemaVersion': 2, 'manifests': [manifest]}).encode()
     api_archive = archive(blobs)
     image = m.image_metadata(api_archive, SHA)
-    bun_hash = 'c' * 64
+    node_hash = 'c' * 64
     source_id = '2026-10-16 14:45:20 555e07ef33f69a0957d24d8e555b702464a131d6f1607f4c3c1e4551e8e6ca76'
-    bun_ref = 'urn:operatoros:runtime:bun:' + bun_hash
+    node_ref = 'urn:operatoros:runtime:node:' + node_hash
+    driver_ref = 'urn:operatoros:native-addon:better-sqlite3:' + '1' * 64
     sqlite_ref = 'urn:operatoros:runtime:sqlite:' + 'd' * 64
-    base_image = 'docker.io/oven/bun:0.0.0-alpine@sha256:' + 'f' * 64
+    node_sqlite_ref = 'urn:operatoros:runtime:sqlite:' + '2' * 64
+    base_image = 'docker.io/library/node:24.22.3-alpine3.24@sha256:' + 'f' * 64
     sbom = {
         'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'components': [{
-            'type': 'application', 'name': 'Bun JavaScript runtime', 'version': '0.0.0',
-            'bom-ref': bun_ref, 'hashes': [{'alg': 'SHA-256', 'content': bun_hash}],
+            'type': 'application', 'name': 'Node.js runtime', 'version': '24.22.3',
+            'bom-ref': node_ref, 'hashes': [{'alg': 'SHA-256', 'content': node_hash}],
             'properties': [{'name': 'operatoros:runtime:origin', 'value': base_image}],
-            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
-                {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                'components': [{'type': 'library', 'name': 'better-sqlite3', 'version': '13.1.1',
+                'bom-ref': driver_ref, 'purl': 'pkg:npm/better-sqlite3@13.1.1',
+                'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
+                    {'name': 'operatoros:component:distribution', 'value': 'bundled-native-addon'},
+                    {'name': 'operatoros:sqlite:provider', 'value': 'better-sqlite3'},
+                    {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                    {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
+                    {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
+                    {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+                    {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
+                ]}],
+            }, {'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': node_sqlite_ref, 'properties': [
+                {'name': 'operatoros:component:distribution', 'value': 'statically-linked-node-builtin'},
+                {'name': 'operatoros:sqlite:provider', 'value': 'node:sqlite'},
+                {'name': 'operatoros:sqlite:source-id', 'value': 'node-builtin-source-id'},
                 {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+                {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
             ]}],
         }],
-        'dependencies': [{'ref': bun_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}],
-        'vulnerabilities': [{'id': 'CVE-2026-119373', 'analysis': {'state': 'resolved'}, 'affects': [{'ref': sqlite_ref}]}],
+        'dependencies': [{'ref': node_ref, 'dependsOn': [driver_ref, node_sqlite_ref]}, {'ref': driver_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}, {'ref': node_sqlite_ref, 'dependsOn': []}],
+        'vulnerabilities': [{'id': 'CVE-2026-119373', 'analysis': {'state': 'resolved'}, 'affects': [{'ref': sqlite_ref}, {'ref': node_sqlite_ref}]}],
         'metadata': {
             'component': {'properties': [{'name': 'aquasecurity:trivy:ImageID', 'value': image['image_id']}]},
             'properties': [
@@ -91,11 +107,17 @@ def fixture():
         },
     }
     runtime = {
-        'schema_version': 1, 'qualification_status': 'PASS',
+        'schema_version': 2, 'qualification_status': 'PASS',
         'source': {'repository': 'daoistmadness/operatoros', 'commit': SHA, 'containerfile': 'deploy/podman/Containerfile.api', 'containerfile_sha256': 'e' * 64, 'pinned_base_images': [base_image]},
         'artifact': {'oci_manifest_digest': image['manifest_digest'], 'image_config_digest': image['image_id'], 'oci_archive_sha256': m.digest(api_archive)},
-        'runtime': {'name': 'Bun', 'version': '0.0.0', 'binary_sha256': bun_hash, 'origin': base_image, 'embedded_component': 'SQLite', 'sqlite_version': '3.54.1', 'sqlite_source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True},
-        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite embedded in the Bun executable', 'status': 'RESOLVED_BY_FIXED_VERSION', 'qualification_floor': 'SQLite 3.54.0 or later, or a verified equivalent backport', 'runtime_gate_reason': None},
+        'runtime': {'name': 'Node.js', 'version': '24.22.3', 'binary_sha256': node_hash, 'origin': base_image, 'sqlite_driver': 'better-sqlite3', 'sqlite_driver_version': '13.1.1', 'sqlite_distribution': 'bundled-native-addon', 'sqlite_libraries': [
+            {'provider': 'better-sqlite3', 'distribution': 'bundled-native-addon', 'version': '3.54.1', 'source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION'},
+            {'provider': 'node:sqlite', 'distribution': 'statically-linked-node-builtin', 'version': '3.54.1', 'source_id': 'node-builtin-source-id', 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION'},
+        ]},
+        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite bundled in better-sqlite3 and Node.js node:sqlite', 'status': 'RESOLVED_BY_FIXED_VERSION', 'components': [
+            {'provider': 'better-sqlite3', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+            {'provider': 'node:sqlite', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+        ], 'qualification_floor': 'SQLite 3.54.0 or later, or a verified equivalent backport', 'runtime_gate_reason': None},
     }
     files = {
         'operatoros-api.oci.tar': api_archive,
@@ -117,6 +139,31 @@ def checksums(files):
 class BundleTests(unittest.TestCase):
     def test_consistent_bundle(self):
         self.assertEqual(m.validate(fixture(), SHA)['source_commit'], SHA)
+
+    def test_release_bundle_requires_both_sqlite_runtime_identities(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['runtime']['sqlite_libraries'].pop()
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'omits one or more SQLite runtime identities'):
+            m.validate(files, SHA)
+
+    def test_release_bundle_rejects_extra_cve_affected_component(self):
+        files = fixture()
+        sbom = json.loads(files['sbom.cdx.json'])
+        cve = next(item for item in sbom['vulnerabilities'] if item['id'] == 'CVE-2026-119373')
+        cve['affects'].append({'ref': 'pkg:apk/alpine/sqlite@3.54.1'})
+        files['sbom.cdx.json'] = json.dumps(sbom).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['sbom.cdx.json'] = m.digest(files['sbom.cdx.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'security disposition'):
+            m.validate(files, SHA)
 
     def test_corruption_and_missing_artifacts(self):
         for name in m.FILES:
@@ -1338,6 +1385,67 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             (root / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': expected['image_id']}}))
             with self.assertRaises(ValueError): m.security_reports(root, expected)
 
+    def test_security_report_rejects_unresolved_high_or_critical_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan = {
+                    'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}],
+                    'Metadata': {'ImageID': image['image_id']},
+                }
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.security_reports(root, image)
+
+    def test_security_report_allows_medium_and_low_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            scan = {
+                'Results': [{'Vulnerabilities': [
+                    {'VulnerabilityID': 'CVE-2026-12345', 'Severity': 'MEDIUM'},
+                    {'VulnerabilityID': 'CVE-2026-54321', 'Severity': 'LOW'},
+                ]}],
+                'Metadata': {'ImageID': image['image_id']},
+            }
+            (root / 'scan.json').write_text(json.dumps(scan))
+            (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+            m.security_reports(root, image)
+
+    def test_security_report_rejects_malformed_vulnerability_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        malformed_scans = (
+            {'Results': [{'Vulnerabilities': ''}]},
+            {'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': ' '}]}]},
+        )
+        for scan in malformed_scans:
+            with self.subTest(scan=scan), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan['Metadata'] = {'ImageID': image['image_id']}
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, 'malformed'):
+                    m.security_reports(root, image)
+
+    def test_release_validation_rejects_unresolved_high_or_critical_findings(self):
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity):
+                files = fixture()
+                scan = json.loads(files['scan.json'])
+                scan['Results'] = [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}]
+                files['scan.json'] = json.dumps(scan).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['scan.json'] = m.digest(files['scan.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.validate(files, SHA)
+
     def test_failure_upload_contains_only_diagnostics_not_failed_bundles(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text()
         job = workflow.split('  release-bundle:\n')[1].split('\n  changes:')[0]
@@ -1400,15 +1508,15 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
     def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
         script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
         for identity in (
-            'b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84',
-            '42181508155',
-            '13485579515',
-            '0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39',
-            '0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4',
-            'sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed',
-            'sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6',
-            '8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc',
-            '2027-02-04T07:32:13Z',
+            'fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98',
+            '43408580871',
+            '14028942446',
+            'd4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e',
+            '146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09',
+            'sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81',
+            'sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede',
+            '6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79',
+            '2027-02-11T10:22:21Z',
         ):
             self.assertIn(identity, script)
         self.assertIn('deploy.verified_artifact(request', script)
@@ -2008,7 +2116,7 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
         self.assertIn("github.ref != 'refs/heads/main'", candidate)
         self.assertIn('contents: read', candidate)
-        self.assertIn('scripts/check-bun-sqlite-runtime.py', candidate)
+        self.assertIn('scripts/check-node-sqlite-runtime.py', candidate)
         self.assertIn('scripts/record-embedded-runtime.py', candidate)
         self.assertIn('reports/embedded-runtime.json', candidate)
         self.assertIn('release.scan_image(', candidate)
@@ -2018,4 +2126,4 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertNotIn('podman push', candidate)
         retained = candidate.split('      - name: Retain non-image candidate reports', 1)[1]
         self.assertNotIn('image.oci.tar', retained)
-        self.assertIn('Enforcement test: `PASS`', candidate)
+        self.assertIn('RUNTIME_GATE_PASS', candidate)

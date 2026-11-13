@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { appendFileSync, chmodSync, copyFileSync, existsSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { syncDirectory, syncFile } from "./domains/durable-files";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { promptHidden } from "./cli/prompt-hidden";
-import { Database, constants } from "bun:sqlite";
-import { assertOrdinarySchemaObjects, compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase, validateMigrationSource } from "@operatoros/db";
+import { assertOrdinarySchemaObjects, compareSchemaVersions, CURRENT_SCHEMA_VERSION, migrateExistingDatabase, openDatabase, PROTECTED_DATABASE_BASENAME, resolveOperatorOSPaths, validateDatabase, validateMigrationSource, type SqliteClient } from "@operatoros/db";
 import { loadConfig, type BackendConfig } from "./config";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityEligible, type RestoreAdministratorCredential } from "./auth/admin-state";
 import { backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile } from "./security/backup-crypto";
@@ -18,8 +18,12 @@ import { cleanupInterruptedBackupScratch, hasPendingRestoreRollback } from "./do
 import { backupAttachmentSources, backupAttachmentsMatch, installBackupAttachments, referencedReportFiles } from "./domains/upp-report-files";
 import { extractBackupPayload, isBackupPayload, writeBackupPayload, type BackupAttachment } from "./security/backup-payload";
 
-const root = resolve(import.meta.dir, "../../");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../");
 const backupName = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
+
+export function isBackupCliEntrypoint(argvPath: string | undefined, moduleUrl: string): boolean {
+  return Boolean(argvPath && ["backup-cli.ts", "backup-cli.mjs"].includes(basename(argvPath)) && fileURLToPath(moduleUrl) === resolve(argvPath));
+}
 
 function config() {
   if (!process.env.OPERATOROS_DATA_DIR?.trim()) throw new Error("OPERATOROS_DATA_DIR is required for explicit backup operations.");
@@ -34,12 +38,26 @@ function config() {
 
 function exists(path: string): boolean { try { statSync(path); return true; } catch { return false; } }
 
-function openOfflineSnapshot(path: string): Database {
+function assertNoOpenHandles(paths: string[]): void {
+  const result = spawnSync("lsof", ["-nP", "--", ...paths], { encoding: "utf8" });
+  if (result.error || result.status === null) throw new Error("DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  if (result.status === 0) throw new Error("DATABASE_OPEN_HANDLE");
+  if (result.status !== 1) throw new Error("DATABASE_OPEN_HANDLE_CHECK_FAILED");
+}
+
+function openOfflineSnapshot(path: string): SqliteClient {
   if (["-wal", "-shm", "-journal"].some((suffix) => existsSync(`${path}${suffix}`))) throw new Error("DATABASE_SIDECAR_PRESENT");
-  const handles = Bun.spawnSync(["lsof", "-nP", "--", path], { stdout: "pipe", stderr: "pipe" });
-  if (handles.exitCode === 0) throw new Error("DATABASE_OPEN_HANDLE");
-  if (handles.exitCode !== 1) throw new Error("DATABASE_OPEN_HANDLE_CHECK_FAILED");
-  return new Database(`${pathToFileURL(path).href}?immutable=1`, constants.SQLITE_OPEN_READONLY | constants.SQLITE_OPEN_URI);
+  assertNoOpenHandles([path]);
+  const client = openDatabase(path, { readonly: true, validate: false }).client;
+  const close = client.close.bind(client);
+  let closed = false;
+  client.close = () => {
+    if (closed) return;
+    closed = true;
+    close();
+    clearOrphanedEmptyWal(path);
+  };
+  return client;
 }
 
 function clearOrphanedEmptyWal(path: string): void {
@@ -48,9 +66,7 @@ function clearOrphanedEmptyWal(path: string): void {
   const journal = `${path}-journal`;
   const sidecars = [wal, shm, journal].filter(existsSync);
   if (!sidecars.length) return;
-  const handles = Bun.spawnSync(["lsof", "-nP", "--", path, ...sidecars], { stdout: "pipe", stderr: "pipe" });
-  if (handles.exitCode === 0) throw new Error("DATABASE_OPEN_HANDLE");
-  if (handles.exitCode !== 1) throw new Error("DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  assertNoOpenHandles([path, ...sidecars]);
   if (existsSync(journal) || !existsSync(wal) || !existsSync(shm) || statSync(wal).size !== 0) throw new Error("DATABASE_SIDECAR_PRESENT");
   rmSync(wal);
   rmSync(shm);
@@ -89,13 +105,13 @@ function verifiedArtifact(selected: string, value: ReturnType<typeof config>, pl
       attachments = payload.attachments;
       if (statSync(databasePath).size !== manifest.sqlite_file_size_bytes || attachments.length !== manifest.report_attachment_count) throw new Error("BACKUP_PAYLOAD_INVALID");
     } else if (isBackupPayload(plaintextPath)) throw new Error("BACKUP_PAYLOAD_METADATA_INVALID");
-    const snapshot = new Database(databasePath, { readonly: true });
+    const snapshot = openDatabase(databasePath, { readonly: true, validate: false });
     try {
-      assertOrdinarySchemaObjects(snapshot);
-      validateMigrationSource(snapshot);
-      const actualSchemaVersion = snapshotSchemaVersion(snapshot);
+      assertOrdinarySchemaObjects(snapshot.client);
+      validateMigrationSource(snapshot.client);
+      const actualSchemaVersion = snapshotSchemaVersion(snapshot.client);
       if (actualSchemaVersion !== manifest.schema_version) throw new Error("BACKUP_VERIFICATION_FAILED");
-      if (!backupAttachmentsMatch(snapshot, attachments)) throw new Error("BACKUP_ATTACHMENTS_INVALID");
+      if (!backupAttachmentsMatch(snapshot.client, attachments)) throw new Error("BACKUP_ATTACHMENTS_INVALID");
     }
     finally { snapshot.close(); }
     return { schemaVersion: manifest.schema_version, createdAt: manifest.created_at, databasePath, attachments };
@@ -182,7 +198,7 @@ function nextFilename(directory: string): string {
   for (let index = 0; ; index++) { const value = index ? base.replace(".sqlite3", `_${index}.sqlite3`) : base; if (!exists(join(directory, value)) && !exists(join(directory, `${value}.meta.json`))) return value; }
 }
 
-function snapshotSchemaVersion(database: Database): string {
+function snapshotSchemaVersion(database: SqliteClient): string {
   const versions = (database.query("SELECT version FROM operatoros_schema_migrations").all() as { version: string }[]).map((value) => String(value.version));
   return versions.reduce((latest, version) => {
     const order = compareSchemaVersions(version, latest);
@@ -193,11 +209,11 @@ function snapshotSchemaVersion(database: Database): string {
 function validateRestoreSnapshot(path: string, credential?: RestoreAdministratorCredential, expectedSchemaVersion?: string): string | null {
   const database = openDatabase(path, { readonly: true });
   try {
-    if (expectedSchemaVersion && snapshotSchemaVersion(database.client as unknown as Database) !== expectedSchemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
+    if (expectedSchemaVersion && snapshotSchemaVersion(database.client) !== expectedSchemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
     if ((database.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
-    if (!restoreIdentityEligible(database.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
-    const firstAdminSetupRequired = isFirstAdminSetupRequired(database.client as unknown as Database);
-    if (!firstAdminSetupRequired && !restoreAdministratorCredentialMatches(database.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+    if (!restoreIdentityEligible(database.client)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
+    const firstAdminSetupRequired = isFirstAdminSetupRequired(database.client);
+    if (!firstAdminSetupRequired && !restoreAdministratorCredentialMatches(database.client, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
     return firstAdminSetupRequired ? null : credential?.username ?? null;
   } finally { database.close(); }
 }
@@ -210,7 +226,7 @@ function revokeRestoredSessions(path: string): void {
   } finally { database.close(); }
 }
 
-function assertRestoredSessionsRevoked(database: Database): void {
+function assertRestoredSessionsRevoked(database: SqliteClient): void {
   if (database.query("SELECT 1 FROM sessions WHERE revoked_at IS NULL LIMIT 1").get()) throw new Error("RESTORE_SESSION_REVOCATION_FAILED");
 }
 
@@ -355,10 +371,10 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
         reopen: () => { opened = openDatabase(databasePath, { readonly: true }); },
         afterSwap: () => {
           if ((opened?.client.query("PRAGMA quick_check").get() as { quick_check?: string } | null)?.quick_check !== "ok") throw new Error("RESTORE_QUICK_CHECK_FAILED");
-          if (!opened || !restoreIdentityEligible(opened.client as unknown as Database)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
-          if (verified?.schemaVersion && snapshotSchemaVersion(opened.client as unknown as Database) !== verified.schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
-          if (!isFirstAdminSetupRequired(opened.client as unknown as Database) && !restoreAdministratorCredentialMatches(opened.client as unknown as Database, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
-          assertRestoredSessionsRevoked(opened.client as unknown as Database);
+          if (!opened || !restoreIdentityEligible(opened.client)) throw new Error("RESTORE_ADMINISTRATOR_REQUIRED");
+          if (verified?.schemaVersion && snapshotSchemaVersion(opened.client) !== verified.schemaVersion) throw new Error("BACKUP_VERIFICATION_FAILED");
+          if (!isFirstAdminSetupRequired(opened.client) && !restoreAdministratorCredentialMatches(opened.client, credential?.username, credential?.password)) throw new Error("RESTORE_ADMIN_CREDENTIAL_REQUIRED");
+          assertRestoredSessionsRevoked(opened.client);
           close();
         },
       });
@@ -377,7 +393,7 @@ export function restore(selected: string, value: BackendConfig = config(), fileS
         fileSystem.syncDirectory(dirname(databasePath));
         validateRestoreSnapshot(databasePath, credential, verified?.schemaVersion);
         const restored = openDatabase(databasePath, { readonly: true });
-        try { assertRestoredSessionsRevoked(restored.client as unknown as Database); } finally { restored.close(); }
+        try { assertRestoredSessionsRevoked(restored.client); } finally { restored.close(); }
       }
       catch (error) {
         try { fileSystem.remove(databasePath); fileSystem.syncDirectory(dirname(databasePath)); }
@@ -429,7 +445,7 @@ export async function runBackupCli(args: string[]): Promise<void> {
   } catch (error) { console.error(error instanceof Error ? error.message : "Backup operation failed."); process.exit(1); }
 }
 
-if (import.meta.main) {
+if (isBackupCliEntrypoint(process.argv[1], import.meta.url)) {
   const args = process.argv.slice(2);
   const [action, selected] = args;
   if (["backup", "restore", "restore-disposable", "migrate-existing"].includes(args[0] ?? "")) {
@@ -442,12 +458,15 @@ if (import.meta.main) {
       if (lockStat && !lockStat.isFile()) throw new Error("BACKUP_CLI_LOCK_INVALID");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
-      const runner = join(import.meta.dir, "backup-cli-runner.ts");
-      const result = Bun.spawnSync([
-        "flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
+      const runner = join(
+        dirname(fileURLToPath(import.meta.url)),
+        process.versions.bun ? "backup-cli-runner.ts" : "backup-cli-runner.mjs",
+      );
+      const result = spawnSync("flock", [
+        "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
         process.execPath, runner, ...args,
-      ], { stdin: "inherit", stdout: "pipe", stderr: "pipe" });
-      if (result.exitCode === 75) {
+      ], { encoding: "utf8", stdio: ["inherit", "pipe", "pipe"] });
+      if (result.status === 75) {
         if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_OPERATION_BUSY");
         else if (action === "backup") {
           const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -457,7 +476,7 @@ if (import.meta.main) {
         console.error("Another backup or restore operation is already active for this data root.");
         process.exit(1);
       }
-      if (result.exitCode === 127) {
+      if (result.error || result.status === null) {
         if (action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, "RESTORE_CLI_LOCK_UNAVAILABLE");
         else if (action === "backup") {
           const at = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -469,7 +488,7 @@ if (import.meta.main) {
       }
       if (result.stdout.length) process.stdout.write(result.stdout);
       if (result.stderr.length) process.stderr.write(result.stderr);
-      process.exit(result.exitCode ?? 1);
+      process.exit(result.status ?? 1);
     } catch (error) {
       const lockFailure = error instanceof Error && error.message === "BACKUP_CLI_LOCK_INVALID" ? "INVALID" : "UNAVAILABLE";
       if (value && action === "restore") recordRestoreCliRefusal(value.backupDir!, selected, `RESTORE_CLI_LOCK_${lockFailure}`);

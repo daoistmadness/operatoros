@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,6 +6,7 @@ import { join } from "node:path";
 import { createFreshDatabase } from "../src/bootstrap";
 import { devDatabaseCommand, inspectDevelopmentDatabase } from "../src/dev-db-cli";
 import { CURRENT_SCHEMA_VERSION } from "../src/manifest";
+import { openSqliteConnection } from "../src/sqlite-client";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
@@ -25,7 +25,7 @@ function fixture() {
   const seed = (path = database, version = CURRENT_SCHEMA_VERSION) => {
     createFreshDatabase(path);
     if (version !== CURRENT_SCHEMA_VERSION) {
-      const client = new Database(path);
+      const client = openSqliteConnection(path).client;
       try { client.run("UPDATE operatoros_schema_migrations SET version=?, schema_fingerprint='synthetic-older-schema'", [version]); }
       finally { client.close(); }
     }
@@ -97,7 +97,7 @@ describe("development DB CLI canonical authority", () => {
     const f = fixture(); f.run("ensure"); const before = hash(f.database);
     expect(() => f.run("reset")).toThrow("DEVELOPMENT_DATABASE_RESET_CONFIRMATION_REQUIRED");
     expect(hash(f.database)).toBe(before);
-    const handle = new Database(f.database, { readonly: true });
+    const handle = openSqliteConnection(f.database, { readonly: true }).client;
     try { expect(() => f.run("reset", "--confirm", "RESET")).toThrow("DEVELOPMENT_DATABASE_BUSY"); }
     finally { handle.close(); }
     expect(hash(f.database)).toBe(before);

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { constants, chmodSync, closeSync, copyFileSync, existsSync, fstatSync, linkSync, lstatSync, mkdirSync, openSync, readSync, rmSync, statSync, unlinkSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type { Database } from "bun:sqlite";
+import type { SqliteClient } from "@operatoros/db";
 import { assertOrdinarySchemaObjects } from "@operatoros/db";
 import { syncDirectory, syncFile } from "./durable-files";
 import type { BackupAttachment, BackupAttachmentSource } from "../security/backup-payload";
@@ -88,11 +88,11 @@ export function storeReportFile(dataDir: string, bytes: Uint8Array): FileMetadat
   return metadata;
 }
 
-function tableExists(database: Database, name: string): boolean {
+function tableExists(database: SqliteClient, name: string): boolean {
   return Boolean(database.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name));
 }
 
-export function referencedReportFiles(database: Database): FileMetadata[] {
+export function referencedReportFiles(database: SqliteClient): FileMetadata[] {
   assertOrdinarySchemaObjects(database);
   const parts: string[] = [];
   if (tableExists(database, "upp_report_versions")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_versions");
@@ -110,7 +110,7 @@ export function referencedReportFiles(database: Database): FileMetadata[] {
   return [...entries].map(([sha256, sizeBytes]) => ({ sha256, sizeBytes })).sort((a, b) => a.sha256.localeCompare(b.sha256));
 }
 
-export function backupAttachmentSources(database: Database, dataDir: string): BackupAttachmentSource[] {
+export function backupAttachmentSources(database: SqliteClient, dataDir: string): BackupAttachmentSource[] {
   return referencedReportFiles(database).map((entry) => {
     const path = reportFilePath(dataDir, entry.sha256);
     assertFile(path, entry);
@@ -118,12 +118,12 @@ export function backupAttachmentSources(database: Database, dataDir: string): Ba
   });
 }
 
-export function backupAttachmentsMatch(database: Database, files: BackupAttachment[]): boolean {
+export function backupAttachmentsMatch(database: SqliteClient, files: BackupAttachment[]): boolean {
   const expected = referencedReportFiles(database);
   return expected.length === files.length && expected.every((entry, index) => entry.sha256 === files[index]?.sha256 && entry.sizeBytes === files[index]?.sizeBytes);
 }
 
-export function removeUnreferencedReportFiles(database: Database, dataDir: string, candidates: FileMetadata[]): void {
+export function removeUnreferencedReportFiles(database: SqliteClient, dataDir: string, candidates: FileMetadata[]): void {
   const referenced = new Set(referencedReportFiles(database).map((entry) => entry.sha256));
   for (const candidate of candidates) {
     if (referenced.has(candidate.sha256)) continue;

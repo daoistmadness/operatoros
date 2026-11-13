@@ -179,7 +179,7 @@ class RuntimeAssessmentTests(unittest.TestCase):
     def test_release_consumer_checks_runtime_before_starting_api(self):
         consumer = (ROOT / "scripts/test-release-consumer.sh").read_text(encoding="utf-8")
         self.assertLess(
-            consumer.index('check-bun-sqlite-runtime.py "$image"'),
+            consumer.index('check-node-sqlite-runtime.py "$image"'),
             consumer.index('podman run -d --name operatoros-release-api'),
         )
 

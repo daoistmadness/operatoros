@@ -103,7 +103,7 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Audit log rotation and retention](runbooks/log-rotation.md) — Draft.
 - [Elysia Runtime Operations](runbooks/runtime-operations.md).
 - [Secret rotation runbook](runbooks/secret-rotation.md).
-- [Ubuntu server deployment runbook](runbooks/ubuntu-server-deployment.md) — Draft; local Podman implementation tested, Ubuntu rehearsal pending.
+- [Ubuntu server deployment runbook](runbooks/ubuntu-server-deployment.md) — Draft; hosted Ubuntu artifact rehearsal passed, OPRSERVER acceptance pending.
 
 ## Audits
 

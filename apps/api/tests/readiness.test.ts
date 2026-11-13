@@ -1,10 +1,9 @@
-import { Database } from "bun:sqlite";
 import { describe, expect, it } from "bun:test";
 import { Value } from "@sinclair/typebox/value";
 import { ReadinessResponseSchema } from "@operatoros/contracts/readiness";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
-import { openDatabase } from "@operatoros/db";
+import { openDatabase, type SqliteClient } from "@operatoros/db";
 import { FEATURE_REQUIREMENTS, mapReadinessToResponse } from "../src/domains/readiness";
 import { createAccountFixture } from "./fixtures/accounts";
 
@@ -37,7 +36,7 @@ async function setup(label: string) {
   };
 }
 
-function configureFoundation(database: { client: Database }): void {
+function configureFoundation(database: { client: SqliteClient }): void {
   const client = database.client;
   const year = client.run("INSERT INTO academic_years (label, start_date, end_date, status, is_default) VALUES ('Synthetic 2026/2027', '2026-07-06', '2027-06-30', 'active', 1)");
   const yearId = Number(year.lastInsertRowid);

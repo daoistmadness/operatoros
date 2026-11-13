@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-07
+last_reviewed: 2026-11-13
 ---
 
 # CI release bundles
@@ -17,11 +17,11 @@ a later movement of main does not change the candidate. Bundle creation is seria
 
 A manual dispatch on a non-main branch performs nonpublishing qualification. It
 runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
-checks the embedded Bun/SQLite runtime before retaining non-image reports for
-seven days. The image is discarded with the runner and receives no signature,
-attestation, or release-bundle upload. A workflow success means the rejection
-guard behaved correctly; the report can still say that the candidate is
-blocked.
+checks SQLite in both Node.js `node:sqlite` and the `better-sqlite3` native
+addon before retaining non-image reports for seven days. The image is
+discarded with the runner and receives no signature, attestation, or
+release-bundle upload. A workflow success means the rejection guard behaved
+correctly; the report can still say that the candidate is blocked.
 
 The existing locked setup action supplies Bun and Node. The runner installs
 Ubuntu's Podman package and records its actual version. The API uses the existing
@@ -96,6 +96,9 @@ layout files into an isolated temporary directory. Trivy scans that directory
 through a read-only mount. JSON and CycloneDX must each identify the archive's
 same config ID, and the layout/archive bytes must remain unchanged after scans.
 Missing, malformed or mismatched reports and scanner errors fail packaging.
+The shared verifier rejects any unresolved Trivy HIGH or CRITICAL finding in
+candidate scans and release bundles. It has no ignore-list bypass; lower
+severities remain in the reports for review.
 The release OCI archive and static SPA formats are unchanged.
 
 Run the real scanner compatibility test with
@@ -109,10 +112,11 @@ Build/scan failure uploads only non-sensitive JSON/log/text diagnostics for seve
 days: source/tool context, scanner version/error, archive size/hash/image identity,
 build/export logs, and available scan reports. Raw OCI/SPA archives, credentials,
 consumer environment files and databases are excluded. An incomplete bundle is
-never uploaded as a release. Full bundle retention remains 90 days. Scan findings remain visible; producing a report does not
-approve security risk. Trivy may omit libraries statically linked into Bun.
-Bun 1.4.4's embedded SQLite/FTS5 finding remains a separate security assessment;
-the new bundle is not production authorization or a security exception.
+never uploaded as a release. Full bundle retention remains 90 days. Scan
+findings remain visible; producing a report does not approve security risk.
+Trivy may omit SQLite code statically linked into Node.js or the native addon.
+The runtime gate probes both copies and CycloneDX records each SQLite component.
+The local Node candidate remains unsigned and does not authorize production.
 
 The GitHub attestation signs the complete bundle digest. It requires job-scoped
 `id-token: write` and `attestations: write`; default permissions remain
@@ -144,7 +148,7 @@ command status and bounded Podman output only; container storage, database,
 environment files, and runtime data are never uploaded. This is not a live
 Quadlet, reboot, or production-host test.
 
-## Isolated deployment rehearsal (prepared, not executed)
+## Isolated deployment rehearsal
 
 The separate `.github/workflows/deployment-rehearsal.yml` workflow is prepared
 to test the repository-managed deployment CLI on a disposable GitHub-hosted
@@ -159,21 +163,35 @@ private empty registry-auth file prevents the public digest-pinned Caddy pull
 from reading credentials from the runner user's normal Podman auth file.
 
 The rehearsal pins the verified release from source
-`b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, workflow run `42181508155`
-(attempt 1), artifact `13485579515`. The artifact name is
-`operatoros-release-b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84-42181508155-1`.
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`, workflow run `43408580871`
+(attempt 1), artifact `14028942446`. The artifact name is
+`operatoros-release-fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98-43408580871-1`.
 Its envelope SHA-256 is
-`0ff8033c51900e0e3154f06e428ea8120f12b906a906938f1458ff058498bbf4`, and its
+`146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09`, and its
 inner bundle SHA-256 is
-`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`. The
+`d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`. The
 signed manifest records OCI digest
-`sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`,
+`sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`,
 image config ID
-`sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6`,
+`sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede`,
 and SPA SHA-256
-`8c23256063f803a52590ba5fe432f51e519cc6d475af058ae5240f896eeb2ecc`. The
-artifact expires on 2027-02-04 07:32:13 UTC. The rehearsal verifies each
+`6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79`. The
+artifact expires on 2027-02-11 10:22:21 UTC. The rehearsal verifies each
 identity before initializing its private Podman store or importing the image.
+
+Hosted run [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+completed on 2026-11-13 from workflow source
+`37bfa038b3054bf2a113bbd58925320cd6b2c55f`. It used the signed release above
+on Ubuntu 24.04 with rootless Podman 4.9.3. The result reports successful
+synthetic deployment, post-backup SQLite preservation, application rollback,
+and interrupted recovery. All seven boolean guards were true, the run reported
+25 check entries and no failures, and the harness exited with code 0. SQLite
+integrity was `ok`, foreign-key violations were zero, journal mode was WAL, and
+the synthetic marker survived each transition. Cleanup passed with no remaining
+resources. GitHub retained evidence artifact `14034070389` through
+`2026-11-27T11:48:41Z`; `rehearsal-evidence.json` SHA-256 is
+`b7c6953b5d7306d598ba4a2c71ad0a2f874dad92c13effb418a1a9fdea8f4301`. This
+run did not access OPRSERVER or production data.
 
 Each workflow run uses a fresh directory below `RUNNER_TEMP`, a private VFS
 run-scoped Podman configuration and storage, random synthetic-only
@@ -257,9 +275,10 @@ rejection, simulated health-check failure, and rollback failure. The workflow
 retains only allowlisted event names, exit codes, `rehearsal-evidence.json`,
 and the cleanup tool's bounded diagnostics for 14 days. It does not retain
 arbitrary subprocess output or deployment CLI output, and never uploads the
-bundle, database, environment file, secrets, or container storage. This
-preparation has not run the workflow or exercised the hosted runner's actual
-service manager.
+bundle, database, environment file, secrets, or container storage. Run
+43419441002 exercised the hosted runner's user systemd manager, rootless Quadlet
+startup and restart, and cleanup. It did not exercise OPRSERVER or its data.
+Target-host service-manager, reboot, crash, and storage acceptance remain open.
 
 When private Podman-context qualification fails, `podman_context` records the
 failing stage, last completed guard, stable failure code, optional process exit

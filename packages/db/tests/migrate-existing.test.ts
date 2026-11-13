@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
 import { existsSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +6,7 @@ import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFinger
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
 import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
+import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
 
 const s46Sql = readFileSync(new URL("./fixtures/s46-schema.sql", import.meta.url), "utf8");
 const s47Sql = readFileSync(new URL("../src/s47-schema.sql", import.meta.url), "utf8");
@@ -24,13 +24,13 @@ function withDatabases(run: (root: string, source: string, fresh: string) => voi
   finally { rmSync(root, { recursive: true, force: true }); }
 }
 
-function source(path: string, variant: "A" | "B" = "A"): Database {
-  const db = new Database(path, { create: true });
+function source(path: string, variant: "A" | "B" = "A"): SqliteClient {
+  const db = openSqliteConnection(path).client;
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(s46Sql);
   if (variant === "B") {
     const baseObjectCount = (db.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' AND NOT (type = 'table' AND name = 'operatoros_schema_migrations')").get() as { count: number }).count;
-    const target = new Database(":memory:");
+    const target = openSqliteConnection(":memory:").client;
     try {
       target.exec(s47Sql);
       const allowed = new Set(variantB.targetObjects);
@@ -53,7 +53,7 @@ function source(path: string, variant: "A" | "B" = "A"): Database {
   return db;
 }
 
-function academicScope(db: Database): void {
+function academicScope(db: SqliteClient): void {
   db.run("INSERT INTO academic_years (id,label,start_date,end_date,status,is_default) VALUES (1,'2026/2027','2026-07-01','2027-06-30','active',1)");
   db.run("INSERT INTO jenjangs (id,code,name,level) VALUES (1,'SD','SD','SD')");
   db.run("INSERT INTO jenjang_config (id,jenjang,cutoff_time,updated_at) VALUES (1,'SD','07:30','2026-07-01')");
@@ -117,7 +117,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("migrates the approved S4.7 schema and preserves its employee directory", () => withDatabases((_, path) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     expect(schemaFingerprint(db)).toBe(S47_SCHEMA_FINGERPRINT);
@@ -139,7 +139,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("keeps S4.7 ledger formatting compatibility for equivalent TEXT type spellings", () => withDatabases((_, path) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20260929_s47','20260901_s46',?,'{}','SYNTHETIC_FIXTURE','2026-09-30T00:00:00Z')", [S47_SCHEMA_FINGERPRINT]);
@@ -154,7 +154,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
 
   it("rejects S4.8 ledgers with extra, hidden generated, or missing columns before migration", () => {
     for (const shape of ["extra", "generated", "missing"] as const) withDatabases((_, path) => {
-      const db = new Database(path, { create: true });
+      const db = openSqliteConnection(path).client;
       db.exec("PRAGMA foreign_keys=ON");
       db.exec(s47Sql);
       db.exec(s48Sql);
@@ -171,7 +171,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
       db.close();
 
       const before = readFileSync(path);
-      const malformed = new Database(path, { readonly: true });
+      const malformed = openSqliteConnection(path, { readonly: true }).client;
       expect(() => validateMigrationSource(malformed)).toThrow("migration ledger layout differs");
       malformed.close();
       expect(() => migrateExistingDatabase(path)).toThrow("migration ledger layout differs");
@@ -180,7 +180,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   });
 
   it("upgrades S4.8 rows and history through S5.1 and matches fresh bootstrap", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -208,7 +208,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("upgrades S4.9 school units and assignment history through S5.1", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -250,7 +250,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
 
 
   it("upgrades an S5.1 database to S5.4 and preserves its UPP records", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -278,7 +278,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("upgrades S5.2 without changing identity records", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -317,7 +317,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("upgrades S5.3 while preserving KK and verification history", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -348,7 +348,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
   }));
 
   it("upgrades an S5.0 database to S5.1 and preserves its staff records", () => withDatabases((_, path, freshPath) => {
-    const db = new Database(path, { create: true });
+    const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
     db.exec(s48Sql);
@@ -420,7 +420,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     const before = readFileSync(path);
     expect(() => migrateExistingDatabase(path)).toThrow("legacy class-month mapping ambiguous");
     expect(readFileSync(path)).toEqual(before);
-    const unchanged = new Database(path);
+    const unchanged = openSqliteConnection(path).client;
     expect(unchanged.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC LIMIT 1").get()).toEqual({ version: "20260901_s46" });
     expect(unchanged.query("SELECT name FROM sqlite_master WHERE name='attendance_ledger_revisions'").get()).toBeNull();
     expect(unchanged.query("SELECT id FROM absence_reason_class_entries").get()).toEqual({ id: 31 });
@@ -436,7 +436,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     db.run("UPDATE operatoros_schema_migrations SET schema_fingerprint='wrong'");
     db.close();
     expect(() => migrateExistingDatabase(path)).toThrow("DATABASE_MIGRATION_CHECKSUM_MISMATCH");
-    const newer = new Database(path);
+    const newer = openSqliteConnection(path).client;
     newer.run("UPDATE operatoros_schema_migrations SET version='20990101_s99'");
     newer.close();
     expect(() => migrateExistingDatabase(path)).toThrow("unknown migration metadata");

@@ -1,18 +1,23 @@
-FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS dependencies
+FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS build
 
 WORKDIR /app
 
 COPY package.json bun.lock ./
 COPY patches ./patches
+COPY scripts/build-api-runtime.sh ./scripts/build-api-runtime.sh
 COPY apps ./apps
 COPY packages ./packages
 COPY openapi ./openapi
 
 RUN bun install --frozen-lockfile --production --filter '@operatoros/api'
 
-FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS runtime
+RUN sh scripts/build-api-runtime.sh /app/runtime
 
-RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0 zlib=1.4-r0
+FROM --platform=linux/amd64 docker.io/library/node:24.22.3-alpine3.24@sha256:d8d97e479cdc64f052f81f129362168717c59783ade8dcc1abd22e1cca8dbd7c AS runtime
+
+RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0 zlib=1.4-r0 \
+    && rm -rf /usr/local/lib/node_modules/npm \
+    && rm -f /usr/local/bin/npm /usr/local/bin/npx
 
 WORKDIR /app
 
@@ -30,33 +35,30 @@ RUN mkdir -p /usr/share/operatoros \
       "$VCS_REF" "$SOURCE_TREE_SHA256" "$SOURCE_DIRTY" \
       > /usr/share/operatoros/build-provenance
 
-COPY --from=dependencies --chown=10000:10000 /app/package.json ./package.json
-COPY --from=dependencies --chown=10000:10000 /app/node_modules ./node_modules
-COPY --from=dependencies --chown=10000:10000 /app/apps/api/package.json ./apps/api/package.json
-COPY --from=dependencies --chown=10000:10000 /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=dependencies --chown=10000:10000 /app/apps/api/src ./apps/api/src
-COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/package.json ./packages/contracts/package.json
-COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/node_modules ./packages/contracts/node_modules
-COPY --from=dependencies --chown=10000:10000 /app/packages/contracts/src ./packages/contracts/src
-COPY --from=dependencies --chown=10000:10000 /app/packages/db/package.json ./packages/db/package.json
-COPY --from=dependencies --chown=10000:10000 /app/packages/db/node_modules ./packages/db/node_modules
-COPY --from=dependencies --chown=10000:10000 /app/packages/db/src ./packages/db/src
-COPY --from=dependencies --chown=10000:10000 /app/packages/excel/package.json ./packages/excel/package.json
-COPY --from=dependencies --chown=10000:10000 /app/packages/excel/node_modules ./packages/excel/node_modules
-COPY --from=dependencies --chown=10000:10000 /app/packages/excel/src ./packages/excel/src
-COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/package.json ./packages/sheetjs-fork/package.json
-COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/xlsx.js ./packages/sheetjs-fork/xlsx.js
-COPY --from=dependencies --chown=10000:10000 /app/packages/sheetjs-fork/dist ./packages/sheetjs-fork/dist
-COPY --from=dependencies --chown=10000:10000 /app/openapi/operatoros.openapi.json ./openapi/operatoros.openapi.json
+COPY --from=build --chown=10000:10000 /app/node_modules ./node_modules
+COPY --from=build --chown=10000:10000 /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=build --chown=10000:10000 /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=build --chown=10000:10000 /app/runtime ./apps/api/dist
+COPY --from=build --chown=10000:10000 /app/packages/sheetjs-fork/package.json ./packages/sheetjs-fork/package.json
+COPY --from=build --chown=10000:10000 /app/packages/sheetjs-fork/xlsx.js ./packages/sheetjs-fork/xlsx.js
+COPY --from=build --chown=10000:10000 /app/packages/sheetjs-fork/dist ./packages/sheetjs-fork/dist
+RUN if [ ! -e /app/node_modules/better-sqlite3 ]; then \
+      ln -s ../packages/db/node_modules/better-sqlite3 /app/node_modules/better-sqlite3; \
+    fi \
+    && mkdir -p /app/node_modules/@operatoros \
+    && if [ ! -e /app/node_modules/@operatoros/sheetjs-fork ]; then \
+      ln -s ../../packages/sheetjs-fork /app/node_modules/@operatoros/sheetjs-fork; \
+    fi
 COPY --chmod=0555 deploy/podman/api-healthcheck.sh /usr/local/bin/operatoros-api-healthcheck
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=8090 \
+    OPERATOROS_REPOSITORY_ROOT=/app \
     OPERATOROS_DATA_DIR=/var/lib/operatoros/data
 
 USER 10000:10000
 EXPOSE 8090
 STOPSIGNAL SIGTERM
 
-ENTRYPOINT ["bun", "run", "apps/api/src/server.ts"]
+ENTRYPOINT ["node", "apps/api/dist/server.mjs"]

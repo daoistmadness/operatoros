@@ -7,47 +7,59 @@ last_reviewed: 2026-11-13
 
 ## Decisions from the 25 most recent pull requests
 
-Reviewed the 25 newest GitHub PRs returned on 2026-11-12: #357–#381, including
-the open Phase 7 follow-up #381. Their descriptions and recorded hosted/local
-failure evidence show these recurring lessons:
+Reviewed the 25 newest GitHub PRs returned on 2026-11-13: #362–#386. PR #386
+was open; #362–#385 were merged. Review covered titles, descriptions, changed
+files, and the hosted/local failure and validation evidence recorded in the PRs.
+The recurring lessons are:
 
-- **Keep release gates fail-closed and evidence tied to the artifact.** PRs
-  #358, #360, #366, #380, and #381 bind verification to source, run, artifact,
-  and image identity. Keep the embedded SQLite finding in the SBOM and block
-  attestation while G3 is open; scanner scope or an adapter smoke test is not a
-  security disposition.
-- **Test state changes, not only health.** PRs #360, #375, and #376 distinguish
-  application rollback from database recovery and preserve a unique write made
-  after backup across restart, rollback, and interrupted recovery. Require the
-  same invariant in future rehearsal evidence; a healthy endpoint or
-  pre-backup row is insufficient.
+- **Bind each release result to its source and artifact.** PRs #366, #380, and
+  #381 bind qualification to source, run, artifact, and image identity. PRs
+  #382, #384, #385, and #386 show why those records also need exact merge and
+  post-merge CI/CodeQL commits, with skipped release jobs reported as skipped.
+  Keep signing fail-closed until the runtime inventory, scan, and security
+  disposition match the same source and image digest.
+- **Test state changes, not only health.** PRs #375 and #376 preserve a unique
+  write made after backup across restart, rollback, and interrupted recovery.
+  Require the same invariant in future rehearsal evidence; a healthy endpoint
+  or pre-backup row is insufficient.
 - **Carry one verified runtime context through every operation.** PRs #362,
   #369, #371, and #374 exposed storage configuration drift, a non-empty
   bootstrap root, and a validator that lost the accepted private Podman
-  context. Pass the validated context to validators and units, assert effective
-  identity and paths, and do not loosen a guard to make a mismatched runner
-  pass.
-- **Make failures and cleanup auditable without leaking internals.** PRs
-  #359, #367, #368, #370, #372, #373, and #375 show that stale stage names,
-  missing exit/operation identity, combined stdout/stderr, and incomplete
-  cleanup can hide the first failure. Keep stable allowlisted failure classes,
-  the last completed guard, operation and exit status, and cleanup status. Keep
-  raw stderr, secrets, database files, private paths, and shared stores out of
-  retained evidence.
-- **Keep privileges and host acceptance narrow.** PRs #363, #377, #378, and
-  #379 separate preparation from live host changes, allow only the Caddy
-  capability required by the pinned image, and disable the unused Caddy admin
-  endpoint. Synthetic runner success still does not prove target-host,
-  independent-device, or off-host recovery acceptance.
-- **Prefer small, measured changes.** PR #357 consolidated duplicate UI
-  ownership but measured no meaningful bundle-size improvement. Retain such a
-  change for simpler dependency ownership, not as a performance claim; avoid
-  broad migrations without measured benefit and end-to-end acceptance.
+  context. PR #383 found active systemd-managed monitors missing from the
+  queried Podman listing, so that runtime context still needs reconciliation.
+  Pass the verified context to validators and units, and assert effective
+  identity and paths.
+- **Make failures and cleanup auditable without leaking internals.** PRs #367
+  through #375 show how stale stage names, missing operation identity, combined
+  stdout/stderr, and incomplete cleanup can hide the first failure. Keep stable
+  allowlisted failure classes, the last completed guard, operation and exit
+  status, and cleanup status. Keep raw stderr, secrets, databases, private
+  paths, and shared stores out of retained evidence.
+- **Keep privileges and host acceptance narrow.** PRs #363 and #377–#379
+  separate preparation from host changes, allow only the Caddy capability
+  required by the pinned image, and disable its unused admin endpoint. PR #383
+  hardened Windows checks but left the actual restore and Identity A/B results
+  unverified. Static checks do not replace an authorized Windows run.
+- **Make CI prerequisites deterministic.** PR #383 authenticated the existing
+  checksum-pinned mise asset request with the workflow's read-only token after
+  hosted bootstrap failures. Keep both asset and extracted-binary hashes
+  pinned, and grant only `contents: read`.
+- **Close each fix at the boundary that failed.** PRs #365 and #378–#379 added
+  checks for the actual GitHub response shape and pinned image behavior; PRs
+  #367–#376 added isolated rehearsal checks after recorded hosted failures.
+  Keep a small regression test for each reproduced failure and run the exact
+  image or host boundary that unit tests cannot cover.
+- **Run lifecycle checks on the scanned image.** PR #387 now binds isolated
+  API startup, clean stop/restart, encrypted backup, and disposable restore to
+  the candidate image config ID and source revision covered by runtime and scan
+  reports. A locally rebuilt image helps debug the harness; only the hosted
+  same-image result qualifies that candidate.
 
-The resulting order is to qualify the runtime, build one exact candidate, run
-the isolated lifecycle and recovery checks against that digest, then verify
-independent recovery and access controls before any production decision. Keep
-the single-server SQLite architecture and production NO-GO boundary in place.
+The resulting order is to qualify the final image runtime, run exact-source CI,
+bind the SBOM and provenance to one digest, exercise lifecycle and recovery
+against that image, then verify independent recovery and access controls before
+any production decision. Keep the single-server SQLite architecture and
+production NO-GO boundary in place.
 
 ## Current decisions
 
@@ -57,6 +69,27 @@ the single-server SQLite architecture and production NO-GO boundary in place.
 - PR #380 was squash-merged at `e410a562bce588e70573cc8eb0d0d83b6e0e9106`
   after all seven required checks passed. Keep the embedded-runtime release
   gate in force; the merge does not qualify the current Bun/SQLite runtime.
+- PR #387 was squash-merged at `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`.
+  Main release run [43408580871](https://github.com/daoistmadness/operatoros/actions/runs/43408580871)
+  produced an attested, immutable bundle; its exact-source verifier, Node/SQLite
+  gate, Trivy scan, SBOM, and isolated consumer all passed. The signed OCI uses
+  Node 24.22.3 and SQLite 3.54.1 in both providers. Bundle SHA-256 is
+  `d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`; OCI
+  manifest is `sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`.
+  This closes G3 for the release artifact. The local Bun development runtime
+  remains on SQLite 3.53.4 and is not included in the image. The artifact is
+  not imported to OPRSERVER; host rehearsal, recovery, and access-control gates
+  remain open. No security exception or deployment authorization is active.
+- PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`. Post-merge
+  CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal
+  [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
+  used signed artifact `14028942446` on disposable Ubuntu 24.04 and passed its
+  synthetic deployment, SQLite preservation, rollback, and interrupted-recovery
+  checks. The retained evidence artifact is `14034070389`;
+  `rehearsal-evidence.json` SHA-256 is
+  `b7c6953b5d7306d598ba4a2c71ad0a2f874dad92c13effb418a1a9fdea8f4301`. This
+  does not qualify OPRSERVER or close Windows recovery, D2, or Gate E. No
+  production data or host service was touched.
 - Enforce squash-only merges in both the repository settings and the active
   `main` ruleset. Strict status checks, no-bypass enforcement, and branch
   deletion/force-push protection remain enabled.
@@ -65,15 +98,98 @@ the single-server SQLite architecture and production NO-GO boundary in place.
   hourly limit by originating IP ([GitHub rate-limit policy](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api));
   keep the release asset ID and archive and binary checksums pinned, and do not
   grant the bootstrap write permissions.
-- Keep G3 blocked. A source audit found 19 production modules using `bun:sqlite`
-  or Drizzle's Bun adapter. The `better-sqlite3` smoke test shows adapter
-  feasibility, but a driver swap leaves Bun's embedded SQLite in the executable
-  and does not pass the current runtime gate. Do not pursue that migration as a
-  G3 fix without a reviewed disposition for the embedded component. Bun's
-  [Bun v1.4.4 SQLite documentation](https://github.com/oven-sh/bun/blob/bun-v1.4.4/docs/runtime/sqlite.mdx)
-  confirms Linux and Windows statically link SQLite and `Database.setCustomSQLite()`
-  is unavailable on those platforms. A system SQLite installation cannot replace
-  the embedded runtime library. No security exception is active.
+- Historical G3 candidate runs 43381159685–43396108609 record the source and
+  artifact iterations before release. The local OCI
+  candidate now uses Node 24.22.3 and `better-sqlite3` 13.1.1 with SQLite 3.54.1
+  in both `node:sqlite` and the native addon; the final image contains no Bun
+  runtime. The image base digest is pinned, the Node binary and both SQLite
+  copies are probed from the image, and local synthetic API, worker, restart,
+  encrypted-backup, and restore checks passed. Node 24.22.3
+  is the official security release ([release](https://nodejs.org/en/blog/release/v24.22.3),
+  [security advisory](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)).
+  Exact-source candidate run [43381159685](https://github.com/daoistmadness/operatoros/actions/runs/43381159685)
+  passed runtime, scan, and same-image lifecycle gates on source `7231cdf`.
+  Full release validation and E2E also passed; the main-only release bundle was
+  skipped. The image was ephemeral and unsigned.
+  The hosted lifecycle check covers clean source identity, API readiness,
+  restart, encrypted backup, and isolated restore.
+  Both clean-source acceptance and dirty-source rejection now have focused
+  tests. The official
+  [Bun release list](https://github.com/oven-sh/bun/releases)
+  still showed v1.4.4 on 2026-11-13, and the active host probe reports SQLite
+  3.53.4. No supported patched Bun runtime was found; SQLite 3.54.1 is listed
+  in the [official release history](https://www.sqlite.org/chronology.html).
+  Bun remains the local build/development tool. This candidate does not qualify
+  a release artifact or production host. No security exception is active.
+  The later exact-source run [43385232734](https://github.com/daoistmadness/operatoros/actions/runs/43385232734)
+  passed runtime, scan, and all eight lifecycle stages on `c4b6cf6`; full
+  release validation passed in 569 seconds and E2E passed. The manual bundle
+  remained skipped on the non-main dispatch. The image remains ephemeral and
+  unsigned; PR review, signed provenance, and target-host rehearsal remain.
+  Exact-source run [43388751408](https://github.com/daoistmadness/operatoros/actions/runs/43388751408)
+  then passed on `a5fc398`. Node 24.22.3 and both SQLite providers reported
+  3.54.1 with FTS5; Trivy found zero vulnerabilities across its Alpine and
+  Node targets. The embedded-runtime report marks CVE-2026-119373 resolved.
+  All eight lifecycle stages, E2E, and full release validation passed. The
+  run took 678 seconds. The candidate remained ephemeral and unsigned.
+  The next exact-source run [43392577115](https://github.com/daoistmadness/operatoros/actions/runs/43392577115)
+  passed on `224741a0f7af2046a572724e2c8d808bca0e6a48`. Node 24.22.3 and both
+  SQLite providers reported 3.54.1 with FTS5; Trivy found zero vulnerabilities
+  in the Alpine and Node targets; CycloneDX and embedded-runtime evidence mark
+  CVE-2026-119373 resolved. All eight lifecycle stages, E2E, and full release
+  validation passed in 662 seconds. Manifest `sha256:81676cfcfd87dc9383391f6755f4a706c261567dc1841d492d7a81cd699122ac`,
+  config `sha256:9d301cc684212d1a9eec0fb1e652f405bc4f16291f5101fe0014ec11eba2d40a`,
+  and archive SHA-256 `44eef8d5614e10da23caa0805811549c240902a2af4adc56254500b740a9325b`.
+  The manual bundle was skipped; the candidate remains ephemeral and unsigned.
+  Exact-source workflow [43396108609](https://github.com/daoistmadness/operatoros/actions/runs/43396108609)
+  then passed on `1dc7f7bde84b14d32112477891c1ea0fee955332`. Both SQLite
+  providers reported 3.54.1 with FTS5, Trivy found zero Alpine/Node
+  vulnerabilities, and all eight lifecycle stages passed. Full release
+  validation and E2E passed in 585 seconds and 3m 2s respectively. Manifest
+  `sha256:8e6a808660948822f2c9f0e0bdb406e72ac78e01ba41e9100b7a514518b0cfc8`,
+  image config `sha256:c62521e9fb8d38aeb5b0eba0c8ca3463ca440b556f0a46c8716ba079aa36bd2f`,
+  and archive SHA-256 `82d1638403b1fc7ae0aeee4fc67947f33067e7578b08db820ae746f0f26c737f`.
+  The release bundle was skipped; the candidate remains ephemeral and unsigned.
+- The first local Node-image lifecycle run exposed a shutdown bug: closing the
+  raw adapter server bypassed Elysia `onStop` hooks, leaving the backup
+  scheduler and employee-retention timer active while SQLite closed. The timer
+  then queried a closed database, and SIGTERM did not exit cleanly. The server
+  now calls `app.stop(true)` for both adapters so lifecycle hooks run before
+  the database and operation lock close. The corrected exact-source image
+  passed three clean SIGTERM stops, API readiness, encrypted backup and active
+  restore, schema/integrity validation, and pre/post-backup sentinel checks on
+  synthetic data. Evidence is recorded in the [stability report](STABILITY_REPORT.md).
+- The hosted Node candidate scan on source `5dece3befffcdf3b4015918643b499d37ccb7255`
+  found 19 CVEs: 6 High, 12 Medium, and 1 Low. Trivy located every finding in
+  the Node base image's unused npm tree at
+  `/usr/local/lib/node_modules/npm`; the application does not invoke npm at
+  runtime. Remove npm and its `npm`/`npx` shims from the final image, and make
+  the shared candidate and release verifier reject any unresolved High or Critical
+  Trivy finding. Keep all scan findings in the retained SBOM/report; do not
+  suppress them. The exact-source scan on `789c2a33` passed with zero Trivy
+  findings after npm was removed. Candidate run 43381159685 then passed the
+  lifecycle step on source `7231cdf`. That evidence is tied to its source;
+  later test or report changes need their own exact-source checks.
+  The pinned-scanner compatibility fixture checks OCI normalization, report
+  identity, and corrupt-archive rejection; its minimal image is not a current
+  vulnerability-detection positive control. Real Trivy run 43365066088 did
+  report 19 findings in the removed npm tree, and unit tests verify that the
+  release gate rejects injected High/Critical findings. Keep these scopes
+  distinct when describing scanner evidence.
+- A read-only OPRSERVER recheck found the Beszel agent and Uptime Kuma Quadlet
+  units active with live conmon and application payload processes. Their
+  loopback responses were 200 and 302. Podman 5.7.0 rootless default and
+  external listings still omit both containers, and `podman container exists`
+  rejects their live IDs. Do not sync, repair, or restart the state while the
+  services are running. The cause and alert delivery/ownership remain unknown;
+  retain this as a Gate E blocker until an owner-approved recovery path is
+  established. Evidence: external `gate-e-monitoring-state-recheck-20261113.json`.
+  A further read-only probe found that both conmon processes use the
+  configured graph and run roots, but their bundle paths and overlay-container
+  metadata directories are absent while the units and payloads stay active.
+  The cause remains unknown. No repair or restart was attempted. Evidence:
+  external `gate-e-monitoring-orphaned-state-probe-20261113.json` and its
+  SHA-256 file.
 - Do not rebind the development service or migrate its live database until a
   relaunchable s48 source and source-plus-database recovery path pass isolated
   tests, a fresh backup is verified, and development cutover is authorized.

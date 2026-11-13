@@ -1,12 +1,14 @@
-import { Database } from "bun:sqlite";
 import { createHash, randomBytes } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { chmodSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { createFreshDatabase } from "./bootstrap";
 import { assertDatabasePath, openDatabase, REQUIRED_TABLES, validateDatabase } from "./connection";
 import { assertDatabaseMigrationSafe, repositoryCommonDirectory, resolveOperatorOSPaths, type OperatorOSPaths } from "./data-dir";
 import { compareSchemaVersions, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS } from "./manifest";
+import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 
 function fail(code: string): never { throw new Error(code); }
 function kind(path: string): "missing" | "file" | "invalid" {
@@ -36,9 +38,9 @@ export function inspectDevelopmentDatabase(path: string) {
     administrator_configured: false, users_count: 0, file_size: entry === "file" ? statSync(path).size : 0,
   };
   if (entry !== "file") return empty;
-  let client: Database | undefined;
+  let client: SqliteClient | undefined;
   try {
-    client = new Database(path, { readonly: true });
+    client = openSqliteConnection(path, { readonly: true, fileMustExist: true }).client;
     const rows = client.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at, version").all() as { version: string }[];
     const known = rows.every(({ version }) => SCHEMA_MIGRATIONS.includes(version as typeof SCHEMA_MIGRATIONS[number]));
     const head = known ? SCHEMA_MIGRATIONS.filter((version) => rows.some((row) => row.version === version)).at(-1) ?? null : rows.at(-1)?.version ?? null;
@@ -107,10 +109,11 @@ function sessionSource(runtime: string, session: string): string {
 function requireUnused(path: string): void {
   if (kind(path) === "missing") return;
   for (const suffix of ["-wal", "-shm", "-journal"]) if (kind(`${path}${suffix}`) !== "missing") fail("DEVELOPMENT_DATABASE_BUSY");
-  if (!Bun.which("lsof")) fail("DEVELOPMENT_DATABASE_LSOF_REQUIRED");
-  const result = Bun.spawnSync(["lsof", "-t", "--", path], { stdout: "pipe", stderr: "pipe" });
-  if (result.exitCode === 0 && result.stdout.toString().trim()) fail("DEVELOPMENT_DATABASE_BUSY");
-  if (result.exitCode !== 0 && result.exitCode !== 1) fail("DEVELOPMENT_DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  const result = spawnSync("lsof", ["-t", "--", path], { encoding: "utf8" });
+  if ((result.error as NodeJS.ErrnoException | undefined)?.code === "ENOENT") fail("DEVELOPMENT_DATABASE_LSOF_REQUIRED");
+  if (result.error || result.status === null) fail("DEVELOPMENT_DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  if (result.status === 0 && result.stdout.trim()) fail("DEVELOPMENT_DATABASE_BUSY");
+  if (result.status !== 0 && result.status !== 1) fail("DEVELOPMENT_DATABASE_OPEN_HANDLE_CHECK_FAILED");
 }
 
 export function devDatabaseCommand(args: string[], env: NodeJS.ProcessEnv = process.env): string {
@@ -176,7 +179,7 @@ export function devDatabaseCommand(args: string[], env: NodeJS.ProcessEnv = proc
     if (values.confirm !== "RESET") fail("DEVELOPMENT_DATABASE_RESET_CONFIRMATION_REQUIRED");
     requireUnused(paths.databasePath);
     if (kind(paths.databasePath) === "file") {
-      const client = new Database(paths.databasePath, { readwrite: true, create: false });
+      const client = openSqliteConnection(paths.databasePath, { fileMustExist: true }).client;
       try { client.exec("PRAGMA busy_timeout=0"); client.exec("BEGIN EXCLUSIVE"); client.exec("ROLLBACK"); }
       catch (error) {
         // Confirmed reset may replace an unreadable managed DB only after the
@@ -195,7 +198,7 @@ export function devDatabaseCommand(args: string[], env: NodeJS.ProcessEnv = proc
   return paths.databasePath;
 }
 
-if (import.meta.main) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   try { console.log(devDatabaseCommand(process.argv.slice(2))); }
   catch (error) {
     // Preserve the Python CLI's machine-consumed diagnostic channel and exit status.

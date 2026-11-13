@@ -4,7 +4,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, createFreshDatabase, openDatabase } from "@operatoros/db";
 import { loadConfig } from "../src/config";
 import { restore as restoreCli } from "../src/backup-cli";
@@ -34,7 +34,7 @@ it("creates a pre-restore safety snapshot with an audit line and preserves the o
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
-    const migrations = new Database(databasePath);
+    const migrations = openTestDatabase(databasePath).client;
     const previousMigration = SCHEMA_MIGRATIONS[SCHEMA_MIGRATIONS.length - 2]!;
     migrations.query("INSERT OR IGNORE INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', ?, ?)").run(previousMigration, "synthetic-history", "synthetic-test", "2099-01-01T00:00:00Z");
     migrations.query("UPDATE operatoros_schema_migrations SET applied_at = ? WHERE version = ?").run("2000-01-01T00:00:00Z", CURRENT_SCHEMA_VERSION);
@@ -229,7 +229,7 @@ it("refuses to publish a CLI backup from a synthetic database with foreign-key v
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
-    const damaged = new Database(databasePath);
+    const damaged = openTestDatabase(databasePath).client;
     damaged.run("PRAGMA foreign_keys = OFF");
     damaged.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'synthetic-orphan-session', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
     damaged.close();
@@ -257,7 +257,7 @@ it("serializes concurrent CLI backups so every successful command keeps a distin
   };
   try {
     createFreshDatabase(databasePath);
-    const database = new Database(databasePath);
+    const database = openTestDatabase(databasePath).client;
     database.query("INSERT INTO students (id, name) VALUES (?, ?)").run(424242, "Synthetic Student ".repeat(800000));
     database.close();
 
@@ -396,7 +396,7 @@ it("rejects authenticated SQLite candidates with integrity, foreign-key, or sche
     if (!encryption) throw new Error("synthetic backup encryption config missing");
 
     const incompatiblePath = join(temporary, "incompatible.sqlite");
-    const incompatible = new Database(incompatiblePath);
+    const incompatible = openTestDatabase(incompatiblePath).client;
     incompatible.run("CREATE TABLE unrelated (id INTEGER PRIMARY KEY)");
     const plaintext = incompatible.serialize();
     incompatible.close();
@@ -421,7 +421,7 @@ it("rejects authenticated SQLite candidates with integrity, foreign-key, or sche
 
     const foreignKeyPath = join(temporary, "foreign-key.sqlite");
     createFreshDatabase(foreignKeyPath);
-    const foreignKeyDatabase = new Database(foreignKeyPath);
+    const foreignKeyDatabase = openTestDatabase(foreignKeyPath).client;
     try {
       foreignKeyDatabase.run("PRAGMA foreign_keys = OFF");
       foreignKeyDatabase.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop102-invalid-candidate', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
@@ -900,7 +900,7 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
           if (selected === "interrupted") throw new Error("SYNTHETIC_RESTORE_INTERRUPTION");
           if (selected === "foreign-key" || selected === "recovery-required") {
             failCandidateParking = selected === "recovery-required";
-            const candidate = new Database(from, { readwrite: true, create: false });
+            const candidate = openTestDatabase(from).client;
             try {
               candidate.run("PRAGMA foreign_keys = OFF");
               candidate.run("INSERT INTO sessions (user_id, token_hash, expires_at, absolute_expires_at) VALUES (404, 'loop102-invalid-candidate', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)");
