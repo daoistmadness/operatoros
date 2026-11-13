@@ -9739,15 +9739,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "faafa793ddffd13a8cceadc46784ccf8aefa1b25ade495233607f9d48e6ed43b",
+      "fingerprint": "0641837d7f86e0c16ab387785ef69e359817e3d0c65fa15708a5e50ccfe971b5",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "f1c665d8639a161e2f221f54f7148c9223b052ec3f7ada5215b8b3d8d1232121"
+        "docs/decisions/podman-deployment.md": "16694bcb6864cdb0a385dd240ab64d0248945af29f6b253874c62949e20be49d"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "bfaf0b190255ecdc982e830df60ab0254c8d7ba9",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Podman decision page now records hosted candidate evidence; no skill guidance changed.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: docs/decisions/podman-deployment.md at bfaf0b190255ecdc982e830df60ab0254c8d7ba9"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
