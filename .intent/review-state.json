@@ -10243,15 +10243,15 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "268f343c4145b9528d29ccd7105ef33f654db938b9f484e6ce22a4ec76b790d8",
+      "fingerprint": "f779b8635d9fffbfd31b99fdd3aaee0d9553e225a26fe8657157dc53fbd22296",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "b5dc27a36d4bf7b5cd2cec602b21dc06ee3999c1a192797dddcc182c03610323"
+        "MASTER_CHECKLIST.md": "00f152a044a69d73ff7e62e5c112a99b352af75ae786011f794942825dc89b81"
       },
-      "head": "09addce07114e44625e5de4984938de38baa2bf9",
+      "head": "b44da40570445c7f3c7dd9037c4889dc13ec68d8",
       "outcome": "no-change",
-      "reason": "MASTER_CHECKLIST.md records operational acceptance steps and does not change agent skills or package guidance.",
+      "reason": "The checklist path locates preserved external recovery instructions; no skill or package guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 09addce07114e44625e5de4984938de38baa2bf9"
+        "Changed: MASTER_CHECKLIST.md at b44da40570445c7f3c7dd9037c4889dc13ec68d8"
       ]
     },
     "source:STABILITY_REPORT.md": {

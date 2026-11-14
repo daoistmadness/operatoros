@@ -31,9 +31,10 @@ table above is updated.
 
 - [ ] **Task 4. Run the independent Windows restore.** Use an authorized Windows
   client, a BitLocker-encrypted destination, and independent credentials for
-  OneDrive and Restic from approved escrow. Follow the prepared Windows recovery
-  instructions. Retain the result JSON, checksum, restore validation, and
-  measured duration.
+  OneDrive and Restic from approved escrow. The prepared package is at
+  `~/data/operatoros-run-artifacts/2026-11-12/phase7-runtime-recovery-20261112/windows-recovery/README.md`
+  outside this repository; transfer it through the approved private channel.
+  Retain the result JSON, checksum, restore validation, and measured duration.
 - [ ] **Task 5. Test Tailscale Identity A and Identity B.**
   Use Identity A and a separate authorized non-admin Identity B device. Map both
   device fingerprints to their users and effective grants. Run the prepared
