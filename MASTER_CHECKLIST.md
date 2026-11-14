@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-15
 ---
 
 # OperatorOS stability checklist
@@ -23,15 +23,54 @@ close a real host, device, recovery, or deployment gate.
 | 10 | Prepare Gate F production deployment | BLOCKED | Preparation may continue after mandatory gates pass. Execute only after all gates pass and the owner explicitly authorizes deployment. Keep HTTPS 443 unmapped until then. |
 | 11 | Stabilize AGENTS.md, skills, mise, dotfiles, CI, and runbooks (Gate G) | IN PROGRESS | The 25 newest PRs (#362–#386) were reviewed on 2026-11-13; PR #387 runtime and deployment lessons are recorded in [DECISIONS.md](DECISIONS.md). PR #385 merged at `a4b45a962c20592cb764f24a028ac44bb591a0be` from head `90a94068f7489e107a29728268ab2de82c6a04ef`; its PR checks reported 10 passed and four skipped, and post-merge CI run `43304768196` plus CodeQL run `43304767529` passed. PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`; post-merge CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal `43419441002` passed against signed artifact `14028942446` on a disposable Ubuntu 24.04 runner. PR #389 merged at `ee576b0d1c80038435277bf63a5f92dd0718eae5`; post-merge CI run `43426640315` and CodeQL run `43426639877` passed. PR #390 merged at `10cd1708900ef298f76511b2247bb8784416e99c` from exact head `8e0633f358ac65c05eb0700666694191f5a2ccfa`; its PR CI `43428604724`, PR CodeQL `43428597042`, post-merge CI `43429481073`, and post-merge CodeQL `43429481044` passed. The docs index now distinguishes the passed hosted rehearsal from pending OPRSERVER acceptance. Hosted evidence does not qualify OPRSERVER. Repository pins, Intent checks, merge controls, dotfiles, interactive Zsh startup, host health, and draft log-rotation limits remain as recorded. Windows recovery and monitoring ownership/delivery evidence remain outstanding. |
 
-## Safe next actions
+## Next-session todo list
 
-1. Complete OPRSERVER target-host checks when valid SSH access is available. The read-only check in this session returned `Permission denied (publickey)`. Do not repair services or storage, or deploy, without separate authorization.
-2. Run the Windows restore and Identity A/B checks when an authorized restore client, independent credentials, and separate non-admin Identity B device are available.
-3. Keep the s48 result scoped to synthetic data. Use an authorized isolated
-   operational snapshot and a fresh verified backup before making any live-data
-   claim; never use the protected database for agent validation.
-4. Follow the PR-derived controls in [decisions](DECISIONS.md): exact artifact
-   identity, post-backup data sentinels, verified Podman context, scoped
-   diagnostics/cleanup, and least privilege.
-5. Preserve NO-GO until every mandatory gate passes and deployment is explicitly
-   authorized by the owner.
+Work these in order when the needed device, credentials, or host access becomes
+available. Keep each task open until its evidence is retained and the status
+table above is updated.
+
+- [ ] **Task 4. Run the independent Windows restore.** Use an authorized Windows
+  client, a BitLocker-encrypted destination, and independent credentials for
+  OneDrive and Restic from approved escrow. Follow the prepared Windows recovery
+  instructions. Retain the result JSON, checksum, restore validation, and
+  measured duration.
+- [ ] **Task 5. Test Tailscale Identity A and Identity B.**
+  Use Identity A and a separate authorized non-admin Identity B device. Map both
+  device fingerprints to their users and effective grants. Run the prepared
+  allowed and denied network checks, and retain structured results. Do not
+  change Tailscale policy during testing.
+- [ ] **Tasks 7, 8, and 11. Verify the OPRSERVER baseline.** After valid SSH
+  access is available, collect the read-only host state. Record runtime versions,
+  Podman and Quadlet context, monitor units and container metadata, disk and log
+  retention, timer status, and `mise run health`. Keep the known mise, AdGuard,
+  Tailscale, and monitoring discrepancies unchanged until each cause is
+  understood and any required host change is separately authorized.
+- [ ] **Task 6. Verify s48 rollback and data preservation.** Use only an authorized
+  isolated operational snapshot and a fresh verified encrypted backup. Verify
+  the post-backup sentinel, restore the s48-compatible source and database,
+  check startup, SQLite integrity and foreign keys, and record recovery time.
+  Never use the protected operational database for agent validation.
+- [ ] **Task 7. Verify recovery and monitoring.** Test host reconstruction
+  from independent escrow, crash and reboot recovery, and cross-release rollback
+  in an approved isolated environment. Verify alert thresholds and actual
+  delivery, named owners, disk and log coverage, and retention. Retain the
+  evidence and resolve the monitoring container-metadata discrepancy only
+  through an authorized change.
+- [ ] **Task 8. Rehearse the exact artifact on the target host.** With explicit
+  approval for the isolated host rehearsal, use the signed artifact's exact
+  digest. Verify import, readiness, restart, persistence, backup and restore,
+  rollback, and cleanup. If the retained artifact expires or source changes,
+  build and qualify a new immutable artifact before rehearsal.
+- [ ] **Task 11. Finish Gate G.** Update `AGENTS.md`, Intent guidance, mise,
+  dotfiles, CI documentation, and runbooks only for evidence-backed gaps. Run
+  the required documentation and maintainer checks. Keep host-dependent runbooks
+  in draft until their actual Windows or host steps pass.
+- [ ] **Task 10. Prepare Gate F.** Once all mandatory gates pass, prepare the
+  deployment and rollback record. Keep production NO-GO and HTTPS 443 unmapped
+  until the owner explicitly authorizes deployment.
+
+The PR/runtime work recorded above does not replace these device and host
+acceptance checks. Follow the PR-derived controls in [decisions](DECISIONS.md):
+bind evidence to the exact artifact, verify a post-backup data sentinel, carry
+the accepted Podman context through each operation, keep diagnostics and
+cleanup scoped, and use least privilege.
