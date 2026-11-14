@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "131fbedbea2020e559eea2404cc06006839712f4fa191dea3f25c2e30e52ff9e",
+      "fingerprint": "aa6990b420a2bb232ca666d4c6d75d030b5feec161259a1af2815da4e4ddeaad",
       "snapshot": {
-        "CHANGELOG.md": "fa9886b0b3bbd6f00368ca283ef1267d1237233436f634fce924b63e8fd9a08e"
+        "CHANGELOG.md": "684f80d3397031f5e6cb48846e60f7f3b4ae429b725a0eddb9d786333efabd88"
       },
-      "head": "09addce07114e44625e5de4984938de38baa2bf9",
+      "head": "abb986e0ce5793a0a014f5888dbffbb8f48f8332",
       "outcome": "no-change",
-      "reason": "MASTER_CHECKLIST.md and CHANGELOG.md document operational acceptance steps; agent skills and package guidance are unchanged.",
+      "reason": "The PR number was added to the Unreleased checklist entry; agent skills and package guidance remain unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 09addce07114e44625e5de4984938de38baa2bf9"
+        "Changed: CHANGELOG.md at abb986e0ce5793a0a014f5888dbffbb8f48f8332"
       ]
     },
     "source:COMMANDS.md": {

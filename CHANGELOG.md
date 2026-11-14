@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Add an ordered next-session checklist for outstanding recovery and production-readiness gates.
+- Add an ordered next-session checklist for outstanding recovery and production-readiness gates. (#392)
 - Refresh Gate G with verified PR #389/#390 checks while keeping host and device acceptance open. (#391)
 - Clarify the hosted Ubuntu rehearsal result and outstanding OPRSERVER acceptance in the documentation index. (#390)
 - Record the exact signed-artifact hosted rehearsal result and keep OPRSERVER acceptance open. (#389)
