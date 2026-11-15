@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "aa6990b420a2bb232ca666d4c6d75d030b5feec161259a1af2815da4e4ddeaad",
+      "fingerprint": "beb7207aa6cf09e6b6977820bf2c3ab132b42553255bd4eb7752f3222ecce70e",
       "snapshot": {
-        "CHANGELOG.md": "684f80d3397031f5e6cb48846e60f7f3b4ae429b725a0eddb9d786333efabd88"
+        "CHANGELOG.md": "afcbd033aee7a4ba1709fef8f342956830614c6b2c693649a41eb7324af5c9a8"
       },
-      "head": "abb986e0ce5793a0a014f5888dbffbb8f48f8332",
+      "head": "5fdb0be25e620c02be11094398135fc2182a5a18",
       "outcome": "no-change",
-      "reason": "The PR number was added to the Unreleased checklist entry; agent skills and package guidance remain unchanged.",
+      "reason": "The checklist groups the existing gates into five work packages; no agent skill or package guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at abb986e0ce5793a0a014f5888dbffbb8f48f8332"
+        "Changed: CHANGELOG.md at 5fdb0be25e620c02be11094398135fc2182a5a18"
       ]
     },
     "source:COMMANDS.md": {
@@ -10243,15 +10243,15 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "f779b8635d9fffbfd31b99fdd3aaee0d9553e225a26fe8657157dc53fbd22296",
+      "fingerprint": "fe6d19bfc2504125168d5eca3238dc8b2c74d270c9eab9041fb59f33d47b44fc",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "00f152a044a69d73ff7e62e5c112a99b352af75ae786011f794942825dc89b81"
+        "MASTER_CHECKLIST.md": "2357212ac7ba830f4fd17de34befd5fc9a517d638a26bf248ee2d2f5a0e72afe"
       },
-      "head": "b44da40570445c7f3c7dd9037c4889dc13ec68d8",
+      "head": "5fdb0be25e620c02be11094398135fc2182a5a18",
       "outcome": "no-change",
-      "reason": "The checklist path locates preserved external recovery instructions; no skill or package guidance changed.",
+      "reason": "The checklist wording now groups existing stability gates and clarifies artifact eligibility; no agent skill or package guidance changed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at b44da40570445c7f3c7dd9037c4889dc13ec68d8"
+        "Changed: MASTER_CHECKLIST.md at 5fdb0be25e620c02be11094398135fc2182a5a18"
       ]
     },
     "source:STABILITY_REPORT.md": {
