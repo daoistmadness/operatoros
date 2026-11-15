@@ -23,55 +23,65 @@ close a real host, device, recovery, or deployment gate.
 | 10 | Prepare Gate F production deployment | BLOCKED | Preparation may continue after mandatory gates pass. Execute only after all gates pass and the owner explicitly authorizes deployment. Keep HTTPS 443 unmapped until then. |
 | 11 | Stabilize AGENTS.md, skills, mise, dotfiles, CI, and runbooks (Gate G) | IN PROGRESS | The 25 newest PRs (#362–#386) were reviewed on 2026-11-13; PR #387 runtime and deployment lessons are recorded in [DECISIONS.md](DECISIONS.md). PR #385 merged at `a4b45a962c20592cb764f24a028ac44bb591a0be` from head `90a94068f7489e107a29728268ab2de82c6a04ef`; its PR checks reported 10 passed and four skipped, and post-merge CI run `43304768196` plus CodeQL run `43304767529` passed. PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`; post-merge CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal `43419441002` passed against signed artifact `14028942446` on a disposable Ubuntu 24.04 runner. PR #389 merged at `ee576b0d1c80038435277bf63a5f92dd0718eae5`; post-merge CI run `43426640315` and CodeQL run `43426639877` passed. PR #390 merged at `10cd1708900ef298f76511b2247bb8784416e99c` from exact head `8e0633f358ac65c05eb0700666694191f5a2ccfa`; its PR CI `43428604724`, PR CodeQL `43428597042`, post-merge CI `43429481073`, and post-merge CodeQL `43429481044` passed. The docs index now distinguishes the passed hosted rehearsal from pending OPRSERVER acceptance. Hosted evidence does not qualify OPRSERVER. Repository pins, Intent checks, merge controls, dotfiles, interactive Zsh startup, host health, and draft log-rotation limits remain as recorded. Windows recovery and monitoring ownership/delivery evidence remain outstanding. |
 
-## Next-session todo list
+## Five remaining work packages
 
-Work these in order when the needed device, credentials, or host access becomes
-available. Keep each task open until its evidence is retained and the status
-table above is updated.
+Tasks 1, 2, 3, and 9 are complete as shown above. Keep them closed unless the
+release source changes or new evidence contradicts their acceptance. These
+packages group the remaining work without changing any gate or authorizing
+production activity.
 
-- [ ] **Task 4. Run the independent Windows restore.** Use an authorized Windows
-  client, a BitLocker-encrypted destination, and independent credentials for
-  OneDrive and Restic from approved escrow. The prepared package is at
-  `~/data/operatoros-run-artifacts/2026-11-12/phase7-runtime-recovery-20261112/windows-recovery/README.md`
-  outside this repository; transfer it through the approved private channel.
-  Retain the result JSON, checksum, restore validation, and measured duration.
-- [ ] **Task 5. Test Tailscale Identity A and Identity B.**
-  Use Identity A and a separate authorized non-admin Identity B device. Map both
-  device fingerprints to their users and effective grants. Run the prepared
-  allowed and denied network checks, and retain structured results. Do not
-  change Tailscale policy during testing.
-- [ ] **Tasks 7, 8, and 11. Verify the OPRSERVER baseline.** After valid SSH
-  access is available, collect the read-only host state. Record runtime versions,
-  Podman and Quadlet context, monitor units and container metadata, disk and log
-  retention, timer status, and `mise run health`. Keep the known mise, AdGuard,
-  Tailscale, and monitoring discrepancies unchanged until each cause is
-  understood and any required host change is separately authorized.
-- [ ] **Task 6. Verify s48 rollback and data preservation.** Use only an authorized
-  isolated operational snapshot and a fresh verified encrypted backup. Verify
-  the post-backup sentinel, restore the s48-compatible source and database,
-  check startup, SQLite integrity and foreign keys, and record recovery time.
-  Never use the protected operational database for agent validation.
-- [ ] **Task 7. Verify recovery and monitoring.** Test host reconstruction
-  from independent escrow, crash and reboot recovery, and cross-release rollback
-  in an approved isolated environment. Verify alert thresholds and actual
-  delivery, named owners, disk and log coverage, and retention. Retain the
-  evidence and resolve the monitoring container-metadata discrepancy only
-  through an authorized change.
-- [ ] **Task 8. Rehearse the exact artifact on the target host.** With explicit
-  approval for the isolated host rehearsal, use the signed artifact's exact
-  digest. Verify import, readiness, restart, persistence, backup and restore,
-  rollback, and cleanup. If the retained artifact expires or source changes,
-  build and qualify a new immutable artifact before rehearsal.
-- [ ] **Task 11. Finish Gate G.** Update `AGENTS.md`, Intent guidance, mise,
-  dotfiles, CI documentation, and runbooks only for evidence-backed gaps. Run
-  the required documentation and maintainer checks. Keep host-dependent runbooks
-  in draft until their actual Windows or host steps pass.
-- [ ] **Task 10. Prepare Gate F.** Once all mandatory gates pass, prepare the
-  deployment and rollback record. Keep production NO-GO and HTTPS 443 unmapped
-  until the owner explicitly authorizes deployment.
+1. **Windows restore and Tailscale access (Tasks 4 and 5).** Run the independent
+   restore with an authorized Windows client, BitLocker-encrypted destination,
+   and separately escrowed OneDrive and Restic credentials. The prepared package
+   is at `~/data/operatoros-run-artifacts/2026-11-12/phase7-runtime-recovery-20261112/windows-recovery/README.md`
+   outside this repository. Transfer it through the approved private channel,
+   then retain the result JSON, checksum, validation, and measured duration. A
+   temporary Windows VM must meet the same Windows, encryption, and credential
+   requirements. A Linux restore needs an owner-approved replacement criterion
+   and cannot be recorded as a Windows test. For D2, use two real Windows
+   devices and sessions: authorized Identity A and separate non-admin Identity
+   B. Verify both clients are online, compare their device and user fingerprints,
+   and have a tailnet administrator confirm each identity and effective grants.
+   Follow the [D2 acceptance procedure](docs/runbooks/ubuntu-server-deployment.md):
+   test its specified private services and DNS, require TCP 443 to fail, and do
+   not change Serve, grants, firewall rules, or routes during the test. Port
+   8445 is only the proposed HTTPS origin pending approval; testing it alone does
+   not meet D2.
+2. **Rollback and target-host qualification (Tasks 6 and 8).** After valid SSH
+   access, collect a read-only OPRSERVER baseline before host writes. Get
+   separate D1 execution authorization before any host write. Recheck UID/GID
+   allocation, mount identity, Podman store, and capacity. UID 1002 is proposed
+   and has not been created, reserved, or tested. Use the retained signed
+   artifact `14028942446` while it remains available and its source is unchanged.
+   It expires `2027-02-11`. In the isolated synthetic D1 root, verify API and
+   Caddy lifecycle, SQLite persistence,
+   backup and restore, rollback, and cleanup. Keep Task 6's operational-data
+   acceptance separate: use only an authorized isolated snapshot and a fresh
+   verified encrypted backup to check the s48-compatible source, post-backup
+   sentinel, SQLite integrity, foreign keys, and recovery time. Never use the
+   protected operational database for agent validation. Retire the s48 criterion
+   only after an owner decision records its replacement.
+3. **Gate E recovery, storage, security, and monitoring (Task 7).** Approve the
+   production encryption and administrator-access boundaries, backup key
+   custody, retention, RPO, RTO, and restore owner. LUKS2 on existing storage is
+   only a candidate. Test key recovery and fail-closed mounting if that design is
+   approved; encryption does not protect a mounted volume from an unrestricted
+   root administrator. Test host reconstruction from independent escrow, crash
+   and reboot recovery, and cross-release rollback. Check for other Bun/SQLite
+   3.53.4 services on the host. Verify disk and log coverage, alert thresholds
+   and delivery, named owners, and retention. Investigate the monitoring
+   container-metadata discrepancy only through an authorized change.
+4. **Finish Gate G (Task 11).** Make evidence-backed updates to `AGENTS.md`,
+   Intent guidance, mise, dotfiles, CI documentation, and runbooks. Run the
+   required documentation and maintainer checks. Keep host-dependent runbooks in
+   draft until their Windows or host procedures pass on the required systems.
+5. **Prepare Gate F (Task 10).** After all mandatory gates pass, prepare the
+   deployment and rollback record for the single-host candidate. Keep production
+   NO-GO and HTTPS 443 unmapped until the owner explicitly authorizes deployment.
 
-The PR/runtime work recorded above does not replace these device and host
-acceptance checks. Follow the PR-derived controls in [decisions](DECISIONS.md):
-bind evidence to the exact artifact, verify a post-backup data sentinel, carry
-the accepted Podman context through each operation, keep diagnostics and
-cleanup scoped, and use least privilege.
+The hosted rehearsal and release evidence remain synthetic and do not replace
+the device, OPRSERVER, or operational-data acceptance above. Follow the
+PR-derived controls in [decisions](DECISIONS.md): bind evidence to the exact
+artifact, verify a post-backup sentinel, use the accepted Podman context, scope
+diagnostics and cleanup, and apply least privilege. These packages require no
+additional always-on server.
