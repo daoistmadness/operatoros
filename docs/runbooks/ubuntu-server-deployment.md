@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-16
 ---
 
 # Ubuntu server deployment runbook
@@ -19,11 +19,11 @@ verification and deployment.
 
 ## Status and scope
 
-This runbook covers OPRSERVER. It follows the accepted [Podman deployment architecture](../decisions/podman-deployment.md). Local rootless Podman validation passed on Ubuntu 26.04.1 with synthetic data. The new UID 1002 runtime has not been qualified, and no production deployment is approved.
+This runbook covers OPRSERVER. It follows the accepted [Podman deployment architecture](../decisions/podman-deployment.md). The UID 1002 synthetic runtime passed D1 with an older Bun release on 2026-11-10. The Node release has not been qualified on OPRSERVER. No production deployment is approved.
 
 ## D1 isolated synthetic qualification
 
-The approved D1 design uses Candidate B under a new rootless identity and a
+The approved D1 design uses Candidate B under a rootless identity and a
 separate root at `/mnt/podman-data/operatoros-d1-synthetic`. The existing
 `/mnt/podman-data/operatoros` tree, UID 1000 services and data, and protected UID
 1001 data remain outside this scope. The data filesystem is unencrypted; this
@@ -31,10 +31,9 @@ exception applies to synthetic qualification only. Do not place business
 records on it. Production encryption, backup, recovery, and administrator
 access decisions remain open.
 
-The proposed account is `operatoros-runtime` with UID/GID 1002 and subordinate
-UID/GID range `231072:65536`. A historical Loop 75 read-only inventory found
-these values available, but they have not been freshly rechecked and are not
-reserved. Recheck them and allocation policy before creating the account. Use
+The account is `operatoros-runtime` with UID/GID 1002. The proposed subordinate
+UID/GID range is `231072:65536`. Recheck the account, allocation, and policy
+before reuse. Use
 its own home, user manager, Quadlet directory, and Podman store. Proposed
 listeners are `127.0.0.1:18188` for Caddy and
 `127.0.0.1:18190` for the API. Do not change Tailscale Serve during D1.
@@ -163,8 +162,9 @@ the capacity table below. Recheck both filesystems before each write; do not
 rebuild the release or treat the local Podman measurement as OPRSERVER
 qualification.
 
-No UID 1002 Podman 5.7.0 runtime or Quadlet has been started. D1 still requires
-separate host execution authorization and must finish with the UID 1002 API and
+Loop 82 exercised the UID 1002 runtime and Quadlets with an older Bun release.
+Its rollback used the same API image and identical SPA contents. Node release
+qualification requires separate host execution authorization and must finish with the UID 1002 API and
 Caddy services stopped and not enabled. A passing D1 qualification does not
 authorize production data or close Gate D2, Gate E, or Gate F.
 
@@ -177,8 +177,8 @@ live `/mnt/podman-data/operatoros/deploy/deploy.sh`, or change either Quadlet.
 The D1 host profile also requires `storage_mountpoint`, `storage_uuid`,
 `storage_fstype`, `storage_driver`, and `root_min_free_bytes`. Its
 `storage-check` action verifies the mounted filesystem and user-manager store
-without invoking Podman. This code has not been run against the new UID 1002
-runtime. Copying it or its private config to OPRSERVER requires separate
+without invoking Podman. Loop 82 used the interface with the older release.
+Copying a new revision or its private config to OPRSERVER requires separate
 authorization.
 
 The interface is:
@@ -214,9 +214,8 @@ read-only schema compatibility, snapshots application configuration, imports
 the image without rebuilding, switches the SPA atomically, and checks health,
 readiness, API proxying and a nested SPA route. It records artifact provenance
 and incomplete transactions. Rollback restores only the previous API image
-configuration and SPA target; it never restores SQLite. The CLI is not installed
-or validated under the new UID 1002 manager. D1 does not qualify Podman 5.7.0,
-reboot recovery, backup ownership, or production access.
+configuration and SPA target; it never restores SQLite. Loop 82 did not prove
+cross-release rollback, reboot recovery, backup ownership, or production access.
 
 ### Podman storage context
 
@@ -410,11 +409,11 @@ Stop if any result differs from the approved contract.
 
 1. Confirm that `/mnt/podman-data` is mounted from the approved UUID as the
    expected writable ext4 filesystem. Record free bytes and inodes.
-2. Confirm that `/mnt/podman-data/operatoros-d1-synthetic` is absent. Do not
-   follow a symlink or reuse any existing directory. Confirm relevant unit,
-   storage, and backup metadata do not reference the target.
-3. Confirm that UID/GID `1002:1002`, the account name, and subordinate range
-   `231072:65536` remain free and policy-approved.
+2. Inspect the existing `/mnt/podman-data/operatoros-d1-synthetic` root,
+   its ownership, mount, Quadlets, storage selector, and retained synthetic data.
+   Stop on unexpected ownership, symlinks, or conflicting resources.
+3. Verify UID/GID `1002:1002`, the account name, subordinate range
+   `231072:65536`, and allocation policy before reuse.
 4. Confirm that ports `18188` and `18190` have no listeners. Preserve the
    existing UID 1000 services on `18088` and `18090`.
 5. Before the first write, require at least 9 GiB free and 80,000 free inodes
@@ -489,8 +488,15 @@ approves its allocation. The current administrator can still use unrestricted
 sudo to read the SQLite file. UID separation does not protect data from that
 administrator.
 
-Only after separate Gate D1 execution authorization, the approved account
-allocation commands are:
+The following commands are historical first-install instructions. The account
+exists; do not run them for requalification. If the account is absent, stop
+and obtain a newly reviewed host plan before creating it.
+
+~~~text
+Historical account allocation commands:
+~~~
+
+The original commands were:
 
 ~~~sh
 groupadd --gid 1002 operatoros-runtime
@@ -504,8 +510,7 @@ awk -F: '$1 == "operatoros-runtime" { if ($2 != 231072 || $3 != 65536) exit 1; c
 chmod 0700 /home/operatoros-runtime
 ~~~
 
-Recheck account, group, UID/GID, and subordinate range availability and policy
-before any of these commands. Do not add sudo privileges. Create the home
+Do not rerun these commands for the existing installation. Do not add sudo privileges. Create the home
 `environment.d` file and user Quadlets before `loginctl enable-linger
 operatoros-runtime`, so the manager starts with the private storage selector.
 The approved rootless manager command context is:
@@ -535,7 +540,8 @@ paths. It also requires UID 1002 and loopback URLs `http://127.0.0.1:18190`
 and `http://127.0.0.1:18188`. It rejects the existing `/mnt/podman-data/operatoros`
 tree and the prior `18090`/`18088` listeners as deployment targets.
 
-Use these D1 paths after the owner authorizes their creation:
+Use these D1 paths for the existing synthetic installation after a fresh
+read-only inventory and separate authorization for any host writes:
 
 | Purpose | Path | Owner and mode |
 | --- | --- | --- |
@@ -550,7 +556,10 @@ Use these D1 paths after the owner authorizes their creation:
 | Deployment lock and records | `deploy/` | UID/GID 1002, mode 0700 |
 
 The `data/sqlite` directory maps to `/var/lib/operatoros/data` in the API
-container. It must contain no copied database or other pre-existing records.
+container. Loop 82 retained a synthetic database and backup there. Before
+requalification, validate their identity and integrity read-only and preserve
+them. Stop if their provenance or compatibility is uncertain. Do not delete,
+replace, or introduce operational data into this directory.
 
 ## Configure the API container
 
@@ -742,7 +751,18 @@ SPA SHA-256
 copying the verified bundle to the OPRSERVER staging directory. The transfer
 must preserve the bundle checksum.
 
-Bootstrap only the new empty `data/sqlite` directory. The API image includes
+For requalification of the retained Loop 82 installation, skip the bootstrap
+and seed instructions below. Inspect the existing synthetic database, backup,
+release pointer, Quadlets, and private storage configuration read-only. Verify
+their provenance, integrity, compatibility with the Node release, and a recent
+verified synthetic backup before any authorized deployment. Preserve the retained
+state. Stop if any prerequisite cannot be verified; do not reset the directory.
+After separate D1 authorization, use the managed deployment interface with
+the verified existing release state and backup. Record startup, persistence,
+rollback, and cleanup evidence. A cross-release rollback needs its own test.
+
+The following bootstrap and seed steps apply only to a separately authorized
+first installation with a new empty `data/sqlite` directory. The API image includes
 the compiled database CLI at `/app/apps/api/dist/db-cli.mjs`; invoke it with
 Node's `--entrypoint node` in a one-time container using `--network=none`,
 `--read-only`, `--read-only-tmpfs`,

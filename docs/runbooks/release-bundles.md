@@ -296,8 +296,9 @@ one and the deployment verifier must never treat such an artifact as accepted.
 The existing synthetic host uses two rootless Quadlet containers: API and Caddy.
 Caddy serves static SPA files and proxies the API. SQLite stays in a host-mounted
 data directory. Access is loopback/private. Candidate B is accepted for the
-parallel D1 synthetic runtime; the host implementation and Tailscale Serve
-remain unauthorized. Production activation remains NO-GO. See the
+parallel D1 synthetic runtime. Loop 82 exercised the host implementation with
+an older Bun release. Further host execution and Tailscale Serve changes require
+separate authorization. Production activation remains NO-GO. See the
 [deployment decision](../decisions/podman-deployment.md).
 
 ## Repository-managed deployment interface
@@ -305,10 +306,10 @@ remain unauthorized. Production activation remains NO-GO. See the
 `scripts/operatoros-deploy.sh` is the version-controlled interface for the
 existing two-container synthetic host topology. It wraps
 `scripts/operatoros_deploy.py` and reuses `scripts/release-bundle.py` for the
-signed inner bundle. It is not installed on the host and has not replaced or
-modified `/mnt/podman-data/operatoros/deploy/deploy.sh` or any live Quadlet.
-Copying this interface and its private configuration onto a host requires a
-separate deployment approval.
+signed inner bundle. Loop 82 used the interface under the synthetic UID 1002
+runtime. It has not replaced or modified `/mnt/podman-data/operatoros/deploy/deploy.sh` or any live Quadlet.
+Copying a new interface revision or its private configuration onto the host
+requires separate authorization.
 
 The supported commands are:
 
