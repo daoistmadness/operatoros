@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2908bafeff8f38afc4ca3b85f8af9fcee9d05393206d663d6e5f8e28ff36aa94",
+      "fingerprint": "ff2c882456b65b8c69e00895a1d1009ddfb383084266f15bb1ab604589adc63a",
       "snapshot": {
-        "CHANGELOG.md": "a604070221db2cad8d76caf82a15ff6232faf4dde5c0dff08d144ffd5d89782e"
+        "CHANGELOG.md": "2626a6caf5b9fe3928f45d9984d377d6f666efdbc9216d43d9fcdf02444be507"
       },
-      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
+      "head": "e503538e0ba20f4f37333e9c2b84ec430116a783",
       "outcome": "no-change",
-      "reason": "Operational evidence correction does not change Elysia skill guidance.",
+      "reason": "Changelog PR reference does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
+        "Changed: CHANGELOG.md at e503538e0ba20f4f37333e9c2b84ec430116a783"
       ]
     },
     "source:COMMANDS.md": {

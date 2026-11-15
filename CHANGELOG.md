@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Correct the D1 checklist to record the earlier UID 1002 rehearsal and the remaining Node release qualification.
+- Correct the D1 checklist to record the earlier UID 1002 rehearsal and the remaining Node release qualification. (#394)
 
 - Group outstanding stability work into five packages while retaining the 11 acceptance gates. (#393)
 - Add an ordered next-session checklist for outstanding recovery and production-readiness gates. (#392)
