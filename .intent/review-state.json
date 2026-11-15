@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "beb7207aa6cf09e6b6977820bf2c3ab132b42553255bd4eb7752f3222ecce70e",
+      "fingerprint": "ee9882e493085205c09b16a07329036c576733df00513bf21211023b2242f2dc",
       "snapshot": {
-        "CHANGELOG.md": "afcbd033aee7a4ba1709fef8f342956830614c6b2c693649a41eb7324af5c9a8"
+        "CHANGELOG.md": "90ba5d0a35728632a10478b8809c53ebae3dd3e57ed060bfdf4bfbcdb10ef2d8"
       },
-      "head": "5fdb0be25e620c02be11094398135fc2182a5a18",
+      "head": "6d84aae48858c70c6f3557608f86d84a38a02180",
       "outcome": "no-change",
-      "reason": "The checklist groups the existing gates into five work packages; no agent skill or package guidance changed.",
+      "reason": "The PR number was added to the Unreleased checklist change; no agent skill or package guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5fdb0be25e620c02be11094398135fc2182a5a18"
+        "Changed: CHANGELOG.md at 6d84aae48858c70c6f3557608f86d84a38a02180"
       ]
     },
     "source:COMMANDS.md": {
