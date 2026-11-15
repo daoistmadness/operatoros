@@ -2941,15 +2941,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ee9882e493085205c09b16a07329036c576733df00513bf21211023b2242f2dc",
+      "fingerprint": "2908bafeff8f38afc4ca3b85f8af9fcee9d05393206d663d6e5f8e28ff36aa94",
       "snapshot": {
-        "CHANGELOG.md": "90ba5d0a35728632a10478b8809c53ebae3dd3e57ed060bfdf4bfbcdb10ef2d8"
+        "CHANGELOG.md": "a604070221db2cad8d76caf82a15ff6232faf4dde5c0dff08d144ffd5d89782e"
       },
-      "head": "6d84aae48858c70c6f3557608f86d84a38a02180",
+      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
       "outcome": "no-change",
-      "reason": "The PR number was added to the Unreleased checklist change; no agent skill or package guidance changed.",
+      "reason": "Operational evidence correction does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 6d84aae48858c70c6f3557608f86d84a38a02180"
+        "Changed: CHANGELOG.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
       ]
     },
     "source:COMMANDS.md": {
@@ -4815,15 +4815,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "bdd0170f468fecf1a07921bb64b3a83d614096d5e3ac4e20c6450e30e14f58e3",
+      "fingerprint": "95fb2039b2bcf111c745df7d3839e4441e4edf14cdcf7f1907f4d9822fb995c7",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "36b02e7425a95bb39f2e03af0a9babdbd3215769b64305d36f303fdbf296e30a"
+        "docs/runbooks/ubuntu-server-deployment.md": "0fe131c5c4e772b7674fc9a6e0ec94487db6e08264f2a86af700663053edb244"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "Operational evidence correction does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9739,15 +9739,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "4e23a27aa2470db77604d6198bfdfa8ee40f07da84872a4970a2a8824a72a3fe",
+      "fingerprint": "446b9205eb6333bdde03cc02df8a3a54142ae1640bb11fd8fa63277191340c49",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "38bc47e0fdceee21b8350556591a5015335f0944e036c767750dd5e2d2db8833"
+        "docs/decisions/podman-deployment.md": "18b584a59b4a9716d4bb931fc048145ca96ff3b49c039084293dbacb753d2173"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "Operational evidence correction does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "Changed: docs/decisions/podman-deployment.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9919,15 +9919,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "fa7e1b689e8548c94f4efb12941eeef3135ca16ccf98cf29ef58dbd9604d2847",
+      "fingerprint": "6955c9abc627990b5ab5bef5a8997eba7e2f02068e8b5d3ec3c79f7dbc9b17db",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "c4f1ff2becfe5aa6486b3099160fdd20015ef5bc040a7a5f654d258884c52a6c"
+        "docs/runbooks/release-bundles.md": "8bd525a5592d1b64e2b053f04d211378c6a8a8bd3052dd3c1ceb45c2f227a549"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "Operational evidence correction does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "Changed: docs/runbooks/release-bundles.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10243,15 +10243,15 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "fe6d19bfc2504125168d5eca3238dc8b2c74d270c9eab9041fb59f33d47b44fc",
+      "fingerprint": "291c4de0cb66092d11d6dfc1ada6c5cf96893911bf8f89769e76999d2362362b",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "2357212ac7ba830f4fd17de34befd5fc9a517d638a26bf248ee2d2f5a0e72afe"
+        "MASTER_CHECKLIST.md": "31e66d31d9fde1660f1e68d0839dd5fec70ec864640408bc67b582f9dd7e348e"
       },
-      "head": "5fdb0be25e620c02be11094398135fc2182a5a18",
+      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
       "outcome": "no-change",
-      "reason": "The checklist wording now groups existing stability gates and clarifies artifact eligibility; no agent skill or package guidance changed.",
+      "reason": "Operational evidence correction does not change Elysia skill guidance.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 5fdb0be25e620c02be11094398135fc2182a5a18"
+        "Changed: MASTER_CHECKLIST.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
       ]
     },
     "source:STABILITY_REPORT.md": {

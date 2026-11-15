@@ -82,14 +82,14 @@ The D1 design uses these isolated values. Recheck them before any host write:
 
 | Setting | Proposed value | State |
 | --- | --- | --- |
-| Caddy listener | `127.0.0.1:18188` | Approved D1 design; not activated |
-| API published listener | `127.0.0.1:18190` | Approved D1 design; not activated |
-| API container listener | `0.0.0.0:8090` inside the container | Must be tested |
+| Caddy listener | `127.0.0.1:18188` | Exercised in Loop 82; recheck before reuse |
+| API published listener | `127.0.0.1:18190` | Exercised in Loop 82; recheck before reuse |
+| API container listener | `0.0.0.0:8090` inside the container | Exercised with the older release |
 | Data directory | `/mnt/podman-data/operatoros-d1-synthetic/data/sqlite` mounted at `/var/lib/operatoros/data` | Synthetic only; filesystem is unencrypted |
-| Runtime identity | `operatoros-runtime`, UID/GID 1002; API container UID/GID 10000 | Account and subordinate IDs remain unallocated |
+| Runtime identity | `operatoros-runtime`, UID/GID 1002; API container UID/GID 10000 | Used in Loop 82; recheck allocation before reuse |
 | Release staging identity | Runtime account `operatoros-runtime` | No second deployment wrapper |
 | Operating system | Ubuntu 26.04.1 LTS amd64 | Read-only inventory; recheck before execution |
-| Podman | 5.7.0 | Version observed; D1 rootless qualification not run |
+| Podman | 5.7.0 | Loop 82 qualified the older release; Node release qualification remains open |
 | Caddy | Digest-pinned rootless container | No host Caddy package or service |
 
 Do not open LAN or public ingress during D1. Loopback HTTP checks do not prove secure-cookie behavior through HTTPS. Gate D2 must approve Tailscale Serve and effective tailnet grants.
@@ -225,7 +225,8 @@ Gate C used the earlier Bun-based image and does not prove cross-release rollbac
 recovery after a real process or host crash, compatibility with OPRSERVER's
 live configuration, independent off-host database recovery, effective tailnet
 grants, or release qualification of the newer Node.js candidate. OPRSERVER runs Ubuntu 26.04.1 and Podman 5.7.0.
-The UID 1002 runtime has not been created or tested. D1 must use only synthetic
+Loop 82 qualified the UID 1002 synthetic runtime with an older Bun release.
+The Node release requires its own host qualification. D1 must use only synthetic
 data on the existing unencrypted data filesystem. Production remains NO-GO.
 
 ## Rollback
