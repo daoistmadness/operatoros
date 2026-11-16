@@ -10489,15 +10489,16 @@
       ]
     },
     "source:apps/api/tests/node-runtime-smoke.ts": {
-      "fingerprint": "197b5e8b4235ccadf457edeff58718f279ed069926531cf9329bcc830570d0d8",
+      "fingerprint": "176bf525f19b88e4983b3a39cac5d1565af66f3e4c4a1ee3e9ded975bef4b0c5",
       "snapshot": {
-        "apps/api/tests/node-runtime-smoke.ts": "b8b938ed04e07e74868c72e6af8c2940a5bc16fad022216e49027a2560469249"
+        "apps/api/tests/node-runtime-smoke.ts": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "apps/api/tests/node-runtime-smoke.ts is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: apps/api/tests/node-runtime-smoke.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: apps/api/tests/bun-runtime-smoke.ts; the old Bun-incompatible smoke filename was removed as part of moving runtime qualification to Bun.",
+        "mise run check:full passed, including two API suites (441/441 each), E2E smoke (8 backend, 67 browser), and readiness (3/3)."
       ]
     },
     "source:apps/api/tests/password.test.ts": {
@@ -10699,63 +10700,68 @@
       ]
     },
     "source:scripts/build-api-runtime.sh": {
-      "fingerprint": "33441910c1de29e781ae7aeaf56fa144d8132e0a97e34265b192ca7b294cf623",
+      "fingerprint": "a6be2a680f98a3b495d53262cf6465a6f4727d240470ab08931fa8639a82bf1f",
       "snapshot": {
-        "scripts/build-api-runtime.sh": "c381c4a24b9900a26f4f48f01b6a852d9d09d1ba332fcfa135c2751c6a1ef689"
+        "scripts/build-api-runtime.sh": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/build-api-runtime.sh is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/build-api-runtime.sh at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: deploy/podman/Containerfile.api now runs apps/api/src/server.ts directly with the pinned Bun image; no Node-targeted bundle build remains.",
+        "mise run check:full passed; exact current-source OCI image qualification remains a CI/release gate."
       ]
     },
     "source:scripts/check-node-sqlite-runtime.py": {
-      "fingerprint": "5d0b3c5b3f86feaf479a63b6e2ba65a41a0d56900bcd4ac6ca712102eb2671ec",
+      "fingerprint": "6bc3fbc0baaaf9ab4ee76d9eded5f5a86df7b0dd90086463ca681225b642bcc0",
       "snapshot": {
-        "scripts/check-node-sqlite-runtime.py": "b8726a3800228b3b784464a78401f1db530710168c6a6574992954b0a77590b4"
+        "scripts/check-node-sqlite-runtime.py": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/check-node-sqlite-runtime.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/check-node-sqlite-runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: scripts/check-bun-sqlite-runtime.py probes the actual Bun image and embedded bun:sqlite identity.",
+        "scripts/tests/test_bun_sqlite_runtime.py and the complete mise run check:full passed."
       ]
     },
     "source:scripts/tests/test_node_sqlite_runtime.py": {
-      "fingerprint": "f47b6a50c1979b5f2af29ee86f660d8f402f5b5311f665868f93e8b99b540fbf",
+      "fingerprint": "f2b0db38b06dd72d716044fc3148669dcc0fca0388f41fcf2f8bf1e977ddde57",
       "snapshot": {
-        "scripts/tests/test_node_sqlite_runtime.py": "bbe22e37258449d11b79addfbd0f019452c27baa8f997eac69ed0f4ee58037ca"
+        "scripts/tests/test_node_sqlite_runtime.py": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/tests/test_node_sqlite_runtime.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/tests/test_node_sqlite_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: scripts/tests/test_bun_sqlite_runtime.py exercises the embedded Bun SQLite probe and its qualification outcomes.",
+        "Runtime, embedded inventory, and release bundle tests plus mise run check:full passed."
       ]
     },
     "source:scripts/verify-node-image-lifecycle.py": {
-      "fingerprint": "acca95e7de66d8b9d987ecf82977f43a1e3e5bd32d765e260bcf9e4fda997436",
+      "fingerprint": "eea2fa5f95fb4e99cb5380949478d204c3ff8c67559a536456b5e09ffd95479f",
       "snapshot": {
-        "scripts/verify-node-image-lifecycle.py": "61eee280b383d4cb7b07790be66596f3879cb34e8db13a86622cd426b6122277"
+        "scripts/verify-node-image-lifecycle.py": null
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "scripts/verify-node-image-lifecycle.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/verify-node-image-lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "Replacement: scripts/verify-bun-image-lifecycle.py runs the candidate application lifecycle with Bun.",
+        "The Bun lifecycle Python suite and mise run check:full passed."
       ]
     },
     "source:scripts/tests/test_node_image_lifecycle.py": {
-      "fingerprint": "8fafc95720527c4e6f2ca2a550d800525aaf067dfd123f52015e808d72249c10",
+      "fingerprint": "563c2f08730dd18cb467b451b996fa8e6f5c36ce6db77f1a455e9570be353563",
       "snapshot": {
-        "scripts/tests/test_node_image_lifecycle.py": "0d34ccada9e8b16bc19a3f2eac845bd52692c01c706243d9828fb9d49918a9d1"
+        "scripts/tests/test_node_image_lifecycle.py": null
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "scripts/tests/test_node_image_lifecycle.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/tests/test_node_image_lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "Replacement: scripts/tests/test_bun_image_lifecycle.py covers the same lifecycle harness under the Bun runtime.",
+        "The lifecycle Python suite and mise run check:full passed."
       ]
     },
     "source:apps/api/tests/bun-runtime-smoke.ts": {
