@@ -133,11 +133,11 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
           python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
-      - name: Node SQLite release gate tests
+      - name: Bun SQLite release gate and image identity tests
         working-directory: ${{ github.workspace }}
         run: |
-          python3 -m unittest discover -s scripts/tests -p "test_node_sqlite_runtime.py"
-          python3 -m unittest discover -s scripts/tests -p "test_node_image_lifecycle.py"
+          python3 -m unittest discover -s scripts/tests -p "test_bun_sqlite_runtime.py"
+          python3 -m unittest discover -s scripts/tests -p "test_bun_image_lifecycle.py"
       - name: Pinned Trivy OCI compatibility regression
         working-directory: ${{ github.workspace }}
         env:
@@ -161,7 +161,6 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           bun scripts/tests/minimatch-override.compatibility.cjs
-          node scripts/tests/minimatch-override.compatibility.cjs
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
@@ -440,16 +439,32 @@ jobs:
             --build-arg SOURCE_DIRTY=false \
             -t "$CANDIDATE_IMAGE" .
           podman save --format oci-archive -o "$CANDIDATE_ROOT/image.oci.tar" "$CANDIDATE_IMAGE"
-          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" <<'PY'
+          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$CANDIDATE_IMAGE" <<'PY'
           import importlib.util
           import json
           import pathlib
+          import subprocess
           import sys
 
           root = pathlib.Path(sys.argv[1])
           spec = importlib.util.spec_from_file_location("release", "scripts/release-bundle.py")
           release = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(release)
+          gate = subprocess.run(
+              ["python3", "scripts/check-bun-sqlite-runtime.py", sys.argv[3]],
+              capture_output=True,
+              text=True,
+              check=False,
+              timeout=75,
+          )
+          (root / "runtime-gate.json").write_text(gate.stdout + ("" if gate.stdout.endswith("\n") else "\n"))
+          if gate.returncode not in (0, 1):
+              raise SystemExit("Bun runtime gate failed without a qualification report")
+          runtime = json.loads(gate.stdout)
+          if (gate.returncode == 0 and runtime.get("status") != "PASS") or (
+              gate.returncode != 0 and runtime.get("status") != "BLOCKED"
+          ):
+              raise SystemExit("Bun runtime gate returned an invalid status")
           image = release.scan_image(
               root / "image.oci.tar",
               sys.argv[2],
@@ -483,17 +498,13 @@ jobs:
               summary.write(f"- Trivy findings by severity: `{json.dumps(counts, sort_keys=True)}`\n")
               summary.write("- The candidate OCI image stays on the ephemeral runner and is not uploaded.\n\n")
           PY
-      - name: Require both Node SQLite runtimes to pass
+      - name: Require Bun SQLite runtime qualification
         env:
           CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
           CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
         run: |
           set -euo pipefail
           mkdir -p "$CANDIDATE_ROOT"
-          set +e
-          python3 scripts/check-node-sqlite-runtime.py "$CANDIDATE_IMAGE" > "$CANDIDATE_ROOT/runtime-gate.json" 2>&1
-          gate_status=$?
-          set -e
           python3 scripts/record-embedded-runtime.py \
             --runtime "$CANDIDATE_ROOT/runtime-gate.json" \
             --image "$CANDIDATE_ROOT/image.json" \
@@ -501,39 +512,46 @@ jobs:
             --containerfile deploy/podman/Containerfile.api \
             --sbom "$CANDIDATE_ROOT/reports/sbom.cdx.json" \
             --output "$CANDIDATE_ROOT/reports/embedded-runtime.json"
-          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$gate_status" "$GITHUB_STEP_SUMMARY" <<'PY'
+          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$GITHUB_STEP_SUMMARY" <<'PY'
           import json
           import pathlib
-          import re
           import sys
 
           root = pathlib.Path(sys.argv[1])
           source = sys.argv[2]
-          status = int(sys.argv[3])
-          with (root / "runtime-gate.json").open(encoding="utf-8") as handle:
-              report = json.load(handle)
+          report = json.loads((root / "runtime-gate.json").read_text(encoding="utf-8"))
           image = json.loads((root / "image.json").read_text())
-          libraries = report.get("sqliteRuntimes")
-          providers = {item.get("provider") for item in libraries if isinstance(item, dict)} if isinstance(libraries, list) else set()
-          if status != 0 or report.get("status") != "PASS" or providers != {"better-sqlite3", "node:sqlite"} or len(libraries) != 2:
-              raise SystemExit("candidate Node SQLite runtimes did not pass qualification")
-          for library in libraries:
-              match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(library.get("version", "")))
-              version = tuple(map(int, match.groups())) if match else ()
-              if not version or (library.get("fts5") is True and version < (3, 54, 0)):
-                  raise SystemExit(f"candidate SQLite runtime is below the fixed version in {library.get('provider', 'unknown')}")
+          inventory = json.loads((root / "reports/embedded-runtime.json").read_text(encoding="utf-8"))
+          finding = inventory.get("finding", {})
+          libraries = inventory.get("runtime", {}).get("sqlite_libraries")
+          if report.get("status") != "PASS" or inventory.get("qualification_status") != "PASS":
+              raise SystemExit("candidate Bun SQLite runtime did not pass qualification")
+          if report.get("bun") != "1.4.4" or not isinstance(libraries, list) or len(libraries) != 1:
+              raise SystemExit("candidate Bun runtime identity is incomplete")
+          library = libraries[0]
+          if library.get("provider") != "bun:sqlite" or library.get("version") != report.get("sqlite"):
+              raise SystemExit("candidate Bun SQLite component does not match the runtime probe")
+          if finding.get("status") == "OPEN":
+              expected = {
+                  "runtime": "1.4.4",
+                  "sqlite": "3.53.4",
+                  "sqlite_source_id": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc",
+                  "origin": "docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690",
+              }
+              if finding.get("disposition") != "ACCEPTED" or finding.get("accepted_exception") != expected:
+                  raise SystemExit("candidate open SQLite finding is outside the accepted Bun scope")
+          elif finding.get("disposition") != "NOT_REQUIRED":
+              raise SystemExit("candidate SQLite finding has an unexpected disposition")
           outcome = "RUNTIME_GATE_PASS"
-          with open(sys.argv[4], "a", encoding="utf-8") as summary:
-              summary.write("## Node.js and SQLite driver qualification\n\n")
+          with open(sys.argv[3], "a", encoding="utf-8") as summary:
+              summary.write("## Bun and SQLite runtime qualification\n\n")
               summary.write(f"- Source commit: `{source}`\n")
               summary.write(f"- OCI manifest digest: `{image['manifest_digest']}`\n")
               summary.write(f"- Qualification outcome: `{outcome}`\n")
-              summary.write(f"- Node.js: `{report.get('node', 'unavailable')}`\n")
-              summary.write(f"- Node.js binary SHA-256: `{report.get('nodeBinarySha256', 'unavailable')}`\n")
-              summary.write(f"- better-sqlite3: `{report.get('betterSqlite3', 'unavailable')}`\n")
-              for library in libraries:
-                  summary.write(f"- `{library['provider']}` SQLite: `{library['version']}`; source ID `{library['sourceId']}`; FTS5 `{library['fts5']}`\n")
-              summary.write("- Node.js built-in and better-sqlite3 SQLite components are included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
+              summary.write(f"- Bun: `{report.get('bun', 'unavailable')}`; binary SHA-256 `{report.get('bunBinarySha256', 'unavailable')}`\n")
+              summary.write(f"- `bun:sqlite`: SQLite `{report.get('sqlite', 'unavailable')}`; source ID `{report.get('sqliteSourceId', 'unavailable')}`; FTS5 `{report.get('fts5', 'unavailable')}`\n")
+              summary.write(f"- Finding disposition: `{finding.get('status')}` / `{finding.get('disposition')}`\n")
+              summary.write("- Bun and SQLite components are included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
               summary.write("- Runtime gate passed. Candidate remains unsigned, unattested, and unpublished.\n")
               summary.write("\n")
           PY
@@ -543,7 +561,7 @@ jobs:
           CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
         run: |
           set -euo pipefail
-          python3 scripts/verify-node-image-lifecycle.py \
+          python3 scripts/verify-bun-image-lifecycle.py \
             --image "$CANDIDATE_IMAGE" \
             --image-metadata "$CANDIDATE_ROOT/image.json" \
             --archive-metadata "$CANDIDATE_ROOT/reports/archive.json" \

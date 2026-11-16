@@ -14,7 +14,6 @@ import {
   type CellValue,
   type ExcelWorksheet,
 } from "@operatoros/excel";
-import { Worker as NodeWorker } from "node:worker_threads";
 
 export const REQUIRED_COLUMNS = [
   "No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang",
@@ -194,11 +193,10 @@ export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: str
 const WORKER_PARSE_THRESHOLD = 64 * 1024;
 const PARSER_WORKER_TIMEOUT_MS = 30_000;
 const pendingParses = new Map<number, PendingParse>();
-type AttendanceParserWorker = Worker | NodeWorker;
-let attendanceParserWorker: AttendanceParserWorker | undefined;
+let attendanceParserWorker: Worker | undefined;
 let nextParseId = 0;
 
-function failAttendanceParserWorker(worker: AttendanceParserWorker, error: Error): void {
+function failAttendanceParserWorker(worker: Worker, error: Error): void {
   if (attendanceParserWorker !== worker) return;
   attendanceParserWorker = undefined;
   for (const pending of pendingParses.values()) {
@@ -209,21 +207,16 @@ function failAttendanceParserWorker(worker: AttendanceParserWorker, error: Error
   worker.terminate();
 }
 
-function terminateIdleAttendanceParserWorker(worker: AttendanceParserWorker): void {
+function terminateIdleAttendanceParserWorker(worker: Worker): void {
   if (attendanceParserWorker !== worker || pendingParses.size > 0) return;
   attendanceParserWorker = undefined;
   worker.terminate();
 }
 
-function getAttendanceParserWorker(): AttendanceParserWorker {
+function getAttendanceParserWorker(): Worker {
   if (attendanceParserWorker) return attendanceParserWorker;
-  const workerUrl = process.versions.bun
-    ? new URL("./excel-reader.worker.ts", import.meta.url)
-    : new URL("./import/excel-reader.worker.mjs", import.meta.url);
-  const worker: AttendanceParserWorker = process.versions.bun
-    ? new Worker(workerUrl)
-    : new NodeWorker(workerUrl);
-  const onMessage = (data: ParserWorkerResponse) => {
+  const worker = new Worker(new URL("./excel-reader.worker.ts", import.meta.url));
+  worker.addEventListener("message", ({ data }: MessageEvent<ParserWorkerResponse>) => {
     const pending = pendingParses.get(data.id);
     if (!pending) return;
     pendingParses.delete(data.id);
@@ -235,17 +228,9 @@ function getAttendanceParserWorker(): AttendanceParserWorker {
       pending.reject(error);
     }
     terminateIdleAttendanceParserWorker(worker);
-  };
-  if (process.versions.bun) {
-    (worker as Worker).addEventListener("message", ({ data }: MessageEvent<ParserWorkerResponse>) => onMessage(data));
-    (worker as Worker).addEventListener("error", (event) => failAttendanceParserWorker(worker, new Error(event.message || "Attendance workbook parser worker failed")));
-    (worker as Worker).addEventListener("messageerror", () => failAttendanceParserWorker(worker, new Error("Attendance workbook parser worker returned an unreadable result")));
-  } else {
-    const nodeWorker = worker as NodeWorker;
-    nodeWorker.on("message", onMessage);
-    nodeWorker.on("error", (error: Error) => failAttendanceParserWorker(worker, error));
-    nodeWorker.on("messageerror", () => failAttendanceParserWorker(worker, new Error("Attendance workbook parser worker returned an unreadable result")));
-  }
+  });
+  worker.addEventListener("error", (event) => failAttendanceParserWorker(worker, new Error(event.message || "Attendance workbook parser worker failed")));
+  worker.addEventListener("messageerror", () => failAttendanceParserWorker(worker, new Error("Attendance workbook parser worker returned an unreadable result")));
   attendanceParserWorker = worker;
   return worker;
 }

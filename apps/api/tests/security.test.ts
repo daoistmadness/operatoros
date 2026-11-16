@@ -74,9 +74,9 @@ describe("proxy trust and Origin protection", () => {
     expect(() => parseTrustedProxyAddresses("proxy.example")).toThrow();
   });
 
-  it("uses the Node adapter peer address without calling its unsupported Bun requestIP method", () => {
+  it("prefers request.ip to an adapter requestIP lookup", () => {
     const request = Object.assign(new Request("http://local/", { headers: { "x-forwarded-for": "203.0.113.7" } }), { ip: "10.0.0.2" });
-    const server = { requestIP: () => { throw new Error("Node adapter has no Bun requestIP method"); } };
+    const server = { requestIP: () => { throw new Error("unexpected requestIP lookup"); } };
     expect(clientIp(request, server)).toBe("10.0.0.2");
     expect(clientIp(request, server, ["10.0.0.2"])).toBe("203.0.113.7");
   });

@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-16
 ---
 
 # OperatorOS stability decisions
@@ -66,20 +66,36 @@ production NO-GO boundary in place.
 - Keep the existing single-server design: Elysia API, browser frontend, and
   file-backed SQLite. Do not add a database service or broaden the runtime
   migration without evidence and review.
+- The owner selected Bun 1.4.4 as the application runtime and accepted its
+  known SQLite 3.53.4 FTS5 finding on 2026-11-16 for the exact SQLite source ID
+  `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`
+  from `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The finding remains
+  `OPEN` with disposition `ACCEPTED` for that identity only. Keep runtime
+  identity in release evidence. Any other affected Bun/SQLite identity remains
+  blocked. A fixed SQLite version follows the normal runtime probes. This
+  decision does not approve deployment.
+- The current working source returns the production API image and application
+  execution to Bun. No exact-source release candidate or signed artifact for
+  this source is recorded yet. After review and merge, run the full release
+  workflow on the exact main commit and record its runtime probe, SBOM, scan,
+  attestation, artifact identity, and consumer result before accepting task 9.
+  The prior Node artifact below does not qualify this source.
 - PR #380 was squash-merged at `e410a562bce588e70573cc8eb0d0d83b6e0e9106`
   after all seven required checks passed. Keep the embedded-runtime release
   gate in force; the merge does not qualify the current Bun/SQLite runtime.
-- PR #387 was squash-merged at `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`.
+- Historical Node release for PR #387: it was squash-merged at
+  `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`.
   Main release run [43408580871](https://github.com/daoistmadness/operatoros/actions/runs/43408580871)
   produced an attested, immutable bundle; its exact-source verifier, Node/SQLite
   gate, Trivy scan, SBOM, and isolated consumer all passed. The signed OCI uses
   Node 24.22.3 and SQLite 3.54.1 in both providers. Bundle SHA-256 is
   `d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`; OCI
   manifest is `sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`.
-  This closes G3 for the release artifact. The local Bun development runtime
-  remains on SQLite 3.53.4 and is not included in the image. The artifact is
-  not imported to OPRSERVER; host rehearsal, recovery, and access-control gates
-  remain open. No security exception or deployment authorization is active.
+  This evidence applies to that Node-based source only. It does not qualify the
+  current Bun source. The artifact was not imported to OPRSERVER; host rehearsal,
+  recovery, access-control, and current-source release gates remain open. The
+  owner accepted the exact pinned Bun finding above, but did not authorize a
+  deployment.
 - PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`. Post-merge
   CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal
   [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
@@ -99,9 +115,9 @@ production NO-GO boundary in place.
   keep the release asset ID and archive and binary checksums pinned, and do not
   grant the bootstrap write permissions.
 - Historical G3 candidate runs 43381159685–43396108609 record the source and
-  artifact iterations before release. The local OCI
-  candidate now uses Node 24.22.3 and `better-sqlite3` 13.1.1 with SQLite 3.54.1
-  in both `node:sqlite` and the native addon; the final image contains no Bun
+  artifact iterations before release. Those local OCI candidates used Node
+  24.22.3 and `better-sqlite3` 13.1.1 with SQLite 3.54.1 in both `node:sqlite`
+  and the native addon; their final images contained no Bun
   runtime. The image base digest is pinned, the Node binary and both SQLite
   copies are probed from the image, and local synthetic API, worker, restart,
   encrypted-backup, and restore checks passed. Node 24.22.3
@@ -119,8 +135,10 @@ production NO-GO boundary in place.
   still showed v1.4.4 on 2026-11-13, and the active host probe reports SQLite
   3.53.4. No supported patched Bun runtime was found; SQLite 3.54.1 is listed
   in the [official release history](https://www.sqlite.org/chronology.html).
-  Bun remains the local build/development tool. This candidate does not qualify
-  a release artifact or production host. No security exception is active.
+  At that time, Bun remained the local build/development tool. This candidate
+  does not qualify a release artifact or production host. The 2026-11-13 note
+  that no security exception was active predates the owner's 2026-11-16
+  acceptance of the exact pinned Bun finding recorded above.
   The later exact-source run [43385232734](https://github.com/daoistmadness/operatoros/actions/runs/43385232734)
   passed runtime, scan, and all eight lifecycle stages on `c4b6cf6`; full
   release validation passed in 569 seconds and E2E passed. The manual bundle

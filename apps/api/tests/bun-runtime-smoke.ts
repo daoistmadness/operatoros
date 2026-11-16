@@ -1,7 +1,7 @@
 import { createWorkbook, readXlsxWorkbook, writeXlsxWorkbook, readLegacyXlsRows, writeLegacyXlsRows } from "@operatoros/excel";
 import { readAttendanceWorkbook, REQUIRED_COLUMNS } from "../src/import/excel-reader";
 
-const workbook = createWorkbook({ exportType: "node-image-smoke" });
+const workbook = createWorkbook({ exportType: "bun-image-smoke" });
 const sheet = workbook.addWorksheet("Synthetic");
 sheet.addRow(["student_identifier", "student_name"]);
 sheet.addRow(["SYN-001", "Synthetic Student"]);
@@ -13,7 +13,7 @@ const xls = readLegacyXlsRows(
 );
 if (xls.rows[0]?.[1] !== "Synthetic Student") throw new Error("legacy XLS round trip failed");
 
-const attendanceWorkbook = createWorkbook({ exportType: "node-worker-smoke" });
+const attendanceWorkbook = createWorkbook({ exportType: "bun-worker-smoke" });
 const attendanceSheet = attendanceWorkbook.addWorksheet("Attendance");
 attendanceSheet.addRow([...REQUIRED_COLUMNS]);
 for (let id = 1; id <= 5000; id++) {
@@ -24,7 +24,7 @@ if (attendanceBuffer.byteLength < 64 * 1024) throw new Error("Attendance fixture
 const attendanceArrayBuffer = new Uint8Array(attendanceBuffer).buffer as ArrayBuffer;
 const parsed = await readAttendanceWorkbook(attendanceArrayBuffer, "attendance.xlsx");
 if (parsed.rows.length !== 5000) {
-  throw new Error(`Node attendance parser worker returned ${parsed.rows.length} valid rows, ${parsed.invalidRows.length} invalid rows, and ${parsed.totalRows} total rows`);
+  throw new Error(`Bun attendance parser worker returned ${parsed.rows.length} valid rows, ${parsed.invalidRows.length} invalid rows, and ${parsed.totalRows} total rows`);
 }
 
-console.log("PASS Node XLSX, legacy XLS, and attendance parser worker smoke checks");
+console.log("PASS Bun XLSX, legacy XLS, and attendance parser worker smoke checks");

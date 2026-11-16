@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { parseOptions } from "@node-rs/argon2";
 import { hashPassword, hashPasswordSync, verifyPassword, verifyPasswordSync } from "../src/auth/password";
 
 describe("Argon2id runtime compatibility", () => {
@@ -10,17 +9,11 @@ describe("Argon2id runtime compatibility", () => {
     expect(await verifyPassword(password, bunHash)).toBe(true);
     expect(await verifyPassword("wrong-password", bunHash)).toBe(false);
 
-    const nodeHash = await hashPassword(password);
-    expect(Bun.password.verifySync(password, nodeHash)).toBe(true);
-    expect(verifyPasswordSync("wrong-password", nodeHash)).toBe(false);
-    expect(parseOptions(nodeHash)).toMatchObject({
-      algorithm: 2,
-      memoryCost: 65_536,
-      timeCost: 2,
-      parallelism: 1,
-      outputLen: 32,
-      saltLen: 32,
-    });
+    const previousHash = "$argon2id$v=19$m=65536,t=2,p=1$BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc$svsSZpQsGQ1slMim4gKvs3dx5rneI/jY2OcvPBLfDp0";
+    expect(await verifyPassword(password, previousHash)).toBe(true);
+    expect(verifyPasswordSync("wrong-password", previousHash)).toBe(false);
+    const currentHash = await hashPassword(password);
+    expect(Bun.password.verifySync(password, currentHash)).toBe(true);
 
     const syncHash = hashPasswordSync(password);
     expect(Bun.password.verifySync(password, syncHash)).toBe(true);

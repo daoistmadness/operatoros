@@ -41,10 +41,4 @@ export OPERATOROS_E2E_PORTS_FILE="$workspace/ports.json"
 export OPERATOROS_E2E_FRONTEND_URL="$(bun -e 'console.log((await Bun.file(process.argv[1]).json()).frontend_url)' "$workspace/ports.json")"
 
 cd "$repo_root/apps/web"
-playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
-if [[ -z "$playwright_node" ]]; then
-  playwright_node="$(mise which node 2>/dev/null || true)"
-fi
-playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
-[[ -x "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
-"$playwright_node" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test --config "$repo_root/e2e/readiness/playwright.config.ts" --grep "@setup-readiness"
+"$OPERATOROS_BUN_REALPATH" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test --config "$repo_root/e2e/readiness/playwright.config.ts" --grep "@setup-readiness"

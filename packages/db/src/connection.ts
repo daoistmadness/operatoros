@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { getTableName, is, Table } from "drizzle-orm";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
 import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 import {
@@ -19,7 +19,7 @@ export const REQUIRED_TABLES: readonly string[] = Object.values(schema)
   .map(getTableName)
   .sort();
 
-export type AppDatabase = BetterSQLite3Database<typeof schema>;
+export type AppDatabase = BunSQLiteDatabase<typeof schema>;
 
 /** Reject views and virtual/shadow tables before validating or reading a database snapshot. */
 export function assertOrdinarySchemaObjects(client: SqliteClient): void {

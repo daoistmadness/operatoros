@@ -1,4 +1,4 @@
-import Database from "better-sqlite3";
+import { Database } from "bun:sqlite";
 
 type SqliteBindingValue = string | number | bigint | boolean | ArrayBufferView | ArrayBuffer | null;
 export type SqliteBinding = SqliteBindingValue | Readonly<Record<string, SqliteBindingValue>>;
@@ -16,7 +16,7 @@ export interface SqliteStatement<Row = Record<string, unknown>, Bindings extends
   run(...bindings: Bindings): SqliteRunResult;
 }
 
-export type SqliteTransaction<T> = Database.Transaction<() => T>;
+export type SqliteTransaction<T> = { (): T; deferred(): T; immediate(): T; exclusive(): T };
 
 export interface SqliteClient {
   query<Row = Record<string, unknown>, Bindings extends QueryBindingShape = readonly SqliteStatementBinding[]>(sql: string): SqliteStatement<Row, Bindings extends readonly SqliteStatementBinding[] ? Bindings : [Bindings]>;
@@ -28,7 +28,7 @@ export interface SqliteClient {
 }
 
 export interface SqliteConnection {
-  readonly database: Database.Database;
+  readonly database: Database;
   readonly client: SqliteClient;
 }
 
@@ -54,24 +54,24 @@ function normalizeBindings(bindings: readonly SqliteStatementBinding[]): unknown
   return values.map((value) => isBindingArray(value) ? value.map(normalizeBinding) : normalizeBinding(value));
 }
 
-export function createSqliteClient(database: Database.Database): SqliteClient {
+export function createSqliteClient(database: Database): SqliteClient {
   return {
     query<Row = Record<string, unknown>>(sql: string): SqliteStatement<Row> {
-      const statement = database.prepare<unknown[], Row>(sql);
+      const statement = database.query<Row, never[]>(sql);
       return {
         get(...bindings: SqliteStatementBinding[]) {
-          return statement.get(...normalizeBindings(bindings)) ?? null;
+          return statement.get(...(normalizeBindings(bindings) as never[])) ?? null;
         },
         all(...bindings: SqliteStatementBinding[]) {
-          return statement.all(...normalizeBindings(bindings));
+          return statement.all(...(normalizeBindings(bindings) as never[]));
         },
         run(...bindings: SqliteStatementBinding[]) {
-          return statement.run(...normalizeBindings(bindings));
+          return statement.run(...(normalizeBindings(bindings) as never[]));
         },
       };
     },
     run(sql, ...bindings) {
-      return database.prepare<unknown[], Record<string, unknown>>(sql).run(...normalizeBindings(bindings));
+      return database.query<Record<string, unknown>, never[]>(sql).run(...(normalizeBindings(bindings) as never[]));
     },
     exec(sql) {
       database.exec(sql);
@@ -90,8 +90,8 @@ export function createSqliteClient(database: Database.Database): SqliteClient {
 
 export function openSqliteConnection(
   path: string,
-  options: Database.Options = {},
+  options: { readonly?: boolean; fileMustExist?: boolean } = {},
 ): SqliteConnection {
-  const database = new Database(path, options);
+  const database = new Database(path, { readonly: options.readonly, create: !options.readonly && !options.fileMustExist, strict: true });
   return { database, client: createSqliteClient(database) };
 }

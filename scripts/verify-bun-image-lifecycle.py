@@ -24,33 +24,6 @@ class LifecycleFailure(Exception):
         self.code = code
 
 
-def build_node_excel_smoke(source_root: Path, output: Path, home: Path) -> None:
-    source = source_root / "apps/api/tests/node-runtime-smoke.ts"
-    bun = shutil.which("bun")
-    if not bun or not source.is_file():
-        raise LifecycleFailure("node_excel_smoke_build_inputs_missing")
-    build_env = {
-        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
-        "HOME": str(home),
-        "CI": "true",
-    }
-    try:
-        result = subprocess.run(
-            [bun, "build", str(source), "--target=node", "--packages=bundle", f"--outfile={output}"],
-            cwd=source_root,
-            env=build_env,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=120,
-        )
-    except subprocess.TimeoutExpired as error:
-        raise LifecycleFailure("node_excel_smoke_build_timeout") from error
-    if result.returncode != 0 or not output.is_file():
-        raise LifecycleFailure("node_excel_smoke_build_failed")
-    output.chmod(0o600)
-
-
 def command(arguments: list[str]) -> str:
     result = subprocess.run(arguments, capture_output=True, text=True, check=False)
     if result.returncode != 0:
@@ -152,17 +125,16 @@ def main() -> int:
         passed("verify_image_identity")
 
         stage = "prepare_synthetic_environment"
-        temp_root = Path(tempfile.mkdtemp(prefix="operatoros-node-lifecycle-"))
+        temp_root = Path(tempfile.mkdtemp(prefix="operatoros-bun-lifecycle-"))
         temp_root.chmod(0o700)
         data_dir = temp_root / "data"
         backup_source = temp_root / "backup-source"
         restore_target = temp_root / "restore-target"
-        smoke_home = temp_root / "bun-home"
-        for path in (data_dir, backup_source, restore_target, smoke_home):
+        for path in (data_dir, backup_source, restore_target):
             path.mkdir(mode=0o700)
-        excel_smoke = temp_root / "node-excel-runtime-smoke.mjs"
-        build_node_excel_smoke(Path(__file__).resolve().parents[1], excel_smoke, smoke_home)
-        passed("prepare_node_excel_smoke")
+        excel_smoke = Path(__file__).resolve().parents[1] / "apps/api/tests/bun-runtime-smoke.ts"
+        if not excel_smoke.is_file():
+            raise LifecycleFailure("excel_smoke_source_missing")
 
         username = f"operatoros_ci_{secrets.token_hex(6)}"
         password = f"Synthetic-{secrets.token_hex(24)}"
@@ -247,17 +219,17 @@ try {
         )
         passed("prepare_synthetic_environment", {"credentials": "ephemeral_generated"})
 
-        stage = "node_excel_runtime_smoke"
+        stage = "bun_excel_runtime_smoke"
         excel_result = command([
             "podman", "run", "--pull=never", "--rm", "--network=none", "--read-only",
             "--read-only-tmpfs=true", "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=64m",
             "--memory=512m", "--cpus=1", "--pids-limit=32", "--cap-drop=all",
             "--security-opt=no-new-privileges", "--userns=keep-id:uid=10000,gid=10000",
             "--user=10000:10000", "--volume",
-            f"{excel_smoke}:/app/apps/api/dist/node-excel-runtime-smoke.mjs:ro",
-            "--entrypoint", "node", image_id, "/app/apps/api/dist/node-excel-runtime-smoke.mjs",
+            f"{excel_smoke}:/app/apps/api/src/bun-runtime-smoke.ts:ro",
+            "--entrypoint", "bun", image_id, "/app/apps/api/src/bun-runtime-smoke.ts",
         ])
-        passed("node_excel_runtime_smoke", {
+        passed("bun_excel_runtime_smoke", {
             "xlsx_roundtrip": "PASS",
             "legacy_xls_roundtrip": "PASS",
             "attendance_worker_rows": 5000,
@@ -270,8 +242,8 @@ try {
             "--userns", "keep-id:uid=10000,gid=10000", "--user", "10000:10000",
             "--read-only", "--read-only-tmpfs=true", "--cap-drop", "all",
             "--security-opt", "no-new-privileges", "--volume", f"{data_dir}:/var/lib/operatoros/data:rw",
-            "--entrypoint", "node", args.image,
-            "apps/api/dist/db-cli.mjs", "bootstrap", "--data-dir", "/var/lib/operatoros/data",
+            "--entrypoint", "bun", args.image,
+            "run", "packages/db/src/db-cli.ts", "bootstrap", "--data-dir", "/var/lib/operatoros/data",
         ])
         passed("bootstrap_synthetic_database")
 
@@ -298,7 +270,7 @@ try {
             deadline = time.monotonic() + 60
             while time.monotonic() < deadline:
                 result = subprocess.run([
-                    "podman", "exec", container, "node", "--input-type=module", "-e",
+                    "podman", "exec", container, "bun", "-e",
                     'fetch("http://127.0.0.1:8090/ready").then((r) => process.exit(r.status === 200 ? 0 : 1)).catch(() => process.exit(1))',
                 ], capture_output=True, check=False)
                 if result.returncode == 0:
@@ -308,7 +280,7 @@ try {
 
         def run_probe(container: str, mode: str) -> dict[str, Any]:
             output = command([
-                "podman", "exec", container, "node",
+                "podman", "exec", container, "bun",
                 "/tmp/operatoros-candidate-lifecycle.mjs", mode,
             ])
             value = json.loads(output)
@@ -376,16 +348,16 @@ try {
             "--tmpfs", "/tmp:rw,exec,nosuid,nodev,size=256m",
             "--volume", f"{backup_source}:/var/lib/operatoros/data:rw",
             "--volume", f"{restore_target}:/tmp/operatoros-restore:rw",
-            "--env-file", str(env_file), "--entrypoint", "node", args.image,
-            "apps/api/dist/backup-cli.mjs", "restore-disposable", backup_name, "/tmp/operatoros-restore",
+            "--env-file", str(env_file), "--entrypoint", "bun", args.image,
+            "run", "apps/api/src/backup-cli.ts", "restore-disposable", backup_name, "/tmp/operatoros-restore",
         ])
         command([
             "podman", "run", "--rm", "--network", "none",
             "--userns", "keep-id:uid=10000,gid=10000", "--user", "10000:10000",
             "--read-only", "--read-only-tmpfs=true", "--cap-drop", "all",
             "--security-opt", "no-new-privileges", "--volume", f"{restore_target}:/var/lib/operatoros/data:ro",
-            "--env", "OPERATOROS_DATA_DIR=/var/lib/operatoros/data", "--entrypoint", "node", args.image,
-            "apps/api/dist/db-cli.mjs", "validate", "--data-dir", "/var/lib/operatoros/data",
+            "--env", "OPERATOROS_DATA_DIR=/var/lib/operatoros/data", "--entrypoint", "bun", args.image,
+            "run", "packages/db/src/db-cli.ts", "validate", "--data-dir", "/var/lib/operatoros/data",
         ])
         restored_name = f"operatoros-candidate-restored-api-{suffix}"
         containers.append(restored_name)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject release images that ship vulnerable FTS5 SQLite in Bun."""
+"""Qualify Bun's embedded SQLite runtime for release."""
 
 from __future__ import annotations
 
@@ -11,6 +11,12 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 MINIMUM_SQLITE_VERSION = (3, 54, 0)
+ACCEPTED_BUN_VERSION = "1.4.4"
+ACCEPTED_SQLITE_VERSION = "3.53.4"
+ACCEPTED_SQLITE_SOURCE_ID = (
+    "2026-07-24 19:02:57 "
+    "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
+)
 PROBE = r'''import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { Database } from "bun:sqlite";
@@ -86,6 +92,12 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
 
     version = parse_version(sqlite)
     fts5 = compiled or probed
+    is_accepted_finding = (
+        bun == ACCEPTED_BUN_VERSION
+        and sqlite == ACCEPTED_SQLITE_VERSION
+        and source_id == ACCEPTED_SQLITE_SOURCE_ID
+        and fts5
+    )
     result = {
         "bun": bun,
         "bunBinarySha256": binary_sha256,
@@ -96,8 +108,14 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
         "fts5Probe": probed,
         "minimumSqlite": "3.54.0",
         "cve": "CVE-2026-119373",
+        "findingStatus": "OPEN" if fts5 and version < MINIMUM_SQLITE_VERSION else (
+            "RESOLVED_BY_FIXED_VERSION" if version >= MINIMUM_SQLITE_VERSION else "NOT_AFFECTED_FTS5_ABSENT"
+        ),
+        "findingDisposition": "ACCEPTED" if is_accepted_finding else (
+            "UNACCEPTED" if fts5 and version < MINIMUM_SQLITE_VERSION else "NOT_REQUIRED"
+        ),
     }
-    if fts5 and version < MINIMUM_SQLITE_VERSION:
+    if fts5 and version < MINIMUM_SQLITE_VERSION and not is_accepted_finding:
         raise RuntimeGateError(
             f"SQLite {sqlite} includes affected FTS5 code; require SQLite 3.54.0 or later",
             runtime=result,

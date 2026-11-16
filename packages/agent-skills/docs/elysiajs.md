@@ -9,6 +9,8 @@ Keep the skill's generic Elysia guidance aligned with these repository facts.
 - For current code, use installed package types and the official v1 docs at
   <https://elysiajs.com/llms.txt>. Use v2 references only for a requested v2
   project or migration planning.
+- OperatorOS runs Elysia on Bun in development and its API container. Use the
+  Bun adapter and `bun:sqlite` for OperatorOS runtime work.
 - Keep route composition in `apps/api/src/app.ts`, cross-boundary DTOs in
   `packages/contracts`, persistence in `packages/db`, and domain behavior in
   `apps/api/`, following the [Change Safety & Feature Golden

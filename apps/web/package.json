@@ -33,7 +33,7 @@
     "react-dom": "19.2.7"
   },
   "devDependencies": {
-    "@playwright/test": "1.61.1",
+    "@playwright/test": "1.65.0",
     "@tailwindcss/vite": "4.2.2",
     "@tanstack/react-router-devtools": "^1.167.2",
     "@tanstack/redact": "0.2.3",
