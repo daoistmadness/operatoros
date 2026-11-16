@@ -2963,16 +2963,16 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c2dc5ec3ccb60723b75b8bc35db71a70d9c2922ee7658b59f97efa11790c7e2e",
+      "fingerprint": "a0de8aadfadc5527517c5ea8806c939e632592ed9185d1faf515b6e30a99c632",
       "snapshot": {
-        "CHANGELOG.md": "cde511c5a8693714631a6a415f5a22fb160b3403940092dfbb76ae2437ce52e7"
+        "CHANGELOG.md": "948fcfdbf858187e697fc514c84693668a12f4e0f908ec0b720a3d825fdff9f5"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "head": "4b9ffac544602c647a346da5f08dfe3f67958a2d",
       "outcome": "no-change",
-      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
+      "reason": "The Unreleased entry now includes its assigned PR number; this changelog bookkeeping does not change product behavior, package skill guidance, or the Intent planning records.",
       "evidence": [
-        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
-        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
+        "CHANGELOG.md records PR #395 for the Bun runtime change.",
+        "The existing Bun/runtime review and full release checks are unchanged by adding the PR reference."
       ]
     },
     "source:COMMANDS.md": {
