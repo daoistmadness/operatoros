@@ -9,9 +9,7 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
-    "@elysiajs/node": "1.4.5",
     "@elysiajs/openapi": "1.4.15",
-    "@node-rs/argon2": "2.2.2",
     "@operatoros/contracts": "workspace:*",
     "@operatoros/db": "workspace:*",
     "@operatoros/excel": "workspace:*",

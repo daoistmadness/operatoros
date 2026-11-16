@@ -4,6 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Align application and release guidance with the accepted pinned Bun runtime.
+  Reopen exact-source release qualification. (#395)
 - Correct the D1 checklist to record the earlier UID 1002 rehearsal and the remaining Node release qualification. (#394)
 
 - Group outstanding stability work into five packages while retaining the 11 acceptance gates. (#393)

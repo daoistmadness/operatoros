@@ -16,6 +16,11 @@ REPO = 'daoistmadness/operatoros'
 WORKFLOW = REPO + '/.github/workflows/ci.yml'
 SCANNER = 'ghcr.io/aquasecurity/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c'
 FILES = {'operatoros-api.oci.tar', 'operatoros-web-client.tar.gz', 'sbom.cdx.json', 'scan.json', 'embedded-runtime.json', 'manifest.json', 'SHA256SUMS'}
+CVE = 'CVE-2026-119373'
+ACCEPTED_BUN_VERSION = '1.4.4'
+ACCEPTED_SQLITE_VERSION = '3.53.4'
+ACCEPTED_SQLITE_SOURCE_ID = '2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc'
+ACCEPTED_BUN_ORIGIN = 'docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690'
 
 
 def run(*args, **kwargs):
@@ -171,7 +176,7 @@ def validate(files, sha):
     if manifest['image'] != image_metadata(files['operatoros-api.oci.tar'], sha):
         raise ValueError('image metadata mismatch')
     runtime = json.loads(files['embedded-runtime.json'])
-    if runtime.get('schema_version') != 2 or runtime.get('qualification_status') != 'PASS':
+    if runtime.get('schema_version') != 3 or runtime.get('qualification_status') != 'PASS':
         raise ValueError('embedded runtime is not release-qualified')
     if runtime.get('source', {}).get('commit') != sha:
         raise ValueError('embedded runtime source identity mismatch')
@@ -180,54 +185,78 @@ def validate(files, sha):
     if runtime.get('artifact', {}).get('oci_archive_sha256') != digest(files['operatoros-api.oci.tar']):
         raise ValueError('embedded runtime OCI archive checksum mismatch')
     runtime_identity = runtime.get('runtime', {})
-    driver_version = runtime_identity.get('sqlite_driver_version', '')
-    if not re.fullmatch(r'\d+\.\d+\.\d+', driver_version) or not re.fullmatch(r'[0-9a-f]{64}', runtime_identity.get('binary_sha256', '')):
-        raise ValueError('Node/SQLite runtime identity is incomplete')
-    if runtime_identity.get('name') != 'Node.js' or runtime_identity.get('sqlite_driver') != 'better-sqlite3' or runtime_identity.get('sqlite_distribution') != 'bundled-native-addon':
-        raise ValueError('release runtime does not use the qualified better-sqlite3 native addon')
+    bun_version = runtime_identity.get('version', '')
+    if not re.fullmatch(r'\d+\.\d+\.\d+', bun_version) or not re.fullmatch(r'[0-9a-f]{64}', runtime_identity.get('binary_sha256', '')):
+        raise ValueError('Bun/SQLite runtime identity is incomplete')
+    if runtime_identity.get('name') != 'Bun' or runtime_identity.get('sqlite_driver') != 'bun:sqlite' or runtime_identity.get('sqlite_distribution') != 'statically-linked-runtime':
+        raise ValueError('release runtime does not use the qualified Bun SQLite runtime')
     if not isinstance(runtime_identity.get('origin'), str) or not re.search(r'@sha256:[0-9a-f]{64}$', runtime_identity['origin']):
-        raise ValueError('Node.js runtime origin is not digest-pinned')
-    if not re.fullmatch(r'[0-9a-f]{64}', runtime.get('source', {}).get('containerfile_sha256', '')) or not runtime.get('source', {}).get('pinned_base_images'):
+        raise ValueError('Bun runtime origin is not digest-pinned')
+    pinned_base_images = runtime.get('source', {}).get('pinned_base_images')
+    if (
+        not re.fullmatch(r'[0-9a-f]{64}', runtime.get('source', {}).get('containerfile_sha256', ''))
+        or not isinstance(pinned_base_images, list)
+        or not pinned_base_images
+        or any(not isinstance(item, str) or not re.search(r'@sha256:[0-9a-f]{64}$', item) for item in pinned_base_images)
+        or runtime_identity['origin'] not in pinned_base_images
+    ):
         raise ValueError('embedded runtime build provenance is incomplete')
+    bun_tag = re.search(r'/oven/bun:(\d+\.\d+\.\d+)(?:[-@])', runtime_identity['origin'])
+    if bun_tag and bun_tag.group(1) != bun_version:
+        raise ValueError('Bun runtime version does not match its pinned image origin')
     sqlite_libraries = runtime_identity.get('sqlite_libraries')
-    expected_providers = {'better-sqlite3', 'node:sqlite'}
-    if not isinstance(sqlite_libraries, list) or len(sqlite_libraries) != len(expected_providers) or any(not isinstance(item, dict) for item in sqlite_libraries):
-        raise ValueError('release bundle omits one or more SQLite runtime identities')
-    if {item.get('provider') for item in sqlite_libraries} != expected_providers:
-        raise ValueError('release bundle has missing, duplicated, or unexpected SQLite runtime providers')
-    expected_distributions = {'better-sqlite3': 'bundled-native-addon', 'node:sqlite': 'statically-linked-node-builtin'}
-    expected_statuses = {}
-    for library in sqlite_libraries:
-        provider = library['provider']
-        version = library.get('version', '')
-        if not re.fullmatch(r'\d+\.\d+\.\d+', version) or not isinstance(library.get('source_id'), str) or not library['source_id']:
-            raise ValueError(f'SQLite identity is incomplete for {provider}')
-        if library.get('distribution') != expected_distributions[provider]:
-            raise ValueError(f'SQLite distribution is invalid for {provider}')
-        if not all(isinstance(library.get(name), bool) for name in ('fts5_present', 'fts5_compile_option', 'fts5_feature_probe')):
-            raise ValueError(f'SQLite FTS5 evidence is incomplete for {provider}')
-        if library['fts5_present'] != (library['fts5_compile_option'] or library['fts5_feature_probe']) or (library['fts5_compile_option'] and not library['fts5_feature_probe']):
-            raise ValueError(f'SQLite FTS5 evidence conflicts for {provider}')
-        version_tuple = tuple(map(int, version.split('.')))
-        expected_status = 'RESOLVED_BY_FIXED_VERSION' if version_tuple >= (3, 54, 0) else (
-            'NOT_AFFECTED_FTS5_ABSENT' if not library['fts5_present'] else 'OPEN'
-        )
-        if library.get('cve_status') != expected_status:
-            raise ValueError(f'SQLite CVE status is invalid for {provider}')
-        if library['fts5_present'] and version_tuple < (3, 54, 0):
-            raise ValueError(f'release bundle contains an unqualified SQLite FTS5 runtime in {provider}')
-        expected_statuses[provider] = expected_status
-    finding_status = 'OPEN' if 'OPEN' in expected_statuses.values() else (
-        'RESOLVED_BY_FIXED_VERSION' if 'RESOLVED_BY_FIXED_VERSION' in expected_statuses.values() else 'NOT_AFFECTED_FTS5_ABSENT'
+    if not isinstance(sqlite_libraries, list) or len(sqlite_libraries) != 1 or not isinstance(sqlite_libraries[0], dict):
+        raise ValueError('release bundle omits the Bun SQLite runtime identity')
+    library = sqlite_libraries[0]
+    if library.get('provider') != 'bun:sqlite':
+        raise ValueError('release bundle has a missing or unexpected SQLite runtime provider')
+    version = library.get('version', '')
+    if not re.fullmatch(r'\d+\.\d+\.\d+', version) or not isinstance(library.get('source_id'), str) or not library['source_id']:
+        raise ValueError('SQLite identity is incomplete for bun:sqlite')
+    if library.get('distribution') != 'statically-linked-runtime':
+        raise ValueError('SQLite distribution is invalid for bun:sqlite')
+    if not all(isinstance(library.get(name), bool) for name in ('fts5_present', 'fts5_compile_option', 'fts5_feature_probe')):
+        raise ValueError('SQLite FTS5 evidence is incomplete for bun:sqlite')
+    if library['fts5_present'] != (library['fts5_compile_option'] or library['fts5_feature_probe']) or (library['fts5_compile_option'] and not library['fts5_feature_probe']):
+        raise ValueError('SQLite FTS5 evidence conflicts for bun:sqlite')
+    sqlite_version = tuple(map(int, version.split('.')))
+    expected_status = 'RESOLVED_BY_FIXED_VERSION' if sqlite_version >= (3, 54, 0) else (
+        'NOT_AFFECTED_FTS5_ABSENT' if not library['fts5_present'] else 'OPEN'
     )
-    expected_components = [
-        {'provider': item['provider'], 'version': item['version'], 'status': item['cve_status']}
-        for item in sorted(sqlite_libraries, key=lambda value: value['provider'])
-    ]
-    if runtime.get('finding', {}).get('components') != expected_components or runtime.get('finding', {}).get('status') != finding_status:
-        raise ValueError('runtime finding does not match the qualified SQLite components')
-    if finding_status not in {'RESOLVED_BY_FIXED_VERSION', 'NOT_AFFECTED_FTS5_ABSENT'}:
-        raise ValueError('release bundle contains an unresolved SQLite finding')
+    if library.get('cve_status') != expected_status:
+        raise ValueError('SQLite CVE status is invalid for bun:sqlite')
+    accepted = (
+        expected_status == 'OPEN'
+        and bun_version == ACCEPTED_BUN_VERSION
+        and version == ACCEPTED_SQLITE_VERSION
+        and library['source_id'] == ACCEPTED_SQLITE_SOURCE_ID
+        and library['fts5_present'] is True
+        and runtime_identity['origin'] == ACCEPTED_BUN_ORIGIN
+        and runtime_identity['origin'] in pinned_base_images
+        and library.get('cve_disposition') == 'ACCEPTED'
+    )
+    expected_disposition = 'ACCEPTED' if accepted else ('UNACCEPTED' if expected_status == 'OPEN' else 'NOT_REQUIRED')
+    if library.get('cve_disposition') != expected_disposition:
+        raise ValueError('SQLite CVE disposition is invalid for bun:sqlite')
+    if expected_status == 'OPEN' and not accepted:
+        raise ValueError('release bundle contains an unaccepted SQLite finding')
+    finding = runtime.get('finding', {})
+    expected_components = [{'provider': 'bun:sqlite', 'version': version, 'status': expected_status}]
+    if finding.get('components') != expected_components or finding.get('status') != expected_status:
+        raise ValueError('runtime finding does not match the qualified SQLite component')
+    if finding.get('disposition') != expected_disposition:
+        raise ValueError('runtime finding disposition does not match the SQLite evidence')
+    expected_exception = {
+        'runtime': ACCEPTED_BUN_VERSION,
+        'sqlite': ACCEPTED_SQLITE_VERSION,
+        'sqlite_source_id': ACCEPTED_SQLITE_SOURCE_ID,
+        'origin': ACCEPTED_BUN_ORIGIN,
+    }
+    if accepted:
+        if finding.get('accepted_exception') != expected_exception:
+            raise ValueError('accepted SQLite finding is missing its exact Bun runtime scope')
+    elif 'accepted_exception' in finding:
+        raise ValueError('release bundle contains an out-of-scope accepted SQLite exception')
     sbom = json.loads(files['sbom.cdx.json'])
     if sbom.get('bomFormat') != 'CycloneDX' or not isinstance(sbom.get('components'), list):
         raise ValueError('invalid CycloneDX report')
@@ -238,22 +267,31 @@ def validate(files, sha):
     trivy_image_ids = [p.get('value') for p in sbom.get('metadata', {}).get('component', {}).get('properties', []) if p.get('name') == 'aquasecurity:trivy:ImageID']
     if trivy_image_ids != [manifest['image']['image_id']]:
         raise ValueError('SBOM image identity mismatch')
-    node = next((component for component in sbom['components'] if component.get('bom-ref', '').startswith('urn:operatoros:runtime:node:')), None)
-    driver = next((component for component in (node or {}).get('components', []) if component.get('name') == 'better-sqlite3'), None)
-    node_sqlite = next((component for component in (node or {}).get('components', []) if component.get('name') == 'SQLite' and any(prop.get('name') == 'operatoros:sqlite:provider' and prop.get('value') == 'node:sqlite' for prop in component.get('properties', []))), None)
-    driver_sqlite = next((component for component in (driver or {}).get('components', []) if component.get('name') == 'SQLite' and any(prop.get('name') == 'operatoros:sqlite:provider' and prop.get('value') == 'better-sqlite3' for prop in component.get('properties', []))), None)
-    if not node or not driver or not node_sqlite or not driver_sqlite or node.get('version') != runtime_identity.get('version') or driver.get('version') != driver_version:
-        raise ValueError('SBOM omits one or more Node.js SQLite runtime relationships')
-    if driver.get('purl') != 'pkg:npm/better-sqlite3@' + driver_version:
-        raise ValueError('SBOM better-sqlite3 package identity mismatch')
-    if node.get('hashes') != [{'alg': 'SHA-256', 'content': runtime_identity['binary_sha256']}]:
-        raise ValueError('SBOM Node.js executable digest mismatch')
-    sbom_sqlite = {'better-sqlite3': driver_sqlite, 'node:sqlite': node_sqlite}
-    for library in sqlite_libraries:
-        component = sbom_sqlite[library['provider']]
-        properties = {item.get('name'): item.get('value') for item in component.get('properties', [])}
-        if component.get('version') != library['version'] or properties.get('operatoros:component:distribution') != library['distribution'] or properties.get('operatoros:sqlite:source-id') != library['source_id'] or properties.get('operatoros:sqlite:fts5-present') != str(library['fts5_present']) or properties.get('operatoros:sqlite:fts5-compile-option') != str(library['fts5_compile_option']) or properties.get('operatoros:sqlite:fts5-feature-probe') != str(library['fts5_feature_probe']) or properties.get('operatoros:security:advisory-status') != library['cve_status']:
-            raise ValueError(f'SBOM SQLite evidence mismatch for {library["provider"]}')
+    bun = next((component for component in sbom['components'] if component.get('bom-ref', '').startswith('urn:operatoros:runtime:bun:')), None)
+    sqlite = next((component for component in (bun or {}).get('components', []) if component.get('name') == 'SQLite' and any(prop.get('name') == 'operatoros:sqlite:provider' and prop.get('value') == 'bun:sqlite' for prop in component.get('properties', []))), None)
+    if not bun or not sqlite or bun.get('version') != bun_version:
+        raise ValueError('SBOM omits the Bun SQLite runtime relationship')
+    if bun.get('hashes') != [{'alg': 'SHA-256', 'content': runtime_identity['binary_sha256']}]:
+        raise ValueError('SBOM Bun executable digest mismatch')
+    bun_properties = {item.get('name'): item.get('value') for item in bun.get('properties', [])}
+    if (
+        bun_properties.get('operatoros:runtime:origin') != runtime_identity['origin']
+        or bun_properties.get('operatoros:runtime:qualification') != 'PASS'
+        or bun_properties.get('operatoros:artifact:oci-manifest-digest') != manifest['image']['manifest_digest']
+    ):
+        raise ValueError('SBOM Bun runtime provenance does not match the release artifact')
+    properties = {item.get('name'): item.get('value') for item in sqlite.get('properties', [])}
+    if (
+        sqlite.get('version') != library['version']
+        or properties.get('operatoros:component:distribution') != library['distribution']
+        or properties.get('operatoros:sqlite:source-id') != library['source_id']
+        or properties.get('operatoros:sqlite:fts5-present') != str(library['fts5_present'])
+        or properties.get('operatoros:sqlite:fts5-compile-option') != str(library['fts5_compile_option'])
+        or properties.get('operatoros:sqlite:fts5-feature-probe') != str(library['fts5_feature_probe'])
+        or properties.get('operatoros:security:advisory-status') != library['cve_status']
+        or properties.get('operatoros:security:advisory-disposition') != library['cve_disposition']
+    ):
+        raise ValueError('SBOM SQLite evidence mismatch for bun:sqlite')
     metadata_properties = {item.get('name'): item.get('value') for item in sbom.get('metadata', {}).get('properties', [])}
     required_metadata = {
         'operatoros:source:commit': sha,
@@ -264,20 +302,28 @@ def validate(files, sha):
     if any(metadata_properties.get(name) != value for name, value in required_metadata.items()):
         raise ValueError('SBOM is not bound to the release source and artifact')
     dependencies = {item.get('ref'): item.get('dependsOn') for item in sbom.get('dependencies', [])}
-    node_dependencies = [driver.get('bom-ref'), node_sqlite.get('bom-ref')]
-    if dependencies.get(node.get('bom-ref')) != node_dependencies or dependencies.get(driver.get('bom-ref')) != [driver_sqlite.get('bom-ref')]:
-        raise ValueError('SBOM does not record both Node.js SQLite runtime relationships')
-    expected_cve_state = {'RESOLVED_BY_FIXED_VERSION': 'resolved', 'NOT_AFFECTED_FTS5_ABSENT': 'not_affected'}[runtime['finding']['status']]
-    affected_refs = {component.get('bom-ref') for component in sbom_sqlite.values() if any(prop.get('name') == 'operatoros:sqlite:fts5-present' and prop.get('value') == 'True' for prop in component.get('properties', []))}
-    cve_entries = [item for item in sbom.get('vulnerabilities', []) if item.get('id') == 'CVE-2026-119373']
+    if dependencies.get(bun.get('bom-ref')) != [sqlite.get('bom-ref')]:
+        raise ValueError('SBOM does not record the Bun SQLite runtime relationship')
+    expected_cve_state = {'RESOLVED_BY_FIXED_VERSION': 'resolved', 'NOT_AFFECTED_FTS5_ABSENT': 'not_affected', 'OPEN': 'in_triage'}[finding['status']]
+    affected_refs = {sqlite.get('bom-ref')} if library['fts5_present'] else set()
+    cve_entries = [item for item in sbom.get('vulnerabilities', []) if item.get('id') == CVE]
     if len(cve_entries) != 1:
         raise ValueError('SBOM must contain exactly one SQLite security disposition')
     cve = cve_entries[0]
     cve_affected = cve.get('affects')
     if not isinstance(cve_affected, list) or any(not isinstance(item, dict) or not isinstance(item.get('ref'), str) for item in cve_affected):
         raise ValueError('SBOM SQLite security disposition is malformed')
-    if cve.get('analysis', {}).get('state') != expected_cve_state or {item['ref'] for item in cve_affected} != affected_refs:
+    detail = cve.get('analysis', {}).get('detail', '')
+    cve_refs = {item['ref'] for item in cve_affected}
+    if cve.get('analysis', {}).get('state') != expected_cve_state or cve_refs != affected_refs:
         raise ValueError('SBOM omits the SQLite security disposition')
+    if accepted and (
+        not isinstance(detail, str)
+        or 'disposition ACCEPTED' not in detail
+        or ACCEPTED_SQLITE_SOURCE_ID not in detail
+        or ACCEPTED_BUN_ORIGIN not in detail
+    ):
+        raise ValueError('SBOM does not retain the exact accepted SQLite finding details')
     for name in FILES - {'SHA256SUMS', 'manifest.json'}:
         if manifest['artifacts'][name] != digest(files[name]):
             raise ValueError('manifest artifact mismatch')
@@ -319,7 +365,7 @@ def build(output, engine):
     diagnostics = output.parent / 'release-diagnostics'
     diagnostics.mkdir(exist_ok=True)
     try:
-        tools = {tool: run(tool, '--version') for tool in ('bun', 'node', 'mise', engine)}
+        tools = {tool: run(tool, '--version') for tool in ('bun', 'mise', engine)}
         (diagnostics / 'context.json').write_text(json.dumps({'source_commit': sha, 'tools': tools, 'scanner': SCANNER}, indent=2) + '\n')
         build_artifacts(output, engine, sha, diagnostics, tools)
     except Exception as error:
@@ -350,10 +396,8 @@ def build_artifacts(output, engine, sha, diagnostics, tools):
             command[2:2] = ['--ignorefile', 'deploy/podman/.containerignore']
         logged(command, diagnostics / 'api-build.log')
         logged([engine, 'save', '--format', 'oci-archive', '-o', str(work / 'operatoros-api.oci.tar'), image], diagnostics / 'oci-export.log')
-        scanned_image = scan_image(work / 'operatoros-api.oci.tar', sha, work / 'oci-layout', diagnostics, engine)
-        (diagnostics / 'image.json').write_text(json.dumps(scanned_image, indent=2) + '\n')
         runtime_gate = subprocess.run(
-            ['python3', 'scripts/check-node-sqlite-runtime.py', image],
+            ['python3', 'scripts/check-bun-sqlite-runtime.py', image],
             capture_output=True, text=True, check=False, timeout=75,
         )
         (diagnostics / 'runtime-gate.json').write_text(runtime_gate.stdout + ('' if runtime_gate.stdout.endswith('\n') else '\n'))
@@ -365,6 +409,10 @@ def build_artifacts(output, engine, sha, diagnostics, tools):
             raise ValueError('embedded runtime gate did not report PASS')
         if runtime_gate.returncode != 0 and runtime_report.get('status') != 'BLOCKED':
             raise ValueError('embedded runtime gate failed without a BLOCKED report')
+        scanned_image = scan_image(
+            work / 'operatoros-api.oci.tar', sha, work / 'oci-layout', diagnostics, engine,
+        )
+        (diagnostics / 'image.json').write_text(json.dumps(scanned_image, indent=2) + '\n')
         inventory = subprocess.run(
             [
                 'python3', 'scripts/record-embedded-runtime.py',
@@ -380,12 +428,12 @@ def build_artifacts(output, engine, sha, diagnostics, tools):
         if inventory.returncode != 0:
             raise ValueError('embedded runtime evidence rejected: ' + inventory.stderr.strip())
         if runtime_gate.returncode != 0:
-            raise ValueError('Node/SQLite driver qualification failed; release packaging is blocked')
+            raise ValueError('Bun/SQLite runtime qualification failed; release packaging is blocked')
         for filename in ('scan.json', 'sbom.cdx.json'):
             (work / filename).write_bytes((diagnostics / filename).read_bytes())
         (work / 'embedded-runtime.json').write_bytes((diagnostics / 'embedded-runtime.json').read_bytes())
         files = {name: (work / name).read_bytes() for name in FILES - {'manifest.json', 'SHA256SUMS'}}
-        manifest = {'schema_version': 1, 'repository': REPO, 'source_commit': sha, 'source_ref': 'refs/heads/main', 'workflow': WORKFLOW, 'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'tools': tools, 'lockfiles': {name: digest(Path(name).read_bytes()) for name in ('bun.lock', 'mise.lock')}, 'scanner': SCANNER, 'image': image_metadata(files['operatoros-api.oci.tar'], sha), 'artifacts': {name: digest(data) for name, data in files.items()}, 'security_scope': {'os_and_language_packages': 'Trivy inventory in scan.json and sbom.cdx.json', 'native_database_runtime': 'embedded-runtime.json and CycloneDX Node.js, node:sqlite, better-sqlite3, and both SQLite components', 'application_dependencies': 'Trivy CycloneDX inventory'}}
+        manifest = {'schema_version': 1, 'repository': REPO, 'source_commit': sha, 'source_ref': 'refs/heads/main', 'workflow': WORKFLOW, 'run_id': os.environ['GITHUB_RUN_ID'], 'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'], 'tools': tools, 'lockfiles': {name: digest(Path(name).read_bytes()) for name in ('bun.lock', 'mise.lock')}, 'scanner': SCANNER, 'image': image_metadata(files['operatoros-api.oci.tar'], sha), 'artifacts': {name: digest(data) for name, data in files.items()}, 'security_scope': {'os_and_language_packages': 'Trivy inventory in scan.json and sbom.cdx.json', 'native_database_runtime': 'embedded-runtime.json and CycloneDX Bun runtime and its statically linked SQLite component', 'application_dependencies': 'Trivy CycloneDX inventory'}}
         files['manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode()
         files['SHA256SUMS'] = ''.join(f'{digest(files[name])}  {name}\n' for name in sorted(files)).encode()
         validate(files, sha)

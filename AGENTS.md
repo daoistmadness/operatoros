@@ -157,6 +157,12 @@ matter, index, links, and changelog bullet.
 
 ## Runtime and ownership
 
+The owner chose Bun as the application runtime and accepted the known SQLite
+issue in the pinned Bun runtime on 2026-11-16. Do not migrate the application
+to another runtime solely to address that issue. Keep the runtime identity and
+the accepted finding in release evidence; this decision does not approve a
+production deployment or suppress unrelated findings.
+
 OperatorOS is an offline-first school attendance and academic analytics system.
 Local runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
 and `POSTGRESQL_NOT_SUPPORTED`. Native Elysia and browser workflows remain the

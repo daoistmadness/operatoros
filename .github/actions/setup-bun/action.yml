@@ -90,7 +90,6 @@ runs:
         test "$(mise --version | awk '{print $1}')" = "2026.10.19"
         test "$(bun --version)" = "1.4.4"
         test "$(hk --version)" = "hk 2.8.1"
-        test "$(node --version)" = "v24.19.0"
         mise_download_cache="$(mise cache path)/downloads-cas"
         test -n "$(find "$mise_download_cache" -type f -print -quit)"
         mise ls --current

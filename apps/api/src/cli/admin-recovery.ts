@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * Local operator-controlled admin recovery CLI
@@ -15,7 +15,7 @@ import { hashPassword } from "../auth/password";
 import { loadConfig } from "../config";
 import { promptHiddenValues } from "./prompt-hidden";
 
-const USAGE = `Usage: node admin-recovery.js --user <username>
+const USAGE = `Usage: bun apps/api/src/cli/admin-recovery.ts --user <username>
   Prompts securely for new password via TTY (not argv)
   Requires execution as operatoros-prod or with access to production DB
   Options:

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { openSqliteConnection } from "../src/sqlite-client";
 
-describe("better-sqlite3 client boundary", () => {
+describe("Bun SQLite client boundary", () => {
   it("preserves positional, array, and named bindings and normalizes missing rows", () => {
     const { client } = openSqliteConnection(":memory:");
     try {

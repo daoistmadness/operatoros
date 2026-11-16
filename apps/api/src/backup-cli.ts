@@ -458,10 +458,7 @@ if (isBackupCliEntrypoint(process.argv[1], import.meta.url)) {
       if (lockStat && !lockStat.isFile()) throw new Error("BACKUP_CLI_LOCK_INVALID");
       writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
       chmodSync(lockPath, 0o600);
-      const runner = join(
-        dirname(fileURLToPath(import.meta.url)),
-        process.versions.bun ? "backup-cli-runner.ts" : "backup-cli-runner.mjs",
-      );
+      const runner = join(dirname(fileURLToPath(import.meta.url)), "backup-cli-runner.ts");
       const result = spawnSync("flock", [
         "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath,
         process.execPath, runner, ...args,

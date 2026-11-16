@@ -3,21 +3,21 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "634e0bd4ed730cdb0120a2582eb786af3a7e251c8f7a570f16bb49ce94096c5b",
+      "fingerprint": "a8942a0ebf82c4a7dfd98b2f3f9e8d3e9eab3808ec421f89675212d47e564d29",
       "snapshot": {
-        ".github/CI.md": "adcacb65b7d22c9daca26ddbf9af39ecf2ad697618d6d8dc3802f970368e3710",
-        ".github/workflows/ci.yml": "b044446b78d134249b568cad439ebaa8ac8a74b4e2d148e0ed89ec983bff85b0",
-        "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
+        ".github/CI.md": "e89c11b016596330bb0fea0fbcd8ddbeadce93d0104bcdd7187c3b150648a2b7",
+        ".github/workflows/ci.yml": "fa671f04bbb9dcf63d4ba29da473d6bcb1526d94530c06986f293c2925d44a16",
+        "AGENTS.md": "9ea9893b35c673eacbfcf5ea73e4136e8adc386953a03da27f52c40083eef511",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
-        "apps/api/package.json": "62df9caddc1e04493eb8d153cb9a28d62eacb0fc9c465eac6fbc6311286787ae",
-        "bun.lock": "fd6e9fa3a245fd8a942b4dd0983f995afd89e7f1272a94363f5daa5bc09fef7c",
+        "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
+        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "aad8dcf51e822d3286ab52d86d1ff40ff4785e708ca976d5490f419ed0f4110c",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
-        "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
+        "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
         "packages/agent-skills/docs/elysiajs/references/api.md": "dc805ba470597f479316f7e2d77e55fdf951540da00e1aad3406b262c751d75c",
         "packages/agent-skills/docs/elysiajs/references/better-auth.md": "0ab46126b292c7bc4cddfd9a56b112242823ca93eca571ddf308703c21418bca",
@@ -44,32 +44,35 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
-      "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "updated",
+      "reason": "The project-specific Elysia source note now records OperatorOS’s Bun API runtime, Elysia default adapter, and bun:sqlite/Drizzle path; the packaged generic framework skill still directs readers to this note and the installed Elysia version.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "Intent validated packages/agent-skills/skills: 1 skill passed; bun run skills:load @operatoros/agent-skills#elysiajs loaded the current project note.",
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "bun run --filter @operatoros/db typecheck passed; packages/db suite 63/63 passed.",
+        "Fresh OCI build, remote CI, and target-host qualification remain pending; this review records local guidance validation only."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "2ffbc735bbd1512e7767db0f3d775d99a6e82ee6532bca443143be4a8ac0465f",
+      "fingerprint": "3776ed9b96960dcf45f2fa4bcac5f88021955720778f4b1af0be72ebf6bbf7f6",
       "snapshot": {
-        ".github/CI.md": "adcacb65b7d22c9daca26ddbf9af39ecf2ad697618d6d8dc3802f970368e3710",
-        ".github/workflows/ci.yml": "b044446b78d134249b568cad439ebaa8ac8a74b4e2d148e0ed89ec983bff85b0",
-        "AGENTS.md": "2088782cae39cfa9764d03bde37afee0a4f5c03274afd36861d7dd464401d9bf",
+        ".github/CI.md": "e89c11b016596330bb0fea0fbcd8ddbeadce93d0104bcdd7187c3b150648a2b7",
+        ".github/workflows/ci.yml": "fa671f04bbb9dcf63d4ba29da473d6bcb1526d94530c06986f293c2925d44a16",
+        "AGENTS.md": "9ea9893b35c673eacbfcf5ea73e4136e8adc386953a03da27f52c40083eef511",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
-        "apps/api/package.json": "62df9caddc1e04493eb8d153cb9a28d62eacb0fc9c465eac6fbc6311286787ae",
-        "bun.lock": "fd6e9fa3a245fd8a942b4dd0983f995afd89e7f1272a94363f5daa5bc09fef7c",
+        "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
+        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "e49c3b3a367f5fe9572db6f3b07c6932394304a188d87322081920b09368091c",
         "docs/guides/testing.md": "aad8dcf51e822d3286ab52d86d1ff40ff4785e708ca976d5490f419ed0f4110c",
         "docs/reference/security-model.md": "e5afb5004e011515d747da3272385929b588c7736fb47c2cefbe9650c4928e75",
         "package.json": "3076a675c8e7ea089b7007fa775d214987bfb234a4acb2bd71114d9f92be6090",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
-        "packages/agent-skills/docs/elysiajs.md": "5cb89e14ac1cd5f1a51e43d01188ed81f32bf42214e8a6ff4f1431b4ae3da6b8",
+        "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
         "packages/agent-skills/docs/elysiajs/references/api.md": "dc805ba470597f479316f7e2d77e55fdf951540da00e1aad3406b262c751d75c",
         "packages/agent-skills/docs/elysiajs/references/better-auth.md": "0ab46126b292c7bc4cddfd9a56b112242823ca93eca571ddf308703c21418bca",
@@ -96,11 +99,13 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "This work changes the runtime implementation and release controls for the existing API/database domain; it adds no product capability, domain, skill, or maintainer task, so the current domain map, skill specification, and skill tree remain accurate.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "_artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml were reviewed and contain no new domain or task required by this runtime-only change.",
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The project-specific Bun runtime note is recorded in packages/agent-skills/docs/elysiajs.md."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -192,15 +197,17 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "84b3717f8a9b5787d6945e6f21470811e75b17f49360879a58b5ebca6928d9c6",
+      "fingerprint": "a3be231affd85aae363bf8c90688347c5ed23593b2dc0494c4ca27cdc4ecfd3c",
       "snapshot": {
-        "apps/api/src/app.ts": "43815970d69b96b9fb3df4074f3bcdf9c4f13cf79394e5d737313c86519ec312"
+        "apps/api/src/app.ts": "6bea6a484776b6587f4693ea3a969c00694087dc16287d00e7cf09a2c416f4bd"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -316,22 +323,17 @@
       ]
     },
     "source:scripts/tests/readiness-seeder.test.ts": {
-      "fingerprint": "ee1c38a3d1315c913c5b3202b9f456aa768b9f9a0411fc46e9760c144ff4d469",
+      "fingerprint": "3fb37e1827bf37b9673ca26bf524242a27c5a783d7d24f40efe8e4f91f68910e",
       "snapshot": {
-        "scripts/tests/readiness-seeder.test.ts": "17cebf25f0ed1adbc3701e5b90ed08feae055d7e98f7491111aac5315e81cb5b"
+        "scripts/tests/readiness-seeder.test.ts": "42295688a1176d0c6185d8395eef4a1930cba8d8bba340a76dcff0ed7998be6e"
       },
-      "head": "b50074e5b0f9d01ba37ad390b17c83bd0e474ff7",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Readiness-only extraction of Loop 97 commit 376e29703f2fdf2df7d6ca1e3d82ef94c36ceb89 onto fresh main. The four readiness source/test files are byte-identical. This changes the test loader only; the existing Elysia skill and all three planning records remain accurate. No backup-health changes or review records are copied.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "e2e/readiness/package.json",
-        "e2e/readiness/playwright.config.ts",
-        "e2e/readiness/setup-readiness.spec.ts",
-        "scripts/tests/readiness-seeder.test.ts",
-        "_artifacts/domain_map.yaml",
-        "_artifacts/skill_spec.md",
-        "_artifacts/skill_tree.yaml",
-        "Loop 98 standalone candidate: 8 seeder/config-load tests, strict config TypeScript, 3 readiness browser scenarios, hk lint and architecture passed. Loop 97 full release exit 0 in 709.46 seconds is reused as supporting evidence for identical readiness sources on its combined candidate; standalone hosted CI is still pending."
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:apps/api/tests/backup-health.test.ts": {
@@ -371,15 +373,17 @@
       ]
     },
     "source:apps/api/src/backup-cli.ts": {
-      "fingerprint": "030fe5bda9f15b8427e6ca2beeb2af6c212345b286534459d620bcb2af6b7344",
+      "fingerprint": "26769b22687144b5b53c218c8bf399837410472ae3a47320d1da8d395865f6be",
       "snapshot": {
-        "apps/api/src/backup-cli.ts": "f6ea4ebb0c31b2c70be1a60eeed1ec5215121531c823984ac3913810e5004dcb"
+        "apps/api/src/backup-cli.ts": "29680d5a1ed0595bd0d2f367f2c64e674bbe20ef7e5c08b36edaf2f976551fea"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/backup-cli.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
@@ -443,15 +447,17 @@
       ]
     },
     "source:apps/api/src/cli/admin-recovery.ts": {
-      "fingerprint": "832a2739c69b6781f3f5afb3fa7fc6f6156c5cecae820c8d513ab95413c79de4",
+      "fingerprint": "fa9aedde277aa6d2b4f4c669f3581264844e6623742723b02483ba7380dcf832",
       "snapshot": {
-        "apps/api/src/cli/admin-recovery.ts": "f3d8cea74868060a6591bbaf19fece322bd238a7852d37b49540f62c9e5788c9"
+        "apps/api/src/cli/admin-recovery.ts": "8a116345ff906c3485763fd63997a0aed09ac6e6f44ff766bb6dab698bd0bc87"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/cli/admin-recovery.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/src/cli/prompt-hidden.ts": {
@@ -692,15 +698,17 @@
       ]
     },
     "source:apps/api/src/domains/backup-operation-lock.ts": {
-      "fingerprint": "08b31fb90d2e8cb7d4b58fe075dc57343739081115b54acddadd4d42d844fa00",
+      "fingerprint": "69dd668a4a19afe2578456ad7c551085798deb1fdcd8d33a3c03d54fae0d20a0",
       "snapshot": {
-        "apps/api/src/domains/backup-operation-lock.ts": "5698c8877f04123df42bb51acba74dcbf40dca96f534480ed65b7e9606e9d911"
+        "apps/api/src/domains/backup-operation-lock.ts": "6f32071dbb7353c84b81fb58a4e8f0615ba0f371f6c65f454217825b2796e363"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/domains/backup-operation-lock.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/src/domains/durable-files.ts": {
@@ -716,15 +724,17 @@
       ]
     },
     "source:apps/api/src/server.ts": {
-      "fingerprint": "99671f0ec4f11b3d274a1dd9b106e8061fb226b81c854e8a856dec391127671c",
+      "fingerprint": "06fb8bfd97ff24447b3ae9be6dc9ae73770249255d75b1cc6d2468cf53a16980",
       "snapshot": {
-        "apps/api/src/server.ts": "f8dc3ccd5628309084ef013013ef0e259c9c78536b2a737d32b14e21b92d0a92"
+        "apps/api/src/server.ts": "ff2f1981343aea9ac800f13a359b7f17c6a1300d3fb64edcfe07740f17eb4af6"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/server.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
@@ -874,15 +884,17 @@
       ]
     },
     "source:apps/api/tests/security.test.ts": {
-      "fingerprint": "45067b5d8427473148741ccd118a7eee44c784c152c92b11ad22ac7ecee1a0c2",
+      "fingerprint": "147dfac6063e42ee1c4298379352994fdb58ee4713c78664b9304404e37b12bc",
       "snapshot": {
-        "apps/api/tests/security.test.ts": "dc29c883d80beefdd97fcf40bf1848477b2296b5ddfa421be7fbbff90116f7c9"
+        "apps/api/tests/security.test.ts": "84110909c33b58d6eab014f7629359e4b6430f4a94d2ad5b3bfc303455ef104b"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/tests/security.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/web/src/components/CorrectionSelfConfirmModal.tsx": {
@@ -1304,15 +1316,17 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "41e5f0b4b9a57b8921fab12d9f86a6986b17c6ecde1a97a89c21d149e045ebd2",
+      "fingerprint": "c82a470e22296617c588ec88830bcb74dd184a1677f740ea79a4bd954dbffdcd",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "9966448e75a8553106c3f90561793414738938bcb51030f291c670e63e8552c8"
+        ".github/actions/setup-bun/action.yml": "72273117d96705371b6d6b0b676f9a1e5ce4f44d50b65230d34e636e271f147a"
       },
-      "head": "211af06f913725a9c7570941248b69b0738e57a0",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Authenticated the existing pinned mise asset request with the workflow read-only token and documented current CI and Gate E evidence; no skill guidance changed.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: .github/actions/setup-bun/action.yml at 211af06f913725a9c7570941248b69b0738e57a0"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:Containerfile.podman": {
@@ -1394,27 +1408,31 @@
       ]
     },
     "source:mise.lock": {
-      "fingerprint": "e26c9c43673cf6760fb623fab4f625f13118e4835ac063be064179a06f20124f",
+      "fingerprint": "014bac67ddf2dba16ff40dc066efce311be6098802ab088aade4156677dbf442",
       "snapshot": {
-        "mise.lock": "9d0b9b5e64374ea103b8a25c3d1b5238dbc324c1c240b971d8ae63d1450f3344"
+        "mise.lock": "3f5f86c2bd55d313b52b4fc0b92a82af2a068bf94f78000507ff0d7335522751"
       },
-      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: mise.lock at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:mise.toml": {
-      "fingerprint": "f6fdc14f323a1531d3a3f0c322b76a0c737d7fbfc16cb150409aed11a48dad3d",
+      "fingerprint": "004271d17519816e61e8213d506b961a7f40464098232ada69101cc0b4ed48f9",
       "snapshot": {
-        "mise.toml": "e1d1820490ee7b2b4f2c1ce289463f8da95836f176cc06466b532fca53eb8471"
+        "mise.toml": "9900aa6c1f84f1db9f85753eb5a6c302ebac3c9754593e3f339a60ad8af9e636"
       },
-      "head": "9fcf223423a7d6699bc27baf3e20e21d4f988c8f",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The HK 2.8.1 toolchain migration changes no Elysia runtime or task guidance. The existing Elysia skill remains accurate; all three planning records still describe only that skill. Versioned HK config validation and v1/v2 disposable hook fixtures passed, so no skill or planning update is warranted.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: mise.toml at 9fcf223423a7d6699bc27baf3e20e21d4f988c8f"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:apps/web/tsconfig.json": {
@@ -1618,27 +1636,31 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "f83ad8a38f34ae78f97514cd60af25ad7231d2cdc5e0b77620adc782d82661e6",
+      "fingerprint": "587221fed3a286b330a3b89dc356539436250921beab5fc7ee917babbe4eb0de",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "eeb767d72888056b26b654410ee8021f1c2c15187f87fae088869f87f1b530f3"
+        "apps/api/src/import/excel-reader.ts": "ea4b9b3b677caafe76dc5c0aad186af2fa4046e404fcaa117d4d0dafbe2511f6"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
-      "fingerprint": "502d3ee75c9c4cac7107f5aba79c85af296b0309dc439a7c0e826452faa192c8",
+      "fingerprint": "f11a89b6946a4a51e92869b9d4e3bdb2ae8650d10cf8e942c76fe97dbc2ef974",
       "snapshot": {
-        "apps/api/src/import/excel-reader.worker.ts": "ecf8dc22ce32edc1cc74ae9048e65721ed485a7b9fe9e34f710366637262b7cf"
+        "apps/api/src/import/excel-reader.worker.ts": "d2c413b4820a4065515cfb40d4ca72eefcbffa4fb864796eeff3faff28d2f8b8"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.worker.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/tests/attendance-import.test.ts": {
@@ -2941,15 +2963,16 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ff2c882456b65b8c69e00895a1d1009ddfb383084266f15bb1ab604589adc63a",
+      "fingerprint": "a0de8aadfadc5527517c5ea8806c939e632592ed9185d1faf515b6e30a99c632",
       "snapshot": {
-        "CHANGELOG.md": "2626a6caf5b9fe3928f45d9984d377d6f666efdbc9216d43d9fcdf02444be507"
+        "CHANGELOG.md": "948fcfdbf858187e697fc514c84693668a12f4e0f908ec0b720a3d825fdff9f5"
       },
-      "head": "e503538e0ba20f4f37333e9c2b84ec430116a783",
+      "head": "4b9ffac544602c647a346da5f08dfe3f67958a2d",
       "outcome": "no-change",
-      "reason": "Changelog PR reference does not change Elysia skill guidance.",
+      "reason": "The Unreleased entry now includes its assigned PR number; this changelog bookkeeping does not change product behavior, package skill guidance, or the Intent planning records.",
       "evidence": [
-        "Changed: CHANGELOG.md at e503538e0ba20f4f37333e9c2b84ec430116a783"
+        "CHANGELOG.md records PR #395 for the Bun runtime change.",
+        "The existing Bun/runtime review and full release checks are unchanged by adding the PR reference."
       ]
     },
     "source:COMMANDS.md": {
@@ -4453,15 +4476,16 @@
       ]
     },
     "source:docs/reference/dependency-audit-exceptions.md": {
-      "fingerprint": "259a6e9aeb0b2561e60a6c1dd64243c4d756e6524ca6904fb9cc3a58fd8b68db",
+      "fingerprint": "5778d4bd94290fa44d9db35fdd431de95acc476c909e6f70e3833c4c9870aa9f",
       "snapshot": {
-        "docs/reference/dependency-audit-exceptions.md": "f2e00028f304fc92f4e08e3c7974b13e9e44dad2bede0abea4519ff1435cd137"
+        "docs/reference/dependency-audit-exceptions.md": "44d295e26cbbe4873ccdab31f507f87b80122882d9ccc66d761b54d4497d96de"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: docs/reference/dependency-audit-exceptions.md at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:docs/reference/employee-management.md": {
@@ -4815,15 +4839,16 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "95fb2039b2bcf111c745df7d3839e4441e4edf14cdcf7f1907f4d9822fb995c7",
+      "fingerprint": "d76a3b6a4e9f0a710d783034c0af9ae7d1cc473719626296c96bf48b9ffb26c3",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "0fe131c5c4e772b7674fc9a6e0ec94487db6e08264f2a86af700663053edb244"
+        "docs/runbooks/ubuntu-server-deployment.md": "aa02fb5009c9e689c4c90dfa8ede7a6c505143a02dd20305052d3ad5c221caae"
       },
-      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Operational evidence correction does not change Elysia skill guidance.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -7937,15 +7962,17 @@
       ]
     },
     "source:e2e/run-smoke.sh": {
-      "fingerprint": "35abbfb1123e828865703dd298220ac2fe82f4ced24307ea0b647fdd4cfb6840",
+      "fingerprint": "187abde383fc622bceea29028206865077350d669d99174b2958d13a22092222",
       "snapshot": {
-        "e2e/run-smoke.sh": "4d1edf012e1fd78ae54a36cf69a4553953383c3df98e8cf8b7ffd59b51f8985f"
+        "e2e/run-smoke.sh": "91595c8106eb6e92a740c93b65d7759af46dce12a598864edb200e495453fcd7"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "This adapts existing browser verification to Bun-compatible tooling; it changes test infrastructure, not application routes, business behavior, or the skill/domain map.",
       "evidence": [
-        "Changed: e2e/run-smoke.sh at 039c44449118797c4f20b29419e63367722150d2"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "Local smoke passed with 8 backend and 67 browser tests; readiness passed 3/3."
       ]
     },
     "source:e2e/smoke/web/attendance-followup-table.spec.ts": {
@@ -8419,15 +8446,17 @@
       ]
     },
     "source:scripts/test-tier.sh": {
-      "fingerprint": "bdc031aba905724874c6ff4c50c60c5ad898a8bcf4454e20b419de0124665b3a",
+      "fingerprint": "6007a44e8892d970ec7f05f7c5516cba2360457ea72100affffbec2fe9abb0d3",
       "snapshot": {
-        "scripts/test-tier.sh": "8f4d1614c620d16a53b67233ffbb620068f97004c9ae8033bcf05596c2e9a15b"
+        "scripts/test-tier.sh": "a5c8b805e8e307df00a453b1209dc5f8c1aba4e861fd581ac479a365c703a433"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/test-tier.sh at df94b6c1760669c8a67f318abcca050625081157"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:apps/api/src/domains/upload-conflicts.ts": {
@@ -8527,15 +8556,17 @@
       ]
     },
     "source:e2e/README.md": {
-      "fingerprint": "cd5d9e2620d0907a084d650074458dc8839fd029b565fa22c1508322386e7ee2",
+      "fingerprint": "9850e11473874211dbd66a65969329d1fe6c2809b861c67a2f28c144564e3527",
       "snapshot": {
-        "e2e/README.md": "01f58ea58d3a40e4a703305c0acd00b3b3d54c60988daa252ad936fc16d89576"
+        "e2e/README.md": "642ce17d78e50d512f5d1d239903c156ad35c5d5c9bafd3ec22b751134e04420"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "This adapts existing browser verification to Bun-compatible tooling; it changes test infrastructure, not application routes, business behavior, or the skill/domain map.",
       "evidence": [
-        "Changed: e2e/README.md at 039c44449118797c4f20b29419e63367722150d2"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "Local smoke passed with 8 backend and 67 browser tests; readiness passed 3/3."
       ]
     },
     "source:apps/web/src/lib/api/errors.test.ts": {
@@ -9679,27 +9710,31 @@
       ]
     },
     "source:deploy/podman/Containerfile.api": {
-      "fingerprint": "bf2a9a67a4b21902e2c60320061ac3a857c207547e5e09c387e4650c881b389b",
+      "fingerprint": "3add9ff8d5f2ff626434e34f570ccefc069e042cf8e0b394f450aa5e625937de",
       "snapshot": {
-        "deploy/podman/Containerfile.api": "3f2c30ae3dbffc4508c1e2ef2c98d518b860724d48855b65b929cf7ca05567f1"
+        "deploy/podman/Containerfile.api": "4b68b0a0aeb22b248c287a97350456fbf8cfaf4be44186379f28c245433ea61b"
       },
-      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
-      "outcome": "out-of-scope",
-      "reason": "OperatorOS runtime, release, checklist, report, and local audit changes do not alter packaged Intent skill guidance or metadata.",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Current diff; intent list reports only @operatoros/agent-skills#elysiajs as an installed skill."
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:deploy/podman/api-healthcheck.sh": {
-      "fingerprint": "46fd0bfe89d548b3a1f90fb067f60ba448ca15364cc1a7c9cce91cb4ccdb375f",
+      "fingerprint": "b465a469ae7928ec5a3d096e9639d2dff7645ce197b4fc8ec71cc09190c16c13",
       "snapshot": {
-        "deploy/podman/api-healthcheck.sh": "a67a5f16c1166f6f5f3c131718983644367b60b4a8ad0be38e32edd1c637c96a"
+        "deploy/podman/api-healthcheck.sh": "61d84aa16c8883d632421ca0e7efdbc4667690a5120fbd2d9c1b5fbe0d8cc7ae"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: deploy/podman/api-healthcheck.sh at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:deploy/podman/operatoros-api.container.in": {
@@ -9739,15 +9774,16 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "446b9205eb6333bdde03cc02df8a3a54142ae1640bb11fd8fa63277191340c49",
+      "fingerprint": "ce6b263da5ea8cda4baac9871fb0d5a11ba18cb98b32efdf94f5d933449de31f",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "18b584a59b4a9716d4bb931fc048145ca96ff3b49c039084293dbacb753d2173"
+        "docs/decisions/podman-deployment.md": "d4c2f63466fe519887a4e6afcd6ac56d482b7457a7f0cc95bc2b3e5e213e5e8b"
       },
-      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Operational evidence correction does not change Elysia skill guidance.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9775,15 +9811,17 @@
       ]
     },
     "source:packages/db/src/connection.ts": {
-      "fingerprint": "bdc6425d30211e8ac26f224052c0617b37fd2a71b8cb19b698e2f24cddb78ebf",
+      "fingerprint": "9190c8b52dc568df4e6af57f9ad0d0aa0185ad865bce518f7112cb8a175d2c87",
       "snapshot": {
-        "packages/db/src/connection.ts": "bde2db78aa9ff92c2a9c99b02309bb9317c6b9f45fe2db859ba2ea8129fd407b"
+        "packages/db/src/connection.ts": "e16a3c46ec9cad220fecd37c904a7e9c7f8d05f11c247e2653a796160e74a18f"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This changes the SQLite driver implementation behind the existing database client; schema authority, migration policy, DTOs, and domain ownership are unchanged, and the Bun path is recorded in the project Elysia note.",
       "evidence": [
-        "Changed: packages/db/src/connection.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/db typecheck passed; packages/db suite 63/63 passed.",
+        "Full synthetic API and release checks passed; no protected operational database was accessed.",
+        "packages/agent-skills/docs/elysiajs.md records the runtime boundary."
       ]
     },
     "source:packages/db/src/legacy-fingerprint.ts": {
@@ -9799,15 +9837,17 @@
       ]
     },
     "source:scripts/podman-local-deploy.sh": {
-      "fingerprint": "8f09d4abe0e6899e7e09f973e9407e024c33bdb54fe8ccb2e8de1f0df75fd8de",
+      "fingerprint": "c6ead0d1275ae0506af1add05c1c9acd30081087be6d81b9725f69655425fa83",
       "snapshot": {
-        "scripts/podman-local-deploy.sh": "e0df49aa5e232418b3c121dcfe4beaccecad83a24262ad4bfe0284bdd562b32c"
+        "scripts/podman-local-deploy.sh": "2e12e806a70022795dccabaad74d870b37ae693b6ba08c856d6d5f89d574eec8"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/podman-local-deploy.sh at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/podman-local-teardown.sh": {
@@ -9859,15 +9899,17 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "2b6c04825169c4ca6e296ffb920254a42740a9a22b01284961274263b0f8214f",
+      "fingerprint": "dc58cb40dfb09cb5e67b55212cd71a79197cb8465ed766cd96ed080b3543022b",
       "snapshot": {
-        "scripts/check": "9bacfdde09f23b75f465ae1aa9a34dfc8f9e6819283920cb8cee3a26f652adbc"
+        "scripts/check": "091ffd07bf014fe324674bb2e75d30d25af916e5f1df9fd32df4906a5e6f9c97"
       },
-      "head": "7231cdf32abae1d54636143fdafbed83f521f815",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "This update adds runtime release checks, a focused source-label test, and status evidence; it changes no packaged skill or Intent planning guidance.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/check at 7231cdf32abae1d54636143fdafbed83f521f815"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/dev": {
@@ -9919,51 +9961,58 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "6955c9abc627990b5ab5bef5a8997eba7e2f02068e8b5d3ec3c79f7dbc9b17db",
+      "fingerprint": "f521441b9a2e933bb8e7a26632f59b4ab1ad798947f11b055e8cad40e368ab91",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "8bd525a5592d1b64e2b053f04d211378c6a8a8bd3052dd3c1ceb45c2f227a549"
+        "docs/runbooks/release-bundles.md": "d7f0142f3b06040636788e4f8ca5f02363bf58aaf48bfd1051e877b26f2927b0"
       },
-      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Operational evidence correction does not change Elysia skill guidance.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:scripts/release-bundle.py": {
-      "fingerprint": "6c7994ae4927b8a7972cfcb8f1cfca4c32dc08e3a586756b157078399e31a5fb",
+      "fingerprint": "07dde373cd22d9a18d999569c4a16b5e7ef2a234d1160e74a2b1a2781dad13dd",
       "snapshot": {
-        "scripts/release-bundle.py": "9b90f9a8588720644a730c89490f1885350aa6d9f8424b762731d74de01a815e"
+        "scripts/release-bundle.py": "667bf9ade22e1ebb93ef9cb1ecb4ce53ec3975a1769fb9de6a65cda6826e7b04"
       },
-      "head": "5dece3befffcdf3b4015918643b499d37ccb7255",
-      "outcome": "out-of-scope",
-      "reason": "OperatorOS runtime, release, checklist, and report changes do not alter packaged Intent skill guidance or metadata.",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Intent list reports only @operatoros/agent-skills#elysiajs as an installed skill; the diff changes no skill source."
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/test-release-consumer.sh": {
-      "fingerprint": "dd918e2e549e02dfcb0bd79be515cc7189675f5f3dbe0b75b1de0fd8116f588e",
+      "fingerprint": "c0f0fa5d25748a4587f90a4816bfa641771bd8a2844bb8e6e82c08f77579a910",
       "snapshot": {
-        "scripts/test-release-consumer.sh": "71a4467a6111b5125f9468ba9b6db1170870564e553be24ce66802e9dd449653"
+        "scripts/test-release-consumer.sh": "27a53160e351be9f189c1a9ab0b88b71c26a63b7a9223d21dcbbd4a5a54a817a"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/test-release-consumer.sh at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "e0534790e53f9c57d5e9e88a9991ebd99dd0bc44a29800722d4e2a2361decbf0",
+      "fingerprint": "8405c0963906947bda13457d4c9fc16f80a33e4dc27b55c36dc9da51822e82c4",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "0d174be7a3d31de9cc3f6cc920228aeb4262d2c16891ca0f2a052137e4d8d8da"
+        "scripts/tests/test_release_bundle.py": "3a41ce7b25c2e359806f3f6c25156dd5db05caa0ed0402594c9949bc2374586a"
       },
-      "head": "74d2ba2635f0c827f5a73882c0674d4e735071cb",
-      "outcome": "out-of-scope",
-      "reason": "This change updates the OperatorOS release rehearsal, signed artifact pins, deployment runbooks, and stability evidence. The repository currently registers only the Elysia developer skill; none of these files changes Elysia usage guidance or a task covered by that skill, so no skill or library planning record change is warranted.",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed files in the review report; scripts/deployment-rehearsal.py pins the exact signed OCI artifact, scripts/tests/test_release_bundle.py checks those identities, and the runbooks document the isolated rehearsal. Focused verifier suite: 86 tests total, 1 environment-guarded skip. Markdown link, organization, developer-doc checks, and git diff --check pass."
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10063,27 +10112,31 @@
       ]
     },
     "source:scripts/operatoros_deploy.py": {
-      "fingerprint": "84e42417673a5628715324bb7289ebe3ad65f3e809d6137d039e3bbb25387fbe",
+      "fingerprint": "a274408b42095c819d14557bcccbebe04b5cf28d8113f387125c8996829f09c7",
       "snapshot": {
-        "scripts/operatoros_deploy.py": "cf9f8de7ede2097a680b86ec2481092662839108d14fc8f388b6cdde58b9b07d"
+        "scripts/operatoros_deploy.py": "1d6d3a4d1b8e086ab94b0623298eb131911d3f5b08496ad4b1b0a9413c375b95"
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/operatoros_deploy.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/tests/test_operatoros_deploy.py": {
-      "fingerprint": "db1f5b712c99f3dda3b96fd9bb67cd4217ea0a49c122ae9ad921d3f3af58fe72",
+      "fingerprint": "3df6ae321e913d61d4249077c3bb90b69ad556ec416ff37d741adb438b792875",
       "snapshot": {
-        "scripts/tests/test_operatoros_deploy.py": "c2e46c3195508bfe5b6e79b3f9d1a3f5988fae2c9ab955338842acb31f795841"
+        "scripts/tests/test_operatoros_deploy.py": "fdc0ac1649b42cad8116d29472e5c81ca659dcb13d392e2d4189dbbe4af129e3"
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/tests/test_operatoros_deploy.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:.github/workflows/deployment-rehearsal.yml": {
@@ -10207,87 +10260,98 @@
       ]
     },
     "source:scripts/check-bun-sqlite-runtime.py": {
-      "fingerprint": "08ffb2e1b4ca32b1ca6a98d62de04b7ab8597706d04fda6c71f225d54e53c6f7",
+      "fingerprint": "7bfc08e00b8afda0d5b980122a1aa970ba17026a8d169f6edc8b4abd53860037",
       "snapshot": {
-        "scripts/check-bun-sqlite-runtime.py": "dadc085d17bf128ff3f3e5a05d5f683acb7ca67f2bd4fe87a1a2a57987244a98"
+        "scripts/check-bun-sqlite-runtime.py": "e75d41131ae83ca87e433bb60fa6c942c58c5b4826fb6cf3ff8fd80637a745b0"
       },
-      "head": "5d50e214c571182e12bb7cf06fd19ede431b4f92",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The release evidence, status files, documentation checker, AGENTS, CI, and runbook changes do not change Elysia APIs, package skill guidance, examples, or skill metadata; no skill update or sync is required.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/check-bun-sqlite-runtime.py at 5d50e214c571182e12bb7cf06fd19ede431b4f92"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/tests/test_bun_sqlite_runtime.py": {
-      "fingerprint": "f3dbcf91e140d235eddbd6d04f563b040221d521bd9a166a8db3415ccbf7e3e6",
+      "fingerprint": "4dda136a0981c88b51b99b22d35d90854155b254d162b3b2c87aa75c53aa5438",
       "snapshot": {
-        "scripts/tests/test_bun_sqlite_runtime.py": "7ac415f877197b525e610214c00826c7a9b19d56d10ccc6e2e53df24978ed6aa"
+        "scripts/tests/test_bun_sqlite_runtime.py": "8c55d11b76f318fbe048ae0eea3d1089f1257c9029efc5922ac3bd22a0343dc5"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/tests/test_bun_sqlite_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "7171b42bb9e14530644e757819b9b430b8430fe25573e6762ea8742bfcd048ba",
+      "fingerprint": "551d3dccbb7026b74f7beadbc569f3fcd0e8a603f31619767b88e616b7b0b099",
       "snapshot": {
-        "DECISIONS.md": "0e6d22ec3b1c32521f46a6381bce86ceaf91c16d01e65db6ed9f77775fd62d32"
+        "DECISIONS.md": "e87761cb755f4ba8a288c593fa30ee67d63301561f0b79738ac63b5574f2299a"
       },
-      "head": "8fb3f8e53847150e85c96c720f663f61e67ba004",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "This PR updates repository and runbook documentation only; it changes no library source or skill guidance. Reviewed the maintainer report and found no guidance updates warranted.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: DECISIONS.md at 8fb3f8e53847150e85c96c720f663f61e67ba004"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "291c4de0cb66092d11d6dfc1ada6c5cf96893911bf8f89769e76999d2362362b",
+      "fingerprint": "bc3b47cab647fd230e30460d0efd14097ac4dd824c56b04603ee9319d2196fe0",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "31e66d31d9fde1660f1e68d0839dd5fec70ec864640408bc67b582f9dd7e348e"
+        "MASTER_CHECKLIST.md": "33f30e256b9eb4c0138973decefea7f649f143881e0ddef1b059760a2453efba"
       },
-      "head": "b43d7504bea0a24da4a8ff3b0b7605730f14628d",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Operational evidence correction does not change Elysia skill guidance.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at b43d7504bea0a24da4a8ff3b0b7605730f14628d"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "553c0433747159692e7943e6ccd75a27387259c229b2bdcd4d2783c125136346",
+      "fingerprint": "a244394813737012781b30e3b2855bbecc22158817015f97d67ae25154deec4f",
       "snapshot": {
-        "STABILITY_REPORT.md": "06bc7aeb46b578ed2ff8d052af12788d155cc0d353f46028b27c8904df85e27a"
+        "STABILITY_REPORT.md": "828c25c35fd8a98fd1d4ad2e55b2744565721d4cf23f5db37b188b69fdaa3583"
       },
-      "head": "a31df96957beec46a1b3df4954d831a924b14146",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "Program-level stability evidence and changelog update only; no package source, library documentation, or skill guidance changed.",
+      "reason": "This page records the Bun implementation or its current verification gates; it does not add a new product capability or skill-planning task.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at a31df96957beec46a1b3df4954d831a924b14146"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "The current docs state that exact-source release evidence, host qualification, independent restore, device checks, and production authorization remain open."
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
-      "fingerprint": "38ae657316ef436bbba326f4b807c63114d6416386d7f130bf5036cdaed8872c",
+      "fingerprint": "51b6d2c53d5b0b8723ba62ea0037e48928c8205c63756da939c2d9acd5e30609",
       "snapshot": {
-        "scripts/record-embedded-runtime.py": "c18e09c824446eb19fa76c0e420defce417787745301ae9e8c1668a121d8ad82"
+        "scripts/record-embedded-runtime.py": "112b5e6bb8aa978f09eaed6da5d1aab430448532773ffd914cfa17f429f6854b"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/record-embedded-runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/tests/test_embedded_runtime.py": {
-      "fingerprint": "9cd5a56d0fe3d2c94fc3c21244bff93c3d7969abeb731ec37ebd8848c57b5849",
+      "fingerprint": "0f40410c4ccab7804ae67dfca858e60aa1e7e14ff04b8cb47902c1aea76729b1",
       "snapshot": {
-        "scripts/tests/test_embedded_runtime.py": "4596c678afe77d54ae843fbc74f88d3d63b2cc2322eaf0d9e1a86b51b7d97c30"
+        "scripts/tests/test_embedded_runtime.py": "a02fb306fcf89793ab18099bf6949ffd8ac68cf9227c28cfc75c6396cea67c84"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
       "evidence": [
-        "Changed: scripts/tests/test_embedded_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     },
     "source:scripts/tests/e2e-workspace.test.ts": {
@@ -10303,15 +10367,17 @@
       ]
     },
     "source:apps/api/src/auth/password.ts": {
-      "fingerprint": "f9e33dee91a5ca59b4be3c984ab61338103729cc1aedf895be2feede6593f23b",
+      "fingerprint": "977f0bf58149cbe2f3141038347298409d5ff8e9bd3808d86ca9ca249e31d92e",
       "snapshot": {
-        "apps/api/src/auth/password.ts": "bede24387d24d6175c6f3151a53ff1c935b9e4cc72c286bec28fd98ae29914c0"
+        "apps/api/src/auth/password.ts": "76c5b8aeebcd61f56b03f90bb01f0fcca96f310af65292db80f8727c98834e0c"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/src/auth/password.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/src/domains/student-exports.ts": {
@@ -10423,27 +10489,30 @@
       ]
     },
     "source:apps/api/tests/node-runtime-smoke.ts": {
-      "fingerprint": "197b5e8b4235ccadf457edeff58718f279ed069926531cf9329bcc830570d0d8",
+      "fingerprint": "176bf525f19b88e4983b3a39cac5d1565af66f3e4c4a1ee3e9ded975bef4b0c5",
       "snapshot": {
-        "apps/api/tests/node-runtime-smoke.ts": "b8b938ed04e07e74868c72e6af8c2940a5bc16fad022216e49027a2560469249"
+        "apps/api/tests/node-runtime-smoke.ts": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "apps/api/tests/node-runtime-smoke.ts is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: apps/api/tests/node-runtime-smoke.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: apps/api/tests/bun-runtime-smoke.ts; the old Bun-incompatible smoke filename was removed as part of moving runtime qualification to Bun.",
+        "mise run check:full passed, including two API suites (441/441 each), E2E smoke (8 backend, 67 browser), and readiness (3/3)."
       ]
     },
     "source:apps/api/tests/password.test.ts": {
-      "fingerprint": "8b13f9b4c717bcd02981f2b8752b292301f96687445ad62f5208045bc3c38694",
+      "fingerprint": "1fd830c9e5a1e848b8bb43cf27a950bee7a75ad7b3ea5352cca6cdecd7c10155",
       "snapshot": {
-        "apps/api/tests/password.test.ts": "0c0bd23977b23aedc4ebbbbb96008b8846a890b13fd6f736426f541aee53a184"
+        "apps/api/tests/password.test.ts": "50f6e35a2b106e2fcf3ede9526be55858bfd7df205e17509d998f9eed0d1e6de"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
       "evidence": [
-        "Changed: apps/api/tests/password.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
       ]
     },
     "source:apps/api/tests/staff-metrics.test.ts": {
@@ -10567,15 +10636,17 @@
       ]
     },
     "source:packages/db/src/sqlite-client.ts": {
-      "fingerprint": "62b5bd927b24b5604ba6b38be76ca3b29e02d3e6da86f6a46d214f89e834dc11",
+      "fingerprint": "5e3bd80a115f6a55008d54894aee5a57e2a5581ce65f4e1b4faa6390a675f73e",
       "snapshot": {
-        "packages/db/src/sqlite-client.ts": "0d4de4b186acedffe9f3b83d04edf50f3c9a62bd5831fc88f4592f3df04a4d59"
+        "packages/db/src/sqlite-client.ts": "24e04fabccaf6b88438df87ec5d2800331798a828c2f82cd0f8b821cd1e9af81"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This changes the SQLite driver implementation behind the existing database client; schema authority, migration policy, DTOs, and domain ownership are unchanged, and the Bun path is recorded in the project Elysia note.",
       "evidence": [
-        "Changed: packages/db/src/sqlite-client.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/db typecheck passed; packages/db suite 63/63 passed.",
+        "Full synthetic API and release checks passed; no protected operational database was accessed.",
+        "packages/agent-skills/docs/elysiajs.md records the runtime boundary."
       ]
     },
     "source:packages/db/tests/attendance-uniqueness.test.ts": {
@@ -10615,75 +10686,138 @@
       ]
     },
     "source:packages/db/tests/sqlite-client.test.ts": {
-      "fingerprint": "e12c1e61a9901ddec5c2583d5d5b88257e1d0ade72c2d24d2cf5ce8899549e64",
+      "fingerprint": "0cbe6ef80eb0e7707f0f7fdb16c2e206beac12e42f40ed3c00789f55994487f4",
       "snapshot": {
-        "packages/db/tests/sqlite-client.test.ts": "ef88a5d7a8c9a679e65664de36796e3df6b41b09ee43832d3df0dd564dbe90a8"
+        "packages/db/tests/sqlite-client.test.ts": "c07337775354204e1994dabe342e220b17463d67cec3941cd0252c74945ec0c2"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "This changes the SQLite driver implementation behind the existing database client; schema authority, migration policy, DTOs, and domain ownership are unchanged, and the Bun path is recorded in the project Elysia note.",
       "evidence": [
-        "Changed: packages/db/tests/sqlite-client.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "bun run --filter @operatoros/db typecheck passed; packages/db suite 63/63 passed.",
+        "Full synthetic API and release checks passed; no protected operational database was accessed.",
+        "packages/agent-skills/docs/elysiajs.md records the runtime boundary."
       ]
     },
     "source:scripts/build-api-runtime.sh": {
-      "fingerprint": "33441910c1de29e781ae7aeaf56fa144d8132e0a97e34265b192ca7b294cf623",
+      "fingerprint": "a6be2a680f98a3b495d53262cf6465a6f4727d240470ab08931fa8639a82bf1f",
       "snapshot": {
-        "scripts/build-api-runtime.sh": "c381c4a24b9900a26f4f48f01b6a852d9d09d1ba332fcfa135c2751c6a1ef689"
+        "scripts/build-api-runtime.sh": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/build-api-runtime.sh is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/build-api-runtime.sh at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: deploy/podman/Containerfile.api now runs apps/api/src/server.ts directly with the pinned Bun image; no Node-targeted bundle build remains.",
+        "mise run check:full passed; exact current-source OCI image qualification remains a CI/release gate."
       ]
     },
     "source:scripts/check-node-sqlite-runtime.py": {
-      "fingerprint": "5d0b3c5b3f86feaf479a63b6e2ba65a41a0d56900bcd4ac6ca712102eb2671ec",
+      "fingerprint": "6bc3fbc0baaaf9ab4ee76d9eded5f5a86df7b0dd90086463ca681225b642bcc0",
       "snapshot": {
-        "scripts/check-node-sqlite-runtime.py": "b8726a3800228b3b784464a78401f1db530710168c6a6574992954b0a77590b4"
+        "scripts/check-node-sqlite-runtime.py": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/check-node-sqlite-runtime.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/check-node-sqlite-runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: scripts/check-bun-sqlite-runtime.py probes the actual Bun image and embedded bun:sqlite identity.",
+        "scripts/tests/test_bun_sqlite_runtime.py and the complete mise run check:full passed."
       ]
     },
     "source:scripts/tests/test_node_sqlite_runtime.py": {
-      "fingerprint": "f47b6a50c1979b5f2af29ee86f660d8f402f5b5311f665868f93e8b99b540fbf",
+      "fingerprint": "f2b0db38b06dd72d716044fc3148669dcc0fca0388f41fcf2f8bf1e977ddde57",
       "snapshot": {
-        "scripts/tests/test_node_sqlite_runtime.py": "bbe22e37258449d11b79addfbd0f019452c27baa8f997eac69ed0f4ee58037ca"
+        "scripts/tests/test_node_sqlite_runtime.py": null
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "scripts/tests/test_node_sqlite_runtime.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/tests/test_node_sqlite_runtime.py at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Replacement: scripts/tests/test_bun_sqlite_runtime.py exercises the embedded Bun SQLite probe and its qualification outcomes.",
+        "Runtime, embedded inventory, and release bundle tests plus mise run check:full passed."
       ]
     },
     "source:scripts/verify-node-image-lifecycle.py": {
-      "fingerprint": "acca95e7de66d8b9d987ecf82977f43a1e3e5bd32d765e260bcf9e4fda997436",
+      "fingerprint": "eea2fa5f95fb4e99cb5380949478d204c3ff8c67559a536456b5e09ffd95479f",
       "snapshot": {
-        "scripts/verify-node-image-lifecycle.py": "61eee280b383d4cb7b07790be66596f3879cb34e8db13a86622cd426b6122277"
+        "scripts/verify-node-image-lifecycle.py": null
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "scripts/verify-node-image-lifecycle.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/verify-node-image-lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "Replacement: scripts/verify-bun-image-lifecycle.py runs the candidate application lifecycle with Bun.",
+        "The Bun lifecycle Python suite and mise run check:full passed."
       ]
     },
     "source:scripts/tests/test_node_image_lifecycle.py": {
-      "fingerprint": "8fafc95720527c4e6f2ca2a550d800525aaf067dfd123f52015e808d72249c10",
+      "fingerprint": "563c2f08730dd18cb467b451b996fa8e6f5c36ce6db77f1a455e9570be353563",
       "snapshot": {
-        "scripts/tests/test_node_image_lifecycle.py": "0d34ccada9e8b16bc19a3f2eac845bd52692c01c706243d9828fb9d49918a9d1"
+        "scripts/tests/test_node_image_lifecycle.py": null
       },
-      "head": "c11f199ecf99272d372ce9e66e885898a592109a",
+      "head": "2ca776d15d3ac60cefa9997bc7fa93eb109d5a15",
       "outcome": "no-change",
-      "reason": "Node runtime lifecycle and deployment validation fixes do not change skill guidance.",
+      "reason": "scripts/tests/test_node_image_lifecycle.py is the removed Node-specific implementation; its behavior is replaced by the Bun path named in the evidence. No independent product, domain, or skill-planning task remains for the deleted file.",
       "evidence": [
-        "Changed: scripts/tests/test_node_image_lifecycle.py at c11f199ecf99272d372ce9e66e885898a592109a"
+        "Replacement: scripts/tests/test_bun_image_lifecycle.py covers the same lifecycle harness under the Bun runtime.",
+        "The lifecycle Python suite and mise run check:full passed."
+      ]
+    },
+    "source:apps/api/tests/bun-runtime-smoke.ts": {
+      "fingerprint": "6704aef65a0085c88a676e8818bd6380c8e2f484bad0f7b798efac62a556c7ca",
+      "snapshot": {
+        "apps/api/tests/bun-runtime-smoke.ts": "64ece7834decf5801bb1b974952e934074867a0f27420574558f446c6d51ad20"
+      },
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
+      "evidence": [
+        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
+        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
+        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
+      ]
+    },
+    "source:e2e/run-readiness.sh": {
+      "fingerprint": "c6caf26e0e51a26d347c1a4bc3f2d2b37b76f7c0070acb983774be16fca5f6ba",
+      "snapshot": {
+        "e2e/run-readiness.sh": "2a4cf3fc0cc70d0c39ae9321584dc3d10134b664904a8fcad61ff42407cbb318"
+      },
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This adapts existing browser verification to Bun-compatible tooling; it changes test infrastructure, not application routes, business behavior, or the skill/domain map.",
+      "evidence": [
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "Local smoke passed with 8 backend and 67 browser tests; readiness passed 3/3."
+      ]
+    },
+    "source:scripts/tests/test_bun_image_lifecycle.py": {
+      "fingerprint": "d683d8837d1ea9e1956dcc6c6578448bb4dd86f524430b03bd7461f5296123fd",
+      "snapshot": {
+        "scripts/tests/test_bun_image_lifecycle.py": "948da77af90ea3275d168d2f60d642ec6d308024e996850a3f09bfdcd4ab8bbb"
+      },
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
+      "evidence": [
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
+      ]
+    },
+    "source:scripts/verify-bun-image-lifecycle.py": {
+      "fingerprint": "bbb3e21d6b2a72440af23ffecdb1c344026a208a156cb260df25549d2d50d2ff",
+      "snapshot": {
+        "scripts/verify-bun-image-lifecycle.py": "b4ace97049074d16e96b930b4f3adc6f104e32634973de8c98f66fc21799a8f9"
+      },
+      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "outcome": "no-change",
+      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
+      "evidence": [
+        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
+        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
+        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
       ]
     }
   }

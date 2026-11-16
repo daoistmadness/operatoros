@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-13
+last_reviewed: 2026-11-16
 ---
 
 # CI release bundles
@@ -17,17 +17,28 @@ a later movement of main does not change the candidate. Bundle creation is seria
 
 A manual dispatch on a non-main branch performs nonpublishing qualification. It
 runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
-checks SQLite in both Node.js `node:sqlite` and the `better-sqlite3` native
-addon before retaining non-image reports for seven days. The image is
-discarded with the runner and receives no signature, attestation, or
-release-bundle upload. A workflow success means the rejection guard behaved
-correctly; the report can still say that the candidate is blocked.
+probes Bun and its embedded `bun:sqlite` runtime before retaining non-image
+reports for seven days. The image is discarded with the runner and receives no
+signature, attestation, or release-bundle upload. The accepted finding applies
+only to Bun 1.4.4 with SQLite 3.53.4, source ID
+`2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
+and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The runtime report still records the finding as
+`OPEN` with disposition `ACCEPTED`. Any other affected runtime identity remains
+blocked. A fixed SQLite version follows the normal runtime probes.
+A workflow success does not make the candidate a release artifact.
 
-The existing locked setup action supplies Bun and Node. The runner installs
-Ubuntu's Podman package and records its actual version. The API uses the existing
-Linux amd64 Containerfile, digest-pinned base and production lockfile install.
-The SPA uses the existing Vite/Start build. There is no server-side source build,
+The locked setup action installs the workspace toolchain. The runner installs
+Ubuntu's Podman package and records its actual version. The API image runs the
+pinned Bun runtime from the Linux amd64 Containerfile and production lockfile
+install. The SPA uses the Vite/Start build. There is no server-side source build,
 GHCR publication, automatic deployment, or database migration.
+
+The signed Node bundle from run `43408580871` covers source
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only. It does not qualify the
+current Bun source. After the Bun implementation is reviewed and merged, run
+full validation and the manual main-branch release for that exact commit. Task 9
+remains open until the new Bun image, runtime evidence, SBOM, scan, attestation,
+and isolated consumer all match that source and artifact.
 
 The artifact name includes source SHA, workflow run ID, and attempt. Download it
 by that run ID using `gh run download RUN_ID --repo daoistmadness/operatoros
@@ -114,9 +125,10 @@ build/export logs, and available scan reports. Raw OCI/SPA archives, credentials
 consumer environment files and databases are excluded. An incomplete bundle is
 never uploaded as a release. Full bundle retention remains 90 days. Scan
 findings remain visible; producing a report does not approve security risk.
-Trivy may omit SQLite code statically linked into Node.js or the native addon.
-The runtime gate probes both copies and CycloneDX records each SQLite component.
-The local Node candidate remains unsigned and does not authorize production.
+Trivy may omit SQLite code statically linked into Bun. The runtime gate probes
+the image's Bun and SQLite identities, and CycloneDX records the embedded
+SQLite component and finding disposition. A scan or accepted finding does not
+qualify a release until all reports bind to the same exact source and image.
 
 The GitHub attestation signs the complete bundle digest. It requires job-scoped
 `id-token: write` and `attestations: write`; default permissions remain
@@ -148,7 +160,11 @@ command status and bounded Podman output only; container storage, database,
 environment files, and runtime data are never uploaded. This is not a live
 Quadlet, reboot, or production-host test.
 
-## Isolated deployment rehearsal
+## Historical isolated deployment rehearsal
+
+The run below is historical evidence for the signed Node artifact from source
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. It does not qualify a Bun image or
+the current source. Do not use it for current-source release acceptance or D1.
 
 The separate `.github/workflows/deployment-rehearsal.yml` workflow is prepared
 to test the repository-managed deployment CLI on a disposable GitHub-hosted

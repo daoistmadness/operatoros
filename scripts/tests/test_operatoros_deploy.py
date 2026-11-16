@@ -334,7 +334,7 @@ class PodmanIsolationTests(unittest.TestCase):
         deployment_environment = deploy.private_environment(self.context.storage_conf)
         self.assertEqual(deployment_environment["CONTAINERS_STORAGE_CONF"], str(self.context.storage_conf))
 
-    def test_schema_validation_uses_node_bundled_database_cli(self):
+    def test_schema_validation_uses_bun_database_cli(self):
         cfg = {
             "data_dir": self.root / "synthetic-data",
             "storage_conf": self.context.storage_conf,
@@ -353,9 +353,9 @@ class PodmanIsolationTests(unittest.TestCase):
             deploy.schema_validate("synthetic-image", cfg)
 
         arguments = captured["arguments"]
-        self.assertEqual(arguments[arguments.index("--entrypoint") + 1], "node")
-        self.assertEqual(arguments[-4:], [
-            "apps/api/dist/db-cli.mjs", "validate", "--data-dir", "/var/lib/operatoros/data",
+        self.assertEqual(arguments[arguments.index("--entrypoint") + 1], "bun")
+        self.assertEqual(arguments[-5:], [
+            "run", "packages/db/src/db-cli.ts", "validate", "--data-dir", "/var/lib/operatoros/data",
         ])
 
     def test_schema_validation_exposes_only_allowlisted_database_rejection(self):
