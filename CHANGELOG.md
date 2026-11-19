@@ -5,6 +5,7 @@ Notable user-facing changes are recorded here.
 ## [Unreleased]
 
 - Record the running Docker Compose deployment definition in the repository and mark the Podman proposal superseded for this host.
+- Add a read-only backup-directory containment check that rejects plaintext snapshots and incomplete artifact pairs.
 - Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
