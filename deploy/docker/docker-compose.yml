@@ -1,0 +1,99 @@
+name: operatoros
+
+# Reviewed copy of the running single-host deployment definition.
+#
+# This file contains no secret values. The API reads its secrets from the
+# host-managed env file named by OPERATOROS_API_ENV_FILE, which stays outside
+# the repository with mode 0600. Host paths and the image tag are supplied
+# through the environment so a fresh clone can render the same topology without
+# hard-coding one host.
+#
+#   OPERATOROS_API_IMAGE       reviewed image tag (required)
+#   OPERATOROS_API_ENV_FILE    host-managed env file (required)
+#   OPERATOROS_DATA_DIR        SQLite and API-owned files (required)
+#   OPERATOROS_DEPLOY_DIR      Caddy data/config directories (required)
+#   OPERATOROS_WEB_ROOT        built SPA client directory (required)
+#   OPERATOROS_CADDYFILE       reviewed Caddyfile (defaults to this directory)
+#   OPERATOROS_API_PORT        loopback API port (defaults to 18090)
+#   OPERATOROS_HTTP_PORT       loopback Caddy port (defaults to 18088)
+#   OPERATOROS_ALLOWED_ORIGIN  exact browser origin (defaults to the loopback URL)
+
+services:
+  operatoros-api:
+    image: ${OPERATOROS_API_IMAGE:?set OPERATOROS_API_IMAGE to the reviewed image tag}
+    pull_policy: never
+    container_name: operatoros-api
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:${OPERATOROS_API_PORT:-18090}:8090"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8090
+      - NODE_ENV=production
+      - OPERATOROS_DATA_DIR=/var/lib/operatoros/data
+      - ALLOWED_ORIGINS=${OPERATOROS_ALLOWED_ORIGIN:-http://127.0.0.1:18088}
+    env_file:
+      - ${OPERATOROS_API_ENV_FILE:?set OPERATOROS_API_ENV_FILE to the host-managed env file}
+    volumes:
+      - ${OPERATOROS_DATA_DIR:?set OPERATOROS_DATA_DIR}:/var/lib/operatoros/data:rw
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,mode=1777,size=64m
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/operatoros-api-healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    mem_limit: 512m
+    cpus: 1.0
+    networks:
+      - operatoros-net
+
+  operatoros-caddy:
+    image: ${OPERATOROS_CADDY_IMAGE:-localhost/caddy:2.11.7}
+    pull_policy: never
+    container_name: operatoros-caddy
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    ports:
+      - "127.0.0.1:${OPERATOROS_HTTP_PORT:-18088}:18088"
+    environment:
+      - XDG_DATA_HOME=/data
+      - XDG_CONFIG_HOME=/config
+    volumes:
+      - ${OPERATOROS_DEPLOY_DIR:?set OPERATOROS_DEPLOY_DIR}/caddy-data:/data:rw
+      - ${OPERATOROS_DEPLOY_DIR:?set OPERATOROS_DEPLOY_DIR}/caddy-config:/config:rw
+      - ${OPERATOROS_CADDYFILE:-./Caddyfile}:/etc/caddy/Caddyfile:ro
+      - ${OPERATOROS_WEB_ROOT:?set OPERATOROS_WEB_ROOT}:/srv/operatoros/current/client:ro
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,mode=1777,size=16m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:18088/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on:
+      operatoros-api:
+        condition: service_healthy
+    networks:
+      - operatoros-net
+
+networks:
+  operatoros-net:
+    driver: bridge

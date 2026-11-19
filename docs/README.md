@@ -81,7 +81,8 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Vendored SheetJS fork and lazy legacy loading](decisions/sheetjs-vendored-fork.md).
 - [Persistent development database](decisions/persistent-development-database.md).
 - [TanStack Start SPA migration](decisions/tanstack-start-spa.md).
-- [Podman single-host deployment proposal](decisions/podman-deployment.md) — Draft; not yet accepted.
+- [Docker Compose single-host deployment](decisions/docker-compose-deployment.md).
+- [Podman single-host deployment proposal](decisions/podman-deployment.md) — Superseded as the deployment target for this host; kept as history.
 - [TanStack Redact research](decisions/tanstack-redact-research.md) — Historical pre-Start measurements; the no-adoption decision remains.
 - [Report artifact preservation](decisions/report-artifact-preservation.md) — Draft.
 - [SQLite-only local runtime](decisions/sqlite-only-runtime.md).

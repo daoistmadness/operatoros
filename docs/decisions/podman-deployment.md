@@ -1,9 +1,13 @@
 ---
-status: draft
-last_reviewed: 2026-11-02
+status: deprecated
+last_reviewed: 2026-11-19
 ---
 
 # Podman single-host deployment proposal
+
+> Superseded as the deployment target for this host by
+> [Docker Compose single-host deployment](docker-compose-deployment.md). The
+> proposal below is retained as history and is not implemented in production.
 
 ## Current synthetic host
 
