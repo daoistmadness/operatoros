@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-16
+last_reviewed: 2026-11-19
 ---
 
 # OperatorOS stability report
@@ -13,12 +13,16 @@ source and does not qualify the current Bun source.
 ## Current source and accepted runtime
 
 On 2026-11-16, the owner accepted the known SQLite 3.53.4 FTS5 finding only for
-Bun 1.4.4 with source ID
+the prior Bun 1.4.4 image with source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`
 from `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The finding remains
-`OPEN` with disposition `ACCEPTED` for that exact identity. It does not resolve
-the upstream finding or accept another affected runtime identity. A fixed
-SQLite version follows the normal runtime probes.
+`OPEN` with disposition `ACCEPTED` for that historical identity only. The
+current toolchain change pins Bun 1.4.5 and its digest-pinned API image; Bun's
+[release notes](https://bun.com/blog/release-notes/bun-v1.4.5) report SQLite
+3.54.1. The runtime gate now requires Bun 1.4.5 and SQLite 3.54.1 and rejects
+vulnerable or otherwise mismatched runtimes. The new exact-source image has not
+yet been built or qualified, so release evidence and production readiness
+remain open.
 
 The application, Containerfile, release checks, and deployment helpers now use
 Bun in this uncommitted source change. This report records no exact-source
@@ -73,9 +77,10 @@ qualification or D1.
   consumer verification for exact source
   `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. That evidence remains valid for
   that Node source only. It does not qualify the current Bun source. The owner
-  accepted SQLite 3.53.4 only for the pinned Bun 1.4.4 runtime identity above.
-  A fresh exact-source release run must bind the accepted finding, scan, SBOM,
-  provenance, and artifact before Task 9 can close.
+  accepted SQLite 3.53.4 only for the prior Bun 1.4.4 runtime identity above.
+  The new Bun 1.4.5 candidate must pass exact-source runtime qualification with
+  SQLite 3.54.1, scan, SBOM, provenance, and artifact checks before Task 9 can
+  close.
   See the [SQLite bug record](https://sqlite.org/bugs/info/f08a04413a70909eda7e9cfb98dbb1fa1142ff8cc9d2420f38f5bb5fcf3a78ab),
   [SQLite release history](https://sqlite.org/changes.html), and [Bun release
   list](https://github.com/oven-sh/bun/releases).

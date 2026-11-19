@@ -120,8 +120,8 @@ operatoros_wsl_validate_bun() {
     return 1
   fi
 
-  if [[ "$bun_version" != 1.4.4 ]]; then
-    OPERATOROS_WSL_TOOLCHAIN_REASON="Bun version must be exactly 1.4.4; detected ${bun_version}"
+  if [[ "$bun_version" != 1.4.5 ]]; then
+    OPERATOROS_WSL_TOOLCHAIN_REASON="Bun version must be exactly 1.4.5; detected ${bun_version}"
     OPERATOROS_WSL_TOOLCHAIN_STATE="SAFE_WRONG_VERSION"
     return 1
   fi
@@ -151,7 +151,7 @@ operatoros_wsl_toolchain_failure() {
   bun: $bun_display
     resolved: $bun_resolved
 
-OperatorOS requires native Linux Bun 1.4.4 from the repository-pinned toolchain.
+OperatorOS requires native Linux Bun 1.4.5 from the repository-pinned toolchain.
 State: ${OPERATOROS_WSL_TOOLCHAIN_STATE}
 Reason: ${OPERATOROS_WSL_TOOLCHAIN_REASON:-toolchain validation failed}
 

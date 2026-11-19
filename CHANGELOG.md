@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Pin Bun 1.4.5 across mise, CI, development containers, and release images; require the fixed embedded SQLite runtime in release evidence. (#396)
 - Align application and release guidance with the accepted pinned Bun runtime.
   Reopen exact-source release qualification. (#395)
 - Correct the D1 checklist to record the earlier UID 1002 rehearsal and the remaining Node release qualification. (#394)

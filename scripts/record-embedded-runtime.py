@@ -12,15 +12,11 @@ from typing import Any
 
 CVE = "CVE-2026-119373"
 SQLITE_FIX_FLOOR = (3, 54, 0)
-ACCEPTED_BUN_VERSION = "1.4.4"
-ACCEPTED_SQLITE_VERSION = "3.53.4"
-ACCEPTED_SQLITE_SOURCE_ID = (
-    "2026-07-24 19:02:57 "
-    "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
-)
-ACCEPTED_BUN_ORIGIN = (
-    "docker.io/oven/bun:1.4.4-alpine@sha256:"
-    "5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690"
+PINNED_BUN_VERSION = "1.4.5"
+PINNED_SQLITE_VERSION = "3.54.1"
+PINNED_BUN_ORIGIN = (
+    "docker.io/oven/bun:1.4.5-alpine@sha256:"
+    "0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31"
 )
 SHA256 = re.compile(r"[0-9a-f]{64}")
 SOURCE_SHA = re.compile(r"[0-9a-f]{40}")
@@ -60,7 +56,7 @@ def container_origins(path: Path) -> tuple[list[str], str]:
     return references, bun_origins[0]
 
 
-def sqlite_library(runtime: dict[str, Any], status: str, origin: str) -> dict[str, Any]:
+def sqlite_library(runtime: dict[str, Any], status: str) -> dict[str, Any]:
     version = runtime.get("sqlite")
     source_id = runtime.get("sqliteSourceId")
     compile_option = runtime.get("fts5CompileOption")
@@ -83,24 +79,16 @@ def sqlite_library(runtime: dict[str, Any], status: str, origin: str) -> dict[st
     ):
         raise ValueError("SQLite FTS5 probe failed for an unsupported reason in bun:sqlite")
 
-    bun = runtime.get("bun")
-    accepted = (
-        bun == ACCEPTED_BUN_VERSION
-        and version == ACCEPTED_SQLITE_VERSION
-        and source_id == ACCEPTED_SQLITE_SOURCE_ID
-        and origin == ACCEPTED_BUN_ORIGIN
-        and fts5_present
-    )
     is_fixed = version_tuple(version) >= SQLITE_FIX_FLOOR
     cve_status = "RESOLVED_BY_FIXED_VERSION" if is_fixed else (
         "NOT_AFFECTED_FTS5_ABSENT" if not fts5_present else "OPEN"
     )
-    disposition = "ACCEPTED" if accepted else ("UNACCEPTED" if cve_status == "OPEN" else "NOT_REQUIRED")
+    disposition = "UNACCEPTED" if cve_status == "OPEN" else "NOT_REQUIRED"
 
-    if accepted and status != "PASS":
-        raise ValueError("accepted Bun SQLite identity was not passed by the runtime gate")
-    if status == "PASS" and cve_status == "OPEN" and not accepted:
-        raise ValueError("runtime passed with an SQLite FTS5 finding outside the accepted Bun identity")
+    if status == "PASS" and cve_status == "OPEN":
+        raise ValueError("runtime passed with an affected SQLite FTS5 finding")
+    if status == "PASS" and version != PINNED_SQLITE_VERSION:
+        raise ValueError("runtime qualification did not use the pinned SQLite 3.54.1 version")
     if status == "PASS" and runtime.get("findingDisposition") != disposition:
         raise ValueError("runtime gate disposition does not match the embedded SQLite identity")
     if status == "BLOCKED" and cve_status == "OPEN":
@@ -157,7 +145,9 @@ def runtime_inventory(
     image_tag = re.search(r"/oven/bun:(\d+\.\d+\.\d+)(?:[-@])", bun_origin)
     if image_tag and image_tag.group(1) != bun:
         raise ValueError("Bun runtime version does not match its pinned base image")
-    libraries = [sqlite_library(runtime, status, bun_origin)]
+    if status == "PASS" and (bun != PINNED_BUN_VERSION or bun_origin != PINNED_BUN_ORIGIN):
+        raise ValueError("runtime qualification did not use the pinned Bun 1.4.5 image")
+    libraries = [sqlite_library(runtime, status)]
     library = libraries[0]
     cve_status = library["cve_status"]
     cve_disposition = library["cve_disposition"]
@@ -172,17 +162,9 @@ def runtime_inventory(
         "components": [
             {"provider": library["provider"], "version": library["version"], "status": cve_status}
         ],
-        "qualification_floor": "SQLite 3.54.0 or later, or the owner-accepted pinned Bun 1.4.4 scope",
+        "qualification_floor": "SQLite 3.54.0 or later",
         "runtime_gate_reason": runtime.get("reason"),
     }
-    if cve_disposition == "ACCEPTED":
-        finding["accepted_exception"] = {
-            "runtime": ACCEPTED_BUN_VERSION,
-            "sqlite": ACCEPTED_SQLITE_VERSION,
-            "sqlite_source_id": ACCEPTED_SQLITE_SOURCE_ID,
-            "origin": ACCEPTED_BUN_ORIGIN,
-        }
-
     return {
         "schema_version": 3,
         "qualification_status": status,
@@ -283,12 +265,6 @@ def enrich_sbom(sbom: dict[str, Any], inventory: dict[str, Any]) -> dict[str, An
         raise ValueError("CycloneDX vulnerabilities section is malformed")
     current = next((item for item in vulnerabilities if item.get("id") == finding["id"]), None)
     affected_refs = [sqlite_ref] if library["fts5_present"] else []
-    accepted_detail = (
-        f" The open finding is accepted only for Bun {ACCEPTED_BUN_VERSION}, SQLite "
-        f"{ACCEPTED_SQLITE_VERSION}, source ID {ACCEPTED_SQLITE_SOURCE_ID}, from "
-        f"{ACCEPTED_BUN_ORIGIN}."
-        if finding["disposition"] == "ACCEPTED" else ""
-    )
     vulnerability = {
         "id": finding["id"],
         "source": {"name": "SQLite project advisory", "url": "https://sqlite.org/bugs/info/f08a04413a70909eda7e9cfb98dbb1fa1142ff8cc9d2420f38f5bb5fcf3a78ab"},
@@ -299,7 +275,6 @@ def enrich_sbom(sbom: dict[str, Any], inventory: dict[str, Any]) -> dict[str, An
                 f"bun:sqlite SQLite {library['version']} has FTS5={str(library['fts5_present']).lower()} "
                 f"({finding['status']}, disposition {finding['disposition']}); runtime qualification "
                 f"is {inventory['qualification_status']} under Bun {runtime['version']} from {runtime['origin']}."
-                + accepted_detail
             ),
         },
     }

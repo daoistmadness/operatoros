@@ -170,9 +170,9 @@ test("Bun validation and launcher preparation use mise's selected executable", (
     stdout: "pipe", stderr: "pipe", timeout: 10_000,
   });
   expect(result.exitCode).toBe(0);
-  expect(result.stdout.toString()).toContain("reported=1.4.4");
+  expect(result.stdout.toString()).toContain("reported=1.4.5");
   expect(result.stdout.toString()).toContain(`selected=${realpathSync(join(selectedBin, "bun"))}`);
-  expect(result.stdout.toString()).toContain("version=1.4.4");
+  expect(result.stdout.toString()).toContain("version=1.4.5");
 });
 test("native Bun validation rejects a version other than the mise pin", () => {
   const root = mkdtempSync(join(tmpdir(), "operatoros-bun-version-test-")); roots.push(root);
@@ -185,7 +185,7 @@ test("native Bun validation rejects a version other than the mise pin", () => {
     cwd: repo, env: { ...env, PATH: `${bin}:${env.PATH}` }, stdout: "pipe", stderr: "pipe", timeout: 10_000,
   });
   expect(result.exitCode).toBe(0);
-  expect(result.stdout.toString()).toContain("SAFE_WRONG_VERSION|Bun version must be exactly 1.4.4; detected 1.4.3");
+  expect(result.stdout.toString()).toContain("SAFE_WRONG_VERSION|Bun version must be exactly 1.4.5; detected 1.4.3");
 });
 test("only exact backend entrypoint or Vite identity matches a service", () => {
   const f = fixture(), info: ProcessInfo = { pid: 1, ppid: 0, pgid: 1, start_ticks: "1", cwd: join(f.repo, "apps/api"), argv: ["bun", "src/server.ts"], uid: process.getuid!(), state: "S" };

@@ -62,38 +62,37 @@ def fixture():
     api_archive = archive(blobs)
     image = m.image_metadata(api_archive, SHA)
     bun_hash = 'c' * 64
-    source_id = m.ACCEPTED_SQLITE_SOURCE_ID
+    source_id = 'candidate-sqlite-source-id'
     bun_ref = 'urn:operatoros:runtime:bun:' + bun_hash
     sqlite_ref = 'urn:operatoros:runtime:sqlite:' + 'd' * 64
-    base_image = m.ACCEPTED_BUN_ORIGIN
+    base_image = m.PINNED_BUN_ORIGIN
     sbom = {
         'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'components': [{
-            'type': 'application', 'name': 'Bun runtime', 'version': '1.4.4',
+            'type': 'application', 'name': 'Bun runtime', 'version': '1.4.5',
             'bom-ref': bun_ref, 'hashes': [{'alg': 'SHA-256', 'content': bun_hash}],
             'properties': [
                 {'name': 'operatoros:runtime:origin', 'value': base_image},
                 {'name': 'operatoros:runtime:qualification', 'value': 'PASS'},
                 {'name': 'operatoros:artifact:oci-manifest-digest', 'value': image['manifest_digest']},
             ],
-            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.53.4', 'bom-ref': sqlite_ref, 'properties': [
+            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
                 {'name': 'operatoros:component:distribution', 'value': 'statically-linked-runtime'},
                 {'name': 'operatoros:sqlite:provider', 'value': 'bun:sqlite'},
                 {'name': 'operatoros:sqlite:source-id', 'value': source_id},
                 {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
                 {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
-                {'name': 'operatoros:security:advisory-status', 'value': 'OPEN'},
-                {'name': 'operatoros:security:advisory-disposition', 'value': 'ACCEPTED'},
+                {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
+                {'name': 'operatoros:security:advisory-disposition', 'value': 'NOT_REQUIRED'},
             ]}],
         }],
         'dependencies': [{'ref': bun_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}],
         'vulnerabilities': [{
             'id': 'CVE-2026-119373',
             'analysis': {
-                'state': 'in_triage',
-                'detail': 'bun:sqlite SQLite 3.53.4 has FTS5=true (OPEN, disposition ACCEPTED); '
-                          'runtime qualification is PASS under Bun 1.4.4 from ' + base_image
-                          + '. Accepted source ID ' + source_id,
+                'state': 'resolved',
+                'detail': 'bun:sqlite SQLite 3.54.1 has FTS5=true (RESOLVED_BY_FIXED_VERSION, disposition NOT_REQUIRED); '
+                          'runtime qualification is PASS under Bun 1.4.5 from ' + base_image,
             },
             'affects': [{'ref': sqlite_ref}],
         }],
@@ -111,14 +110,12 @@ def fixture():
         'schema_version': 3, 'qualification_status': 'PASS',
         'source': {'repository': 'daoistmadness/operatoros', 'commit': SHA, 'containerfile': 'deploy/podman/Containerfile.api', 'containerfile_sha256': 'e' * 64, 'pinned_base_images': [base_image]},
         'artifact': {'oci_manifest_digest': image['manifest_digest'], 'image_config_digest': image['image_id'], 'oci_archive_sha256': m.digest(api_archive)},
-        'runtime': {'name': 'Bun', 'version': '1.4.4', 'binary_sha256': bun_hash, 'origin': base_image, 'sqlite_driver': 'bun:sqlite', 'sqlite_distribution': 'statically-linked-runtime', 'sqlite_libraries': [
-            {'provider': 'bun:sqlite', 'distribution': 'statically-linked-runtime', 'version': '3.53.4', 'source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'OPEN', 'cve_disposition': 'ACCEPTED'},
+        'runtime': {'name': 'Bun', 'version': '1.4.5', 'binary_sha256': bun_hash, 'origin': base_image, 'sqlite_driver': 'bun:sqlite', 'sqlite_distribution': 'statically-linked-runtime', 'sqlite_libraries': [
+            {'provider': 'bun:sqlite', 'distribution': 'statically-linked-runtime', 'version': '3.54.1', 'source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION', 'cve_disposition': 'NOT_REQUIRED'},
         ]},
-        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite statically linked in Bun', 'status': 'OPEN', 'disposition': 'ACCEPTED', 'components': [
-            {'provider': 'bun:sqlite', 'version': '3.53.4', 'status': 'OPEN'},
-        ], 'accepted_exception': {
-            'runtime': '1.4.4', 'sqlite': '3.53.4', 'sqlite_source_id': source_id, 'origin': base_image,
-        }, 'qualification_floor': 'SQLite 3.54.0 or later, or the accepted pinned Bun 1.4.4 backport scope', 'runtime_gate_reason': None},
+        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite statically linked in Bun', 'status': 'RESOLVED_BY_FIXED_VERSION', 'disposition': 'NOT_REQUIRED', 'components': [
+            {'provider': 'bun:sqlite', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+        ], 'qualification_floor': 'SQLite 3.54.0 or later', 'runtime_gate_reason': None},
     }
     files = {
         'operatoros-api.oci.tar': api_archive,
@@ -153,18 +150,25 @@ class BundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'omits the Bun SQLite runtime identity'):
             m.validate(files, SHA)
 
-    def test_accepted_sqlite_finding_remains_open_and_scoped_to_pinned_bun(self):
+    def test_fixed_sqlite_finding_is_resolved_in_inventory_and_bundle(self):
         files = fixture()
         runtime = json.loads(files['embedded-runtime.json'])
-        self.assertEqual(runtime['finding']['status'], 'OPEN')
-        self.assertEqual(runtime['finding']['disposition'], 'ACCEPTED')
-        self.assertEqual(runtime['finding']['accepted_exception'], {
-            'runtime': '1.4.4',
-            'sqlite': '3.53.4',
-            'sqlite_source_id': m.ACCEPTED_SQLITE_SOURCE_ID,
-            'origin': m.ACCEPTED_BUN_ORIGIN,
-        })
+        self.assertEqual(runtime['finding']['status'], 'RESOLVED_BY_FIXED_VERSION')
+        self.assertEqual(runtime['finding']['disposition'], 'NOT_REQUIRED')
+        self.assertNotIn('accepted_exception', runtime['finding'])
         self.assertEqual(m.validate(files, SHA)['source_commit'], SHA)
+
+    def test_release_requires_the_pinned_sqlite_version(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['runtime']['sqlite_libraries'][0]['version'] = '3.54.0'
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'pinned SQLite 3.54.1'):
+            m.validate(files, SHA)
 
     def test_release_rejects_separate_trivy_sqlite_affected_reference(self):
         files = fixture()
@@ -187,7 +191,7 @@ class BundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'security disposition'):
             m.validate(files, SHA)
 
-    def test_release_rejects_multiple_trivy_sqlite_references_for_the_accepted_finding(self):
+    def test_release_rejects_multiple_trivy_sqlite_references_for_the_fixed_finding(self):
         files = fixture()
         sbom = json.loads(files['sbom.cdx.json'])
         refs = ('pkg:apk/alpine/sqlite@3.53.4-r0', 'pkg:generic/sqlite@3.53.4')
@@ -209,7 +213,7 @@ class BundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'security disposition'):
             m.validate(files, SHA)
 
-    def test_release_rejects_accepted_finding_with_a_changed_source_or_origin(self):
+    def test_release_rejects_runtime_evidence_with_a_changed_source_or_origin(self):
         for field, value in (
             ('source_id', 'different-source-id'),
             ('origin', 'docker.io/oven/bun:1.4.4-alpine@sha256:' + 'f' * 64),
@@ -229,10 +233,10 @@ class BundleTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     m.validate(files, SHA)
 
-    def test_release_never_classifies_accepted_sqlite_finding_as_resolved(self):
+    def test_release_rejects_open_sqlite_finding_for_the_fixed_runtime(self):
         files = fixture()
         runtime = json.loads(files['embedded-runtime.json'])
-        runtime['finding']['status'] = 'RESOLVED_BY_FIXED_VERSION'
+        runtime['finding']['status'] = 'OPEN'
         files['embedded-runtime.json'] = json.dumps(runtime).encode()
         manifest = json.loads(files['manifest.json'])
         manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])

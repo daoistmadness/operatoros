@@ -66,14 +66,12 @@ production NO-GO boundary in place.
 - Keep the existing single-server design: Elysia API, browser frontend, and
   file-backed SQLite. Do not add a database service or broaden the runtime
   migration without evidence and review.
-- The owner selected Bun 1.4.4 as the application runtime and accepted its
-  known SQLite 3.53.4 FTS5 finding on 2026-11-16 for the exact SQLite source ID
-  `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`
-  from `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The finding remains
-  `OPEN` with disposition `ACCEPTED` for that identity only. Keep runtime
-  identity in release evidence. Any other affected Bun/SQLite identity remains
-  blocked. A fixed SQLite version follows the normal runtime probes. This
-  decision does not approve deployment.
+- The current toolchain change pins Bun 1.4.5 across mise, package metadata, CI,
+  development containers, and the proposed API image. Bun's release notes
+  report SQLite 3.54.1, above the affected range for CVE-2026-119373. The
+  2026-11-16 acceptance remains limited to the prior Bun 1.4.4 / SQLite 3.53.4
+  image identity. The new exact-source image still needs runtime, SBOM, scan,
+  provenance, and release checks. This decision does not approve deployment.
 - The current working source returns the production API image and application
   execution to Bun. No exact-source release candidate or signed artifact for
   this source is recorded yet. After review and merge, run the full release

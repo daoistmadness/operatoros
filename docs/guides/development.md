@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-19
 ---
 
 # Development
@@ -11,7 +11,7 @@ supervision to `./start-dev.sh`. Verified commands are maintained in
 [`MEMORY.md`](../../MEMORY.md).
 
 Install the repository-pinned tools with `mise install`; the active Bun runtime
-is 1.4.4. Workspace and launcher CLI typechecks use TypeScript 7.0.2. The
+is 1.4.5. Workspace and launcher CLI typechecks use TypeScript 7.0.2. The
 TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
 consumers. See the [toolchain decision](../decisions/bun-toolchain.md).
 

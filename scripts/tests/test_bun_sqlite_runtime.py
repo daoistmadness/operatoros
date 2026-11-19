@@ -21,7 +21,7 @@ class RuntimeAssessmentTests(unittest.TestCase):
         "bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc"
     )
 
-    def runtime(self, *, bun="1.4.4", sqlite="3.53.4", source_id=SOURCE_ID, fts5=True):
+    def runtime(self, *, bun="1.4.5", sqlite="3.54.1", source_id="candidate-source-id", fts5=True):
         return {
             "bun": bun,
             "bunBinarySha256": self.BINARY_SHA256,
@@ -32,21 +32,15 @@ class RuntimeAssessmentTests(unittest.TestCase):
             "fts5ProbeError": None if fts5 else "no such module: fts5",
         }
 
-    def test_accepts_only_the_pinned_bun_sqlite_finding_as_open_and_accepted(self):
-        report = gate.assess_runtime(self.runtime())
-        self.assertEqual(report["findingStatus"], "OPEN")
-        self.assertEqual(report["findingDisposition"], "ACCEPTED")
-        for runtime in (
-            self.runtime(bun="1.4.5"),
-            self.runtime(source_id="different-source-id"),
-            self.runtime(sqlite="3.53.3"),
-        ):
-            with self.subTest(runtime=runtime), self.assertRaisesRegex(
-                gate.RuntimeGateError, "3.54.0 or later"
-            ):
-                gate.assess_runtime(runtime)
+    def test_requires_the_pinned_bun_and_fixed_sqlite(self):
+        with self.assertRaisesRegex(gate.RuntimeGateError, "3.54.0 or later"):
+            gate.assess_runtime(self.runtime(sqlite="3.53.4"))
+        with self.assertRaisesRegex(gate.RuntimeGateError, "SQLite runtime must be exactly 3.54.1"):
+            gate.assess_runtime(self.runtime(sqlite="3.54.0"))
+        with self.assertRaisesRegex(gate.RuntimeGateError, "Bun runtime must be exactly 1.4.5"):
+            gate.assess_runtime(self.runtime(bun="1.4.4"))
 
-    def test_main_reports_the_accepted_finding_without_marking_it_resolved(self):
+    def test_main_reports_fixed_sqlite_as_resolved(self):
         output = io.StringIO()
         with patch.object(gate, "inspect_image", return_value={
             **gate.assess_runtime(self.runtime()),
@@ -55,9 +49,9 @@ class RuntimeAssessmentTests(unittest.TestCase):
             self.assertEqual(gate.main(["local-image-id"]), 0)
         report = json.loads(output.getvalue())
         self.assertEqual(report["status"], "PASS")
-        self.assertEqual(report["findingStatus"], "OPEN")
-        self.assertEqual(report["findingDisposition"], "ACCEPTED")
-        self.assertEqual(report["sqliteSourceId"], self.SOURCE_ID)
+        self.assertEqual(report["findingStatus"], "RESOLVED_BY_FIXED_VERSION")
+        self.assertEqual(report["findingDisposition"], "NOT_REQUIRED")
+        self.assertEqual(report["sqlite"], "3.54.1")
 
     def test_blocked_report_retains_exact_embedded_runtime_identity(self):
         runtime = self.runtime(source_id="embedded-source-id")
@@ -96,12 +90,9 @@ class RuntimeAssessmentTests(unittest.TestCase):
         self.assertEqual(report["findingStatus"], "RESOLVED_BY_FIXED_VERSION")
         self.assertEqual(report["findingDisposition"], "NOT_REQUIRED")
 
-    def test_accepts_older_sqlite_when_fts5_is_absent(self):
-        report = gate.assess_runtime(
-            self.runtime(bun="1.4.5", source_id="candidate-source-id", fts5=False)
-        )
-        self.assertFalse(report["fts5"])
-        self.assertEqual(report["findingStatus"], "NOT_AFFECTED_FTS5_ABSENT")
+    def test_rejects_non_pinned_sqlite_even_when_fts5_is_absent(self):
+        with self.assertRaisesRegex(gate.RuntimeGateError, "SQLite runtime must be exactly 3.54.1"):
+            gate.assess_runtime(self.runtime(sqlite="3.53.4", fts5=False))
 
     def test_fails_closed_when_fts5_probe_fails_unexpectedly(self):
         runtime = self.runtime(bun="1.4.5", source_id="candidate-source-id", fts5=False)
@@ -119,9 +110,9 @@ class RuntimeAssessmentTests(unittest.TestCase):
         for runtime in (
             None,
             {},
-            {"bun": "1.4.4", "bunBinarySha256": self.BINARY_SHA256, "sqlite": "not-a-version", "sqliteSourceId": "candidate"},
-            {"bun": "1.4.4", "bunBinarySha256": self.BINARY_SHA256, "sqlite": "3.54.1", "sqliteSourceId": ""},
-            {"bun": "1.4.4", "bunBinarySha256": "unverified", "sqlite": "3.54.1", "sqliteSourceId": "candidate"},
+            {"bun": "1.4.5", "bunBinarySha256": self.BINARY_SHA256, "sqlite": "not-a-version", "sqliteSourceId": "candidate"},
+            {"bun": "1.4.5", "bunBinarySha256": self.BINARY_SHA256, "sqlite": "3.54.1", "sqliteSourceId": ""},
+            {"bun": "1.4.5", "bunBinarySha256": "unverified", "sqlite": "3.54.1", "sqliteSourceId": "candidate"},
         ):
             with self.subTest(runtime=runtime), self.assertRaises(gate.RuntimeGateError):
                 gate.assess_runtime(runtime)
@@ -129,7 +120,7 @@ class RuntimeAssessmentTests(unittest.TestCase):
     def test_probe_uses_local_image_without_network_or_writable_root(self):
         image_id = "sha256:" + "e" * 64
         runtime = {
-            "bun": "candidate",
+            "bun": "1.4.5",
             "bunBinarySha256": self.BINARY_SHA256,
             "sqlite": "3.54.1",
             "sqliteSourceId": "candidate-source-id",

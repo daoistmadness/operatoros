@@ -344,16 +344,16 @@ passes runtime qualification, SBOM and scan checks, provenance verification,
 and the isolated consumer. D1 still requires separate execution
 authorization.
 
-The API image runs the pinned Bun 1.4.4 runtime and uses the source entrypoint
-`apps/api/src/server.ts`. Its embedded SQLite is 3.53.4 with FTS5. The owner
-accepted this known finding only for SQLite source ID
-`2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`
-from `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The finding remains open and
-must appear in runtime and SBOM evidence with the accepted disposition. The
-image uses production dependencies, runs as UID/GID `10000:10000`, and excludes
-web files, test data, databases, environment files, private keys, and Git
-metadata. See the [current integration audit](../audits/host-integration-2026-11-06.md)
-for the earlier host review.
+The current source pins Bun 1.4.5 from
+`docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31`
+and uses the source entrypoint `apps/api/src/server.ts`. Bun's release notes
+report embedded SQLite 3.54.1 with FTS5. Exact-image runtime, SBOM, scan,
+provenance, and consumer evidence is still required before release. The earlier
+accepted finding applied only to the 1.4.4 image and does not cover this
+candidate. The image uses production dependencies, runs as UID/GID
+`10000:10000`, and excludes web files, test data, databases, environment files,
+private keys, and Git metadata. See the [current integration
+audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
 
 Record these immutable release identifiers:
 

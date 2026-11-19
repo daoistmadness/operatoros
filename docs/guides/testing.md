@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-02
+last_reviewed: 2026-11-19
 ---
 
 # Test strategy
@@ -22,7 +22,7 @@ replace the classifier or the full PR/release gate. Use
 `mise run check:affected -- --dry=json` to inspect selection without running.
 
 Workspace and launcher CLI typechecks use the root-pinned TypeScript 7.0.2
-compiler. CI also runs Bun 1.4.4's `bun check` across its six workspaces. The
+compiler. CI also runs Bun 1.4.5's `bun check` across its six workspaces. The
 TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
 consumers; it is not the CLI typecheck compiler.
 

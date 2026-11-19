@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-28
+last_reviewed: 2026-11-19
 ---
 
 # Security model
@@ -70,7 +70,7 @@ either secret. See [the rotation runbook](../runbooks/secret-rotation.md).
 ## Dependency audit
 
 For a local audit, run `mise exec -- bun run security:audit` so it uses the
-repository-pinned Bun 1.4.4. The command uses Bun audit and fails on any
+repository-pinned Bun 1.4.5. The command uses Bun audit and fails on any
 advisory outside the two reviewed exceptions in
 [dependency-audit-exceptions.md](dependency-audit-exceptions.md). CI runs the
 same command on pull requests, main pushes, and weekly schedule. The audit job
