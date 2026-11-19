@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d28f5fcc0155498684c11f76206e2bd2a000cc5dc21709f02824b72c248b252e",
+      "fingerprint": "0496b24b25e6ce8130ce2841f17f2220be1f275efbee397fd07ba641208a2c8c",
       "snapshot": {
-        "CHANGELOG.md": "8a44852bb9f4b54aaeea19fbb0c7303149efa9d6f07de1e7c7bcca0c8631c00f"
+        "CHANGELOG.md": "58412db652ed8acbad8cf7d3491e2812dacb32789be3d6d980a6860968ade8c9"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "c5ee417d0c56d3ddce3fcf1db0802883ac5075fc",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "The changelog entry records the Bun 1.4.5 release-history change and PR number; it introduces no skill or planning guidance.",
       "evidence": [
-        "Reviewed CHANGELOG.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "CHANGELOG.md contains one Unreleased bullet for PR #396; the existing Bun entry was consolidated and numbered after GitHub assigned the PR."
       ]
     },
     "source:COMMANDS.md": {
