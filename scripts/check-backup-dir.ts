@@ -14,7 +14,7 @@ import { join, resolve } from "node:path";
 
 const ARTIFACT = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3$/;
 const METADATA = /^backup_\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z(?:_\d+)?\.sqlite3\.meta\.json$/;
-const AUDIT = "backup_operations_audit.jsonl";
+const AUDIT_FILES = new Set(["backup_operations_audit.jsonl", "backup_restore_audit.jsonl"]);
 const METADATA_SUFFIX = ".meta.json";
 
 /** Returns one line per problem; an empty array means the directory is clean. */
@@ -22,7 +22,7 @@ export function inspectBackupDirectory(names: string[], isRegularFile: (name: st
   const present = new Set(names);
   const problems: string[] = [];
   for (const name of names) {
-    if (name === AUDIT) continue;
+    if (AUDIT_FILES.has(name)) continue;
     const isArtifact = ARTIFACT.test(name);
     const isMetadata = METADATA.test(name);
     if (!isArtifact && !isMetadata) {

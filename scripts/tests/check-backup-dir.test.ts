@@ -7,8 +7,8 @@ const audit = "backup_operations_audit.jsonl";
 const regular = () => true;
 
 describe("backup directory containment", () => {
-  it("accepts complete artifact/metadata pairs and the audit log", () => {
-    expect(inspectBackupDirectory([artifact, metadata, audit], regular)).toEqual([]);
+  it("accepts complete artifact/metadata pairs and audit logs", () => {
+    expect(inspectBackupDirectory([artifact, metadata, audit, "backup_restore_audit.jsonl"], regular)).toEqual([]);
   });
 
   it("reports a plaintext database or any other unexpected entry", () => {
