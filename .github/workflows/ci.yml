@@ -526,22 +526,17 @@ jobs:
           libraries = inventory.get("runtime", {}).get("sqlite_libraries")
           if report.get("status") != "PASS" or inventory.get("qualification_status") != "PASS":
               raise SystemExit("candidate Bun SQLite runtime did not pass qualification")
-          if report.get("bun") != "1.4.4" or not isinstance(libraries, list) or len(libraries) != 1:
+          if report.get("bun") != "1.4.5" or not isinstance(libraries, list) or len(libraries) != 1:
               raise SystemExit("candidate Bun runtime identity is incomplete")
           library = libraries[0]
-          if library.get("provider") != "bun:sqlite" or library.get("version") != report.get("sqlite"):
-              raise SystemExit("candidate Bun SQLite component does not match the runtime probe")
-          if finding.get("status") == "OPEN":
-              expected = {
-                  "runtime": "1.4.4",
-                  "sqlite": "3.53.4",
-                  "sqlite_source_id": "2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc",
-                  "origin": "docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690",
-              }
-              if finding.get("disposition") != "ACCEPTED" or finding.get("accepted_exception") != expected:
-                  raise SystemExit("candidate open SQLite finding is outside the accepted Bun scope")
-          elif finding.get("disposition") != "NOT_REQUIRED":
-              raise SystemExit("candidate SQLite finding has an unexpected disposition")
+          if library.get("provider") != "bun:sqlite" or library.get("version") != "3.54.1" or report.get("sqlite") != "3.54.1":
+              raise SystemExit("candidate Bun SQLite component does not match the pinned fixed runtime")
+          if (
+              finding.get("status") != "RESOLVED_BY_FIXED_VERSION"
+              or finding.get("disposition") != "NOT_REQUIRED"
+              or "accepted_exception" in finding
+          ):
+              raise SystemExit("candidate SQLite finding is not resolved by the pinned runtime")
           outcome = "RUNTIME_GATE_PASS"
           with open(sys.argv[3], "a", encoding="utf-8") as summary:
               summary.write("## Bun and SQLite runtime qualification\n\n")

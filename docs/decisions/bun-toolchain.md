@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-19
 ---
 
 # ADR: Bun-native frontend and tooling environment
@@ -15,7 +15,7 @@ and fast, unified package management with frozen lockfiles (`bun.lock`).
 
 ## Decision
 
-OperatorOS adopts Bun 1.4.4 as its JavaScript runtime, package manager, and
+OperatorOS adopts Bun 1.4.5 as its JavaScript runtime, package manager, and
 scripting execution environment in the supported Linux development workflow.
 - `bun.lock` at the repository root is the single dependency lockfile authority.
 - Vite and frontend CLI tools run under Bun (`bun run --bun ...`).
@@ -33,6 +33,16 @@ the pinned Node.js compatibility runtime. Development uses the repository's
 managed launcher and native Linux Bun; optional HTTPS development follows the
 Tailscale guide. WSL is not a supported onboarding workflow. Rollback follows
 the protected Git workflow.
+
+## Bun 1.4.5 security update
+
+On 2026-11-19, OperatorOS pinned Bun 1.4.5 across mise, package metadata, CI,
+development containers, and the proposed API image. Bun's [1.4.5 release
+notes](https://bun.com/blog/release-notes/bun-v1.4.5) identify this as a
+security release and report bundled SQLite 3.54.1, above the 3.54.0 fix floor
+for CVE-2026-119373. The release image remains subject to the existing exact
+image probe, SBOM, scan, provenance, and consumer checks; the earlier
+1.4.4/SQLite 3.53.4 acceptance remains scoped to that prior image only.
 
 ## Bun 1.4.4 evaluation
 
@@ -108,7 +118,7 @@ References: [TypeScript 7.0 release](https://devblogs.microsoft.com/typescript/a
 [typescript-eslint version support](https://typescript-eslint.io/users/dependency-versions/),
 [VS Code TypeScript 7 extension](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview).
 
-References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
+References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [1.4.5](https://bun.com/blog/release-notes/bun-v1.4.5), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
 
 ## HK 2.8.1 compatibility upgrade
 

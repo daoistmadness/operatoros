@@ -36,7 +36,7 @@ the network-sensitive parts; the sections below isolate each.
 
 ## Prerequisites
 
-- Native Linux Bun 1.4.4, preinstalled (`bun --version` prints `1.4.4`) or
+- Native Linux Bun 1.4.5, preinstalled (`bun --version` prints `1.4.5`) or
   provided by a pre-populated mise tool cache. Never a Windows/WSL-interop
   binary.
 - The checkout with `bun.lock` and `mise.lock` (the lockfile authorities).

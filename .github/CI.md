@@ -12,16 +12,18 @@ A manual dispatch on a non-main ref builds that exact source commit as an
 ephemeral OCI image, generates Trivy SBOM/scan reports, and probes SQLite in
 Bun's embedded `bun:sqlite` runtime. This path retains image metadata and JSON
 reports for seven days. It does not upload the OCI image, sign or attest it, or
-deploy it. The owner accepted the SQLite 3.53.4 finding only for Bun 1.4.4,
+deploy it. The previous SQLite 3.53.4 acceptance applied only to Bun 1.4.4,
 source ID `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
 and `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The workflow
-records that finding as `OPEN` with disposition `ACCEPTED`. Any other affected
-SQLite identity remains blocked. A runtime-gate PASS does not make the unsigned
-candidate a release artifact.
+records that historical finding as `OPEN` with disposition `ACCEPTED`. Current
+source pins Bun 1.4.5, whose release updates SQLite to 3.54.1; its candidate
+must pass the normal runtime probe and scan with the finding resolved. Any
+affected SQLite identity remains blocked. A runtime-gate PASS does not make
+the unsigned candidate a release artifact.
 
 The `preflight` job validates Markdown links and organization, validates agent skills, runs the Intent maintainer check against the event base, and checks the pull-request changelog. It fetches the pull-request, merge-group, or push base before the maintainer check. A first push with an all-zero `before` SHA falls back to the event SHA. A failed preflight skips `api`, E2E scope selection, and `E2E full regression`; `E2E regression result` still runs and fails when those required results are missing. The main ruleset requires `preflight` so a failed gate cannot pass as a successful skipped check.
 
-The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.4's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates docs structure and the index, tests documentation checker fixtures, checks current developer commands, and verifies every package file in the agent-skills tarball. It installs the tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter after preflight passes: every browser scenario, API smoke check, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
+The `api` job's `bun run turbo:check` runs all package tests, including security, auth, backup/restore, and SQLite migration tests, plus workspace and launcher typechecks with the TypeScript 7.0.2 CLI and the production build using the pinned Vite 8.3.4 and `@vitejs/plugin-react` 6.1.2 from `apps/web/package.json` and `bun.lock`. A separate blocking step runs Bun 1.4.5's `bun check` across six workspaces. The `frontend` job uses the same frozen lockfile for its dependency and boundary checks, validates docs structure and the index, tests documentation checker fixtures, checks current developer commands, and verifies every package file in the agent-skills tarball. It installs the tarball into a temporary consumer with lifecycle scripts disabled and verifies allowlisted discovery and task-scoped loading. The `E2E full regression` job runs `make e2e-smoke` with no scenario filter after preflight passes: every browser scenario, API smoke check, and disposable reset/enrollment verification still run. It no longer repeats the API unit suite, web unit suite, or production build after the browser suite. `E2E regression result` rejects skipped, cancelled, failed, or missing results.
 
 The previous merged-main E2E run `39458747765` measured `6m22s` inside the regression command, including `4m06s` for the complete smoke suite. The remaining `2m16s` repeated tests and a build already covered by the required `api` job. PR #252 measured `4m02s` for the smoke command after consolidation. See [CI performance](../docs/reference/ci-performance.md) for measured job durations and queue-time limits.
 
@@ -29,7 +31,7 @@ All Linux jobs use GitHub-hosted `ubuntu-26.04` x64. Pull-request CI checks the 
 
 ## Toolchain and dependency setup
 
-[`actions/setup-bun`](actions/setup-bun/action.yml) downloads the pinned mise 2026.10.19 release asset with the workflow's read-only `contents` token and verifies both the archive and extracted binary checksums. It then installs the tools in [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.4, hk 2.8.1, and Turbo 2.11.4, and runs `bun install --frozen-lockfile` from the repository root. The action works in jobs with a different default working directory.
+[`actions/setup-bun`](actions/setup-bun/action.yml) downloads the pinned mise 2026.10.19 release asset with the workflow's read-only `contents` token and verifies both the archive and extracted binary checksums. It then installs the tools in [`mise.toml`](../mise.toml) and [`mise.lock`](../mise.lock), verifies Bun 1.4.5, hk 2.8.1, and Turbo 2.11.4, and runs `bun install --frozen-lockfile` from the repository root. The action works in jobs with a different default working directory.
 
 External actions use verified full commit SHAs. The workflow pins `actions/checkout` v7.0.1, `jdx/mise-action` v5.1.1, `actions/cache` v6.1.0, and `actions/upload-artifact` v6.0.0. Dependabot checks GitHub Actions references weekly.
 
@@ -75,8 +77,8 @@ Use the [contributor PR procedure](../CONTRIBUTING.md) for merge and recovery. A
 The `Manual release bundle` job runs only on a main-branch manual dispatch after
 full release validation and E2E acceptance. It builds the Bun API OCI image and
 SPA from the event SHA, records the embedded Bun/SQLite finding disposition,
-checks the exact accepted runtime identity, attests the bundle, tests an
-isolated consumer, and retains it for 90 days. No
+requires the pinned Bun 1.4.5 image and SQLite 3.54.1 with the finding resolved,
+attests the bundle, tests an isolated consumer, and retains it for 90 days. No
 scheduled, push, or PR event publishes a bundle. See the
 [release bundle runbook](../docs/runbooks/release-bundles.md) for verification,
 security limitations, helper adoption, and CI rollback.
@@ -84,10 +86,10 @@ security limitations, helper adoption, and CI rollback.
 A manual dispatch on a non-main branch runs full validation and builds an
 ephemeral Bun API candidate for Trivy scanning and embedded SQLite
 qualification. The candidate is not uploaded, signed, or published; sanitized
-reports are retained for seven days. The pinned owner-accepted Bun identity may
-pass with its finding recorded as accepted. A different affected SQLite
-identity must produce a verifiable rejection, so a successful workflow can
-still report the candidate as blocked.
+reports are retained for seven days. It must use the pinned Bun 1.4.5 image and
+SQLite 3.54.1, with the finding resolved by the fixed version. Affected or
+mismatched runtime identities are rejected, so a successful workflow can still
+report the candidate as blocked.
 
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.

@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS dependencies
+FROM --platform=linux/amd64 docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31 AS dependencies
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY openapi ./openapi
 
 RUN bun install --frozen-lockfile --production --filter '@operatoros/api'
 
-FROM --platform=linux/amd64 docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690 AS runtime
+FROM --platform=linux/amd64 docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31 AS runtime
 
 RUN apk add --no-cache flock=2.42.3-r1 lsof=4.99.6-r0 zlib=1.4-r0
 

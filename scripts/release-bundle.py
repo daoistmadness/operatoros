@@ -17,10 +17,9 @@ WORKFLOW = REPO + '/.github/workflows/ci.yml'
 SCANNER = 'ghcr.io/aquasecurity/trivy@sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c'
 FILES = {'operatoros-api.oci.tar', 'operatoros-web-client.tar.gz', 'sbom.cdx.json', 'scan.json', 'embedded-runtime.json', 'manifest.json', 'SHA256SUMS'}
 CVE = 'CVE-2026-119373'
-ACCEPTED_BUN_VERSION = '1.4.4'
-ACCEPTED_SQLITE_VERSION = '3.53.4'
-ACCEPTED_SQLITE_SOURCE_ID = '2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc'
-ACCEPTED_BUN_ORIGIN = 'docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690'
+PINNED_BUN_VERSION = '1.4.5'
+PINNED_SQLITE_VERSION = '3.54.1'
+PINNED_BUN_ORIGIN = 'docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31'
 
 
 def run(*args, **kwargs):
@@ -190,6 +189,8 @@ def validate(files, sha):
         raise ValueError('Bun/SQLite runtime identity is incomplete')
     if runtime_identity.get('name') != 'Bun' or runtime_identity.get('sqlite_driver') != 'bun:sqlite' or runtime_identity.get('sqlite_distribution') != 'statically-linked-runtime':
         raise ValueError('release runtime does not use the qualified Bun SQLite runtime')
+    if bun_version != PINNED_BUN_VERSION:
+        raise ValueError('release runtime does not use the pinned Bun 1.4.5 version')
     if not isinstance(runtime_identity.get('origin'), str) or not re.search(r'@sha256:[0-9a-f]{64}$', runtime_identity['origin']):
         raise ValueError('Bun runtime origin is not digest-pinned')
     pinned_base_images = runtime.get('source', {}).get('pinned_base_images')
@@ -204,6 +205,8 @@ def validate(files, sha):
     bun_tag = re.search(r'/oven/bun:(\d+\.\d+\.\d+)(?:[-@])', runtime_identity['origin'])
     if bun_tag and bun_tag.group(1) != bun_version:
         raise ValueError('Bun runtime version does not match its pinned image origin')
+    if runtime_identity['origin'] != PINNED_BUN_ORIGIN:
+        raise ValueError('release runtime does not use the pinned Bun 1.4.5 image')
     sqlite_libraries = runtime_identity.get('sqlite_libraries')
     if not isinstance(sqlite_libraries, list) or len(sqlite_libraries) != 1 or not isinstance(sqlite_libraries[0], dict):
         raise ValueError('release bundle omits the Bun SQLite runtime identity')
@@ -213,6 +216,8 @@ def validate(files, sha):
     version = library.get('version', '')
     if not re.fullmatch(r'\d+\.\d+\.\d+', version) or not isinstance(library.get('source_id'), str) or not library['source_id']:
         raise ValueError('SQLite identity is incomplete for bun:sqlite')
+    if version != PINNED_SQLITE_VERSION:
+        raise ValueError('release runtime does not use the pinned SQLite 3.54.1 version')
     if library.get('distribution') != 'statically-linked-runtime':
         raise ValueError('SQLite distribution is invalid for bun:sqlite')
     if not all(isinstance(library.get(name), bool) for name in ('fts5_present', 'fts5_compile_option', 'fts5_feature_probe')):
@@ -225,38 +230,17 @@ def validate(files, sha):
     )
     if library.get('cve_status') != expected_status:
         raise ValueError('SQLite CVE status is invalid for bun:sqlite')
-    accepted = (
-        expected_status == 'OPEN'
-        and bun_version == ACCEPTED_BUN_VERSION
-        and version == ACCEPTED_SQLITE_VERSION
-        and library['source_id'] == ACCEPTED_SQLITE_SOURCE_ID
-        and library['fts5_present'] is True
-        and runtime_identity['origin'] == ACCEPTED_BUN_ORIGIN
-        and runtime_identity['origin'] in pinned_base_images
-        and library.get('cve_disposition') == 'ACCEPTED'
-    )
-    expected_disposition = 'ACCEPTED' if accepted else ('UNACCEPTED' if expected_status == 'OPEN' else 'NOT_REQUIRED')
+    expected_disposition = 'UNACCEPTED' if expected_status == 'OPEN' else 'NOT_REQUIRED'
     if library.get('cve_disposition') != expected_disposition:
         raise ValueError('SQLite CVE disposition is invalid for bun:sqlite')
-    if expected_status == 'OPEN' and not accepted:
-        raise ValueError('release bundle contains an unaccepted SQLite finding')
+    if expected_status == 'OPEN':
+        raise ValueError('release bundle contains an unresolved SQLite finding')
     finding = runtime.get('finding', {})
     expected_components = [{'provider': 'bun:sqlite', 'version': version, 'status': expected_status}]
     if finding.get('components') != expected_components or finding.get('status') != expected_status:
         raise ValueError('runtime finding does not match the qualified SQLite component')
     if finding.get('disposition') != expected_disposition:
         raise ValueError('runtime finding disposition does not match the SQLite evidence')
-    expected_exception = {
-        'runtime': ACCEPTED_BUN_VERSION,
-        'sqlite': ACCEPTED_SQLITE_VERSION,
-        'sqlite_source_id': ACCEPTED_SQLITE_SOURCE_ID,
-        'origin': ACCEPTED_BUN_ORIGIN,
-    }
-    if accepted:
-        if finding.get('accepted_exception') != expected_exception:
-            raise ValueError('accepted SQLite finding is missing its exact Bun runtime scope')
-    elif 'accepted_exception' in finding:
-        raise ValueError('release bundle contains an out-of-scope accepted SQLite exception')
     sbom = json.loads(files['sbom.cdx.json'])
     if sbom.get('bomFormat') != 'CycloneDX' or not isinstance(sbom.get('components'), list):
         raise ValueError('invalid CycloneDX report')
@@ -313,17 +297,9 @@ def validate(files, sha):
     cve_affected = cve.get('affects')
     if not isinstance(cve_affected, list) or any(not isinstance(item, dict) or not isinstance(item.get('ref'), str) for item in cve_affected):
         raise ValueError('SBOM SQLite security disposition is malformed')
-    detail = cve.get('analysis', {}).get('detail', '')
     cve_refs = {item['ref'] for item in cve_affected}
     if cve.get('analysis', {}).get('state') != expected_cve_state or cve_refs != affected_refs:
         raise ValueError('SBOM omits the SQLite security disposition')
-    if accepted and (
-        not isinstance(detail, str)
-        or 'disposition ACCEPTED' not in detail
-        or ACCEPTED_SQLITE_SOURCE_ID not in detail
-        or ACCEPTED_BUN_ORIGIN not in detail
-    ):
-        raise ValueError('SBOM does not retain the exact accepted SQLite finding details')
     for name in FILES - {'SHA256SUMS', 'manifest.json'}:
         if manifest['artifacts'][name] != digest(files[name]):
             raise ValueError('manifest artifact mismatch')

@@ -158,9 +158,10 @@ matter, index, links, and changelog bullet.
 ## Runtime and ownership
 
 The owner chose Bun as the application runtime and accepted the known SQLite
-issue in the pinned Bun runtime on 2026-11-16. Do not migrate the application
-to another runtime solely to address that issue. Keep the runtime identity and
-the accepted finding in release evidence; this decision does not approve a
+issue only for the prior Bun 1.4.4 image on 2026-11-16. Do not migrate the
+application to another runtime solely to address that issue. Current source
+pins Bun 1.4.5 with SQLite 3.54.1; keep the prior runtime identity and accepted
+finding in its historical release evidence. This decision does not approve a
 production deployment or suppress unrelated findings.
 
 OperatorOS is an offline-first school attendance and academic analytics system.
@@ -217,10 +218,10 @@ Implementation prompts start with `/plan`; keep code identifiers exact.
 
 Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
-resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.4
+resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.5
 in its local development image and does not change the supported runtime.
 The active CLI typechecker is TypeScript 7.0.2 through the root
-`@typescript/native` alias; Bun 1.4.4's `bun check` also runs in CI. TypeScript
+`@typescript/native` alias; Bun 1.4.5's `bun check` also runs in CI. TypeScript
 5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
 CLI typechecks.
 HK 2.8.1 is pinned in `mise.toml` and uses the matching versioned Pkl schema in

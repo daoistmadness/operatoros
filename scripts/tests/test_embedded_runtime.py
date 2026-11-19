@@ -21,14 +21,14 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
         root: Path,
         *,
         status="PASS",
-        bun="1.4.4",
-        version="3.53.4",
-        source_id=evidence.ACCEPTED_SQLITE_SOURCE_ID,
+        bun="1.4.5",
+        version="3.54.1",
+        source_id="candidate-sqlite-source-id",
         fts5=True,
         origin=None,
     ):
         if origin is None:
-            origin = evidence.ACCEPTED_BUN_ORIGIN if bun == "1.4.4" else (
+            origin = evidence.PINNED_BUN_ORIGIN if bun == evidence.PINNED_BUN_VERSION else (
                 f"docker.io/oven/bun:{bun}-alpine@sha256:" + "f" * 64
             )
         containerfile = root / "Containerfile.api"
@@ -45,7 +45,7 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
         }
         runtime = {
             "status": status,
-            "reason": "SQLite 3.53.4 includes affected FTS5 code; require SQLite 3.54.0 or later"
+            "reason": f"SQLite {version} includes affected FTS5 code; require SQLite 3.54.0 or later"
             if status == "BLOCKED" else None,
             "bun": bun,
             "bunBinarySha256": self.binary_sha,
@@ -54,17 +54,13 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
             "fts5CompileOption": fts5,
             "fts5Probe": fts5,
             "fts5ProbeError": None if fts5 else "no such module: fts5",
-            "findingStatus": "OPEN" if fts5 and version == "3.53.4" else (
+            "findingStatus": "OPEN" if fts5 and tuple(map(int, version.split("."))) < (3, 54, 0) else (
                 "RESOLVED_BY_FIXED_VERSION" if tuple(map(int, version.split("."))) >= (3, 54, 0)
                 else "NOT_AFFECTED_FTS5_ABSENT"
             ),
-            "findingDisposition": "ACCEPTED" if (
-                bun == "1.4.4"
-                and version == "3.53.4"
-                and source_id == evidence.ACCEPTED_SQLITE_SOURCE_ID
-                and origin == evidence.ACCEPTED_BUN_ORIGIN
-                and fts5
-            ) else ("UNACCEPTED" if fts5 and version == "3.53.4" else "NOT_REQUIRED"),
+            "findingDisposition": "UNACCEPTED" if (
+                fts5 and tuple(map(int, version.split("."))) < (3, 54, 0)
+            ) else "NOT_REQUIRED",
             "imageId": self.image_id,
         }
         archive = {
@@ -84,7 +80,7 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
         }
         return runtime, image, archive, containerfile, sbom
 
-    def test_accepted_finding_stays_open_and_visible_in_inventory_and_cyclonedx(self):
+    def test_fixed_runtime_is_resolved_in_inventory_and_cyclonedx(self):
         with tempfile.TemporaryDirectory() as temporary:
             runtime, image, archive, containerfile, sbom = self.inputs(Path(temporary))
             inventory = evidence.runtime_inventory(runtime, image, archive, containerfile)
@@ -93,49 +89,51 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
         library = inventory["runtime"]["sqlite_libraries"][0]
         self.assertEqual(inventory["qualification_status"], "PASS")
         self.assertEqual(inventory["runtime"]["name"], "Bun")
-        self.assertEqual(inventory["runtime"]["version"], "1.4.4")
-        self.assertEqual(inventory["runtime"]["origin"], evidence.ACCEPTED_BUN_ORIGIN)
+        self.assertEqual(inventory["runtime"]["version"], "1.4.5")
+        self.assertEqual(inventory["runtime"]["origin"], evidence.PINNED_BUN_ORIGIN)
         self.assertEqual(library["provider"], "bun:sqlite")
-        self.assertEqual(library["version"], "3.53.4")
-        self.assertEqual(library["source_id"], evidence.ACCEPTED_SQLITE_SOURCE_ID)
-        self.assertEqual(library["cve_status"], "OPEN")
-        self.assertEqual(library["cve_disposition"], "ACCEPTED")
-        self.assertEqual(inventory["finding"]["status"], "OPEN")
-        self.assertEqual(inventory["finding"]["disposition"], "ACCEPTED")
-        self.assertEqual(inventory["finding"]["accepted_exception"]["origin"], evidence.ACCEPTED_BUN_ORIGIN)
+        self.assertEqual(library["version"], "3.54.1")
+        self.assertEqual(library["source_id"], "candidate-sqlite-source-id")
+        self.assertEqual(library["cve_status"], "RESOLVED_BY_FIXED_VERSION")
+        self.assertEqual(library["cve_disposition"], "NOT_REQUIRED")
+        self.assertEqual(inventory["finding"]["status"], "RESOLVED_BY_FIXED_VERSION")
+        self.assertEqual(inventory["finding"]["disposition"], "NOT_REQUIRED")
+        self.assertNotIn("accepted_exception", inventory["finding"])
         self.assertEqual(inventory["artifact"]["oci_manifest_digest"], self.image_digest)
 
         bun = output["components"][0]
         sqlite = bun["components"][0]
         self.assertEqual(bun["name"], "Bun runtime")
         self.assertEqual(bun["hashes"][0]["content"], self.binary_sha)
-        self.assertEqual(sqlite["version"], "3.53.4")
+        self.assertEqual(sqlite["version"], "3.54.1")
         properties = {item["name"]: item["value"] for item in sqlite["properties"]}
-        self.assertEqual(properties["operatoros:security:advisory-status"], "OPEN")
-        self.assertEqual(properties["operatoros:security:advisory-disposition"], "ACCEPTED")
+        self.assertEqual(properties["operatoros:security:advisory-status"], "RESOLVED_BY_FIXED_VERSION")
+        self.assertEqual(properties["operatoros:security:advisory-disposition"], "NOT_REQUIRED")
         dependencies = {item["ref"]: item["dependsOn"] for item in output["dependencies"]}
         self.assertEqual(dependencies[bun["bom-ref"]], [sqlite["bom-ref"]])
         vulnerability = output["vulnerabilities"][0]
         self.assertEqual(vulnerability["id"], "CVE-2026-119373")
-        self.assertEqual(vulnerability["analysis"]["state"], "in_triage")
-        self.assertIn("disposition ACCEPTED", vulnerability["analysis"]["detail"])
-        self.assertIn(evidence.ACCEPTED_SQLITE_SOURCE_ID, vulnerability["analysis"]["detail"])
-        self.assertIn(evidence.ACCEPTED_BUN_ORIGIN, vulnerability["analysis"]["detail"])
+        self.assertEqual(vulnerability["analysis"]["state"], "resolved")
+        self.assertIn("disposition NOT_REQUIRED", vulnerability["analysis"]["detail"])
+        self.assertIn("SQLite 3.54.1", vulnerability["analysis"]["detail"])
+        self.assertIn(evidence.PINNED_BUN_ORIGIN, vulnerability["analysis"]["detail"])
         self.assertEqual(vulnerability["affects"], [{"ref": sqlite["bom-ref"]}])
 
-    def test_rejects_open_finding_from_a_different_sqlite_source_id(self):
+    def test_pass_rejects_an_open_finding_below_the_sqlite_fix_floor(self):
         with tempfile.TemporaryDirectory() as temporary:
             runtime, image, archive, containerfile, _ = self.inputs(
-                Path(temporary), source_id="different-source-id"
+                Path(temporary), version="3.53.4", source_id="affected-source-id"
             )
-            with self.assertRaisesRegex(ValueError, "outside the accepted Bun identity"):
+            with self.assertRaisesRegex(ValueError, "runtime passed with an affected SQLite"):
                 evidence.runtime_inventory(runtime, image, archive, containerfile)
 
-    def test_rejects_open_finding_from_a_different_pinned_bun_origin(self):
+    def test_pass_requires_the_pinned_bun_version_and_image(self):
         alternate = "docker.io/oven/bun:1.4.4-alpine@sha256:" + "f" * 64
         with tempfile.TemporaryDirectory() as temporary:
-            runtime, image, archive, containerfile, _ = self.inputs(Path(temporary), origin=alternate)
-            with self.assertRaisesRegex(ValueError, "outside the accepted Bun identity"):
+            runtime, image, archive, containerfile, _ = self.inputs(
+                Path(temporary), bun="1.4.4", version="3.54.1", origin=alternate
+            )
+            with self.assertRaisesRegex(ValueError, "pinned Bun 1.4.5 image"):
                 evidence.runtime_inventory(runtime, image, archive, containerfile)
 
     def test_rejects_runtime_probe_from_a_different_oci_image(self):
@@ -163,13 +161,21 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
         self.assertEqual(inventory["finding"]["disposition"], "NOT_REQUIRED")
         self.assertEqual(output["vulnerabilities"][0]["analysis"]["state"], "resolved")
 
+    def test_pass_requires_pinned_sqlite_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            runtime, image, archive, containerfile, _ = self.inputs(
+                Path(temporary), version="3.54.0"
+            )
+            with self.assertRaisesRegex(ValueError, "pinned SQLite 3.54.1"):
+                evidence.runtime_inventory(runtime, image, archive, containerfile)
+
     def test_fts5_absent_is_not_affected(self):
         with tempfile.TemporaryDirectory() as temporary:
             runtime, image, archive, containerfile, _ = self.inputs(
                 Path(temporary), bun="1.4.5", fts5=False, source_id="without-fts5"
             )
             inventory = evidence.runtime_inventory(runtime, image, archive, containerfile)
-        self.assertEqual(inventory["finding"]["status"], "NOT_AFFECTED_FTS5_ABSENT")
+        self.assertEqual(inventory["finding"]["status"], "RESOLVED_BY_FIXED_VERSION")
 
     def test_rejects_existing_cve_association_with_unqualified_component(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -183,7 +189,7 @@ class BunSqliteRuntimeEvidenceTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unqualified components"):
                 evidence.enrich_sbom(sbom, inventory)
 
-    def test_rejects_separate_trivy_sqlite_component_on_the_open_accepted_finding(self):
+    def test_rejects_separate_trivy_sqlite_component_on_the_resolved_finding(self):
         with tempfile.TemporaryDirectory() as temporary:
             runtime, image, archive, containerfile, sbom = self.inputs(Path(temporary))
             inventory = evidence.runtime_inventory(runtime, image, archive, containerfile)

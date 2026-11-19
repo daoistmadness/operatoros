@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-16
+last_reviewed: 2026-11-19
 ---
 
 # CI release bundles
@@ -19,13 +19,10 @@ A manual dispatch on a non-main branch performs nonpublishing qualification. It
 runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
 probes Bun and its embedded `bun:sqlite` runtime before retaining non-image
 reports for seven days. The image is discarded with the runner and receives no
-signature, attestation, or release-bundle upload. The accepted finding applies
+signature, attestation, or release-bundle upload. The previous accepted finding applied
 only to Bun 1.4.4 with SQLite 3.53.4, source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
-and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The runtime report still records the finding as
-`OPEN` with disposition `ACCEPTED`. Any other affected runtime identity remains
-blocked. A fixed SQLite version follows the normal runtime probes.
-A workflow success does not make the candidate a release artifact.
+and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1. The new candidate must pass the normal runtime probe, SBOM, and scan with the finding resolved; the old acceptance does not apply to it. Any affected SQLite identity remains blocked. A workflow success does not make the candidate a release artifact.
 
 The locked setup action installs the workspace toolchain. The runner installs
 Ubuntu's Podman package and records its actual version. The API image runs the
