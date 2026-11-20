@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -40,7 +40,7 @@ describe("employee age and tenure metrics", () => {
   });
 
   it("returns unavailable percentages for an empty employee population", () => {
-    const db = new Database(":memory:");
+    const db = openTestDatabase(":memory:").client;
     try {
       db.exec("CREATE TABLE staff_members (id TEXT PRIMARY KEY, employment_status TEXT, birth_date TEXT, employment_start_date TEXT, employment_end_date TEXT, dapodik_status_raw TEXT, dapodik_status_normalized TEXT, job_title_raw TEXT, job_title_normalized TEXT, created_at TEXT)");
       db.exec("CREATE TABLE staff_identifiers (id INTEGER PRIMARY KEY, staff_member_id TEXT, identifier_type TEXT, normalized_value TEXT, verification_status TEXT)");

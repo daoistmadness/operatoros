@@ -131,7 +131,13 @@ jobs:
           OPERATOROS_TEST_ROOTLESS_PODMAN: "1"
         run: |
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
+          python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
+      - name: Bun SQLite release gate and image identity tests
+        working-directory: ${{ github.workspace }}
+        run: |
+          python3 -m unittest discover -s scripts/tests -p "test_bun_sqlite_runtime.py"
+          python3 -m unittest discover -s scripts/tests -p "test_bun_image_lifecycle.py"
       - name: Pinned Trivy OCI compatibility regression
         working-directory: ${{ github.workspace }}
         env:
@@ -155,7 +161,6 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           bun scripts/tests/minimatch-override.compatibility.cjs
-          node scripts/tests/minimatch-override.compatibility.cjs
       - name: Verify hk checks
         working-directory: ${{ github.workspace }}
         env:
@@ -395,6 +400,205 @@ jobs:
           retention-days: 7
 
 
+  candidate-qualification:
+    name: Nonpublishing release candidate qualification
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+    needs: [preflight]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Check out selected candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Install container build tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes podman
+      - name: Build candidate OCI image and produce scan evidence
+        env:
+          CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bun scripts/podman-source-manifest.mjs assert-clean .
+          mkdir -p "$CANDIDATE_ROOT"
+          bun scripts/podman-source-manifest.mjs write-manifest . "$CANDIDATE_ROOT/source-manifest.json"
+          source_tree_sha="$(sha256sum "$CANDIDATE_ROOT/source-manifest.json" | cut -d' ' -f1)"
+          podman build \
+            --ignorefile deploy/podman/.containerignore \
+            --platform linux/amd64 \
+            -f deploy/podman/Containerfile.api \
+            --build-arg "VCS_REF=$GITHUB_SHA" \
+            --build-arg "SOURCE_TREE_SHA256=$source_tree_sha" \
+            --build-arg SOURCE_DIRTY=false \
+            -t "$CANDIDATE_IMAGE" .
+          podman save --format oci-archive -o "$CANDIDATE_ROOT/image.oci.tar" "$CANDIDATE_IMAGE"
+          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$CANDIDATE_IMAGE" <<'PY'
+          import importlib.util
+          import json
+          import pathlib
+          import subprocess
+          import sys
+
+          root = pathlib.Path(sys.argv[1])
+          spec = importlib.util.spec_from_file_location("release", "scripts/release-bundle.py")
+          release = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(release)
+          gate = subprocess.run(
+              ["python3", "scripts/check-bun-sqlite-runtime.py", sys.argv[3]],
+              capture_output=True,
+              text=True,
+              check=False,
+              timeout=75,
+          )
+          (root / "runtime-gate.json").write_text(gate.stdout + ("" if gate.stdout.endswith("\n") else "\n"))
+          if gate.returncode not in (0, 1):
+              raise SystemExit("Bun runtime gate failed without a qualification report")
+          runtime = json.loads(gate.stdout)
+          if (gate.returncode == 0 and runtime.get("status") != "PASS") or (
+              gate.returncode != 0 and runtime.get("status") != "BLOCKED"
+          ):
+              raise SystemExit("Bun runtime gate returned an invalid status")
+          image = release.scan_image(
+              root / "image.oci.tar",
+              sys.argv[2],
+              root / "oci-layout",
+              root / "reports",
+              "podman",
+          )
+          (root / "image.json").write_text(json.dumps(image, indent=2) + "\n")
+          PY
+          python3 - "$CANDIDATE_ROOT" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          root = pathlib.Path(sys.argv[1])
+          archive = json.loads((root / "reports/archive.json").read_text())
+          image = json.loads((root / "image.json").read_text())
+          scan = json.loads((root / "reports/scan.json").read_text())
+          counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "UNKNOWN": 0}
+          for result in scan.get("Results", []):
+              for finding in result.get("Vulnerabilities", []) or []:
+                  severity = str(finding.get("Severity", "UNKNOWN")).upper()
+                  counts[severity if severity in counts else "UNKNOWN"] += 1
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Ephemeral candidate build and scan\n\n")
+              summary.write(f"- Source commit: `{archive['source_commit']}`\n")
+              summary.write(f"- OCI manifest digest: `{image['manifest_digest']}`\n")
+              summary.write(f"- Image config digest: `{image['image_id']}`\n")
+              summary.write(f"- OCI archive SHA-256: `{archive['archive_sha256']}`\n")
+              summary.write(f"- SBOM and Trivy scan: generated and identity-checked for the same image\n")
+              summary.write(f"- Trivy findings by severity: `{json.dumps(counts, sort_keys=True)}`\n")
+              summary.write("- The candidate OCI image stays on the ephemeral runner and is not uploaded.\n\n")
+          PY
+      - name: Require Bun SQLite runtime qualification
+        env:
+          CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANDIDATE_ROOT"
+          python3 scripts/record-embedded-runtime.py \
+            --runtime "$CANDIDATE_ROOT/runtime-gate.json" \
+            --image "$CANDIDATE_ROOT/image.json" \
+            --archive "$CANDIDATE_ROOT/reports/archive.json" \
+            --containerfile deploy/podman/Containerfile.api \
+            --sbom "$CANDIDATE_ROOT/reports/sbom.cdx.json" \
+            --output "$CANDIDATE_ROOT/reports/embedded-runtime.json"
+          python3 - "$CANDIDATE_ROOT" "$GITHUB_SHA" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          root = pathlib.Path(sys.argv[1])
+          source = sys.argv[2]
+          report = json.loads((root / "runtime-gate.json").read_text(encoding="utf-8"))
+          image = json.loads((root / "image.json").read_text())
+          inventory = json.loads((root / "reports/embedded-runtime.json").read_text(encoding="utf-8"))
+          finding = inventory.get("finding", {})
+          libraries = inventory.get("runtime", {}).get("sqlite_libraries")
+          if report.get("status") != "PASS" or inventory.get("qualification_status") != "PASS":
+              raise SystemExit("candidate Bun SQLite runtime did not pass qualification")
+          if report.get("bun") != "1.4.5" or not isinstance(libraries, list) or len(libraries) != 1:
+              raise SystemExit("candidate Bun runtime identity is incomplete")
+          library = libraries[0]
+          if library.get("provider") != "bun:sqlite" or library.get("version") != "3.54.1" or report.get("sqlite") != "3.54.1":
+              raise SystemExit("candidate Bun SQLite component does not match the pinned fixed runtime")
+          if (
+              finding.get("status") != "RESOLVED_BY_FIXED_VERSION"
+              or finding.get("disposition") != "NOT_REQUIRED"
+              or "accepted_exception" in finding
+          ):
+              raise SystemExit("candidate SQLite finding is not resolved by the pinned runtime")
+          outcome = "RUNTIME_GATE_PASS"
+          with open(sys.argv[3], "a", encoding="utf-8") as summary:
+              summary.write("## Bun and SQLite runtime qualification\n\n")
+              summary.write(f"- Source commit: `{source}`\n")
+              summary.write(f"- OCI manifest digest: `{image['manifest_digest']}`\n")
+              summary.write(f"- Qualification outcome: `{outcome}`\n")
+              summary.write(f"- Bun: `{report.get('bun', 'unavailable')}`; binary SHA-256 `{report.get('bunBinarySha256', 'unavailable')}`\n")
+              summary.write(f"- `bun:sqlite`: SQLite `{report.get('sqlite', 'unavailable')}`; source ID `{report.get('sqliteSourceId', 'unavailable')}`; FTS5 `{report.get('fts5', 'unavailable')}`\n")
+              summary.write(f"- Finding disposition: `{finding.get('status')}` / `{finding.get('disposition')}`\n")
+              summary.write("- Bun and SQLite components are included in CycloneDX and `embedded-runtime.json`; OS/language scan remains in separate Trivy evidence.\n")
+              summary.write("- Runtime gate passed. Candidate remains unsigned, unattested, and unpublished.\n")
+              summary.write("\n")
+          PY
+      - name: Exercise exact candidate lifecycle and encrypted restore
+        env:
+          CANDIDATE_IMAGE: operatoros-api:candidate-${{ github.sha }}
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-candidate
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-bun-image-lifecycle.py \
+            --image "$CANDIDATE_IMAGE" \
+            --image-metadata "$CANDIDATE_ROOT/image.json" \
+            --archive-metadata "$CANDIDATE_ROOT/reports/archive.json" \
+            --source "$GITHUB_SHA" \
+            --output "$CANDIDATE_ROOT/lifecycle.json"
+          python3 - "$CANDIDATE_ROOT/lifecycle.json" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          if report.get("status") != "PASS":
+              raise SystemExit("exact candidate lifecycle report did not pass")
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Exact candidate API lifecycle\n\n")
+              summary.write(f"- Source commit: `{report['source_commit']}`\n")
+              summary.write(f"- OCI manifest digest: `{report['oci_manifest_digest']}`\n")
+              summary.write(f"- Image config digest: `{report['image_config_digest']}`\n")
+              summary.write(f"- OCI archive SHA-256: `{report['oci_archive_sha256']}`\n")
+              for name, evidence in report["stages"].items():
+                  summary.write(f"- `{name}`: `{evidence['status']}`\n")
+              summary.write(f"- Encrypted backup SHA-256: `{report['stages']['restore_encrypted_backup']['backup_sha256']}`\n")
+              summary.write(f"- Restored backup metadata SHA-256: `{report['stages']['restore_encrypted_backup']['metadata_sha256']}`\n")
+              summary.write(f"- Duration: `{report['duration_seconds']}` seconds\n\n")
+          PY
+      - name: Retain non-image candidate reports
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-candidate-reports-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/operatoros-candidate/image.json
+            ${{ runner.temp }}/operatoros-candidate/runtime-gate.json
+            ${{ runner.temp }}/operatoros-candidate/reports/archive.json
+            ${{ runner.temp }}/operatoros-candidate/reports/embedded-runtime.json
+            ${{ runner.temp }}/operatoros-candidate/reports/sbom.cdx.json
+            ${{ runner.temp }}/operatoros-candidate/reports/scan.json
+            ${{ runner.temp }}/operatoros-candidate/lifecycle.json
+          if-no-files-found: warn
+          retention-days: 7
+
+
   release-bundle:
     name: Manual release bundle
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
@@ -426,6 +630,11 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 scripts/release-bundle.py build "$RELEASE_OUTPUT"
+      - name: Verify embedded runtime and mandatory evidence before signing
+        env:
+          RELEASE_OUTPUT: ${{ runner.temp }}/operatoros-release.tar
+        run: |
+          python3 scripts/release-bundle.py verify-evidence "$RELEASE_OUTPUT" "$GITHUB_SHA"
       - name: Attest the complete release bundle
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:

@@ -1,12 +1,12 @@
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { describe, expect, it } from "bun:test";
 import { studentTrendInsights } from "../src/domains/student-trends";
 import type { AuthContext } from "../src/auth/service";
 import { createApp } from "../src/app";
 
 function context(): AuthContext {
-  const client = new Database(":memory:");
-  client.run(`
+  const client = openTestDatabase(":memory:").client;
+  client.exec(`
     CREATE TABLE academic_years (id INTEGER PRIMARY KEY, label TEXT, start_date TEXT, end_date TEXT);
     CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT);
     CREATE TABLE academic_programs (id INTEGER PRIMARY KEY, jenjang_id INTEGER, name TEXT);
@@ -26,7 +26,7 @@ function context(): AuthContext {
   `);
   client.run("INSERT INTO academic_years VALUES (1, '2026/2027', '2026-01-01', '2026-03-31')");
   client.run("INSERT INTO jenjangs VALUES (1, 'SMP')");
-  client.run("INSERT INTO academic_programs VALUES (1, 1, 'Regular'); INSERT INTO academic_grades VALUES (1, 1, 1, '7')");
+  client.exec("INSERT INTO academic_programs VALUES (1, 1, 'Regular'); INSERT INTO academic_grades VALUES (1, 1, 1, '7')");
   client.run("INSERT INTO academic_classes VALUES (1, 1, 1, '7A')");
   client.run("INSERT INTO student_masters VALUES ('student-a', 'Alya'), ('student-b', 'Bima')");
   client.run("INSERT INTO students VALUES (1, 'Alya legacy', 'SMP', '7A'), (2, 'Bima legacy', 'SMP', '7A')");

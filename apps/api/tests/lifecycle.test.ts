@@ -1,5 +1,10 @@
 import { describe, it, expect } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { createFreshDatabase, ensureOperatorOSDirectories, resolveOperatorOSPaths } from "@operatoros/db";
 import { startServer } from "../src/server";
+import { backupScheduler } from "../src/domains/safety";
 
 async function waitForReady(url: string, timeoutMs = 3000) {
   const deadline = Date.now() + timeoutMs;
@@ -27,6 +32,32 @@ describe("server lifecycle", () => {
     expect(res2.status).toBe(200);
     await s2.stop();
     await Bun.sleep(50);
+  }, 15000);
+
+  it("runs Elysia stop hooks before closing the database", async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "operatoros-server-lifecycle-"));
+    const paths = resolveOperatorOSPaths({ env: { OPERATOROS_DATA_DIR: dataDir } });
+    ensureOperatorOSDirectories(paths);
+    createFreshDatabase(paths.databasePath);
+    let server: Awaited<ReturnType<typeof startServer>> | undefined;
+    try {
+      server = await startServer({
+        hostname: "127.0.0.1",
+        port: 0,
+        environment: "test",
+        databasePath: paths.databasePath,
+        dataPaths: paths,
+        backupDir: paths.backupDir,
+        auth: { authCookieSecret: "synthetic-lifecycle-cookie-secret" },
+      });
+      expect(backupScheduler.running).toBe(true);
+      await server.stop();
+      expect(backupScheduler.running).toBe(false);
+      server = undefined;
+    } finally {
+      await server?.stop();
+      rmSync(dataDir, { recursive: true, force: true });
+    }
   }, 15000);
 });
 

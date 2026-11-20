@@ -11,7 +11,8 @@ export async function acquireBackupOperationLock(dataDir: string): Promise<{ rel
   if (existing && !existing.isFile()) throw Object.assign(new Error("BACKUP_OPERATION_LOCK_INVALID"), { code: "BACKUP_OPERATION_LOCK_INVALID" });
   writeFileSync(path, "", { flag: "a", mode: 0o600 });
   chmodSync(path, 0o600);
-  const worker = fileURLToPath(new URL("./backup-operation-lock-holder.ts", import.meta.url));
+  const workerUrl = new URL("./backup-operation-lock-holder.ts", import.meta.url);
+  const worker = fileURLToPath(workerUrl);
   const child = spawn("flock", ["--nonblock", "--exclusive", "--conflict-exit-code", "75", "--no-fork", path, process.execPath, worker], { stdio: ["ignore", "pipe", "ignore"] });
   let settled = false;
   let released = false;

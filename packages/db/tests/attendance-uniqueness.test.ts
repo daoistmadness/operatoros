@@ -1,5 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
 import { getTableConfig, type SQLiteTable } from "drizzle-orm/sqlite-core";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,6 +6,7 @@ import { join } from "node:path";
 import { createFreshDatabase, migrateExistingDatabase, openDatabase, schemaFingerprint } from "../src";
 import * as schema from "../src/schema";
 import { S47_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
 
 const s47Sql = readFileSync(new URL("../src/s47-schema.sql", import.meta.url), "utf8");
 const expectedKeys: { attendance: string[][]; attendance_import_rows: string[][]; attendance_overrides: string[][]; attendance_periods: string[][] } = {
@@ -26,7 +26,7 @@ function withDatabases(run: (root: string, freshPath: string, migratedPath: stri
 }
 
 function createMigratedS47(path: string): void {
-  const source = new Database(path, { create: true });
+  const source = openSqliteConnection(path).client;
   source.exec("PRAGMA foreign_keys = ON");
   source.exec(s47Sql);
   expect(schemaFingerprint(source)).toBe(S47_SCHEMA_FINGERPRINT);
@@ -38,7 +38,7 @@ function createMigratedS47(path: string): void {
   expect(migrateExistingDatabase(path)).toBe("MIGRATED");
 }
 
-function physicalUniqueKeys(db: Database): string[][][] {
+function physicalUniqueKeys(db: SqliteClient): string[][][] {
   return Object.entries(expectedKeys).map(([table]) => {
     const indexes = db.query(`PRAGMA index_list("${table}")`).all() as { name: string; unique: number }[];
     return indexes
@@ -50,7 +50,7 @@ function physicalUniqueKeys(db: Database): string[][][] {
   });
 }
 
-function assertHistoricalNames(db: Database): void {
+function assertHistoricalNames(db: SqliteClient): void {
   const tableDefinitions = db.query("SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name IN ('attendance', 'attendance_import_rows')").all() as { name: string; sql: string }[];
   expect(tableDefinitions.find((table) => table.name === "attendance")?.sql).toMatch(/CONSTRAINT _student_date_uc UNIQUE\s*\(student_id, date\)/);
   expect(tableDefinitions.find((table) => table.name === "attendance_import_rows")?.sql).toMatch(/CONSTRAINT uq_attendance_import_batch_key UNIQUE\s*\(batch_id, student_identifier, attendance_date\)/);
@@ -67,7 +67,7 @@ function declaredUniqueKeys(table: SQLiteTable): string[][] {
     .sort((left, right) => left.join("|").localeCompare(right.join("|")));
 }
 
-function assertEnforced(db: Database): void {
+function assertEnforced(db: SqliteClient): void {
   db.run("INSERT INTO students (id, name) VALUES (1, 'Synthetic One'), (2, 'Synthetic Two')");
   db.run("INSERT INTO attendance (student_id, date, late_duration, late_source, is_absent, status) VALUES (1, '2026-09-01', 0, 'none', 0, 'present')");
   expect(() => db.run("INSERT INTO attendance (student_id, date, late_duration, late_source, is_absent, status) VALUES (1, '2026-09-01', 10, 'manual', 0, 'late')")).toThrow(/UNIQUE constraint failed/);
@@ -130,7 +130,7 @@ describe("attendance uniqueness authority", () => {
   }));
 
   it("reports duplicate groups and rolls back a conflicting SQLite uniqueness migration", () => {
-    const db = new Database(":memory:");
+    const db = openSqliteConnection(":memory:").client;
     try {
       db.exec("CREATE TABLE attendance (id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL, date TEXT NOT NULL)");
       db.run("INSERT INTO attendance (id, student_id, date) VALUES (1, 71, '2026-09-01'), (2, 71, '2026-09-01')");

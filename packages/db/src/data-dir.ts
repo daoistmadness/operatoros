@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { existsSync, chmodSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const OPERATOROS_DATA_DIR_ENV = "OPERATOROS_DATA_DIR";
 export const LEGACY_DATA_DIR_ENV = "OPERATOROS_DEV_DATA_DIR";
@@ -48,18 +50,18 @@ function contained(path: string, root: string): boolean {
 
 export function repositoryCommonDirectory(repositoryRoot: string): string {
   const env = { ...process.env };
-  const local = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe", stderr: "pipe" });
-  if (local.exitCode !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
-  for (const key of local.stdout.toString().trim().split("\n")) delete env[key];
-  const result = Bun.spawnSync(["git", "-C", repositoryRoot, "rev-parse", "--git-common-dir"], { env, stdout: "pipe", stderr: "pipe" });
-  if (result.exitCode !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
-  const output = result.stdout.toString().trim();
+  const local = spawnSync("git", ["rev-parse", "--local-env-vars"], { encoding: "utf8", env });
+  if (local.error || local.status !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
+  for (const key of local.stdout.trim().split("\n")) delete env[key];
+  const result = spawnSync("git", ["-C", repositoryRoot, "rev-parse", "--git-common-dir"], { encoding: "utf8", env });
+  if (result.error || result.status !== 0) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
+  const output = result.stdout.trim();
   if (!output) fail("DATA_DIR_REPOSITORY_ID_UNAVAILABLE", repositoryRoot);
   return resolve(repositoryRoot, output);
 }
 
 function repositoryRoot(options: ResolveDataDirOptions): string {
-  return resolve(options.repositoryRoot ?? join(import.meta.dir, "../../.."));
+  return resolve(options.repositoryRoot ?? join(dirname(fileURLToPath(import.meta.url)), "../../.."));
 }
 
 function defaultDataRoot(env: Record<string, string | undefined>, home: string): string {

@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { createReadStream } from "node:fs";
+import { Readable } from "node:stream";
 import { t } from "elysia";
 import { inTransaction } from "@operatoros/db";
 import type { AuthContext, CurrentUser } from "../auth/service";
@@ -478,7 +480,7 @@ export function registerStudentAdmin(app: any, context: AuthContext, config: Bac
           sizeBytes: Number(doc.file_size_bytes),
         });
 
-        return new Response(Bun.file(filePath), {
+        return new Response(Readable.toWeb(createReadStream(filePath)), {
           headers: {
             "content-type": "application/pdf",
             "content-disposition": `inline; filename="${encodeURIComponent(String(doc.original_filename))}"`,

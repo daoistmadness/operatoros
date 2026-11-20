@@ -1,8 +1,8 @@
-import { Database } from "bun:sqlite";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync } from "node:fs";
 import { dirname } from "node:path";
 import { assertDatabasePath, schemaFingerprint, validateDatabase } from "./connection";
 import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION } from "./manifest";
+import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 
 const schemaSql = readFileSync(new URL("./s47-schema.sql", import.meta.url), "utf8");
 const employeeSql = readFileSync(new URL("./s48-migration.sql", import.meta.url), "utf8");
@@ -17,43 +17,43 @@ const schoolUnitTriggerStart = schoolUnitsSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
 if (schoolUnitTriggerStart < 0) throw new Error("SCHOOL_UNIT_TRIGGERS_MISSING");
 
-export function installS47Schema(client: Database, triggers = true): void {
+export function installS47Schema(client: SqliteClient, triggers = true): void {
   client.exec(triggers ? schemaSql : schemaSql.slice(0, triggerStart));
 }
 
-export function installS47Triggers(client: Database): void {
+export function installS47Triggers(client: SqliteClient): void {
   client.exec(schemaSql.slice(triggerStart));
 }
 
-export function installS48EmployeeSchema(client: Database): void {
+export function installS48EmployeeSchema(client: SqliteClient): void {
   client.exec(employeeSql);
 }
 
-export function installS49SchoolUnitSchema(client: Database, triggers = true): void {
+export function installS49SchoolUnitSchema(client: SqliteClient, triggers = true): void {
   client.exec(triggers ? schoolUnitsSql : schoolUnitsSql.slice(0, schoolUnitTriggerStart));
 }
 
-export function installS49SchoolUnitTriggers(client: Database): void {
+export function installS49SchoolUnitTriggers(client: SqliteClient): void {
   client.exec(schoolUnitsSql.slice(schoolUnitTriggerStart));
 }
 
-export function installS50StaffMonthlyActivitySchema(client: Database): void {
+export function installS50StaffMonthlyActivitySchema(client: SqliteClient): void {
   client.exec(staffMonthlyActivitySql);
 }
 
-export function installS51UppReportsSchema(client: Database): void {
+export function installS51UppReportsSchema(client: SqliteClient): void {
   client.exec(uppReportsSql);
 }
 
-export function installS52StudentAdminSchema(client: Database): void {
+export function installS52StudentAdminSchema(client: SqliteClient): void {
   client.exec(studentAdminSql);
 }
 
-export function installS53StudentVerificationSchema(client: Database): void {
+export function installS53StudentVerificationSchema(client: SqliteClient): void {
   client.exec(studentVerificationSql);
 }
 
-export function installS54BospReminderSchema(client: Database): void {
+export function installS54BospReminderSchema(client: SqliteClient): void {
   client.exec(bospReminderSql);
 }
 
@@ -61,12 +61,12 @@ export function createFreshDatabase(path: string): void {
   assertDatabasePath(path);
   if (existsSync(path)) throw new Error("DATABASE_ALREADY_EXISTS");
   mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
-  let client: Database | undefined;
+  let client: SqliteClient | undefined;
   let reserved = false;
   try {
     closeSync(openSync(path, "wx", 0o600));
     reserved = true;
-    client = new Database(path, { readwrite: true, create: false });
+    client = openSqliteConnection(path, { fileMustExist: true }).client;
     client.exec("PRAGMA foreign_keys = ON");
     client.transaction(() => {
       installS47Schema(client!);

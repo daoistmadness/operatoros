@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import type { SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding } from "@operatoros/db";
 import { t } from "elysia";
 import {
   StaffMonthlyActivityExportQuery,
@@ -41,11 +41,11 @@ function fail(set: Context["set"], status: number, code: string, message: string
   return { detail: { code, message } };
 }
 
-function rows(context: AuthContext, sql: string, params: SQLQueryBindings[] = []): Row[] {
+function rows(context: AuthContext, sql: string, params: SqliteBinding[] = []): Row[] {
   return context.database.client.query(sql).all(...params) as Row[];
 }
 
-function row(context: AuthContext, sql: string, params: SQLQueryBindings[] = []): Row | null {
+function row(context: AuthContext, sql: string, params: SqliteBinding[] = []): Row | null {
   return (context.database.client.query(sql).get(...params) as Row | null) ?? null;
 }
 
@@ -88,7 +88,7 @@ function period(context: AuthContext, month: string): Row | null {
 
 function listItems(context: AuthContext, periodId: number, filters: Filters): Row[] {
   const where = ["a.period_id=?"];
-  const params: SQLQueryBindings[] = [periodId];
+  const params: SqliteBinding[] = [periodId];
   if (filters.school_unit_id !== undefined) {
     where.push("a.school_unit_id=?");
     params.push(filters.school_unit_id);
@@ -130,7 +130,7 @@ function zeroSummary(context: AuthContext, month: string, schoolUnitId?: number)
 function periodSummary(context: AuthContext, month: string, periodId: number | null, schoolUnitId?: number): Row {
   if (periodId === null) return zeroSummary(context, month, schoolUnitId);
   const unitFilter = schoolUnitId === undefined ? "" : " AND a.school_unit_id=?";
-  const params: SQLQueryBindings[] = schoolUnitId === undefined ? [periodId] : [periodId, schoolUnitId];
+  const params: SqliteBinding[] = schoolUnitId === undefined ? [periodId] : [periodId, schoolUnitId];
   const result = row(context, `SELECT count(*) AS total_activities,
       sum(CASE WHEN a.status!='NOT_APPLICABLE' THEN 1 ELSE 0 END) AS total_applicable,
       sum(CASE WHEN a.status='COMPLETED' THEN 1 ELSE 0 END) AS completed,
@@ -159,7 +159,7 @@ function trendRows(context: AuthContext, fromMonth: string, toMonth: string, sch
   const from = monthBounds(fromMonth)!;
   const to = monthBounds(toMonth)!;
   const where = ["p.reporting_year*100+p.reporting_month BETWEEN ? AND ?"];
-  const params: SQLQueryBindings[] = schoolUnitId === undefined
+  const params: SqliteBinding[] = schoolUnitId === undefined
     ? [from.year * 100 + from.month, to.year * 100 + to.month]
     : [schoolUnitId, from.year * 100 + from.month, to.year * 100 + to.month];
   const groupByUnit = schoolUnitId !== undefined;

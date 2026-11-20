@@ -1,13 +1,9 @@
 ---
-status: deprecated
+status: current
 last_reviewed: 2026-11-19
 ---
 
-# Podman single-host deployment proposal
-
-> Superseded as the deployment target for this host by
-> [Docker Compose single-host deployment](docker-compose-deployment.md). The
-> proposal below is retained as history and is not implemented in production.
+# Podman single-host deployment
 
 ## Current synthetic host
 
@@ -15,53 +11,88 @@ The existing synthetic host runs both Elysia API and Caddy in separate rootless
 Podman containers supervised by user Quadlet services. Caddy serves the static
 SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
 access remains loopback/private. The existing manual helper consumes verified
-archives without rebuilding on the host. This differs from the future host-Caddy
-proposal below. Production topology and public ingress/TLS remain unresolved.
+archives without rebuilding on the host.
+
+A read-only audit on 2026-11-06 confirmed this shape: units
+`operatoros-lite-api` and `operatoros-lite-caddy` under host UID 1000, API
+published only as `127.0.0.1:18090`, Caddy bound to `127.0.0.1:18088`, container
+runtime UID 10000, and no Tailscale Serve route pointing at either. The earlier
+host-Caddy proposal below was never installed. The owner has approved Candidate
+B for the parallel D1 synthetic runtime. Production activation and private
+HTTPS access remain pending.
+
+Storage has three distinct layers and one hazard:
+
+| Layer | Meaning |
+| --- | --- |
+| Deployment root | `/mnt/podman-data/operatoros`, owned by the deployment account |
+| Data directory | SQLite, logs, and backups under that root |
+| Container mount | The host data directory appears in the API container at `/var/lib/operatoros/data` |
+| Development root | A separate per-repository directory under the developer's state directory |
+
+The hazard: the deployed units select a dedicated `storage.conf`, so bare
+`podman ps` reads the developer's default store and reports no OperatorOS
+containers. An empty default-store listing is never evidence that the stack is
+absent. Use the deployment CLI `status`, which validates and reports the
+effective store, or set `CONTAINERS_STORAGE_CONF` explicitly.
+
 See [CI release bundles](../runbooks/release-bundles.md) for the proposed artifact
 handoff and the reviewed helper-adoption boundary.
 
 ## Status
 
-**Proposal only; local implementation exists. Rehearsal remains NO-GO.** This document recommends a target architecture for review. It does not authorize changes to an EC2 host, production systems, secrets, or data. An earlier image scan found no Alpine package findings, but it did not cover Bun's embedded SQLite 3.53.4 or the unresolved FTS5 CVE. C2 has not been scanned. Earlier test records apply to other source snapshots and constrained environments. Some passed, while other release and E2E runs failed or timed out. None establishes release acceptance for C2. C2 still needs qualified-runner validation, current image artifacts and scans, independent review, and an authorized Ubuntu rehearsal.
+**Candidate B remains the accepted design for a synthetic D1 rehearsal; current-source target-host D1 remains open.** This decision does not authorize host changes or production data. The earlier signed Node artifact and hosted rehearsal apply only to source `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. They do not qualify the current Bun source. The owner accepted the known SQLite 3.53.4 FTS5 finding only for the prior Bun 1.4.4 image, source ID, and identity described in the [stability report](../../STABILITY_REPORT.md). Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1; exact-image runtime, SBOM, scan, provenance, and consumer checks are still required. No exact-source Bun release or current-source host rehearsal is recorded yet. Host Podman, independent recovery, access controls, and operational storage remain unverified. Production remains NO-GO.
 
-Application baseline: `6070cbb7fee48b937596944da3694d39105cd3ee`, with TanStack Start in SPA mode and Elysia as a separate API process.
+Gate C source baseline: harness `b328987fa25338ea518dd15600ea3628fc00449e`, with release source `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`.
 
-## Proposed decision
+## Accepted topology
 
-Use rootless Podman and Quadlet to supervise one Elysia API container. Keep Caddy as a host systemd service. Caddy serves the built TanStack Start SPA files from an immutable release directory and proxies API requests to a loopback-only published API port. Preload the exact image before service start and set Quadlet `Pull=never` so boot does not depend on registry access.
+Use rootless Podman and Quadlet to supervise the Elysia API container, and put a
+single loopback ingress in front of it. Preload the exact image before service
+start and set Quadlet `Pull=never` so boot does not depend on registry access.
 
-This topology has two long-running services and one container. The SPA is static output; it does not need a web runtime container. Do not run `vite preview` or `build/server/server.js` in production.
+The owner selected Candidate B after reviewing
+[the ingress comparison below](#ingress-topology-comparison). The existing
+UID 1000 synthetic deployment remains on ports `18088` and `18090`. D1 will use
+a separate UID 1002 manager on `127.0.0.1:18188` for Caddy and
+`127.0.0.1:18190` for the API. Tailscale Serve remains unchanged during D1.
+Gate D2 must approve and configure private HTTPS separately.
+
+The SPA is static output. Do not run `vite preview` or `build/server/server.js`
+in production.
 
 ~~~mermaid
 flowchart LR
-  Browser["Approved browser origin"]
-  Caddy["Host Caddy systemd service<br/>static client files + reverse proxy"]
+  Browser["Authorized tailnet device"]
+  Serve["Tailscale Serve HTTPS<br/>Gate D2 pending"]
+  Caddy["Rootless Caddy container<br/>static client files + reverse proxy"]
   API["Rootless Podman API container<br/>Elysia + Bun"]
   Data[("Persistent host directory<br/>SQLite + API-owned files")]
   Backup["Approved off-host encrypted backup"]
 
-  Browser -->|"HTTP / HTTPS<br/>access model pending"| Caddy
-  Caddy -->|"127.0.0.1:8090<br/>API, health, OpenAPI paths"| API
+  Browser --> Serve
+  Serve -->|"127.0.0.1:18188<br/>D1 listener only"| Caddy
+  Caddy -->|"127.0.0.1:18190<br/>API, health, OpenAPI paths"| API
   Caddy -->|"static SPA shell and assets"| Static["Immutable release client directory"]
   API -->|"single bind mount"| Data
   Data -.->|"application backup flow"| Backup
 ~~~
 
-Initial disposable rehearsal values remain proposals and need host approval:
+The D1 design uses these isolated values. Recheck them before any host write:
 
 | Setting | Proposed value | State |
 | --- | --- | --- |
-| Caddy listener | `127.0.0.1:8088` | Pending host inventory and approval |
-| API published listener | `127.0.0.1:8090` | Pending host inventory and approval |
-| API container listener | `0.0.0.0:8090` inside the container | Must be tested |
-| SQLite data root | `/var/lib/operatoros/data` | Pending owner and mount-permission rehearsal |
-| Runtime identity | Unprivileged `operatoros` account | Pending host approval |
-| Release staging identity | `operatoros-release` | Proposed; confirm whether it is needed |
-| Operating system | Ubuntu Server 24.04.5 LTS amd64 | Preferred rehearsal target, not verified |
-| Podman package | Ubuntu 24.04 package source | Host candidate and Quadlet compatibility pending; local testing used Podman 5.7.0 on Ubuntu 26.04.1 |
-| Caddy package | Official stable APT repository | Exact APT candidate pending; local config testing used the pinned Caddy 2.11.7 container image |
+| Caddy listener | `127.0.0.1:18188` | Exercised in Loop 82; recheck before reuse |
+| API published listener | `127.0.0.1:18190` | Exercised in Loop 82; recheck before reuse |
+| API container listener | `0.0.0.0:8090` inside the container | Exercised with the older release |
+| Data directory | `/mnt/podman-data/operatoros-d1-synthetic/data/sqlite` mounted at `/var/lib/operatoros/data` | Synthetic only; filesystem is unencrypted |
+| Runtime identity | `operatoros-runtime`, UID/GID 1002; API container UID/GID 10000 | Used in Loop 82; recheck allocation before reuse |
+| Release staging identity | Runtime account `operatoros-runtime` | No second deployment wrapper |
+| Operating system | Ubuntu 26.04.1 LTS amd64 | Read-only inventory; recheck before execution |
+| Podman | 5.7.0 | Loop 82 qualified an older Bun release; current-source Bun qualification remains open |
+| Caddy | Digest-pinned rootless container | No host Caddy package or service |
 
-Do not open LAN or public ingress during the initial rehearsal. Use an approved SSH tunnel for browser tests. Production access, TLS termination, host, and firewall policy require separate decisions.
+Do not open LAN or public ingress during D1. Loopback HTTP checks do not prove secure-cookie behavior through HTTPS. Gate D2 must approve Tailscale Serve and effective tailnet grants.
 
 ## Application boundaries
 
@@ -69,7 +100,8 @@ Keep the accepted [TanStack Start SPA decision](tanstack-start-spa.md):
 
 - Start builds a static shell at `apps/web/build/client/_shell.html` and browser assets under `apps/web/build/client`.
 - The app remains client-rendered. Do not add SSR, Start server routes, Start server functions, or embedded Elysia.
-- Caddy owns static delivery and same-origin routing in the proposed host deployment.
+- Caddy owns static delivery and same-origin routing on the loopback ingress
+  through Candidate B.
 - The separately supervised Elysia service remains the only API owner.
 - `packages/db` continues to own SQLite schema and lifecycle. Do not add a database container.
 - Run exactly one Elysia process for each SQLite data root. Preserve the Linux data-root `flock` and API shutdown behavior.
@@ -77,27 +109,64 @@ Keep the accepted [TanStack Start SPA decision](tanstack-start-spa.md):
 
 ## Why rootless Podman and Quadlet
 
-Run the API container under the unprivileged `operatoros` account. Rootless Podman reduces the host privileges available to a compromised API process. The host must support cgroup v2 and configure subordinate UID and GID ranges. A user-level Quadlet unit needs systemd lingering to start after reboot without an interactive login.
+Run the API container under the proposed unprivileged `operatoros-runtime` account for D1. Rootless Podman reduces the host privileges available to a compromised API process. The host must support cgroup v2 and configure subordinate UID and GID ranges. A user-level Quadlet unit needs systemd lingering to start after reboot without an interactive login. D1 will leave its services stopped and not enabled after qualification.
 
 Use Quadlet-generated systemd services for the API container. It keeps process supervision, restart policy, boot behavior, logs, and service inspection in systemd. One API container does not justify Podman Compose or Kubernetes.
 
 The application image must run as a non-root numeric user. Test the exact user-namespace mapping and bind-mount ownership before using a production data path. Do not use Podman's recursive ownership option on an existing database. Start the rehearsal with synthetic data only.
 
-Bun's JavaScriptCore runtime may need writable-executable memory for its JIT. Do not add a systemd or container memory-execution restriction until the exact production image passes runtime tests.
+The API image uses the pinned Bun runtime in development and release. Do not add a systemd or container memory-execution restriction until the exact release image passes runtime tests.
 
-## Why Caddy stays on the host
+## Ingress topology comparison
 
-The host Caddy service serves immutable static files and proxies the API. It can manage HTTPS later if the approved access model needs it. Keeping Caddy on the host avoids another container and avoids depending on rootless port mapping for privileged public ports.
+Both candidates put Tailscale Serve in front of one loopback ingress and keep
+the API unpublished. The owner accepted Candidate B for the isolated D1
+runtime.
 
-The initial rehearsal binds Caddy to loopback. Do not assume TLS or public DNS is required. If a later approved profile needs LAN or public access, decide the DNS, certificate, ingress, firewall, and monitoring policy before changing the listener.
+### Candidate A — host Caddy
 
-Caddy must route `/api`, `/health`, `/ready`, and `/openapi` before any SPA fallback. Existing static files must win. A missing file with an extension must return 404 instead of `_shell.html`. Validate the exact Caddyfile with the pinned package and test those responses.
+Caddy runs as a host systemd service, serves the immutable client directory, and
+proxies `/api`, `/health`, `/ready`, and `/openapi` to the loopback API port. It
+can terminate TLS later if a non-Tailscale access model is approved. This keeps
+the web tier outside rootless port mapping and adds one host package and unit.
 
-## Why not run Compose or add a web container
+### Candidate B — Caddy container plus API container
 
-The web build contains static assets and a shell, so a Node or Bun web server container would add a runtime without adding application behavior. The Elysia API already needs one independent process. Caddy can serve the static output and proxy to the loopback API port.
+Caddy runs as a second rootless container on the host network, bound to loopback,
+with the same routing contract. The API stays on its own rootless container and
+its published port remains `127.0.0.1`-only. Both are Quadlet units under the
+deployment account.
 
-Podman Compose would add a second orchestration configuration for one container. Quadlet and systemd already provide the needed lifecycle. Reconsider Compose only if the runtime topology grows and a reproducible need appears.
+### Evidence comparison
+
+| Question | Candidate A | Candidate B |
+| --- | --- | --- |
+| Matches the deployed stack on 2026-11-06 | No | Yes (`operatoros-lite-api` and `operatoros-lite-caddy`) |
+| Matches `scripts/operatoros_deploy.py` | No | Yes |
+| Additional host packages or units | Caddy package, host unit | None beyond Podman and Quadlet |
+| Ingress owner | Host systemd | Rootless container |
+| Static file ownership | Host release directory | Bind-mounted read-only release directory |
+| Artifact promotion and pointer switch | Host symlink | Host symlink, same code path |
+| Restart and failure unit | Host service | Quadlet-generated user service |
+| Tailscale Serve compatibility | Yes | Yes |
+| Privileged port requirement | None on loopback | None on loopback |
+| Operational surface to maintain | Host package, config, unit, logs | Container image digest, config, unit, logs |
+
+**Accepted for D1: Candidate B.** It matches the existing synthetic topology
+and the version-controlled deployment interface. Candidate A would add a host
+Caddy package and unit and require a separate deployment path. D1 does not
+change the existing services or Tailscale Serve configuration.
+
+## Why not run Compose or add another web runtime
+
+The web build contains static assets and a shell, so a third runtime to serve
+them would add a process without adding behavior. Caddy already serves the
+client and proxies the API in the implemented container topology.
+
+Podman Compose would add a second orchestration configuration for two
+containers. Quadlet and systemd already provide the needed lifecycle.
+Reconsider Compose only if the runtime topology grows and a reproducible need
+appears.
 
 Rootful Podman is not the default. It can simplify host networking, but gives the runtime manager greater host privilege. Revisit it only if rootless storage, cgroup, or networking cannot satisfy a measured requirement and a reviewer accepts the added risk.
 
@@ -105,7 +174,7 @@ Rootful Podman is not the default. It can simplify host networking, but gives th
 
 Build the API image and static client from the same reviewed source commit. Pin the API image by immutable OCI digest. Record the source commit, build tool versions, base image digest, lockfile checksum, image digest, static archive checksum, and build attestations in one release record.
 
-The repository now has a separate production API Containerfile and Quadlet template under `deploy/podman/`, plus a host Caddyfile and a local synthetic validation harness. Do not reuse the development image. Local checks use a digest-pinned Bun 1.4.4 Alpine Linux/amd64 base and exact `apk` versions for `flock` and `lsof`. A Trivy scan of an earlier image reported zero Alpine OS and Node package findings, but it did not inventory Bun's embedded SQLite, which remains affected by CVE-2026-119373. C2 has not been scanned. The target Ubuntu package candidates, production registry/signer, and host installation procedure are not yet verified.
+The repository has a production API Containerfile and Quadlet template under `deploy/podman/`, a Caddyfile for the rootless Caddy container, and a local synthetic validation harness. Do not reuse the development Podman image. Current source pins digest-locked Bun 1.4.5 from `docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31` and uses the source entrypoint `apps/api/src/server.ts`. Bun's release notes report SQLite 3.54.1 with FTS5. The earlier SQLite 3.53.4 acceptance applies only to the prior Bun 1.4.4 image and its recorded source ID. Runtime reports for the new image must show the finding resolved by the fixed SQLite version. Exact-source release checks and a Bun host rehearsal remain open. The earlier signed Node artifact and hosted rehearsal apply only to their recorded source and do not qualify the current image.
 
 The API image records the source revision, dirty-tree state, and source-manifest
 SHA-256 in OCI labels and `/usr/share/operatoros/build-provenance`. The local
@@ -129,82 +198,38 @@ Caddy reads only the client artifact from a root-owned immutable release directo
 ## Validation gates
 
 1. **Release gate:** current main commit, clean install, full security audits, release validation, and browser E2E all pass on the candidate.
-2. **Image gate:** production image is built, scanned with no unresolved High/Critical findings or approved exceptions, pinned, and inspected; the image starts with no repository checkout or writable source mount.
+2. **Image gate:** the production image is pinned and inspected, and its scan has no unresolved High or Critical findings. Runtime evidence records the exact Bun and SQLite identities. The accepted SQLite finding is limited to its documented runtime fingerprint. The image starts with no repository checkout or writable source mount.
 3. **Host gate:** an identified disposable host, administrator, access method, ingress policy, package policy, recovery policy, reviewers, and explicit change authorization are recorded.
 4. **Rehearsal gate:** browser deep links and assets work; API endpoints bypass the SPA fallback; service restart and reboot work; one API owns the data root; encrypted backup restores into an isolated root; rollback keeps data intact.
 5. **Production gate:** separate target approval, maintenance window, verified backup, migration approval if needed, named operator, rollback criteria, monitoring owner, and explicit GO decision.
 
 A successful local build or Podman development run does not pass the host rehearsal or production gates.
 
-## Local implementation evidence
+## Gate C qualification and open checks
 
-The latest complete local synthetic harness run passed on rootless Podman 5.7.0
-with Bun 1.4.4 and verified that image provenance labels and the in-image
-provenance file match the source manifest. Earlier complete runs also passed. The API ran as UID/GID `10000:10000`, with a read-only root
-filesystem, dropped capabilities, and no-new-privileges. A second API
-container on the same data root was rejected by the existing
-`BACKUP_OPERATION_LOCKED` guard. Manual process restart and container
-recreation preserved the SQLite-backed session.
+Gate C passed on Ubuntu 24.04 with Podman 4.9.3. The accepted harness is
+`b328987fa25338ea518dd15600ea3628fc00449e`, from merged PR #376 and successful
+run [42511295699](https://github.com/daoistmadness/operatoros/actions/runs/42511295699).
+It verified the retained release artifact without rebuilding it. The release
+source is `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`, bundle SHA-256 is
+`0d66097da4bff85b4bb0915c39c819b9d069cf34f16688b0b9e29f5c7594bd39`, and OCI
+manifest digest is `sha256:acf22409b2a2f957830533c778198cdde5c342664d886526c38f8a4336c5a0ed`.
 
-The pinned Caddy 2.11.7 test image served the SPA shell/assets and proxied
-health, readiness, OpenAPI, and auth calls over loopback. Missing assets and a
-present synthetic `.vite/manifest.json` canary returned 404; wrong-origin
-logout returned 403 and preserved the session. The harness enabled SQLite WAL,
-verified pending WAL frames before backup, restored an encrypted snapshot to an
-isolated data root, validated schema `20261027_s54`, and authenticated both
-the restored session and a new login. The local restore-to-usable timing is recorded in the paired external test
-record; it is synthetic and is not an approved RTO.
+The rehearsal passed artifact provenance, isolated rootless storage, OCI
+import without rebuilding, synthetic SQLite setup and validation, Quadlet
+lifecycle, API health and authentication, SPA routing, WAL and integrity
+checks, locking, invalid-input rejection, interrupted-transaction recovery,
+application rollback, and scoped cleanup.
 
-The generated Quadlet passed the local Podman user-generator dry run and
-`systemd-analyze verify`, but the actual user service was not started because
-the host user manager is degraded. Crash-policy automation, reboot recovery,
-Ubuntu 24.04 compatibility, host firewall/ingress, off-host backup policy,
-and application rollback against a previous image remain unverified.
-
-A fresh Trivy 0.76.1 scan of the pinned Alpine API image reported zero OS,
-Node-package, and secret findings, with a 131-component CycloneDX SBOM. This
-does not clear the image security gate: Bun 1.4.4 embeds SQLite 3.53.4 with
-FTS5 enabled, leaving CVE-2026-119373 in the runtime. The Debian base used by
-the earlier candidate was replaced with Alpine, removing its Debian-specific
-package findings; the CVEs were not patched in Debian. No supported Bun release
-containing SQLite 3.54.0 or later was available during this audit, and no
-security exception was approved. See the [readiness audit](../audits/podman-deployment-readiness.md)
-for CVE details and scanner scope.
-
-A loopback-only local registry test pushed the image and captured the
-post-push registry digest. A separate rootless Podman VFS store pulled by that
-digest and reported the same image ID. An ephemeral Ed25519 test identity
-signed a local manifest and verification passed. This validates local digest
-identity and signature mechanics only; it does not establish an approved
-production registry, signer, attestation policy, or retention process. The
-exact local source manifest, image/archive checksums, scanner output, SBOM,
-and test signature remain outside Git and identify an uncommitted synthetic
-build, not a release artifact.
-
-Two controlled SPA builds emitted 214 files each. All files matched except
-`_shell.html`, whose serialized root-route `updatedAt` value comes from
-TanStack Router's `Date.now()` server-loader timestamp. `SOURCE_DATE_EPOCH`
-does not control it. No safe app-level override was found; post-build editing
-could change hydration state. The SPA is checksum-traceable but not
-byte-for-byte reproducible. Build once from a reviewed tree, record the exact
-artifact checksum and toolchain provenance, and promote that exact artifact
-without rebuilding it.
-
-Older records include three `timeout 300 make e2e-smoke` passes at 257.65s,
-259.19s, and 262.21s, with 67 browser tests passing, two intentional skips,
-and API tests 8/8. Other recorded runs timed out or were terminated at the
-300-second limit; a focused E2E run also failed the disposable-data-reset
-check. These runs used earlier source snapshots and constrained environments,
-so they do not establish C2 acceptance or a qualified timing baseline.
-
-The `check:full` records also differ. The run logged against `6070cbb7` failed
-with 420 passing tests and three attendance-reconciliation timeouts. A separate
-pre-freeze run exited 0 in 1,372 seconds against source manifest `b1e2248a…`,
-but only in a private mount namespace with tmpfs-backed `/tmp` while the host
-root filesystem was full. Neither result is release acceptance for C2. No
-canonical `mise run check:full` or 300-second smoke run has been accepted on C2
-using a qualified disk-backed runner. No external image promotion, EC2 change,
-or production deployment occurred.
+Gate C used an earlier Bun-based image and does not prove cross-release rollback
+between distinct API images, recovery after a real process or host crash,
+compatibility with OPRSERVER's live configuration, independent off-host
+database recovery, or effective tailnet grants. OPRSERVER runs Ubuntu 26.04.1
+and Podman 5.7.0. Loop 82 qualified the UID 1002 synthetic runtime with an
+older Bun release. The historical Node release does not qualify the current
+Bun image. Current-source release and host qualification remain open. D1 must
+use only synthetic data on the existing unencrypted data filesystem.
+Production remains NO-GO.
 
 ## Rollback
 
@@ -220,6 +245,7 @@ Before rollback, verify that the prior API version accepts the current schema. T
 - [Ubuntu Noble Podman package](https://packages.ubuntu.com/noble/podman)
 - [Caddy official package installation](https://caddyserver.com/docs/install)
 - [Caddy route directive](https://caddyserver.com/docs/caddyfile/directives/route)
+- [SQLite 3.54.1 release history](https://www.sqlite.org/changes.html)
 - [Caddy file server](https://caddyserver.com/docs/caddyfile/directives/file_server)
 - [Ubuntu deployment runbook](../runbooks/ubuntu-server-deployment.md)
 - [Backup and restore](../runbooks/backup-restore.md)

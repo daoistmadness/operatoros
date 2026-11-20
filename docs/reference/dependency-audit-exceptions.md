@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-19
 ---
 
 # Dependency audit exceptions
@@ -15,17 +15,24 @@ The `minimatch` paths resolve to patched `11.0.1`, including the ExcelJS /
 Archiver production path and development tooling. The root scoped overrides and
 consumer compatibility tests remain in place.
 
-`bun audit` does not scan Bun's embedded SQLite runtime. Bun 1.4.4 embeds
-SQLite 3.53.4 with FTS5 enabled; [CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373)
-affects SQLite versions before 3.54.0. This remains a separate unresolved
-runtime finding. The API and database source scan found no FTS5 table creation
-or `MATCH` query, but the runtime itself is still affected. See the
-[deployment readiness audit](../audits/podman-deployment-readiness.md) for the
-current runtime and image assessment.
+`bun audit` does not scan Bun's embedded SQLite runtime. The prior Bun 1.4.4
+image embedded SQLite 3.53.4 with FTS5 enabled.
+[CVE-2026-119373](https://osv.dev/vulnerability/CVE-2026-119373) affects
+SQLite versions before 3.54.0. On 2026-11-16, the owner accepted this finding
+only for Bun 1.4.4 with SQLite 3.53.4, source ID
+`2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
+and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Release evidence must retain the runtime identity and record the finding as
+`OPEN` with disposition `ACCEPTED`. That acceptance remains limited to the
+listed historical image. Current source pins Bun 1.4.5; its [release
+notes](https://bun.com/blog/release-notes/bun-v1.4.5) report bundled SQLite
+3.54.1, above the affected range. The new image still needs exact-source
+runtime, SBOM, scan, provenance, and consumer checks before it can qualify a
+release. See the [stability report](../../STABILITY_REPORT.md) for the release
+boundary and other evidence limits.
 
 | Advisory | Package and range | Reason | Compensating control | Owner | Review date |
 | --- | --- | --- | --- | --- | --- |
-| _none_ | _none_ | No active JavaScript dependency exceptions. The Bun/SQLite runtime finding is recorded separately below and in the deployment readiness audit. | _n/a_ | OperatorOS maintainers | _n/a_ |
+| _none_ | _none_ | No JavaScript dependency advisories are excepted. Bun's embedded SQLite runtime is qualified separately; current Bun 1.4.5 uses SQLite 3.54.1, and the earlier acceptance remains limited to the prior image. | _n/a_ | OperatorOS maintainers | _n/a_ |
 
 ## Removed exceptions
 

@@ -1,12 +1,12 @@
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { describe, expect, it } from "bun:test";
 import { createApp } from "../src/app";
 import { analyticsCohorts, analyticsOverview, analyticsTrends, roundHalfEven } from "../src/analytics/queries";
 import type { AuthContext } from "../src/auth/service";
 
 function context(): AuthContext {
-  const client = new Database(":memory:");
-  client.run(`
+  const client = openTestDatabase(":memory:").client;
+  client.exec(`
     CREATE TABLE academic_years (id INTEGER PRIMARY KEY, label TEXT, start_date TEXT, end_date TEXT);
     CREATE TABLE jenjangs (id INTEGER PRIMARY KEY, name TEXT);
     CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT, jenjang TEXT, class_name TEXT);
@@ -34,7 +34,7 @@ describe("Phase 16 canonical analytics aggregates", () => {
   it("keeps canonical rounding and protects analytics routes", async () => {
     expect(roundHalfEven(80.05)).toBe(80);
     expect(roundHalfEven(80.15)).toBe(80.2);
-    const client = new Database(":memory:");
+    const client = openTestDatabase(":memory:").client;
     const app = createApp({ environment: "test", databaseHandle: { client } as any, auth: { authCookieSecret: "phase16-test-auth-secret-32-characters" } });
     try {
       for (const path of ["overview?academic_year_id=1", "trends?academic_year_id=1", "cohorts?academic_year_id=1&dimension=class"]) {

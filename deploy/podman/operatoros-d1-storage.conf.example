@@ -1,0 +1,4 @@
+[storage]
+driver = "overlay"
+graphroot = "/mnt/podman-data/operatoros-d1-synthetic/podman-rootless/graphroot"
+runroot = "/run/user/1002/operatoros-podman-runroot"

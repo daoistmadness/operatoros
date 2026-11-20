@@ -2,14 +2,14 @@ import { createHash, randomUUID } from "node:crypto";
 import { accessSync, constants, appendFileSync, chmodSync, closeSync, copyFileSync, createReadStream, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, statfsSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { Readable } from "node:stream";
-import { Database } from "bun:sqlite";
 import { t } from "elysia";
 import { BackupEntrySchema, BackupExecutionHistoryEntrySchema, BackupSchedulerConfigSchema, BackupSchedulerUpdateSchema, BackupStatusSchema, CreatedBackupSchema, DeleteBackupResultSchema, RecoveryHistoryPageSchema, RestorePreflightSchema, RestoreRequestSchema, RestoreResultSchema } from "@operatoros/contracts/backup";
 import { syncDirectory, syncFile } from "./durable-files";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { verifyPasswordSync } from "../auth/password";
 import { isFirstAdminSetupRequired, restoreAdministratorCredentialMatches, restoreIdentityState } from "../auth/admin-state";
-import { assertMigrationLedgerShape, compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES as DATABASE_REQUIRED_TABLES, schemaFingerprint } from "@operatoros/db";
+import { assertMigrationLedgerShape, compareSchemaVersions, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES as DATABASE_REQUIRED_TABLES, schemaFingerprint, type SqliteClient } from "@operatoros/db";
 import { BACKUP_ENVELOPE_MAGIC, BACKUP_ENVELOPE_VERSION, BACKUP_ENCRYPTION_ALGORITHM, backupSha256, decryptBackupFileSync, encryptBackupFileSync, hashBackupFileSync, isEncryptedBackupFile, type BackupEncryptionConfig, type BackupFileVerification } from "../security/backup-crypto";
 import { appendRestoreAudit, restoreAuditReason, type RestoreAuditEvent, type RestoreAuditOutcome } from "./restore-audit";
 import { performRestoreSwap, type RestoreFileSystem } from "./restore-transaction";
@@ -135,7 +135,7 @@ function recordRestoreEvent(root: string, event: RestoreAuditEvent, outcome: Res
   catch { console.error(`WARN: ${event} restore audit record could not be written.`); }
 }
 
-function dbSchemaVersion(database: Database): string {
+function dbSchemaVersion(database: SqliteClient): string {
   const versions = (database.query("SELECT version FROM operatoros_schema_migrations").all() as Row[]).map((value) => String(value.version));
   return versions.reduce((latest, version) => {
     const order = compareSchemaVersions(version, latest);
@@ -175,7 +175,8 @@ function incompatibleDatabaseInspection(tables: Set<string>, schema = "unknown")
 }
 
 function inspectDatabase(path: string, mode: InspectionMode = "restore-candidate"): DatabaseInspection {
-  const database = new Database(path, { readonly: true });
+  const handle = openDatabase(path, { readonly: true, validate: false });
+  const database = handle.client;
   try {
     const tableList = database.query("PRAGMA main.table_list").all() as Row[];
     const mainObjects = tableList.filter((value) => value.schema === "main");
@@ -211,7 +212,7 @@ function inspectDatabase(path: string, mode: InspectionMode = "restore-candidate
     const identityCompatible = ["id", "username", "password_hash", "role", "is_active", "failed_login_attempts", "locked_until"].every((value) => userColumns.has(value)) && ["id", "user_id", "token_hash", "created_at", "last_used_at", "expires_at", "absolute_expires_at", "revoked_at"].every((value) => sessionColumns.has(value));
     const restoreIdentity = mode === "restore-candidate" ? restoreIdentityState(database) : null;
     return { integrity, quick, schemaValid, foreignKeyViolationCount, tables, counts, schema, identityCompatible, restoreIdentityEligible: restoreIdentity?.eligible ?? null, restoreIdentityBlockingReason: restoreIdentity?.blockingReason ?? null };
-  } finally { database.close(); }
+  } finally { handle.close(); }
 }
 
 function validateSnapshot(path: string, sourceTables: Set<string>, mode: InspectionMode = "restore-candidate"): ReturnType<typeof inspectDatabase> {
@@ -266,7 +267,7 @@ function diskSpaceProbePath(root: string): string {
 
 /** Fails closed (503) when the capacity probe itself fails; refuses (507) when available bytes are below the documented minimum. */
 function assertBackupDiskSpace(context: AuthContext, config: SafetyConfig, root: string): void {
-  const attachmentBytes = referencedReportFiles(context.database.client as unknown as Database).reduce((total, entry) => total + entry.sizeBytes, 0);
+  const attachmentBytes = referencedReportFiles(context.database.client).reduce((total, entry) => total + entry.sizeBytes, 0);
   const required = minimumRequiredSpaceBytes(dbPath(context), attachmentBytes);
   let probe: { availableBytes: number; freeBytes: number };
   try { probe = diskSpaceProbeFor(config)(diskSpaceProbePath(root)); } catch { throw Object.assign(new Error("Backup free-space probe failed; refusing to create a backup."), { status: 503, code: BACKUP_DISK_SPACE_PROBE_FAILED }); }
@@ -335,12 +336,12 @@ function createBackup(context: AuthContext, config: SafetyConfig, trigger: "manu
     chmodSync(temporary, 0o600);
     const sourceTables = new Set((context.database.client.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as Row[]).map((value) => String(value.name)));
     validateSnapshot(temporary, sourceTables, "trusted-database");
-    const references = referencedReportFiles(context.database.client as unknown as Database);
+    const references = referencedReportFiles(context.database.client);
     let payloadPath = temporary;
     let payloadInfo: { databaseSizeBytes: number; payloadSizeBytes: number; attachments: { sha256: string; sizeBytes: number }[] } | null = null;
     if (references.length) {
       if (!config.reportStorageDir) throw Object.assign(new Error("UPP report storage is required for a complete backup."), { status: 503, code: "UPP_REPORT_STORAGE_UNAVAILABLE" });
-      const attachments = backupAttachmentSources(context.database.client as unknown as Database, config.reportStorageDir);
+      const attachments = backupAttachmentSources(context.database.client, config.reportStorageDir);
       payloadPath = join(temporaryDirectory, "full-backup.payload");
       payloadInfo = writeBackupPayload(temporary, attachments, payloadPath);
     }
@@ -901,9 +902,9 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
     const contents = backupContents(plaintextPath, dirname(plaintextPath), manifest);
     const source = inspectDatabase(contents.databasePath);
     if (source.schemaValid) {
-      const candidate = new Database(contents.databasePath, { readonly: true });
+      const candidate = openDatabase(contents.databasePath, { readonly: true, validate: false });
       try {
-        if (!backupAttachmentsMatch(candidate, contents.attachments)) {
+        if (!backupAttachmentsMatch(candidate.client, contents.attachments)) {
           const code = contents.attachments.length ? "BACKUP_ATTACHMENTS_INVALID" : "BACKUP_ATTACHMENTS_MISSING";
           throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code });
         }
@@ -940,7 +941,7 @@ function preflight(context: AuthContext, config: SafetyConfig, filename: string)
 function missingRestoreFields(body: Row): string[] { return ["acknowledge_complete_replacement", "acknowledge_session_revocation", "acknowledge_restart_required", "acknowledge_safety_backup", "expected_source_sha256", "expected_active_sha256"].filter((key) => body[key] === undefined); }
 function restoreValidationError(set: any, fields: string[]): { detail: unknown } { set.status = 422; return { detail: fields.map((field) => ({ loc: ["body", field], msg: "Field required", type: "missing" })) }; }
 
-function restoredAdministratorCredentialsMatch(client: Database, body: Row, operator: { username: string }): boolean {
+function restoredAdministratorCredentialsMatch(client: SqliteClient, body: Row, operator: { username: string }): boolean {
   return isFirstAdminSetupRequired(client) ||
     restoreAdministratorCredentialMatches(client, operator.username, body.current_password) ||
     restoreAdministratorCredentialMatches(client, body.candidate_admin_username, body.candidate_admin_password);
@@ -953,7 +954,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
     if (!config.destructiveOperationsEnabled) throw Object.assign(new Error("Destructive operations are disabled."), { status: 403, code: "RESTORE_DISABLED" });
     if (!body.current_password || !body.confirmation_filename || !body.confirmation_phrase) throw Object.assign(new Error("Restore fields are required."), { status: 422, code: "RESTORE_FIELDS_REQUIRED" });
     const user = row(context, "SELECT password_hash FROM users WHERE id = ?", [operator.id]);
-    if (!user || !Bun.password.verifySync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
+    if (!user || !verifyPasswordSync(body.current_password, String(user.password_hash))) throw Object.assign(new Error("Restore authorization failed."), { status: 401, code: "RESTORE_REAUTHENTICATION_FAILED" });
     if (body.confirmation_filename !== filename) throw Object.assign(new Error("The confirmation filename does not match."), { status: 400, code: "RESTORE_CONFIRMATION_FILENAME_MISMATCH" });
     if (body.confirmation_phrase !== "RESTORE_DATABASE") throw Object.assign(new Error("The restore confirmation phrase is invalid."), { status: 400, code: "RESTORE_CONFIRMATION_PHRASE_INVALID" });
     if (![body.acknowledge_complete_replacement, body.acknowledge_session_revocation, body.acknowledge_restart_required, body.acknowledge_safety_backup].every(Boolean)) throw Object.assign(new Error("Every restore safety acknowledgement is required."), { status: 400, code: "RESTORE_ACKNOWLEDGEMENT_REQUIRED" });
@@ -984,10 +985,10 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         const candidateInspection = validateSnapshot(candidate, new Set(REQUIRED_OPERATIONAL_TABLES));
         if (candidateInspection.restoreIdentityEligible !== true) throw new Error("Restore candidate has no eligible active administrator and first-run setup is closed.");
         if (candidateInspection.foreignKeyViolationCount !== 0) throw new Error("Restore candidate foreign-key validation failed.");
-        const candidateDatabase = new Database(candidate, { readonly: true });
+        const candidateDatabase = openDatabase(candidate, { readonly: true, validate: false });
         try {
-          if (!backupAttachmentsMatch(candidateDatabase, contents.attachments)) throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code: "BACKUP_ATTACHMENTS_INVALID" });
-          if (!restoredAdministratorCredentialsMatch(candidateDatabase, body, operator)) throw Object.assign(new Error("A password for an active administrator in the selected backup could not be verified."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
+          if (!backupAttachmentsMatch(candidateDatabase.client, contents.attachments)) throw Object.assign(new Error("Backup attachment references do not match its database."), { status: 409, code: "BACKUP_ATTACHMENTS_INVALID" });
+          if (!restoredAdministratorCredentialsMatch(candidateDatabase.client, body, operator)) throw Object.assign(new Error("A password for an active administrator in the selected backup could not be verified."), { status: 409, code: "RESTORE_ADMIN_CREDENTIAL_REQUIRED" });
         } finally { candidateDatabase.close(); }
         if (contents.attachments.length) {
           if (!config.reportStorageDir) throw Object.assign(new Error("UPP report storage is required to restore referenced files."), { status: 409, code: "UPP_REPORT_STORAGE_UNAVAILABLE" });
@@ -1017,7 +1018,7 @@ function restore(context: AuthContext, config: SafetyConfig, filename: string, b
         context.database.client.run("UPDATE sessions SET revoked_at = CURRENT_TIMESTAMP WHERE revoked_at IS NULL");
         const checkedRestored = inspectDatabase(active);
         const postRestoreForeignKeyViolations = checkedRestored.foreignKeyViolationCount;
-        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client as unknown as Database, body, operator)) throw new Error("Post-restore integrity validation failed.");
+        if (checkedRestored.integrity !== "ok" || checkedRestored.quick !== "ok" || postRestoreForeignKeyViolations !== 0 || !checkedRestored.restoreIdentityEligible || !restoredAdministratorCredentialsMatch(context.database.client, body, operator)) throw new Error("Post-restore integrity validation failed.");
         return checkedRestored;
       },
       beforeCommit: () => appendRestoreAudit(root, { event: "restore_completed", outcome: "COMPLETED", target_filename: filename, authenticated_username: operator.username, operation_id: operationId, pre_restore_snapshot_filename: snapshot!.filename, reason: null }),

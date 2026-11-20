@@ -1,0 +1,39 @@
+[Unit]
+Description=OperatorOS D1 synthetic Elysia API
+RequiresMountsFor=/mnt/podman-data
+ConditionPathIsMountPoint=/mnt/podman-data
+
+[Service]
+Environment=CONTAINERS_STORAGE_CONF=/mnt/podman-data/operatoros-d1-synthetic/deploy/storage.conf
+ExecStartPre=/usr/bin/install -d -m 0700 /run/user/1002/operatoros-podman-runroot
+ExecStartPre=/usr/bin/python3 /mnt/podman-data/operatoros-d1-synthetic/deploy/operatoros_deploy.py storage-check --config /mnt/podman-data/operatoros-d1-synthetic/deploy/config/operatoros.toml
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=600
+TimeoutStopSec=45
+MemoryMax=6G
+CPUQuota=250%
+
+[Container]
+Image=sha256:8c8dfce496c1f304a2b157603d0b6b239fadf540e9824cc1414d0addf31621c6
+Pull=never
+ContainerName=operatoros-lite-api
+PublishPort=127.0.0.1:18190:8090
+Environment=HOST=0.0.0.0
+Environment=PORT=8090
+Environment=NODE_ENV=production
+Environment=OPERATOROS_DATA_DIR=/var/lib/operatoros/data
+EnvironmentFile=/mnt/podman-data/operatoros-d1-synthetic/deploy/api.env
+Volume=/mnt/podman-data/operatoros-d1-synthetic/data/sqlite:/var/lib/operatoros/data:rw
+User=10000:10000
+UserNS=keep-id:uid=10000,gid=10000
+ReadOnly=true
+ReadOnlyTmpfs=true
+NoNewPrivileges=true
+DropCapability=all
+LogDriver=journald
+HealthCmd=/usr/local/bin/operatoros-api-healthcheck
+HealthInterval=30s
+HealthTimeout=5s
+HealthStartPeriod=30s
+HealthRetries=3

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { copyFileSync, readFileSync, unlinkSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -38,7 +38,7 @@ describe("S5.1 data layer", () => {
     const path = disposableDatabasePath("fresh-parity");
     bootstrapDatabase(path);
     try {
-      const client = new Database(path, { readonly: true });
+      const client = openTestDatabase(path, { readonly: true }).client;
       const present = new Set(
         (client.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map((row) => row.name),
       );
@@ -58,7 +58,7 @@ describe("S5.1 data layer", () => {
   });
 
   it("rolls back a failed transaction", () => {
-    const client = new Database(":memory:");
+    const client = openTestDatabase(":memory:").client;
     client.run("CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT NOT NULL)");
     expect(() =>
       inTransaction(client, () => {
@@ -74,12 +74,12 @@ describe("S5.1 data layer", () => {
     const path = disposableDatabasePath("historical-65");
     bootstrapDatabase(path);
     try {
-      const client = new Database(path);
+      const client = openTestDatabase(path).client;
       for (const table of ["staff_members", "staff_education", "staff_identifiers", "staff_contact_details", "staff_import_batches", "staff_import_rows", "staff_import_issues", "staff_job_title_mappings", "staff_jenjang_assignments", "dismissal_policies", "dismissal_policy_audits", "teacher_class_assignments", "teacher_class_assignment_audit"]) {
         client.run(`DROP TABLE IF EXISTS "${table}"`);
       }
       client.close();
-      const probe = new Database(path, { readonly: true });
+      const probe = openTestDatabase(path, { readonly: true }).client;
       const before = (probe.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map((r) => r.name).sort().join(",");
       const ledgerBefore = (probe.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at").all() as { version: string }[]).map((r) => r.version).join(",");
       probe.close();
@@ -109,7 +109,7 @@ describe("S5.1 data layer", () => {
         const path = disposableDatabasePath("drop-one");
         copyFileSync(template, path);
         try {
-          const client = new Database(path);
+          const client = openTestDatabase(path).client;
           client.run(`PRAGMA foreign_keys = OFF`);
           client.run(`DROP TABLE IF EXISTS "${table}"`);
           client.close();
@@ -127,7 +127,7 @@ describe("S5.1 data layer", () => {
     const path = disposableDatabasePath("nonmutation");
     bootstrapDatabase(path);
     try {
-      const client = new Database(path);
+      const client = openTestDatabase(path).client;
       client.run("DROP TABLE staff_members");
       client.close();
       const before = sha256FileSync(path);
@@ -142,7 +142,7 @@ describe("S5.1 data layer", () => {
     const path = disposableDatabasePath("extras");
     bootstrapDatabase(path);
     try {
-      const client = new Database(path);
+      const client = openTestDatabase(path).client;
       client.run("CREATE TABLE unrelated_legacy_notes (id INTEGER PRIMARY KEY, note TEXT)");
       client.close();
       expect(() => openDatabase(path, { readonly: true })).toThrow("DATABASE_CHECKSUM_MISMATCH");
@@ -155,7 +155,7 @@ describe("S5.1 data layer", () => {
     const path = disposableDatabasePath("missing-trigger");
     bootstrapDatabase(path);
     try {
-      const client = new Database(path);
+      const client = openTestDatabase(path).client;
       client.run("DROP TRIGGER trg_student_master_change_history_no_delete");
       client.close();
       expect(() => openDatabase(path)).toThrow("DATABASE_SCHEMA_INVALID");
@@ -165,7 +165,7 @@ describe("S5.1 data layer", () => {
   }, 30000);
 
   it("fails closed when the migration ledger is missing entirely", () => {
-    const client = new Database(":memory:");
+    const client = openTestDatabase(":memory:").client;
     expect(() => validateDatabase(client)).toThrow();
     client.close();
   });

@@ -143,6 +143,10 @@ docs/. Use one topic per kebab-case page, add status and last_reviewed front
 matter, and link every maintained page from the index. The protected Dapodik
 design is the explicit content and front-matter exception. Keep package-owned,
 generated, release, and contributor docs with their existing owners.
+The program-level status deliverables `MASTER_CHECKLIST.md`, `DECISIONS.md`, and
+`STABILITY_REPORT.md` are explicit root exceptions. Give each status and
+last_reviewed front matter, link each once from docs/README.md, and keep
+canonical architecture and operational procedures in their existing docs pages.
 
 Session logs belong only in docs/session/; they are non-authoritative.
 Promote durable facts into their canonical page. Add one user-facing
@@ -152,6 +156,13 @@ release-history impact. The repository CI checks the docs layout, front
 matter, index, links, and changelog bullet.
 
 ## Runtime and ownership
+
+The owner chose Bun as the application runtime and accepted the known SQLite
+issue only for the prior Bun 1.4.4 image on 2026-11-16. Do not migrate the
+application to another runtime solely to address that issue. Current source
+pins Bun 1.4.5 with SQLite 3.54.1; keep the prior runtime identity and accepted
+finding in its historical release evidence. This decision does not approve a
+production deployment or suppress unrelated findings.
 
 OperatorOS is an offline-first school attendance and academic analytics system.
 Local runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
@@ -207,10 +218,10 @@ Implementation prompts start with `/plan`; keep code identifiers exact.
 
 Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
-resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.4
+resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.5
 in its local development image and does not change the supported runtime.
 The active CLI typechecker is TypeScript 7.0.2 through the root
-`@typescript/native` alias; Bun 1.4.4's `bun check` also runs in CI. TypeScript
+`@typescript/native` alias; Bun 1.4.5's `bun check` also runs in CI. TypeScript
 5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
 CLI typechecks.
 HK 2.8.1 is pinned in `mise.toml` and uses the matching versioned Pkl schema in

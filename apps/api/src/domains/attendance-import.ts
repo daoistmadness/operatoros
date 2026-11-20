@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding } from "@operatoros/db";
 import { t } from "elysia";
 import { AttendanceImportCommitRequestSchema } from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
@@ -30,7 +30,7 @@ function rows(client: AuthContext["database"]["client"], query: string, params: 
 function row(client: AuthContext["database"]["client"], query: string, params: any[] = []): Row | null { return (client.query(query).get(...params) as Row | null) ?? null; }
 function json(value: unknown): string | null { return value == null ? null : JSON.stringify(value); }
 function parseJson(value: unknown): any { return value == null || value === "" ? null : typeof value === "string" ? JSON.parse(value) : value; }
-function insertStagedRows(client: AuthContext["database"]["client"], columns: string, values: SQLQueryBindings[][]): void {
+function insertStagedRows(client: AuthContext["database"]["client"], columns: string, values: SqliteBinding[][]): void {
   const width = values[0]?.length;
   if (width === undefined) return;
   const batchSize = Math.min(IMPORT_STAGING_INSERT_BATCH_SIZE, Math.floor(SQLITE_BIND_PARAMETER_LIMIT / width));
@@ -166,7 +166,7 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
   const counts = { NEW: 0, UNCHANGED: 0, DIFFERENCE: 0, CONFLICT: 0, INVALID: 0 };
   inTransaction(client, () => {
     client.run("INSERT INTO attendance_import_batches (id, filename, checksum, uploaded_by, total_rows, logical_rows, new_records, update_records, unchanged_records, conflict_records, invalid_records, new_students, status) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, 0, 0, 0, 'preview')", [batchId, filename, checksum, username, workbook.totalRows, workbook.rows.length]);
-    const stagedRows: SQLQueryBindings[][] = [];
+    const stagedRows: SqliteBinding[][] = [];
     for (const entry of workbook.rows) {
       const student = resolveStudent(context, entry.studentIdentifier);
       const existing = student ? row(client, "SELECT * FROM attendance WHERE student_id = ? AND date = ?", [student.id, entry.date]) : null;
@@ -199,7 +199,7 @@ export function createPreview(context: AuthContext, workbook: WorkbookRows, file
       if (stagedRows.length === IMPORT_STAGING_INSERT_BATCH_SIZE) insertStagedRows(client, IMPORT_ROW_COLUMNS, stagedRows);
     }
     if (stagedRows.length) insertStagedRows(client, IMPORT_ROW_COLUMNS, stagedRows);
-    const invalidRows: SQLQueryBindings[][] = [];
+    const invalidRows: SqliteBinding[][] = [];
     for (const invalid of workbook.invalidRows) {
       counts.INVALID++;
       invalidRows.push([batchId, invalid.excelRow, invalid.noId, invalid.name, invalid.date, "INVALID", invalid.reason]);

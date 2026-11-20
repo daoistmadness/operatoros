@@ -9,6 +9,7 @@ export {
   schemaFingerprint,
 } from "./connection";
 export type { AppDatabase, DatabaseHandle } from "./connection";
+export type { SqliteBinding, SqliteClient, SqliteRunResult, SqliteStatement, SqliteStatementBinding } from "./sqlite-client";
 export { createFreshDatabase } from "./bootstrap";
 export { migrateExistingDatabase, validateMigrationSource } from "./migrate-existing";
 export {

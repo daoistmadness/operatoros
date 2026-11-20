@@ -1,4 +1,4 @@
-import type { Database, SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding, SqliteClient } from "@operatoros/db";
 import type { StaffAnalyticsSummaryDto } from "@operatoros/contracts/staff";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 
@@ -43,7 +43,7 @@ function median(values: number[]): number | null {
 }
 function bool(value: unknown): boolean { return value === true || value === 1 || value === "1"; }
 
-export function staffAnalytics(db: Database, asOfDate: string, whereSql = "", params: SQLQueryBindings[] = [], today = schoolLocalDate(new Date())): StaffAnalyticsSummaryDto {
+export function staffAnalytics(db: SqliteClient, asOfDate: string, whereSql = "", params: SqliteBinding[] = [], today = schoolLocalDate(new Date())): StaffAnalyticsSummaryDto {
   if (!validDate(asOfDate) || asOfDate > today) throw new Error("INVALID_AS_OF_DATE");
   const rows = db.query(`SELECT s.id, s.employment_status, s.birth_date, s.employment_start_date, s.employment_end_date,
     s.created_at,

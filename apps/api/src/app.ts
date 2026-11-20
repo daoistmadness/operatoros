@@ -65,7 +65,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
   if ((_config.environment ?? process.env.NODE_ENV) !== "test") assertAuthCookieSecret(_config.auth?.authCookieSecret);
   const database = _config.databaseHandle ?? (_config.databasePath ? openDatabase(_config.databasePath) : undefined);
   const securityConfig = defaultAuthConfig(_config.auth);
-  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
+  const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, passwordVerifier: _config.passwordVerifier, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
   let applicationRoutesRegistered = false;
   const app = new Elysia({ name: "operatoros-api" })
     .onError(({ code, set }) => {

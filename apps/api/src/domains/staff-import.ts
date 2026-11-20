@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { Database, SQLQueryBindings } from "bun:sqlite";
+import type { SqliteBinding, SqliteClient } from "@operatoros/db";
 import { inTransaction } from "@operatoros/db";
 import { isBlank, parseExcelDate, readXlsxWorkbook, safeExportFilename } from "@operatoros/excel";
 import { schoolLocalDate } from "./attendance-submission-deadline";
@@ -76,7 +76,7 @@ function addMissing(issues: Issue[], field: string, code: string, label: string)
   issues.push({ field, code, severity: "WARNING", message: `${label} is blank.` });
 }
 
-export function expirePendingStaffImportData(db: Database, asOfDate = new Date()): void {
+export function expirePendingStaffImportData(db: SqliteClient, asOfDate = new Date()): void {
   const existing = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('staff_import_rows','staff_import_batches')").all() as Array<{ name: string }>;
   if (existing.length !== 2) return;
   const cutoff = new Date(asOfDate.getTime() - STAFF_IMPORT_RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace("T", " ");
@@ -89,16 +89,16 @@ export function expirePendingStaffImportData(db: Database, asOfDate = new Date()
 }
 
 function sha(value: unknown): string { return createHash("sha256").update(JSON.stringify(value)).digest("hex"); }
-function dbRows(db: Database, sql: string, params: SQLQueryBindings[] = []): Row[] { return db.query(sql).all(...params) as Row[]; }
-function dbRow(db: Database, sql: string, params: SQLQueryBindings[] = []): Row | null { return (db.query(sql).get(...params) as Row | null) ?? null; }
+function dbRows(db: SqliteClient, sql: string, params: SqliteBinding[] = []): Row[] { return db.query(sql).all(...params) as Row[]; }
+function dbRow(db: SqliteClient, sql: string, params: SqliteBinding[] = []): Row | null { return (db.query(sql).get(...params) as Row | null) ?? null; }
 function text(value: unknown): string { return value == null ? "" : String(value); }
-function failedImportRows(db: Database, batchId: string): Array<{ row_number: number; code: string }> {
+function failedImportRows(db: SqliteClient, batchId: string): Array<{ row_number: number; code: string }> {
   return dbRows(db, `SELECT DISTINCT r.source_row_number AS row_number, i.issue_code AS code FROM staff_import_rows r
     JOIN staff_import_issues i ON i.import_row_id=r.id WHERE r.batch_id=? AND i.issue_code IN ('STALE_MATCH','STALE_UNMATCHED_MATCH','STALE_CONFLICTING_MATCHES')
     ORDER BY r.source_row_number,i.issue_code`, [batchId]).map((item) => ({ row_number: Number(item.row_number), code: String(item.code) }));
 }
 
-function profile(db: Database, staffId: string): Row | null {
+function profile(db: SqliteClient, staffId: string): Row | null {
   const member = dbRow(db, "SELECT * FROM staff_members WHERE id = ?", [staffId]);
   if (!member) return null;
   const contact = dbRow(db, "SELECT address, email, phone FROM staff_contact_details WHERE staff_member_id = ?", [staffId]) ?? {};
@@ -116,7 +116,7 @@ function validNik(value: string | null): boolean { return Boolean(value && /^\d{
 function validNuptk(value: string | null): boolean { return Boolean(value && /^\d{16}$/.test(value)); }
 function mask(value: string | null): string | null { return value ? `${"*".repeat(Math.max(0, value.length - 4))}${value.slice(-4)}` : null; }
 
-function resolveStrongIdentityMatches(db: Database, value: Normalized): Set<string> {
+function resolveStrongIdentityMatches(db: SqliteClient, value: Normalized): Set<string> {
   const candidates = new Set<string>();
   const signals: Array<[string, string | null, boolean]> = [
     ["INTERNAL_STAFF_ID", value.source_staff_id, Boolean(value.source_staff_id)],
@@ -147,12 +147,12 @@ function mapDapodik(value: string | null): string {
   }
 }
 
-function ensurePositionMapping(db: Database, title: string | null): void {
+function ensurePositionMapping(db: SqliteClient, title: string | null): void {
   if (!title || dbRow(db, "SELECT id FROM staff_job_title_mappings WHERE lower(trim(raw_title))=lower(trim(?))", [title])) return;
   db.run("INSERT INTO staff_job_title_mappings (raw_title,normalized_title,status) VALUES (?,?,'PENDING')", [title, title]);
 }
 
-function parseRows(db: Database, headers: string[], sourceRows: Array<{ rowNumber: number; values: unknown[] }>, date1904: boolean, today: string): { rows: ImportRow[]; mapping: Record<string, string> } {
+function parseRows(db: SqliteClient, headers: string[], sourceRows: Array<{ rowNumber: number; values: unknown[] }>, date1904: boolean, today: string): { rows: ImportRow[]; mapping: Record<string, string> } {
   const byKey = new Map<string, number>();
   for (const [index, header] of headers.entries()) {
     const key = headerKey(header);
@@ -318,7 +318,7 @@ function previewSummary(rows: ImportRow[]): { total: number; valid: number; new:
   };
 }
 
-export async function previewStaffImport(db: Database, bytes: Uint8Array, filename: string, actor: { id: number; username: string; role: string }, today = schoolLocalDate(new Date())): Promise<Preview> {
+export async function previewStaffImport(db: SqliteClient, bytes: Uint8Array, filename: string, actor: { id: number; username: string; role: string }, today = schoolLocalDate(new Date())): Promise<Preview> {
   expirePendingStaffImportData(db);
   if (!filename.toLowerCase().endsWith(".xlsx") || !bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) throw new StaffImportError(400, "Choose a non-empty XLSX file smaller than 25 MB.");
   let workbook;
@@ -350,7 +350,7 @@ export async function previewStaffImport(db: Database, bytes: Uint8Array, filena
 
 type ImportActor = { username: string; role: string; capability: string };
 
-function insertMember(db: Database, value: Normalized, actor: ImportActor, batchId: string): string {
+function insertMember(db: SqliteClient, value: Normalized, actor: ImportActor, batchId: string): string {
   const id = randomUUID();
   ensurePositionMapping(db, value.job_title_raw);
   db.run("INSERT INTO staff_members (id, source_staff_id, full_name, normalized_name, employment_status, birth_place, birth_date, job_title_raw, job_title_normalized, employment_start_date, employment_end_date, dapodik_status_raw, dapodik_status_normalized) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)", [id, value.source_staff_id, value.full_name, value.normalized_name, value.employment_status, value.birth_place, value.birth_date, value.job_title_raw, value.job_title_normalized, value.employment_start_date, value.dapodik_status_raw, value.dapodik_status_normalized]);
@@ -364,9 +364,9 @@ function insertMember(db: Database, value: Normalized, actor: ImportActor, batch
   return id;
 }
 
-function updateMember(db: Database, staffId: string, value: Normalized, actor: ImportActor, batchId: string, previous: Row): void {
+function updateMember(db: SqliteClient, staffId: string, value: Normalized, actor: ImportActor, batchId: string, previous: Row): void {
   ensurePositionMapping(db, value.job_title_raw);
-  const assignments: Array<[string, SQLQueryBindings]> = [];
+  const assignments: Array<[string, SqliteBinding]> = [];
   for (const [column, incoming] of [["source_staff_id", value.source_staff_id], ["full_name", value.full_name], ["normalized_name", value.normalized_name], ["birth_place", value.birth_place], ["birth_date", value.birth_date], ["employment_start_date", value.employment_start_date], ["job_title_raw", value.job_title_raw], ["job_title_normalized", value.job_title_normalized], ["dapodik_status_raw", value.dapodik_status_raw], ["dapodik_status_normalized", value.dapodik_status_raw ? value.dapodik_status_normalized : null]] as Array<[string, string | null]>) if (incoming != null && incoming !== "") assignments.push([column, incoming]);
   if (value.job_title_raw) assignments.push(["job_title_normalized", value.job_title_normalized]);
   if (assignments.length) db.run(`UPDATE staff_members SET ${assignments.map(([column]) => `${column} = ?`).join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, [...assignments.map(([, value]) => value), staffId]);
@@ -378,7 +378,7 @@ function updateMember(db: Database, staffId: string, value: Normalized, actor: I
   db.run("INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, success, failure_code, changed_fields, metadata, schema_version) VALUES (?, ?, ?, ?, 'STAFF', ?, 'STAFF_IMPORT_UPDATE', 'MEDIUM', 'API', 1, NULL, ?, ?, '1')", [randomUUID(), actor.username, actor.role, actor.capability, staffId, JSON.stringify(value.changes), JSON.stringify({ batch_id: batchId })]);
 }
 
-export function commitStaffImport(db: Database, batchId: string, requestedRows: number[], actor: ImportActor): { batch_id: string; status: string; summary: { inserted: number; updated: number; unchanged: number; rejected: number; failed: number }; failed_rows: Array<{ row_number: number; code: string }> } {
+export function commitStaffImport(db: SqliteClient, batchId: string, requestedRows: number[], actor: ImportActor): { batch_id: string; status: string; summary: { inserted: number; updated: number; unchanged: number; rejected: number; failed: number }; failed_rows: Array<{ row_number: number; code: string }> } {
   expirePendingStaffImportData(db);
   const batch = dbRow(db, "SELECT id, file_sha256, status FROM staff_import_batches WHERE id = ?", [batchId]);
   if (!batch) throw new StaffImportError(404, "Import preview was not found.");

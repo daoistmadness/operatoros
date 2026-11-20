@@ -1,5 +1,6 @@
-import type { Database } from "bun:sqlite";
+import type { SqliteClient } from "@operatoros/db";
 import { randomBytes } from "node:crypto";
+import { verifyPasswordSync } from "./password";
 import { isAccountUnlocked } from "./sqlite-date";
 
 const passwordHashProbe = randomBytes(32).toString("base64url");
@@ -10,24 +11,24 @@ function usablePasswordHash(value: unknown): value is string {
   if (typeof value !== "string" || value.length === 0) return false;
   try {
     // A random wrong password checks that the stored hash is parseable without asserting operator knowledge.
-    Bun.password.verifySync(passwordHashProbe, value);
+    verifyPasswordSync(passwordHashProbe, value);
     return true;
   } catch {
     return false;
   }
 }
 
-export function isFirstAdminSetupRequired(client: Database): boolean {
+export function isFirstAdminSetupRequired(client: SqliteClient): boolean {
   const hasUser = Boolean(client.query("SELECT id FROM users LIMIT 1").get());
   const state = client.query<{ completed: number }, []>("SELECT completed FROM first_admin_setup_state WHERE id = 1").get() ?? null;
   return !hasUser && !Boolean(state?.completed);
 }
 
-export function restoreIdentityEligible(client: Database): boolean {
+export function restoreIdentityEligible(client: SqliteClient): boolean {
   return restoreIdentityState(client).eligible;
 }
 
-export function restoreIdentityState(client: Database): { eligible: boolean; blockingReason: string | null } {
+export function restoreIdentityState(client: SqliteClient): { eligible: boolean; blockingReason: string | null } {
   try {
     const admins = client.query<{ username: string; password_hash: string; locked_until: string | null }, []>("SELECT username, password_hash, locked_until FROM users WHERE role = 'admin' AND is_active = 1").all();
     const addressable = admins.filter(({ username }) => typeof username === "string" && username.trim() === username && username.length > 0 && username.length <= 255);
@@ -40,11 +41,11 @@ export function restoreIdentityState(client: Database): { eligible: boolean; blo
   }
 }
 
-export function restoreAdministratorCredentialMatches(client: Database, username: unknown, password: unknown): boolean {
+export function restoreAdministratorCredentialMatches(client: SqliteClient, username: unknown, password: unknown): boolean {
   if (typeof username !== "string" || !username || username.trim() !== username || username.length > 255 || typeof password !== "string" || !password) return false;
   try {
     const admin = client.query<{ password_hash: string; locked_until: string | null }, string>("SELECT password_hash, locked_until FROM users WHERE username = ? AND role = 'admin' AND is_active = 1").get(username);
-    return Boolean(admin && isAccountUnlocked(admin.locked_until) && Bun.password.verifySync(password, admin.password_hash));
+    return Boolean(admin && isAccountUnlocked(admin.locked_until) && verifyPasswordSync(password, admin.password_hash));
   } catch {
     return false;
   }

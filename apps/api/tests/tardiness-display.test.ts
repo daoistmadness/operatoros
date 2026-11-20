@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { createApp } from "../src/app";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 
@@ -14,7 +14,7 @@ function bootstrap(path: string): void {
 async function seed(withCutoff: boolean): Promise<{ path: string; cleanup: () => void }> {
   const path = `/tmp/operatoros-tardiness-display-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.db`;
   bootstrap(path);
-  const seedClient = new Database(path);
+  const seedClient = openTestDatabase(path).client;
   const run = (sql: string, ...params: any[]) => (seedClient as any).run(sql, ...params);
   const get = (sql: string, ...params: any[]) => (seedClient as any).query(sql).get(...params);
   const hash = await Bun.password.hash("display-admin-pass-1", "argon2id");

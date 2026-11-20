@@ -19,6 +19,13 @@ existing path and content because repository instructions explicitly protect
 it. Package-owned, generated, release, and contributor documents stay beside
 their code or at their existing repository entry point.
 
+The program-level status deliverables `MASTER_CHECKLIST.md`, `DECISIONS.md`,
+and `STABILITY_REPORT.md` are explicit root exceptions. Each carries the same
+status and review metadata and appears once in `docs/README.md`. Canonical
+architecture, security, and operational instructions remain in their existing
+documentation sections; the root files summarize status and link to those
+sources.
+
 ## Authority and history
 
 Source code, package manifests, lockfiles, and executable configuration define

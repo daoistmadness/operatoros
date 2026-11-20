@@ -9,13 +9,13 @@
     "start": "bun run src/server.ts"
   },
   "dependencies": {
+    "@elysiajs/openapi": "1.4.15",
     "@operatoros/contracts": "workspace:*",
     "@operatoros/db": "workspace:*",
     "@operatoros/excel": "workspace:*",
-    "@elysiajs/openapi": "1.4.15",
+    "@sinclair/typebox": "catalog:",
     "elysia": "1.4.29",
     "jszip": "3.10.1",
-    "@sinclair/typebox": "catalog:",
     "pdf-lib": "1.17.1"
   },
   "devDependencies": {

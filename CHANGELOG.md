@@ -4,12 +4,46 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Record the running Docker Compose deployment definition in the repository and mark the Podman proposal superseded for this host.
-- Add a read-only backup-directory containment check that rejects plaintext snapshots and incomplete artifact pairs.
-- Pin backup retention tests to the count-based policy so persisted tier fields cannot silently change eviction.
-- Build the API image on Bun 1.4.5 with SQLite 3.54.1 to clear CVE-2026-119373.
+- Pin Bun 1.4.5 across mise, CI, development containers, and release images; require the fixed embedded SQLite runtime in release evidence. (#396)
+- Align application and release guidance with the accepted pinned Bun runtime.
+  Reopen exact-source release qualification. (#395)
+- Correct the D1 checklist to record the earlier UID 1002 rehearsal and the remaining Node release qualification. (#394)
+
+- Group outstanding stability work into five packages while retaining the 11 acceptance gates. (#393)
+- Add an ordered next-session checklist for outstanding recovery and production-readiness gates. (#392)
+- Refresh Gate G with verified PR #389/#390 checks while keeping host and device acceptance open. (#391)
+- Clarify the hosted Ubuntu rehearsal result and outstanding OPRSERVER acceptance in the documentation index. (#390)
+- Record the exact signed-artifact hosted rehearsal result and keep OPRSERVER acceptance open. (#389)
+- Pin the isolated deployment rehearsal to the signed Node and SQLite release artifact and refresh the deployment instructions. (#388)
+- Qualify the API image on patched Node and SQLite, remove unused npm, block unresolved High or Critical findings, and verify exact-image readiness, clean restart, encrypted backup, and isolated restore. (#387)
+- Record successful post-merge CI and CodeQL validation for PR #385. (#386)
+- Verify interactive shell startup, record a same-host isolated Restic restore, and document Bun's SQLite runtime limitation. (#385)
+- Record successful hosted validation for PR #383 and a read-only Podman record mismatch in Gate E; keep recovery and alert-delivery gates open. (#384)
+- Authenticate the checksum-pinned mise bootstrap and record Gate E monitoring, log-rotation, and Windows access-test evidence while keeping real-device recovery and Identity A/B gates open. (#383)
+- Refresh runtime qualification, recovery, and cutover readiness evidence after Phase 7, with the unresolved SQLite and independent-recovery gates recorded.
+- Bind the embedded Bun/SQLite CycloneDX inventory to the exact OCI image and source, and reject release evidence with an unqualified runtime. (#381)
+- Gate release images on embedded Bun/SQLite evidence before signing and provide a nonpublishing candidate qualification path.
+- Disable the D1 and rehearsal Caddy admin listeners to avoid conflicts with the existing Caddy service. (#379)
+- Allow the pinned D1 Caddy image to start with only its required `net_bind_service` capability while retaining `NoNewPrivileges` and dropping all others. (#378)
+- Pin the host deployment profile to the isolated D1 root, UID 1002, measured capacity reserves, first-admin setup token, and approved loopback ports; keep rehearsal and host Quadlet validation distinct and allocate subordinate IDs deterministically (#377).
+- Record a public summary of the read-only host integration findings and the missing attested release for the reviewed main baseline (#363).
+- Report and fail closed on an invalid rootless Podman storage context in `operatoros-deploy status`, so a default-store listing cannot be mistaken for the deployed stack (#364).
+- Document the two ingress candidates with an evidence-backed container recommendation, the deployment-root/data/container-mount distinction, and Tailscale route ownership (#364).
+- Accept GitHub Actions runs whose workflow path has no ref suffix when verifying a release artifact, while still rejecting foreign workflows and non-main refs (#365).
 - Add a provenance-verifying single-server deployment command with application-only rollback and interrupted-transaction reporting.
 - Prepare a manually confirmed, run-isolated Ubuntu 24.04 deployment rehearsal for the retained verified release artifact.
+- Pin the rehearsal to the approved attested release, record its provenance and checksums, and verify WAL-safe SQLite preservation, lock isolation, restart recovery, and SPA cache behavior (#366).
+- Pin Podman storage and metadata to the rehearsal workspace and separate JSON output from warnings.
+- Retain stable, sanitized failure codes and cleanup status when private Podman-context qualification fails (#367).
+- Report the last completed guard accurately for private Podman-context rejection (#368).
+- Use the standard private XDG storage config for rehearsal Podman and keep failure summaries synchronized with the rejected guard (#369).
+- Prevent duplicate synthetic data-directory creation and retain sanitized deployment and cleanup phase results in rehearsal evidence (#370).
+- Bootstrap the synthetic database before creating backups and report setup operations and cleanup-log creation accurately (#371).
+- Preserve typed synthetic schema-rejection results and remove only validated read-only workspace directories during rehearsal cleanup (#372).
+- Preserve safe Podman failure categories in synthetic schema-validation evidence and redact executable paths from command errors (#373).
+- Use the verified private Podman context for synthetic schema validation (#374).
+- Preserve SQLite file identity across application transitions without treating normal WAL/SHM lifecycle changes as database replacement, and report rollback failures by operation (#375).
+- Verify post-backup SQLite preservation and report interrupted recovery failures by phase in the synthetic deployment rehearsal (#376).
 - Scan validated OCI layouts with pinned Trivy and retain safe diagnostics when release builds or scans fail (#358).
 - Tear down the isolated release consumer's rootless Podman store safely, inspect rootless mounts correctly, and preserve cleanup failures (#359).
 

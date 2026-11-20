@@ -1,5 +1,5 @@
 import { expect, it } from "bun:test";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,7 +20,7 @@ it("backs up and rehearses an approved S4.8 migration without changing its sourc
   const env = { ...process.env, OPERATOROS_DATA_DIR: source, DATABASE_URL: `sqlite:///${databasePath}`, BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"), BACKUP_ENCRYPTION_KEY_ID: "synthetic-test", AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key" };
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
-    const database = new Database(databasePath, { create: true });
+    const database = openTestDatabase(databasePath).client;
     database.exec(readFileSync(join(root, "packages/db/src/s47-schema.sql"), "utf8"));
     database.exec(readFileSync(join(root, "packages/db/src/s48-migration.sql"), "utf8"));
     database.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
@@ -38,11 +38,11 @@ it("backs up and rehearses an approved S4.8 migration without changing its sourc
     const result = openDatabase(restoredPath, { readonly: true });
     expect(result.client.query("SELECT full_name FROM staff_members WHERE id='synthetic-s48'").get()).toEqual({ full_name: "Synthetic Staff" });
     result.close();
-    const original = new Database(databasePath, { readonly: true });
+    const original = openTestDatabase(databasePath, { readonly: true }).client;
     expect(original.query("SELECT version FROM operatoros_schema_migrations").get()).toEqual({ version: "20261002_s48" });
     original.close();
 
-    const tampered = new Database(databasePath);
+    const tampered = openTestDatabase(databasePath).client;
     tampered.run("CREATE TABLE unapproved_change (id INTEGER)");
     tampered.close();
     expect(command("backup").exitCode).not.toBe(0);
@@ -106,7 +106,7 @@ it("backs up and restores only an explicit disposable data root", () => {
     if (!backupEncryption) throw new Error("synthetic backup encryption config missing");
     const plaintextPath = join(temporary, "incomplete-schema.sqlite");
     writeFileSync(plaintextPath, decryptBackup(readFileSync(artifact), backupEncryption), { mode: 0o600 });
-    const incomplete = new Database(plaintextPath);
+    const incomplete = openTestDatabase(plaintextPath).client;
     let plaintext: Uint8Array;
     try { incomplete.run("DROP TABLE attendance"); plaintext = incomplete.serialize(); } finally { incomplete.close(); }
     const invalidArtifact = encryptBackup(plaintext!, backupEncryption);
@@ -154,7 +154,7 @@ it("rejects an S4.8 source with an altered migration ledger before backup, dispo
   const env = { ...process.env, OPERATOROS_DATA_DIR: source, DATABASE_URL: `sqlite:///${databasePath}`, BACKUP_ENCRYPTION_KEY: randomBytes(32).toString("base64"), BACKUP_ENCRYPTION_KEY_ID: "synthetic-test", AUTH_COOKIE_SECRET: "synthetic-test-cookie-secret-distinct-from-key" };
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
-    const database = new Database(databasePath, { create: true });
+    const database = openTestDatabase(databasePath).client;
     database.exec(readFileSync(join(root, "packages/db/src/s47-schema.sql"), "utf8"));
     database.exec(readFileSync(join(root, "packages/db/src/s48-migration.sql"), "utf8"));
     database.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261002_s48','20260929_s47',?,'{}','SYNTHETIC_FIXTURE','2026-10-02T00:00:00Z')", [S48_SCHEMA_FINGERPRINT]);
@@ -167,7 +167,7 @@ it("rejects an S4.8 source with an altered migration ledger before backup, dispo
     if (!config) throw new Error("synthetic backup encryption config missing");
     const plaintextPath = join(temporary, "altered-ledger.sqlite");
     writeFileSync(plaintextPath, decryptBackup(readFileSync(artifact), config), { mode: 0o600 });
-    const altered = new Database(plaintextPath);
+    const altered = openTestDatabase(plaintextPath).client;
     let plaintext: Uint8Array;
     try { altered.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT"); plaintext = altered.serialize(); } finally { altered.close(); }
     const encrypted = encryptBackup(plaintext!, config);
@@ -181,7 +181,7 @@ it("rejects an S4.8 source with an altered migration ledger before backup, dispo
     expect(restore.stderr.toString()).toContain("migration ledger layout differs");
     expect(existsSync(join(restored, "operatoros.sqlite"))).toBe(false);
 
-    const sourceWithBadLedger = new Database(databasePath);
+    const sourceWithBadLedger = openTestDatabase(databasePath).client;
     sourceWithBadLedger.exec("ALTER TABLE operatoros_schema_migrations ADD COLUMN extra TEXT");
     sourceWithBadLedger.close();
     expect(command("backup").stderr.toString()).toContain("migration ledger layout differs");
@@ -201,7 +201,7 @@ it("rejects a virtual report attachment table before the backup CLI queries it",
   const command = (...args: string[]) => Bun.spawnSync([process.execPath, cli, ...args], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   try {
     createFreshDatabase(databasePath);
-    const candidate = new Database(databasePath);
+    const candidate = openTestDatabase(databasePath).client;
     let plaintext: Uint8Array;
     try {
       candidate.run("DROP TABLE upp_report_versions");

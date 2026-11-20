@@ -1,10 +1,10 @@
 import { afterEach, expect, test } from "bun:test";
-import { Database } from "bun:sqlite";
 import { closeSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createFreshDatabase } from "../src/bootstrap";
 import { assertProtectedAbsent, canonicalSnapshotPath, protectedSnapshot, selectProtectedDatabase, sidecarsFor, snapshotJson } from "../src/protected-snapshot-cli";
+import { openSqliteConnection } from "../src/sqlite-client";
 
 const roots: string[] = [], children: Bun.Subprocess[] = [], env = { ...process.env };
 for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete env[key];
@@ -22,7 +22,7 @@ function fixture(seed = true) {
   const path = join(repo, "backend/attendance.db"), lock = join(root, "migration.lock");
   if (seed) {
     const source = join(root, "canonical.sqlite"); createFreshDatabase(source);
-    const client = new Database(source); try { client.run("UPDATE operatoros_schema_migrations SET version='20260725_s43'"); } finally { client.close(); }
+    const client = openSqliteConnection(source).client; try { client.run("UPDATE operatoros_schema_migrations SET version='20260725_s43'"); } finally { client.close(); }
     mkdirSync(join(repo, "backend")); copyFileSync(source, path);
   }
   return { root, repo, secondary, path, lock };
@@ -78,7 +78,7 @@ test("migration lock detection probes only the existing read-only lock file", as
   expect(protectedSnapshot(f.path, f.lock).head).toBe("20260725_s43"); expect(readFileSync(f.lock, "utf8")).toBe("sentinel");
 });
 test("invalid schema state remains unchanged after inspection refusal", () => {
-  const f = fixture(), client = new Database(f.path);
+  const f = fixture(), client = openSqliteConnection(f.path).client;
   try { client.run("UPDATE operatoros_schema_migrations SET version='unknown'"); } finally { client.close(); }
   const bytes = readFileSync(f.path);
   expect(() => protectedSnapshot(f.path, f.lock)).toThrow("PROTECTED_DATABASE_S43_STATE_INVALID"); expect(readFileSync(f.path)).toEqual(bytes);

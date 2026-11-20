@@ -1,8 +1,10 @@
-import { constants, Database } from "bun:sqlite";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, lstatSync, openSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative } from "node:path";
-import { pathToFileURL } from "node:url";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, mkdtempSync, openSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { openSqliteConnection } from "./sqlite-client";
 
 const S43_HEAD = "20260725_s43";
 const EXPECTED_TABLES = ["attendance_follow_ups", "attendance_follow_up_notes", "attendance_follow_up_audit"];
@@ -30,10 +32,12 @@ export function selectProtectedDatabase(repo: string, explicit = process.env.PRO
   if (within(path, root)) { if (explicit) fail("PROTECTED_DATABASE_PATH_INSIDE_WORKTREE"); }
   else if (explicit) {
     const env = { ...process.env };
-    for (const key of Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe" }).stdout.toString().trim().split("\n")) delete env[key];
-    const listing = Bun.spawnSync(["git", "-C", root, "worktree", "list", "--porcelain"], { env, stdout: "pipe", stderr: "pipe" });
-    if (listing.exitCode) fail("PROTECTED_DATABASE_WORKTREE_DISCOVERY_FAILED");
-    const worktrees = listing.stdout.toString().split("\n").filter(line => line.startsWith("worktree ")).map(line => realpathSync(line.slice(9)));
+    const local = spawnSync("git", ["rev-parse", "--local-env-vars"], { encoding: "utf8" });
+    if (local.error || local.status !== 0) fail("PROTECTED_DATABASE_WORKTREE_DISCOVERY_FAILED");
+    for (const key of local.stdout.trim().split("\n")) delete env[key];
+    const listing = spawnSync("git", ["-C", root, "worktree", "list", "--porcelain"], { env, encoding: "utf8" });
+    if (listing.error || listing.status !== 0) fail("PROTECTED_DATABASE_WORKTREE_DISCOVERY_FAILED");
+    const worktrees = listing.stdout.split("\n").filter(line => line.startsWith("worktree ")).map(line => realpathSync(line.slice(9)));
     if (!worktrees.includes(dirname(dirname(path)))) fail("PROTECTED_DATABASE_UNAPPROVED_WORKTREE");
   }
   return { mode: "snapshot", path };
@@ -50,35 +54,55 @@ export function protectedSnapshot(path: string, migrationLock = MIGRATION_LOCK) 
     // Probe an existing read-only descriptor. flock must never create a lock file.
     const descriptor = openSync(migrationLock, "r");
     try {
-      const probe = Bun.spawnSync(["flock", "--nonblock", "--exclusive", "0"], { stdin: descriptor, stdout: "pipe", stderr: "pipe" });
-      if (probe.exitCode === 1) fail("PROTECTED_DATABASE_MIGRATION_LOCK_PRESENT");
-      if (probe.exitCode) fail("PROTECTED_DATABASE_LOCK_CHECK_FAILED");
+      const probe = spawnSync("flock", ["--nonblock", "--exclusive", "0"], { stdio: [descriptor, "pipe", "pipe"] });
+      if (probe.status === 1) fail("PROTECTED_DATABASE_MIGRATION_LOCK_PRESENT");
+      if (probe.error || probe.status !== 0) fail("PROTECTED_DATABASE_LOCK_CHECK_FAILED");
     } finally { closeSync(descriptor); }
   }
-  if (!Bun.which("lsof")) fail("PROTECTED_DATABASE_LSOF_REQUIRED");
-  const handles = Bun.spawnSync(["lsof", "--", path], { stdout: "pipe", stderr: "pipe" });
-  if (handles.exitCode === 0 && handles.stdout.toString().trim()) fail(`PROTECTED_DATABASE_OPEN_HANDLE: ${handles.stdout.toString().trim()}`);
-  if (handles.exitCode !== 0 && handles.exitCode !== 1) fail("PROTECTED_DATABASE_OPEN_HANDLE_CHECK_FAILED");
-  const sha256 = createHash("sha256").update(readFileSync(path)).digest("hex"), stat = statSync(path, { bigint: true });
-  const uri = pathToFileURL(path); uri.search = "?mode=ro&immutable=1";
-  const client = new Database(uri.href, constants.SQLITE_OPEN_READONLY | constants.SQLITE_OPEN_URI);
-  let head: string | null, ledger: number, integrity: string, quick: string, violations: number;
+  const handles = spawnSync("lsof", ["--", path], { encoding: "utf8" });
+  if ((handles.error as NodeJS.ErrnoException | undefined)?.code === "ENOENT") fail("PROTECTED_DATABASE_LSOF_REQUIRED");
+  if (handles.error || handles.status === null) fail("PROTECTED_DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  if (handles.status === 0 && handles.stdout.trim()) fail(`PROTECTED_DATABASE_OPEN_HANDLE: ${handles.stdout.trim()}`);
+  if (handles.status !== 0 && handles.status !== 1) fail("PROTECTED_DATABASE_OPEN_HANDLE_CHECK_FAILED");
+  const stat = statSync(path, { bigint: true });
+  const descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  let bytes: Buffer;
   try {
-    head = (client.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version: string } | null)?.version ?? null;
-    ledger = (client.query("SELECT COUNT(*) AS count FROM operatoros_schema_migrations WHERE version=?").get(S43_HEAD) as { count: number }).count;
-    const tables = new Set((client.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map(row => row.name));
-    integrity = (client.query("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check;
-    quick = (client.query("PRAGMA quick_check").get() as { quick_check: string }).quick_check;
-    violations = client.query("PRAGMA foreign_key_check").all().length;
-    if (head !== S43_HEAD || ledger !== 1 || !EXPECTED_TABLES.every(table => tables.has(table))) fail("PROTECTED_DATABASE_S43_STATE_INVALID");
-    if (integrity !== "ok" || quick !== "ok" || violations) fail("PROTECTED_DATABASE_INTEGRITY_INVALID");
-  } finally { client.close(); }
-  return { path, sha256, size: stat.size, inode: stat.ino, mode: stat.mode & 0o7777n, mtime_ns: stat.mtimeNs, ctime_ns: stat.ctimeNs,
-    head, ledger, integrity, quick, foreign_key_violations: violations, sidecars };
+    const opened = fstatSync(descriptor, { bigint: true });
+    if (opened.dev !== stat.dev || opened.ino !== stat.ino) fail("PROTECTED_DATABASE_PATH_CHANGED_DURING_INSPECTION");
+    bytes = readFileSync(descriptor);
+    const read = fstatSync(descriptor, { bigint: true }), current = statSync(path, { bigint: true });
+    if (read.size !== stat.size || read.mtimeNs !== stat.mtimeNs || read.ctimeNs !== stat.ctimeNs ||
+      current.dev !== stat.dev || current.ino !== stat.ino || current.size !== stat.size ||
+      current.mtimeNs !== stat.mtimeNs || current.ctimeNs !== stat.ctimeNs || BigInt(bytes.length) !== stat.size) {
+      fail("PROTECTED_DATABASE_CHANGED_DURING_INSPECTION");
+    }
+  } finally { closeSync(descriptor); }
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  const snapshotDir = mkdtempSync(join(tmpdir(), "operatoros-s43-snapshot-"));
+  const snapshotPath = join(snapshotDir, "attendance.db");
+  try {
+    writeFileSync(snapshotPath, bytes, { flag: "wx", mode: 0o400 });
+    const client = openSqliteConnection(snapshotPath, { readonly: true, fileMustExist: true }).client;
+    try {
+      const head = (client.query("SELECT version FROM operatoros_schema_migrations ORDER BY applied_at DESC, version DESC LIMIT 1").get() as { version: string } | null)?.version ?? null;
+      const ledger = (client.query("SELECT COUNT(*) AS count FROM operatoros_schema_migrations WHERE version=?").get(S43_HEAD) as { count: number }).count;
+      const tables = new Set((client.query("SELECT name FROM sqlite_master WHERE type='table'").all() as { name: string }[]).map(row => row.name));
+      const integrity = (client.query("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check;
+      const quick = (client.query("PRAGMA quick_check").get() as { quick_check: string }).quick_check;
+      const violations = client.query("PRAGMA foreign_key_check").all().length;
+      if (head !== S43_HEAD || ledger !== 1 || !EXPECTED_TABLES.every(table => tables.has(table))) fail("PROTECTED_DATABASE_S43_STATE_INVALID");
+      if (integrity !== "ok" || quick !== "ok" || violations) fail("PROTECTED_DATABASE_INTEGRITY_INVALID");
+      return { path, sha256, size: stat.size, inode: stat.ino, mode: stat.mode & 0o7777n, mtime_ns: stat.mtimeNs, ctime_ns: stat.ctimeNs,
+        head, ledger, integrity, quick, foreign_key_violations: violations, sidecars };
+    } finally { client.close(); }
+  } finally {
+    rmSync(snapshotDir, { recursive: true, force: true });
+  }
 }
 // The CLI must retain full nanosecond/inode integers rather than rounding through Number.
 export const snapshotJson = (value: ReturnType<typeof protectedSnapshot>): string => `{${Object.entries(value).map(([key, item]) => `${JSON.stringify(key)}:${typeof item === "bigint" ? item.toString() : JSON.stringify(item)}`).join(",")}}`;
-if (import.meta.main) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   try {
     const args = process.argv.slice(2);
     if (args.length === 2 && args[0] === "select") { const result = selectProtectedDatabase(args[1]!); console.log(`${result.mode}\t${result.path}`); }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Database } from "bun:sqlite";
+import { openTestDatabase } from "./fixtures/database";
 import { CURRENT_SCHEMA_VERSION, openDatabase } from "@operatoros/db";
 import { createApp } from "../src/app";
 import { backupSha256, decryptBackup, encryptBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
@@ -58,7 +58,7 @@ async function prepare(restoreFileSystem?: RestoreFileSystem) {
 async function setCandidate(value: Awaited<ReturnType<typeof prepare>>, state: CandidateState): Promise<void> {
   const candidatePath = join(value.root, "candidate.sqlite");
   writeFileSync(candidatePath, value.basePlaintext);
-  const candidate = new Database(candidatePath);
+  const candidate = openTestDatabase(candidatePath).client;
   try {
     if (state === "missing") {
       candidate.run("DELETE FROM sessions");
@@ -403,7 +403,7 @@ describe("restore administrator eligibility", () => {
       rename: (from, to) => {
         if (mutateCandidate && to === activePath && from.endsWith(".candidate")) {
           mutateCandidate = false;
-          const candidate = new Database(from, { readwrite: true, create: false });
+          const candidate = openTestDatabase(from).client;
           try { candidate.run("UPDATE users SET password_hash = ? WHERE username = 'golden-admin'", [Bun.password.hashSync("different-after-check", "argon2id")]); }
           finally { candidate.close(); }
         }

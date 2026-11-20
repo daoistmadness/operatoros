@@ -11,6 +11,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -23,7 +24,15 @@ cleanup_spec.loader.exec_module(cleanup)
 rehearsal_spec = importlib.util.spec_from_file_location('deployment_rehearsal', ROOT / 'scripts/deployment-rehearsal.py')
 rehearsal = importlib.util.module_from_spec(rehearsal_spec)
 rehearsal_spec.loader.exec_module(rehearsal)
+deploy_spec = importlib.util.spec_from_file_location('operatoros_deploy_tests', ROOT / 'scripts/operatoros_deploy.py')
+deploy = importlib.util.module_from_spec(deploy_spec)
+sys.modules[deploy_spec.name] = deploy
+deploy_spec.loader.exec_module(deploy)
 SHA = 'a' * 40
+
+
+def private_context(workspace):
+    return deploy.create_private_podman_context(workspace)
 
 
 def archive(files):
@@ -40,7 +49,7 @@ def fixture():
         key = m.digest(data)
         blobs['blobs/sha256/' + key] = data
         return {'digest': 'sha256:' + key, 'size': len(data)}
-    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n', 'lib/apk/db/installed': b'P:musl\nV:1.2.5-r10\nA:x86_64\nL:MIT\nT:musl C library\n\n'})
+    layer_data = archive({'etc/os-release': b'NAME=Alpine\nID=alpine\nVERSION_ID=3.24.3\n'})
     layer_hash = m.digest(layer_data)
     blobs['blobs/sha256/' + layer_hash] = layer_data
     layer = {'mediaType': 'application/vnd.oci.image.layer.v1.tar', 'digest': 'sha256:' + layer_hash, 'size': len(layer_data)}
@@ -50,8 +59,72 @@ def fixture():
     manifest['mediaType'] = 'application/vnd.oci.image.manifest.v1+json'
     blobs['oci-layout'] = b'{"imageLayoutVersion":"1.0.0"}'
     blobs['index.json'] = json.dumps({'schemaVersion': 2, 'manifests': [manifest]}).encode()
-    files = {'operatoros-api.oci.tar': archive(blobs), 'operatoros-web-client.tar.gz': archive({'client/_shell.html': b'shell', 'client/assets/app.js': b'app', 'client/release.json': json.dumps({'source_commit': SHA}).encode()}), 'sbom.cdx.json': b'{"bomFormat":"CycloneDX"}', 'scan.json': b'{"Results":[]}'}
-    manifest = {'schema_version': 1, 'lockfiles': {'bun.lock': 'a' * 64, 'mise.lock': 'b' * 64}, 'source_commit': SHA, 'repository': m.REPO, 'workflow': m.WORKFLOW, 'source_ref': 'refs/heads/main', 'run_id': '123', 'run_attempt': '1', 'image': m.image_metadata(files['operatoros-api.oci.tar'], SHA), 'artifacts': {name: m.digest(data) for name, data in files.items()}}
+    api_archive = archive(blobs)
+    image = m.image_metadata(api_archive, SHA)
+    bun_hash = 'c' * 64
+    source_id = 'candidate-sqlite-source-id'
+    bun_ref = 'urn:operatoros:runtime:bun:' + bun_hash
+    sqlite_ref = 'urn:operatoros:runtime:sqlite:' + 'd' * 64
+    base_image = m.PINNED_BUN_ORIGIN
+    sbom = {
+        'bomFormat': 'CycloneDX', 'specVersion': '1.6', 'components': [{
+            'type': 'application', 'name': 'Bun runtime', 'version': '1.4.5',
+            'bom-ref': bun_ref, 'hashes': [{'alg': 'SHA-256', 'content': bun_hash}],
+            'properties': [
+                {'name': 'operatoros:runtime:origin', 'value': base_image},
+                {'name': 'operatoros:runtime:qualification', 'value': 'PASS'},
+                {'name': 'operatoros:artifact:oci-manifest-digest', 'value': image['manifest_digest']},
+            ],
+            'components': [{'type': 'library', 'name': 'SQLite', 'version': '3.54.1', 'bom-ref': sqlite_ref, 'properties': [
+                {'name': 'operatoros:component:distribution', 'value': 'statically-linked-runtime'},
+                {'name': 'operatoros:sqlite:provider', 'value': 'bun:sqlite'},
+                {'name': 'operatoros:sqlite:source-id', 'value': source_id},
+                {'name': 'operatoros:sqlite:fts5-present', 'value': 'True'},
+                {'name': 'operatoros:sqlite:fts5-compile-option', 'value': 'True'},
+                {'name': 'operatoros:sqlite:fts5-feature-probe', 'value': 'True'},
+                {'name': 'operatoros:security:advisory-status', 'value': 'RESOLVED_BY_FIXED_VERSION'},
+                {'name': 'operatoros:security:advisory-disposition', 'value': 'NOT_REQUIRED'},
+            ]}],
+        }],
+        'dependencies': [{'ref': bun_ref, 'dependsOn': [sqlite_ref]}, {'ref': sqlite_ref, 'dependsOn': []}],
+        'vulnerabilities': [{
+            'id': 'CVE-2026-119373',
+            'analysis': {
+                'state': 'resolved',
+                'detail': 'bun:sqlite SQLite 3.54.1 has FTS5=true (RESOLVED_BY_FIXED_VERSION, disposition NOT_REQUIRED); '
+                          'runtime qualification is PASS under Bun 1.4.5 from ' + base_image,
+            },
+            'affects': [{'ref': sqlite_ref}],
+        }],
+        'metadata': {
+            'component': {'properties': [{'name': 'aquasecurity:trivy:ImageID', 'value': image['image_id']}]},
+            'properties': [
+                {'name': 'operatoros:source:commit', 'value': SHA},
+                {'name': 'operatoros:artifact:oci-manifest-digest', 'value': image['manifest_digest']},
+                {'name': 'operatoros:artifact:oci-archive-sha256', 'value': m.digest(api_archive)},
+                {'name': 'operatoros:runtime:qualification', 'value': 'PASS'},
+            ],
+        },
+    }
+    runtime = {
+        'schema_version': 3, 'qualification_status': 'PASS',
+        'source': {'repository': 'daoistmadness/operatoros', 'commit': SHA, 'containerfile': 'deploy/podman/Containerfile.api', 'containerfile_sha256': 'e' * 64, 'pinned_base_images': [base_image]},
+        'artifact': {'oci_manifest_digest': image['manifest_digest'], 'image_config_digest': image['image_id'], 'oci_archive_sha256': m.digest(api_archive)},
+        'runtime': {'name': 'Bun', 'version': '1.4.5', 'binary_sha256': bun_hash, 'origin': base_image, 'sqlite_driver': 'bun:sqlite', 'sqlite_distribution': 'statically-linked-runtime', 'sqlite_libraries': [
+            {'provider': 'bun:sqlite', 'distribution': 'statically-linked-runtime', 'version': '3.54.1', 'source_id': source_id, 'fts5_present': True, 'fts5_compile_option': True, 'fts5_feature_probe': True, 'cve_status': 'RESOLVED_BY_FIXED_VERSION', 'cve_disposition': 'NOT_REQUIRED'},
+        ]},
+        'finding': {'id': 'CVE-2026-119373', 'component': 'SQLite statically linked in Bun', 'status': 'RESOLVED_BY_FIXED_VERSION', 'disposition': 'NOT_REQUIRED', 'components': [
+            {'provider': 'bun:sqlite', 'version': '3.54.1', 'status': 'RESOLVED_BY_FIXED_VERSION'},
+        ], 'qualification_floor': 'SQLite 3.54.0 or later', 'runtime_gate_reason': None},
+    }
+    files = {
+        'operatoros-api.oci.tar': api_archive,
+        'operatoros-web-client.tar.gz': archive({'client/_shell.html': b'shell', 'client/assets/app.js': b'app', 'client/release.json': json.dumps({'source_commit': SHA}).encode()}),
+        'sbom.cdx.json': json.dumps(sbom).encode(),
+        'scan.json': json.dumps({'Results': [], 'Metadata': {'ImageID': image['image_id']}}).encode(),
+        'embedded-runtime.json': json.dumps(runtime).encode(),
+    }
+    manifest = {'schema_version': 1, 'lockfiles': {'bun.lock': 'a' * 64, 'mise.lock': 'b' * 64}, 'source_commit': SHA, 'repository': m.REPO, 'workflow': m.WORKFLOW, 'source_ref': 'refs/heads/main', 'run_id': '123', 'run_attempt': '1', 'image': image, 'artifacts': {name: m.digest(data) for name, data in files.items()}}
     files['manifest.json'] = json.dumps(manifest).encode()
     checksums(files)
     return files
@@ -64,6 +137,126 @@ def checksums(files):
 class BundleTests(unittest.TestCase):
     def test_consistent_bundle(self):
         self.assertEqual(m.validate(fixture(), SHA)['source_commit'], SHA)
+
+    def test_release_bundle_requires_the_bun_sqlite_runtime_identity(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['runtime']['sqlite_libraries'].pop()
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'omits the Bun SQLite runtime identity'):
+            m.validate(files, SHA)
+
+    def test_fixed_sqlite_finding_is_resolved_in_inventory_and_bundle(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        self.assertEqual(runtime['finding']['status'], 'RESOLVED_BY_FIXED_VERSION')
+        self.assertEqual(runtime['finding']['disposition'], 'NOT_REQUIRED')
+        self.assertNotIn('accepted_exception', runtime['finding'])
+        self.assertEqual(m.validate(files, SHA)['source_commit'], SHA)
+
+    def test_release_requires_the_pinned_sqlite_version(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['runtime']['sqlite_libraries'][0]['version'] = '3.54.0'
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'pinned SQLite 3.54.1'):
+            m.validate(files, SHA)
+
+    def test_release_rejects_separate_trivy_sqlite_affected_reference(self):
+        files = fixture()
+        sbom = json.loads(files['sbom.cdx.json'])
+        trivy_ref = 'pkg:apk/alpine/sqlite-libs@3.53.4-r0'
+        sbom['components'].append({
+            'type': 'library',
+            'name': 'SQLite',
+            'version': '3.53.4-r0',
+            'bom-ref': trivy_ref,
+            'purl': trivy_ref,
+        })
+        cve = next(item for item in sbom['vulnerabilities'] if item['id'] == m.CVE)
+        cve['affects'].append({'ref': trivy_ref})
+        files['sbom.cdx.json'] = json.dumps(sbom).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['sbom.cdx.json'] = m.digest(files['sbom.cdx.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'security disposition'):
+            m.validate(files, SHA)
+
+    def test_release_rejects_multiple_trivy_sqlite_references_for_the_fixed_finding(self):
+        files = fixture()
+        sbom = json.loads(files['sbom.cdx.json'])
+        refs = ('pkg:apk/alpine/sqlite@3.53.4-r0', 'pkg:generic/sqlite@3.53.4')
+        for reference, version in zip(refs, ('3.53.4-r0', '3.53.4'), strict=True):
+            sbom['components'].append({
+                'type': 'library',
+                'name': 'SQLite',
+                'version': version,
+                'bom-ref': reference,
+                'purl': reference,
+            })
+        cve = next(item for item in sbom['vulnerabilities'] if item['id'] == m.CVE)
+        cve['affects'].extend({'ref': reference} for reference in refs)
+        files['sbom.cdx.json'] = json.dumps(sbom).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['sbom.cdx.json'] = m.digest(files['sbom.cdx.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'security disposition'):
+            m.validate(files, SHA)
+
+    def test_release_rejects_runtime_evidence_with_a_changed_source_or_origin(self):
+        for field, value in (
+            ('source_id', 'different-source-id'),
+            ('origin', 'docker.io/oven/bun:1.4.4-alpine@sha256:' + 'f' * 64),
+        ):
+            with self.subTest(field=field):
+                files = fixture()
+                runtime = json.loads(files['embedded-runtime.json'])
+                if field == 'source_id':
+                    runtime['runtime']['sqlite_libraries'][0]['source_id'] = value
+                else:
+                    runtime['runtime']['origin'] = value
+                files['embedded-runtime.json'] = json.dumps(runtime).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaises(ValueError):
+                    m.validate(files, SHA)
+
+    def test_release_rejects_open_sqlite_finding_for_the_fixed_runtime(self):
+        files = fixture()
+        runtime = json.loads(files['embedded-runtime.json'])
+        runtime['finding']['status'] = 'OPEN'
+        files['embedded-runtime.json'] = json.dumps(runtime).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['embedded-runtime.json'] = m.digest(files['embedded-runtime.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'runtime finding does not match'):
+            m.validate(files, SHA)
+
+    def test_release_bundle_rejects_extra_cve_affected_component(self):
+        files = fixture()
+        sbom = json.loads(files['sbom.cdx.json'])
+        cve = next(item for item in sbom['vulnerabilities'] if item['id'] == 'CVE-2026-119373')
+        cve['affects'].append({'ref': 'pkg:apk/alpine/sqlite@3.54.1'})
+        files['sbom.cdx.json'] = json.dumps(sbom).encode()
+        manifest = json.loads(files['manifest.json'])
+        manifest['artifacts']['sbom.cdx.json'] = m.digest(files['sbom.cdx.json'])
+        files['manifest.json'] = json.dumps(manifest).encode()
+        checksums(files)
+        with self.assertRaisesRegex(ValueError, 'security disposition'):
+            m.validate(files, SHA)
 
     def test_corruption_and_missing_artifacts(self):
         for name in m.FILES:
@@ -121,6 +314,607 @@ class BundleTests(unittest.TestCase):
 
 
 class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
+    def test_sqlite_preservation_requires_a_post_backup_audit_marker(self):
+        bun = shutil.which('bun')
+        if bun is None:
+            self.skipTest('Bun is required to exercise the rehearsal SQLite snippets')
+
+        with tempfile.TemporaryDirectory(prefix='operatoros-sqlite-preservation-') as temporary:
+            database = Path(temporary) / 'operatoros.sqlite'
+            fixture_setup = (
+                "import { Database } from 'bun:sqlite'; "
+                "const db = new Database(process.argv[1]); "
+                "db.exec(`CREATE TABLE users (username TEXT PRIMARY KEY, role TEXT NOT NULL, "
+                "is_active INTEGER NOT NULL); "
+                "CREATE TABLE operations_audit_events (id INTEGER PRIMARY KEY, event_id TEXT NOT NULL UNIQUE, "
+                "occurred_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, actor_id TEXT NOT NULL, "
+                "actor_role TEXT NOT NULL, capability TEXT NOT NULL, entity_type TEXT NOT NULL, "
+                "entity_reference TEXT NOT NULL, operation TEXT NOT NULL, risk_level TEXT NOT NULL, "
+                "source TEXT NOT NULL, success INTEGER NOT NULL, metadata TEXT NOT NULL, "
+                "schema_version TEXT NOT NULL); "
+                "CREATE TABLE operatoros_schema_migrations (version TEXT PRIMARY KEY, predecessor TEXT, "
+                "schema_fingerprint TEXT NOT NULL, protected_fingerprints TEXT NOT NULL, "
+                "approved_by TEXT NOT NULL, applied_at TEXT NOT NULL); "
+                "INSERT INTO users VALUES ('synthetic-admin', 'admin', 1);`); db.close();"
+            )
+            setup = subprocess.run([bun, '-e', fixture_setup, str(database)], capture_output=True, text=True)
+            self.assertEqual(setup.returncode, 0, setup.stderr)
+
+            marker_without_schema = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_MARKER_SETUP, str(database),
+                 'synthetic-admin', '9e8726e5-4250-4353-9635-0c5e42d96e75'],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(marker_without_schema.returncode, 0)
+            audit_count = subprocess.run(
+                [bun, '-e', "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1], {readonly:true}); "
+                 "console.log(db.query('SELECT count(*) AS count FROM operations_audit_events').get().count); db.close();",
+                 str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(audit_count.returncode, 0, audit_count.stderr)
+            self.assertEqual(audit_count.stdout.strip(), '0')
+
+            add_schema_versions = (
+                "import { Database } from 'bun:sqlite'; const db = new Database(process.argv[1]); "
+                "db.query('INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?, ?)').run("
+                "'20261026_s53', null, 'old', '[]', 'test', '2026-10-26T00:00:00Z'); "
+                "db.query('INSERT INTO operatoros_schema_migrations VALUES (?, ?, ?, ?, ?, ?)').run("
+                "'20261027_s54', '20261026_s53', 'current', '[]', 'test', '2026-10-27T00:00:00Z'); "
+                "db.close();"
+            )
+            migration_setup = subprocess.run(
+                [bun, '-e', add_schema_versions, str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(migration_setup.returncode, 0, migration_setup.stderr)
+
+            wal = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_WAL_SETUP, str(database)], capture_output=True, text=True,
+            )
+            self.assertEqual(wal.returncode, 0, wal.stderr)
+
+            marker = '92a9c0d2-b20e-4bea-9bce-39ea24c83a25'
+            marker_setup = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_MARKER_SETUP, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(marker_setup.returncode, 0, marker_setup.stderr)
+            self.assertEqual(json.loads(marker_setup.stdout), {
+                'marker_created': True,
+                'schema_version': '20261027_s54',
+            })
+
+            assertion = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(assertion.returncode, 0, assertion.stderr)
+            self.assertEqual(json.loads(assertion.stdout), {
+                'integrity_check': 'ok',
+                'foreign_key_violations': 0,
+                'journal_mode': 'wal',
+                'synthetic_admin_preserved': True,
+                'synthetic_preservation_marker': True,
+            })
+
+            # Losing this in-place write leaves the seeded admin, integrity,
+            # and WAL checks intact, matching the blind spot in the old test.
+            remove_marker = (
+                "import { Database } from 'bun:sqlite'; "
+                "const db = new Database(process.argv[1]); "
+                "db.query('DELETE FROM operations_audit_events WHERE event_id = ?').run(process.argv[2]); "
+                "db.close();"
+            )
+            removed = subprocess.run(
+                [bun, '-e', remove_marker, str(database), marker], capture_output=True, text=True,
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            old_assertion = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin'],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(old_assertion.returncode, 0, old_assertion.stderr)
+            self.assertIsNone(json.loads(old_assertion.stdout)['synthetic_preservation_marker'])
+            lost_marker = subprocess.run(
+                [bun, '-e', rehearsal.SQLITE_ASSERTION, str(database), 'synthetic-admin', marker],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(lost_marker.returncode, 0)
+
+    def test_sqlite_marker_setup_follows_verified_backup_and_precedes_deployment(self):
+        script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
+        rehearsal_body = script.split('def rehearse(', 1)[1]
+        backup_verified = rehearsal_body.index('deployment_progress("synthetic_backup_verification_completed"')
+        marker_started = rehearsal_body.index('deployment_progress("sqlite_preservation_marker_setup_started"')
+        quadlet_started = rehearsal_body.index('deployment_progress("quadlet_staging_started"')
+        self.assertLess(backup_verified, marker_started)
+        self.assertLess(marker_started, quadlet_started)
+        self.assertEqual(rehearsal_body.count(
+            'SQLITE_ASSERTION, str(cfg["data_dir"] / "operatoros.sqlite"),\n'
+            '             admin_username, preservation_marker]'
+        ), 4)
+
+    def test_rehearsal_workspace_scaffold_leaves_synthetic_data_to_its_initializer(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-scaffold-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {}, clear=True):
+                rehearsal.create_rehearsal_workspace(runner_temp, workspace)
+            self.assertTrue((workspace / 'deploy').is_dir())
+            self.assertTrue((workspace / 'web/releases').is_dir())
+            self.assertFalse((workspace / 'data').exists())
+
+    def test_deployment_failure_record_reports_phase_without_filesystem_paths(self):
+        private_path = '/tmp/private-rehearsal/synthetic-data'
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress('synthetic_database_setup_started',
+                                          completed_guard='verified_oci_import')
+            rehearsal.retain_deployment_failure(FileExistsError(17, 'File exists', private_path))
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_PATH_COLLISION')
+        self.assertEqual(failure['phase'], 'synthetic_database_setup_started')
+        self.assertEqual(failure['last_completed_guard'], 'verified_oci_import')
+        self.assertEqual(failure['exception_class'], 'FileExistsError')
+        self.assertEqual(failure['path_category'], 'synthetic_data_directory')
+        self.assertEqual(failure['expected'], 'path_absent')
+        self.assertEqual(failure['observed'], 'path_exists')
+        self.assertNotIn(private_path, json.dumps(report))
+        self.assertNotIn('File exists', json.dumps(report))
+
+    def test_deployment_failure_codes_identify_import_quadlet_startup_and_acceptance(self):
+        cases = (
+            ('oci_import_started', 'DEPLOY_OCI_IMPORT_FAILED', 'release_staged'),
+            ('quadlet_staging_started', 'DEPLOY_QUADLET_STAGING_FAILED', 'synthetic_database_ready'),
+            ('application_start_started', 'DEPLOY_APPLICATION_START_FAILED', 'quadlet_files_staged'),
+            ('application_acceptance_started', 'DEPLOY_APPLICATION_ACCEPTANCE_FAILED', 'deployed_application_healthy'),
+            ('sqlite_preservation_marker_setup_started',
+             'DEPLOY_SQLITE_PRESERVATION_MARKER_SETUP_FAILED', 'synthetic_backup_verified'),
+        )
+        for phase, expected_code, previous_guard in cases:
+            with self.subTest(phase=phase):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report):
+                    rehearsal.deployment_progress(phase, completed_guard=previous_guard)
+                    rehearsal.retain_deployment_failure(rehearsal.RehearsalError('sensitive detail'))
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], expected_code)
+                self.assertEqual(failure['last_completed_guard'], previous_guard)
+                self.assertNotIn('sensitive detail', json.dumps(report))
+
+    def test_interrupted_recovery_failure_has_its_own_sanitized_phase_and_code(self):
+        private_detail = 'failed at /private/runner/deploy/operatoros.sqlite token=synthetic-secret'
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        error = rehearsal.RehearsalError(private_detail)
+        error.exit_code = 23
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress(
+                'interrupted_transaction_recovery_started',
+                completed_guard='application_rollback_completed',
+            )
+            rehearsal.retain_deployment_failure(error)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_INTERRUPTED_TRANSACTION_RECOVERY_FAILED')
+        self.assertEqual(failure['phase'], 'interrupted_transaction_recovery_started')
+        self.assertEqual(failure['last_completed_guard'], 'application_rollback_completed')
+        self.assertEqual(failure['exit_code'], 23)
+        rendered = json.dumps(report)
+        self.assertNotIn(private_detail, rendered)
+        self.assertNotIn('/private/runner', rendered)
+        self.assertNotIn('synthetic-secret', rendered)
+
+    def test_rollback_failure_retains_operation_and_sanitized_exit_classification(self):
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        private_output = 'permission denied token=synthetic-private-token'
+        completed = subprocess.CompletedProcess(
+            ['operatoros-deploy.sh', 'rollback'], 23, '', private_output,
+        )
+        with patch.object(rehearsal, 'REPORT', report), patch.object(rehearsal, 'log'), \
+             patch.object(rehearsal.subprocess, 'run', return_value=completed):
+            rehearsal.deployment_progress(
+                'application_rollback_started', completed_guard='locked_application_state_unchanged',
+                application_rollback='started',
+            )
+            with self.assertRaises(rehearsal.RehearsalError) as caught:
+                rehearsal.run_cli(
+                    ['operatoros-deploy.sh', 'rollback'], operation_id='application_rollback',
+                )
+            rehearsal.retain_deployment_failure(caught.exception)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_APPLICATION_ROLLBACK_FAILED')
+        self.assertEqual(failure['phase'], 'application_rollback_started')
+        self.assertEqual(failure['last_completed_guard'], 'locked_application_state_unchanged')
+        self.assertEqual(failure['exit_code'], 23)
+        self.assertEqual(failure['operation_id'], 'application_rollback')
+        self.assertEqual(failure['operation_failure_classification'], 'permission_rejected')
+        self.assertNotIn(private_output, json.dumps(report))
+
+    def test_rollback_launch_failure_retains_sanitized_exception_classification(self):
+        failures = (
+            (FileNotFoundError('private executable path'), 'command_not_found'),
+            (subprocess.TimeoutExpired('private executable path', 300), 'subprocess_timeout'),
+        )
+        for cause, classification in failures:
+            with self.subTest(exception=type(cause).__name__):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report), patch.object(rehearsal, 'log'), \
+                     patch.object(rehearsal.subprocess, 'run', side_effect=cause):
+                    rehearsal.deployment_progress(
+                        'application_rollback_started', completed_guard='locked_application_state_unchanged',
+                        application_rollback='started',
+                    )
+                    with self.assertRaises(rehearsal.RehearsalError) as caught:
+                        rehearsal.run_cli(
+                            ['operatoros-deploy.sh', 'rollback'], operation_id='application_rollback',
+                        )
+                    rehearsal.retain_deployment_failure(caught.exception)
+
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], 'DEPLOY_APPLICATION_ROLLBACK_FAILED')
+                self.assertEqual(failure['exit_code'], None)
+                self.assertEqual(failure['operation_id'], 'application_rollback')
+                self.assertEqual(failure['operation_failure_classification'], classification)
+                self.assertEqual(failure['subprocess_exception_class'], type(cause).__name__)
+                self.assertNotIn(str(cause), json.dumps(report))
+
+    def test_schema_validation_failure_reports_exact_operation_boundary_and_exit(self):
+        errors = (
+            rehearsal.RehearsalError('safe wrapper message'),
+            deploy.DeployError('safe command failure', exit_code=1),
+        )
+        errors[0].exit_code = 1
+        for error in errors:
+            with self.subTest(error_class=type(error).__name__):
+                report = {'deployment': rehearsal.initial_deployment_record()}
+                report['deployment']['status'] = 'in_progress'
+                with patch.object(rehearsal, 'REPORT', report):
+                    rehearsal.deployment_progress(
+                        'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
+                    )
+                    rehearsal.retain_deployment_failure(error)
+
+                failure = report['deployment']['failure']
+                self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
+                self.assertEqual(failure['phase'], 'schema_validation_started')
+                self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
+                self.assertEqual(failure['exit_code'], 1)
+                self.assertNotIn(str(error), json.dumps(report))
+
+    def test_schema_validation_failure_retains_only_allowlisted_podman_classification(self):
+        self.assertTrue(deploy.PODMAN_FAILURE_CLASSIFICATIONS.issubset(
+            rehearsal.REHEARSAL_FAILURE_CLASSIFICATIONS,
+        ))
+        report = {'deployment': rehearsal.initial_deployment_record()}
+        report['deployment']['status'] = 'in_progress'
+        report['deployment']['schema_rejection'] = {
+            'status': 'failed',
+            'result': 'unrecognized_validator_failure',
+            'exit_code': 125,
+            'failure_classification': 'podman_engine_failure',
+        }
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.deployment_progress(
+                'schema_validation_started', completed_guard='incompatible_database_snapshot_captured',
+            )
+            failure_error = rehearsal.RehearsalError('safe wrapper message')
+            failure_error.exit_code = 125
+            rehearsal.retain_deployment_failure(failure_error)
+
+        failure = report['deployment']['failure']
+        self.assertEqual(failure['code'], 'DEPLOY_SCHEMA_VALIDATION_FAILED')
+        self.assertEqual(failure['last_completed_guard'], 'incompatible_database_snapshot_captured')
+        self.assertEqual(failure['operation_failure_classification'], 'podman_engine_failure')
+        self.assertEqual(failure['operation'], 'schema_validation_container')
+
+    def test_synthetic_database_setup_fails_closed_on_preexisting_data_directory(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-data-collision-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            data = workspace / 'data'
+            data.mkdir(mode=0o700)
+            marker = data / 'preserve-me'
+            marker.write_text('unrelated synthetic marker', encoding='utf-8')
+            report = {}
+            environment = {
+                'GITHUB_RUN_ID': '123456789',
+                'GITHUB_RUN_ATTEMPT': '1',
+                'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                'PATH': '/usr/bin:/bin',
+            }
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, environment, clear=True), \
+                 patch.object(rehearsal, 'create_podman_secret') as create_secret:
+                with self.assertRaises(FileExistsError):
+                    rehearsal.setup_synthetic_database(workspace, SHA, None)
+            create_secret.assert_not_called()
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'unrelated synthetic marker')
+            failure = report['synthetic_database_setup']['failure']
+            self.assertEqual(failure['code'], 'DB_SETUP_DATA_ROOT_CREATE_FAILED')
+            self.assertEqual(failure['classification'], 'unexpected_existing_path')
+            self.assertFalse(report['synthetic_database_setup']['database_initializer_started'])
+
+    def test_database_setup_rejects_missing_run_identity_before_creating_data_root(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-invalid-input-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, {
+                     'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                 }, clear=True), \
+                 patch.object(rehearsal, 'create_podman_secret') as create_secret:
+                with self.assertRaises(rehearsal.RehearsalError):
+                    rehearsal.setup_synthetic_database(workspace, SHA, None)
+
+            create_secret.assert_not_called()
+            self.assertFalse((workspace / 'data').exists())
+            setup = report['synthetic_database_setup']
+            self.assertEqual(setup['failure']['code'], 'DB_SETUP_INPUTS_VALIDATION_FAILED')
+            self.assertEqual(setup['failure']['classification'], 'validation_rejected')
+            self.assertEqual(setup['last_completed_operation'], 'none')
+
+    def test_database_setup_bootstrap_failure_identifies_operation_without_raw_output(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-bootstrap-failure-') as temporary:
+            root = Path(temporary)
+            workspace = root / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'deploy').mkdir(mode=0o700)
+            context = private_context(workspace)
+            diagnostics = root / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            report = {'deployment': rehearsal.initial_deployment_record()}
+            report['deployment'].update({
+                'status': 'in_progress',
+                'phase': 'synthetic_database_setup_started',
+                'last_completed_guard': 'runtime_image_pulled',
+            })
+            calls = []
+            private_output = 'DATA_DIR_NOT_EMPTY /private/runner/path'
+
+            def fail_bootstrap(args, **kwargs):
+                calls.append((args, kwargs))
+                if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
+                    return subprocess.CompletedProcess(args, 1, '', private_output)
+                return subprocess.CompletedProcess(args, 0, '', '')
+
+            environment = {
+                'GITHUB_RUN_ID': '123456789',
+                'GITHUB_RUN_ATTEMPT': '1',
+                'OPERATOROS_REHEARSAL_ORIGIN': 'http://127.0.0.1:18080',
+                'PATH': '/usr/bin:/bin',
+            }
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.dict(os.environ, environment, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=fail_bootstrap):
+                with self.assertRaises(rehearsal.RehearsalError) as raised:
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
+                rehearsal.retain_deployment_failure(raised.exception)
+
+            setup = report['synthetic_database_setup']
+            self.assertEqual(len(calls), 3)
+            self.assertEqual(setup['current_operation'], 'DB_SETUP_DATABASE_BOOTSTRAP')
+            self.assertEqual(setup['last_completed_operation'], 'DB_SETUP_API_ENV_STAGE')
+            self.assertTrue(setup['database_initializer_started'])
+            self.assertFalse(setup['database_initializer_completed'])
+            self.assertFalse(setup['schema_verification_completed'])
+            self.assertEqual(setup['failure'], {
+                'code': 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED',
+                'operation_id': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                'exception_class': 'SubprocessExit',
+                'exit_code': 1,
+                'classification': 'unexpected_nonempty_data_root',
+            })
+            deployment_failure = report['deployment']['failure']
+            self.assertEqual(deployment_failure['code'], 'DEPLOY_SYNTHETIC_DATABASE_SETUP_FAILED')
+            self.assertEqual(deployment_failure['operation_failure_code'], 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED')
+            self.assertEqual(deployment_failure['last_completed_operation'], 'DB_SETUP_API_ENV_STAGE')
+            rendered = json.dumps(report)
+            self.assertNotIn(private_output, rendered)
+            self.assertNotIn('/private/runner/path', rendered)
+            log_text = (diagnostics / 'rehearsal.log').read_text(encoding='utf-8')
+            self.assertIn('operation=DB_SETUP_DATABASE_BOOTSTRAP status=failed exit=1', log_text)
+            self.assertIn('classification=unexpected_nonempty_data_root', log_text)
+            self.assertNotIn(private_output, log_text)
+            self.assertNotIn('/private/runner/path', log_text)
+
+    def test_subprocess_failure_classification_is_allowlisted_and_distinguishes_causes(self):
+        cases = (
+            (['bun'], '', 'FileNotFoundError', 'command_not_found'),
+            (['bun'], 'Permission denied', None, 'permission_rejected'),
+            (['podman', 'secret', 'create'], 'unexpected failure', None, 'container_command_failed'),
+            (['bun'], 'DATA_DIR_NOT_EMPTY', None, 'unexpected_nonempty_data_root'),
+            (['bun'], 'DATABASE_ALREADY_EXISTS', None, 'database_already_exists'),
+            (['bun'], 'BOOTSTRAP_SCHEMA_MISMATCH', None, 'schema_mismatch'),
+            (['bun'], 'SQLiteError: database is locked', None, 'sqlite_initialization_failure'),
+            (['bun'], 'Cannot find module', None, 'working_directory_or_script_unavailable'),
+            (['bun'], 'No such file or directory', None, 'missing_expected_file'),
+            (['bun'], 'unclassified child output', None, 'nonzero_exit'),
+        )
+        for args, output, exception_class, expected in cases:
+            with self.subTest(expected=expected):
+                self.assertEqual(
+                    rehearsal.classify_subprocess_failure(args, output, exception_class), expected,
+                )
+
+    def test_cleanup_environment_keeps_private_image_temp_directory(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cleanup-env-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.123456789a1'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            with patch.dict(os.environ, {'XDG_DATA_HOME': str(Path(temporary) / 'host-xdg')}, clear=True):
+                environment = rehearsal.cleanup_environment(workspace, context)
+            self.assertEqual(environment['TMPDIR'], str(workspace / 'podman-rootless/image-tmp'))
+            self.assertEqual(environment['XDG_CONFIG_HOME'], str(context.xdg_config_home))
+            self.assertIn('OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME', environment)
+
+    def test_verified_cleanup_passes_private_tmpdir_and_embeds_child_result(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-cleanup-parent-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.123456789a1'
+            workspace.mkdir(mode=0o700)
+            diagnostics.mkdir(mode=0o700)
+            context = private_context(workspace)
+            removed = {
+                'attempted': True,
+                'phase': 'complete',
+                'failure_code': None,
+                'exit_code': 0,
+                'command_exit_code': None,
+                'ownership_validated': True,
+                'resources_removed': ['run_scoped_containers', 'private_store_contents', 'workspace'],
+                'resources_remaining': [],
+                'diagnostics_log_created': True,
+                'status': 'passed',
+            }
+            observed = {}
+
+            def successful_cleanup(_args, **kwargs):
+                observed.update(kwargs['env'])
+                shutil.rmtree(workspace)
+                return subprocess.CompletedProcess(
+                    _args, 0, 'OPERATOROS_CLEANUP_RESULT=' + json.dumps(removed), '',
+                )
+
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'PODMAN_CONTEXT_VERIFIED', True), \
+                 patch.dict(os.environ, context.environment() | {'PATH': '/usr/bin:/bin'}, clear=True), \
+                 patch.object(rehearsal.subprocess, 'run', side_effect=successful_cleanup):
+                rehearsal.cleanup_workspace(workspace, runner_temp, diagnostics)
+
+            self.assertEqual(observed['TMPDIR'], str(context.image_copy_tmp_dir))
+            self.assertNotEqual(observed['TMPDIR'], str(runner_temp))
+            self.assertEqual(report['cleanup']['status'], 'passed')
+            self.assertEqual(report['cleanup']['resources_remaining'], [])
+            self.assertEqual(report['cleanup']['cleanup_helper_exit_code'], 0)
+
+    def test_absent_run_scoped_workspace_is_recorded_as_already_clean(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-absent-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            report = {}
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.dict(os.environ, {'GITHUB_RUN_ID': '123456789', 'GITHUB_RUN_ATTEMPT': '1'}, clear=True):
+                rehearsal.cleanup_workspace(workspace, runner_temp, runner_temp / 'diagnostics')
+            self.assertEqual(report['cleanup']['status'], 'passed')
+            self.assertEqual(report['cleanup']['phase'], 'workspace_absent')
+            self.assertTrue(report['cleanup']['ownership_validated'])
+            self.assertEqual(report['cleanup']['resources_remaining'], [])
+
+    def test_cleanup_result_parser_accepts_only_sanitized_allowlisted_values(self):
+        record = {
+            'attempted': True,
+            'phase': 'workspace_validation',
+            'failure_code': 'CLEANUP_PRIVATE_TMPDIR_MISMATCH',
+            'exit_code': 1,
+            'command_exit_code': None,
+            'ownership_validated': False,
+            'resources_removed': [],
+            'resources_remaining': ['workspace_and_private_store'],
+            'diagnostics_log_created': False,
+            'status': 'failed',
+            'expected': 'workspace_tmpdir',
+            'observed': 'runner_temp',
+        }
+        self.assertTrue(rehearsal.valid_cleanup_result(record))
+        record['observed'] = '/private/runner/path'
+        self.assertFalse(rehearsal.valid_cleanup_result(record))
+
+    def test_rehearsal_workspace_must_be_outside_protected_roots_before_creation(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-boundary-') as temporary:
+            base = Path(temporary).resolve()
+            runner_temp = base / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {}, clear=True):
+                rehearsal.require_private_workspace_boundary(runner_temp, workspace)
+
+            xdg_home = base / 'xdg'
+            protected_runner_temp = xdg_home / 'containers/storage'
+            protected_runner_temp.mkdir(parents=True, mode=0o700)
+            protected_workspace = protected_runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            with patch.dict(os.environ, {'XDG_DATA_HOME': str(xdg_home)}, clear=True):
+                with self.assertRaisesRegex(rehearsal.RehearsalError, 'overlaps shared Podman storage'):
+                    rehearsal.require_private_workspace_boundary(protected_runner_temp, protected_workspace)
+
+    def test_unverified_context_cleanup_never_invokes_podman(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-unverified-cleanup-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.123456789a1'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'partial-setup').write_text('synthetic only', encoding='utf-8')
+            unrelated = runner_temp / 'unrelated-resource'
+            unrelated.write_text('preserve', encoding='utf-8')
+            diagnostics = runner_temp / 'diagnostics'
+            diagnostics.mkdir(mode=0o700)
+            rehearsal.PODMAN_CONTEXT_VERIFIED = False
+            with patch.object(rehearsal.subprocess, 'run') as run:
+                rehearsal.cleanup_workspace(workspace, runner_temp, diagnostics)
+            run.assert_not_called()
+            self.assertFalse(workspace.exists())
+            self.assertEqual(unrelated.read_text(encoding='utf-8'), 'preserve')
+
+    def test_private_workspace_creation_failure_is_recorded_with_its_stage(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-workspace-failure-') as temporary:
+            runner_temp = Path(temporary).resolve()
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            report = {'schema_version': 2, 'checks': {}, 'failures': []}
+            error_text = 'synthetic workspace failure detail'
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'require_private_workspace_boundary',
+                              side_effect=rehearsal.RehearsalError(error_text)):
+                with self.assertRaises(RuntimeError) as error:
+                    rehearsal.rehearse(
+                        workspace, diagnostics,
+                        ('operatoros-rehearsal-fixture-api.service',
+                         'operatoros-rehearsal-fixture-caddy.service'),
+                        set(), [],
+                    )
+
+                self.assertEqual(error.exception.code, 'CTX_WORKSPACE_FAILURE')
+                self.assertEqual(error.exception.stage, 'workspace_creation')
+                self.assertEqual(error.exception.last_completed_guard, 'none')
+                rehearsal.retain_context_failure(error.exception)
+
+            failure = report['podman_context']['failure']
+            self.assertEqual(failure['code'], 'CTX_WORKSPACE_FAILURE')
+            self.assertEqual(failure['stage'], 'workspace_creation')
+            self.assertEqual(failure['last_completed_guard'], 'none')
+            self.assertEqual(failure['observed'], 'unsafe')
+            self.assertNotIn(error_text, json.dumps(failure))
+
+    def test_structured_context_failure_updates_outer_guard_summary(self):
+        report = {
+            'podman_context': {
+                'status': 'qualifying',
+                'stage': 'podman_store_validation',
+                'last_completed_guard': 'podman_info_parsed',
+            },
+        }
+        error = deploy.PodmanContextError(
+            'CTX_GRAPHROOT_MISMATCH', 'podman_store_validation',
+            'rootless_runtime_validated', expected='private_graphroot', observed='different_path',
+        )
+
+        with patch.object(rehearsal, 'REPORT', report):
+            rehearsal.retain_context_failure(error)
+
+        summary = report['podman_context']
+        self.assertEqual(summary['stage'], summary['failure']['stage'])
+        self.assertEqual(summary['last_completed_guard'], summary['failure']['last_completed_guard'])
+        self.assertEqual(summary['last_completed_guard'], 'rootless_runtime_validated')
+
     def test_podman_secret_stdin_and_subprocess_outputs_never_enter_logs_or_errors(self):
         secret_value = 'synthetic-secret-value'
         child_output = 'synthetic-child-output-marker'
@@ -179,19 +973,26 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-success-') as temporary:
             root = Path(temporary)
             workspace = root / 'operatoros-deployment-rehearsal.fixture01'
-            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
+            report = {}
             calls = []
 
             def successful_process(args, **kwargs):
                 calls.append((args, kwargs))
                 if args[:3] == ['bun', 'packages/db/src/db-cli.ts', 'bootstrap']:
                     data_dir = Path(kwargs['env']['OPERATOROS_DATA_DIR'])
+                    self.assertEqual(
+                        list(data_dir.iterdir()), [],
+                        'db-cli bootstrap requires an empty synthetic data directory',
+                    )
                     (data_dir / 'operatoros.sqlite').write_bytes(b'synthetic database')
                 return subprocess.CompletedProcess(args, 0, child_output, child_output)
 
             with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal, 'REPORT', report), \
                  patch.dict(os.environ, {
                      'GITHUB_RUN_ID': '123456789',
                      'GITHUB_RUN_ATTEMPT': '1',
@@ -200,9 +1001,11 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                  }, clear=True), \
                  patch.object(rehearsal.subprocess, 'run', side_effect=successful_process):
                 username, password, cookie_secret, backup_key, auth_name, backup_name = \
-                    rehearsal.setup_synthetic_database(workspace, SHA)
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 5)
+            self.assertTrue(report['synthetic_database_setup']['schema_verification_completed'])
+            self.assertEqual(report['synthetic_database_setup']['status'], 'completed')
             secret_calls = calls[:2]
             self.assertEqual(secret_calls[0][0], ['podman', 'secret', 'create', auth_name, '-'])
             self.assertEqual(secret_calls[1][0], ['podman', 'secret', 'create', backup_name, '-'])
@@ -246,21 +1049,128 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
     def test_quadlet_references_run_scoped_podman_secrets_without_values(self):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-secret-test-') as temporary:
             workspace = Path(temporary) / 'workspace'
+            workspace.mkdir(mode=0o700)
+            (workspace / 'data').mkdir(mode=0o700)
+            context = private_context(workspace)
             unit_dir = Path(temporary) / 'units'
-            for directory in ('deploy', 'data', 'podman-rootless/graphroot', 'podman-rootless/runroot'):
-                (workspace / directory).mkdir(parents=True, exist_ok=True)
             unit_dir.mkdir()
-            api_unit, _, api_copy = rehearsal.write_quadlets(
+            api_unit, caddy_unit, api_copy = rehearsal.write_quadlets(
                 workspace, unit_dir, 'operatoros-rehearsal-api.service',
                 'operatoros-rehearsal-caddy.service', 18081, 18080,
                 'localhost/operatoros-api:' + SHA,
                 'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(),
+                context,
             )
 
-            rendered = api_unit.read_text(encoding='utf-8') + api_copy.read_text(encoding='utf-8')
+            rendered = (api_unit.read_text(encoding='utf-8') + caddy_unit.read_text(encoding='utf-8') +
+                        api_copy.read_text(encoding='utf-8'))
             self.assertIn('Secret=operatoros-rehearsal-auth,type=env,target=AUTH_COOKIE_SECRET', rendered)
             self.assertIn('Secret=operatoros-rehearsal-backup,type=env,target=BACKUP_ENCRYPTION_KEY', rendered)
             self.assertNotIn('synthetic-secret-value', rendered)
+            for name, value in context.environment().items():
+                self.assertEqual(rendered.count(f'Environment={name}={value}'), 3)
+            self.assertNotIn('XDG_RUNTIME_DIR=', rendered)
+
+    def test_rehearsal_quadlets_pass_the_shared_runtime_verifier_without_relaxing_host_guards(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-verifier-test-') as temporary:
+            parent = Path(temporary)
+            workspace = parent / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            deploy_dir = workspace / 'deploy'
+            deploy_dir.mkdir(mode=0o700)
+            (workspace / 'data').mkdir(mode=0o700)
+            (workspace / 'web/current/client').mkdir(mode=0o700, parents=True)
+            unit_dir = parent / 'units'
+            unit_dir.mkdir(mode=0o700)
+            context = private_context(workspace)
+            api_port, web_port = 18081, 18080
+            (deploy_dir / 'api.env').write_text('synthetic rehearsal environment\n', encoding='utf-8')
+            (deploy_dir / 'api.env').chmod(0o600)
+            (deploy_dir / 'Caddyfile').write_text(
+                rehearsal.make_caddyfile(web_port, api_port), encoding='utf-8',
+            )
+            (deploy_dir / 'Caddyfile').chmod(0o600)
+            api_unit, caddy_unit, _ = rehearsal.write_quadlets(
+                workspace, unit_dir, 'operatoros-rehearsal-api.service',
+                'operatoros-rehearsal-caddy.service', api_port, web_port,
+                'localhost/operatoros-api:' + SHA,
+                'operatoros-rehearsal-auth', 'operatoros-rehearsal-backup', set(), context,
+            )
+            cfg = {
+                'profile': 'rehearsal',
+                'root': workspace,
+                'data_dir': workspace / 'data',
+                'api_unit': api_unit,
+                'caddy_unit': caddy_unit,
+                'api_service': 'operatoros-rehearsal-api.service',
+                'caddy_service': 'operatoros-rehearsal-caddy.service',
+                'api_url': f'http://127.0.0.1:{api_port}',
+                'web_url': f'http://127.0.0.1:{web_port}',
+            }
+
+            deploy.verify_runtime_units(cfg)
+            caddy_text = caddy_unit.read_text(encoding='utf-8')
+            self.assertEqual(deploy.unit_values(caddy_text, 'AddCapability'), ['net_bind_service'])
+            caddy_unit.write_text(caddy_text + 'AddCapability=SYS_ADMIN\n', encoding='utf-8')
+            with self.assertRaisesRegex(deploy.DeployError, 'unexpected capability'):
+                deploy.verify_runtime_units(cfg)
+
+    def test_effective_quadlet_environment_must_match_private_podman_context(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-unit-env-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            valid = 'PATH=/usr/bin:/bin ' + ' '.join(
+                f'{name}={value}' for name, value in context.environment().items()
+            )
+            self.assertNotIn('CONTAINERS_STORAGE_CONF', context.environment())
+            rehearsal.verify_quadlet_podman_environment(valid, context)
+
+            wrong = valid.replace(
+                str(context.xdg_config_home),
+                '/home/runner/.config',
+            )
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
+                rehearsal.verify_quadlet_podman_environment(wrong, context)
+
+            override = valid + f' CONTAINERS_STORAGE_CONF={context.storage_conf}'
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'override'):
+                rehearsal.verify_quadlet_podman_environment(override, context)
+
+            missing = ' '.join(
+                f'{name}={value}' for name, value in context.environment().items()
+                if name != 'XDG_DATA_HOME'
+            )
+            with self.assertRaisesRegex(rehearsal.RehearsalError, 'differs'):
+                rehearsal.verify_quadlet_podman_environment(missing, context)
+
+    def test_schema_rejection_uses_the_verified_private_podman_context(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-schema-context-') as temporary:
+            workspace = Path(temporary) / 'operatoros-deployment-rehearsal.fixture01'
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
+            data_dir = workspace / 'schema-negative/data'
+            data_dir.mkdir(mode=0o700, parents=True)
+            database = data_dir / 'operatoros.sqlite'
+            database.write_bytes(b'synthetic database snapshot')
+            database.chmod(0o600)
+            cfg = rehearsal.schema_validation_config(workspace, data_dir, context)
+            captured = []
+
+            def reject_synthetic_schema(args, env=None, timeout=60):
+                captured.append(env)
+                return subprocess.CompletedProcess(
+                    args, 1, '', 'DATABASE_MIGRATION_REQUIRED: expected schema\n',
+                )
+
+            with patch.object(deploy, 'run_command', side_effect=reject_synthetic_schema):
+                with self.assertRaises(deploy.SchemaValidationError):
+                    deploy.schema_validate('synthetic-image', cfg)
+
+            self.assertEqual(captured, [deploy.private_environment(context.storage_conf, context)])
+            self.assertEqual(captured[0]['XDG_CONFIG_HOME'], str(context.xdg_config_home))
+            self.assertEqual(captured[0]['CONTAINERS_CONF'], str(context.containers_conf))
+            self.assertNotIn('CONTAINERS_STORAGE_CONF', captured[0])
 
     def test_synthetic_login_uses_memory_request_and_cookie_jar(self):
         class Response(io.BytesIO):
@@ -299,9 +1209,11 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-partial-setup-') as temporary:
             root = Path(temporary)
             workspace = root / 'operatoros-deployment-rehearsal.fixture01'
-            (workspace / 'deploy').mkdir(parents=True, mode=0o700)
+            workspace.mkdir(mode=0o700)
+            context = private_context(workspace)
             diagnostics = root / 'diagnostics'
             diagnostics.mkdir(mode=0o700)
+            report = {}
             calls = []
 
             def fail_second_secret(args, **kwargs):
@@ -312,6 +1224,7 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 )
 
             with patch.object(rehearsal, 'DIAGNOSTICS', diagnostics), \
+                 patch.object(rehearsal, 'REPORT', report), \
                  patch.dict(os.environ, {
                      'GITHUB_RUN_ID': '123456789',
                      'GITHUB_RUN_ATTEMPT': '1',
@@ -320,13 +1233,20 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                  }, clear=True), \
                  patch.object(rehearsal.subprocess, 'run', side_effect=fail_second_secret):
                 with self.assertRaisesRegex(rehearsal.RehearsalError, 'exit code 23'):
-                    rehearsal.setup_synthetic_database(workspace, SHA)
+                    rehearsal.setup_synthetic_database(workspace, SHA, context)
 
             self.assertEqual(len(calls), 2)
+            setup = report['synthetic_database_setup']
+            self.assertEqual(setup['failure']['operation_id'], 'DB_SETUP_BACKUP_SECRET_CREATE')
+            self.assertEqual(setup['failure']['code'], 'DB_SETUP_BACKUP_SECRET_CREATE_FAILED')
+            self.assertEqual(setup['failure']['classification'], 'container_command_failed')
             secret_values = [call[1]['input'] for call in calls]
             for args, kwargs in calls:
                 self.assertEqual(args[-1], '-')
-                self.assertTrue(Path(kwargs['env']['CONTAINERS_STORAGE_CONF']).is_relative_to(workspace))
+                self.assertNotIn('CONTAINERS_STORAGE_CONF', kwargs['env'])
+                self.assertEqual(kwargs['env']['XDG_CONFIG_HOME'], str(context.xdg_config_home))
+                self.assertTrue(Path(kwargs['env']['CONTAINERS_CONF']).is_relative_to(workspace))
+                self.assertEqual(kwargs['env']['XDG_DATA_HOME'], str(context.xdg_data_home))
                 self.assertNotIn('AUTH_COOKIE_SECRET', kwargs['env'])
                 self.assertNotIn('BACKUP_ENCRYPTION_KEY', kwargs['env'])
             self.assertFalse((workspace / 'deploy/api.env').exists())
@@ -335,7 +1255,9 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
                 self.assertFalse(any(value.encode() in contents for contents in file_contents))
             diagnostic = (diagnostics / 'rehearsal.log').read_text()
             self.assertIn('subprocess exit=23', diagnostic)
+            self.assertIn('operation=DB_SETUP_BACKUP_SECRET_CREATE status=failed exit=23', diagnostic)
             self.assertNotIn('synthetic-podman-output-marker', diagnostic)
+            self.assertNotIn('synthetic-podman-output-marker', json.dumps(report))
             for value in secret_values:
                 self.assertNotIn(value, diagnostic)
 
@@ -379,12 +1301,19 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             report = {'schema_version': 1, 'checks': {}, 'failures': []}
             stderr = io.StringIO()
 
+            def fail_after_import(*_args):
+                report['deployment'] = rehearsal.initial_deployment_record()
+                report['deployment']['status'] = 'in_progress'
+                rehearsal.deployment_progress('oci_import_started', completed_guard='podman_context_accepted',
+                                              oci_import='started')
+                raise rehearsal.RehearsalError(secret)
+
             with patch.object(rehearsal, 'REPORT', report), \
                  patch.object(rehearsal, 'DIAGNOSTICS', None), \
                  patch.object(rehearsal, 'validate_workflow_context',
                               return_value=(runner_temp, workspace, diagnostics, services)), \
                  patch.object(rehearsal, 'preflight_runner', return_value={}), \
-                 patch.object(rehearsal, 'rehearse', side_effect=rehearsal.RehearsalError(secret)), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_after_import), \
                  patch.object(rehearsal, 'cleanup_workspace',
                               side_effect=rehearsal.RehearsalError(cleanup_secret)), \
                  redirect_stderr(stderr):
@@ -396,6 +1325,112 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             self.assertNotIn(cleanup_secret, evidence)
             self.assertNotIn(secret, stderr.getvalue())
             self.assertNotIn(cleanup_secret, stderr.getvalue())
+            retained = json.loads(evidence)
+            self.assertEqual(retained['deployment']['failure']['code'], 'DEPLOY_OCI_IMPORT_FAILED')
+            self.assertEqual(retained['deployment']['failure']['last_completed_guard'], 'podman_context_accepted')
+            self.assertEqual(retained['cleanup']['failure_code'], 'CLEANUP_WORKSPACE_FAILED')
+            self.assertEqual(retained['cleanup']['status'], 'failed')
+
+    def test_main_records_cleanup_outcome_alongside_database_setup_failure(self):
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-database-cleanup-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 2, 'checks': {}, 'failures': []}
+
+            def fail_database_setup(*_args):
+                report['deployment'] = rehearsal.initial_deployment_record()
+                report['deployment'].update({
+                    'status': 'in_progress',
+                    'phase': 'synthetic_database_setup_started',
+                    'last_completed_guard': 'runtime_image_pulled',
+                })
+                report['synthetic_database_setup'] = rehearsal.initial_synthetic_database_setup_record()
+                report['synthetic_database_setup'].update({
+                    'status': 'failed',
+                    'current_operation': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                    'last_completed_operation': 'DB_SETUP_API_ENV_STAGE',
+                    'database_initializer_started': True,
+                    'failure': {
+                        'code': 'DB_SETUP_DATABASE_BOOTSTRAP_FAILED',
+                        'operation_id': 'DB_SETUP_DATABASE_BOOTSTRAP',
+                        'exception_class': 'SubprocessExit',
+                        'exit_code': 1,
+                        'classification': 'unexpected_nonempty_data_root',
+                    },
+                })
+                error = rehearsal.RehearsalError('synthetic database setup failed')
+                error.exit_code = 1
+                raise error
+
+            def cleanup_succeeds(*_args):
+                report['cleanup'] = {'attempted': True, 'status': 'passed', 'exit_code': 0}
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_database_setup), \
+                 patch.object(rehearsal, 'cleanup_workspace', side_effect=cleanup_succeeds):
+                self.assertEqual(rehearsal.main(), 1)
+
+            retained = json.loads((diagnostics / 'rehearsal-evidence.json').read_text())
+            self.assertEqual(retained['deployment']['failure']['operation_failure_code'],
+                             'DB_SETUP_DATABASE_BOOTSTRAP_FAILED')
+            self.assertEqual(retained['synthetic_database_setup']['cleanup_status'], 'passed')
+            self.assertEqual(retained['cleanup']['status'], 'passed')
+
+    def test_main_retains_structured_context_failure_and_cleanup_status(self):
+        secret = 'synthetic-podman-output-secret'
+        with tempfile.TemporaryDirectory(prefix='operatoros-rehearsal-context-diagnostic-') as temporary:
+            runner_temp = Path(temporary) / 'runner-temp'
+            runner_temp.mkdir(mode=0o700)
+            diagnostics = runner_temp / 'operatoros-deployment-rehearsal-diagnostics.fixture01'
+            diagnostics.mkdir(mode=0o700)
+            workspace = runner_temp / 'operatoros-deployment-rehearsal.fixture01'
+            services = ('operatoros-rehearsal-fixture-api.service',
+                        'operatoros-rehearsal-fixture-caddy.service')
+            report = {'schema_version': 1, 'checks': {}, 'failures': []}
+            error = deploy.PodmanContextError(
+                'CTX_PODMAN_INFO_FAILURE', 'podman_info', 'private_environment_verified',
+                exit_code=17, expected='successful_podman_info', observed='command_failed',
+            )
+            error.stderr = secret
+
+            def fail_context(*args):
+                report['podman_context'] = {
+                    'stage': 'podman_info',
+                    'last_completed_guard': 'private_environment_verified',
+                    'status': 'qualifying',
+                    'cleanup_status': 'not_started',
+                }
+                raise error
+
+            with patch.object(rehearsal, 'REPORT', report), \
+                 patch.object(rehearsal, 'DIAGNOSTICS', None), \
+                 patch.object(rehearsal, 'validate_workflow_context',
+                              return_value=(runner_temp, workspace, diagnostics, services)), \
+                 patch.object(rehearsal, 'preflight_runner', return_value={}), \
+                 patch.object(rehearsal, 'rehearse', side_effect=fail_context), \
+                 patch.object(rehearsal, 'cleanup_workspace'):
+                self.assertEqual(rehearsal.main(), 1)
+
+            evidence = (diagnostics / 'rehearsal-evidence.json').read_text()
+            record = json.loads(evidence)['podman_context']
+            failure = record.get('failure', {})
+            self.assertEqual(failure.get('code'), 'CTX_PODMAN_INFO_FAILURE')
+            self.assertEqual(failure.get('stage'), 'podman_info')
+            self.assertEqual(failure.get('last_completed_guard'), 'private_environment_verified')
+            self.assertEqual(failure.get('exit_code'), 17)
+            self.assertEqual(failure.get('expected'), 'successful_podman_info')
+            self.assertEqual(failure.get('observed'), 'command_failed')
+            self.assertEqual(record.get('cleanup_status'), 'passed')
+            self.assertNotIn(secret, evidence)
 
     def test_layout_scan_uses_archive_identity_and_read_only_mount(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -442,6 +1477,112 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
             with self.assertRaises(ValueError): m.security_reports(root, expected)
             (root / 'scan.json').write_text(json.dumps({'Results': [], 'Metadata': {'ImageID': expected['image_id']}}))
             with self.assertRaises(ValueError): m.security_reports(root, expected)
+
+    def test_security_report_rejects_unresolved_high_or_critical_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan = {
+                    'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}],
+                    'Metadata': {'ImageID': image['image_id']},
+                }
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.security_reports(root, image)
+
+    def test_security_report_allows_medium_and_low_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            scan = {
+                'Results': [{'Vulnerabilities': [
+                    {'VulnerabilityID': 'CVE-2026-12345', 'Severity': 'MEDIUM'},
+                    {'VulnerabilityID': 'CVE-2026-54321', 'Severity': 'LOW'},
+                ]}],
+                'Metadata': {'ImageID': image['image_id']},
+            }
+            (root / 'scan.json').write_text(json.dumps(scan))
+            (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+            m.security_reports(root, image)
+
+    def test_security_report_rejects_malformed_vulnerability_findings(self):
+        files = fixture()
+        image = m.image_metadata(files['operatoros-api.oci.tar'], SHA)
+        malformed_scans = (
+            {'Results': [{'Vulnerabilities': ''}]},
+            {'Results': [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': ' '}]}]},
+        )
+        for scan in malformed_scans:
+            with self.subTest(scan=scan), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                scan['Metadata'] = {'ImageID': image['image_id']}
+                (root / 'scan.json').write_text(json.dumps(scan))
+                (root / 'sbom.cdx.json').write_bytes(files['sbom.cdx.json'])
+                with self.assertRaisesRegex(ValueError, 'malformed'):
+                    m.security_reports(root, image)
+
+    def test_release_validation_rejects_unresolved_high_or_critical_findings(self):
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity):
+                files = fixture()
+                scan = json.loads(files['scan.json'])
+                scan['Results'] = [{'Vulnerabilities': [{'VulnerabilityID': 'CVE-2026-12345', 'Severity': severity}]}]
+                files['scan.json'] = json.dumps(scan).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['scan.json'] = m.digest(files['scan.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaisesRegex(ValueError, f'{severity}.*CVE-2026-12345'):
+                    m.validate(files, SHA)
+
+    def test_release_rejects_trivy_high_or_critical_sqlite_finding(self):
+        for severity in ('HIGH', 'CRITICAL'):
+            with self.subTest(severity=severity):
+                files = fixture()
+                scan = json.loads(files['scan.json'])
+                scan['Results'] = [{'Vulnerabilities': [{
+                    'VulnerabilityID': m.CVE,
+                    'Severity': severity,
+                    'PkgName': 'sqlite',
+                    'InstalledVersion': '3.53.4',
+                }]}]
+                files['scan.json'] = json.dumps(scan).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['scan.json'] = m.digest(files['scan.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaisesRegex(ValueError, severity):
+                    m.validate(files, SHA)
+
+    def test_release_still_rejects_other_or_ambiguous_high_sqlite_findings(self):
+        cases = (
+            [{'VulnerabilityID': m.CVE, 'Severity': 'CRITICAL', 'PkgName': 'sqlite', 'InstalledVersion': '3.53.3'}],
+            [{'VulnerabilityID': m.CVE, 'Severity': 'HIGH', 'PkgName': 'openssl', 'InstalledVersion': '3.53.4'}],
+            [
+                {'VulnerabilityID': m.CVE, 'Severity': 'HIGH', 'PkgName': 'sqlite', 'InstalledVersion': '3.53.4'},
+                {'VulnerabilityID': m.CVE, 'Severity': 'HIGH', 'PkgName': 'sqlite-libs', 'InstalledVersion': '3.53.4'},
+            ],
+            [
+                {'VulnerabilityID': m.CVE, 'Severity': 'HIGH', 'PkgName': 'sqlite', 'InstalledVersion': '3.53.4'},
+                {'VulnerabilityID': 'CVE-2026-12345', 'Severity': 'HIGH', 'PkgName': 'openssl', 'InstalledVersion': '1.0'},
+            ],
+        )
+        for findings in cases:
+            with self.subTest(findings=findings):
+                files = fixture()
+                scan = json.loads(files['scan.json'])
+                scan['Results'] = [{'Vulnerabilities': findings}]
+                files['scan.json'] = json.dumps(scan).encode()
+                manifest = json.loads(files['manifest.json'])
+                manifest['artifacts']['scan.json'] = m.digest(files['scan.json'])
+                files['manifest.json'] = json.dumps(manifest).encode()
+                checksums(files)
+                with self.assertRaises(ValueError):
+                    m.validate(files, SHA)
 
     def test_failure_upload_contains_only_diagnostics_not_failed_bundles(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text()
@@ -505,21 +1646,45 @@ class ReleasePipelineAndDeploymentRehearsalTests(unittest.TestCase):
     def test_deployment_rehearsal_pins_existing_artifact_and_never_builds_or_deploys_live(self):
         script = (ROOT / 'scripts/deployment-rehearsal.py').read_text()
         for identity in (
-            '278faae7a027cf1c96326d32a9b796618d75620e',
-            '41987515713',
-            '13396749662',
-            'a8a1555d2184ca1daeeb2d4d4d48dceffd08961215c125721d8ed7b108a18435',
-            '22829ed9a872500fae1d793fda85059384321ccf827fcd770cc2401ae6458cf7',
+            'fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98',
+            '43408580871',
+            '14028942446',
+            'd4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e',
+            '146bad5c2bf7f1bcad2029f9551dd18c6de30e11a468fb0e7082c0da2f500b09',
+            'sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81',
+            'sha256:5eded8054ce50b43f2be7c501519735bbc9936517acdbde94539eae56f726ede',
+            '6690c2e8e7fb0554dc1dc88bd897b54adeb425491f1341ca3bc99df877d5aa79',
+            '2027-02-11T10:22:21Z',
         ):
             self.assertIn(identity, script)
         self.assertIn('deploy.verified_artifact(request', script)
+        self.assertIn('"manifest_sha256": hashlib.sha256(verified.files["manifest.json"]).hexdigest()', script)
+        self.assertIn('"artifact_checksums": manifest["artifacts"]', script)
+        self.assertIn('"attestation": "verified"', script)
+        self.assertIn('verified.envelope_sha256 == ENVELOPE_SHA256', script)
         self.assertIn('verified.bundle_sha256 == INNER_BUNDLE_SHA256', script)
+        self.assertIn('manifest.get("workflow") == REPOSITORY + "/.github/workflows/ci.yml"', script)
+        self.assertIn('SQLITE_ASSERTION', script)
+        self.assertIn('PRAGMA journal_mode=WAL', script)
+        self.assertIn('If-None-Match', script)
+        self.assertIn('"quadlet_restart"', script)
+        self.assertIn('"locked_application_state_unchanged"', script)
+        self.assertIn('"sqlite_after_interrupted_recovery"', script)
+        self.assertIn('"interrupted_transaction_recovered"', script)
+        self.assertIn('interrupted deployment could not restore its recorded previous release', script)
+        self.assertLess(script.index('verified = deploy.verified_artifact'),
+                        script.index('context = deploy.create_private_podman_context(workspace)'))
+        self.assertLess(script.index('context = deploy.create_private_podman_context(workspace)'),
+                        script.index('image_ref = image_identity_for_release'))
         self.assertIn('OPERATOROS_REHEARSAL_CONFIRMED', script)
         self.assertIn('RUNNER_TEMP', script)
         self.assertIn('podman-rootless/graphroot', script)
         self.assertIn('show-environment', script)
         self.assertIn('OPERATOROS_RELEASE_TOKEN', script)
-        self.assertIn('REGISTRY_AUTH_FILE', script)
+        self.assertIn('REGISTRY_AUTH_FILE', (ROOT / 'scripts/operatoros_deploy.py').read_text())
+        deploy_source = (ROOT / 'scripts/operatoros_deploy.py').read_text()
+        self.assertIn('"manifest_sha256": hashlib.sha256(release.files["manifest.json"]).hexdigest()', deploy_source)
+        self.assertIn('"artifact_expires_at": release.artifact_expires_at', deploy_source)
         self.assertNotIn('podman", "build', script)
         self.assertNotIn('sudo ', script)
         self.assertNotIn('/mnt/podman-data/operatoros', script)
@@ -562,6 +1727,17 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_podman_cleanup_environment_keeps_host_xdg_guard_but_not_secrets(self):
+        with unittest.mock.patch.dict(os.environ, {
+            'OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME': '/home/runner/.local/share',
+            'GITHUB_TOKEN': 'synthetic-token-must-not-propagate',
+            'AUTH_COOKIE_SECRET': 'synthetic-cookie-must-not-propagate',
+        }, clear=True):
+            environment = cleanup.command_environment()
+        self.assertEqual(environment['OPERATOROS_REHEARSAL_HOST_XDG_DATA_HOME'], '/home/runner/.local/share')
+        self.assertNotIn('GITHUB_TOKEN', environment)
+        self.assertNotIn('AUTH_COOKIE_SECRET', environment)
+
     def fake_podman(self, arguments, workspace, log_path):
         self.commands.append(arguments)
         if arguments[0] == 'rm':
@@ -593,6 +1769,12 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
         process = subprocess.Popen(['sleep', '30'])
         try:
             self.assertEqual(self.run_cleanup(), 0)
+            self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+            self.assertTrue(cleanup.CLEANUP_RESULT['ownership_validated'])
+            self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+            self.assertEqual(cleanup.CLEANUP_RESULT['resources_removed'], [
+                'run_scoped_containers', 'private_store_contents', 'workspace',
+            ])
             self.assertFalse(self.workspace.exists())
             self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
             self.assertIsNone(process.poll())
@@ -604,60 +1786,137 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             process.terminate()
             process.wait(timeout=5)
 
+    def test_cleanup_removes_readonly_spa_tree_without_following_owned_symlink(self):
+        files = fixture()
+        release = SimpleNamespace(
+            files=files,
+            bundle_path=self.temp_parent / 'release.tar',
+            manifest=json.loads(files['manifest.json']),
+        )
+        releases = self.workspace / 'web/releases'
+        releases.mkdir(parents=True, mode=0o700)
+        spa = deploy.materialize_spa({'root': self.workspace}, release, 'legacy-' + SHA)
+        self.assertEqual(spa.joinpath('client').stat().st_mode & 0o777, 0o555)
+        self.assertEqual(spa.joinpath('client/assets').stat().st_mode & 0o777, 0o555)
+
+        outside = self.temp_parent / 'unrelated-release-target'
+        outside.mkdir(mode=0o700)
+        sentinel = outside / 'preserve-me'
+        sentinel.write_text('unrelated', encoding='utf-8')
+        (self.workspace / 'web/current').symlink_to(outside)
+
+        self.assertEqual(self.run_cleanup(), 0)
+
+        self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+        self.assertEqual(sentinel.read_text(encoding='utf-8'), 'unrelated')
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+
+    def test_cleanup_rejects_hardlinked_workspace_entry_before_changing_directory_modes(self):
+        files = fixture()
+        release = SimpleNamespace(
+            files=files,
+            bundle_path=self.temp_parent / 'release.tar',
+            manifest=json.loads(files['manifest.json']),
+        )
+        releases = self.workspace / 'web/releases'
+        releases.mkdir(parents=True, mode=0o700)
+        spa = deploy.materialize_spa({'root': self.workspace}, release, 'legacy-' + SHA)
+        os.link(self.external, self.workspace / 'unexpected-hardlink')
+
+        self.assertEqual(self.run_cleanup(), 1)
+
+        self.assertTrue(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_WORKSPACE_REMOVAL_FAILED')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], ['workspace'])
+        self.assertEqual(spa.joinpath('client').stat().st_mode & 0o777, 0o555)
+        self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
+
+    def test_cleanup_result_reports_log_created_during_cleanup(self):
+        diagnostics = self.temp_parent / 'release-diagnostics'
+        def logged_fake_podman(arguments, workspace, log_path):
+            result = self.fake_podman(arguments, workspace, log_path)
+            if arguments[0] == 'rm':
+                cleanup.append_log(log_path, 'synthetic container removal completed')
+            return result
+
+        with unittest.mock.patch.dict(os.environ, self.environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman', side_effect=logged_fake_podman):
+            self.assertEqual(cleanup.cleanup(
+                str(self.workspace), str(self.temp_parent), str(diagnostics),
+            ), 0)
+
+        self.assertTrue((diagnostics / 'consumer-cleanup.log').is_file())
+        self.assertTrue(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
+
     def test_deployment_rehearsal_profile_cleans_only_its_scoped_containers(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
         workspace.mkdir(mode=0o700)
-        graphroot = workspace / 'podman-rootless/graphroot'
-        runroot = workspace / 'podman-rootless/runroot'
-        graphroot.mkdir(parents=True)
-        runroot.mkdir()
-        storage_conf = workspace / 'deploy/storage.conf'
-        storage_conf.parent.mkdir()
-        storage_conf.write_text(
-            '[storage]\n'
-            'driver="vfs"\n'
-            f'graphroot="{graphroot}"\n'
-            f'runroot="{runroot}"\n',
-            encoding='utf-8',
-        )
-        storage_conf.chmod(0o600)
-        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage_conf)}
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
         with unittest.mock.patch.dict(os.environ, environment, clear=True), \
              unittest.mock.patch.object(cleanup, 'run_podman', side_effect=self.fake_podman):
             self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 0)
         self.assertFalse(workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['status'], 'passed')
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
         self.assertEqual(self.external.read_text(encoding='utf-8'), 'preserve')
         self.assertEqual(self.commands[0], [
             'rm', '--force', '--ignore', 'operatoros-lite-api', 'operatoros-lite-caddy',
         ])
 
+    def test_deployment_rehearsal_cleanup_rejects_storage_config_override(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
+        environment['CONTAINERS_STORAGE_CONF'] = str(context.storage_conf)
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent)), 1)
+            run.assert_not_called()
+        self.assertTrue(workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_OWNERSHIP_REJECTED')
+        self.assertFalse(cleanup.CLEANUP_RESULT['ownership_validated'])
+
+    def test_rehearsal_cleanup_classifies_private_tmpdir_mismatch_before_log_creation(self):
+        workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
+        workspace.mkdir(mode=0o700)
+        context = private_context(workspace)
+        environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
+        environment['TMPDIR'] = str(self.temp_parent)
+        diagnostics = self.temp_parent / 'operatoros-deployment-rehearsal-diagnostics.123456789a1'
+        with unittest.mock.patch.dict(os.environ, environment, clear=True), \
+             unittest.mock.patch.object(cleanup, 'run_podman') as run:
+            self.assertEqual(cleanup.cleanup(str(workspace), str(self.temp_parent), str(diagnostics)), 1)
+            run.assert_not_called()
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_PRIVATE_TMPDIR_MISMATCH')
+        self.assertEqual(cleanup.CLEANUP_RESULT['expected'], 'workspace_tmpdir')
+        self.assertEqual(cleanup.CLEANUP_RESULT['observed'], 'runner_temp')
+        self.assertFalse(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
+        self.assertFalse((diagnostics / 'consumer-cleanup.log').exists())
+        self.assertTrue(workspace.exists())
+
     def test_deployment_rehearsal_rejects_unsafe_store_with_cleanup_error(self):
         workspace = self.temp_parent / 'operatoros-deployment-rehearsal.123456789a1'
         workspace.mkdir(mode=0o700)
-        storage = workspace / 'deploy/storage.conf'
-        storage.parent.mkdir()
+        context = private_context(workspace)
         external_store = self.temp_parent / 'external-store'
         external_store.mkdir()
-        (workspace / 'podman-rootless').mkdir()
-        (workspace / 'podman-rootless/graphroot').symlink_to(external_store, target_is_directory=True)
-        (workspace / 'podman-rootless/runroot').mkdir()
-        storage.write_text(
-            '[storage]\n'
-            'driver="vfs"\n'
-            f'graphroot="{workspace / "podman-rootless/graphroot"}"\n'
-            f'runroot="{workspace / "podman-rootless/runroot"}"\n',
-            encoding='utf-8',
-        )
-        storage.chmod(0o600)
-        environment = self.environment | {'CONTAINERS_STORAGE_CONF': str(storage)}
+        context.graphroot.rmdir()
+        context.graphroot.symlink_to(external_store, target_is_directory=True)
+        environment = self.environment | context.environment()
+        environment.pop('CONTAINERS_STORAGE_CONF', None)
         with patch.dict(os.environ, environment, clear=True):
-            with self.assertRaisesRegex(cleanup.CleanupError, 'unsafe consumer graphroot path'):
+            with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot path'):
                 cleanup.validate_workspace(str(workspace), str(self.temp_parent))
-        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, storage)):
+        with patch.object(cleanup, 'validate_workspace', return_value=(workspace, self.temp_parent, context.storage_conf)):
             with self.assertRaisesRegex(cleanup.CleanupError, 'graphroot'):
                 cleanup.remove_store_in_user_namespace(workspace, self.temp_parent)
         self.assertTrue(external_store.is_dir())
-
 
     def test_cleanup_command_failure_is_reported_even_if_store_is_removed(self):
         self.rm_status = 9
@@ -665,11 +1924,43 @@ class ReleaseConsumerCleanupTests(unittest.TestCase):
             self.assertEqual(self.run_cleanup(), 1)
             self.assertIn('exit=9', error.getvalue())
         self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_PODMAN_REMOVE_FAILED')
+        self.assertEqual(cleanup.CLEANUP_RESULT['command_exit_code'], 9)
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+
+    def test_cleanup_result_survives_diagnostic_log_creation_failure(self):
+        with unittest.mock.patch.object(cleanup, 'diagnostic_log', side_effect=OSError('private path detail')):
+            self.assertEqual(self.run_cleanup(), 1)
+        self.assertFalse(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_LOG_UNAVAILABLE')
+        self.assertFalse(cleanup.CLEANUP_RESULT['diagnostics_log_created'])
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_removed'], [
+            'run_scoped_containers', 'private_store_contents', 'workspace',
+        ])
+        self.assertEqual(cleanup.CLEANUP_RESULT['resources_remaining'], [])
+
+    def test_cleanup_cli_emits_sanitized_result_when_cleanup_raises_before_logging(self):
+        secret = 'sensitive-cleanup-exception-detail'
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['release-consumer-cleanup.py', '/unsafe/workspace', '/tmp']), \
+             patch.object(cleanup, 'cleanup', side_effect=OSError(secret)), \
+             redirect_stdout(output):
+            self.assertEqual(cleanup.main(), 1)
+        record_lines = [line for line in output.getvalue().splitlines()
+                        if line.startswith('OPERATOROS_CLEANUP_RESULT=')]
+        self.assertEqual(len(record_lines), 1)
+        record = json.loads(record_lines[0].split('=', 1)[1])
+        self.assertEqual(record['failure_code'], 'CLEANUP_UNHANDLED_FAILURE')
+        self.assertEqual(record['exception_class'], 'OSError')
+        self.assertEqual(record['status'], 'failed')
+        self.assertNotIn(secret, output.getvalue())
 
     def test_remaining_container_or_mount_blocks_filesystem_cleanup(self):
         self.containers_output = 'unexpected-container\n'
         self.assertEqual(self.run_cleanup(), 1)
         self.assertTrue(self.workspace.exists())
+        self.assertEqual(cleanup.CLEANUP_RESULT['failure_code'], 'CLEANUP_CONTAINERS_REMAIN_OR_UNKNOWN')
+        self.assertIn('containers_or_unverified_inventory', cleanup.CLEANUP_RESULT['resources_remaining'])
         self.assertIn(['unshare', 'podman', 'mount'], self.commands)
         self.assertFalse(any(command[:2] == ['unshare', sys.executable] for command in self.commands))
 
@@ -942,3 +2233,35 @@ class RehearsalUnitCleanupTests(unittest.TestCase):
             self.assertFalse(caddy_unit.exists())
             self.assertTrue(api_copy.is_file())
             self.assertTrue(unrelated.is_file())
+
+
+class ReleaseQualificationWorkflowTests(unittest.TestCase):
+    def test_embedded_runtime_gate_runs_before_provenance_attestation(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        release_job = workflow.split('  release-bundle:\n', 1)[1]
+        qualification = release_job.index('Verify embedded runtime and mandatory evidence before signing')
+        attestation = release_job.index('Attest the complete release bundle')
+        consumer = release_job.index('Verify provenance and start an isolated consumer')
+        self.assertLess(release_job.index('Build and inspect release artifacts'), qualification)
+        self.assertLess(qualification, attestation)
+        self.assertLess(attestation, consumer)
+
+    def test_candidate_qualification_requires_manual_non_main_dispatch_and_is_unattested(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
+            '\n\n  release-bundle:', 1
+        )[0]
+        self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
+        self.assertIn("github.ref != 'refs/heads/main'", candidate)
+        self.assertIn('contents: read', candidate)
+        self.assertIn('scripts/check-bun-sqlite-runtime.py', candidate)
+        self.assertIn('scripts/record-embedded-runtime.py', candidate)
+        self.assertIn('reports/embedded-runtime.json', candidate)
+        self.assertIn('release.scan_image(', candidate)
+        self.assertIn('actions/upload-artifact@', candidate)
+        self.assertNotIn('id-token: write', candidate)
+        self.assertNotIn('attest-build-provenance', candidate)
+        self.assertNotIn('podman push', candidate)
+        retained = candidate.split('      - name: Retain non-image candidate reports', 1)[1]
+        self.assertNotIn('image.oci.tar', retained)
+        self.assertIn('RUNTIME_GATE_PASS', candidate)

@@ -1,10 +1,10 @@
-import { Database } from "bun:sqlite";
 import { chmodSync, closeSync, existsSync, fsyncSync, mkdtempSync, openSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { assertDatabasePath, assertMigrationLedgerShape, assertOrdinarySchemaObjects, schemaFingerprint, validateDatabase } from "./connection";
 import { installS47Schema, installS47Triggers, installS48EmployeeSchema, installS49SchoolUnitSchema, installS49SchoolUnitTriggers, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema } from "./bootstrap";
 import { legacySchemaFingerprint } from "./legacy-fingerprint";
 import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT } from "./manifest";
+import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 
 const SOURCE_VERSION = "20260901_s46";
 const S47_VERSION = "20260929_s47";
@@ -26,7 +26,7 @@ function date(value: unknown): string {
   return text;
 }
 
-function sourceVariant(client: Database): SourceVariant | "S47" | "S48" | "S49" | "S50" | "S51" | "S52" | "S53" | "CURRENT" {
+function sourceVariant(client: SqliteClient): SourceVariant | "S47" | "S48" | "S49" | "S50" | "S51" | "S52" | "S53" | "CURRENT" {
   assertOrdinarySchemaObjects(client);
 
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check: string };
@@ -102,11 +102,11 @@ function sourceVariant(client: Database): SourceVariant | "S47" | "S48" | "S49" 
   return variant;
 }
 
-export function validateMigrationSource(client: Database): void {
+export function validateMigrationSource(client: SqliteClient): void {
   sourceVariant(client);
 }
 
-function copyData(target: Database): void {
+function copyData(target: SqliteClient): void {
   const oldTables = target.query("SELECT name FROM previous.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*'").all() as Named[];
   const currentTables = new Set((target.query("SELECT name FROM main.sqlite_master WHERE type='table' AND name NOT GLOB 'sqlite_*'").all() as Named[]).map((row) => row.name));
   for (const { name } of oldTables) {
@@ -123,7 +123,7 @@ function copyData(target: Database): void {
   }
 }
 
-function backfill(target: Database): void {
+function backfill(target: SqliteClient): void {
   const attendance = target.query("SELECT trim(s.jenjang) AS label, a.date AS date FROM attendance a LEFT JOIN students s ON s.id = a.student_id ORDER BY a.date, a.id").all() as { label: string | null; date: string }[];
   const earliest = new Map<string, string>();
   for (const row of attendance) {
@@ -170,7 +170,7 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
   assertDatabasePath(path);
   if (!existsSync(path)) throw new Error("DATABASE_PATH_MISSING");
   if (existsSync(`${path}-wal`) || existsSync(`${path}-shm`)) throw new Error("DATABASE_SIDECAR_PRESENT");
-  const source = new Database(path, { readwrite: true, create: false });
+  const source = openSqliteConnection(path, { fileMustExist: true }).client;
   let temporary: string | undefined;
   try {
     source.exec("PRAGMA foreign_keys = ON");
@@ -182,7 +182,7 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
     const snapshot = join(temporary, "source.sqlite");
     const targetPath = join(temporary, "target.sqlite");
     writeFileSync(snapshot, source.serialize(), { mode: 0o600 });
-    const target = new Database(targetPath, { create: true });
+    const target = openSqliteConnection(targetPath).client;
     try {
       target.exec("PRAGMA foreign_keys = OFF");
       target.run("ATTACH DATABASE ? AS previous", [snapshot]);
@@ -229,7 +229,7 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
       }).immediate();
       target.run("DETACH DATABASE previous");
     } finally { target.close(); }
-    const verified = new Database(targetPath, { readonly: true });
+    const verified = openSqliteConnection(targetPath, { readonly: true, fileMustExist: true }).client;
     try { validateDatabase(verified); } finally { verified.close(); }
     chmodSync(targetPath, statSync(path).mode & 0o777);
     const file = openSync(targetPath, "r");

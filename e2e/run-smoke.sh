@@ -85,10 +85,6 @@ export BACKUP_ENCRYPTION_KEY_ID="e2e-test-key"
 export COOKIE_SECURE=false
 export ALLOW_LEGACY_STARTUP_SCHEMA_MUTATION=false
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
-playwright_node="${OPERATOROS_PLAYWRIGHT_NODE:-$(command -v node || true)}"
-[[ -n "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
-playwright_node="$(readlink -f -- "$playwright_node" 2>/dev/null || true)"
-[[ -x "$playwright_node" ]] || { printf '%s\n' "Playwright requires the native Linux Node runtime." >&2; exit 2; }
 export PATH="$bun_bin:/usr/bin:/bin"
 bun "$repo_root/e2e/helpers/seed-test-database.ts" \
   --database "$database" --runtime-root "$runtime_root" >"$logs/fixture-seed.log" 2>&1
@@ -127,7 +123,7 @@ fi
 if [[ -n "${OPERATOROS_E2E_GREP:-}" ]]; then
   playwright_args+=(--grep "$OPERATOROS_E2E_GREP")
 fi
-(cd "$repo_root/apps/web" && PATH="$bun_bin:/usr/bin:/bin" "$playwright_node" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
+(cd "$repo_root/apps/web" && PATH="$bun_bin:/usr/bin:/bin" "$OPERATOROS_BUN_REALPATH" "$repo_root/apps/web/node_modules/@playwright/test/cli.js" test "${playwright_args[@]}") >"$logs/web-smoke.log" 2>&1 || web_status=$?
 
 cleanup_stack
 stack_stopped=true
