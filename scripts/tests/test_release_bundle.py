@@ -2266,23 +2266,41 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertNotIn('image.oci.tar', retained)
         self.assertIn('RUNTIME_GATE_PASS', candidate)
 
-    def test_docker_candidate_is_branch_scoped_attested_and_not_published(self):
+    def test_docker_rehearsal_is_unprivileged_and_attestation_is_main_only(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
         podman_candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
             '\n\n  docker-candidate-qualification:', 1
         )[0]
-        self.assertIn("github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth'", podman_candidate)
+        self.assertIn("inputs.docker_qualification != true", podman_candidate)
+        self.assertIn("github.ref != 'refs/heads/codex/loop19-docker-startup-20261121'", podman_candidate)
         candidate = workflow.split('  docker-candidate-qualification:\n', 1)[1].split(
-            '\n\n  release-bundle:', 1
+            '\n\n  docker-candidate-attestation:', 1
         )[0]
         self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
-        self.assertIn("github.ref == 'refs/heads/codex/p0-4-docker-source-of-truth'", candidate)
-        self.assertIn('needs: [preflight]', candidate)
+        self.assertIn("github.ref == 'refs/heads/codex/loop19-docker-startup-20261121'", candidate)
+        self.assertIn("inputs.docker_qualification == true", candidate)
+        self.assertIn('needs: [preflight, release, result]', candidate)
         self.assertIn('contents: read', candidate)
-        self.assertIn('id-token: write', candidate)
-        self.assertIn('attestations: write', candidate)
+        self.assertNotIn('id-token: write', candidate)
+        self.assertNotIn('attestations: write', candidate)
         self.assertIn('fetch-depth: 0', candidate)
-        self.assertIn('actions/attest-build-provenance@', candidate)
         self.assertIn('operatoros-docker-candidate.tar', candidate)
+        self.assertIn("if: success() && github.ref == 'refs/heads/main'", candidate)
         self.assertNotIn('ghcr.io', candidate)
         self.assertNotIn('docker push', candidate)
+
+        attestation = workflow.split('  docker-candidate-attestation:\n', 1)[1].split(
+            '\n\n  release-bundle:', 1
+        )[0]
+        self.assertIn("github.ref == 'refs/heads/main'", attestation)
+        self.assertIn('inputs.docker_qualification == true', attestation)
+        self.assertIn('needs: [docker-candidate-qualification]', attestation)
+        self.assertIn('id-token: write', attestation)
+        self.assertIn('attestations: write', attestation)
+        self.assertIn('actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333', attestation)
+        self.assertIn('sha256sum --check --strict', attestation)
+        self.assertIn('--source-ref refs/heads/main', attestation)
+        self.assertIn('--source-digest "$GITHUB_SHA"', attestation)
+        self.assertIn('--deny-self-hosted-runners', attestation)
+        release = workflow.split('  release-bundle:\n', 1)[1]
+        self.assertIn('inputs.docker_qualification != true', release)

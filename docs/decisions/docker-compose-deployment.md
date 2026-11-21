@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-21
+last_reviewed: 2026-11-22
 ---
 
 # Docker Compose deployment source-of-truth candidate
@@ -36,22 +36,28 @@ is introduced.
 
 ## Candidate qualification
 
-Manual CI qualification builds the API with Docker from a clean committed
-source archive, checks Bun and embedded `bun:sqlite`, and pulls the pinned
-Docker Official Image for Caddy 2.11.7. It starts the Compose stack on a
-GitHub-hosted runner with a synthetic database and distinct random API
-secrets. The rehearsal checks health, readiness, SPA routes, missing-asset and
-dotfile responses, then switches to a separately built current-main API image
-to verify image rollback. Cleanup removes only its unique Compose project,
-image tags, and private runner-temporary root; the report contains phase status
-and runtime identity but no secret values.
+Manual Docker-only CI qualification runs on a GitHub-hosted runner after full
+release validation and E2E checks. A feature-ref run builds the API from a clean
+committed source archive, checks Bun and embedded `bun:sqlite`, and pulls the
+pinned Docker Official Image for Caddy 2.11.7. It starts Compose with a
+synthetic database and distinct random API secrets, checks health/readiness,
+SPA routes, missing-asset and dotfile responses, then switches to a prior-main
+API image to verify rollback. Read-only database status checks confirm the
+synthetic SQLite file remains valid before and after each image. Startup failure
+reports contain container state, health probe exit codes, and allowlisted log
+categories; raw container logs are not retained. Cleanup removes only its
+unique Compose project, image tags, and private runner-temporary root.
 
-CI saves the API and Caddy images with the Compose file, Caddyfile, env
-examples, and static client in a Docker-loadable archive. It includes no
-populated API env file or credential values. GitHub build
-provenance attests the archive. It does not publish to GHCR and can be loaded
-without an image registry. The artifact and rehearsal qualify only the exact
-source SHA and synthetic runner environment.
+The feature-ref run retains only its sanitized report and receives no
+attestation permissions. After the change is merged, the same selector on
+protected `main` repeats the rehearsal. Once full release validation and E2E
+succeed, a separate job checks the archive SHA-256, embedded source SHA, and
+Bun 1.4.5/SQLite 3.54.1 versions, then attests and retains the Docker-loadable
+archive. The archive contains the API and Caddy images, Compose files, env
+examples, and static client, with no populated API env file, secrets, or
+database. It does not publish to GHCR and can be loaded without an image
+registry. Each artifact qualifies only its exact source SHA and synthetic
+runner environment.
 
 ## Acceptance still required
 
@@ -63,6 +69,6 @@ confirm a recent authenticated encrypted backup, and authorize a separate
 change window. The live Docker daemon was not available to this review, so no
 running container, application runtime, or database state was inspected.
 
-The candidate rehearsal is not a full disaster-recovery test or a production
-rollback rehearsal. Production data, credentials, listeners, containers, and
-monitoring remain outside this draft's authorization.
+The candidate rehearsal is not a backup/restore, full disaster-recovery, or
+production rollback test. Production data, credentials, listeners, containers,
+and monitoring remain outside this draft's authorization.

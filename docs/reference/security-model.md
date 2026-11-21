@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-21
+last_reviewed: 2026-11-22
 ---
 
 # Security model
@@ -76,6 +76,13 @@ values. Run
 `bun scripts/check-backup-dir.ts <backup-dir>` to find unexpected entries,
 incomplete encrypted pairs, and non-regular artifact or audit files. A clean
 result verifies directory layout, not artifact encryption or recoverability.
+
+Docker startup-failure reports retain only container state, health probe exit
+codes, and allowlisted error categories; raw container logs and database
+contents are discarded. Feature-ref rehearsals have `contents: read` and do not
+retain a release archive. The separate protected-main Docker attestation job
+receives OIDC and attestation permissions only after full validation and E2E
+succeed.
 
 The application currently has no FTS5 query path. Startup and restore checks
 reject virtual tables by requiring ordinary table objects from SQLite's

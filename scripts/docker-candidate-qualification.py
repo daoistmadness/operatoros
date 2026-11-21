@@ -211,6 +211,100 @@ def compose_command(project: str, env_file: Path, override: Path, *args: str) ->
     ]
 
 
+def startup_log_signals(output: str) -> list[str]:
+    signals = {
+        "sqlite_open_failed": "unable to open database file",
+        "sqlite_busy": "database is locked",
+        "sqlite_database_invalid": "sqlite_notadb",
+        "sqlite_database_corrupt": "sqlite_corrupt",
+        "database_integrity_failed": "database_integrity_failed",
+        "database_schema_invalid": "database_schema_invalid",
+        "database_migration_required": "database_migration_required",
+        "database_checksum_mismatch": "database_checksum_mismatch",
+        "legacy_database_requires_manual_migration": "data_dir_legacy_database_requires_manual_migration",
+        "multiple_database_layouts": "data_dir_multiple_databases",
+        "backup_lock_unavailable": "backup_operation_lock_unavailable",
+        "backup_lock_invalid": "backup_operation_lock_invalid",
+        "backup_lock_busy": "backup_operation_locked",
+        "auth_secret_configuration": "auth_cookie_secret",
+        "backup_key_configuration": "backup_encryption_key",
+        "filesystem_permission_denied": "permission denied",
+        "filesystem_path_missing": "no such file or directory",
+        "container_entrypoint_invalid": "exec format error",
+        "listener_port_conflict": "address already in use",
+    }
+    lowered = output.casefold()
+    return sorted(signal for signal, needle in signals.items() if needle in lowered)
+
+
+def container_diagnostics(name: str) -> dict[str, Any]:
+    unavailable = {
+        "state": "unavailable",
+        "exit_code": None,
+        "oom_killed": False,
+        "restart_count": None,
+        "health_status": "unavailable",
+        "health_exit_codes": [],
+        "startup_signals": [],
+    }
+    try:
+        inspected = subprocess.run(
+            ["docker", "container", "inspect", name],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=15,
+        )
+        if inspected.returncode != 0:
+            return unavailable
+        value = json.loads(inspected.stdout)
+        if not isinstance(value, list) or not value or not isinstance(value[0], dict):
+            return unavailable
+        container = value[0]
+        state = container.get("State")
+        if not isinstance(state, dict):
+            return unavailable
+        status = state.get("Status")
+        health = state.get("Health")
+        health_logs = health.get("Log", []) if isinstance(health, dict) else []
+        if not isinstance(health_logs, list):
+            health_logs = []
+        recent_health_logs = health_logs[-5:]
+        exit_codes = [
+            row["ExitCode"]
+            for row in recent_health_logs
+            if isinstance(row, dict) and isinstance(row.get("ExitCode"), int)
+        ]
+        health_status = health.get("Status") if isinstance(health, dict) else "none"
+        result = {
+            "state": status if status in {"created", "running", "paused", "restarting", "removing", "exited", "dead"} else "unknown",
+            "exit_code": state.get("ExitCode") if isinstance(state.get("ExitCode"), int) else None,
+            "oom_killed": state.get("OOMKilled") is True,
+            "restart_count": container.get("RestartCount") if isinstance(container.get("RestartCount"), int) else None,
+            "health_status": health_status if health_status in {"none", "starting", "healthy", "unhealthy"} else "unknown",
+            "health_exit_codes": exit_codes,
+            "startup_signals": [],
+        }
+        health_output = "\n".join(
+            row.get("Output", "")
+            for row in recent_health_logs
+            if isinstance(row, dict) and isinstance(row.get("Output"), str)
+        )
+        logs = subprocess.run(
+            ["docker", "logs", "--tail", "100", name],
+            capture_output=True,
+            text=True,
+            errors="replace",
+            check=False,
+            timeout=15,
+        )
+        log_output = f"{logs.stdout}\n{logs.stderr}" if logs.returncode == 0 else ""
+        result["startup_signals"] = startup_log_signals(f"{health_output}\n{log_output}")
+        return result
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, TypeError, UnicodeError):
+        return unavailable
+
+
 def status_code(url: str) -> int:
     try:
         with urlopen(url, timeout=3) as response:
@@ -222,10 +316,21 @@ def status_code(url: str) -> int:
         return 0
 
 
+def is_sqlite_ready(url: str) -> bool:
+    try:
+        with urlopen(url, timeout=3) as response:
+            if response.status != 200:
+                return False
+            value = json.loads(response.read())
+            return value.get("ready") is True and value.get("persistence") == "sqlite"
+    except (TimeoutError, URLError, OSError, json.JSONDecodeError, AttributeError):
+        return False
+
+
 def wait_ready(url: str, timeout_seconds: int = 120) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        if status_code(url) == 200:
+        if is_sqlite_ready(url):
             return
         time.sleep(2)
     raise QualificationFailure("api_readiness_timeout")
@@ -374,7 +479,7 @@ def remove_private_root(private_root: Path) -> bool:
         return False
 
 
-def make_synthetic_database(data_dir: Path) -> None:
+def make_synthetic_database(data_dir: Path) -> str:
     schema = run(["bun", "packages/db/src/schema-version-cli.ts", "--format", "current"])
     run(
         [
@@ -391,6 +496,50 @@ def make_synthetic_database(data_dir: Path) -> None:
         timeout=120,
     )
     run(["sudo", "chown", "-R", "1000:1000", str(data_dir)], timeout=30)
+    return schema
+
+
+def synthetic_database_status(data_dir: Path, expected_schema: str) -> dict[str, Any]:
+    raw = run(
+        [
+            "bun",
+            "packages/db/src/dev-db-cli.ts",
+            "status",
+            "--repo",
+            str(ROOT),
+            "--data-dir",
+            str(data_dir),
+            "--expected-schema",
+            expected_schema,
+        ],
+        timeout=30,
+    )
+    state = json.loads(raw)
+    if (
+        not isinstance(state, dict)
+        or state.get("layout") != "CANONICAL"
+        or state.get("schema_head") != expected_schema
+        or state.get("integrity") != "ok"
+        or state.get("quick_check") != "ok"
+        or state.get("foreign_key_violations") != 0
+        or state.get("schema_checksum_valid") is not True
+    ):
+        raise QualificationFailure("synthetic_database_invalid")
+    return {
+        "schema_head": state["schema_head"],
+        "integrity": state["integrity"],
+        "quick_check": state["quick_check"],
+        "foreign_key_violations": state["foreign_key_violations"],
+        "schema_checksum_valid": state["schema_checksum_valid"],
+        "file_size_bytes": state.get("file_size", 0),
+    }
+
+
+def rollback_source_commit(source: str, source_ref: str) -> str:
+    if source_ref == "refs/heads/main":
+        return run(["git", "rev-parse", f"{source}^1"])
+    main = run(["git", "rev-parse", "origin/main"])
+    return run(["git", "merge-base", source, main])
 
 
 def create_bundle(
@@ -508,6 +657,8 @@ def qualify(args: argparse.Namespace) -> int:
     project = ""
     api_container = ""
     caddy_container = ""
+    data_dir: Path | None = None
+    expected_schema = ""
     owned_images = [args.api_image, args.rollback_image, args.caddy_image]
     docker_context_verified = False
     cleanup_ok = True
@@ -543,7 +694,7 @@ def qualify(args: argparse.Namespace) -> int:
         run(["bun", "scripts/podman-source-manifest.mjs", "write-manifest", str(ROOT), str(manifest_path)])
         source_manifest_sha = sha256_file(manifest_path)
         extract_commit(source, candidate_context, work)
-        rollback_source = run(["git", "merge-base", source, "origin/main"])
+        rollback_source = rollback_source_commit(source, os.environ.get("GITHUB_REF", ""))
         if not COMMIT.fullmatch(rollback_source):
             raise QualificationFailure("rollback_source_invalid")
         extract_commit(rollback_source, rollback_context, work)
@@ -653,7 +804,10 @@ def qualify(args: argparse.Namespace) -> int:
             api_env,
             f"AUTH_COOKIE_SECRET={auth_secret}\nBACKUP_ENCRYPTION_KEY={backup_key}\nENABLE_DESTRUCTIVE_OPERATIONS=false\n",
         )
-        make_synthetic_database(data_dir)
+        expected_schema = make_synthetic_database(data_dir)
+        report["synthetic_database"] = {
+            "before": synthetic_database_status(data_dir, expected_schema),
+        }
         run(["sudo", "chown", "-R", "1000:1000", str(deploy_dir)], timeout=30)
 
         api_port = get_free_port()
@@ -696,6 +850,7 @@ def qualify(args: argparse.Namespace) -> int:
         running_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if running_id != api_id:
             raise QualificationFailure("candidate_container_image_mismatch")
+        report["synthetic_database"]["candidate"] = synthetic_database_status(data_dir, expected_schema)
         report["stages"]["candidate_compose_deploy"] = "PASS"
         report["stages"]["health_readiness_spa_and_security_routes"] = "PASS"
 
@@ -724,12 +879,28 @@ def qualify(args: argparse.Namespace) -> int:
         rolled_back_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if rolled_back_id != rollback_id:
             raise QualificationFailure("rollback_container_image_mismatch")
+        report["synthetic_database"]["rollback"] = synthetic_database_status(data_dir, expected_schema)
         report["stages"]["synthetic_image_rollback"] = "PASS"
 
         report["events"].append({"stage": "compose_rehearsal", "status": "PASS"})
     except (QualificationFailure, OSError, subprocess.TimeoutExpired, tarfile.TarError, json.JSONDecodeError) as error:
         report["failure_stage"] = stage
         report["failure_code"] = error.code if isinstance(error, QualificationFailure) else "qualification_error"
+        if stage in {
+            "compose_up",
+            "candidate_api_readiness",
+            "rollback_compose_up",
+            "rollback_api_readiness",
+        } and api_container:
+            report["compose_diagnostics"] = {
+                "api": container_diagnostics(api_container),
+                "caddy": container_diagnostics(caddy_container),
+            }
+            if data_dir is not None and expected_schema:
+                try:
+                    report["synthetic_database"]["at_failure"] = synthetic_database_status(data_dir, expected_schema)
+                except QualificationFailure as diagnostic_error:
+                    report["synthetic_database"]["at_failure"] = {"status": diagnostic_error.code}
     finally:
         cleanup_details: dict[str, Any] = {}
         if project:

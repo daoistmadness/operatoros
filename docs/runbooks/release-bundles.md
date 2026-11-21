@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-21
+last_reviewed: 2026-11-22
 ---
 
 # CI release bundles
@@ -15,12 +15,14 @@ Scheduled validation, PRs, and ordinary pushes cannot create release bundles.
 The validation and bundle jobs explicitly check out the event's full commit SHA;
 a later movement of main does not change the candidate. Bundle creation is serialized.
 
-A manual dispatch on a non-main branch runs the generic Podman candidate job.
-It builds an ephemeral API OCI image, scans it, and probes Bun and its embedded
-`bun:sqlite` runtime before retaining non-image reports for seven days. That
-image is discarded with the runner and receives no signature or release-bundle
-upload. The branch-scoped Docker candidate described below is a separate
-attested artifact. The previous accepted finding applied only to Bun 1.4.4
+By default, a manual dispatch on a non-main branch runs the generic Podman
+candidate job. Selecting `docker_qualification=true` runs the Docker-only
+rehearsal instead and skips both the Podman candidate and main release-bundle
+jobs. The generic Podman path builds an ephemeral API OCI image, scans it, and
+probes Bun and its embedded `bun:sqlite` runtime before retaining non-image
+reports for seven days. That image is discarded with the runner and receives
+no signature or release-bundle upload. The Docker path is described below. The
+previous accepted finding applied only to Bun 1.4.4
 with SQLite 3.53.4, source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
 and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1. The new candidate must pass the normal runtime probe, SBOM, and scan with the finding resolved; the old acceptance does not apply to it. Any affected SQLite identity remains blocked. A workflow success does not make the candidate a release artifact.
@@ -31,37 +33,66 @@ pinned Bun runtime from the Linux amd64 Containerfile and production lockfile
 install. The SPA uses the Vite/Start build. There is no server-side source build,
 GHCR publication, automatic deployment, or database migration.
 
-The `codex/p0-4-docker-source-of-truth` branch also defines a separate
-manual-only Docker Compose qualification job. Run it with
-`gh workflow run ci.yml --repo daoistmadness/operatoros --ref codex/p0-4-docker-source-of-truth`.
-It builds the API with Docker, qualifies the image's Bun/SQLite runtime, pulls
-the digest-pinned Caddy 2.11.7 image, and runs the repository Compose template
-with a synthetic database and random secrets on a GitHub-hosted runner. It
-checks API health/readiness, SPA deep routes, missing static files, dotfile
-denial, and rollback to an API image built from the current main common
-ancestor. The rehearsal uses no production data or credentials and verifies
-that its unique Compose resources and private temporary root are removed.
-
-On success, CI saves the API and Caddy images, deployment files, and static
-client in `operatoros-docker-candidate.tar`, signs that exact archive with
-GitHub build provenance, and retains it for 30 days. The archive uses Docker's
-`docker load` format and needs no image registry after download. The attestation
-is separate from the archive; verify it before loading:
+The Docker qualification selector runs full release validation and E2E before
+its Compose rehearsal. The feature-ref diagnostic run uses no production data
+or credentials and receives only `contents: read`; the Docker rehearsal job
+retains no release archive or attestation on that ref. Run the current
+Loop 19 diagnostic branch with:
 
 ```bash
+gh workflow run ci.yml --repo daoistmadness/operatoros \
+  --ref codex/loop19-docker-startup-20261121 \
+  -f docker_qualification=true
+```
+
+The GitHub-hosted runner builds the API from the selected clean source archive,
+checks Bun and embedded `bun:sqlite`, pulls the digest-pinned Caddy 2.11.7 image,
+and starts the repository Compose template with a synthetic database and random
+secrets. It checks health/readiness, SPA deep routes, missing static files,
+dotfile denial, and image rollback to the previous main revision. Read-only
+SQLite status checks verify schema, integrity, quick-check, and foreign keys
+before and after both application images. On startup failure, the report keeps
+container state, health probe exit codes, and allowlisted log categories; raw
+container logs and database contents are not retained. Cleanup must verify that
+its unique Compose resources, owned images, and private temporary root are
+removed.
+
+After this change is merged, run the same selector on protected `main` to build
+the candidate from the main SHA and produce its release artifact:
+
+```bash
+gh workflow run ci.yml --repo daoistmadness/operatoros \
+  --ref main \
+  -f docker_qualification=true
+```
+
+The Docker-only selector skips the Podman release-bundle job. Once the Compose
+rehearsal, full release validation, and E2E succeed, CI retains the Docker-loadable
+archive and checksum for 30 days. A separate job checks the checksum, embedded
+source SHA, and Bun 1.4.5/SQLite 3.54.1 versions, then attests the exact archive
+with GitHub build provenance. Download the archive and checksum sidecar from
+that workflow run and set `SOURCE_SHA` to its full main source commit SHA:
+
+```bash
+RUN_ID=123456789
+RUN_ATTEMPT=1
+ARTIFACT_NAME="operatoros-docker-candidate-${SOURCE_SHA}-${RUN_ID}-${RUN_ATTEMPT}"
+gh run download "$RUN_ID" --repo daoistmadness/operatoros --name "$ARTIFACT_NAME"
+sha256sum --check --strict operatoros-docker-candidate.tar.sha256
 gh attestation verify operatoros-docker-candidate.tar \
   --repo daoistmadness/operatoros \
   --signer-workflow daoistmadness/operatoros/.github/workflows/ci.yml \
-  --source-ref refs/heads/codex/p0-4-docker-source-of-truth \
+  --source-ref refs/heads/main \
   --source-digest "$SOURCE_SHA" \
   --deny-self-hosted-runners
 ```
 
-This branch-scoped archive is a review candidate, not the official main-only
-release bundle or a supported production release. CI does not publish it to
-GHCR. The synthetic rollback proves image-reference rollback in Compose only;
-production rollback, backup verification, and runtime acceptance still require
-separate operator authorization.
+The archive uses Docker's `docker load` format and needs no image registry after
+download. It is a review candidate, not a supported production release. CI does
+not publish to GHCR or deploy. The synthetic rollback proves application image
+selection and persistent synthetic SQLite integrity only; production rollback,
+backup verification, and runtime acceptance still require separate operator
+authorization.
 
 ## Prepare a Docker host change
 
@@ -78,7 +109,7 @@ sha256sum --check --strict operatoros-docker-candidate.tar.sha256
 gh attestation verify operatoros-docker-candidate.tar \
   --repo daoistmadness/operatoros \
   --signer-workflow daoistmadness/operatoros/.github/workflows/ci.yml \
-  --source-ref refs/heads/codex/p0-4-docker-source-of-truth \
+  --source-ref refs/heads/main \
   --source-digest "$SOURCE_SHA" \
   --deny-self-hosted-runners
 ```
