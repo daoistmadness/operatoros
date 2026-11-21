@@ -67,12 +67,16 @@ is explicitly enabled.
 `BACKUP_ENCRYPTION_KEY` must differ from `AUTH_COOKIE_SECRET`. Never commit
 either secret. See [the rotation runbook](../runbooks/secret-rotation.md).
 
-For a Docker Compose candidate, keep the API env file outside the repository and
-release archive with mode `0600`; its parent directories must be `0700`. CI
-rehearsals generate distinct synthetic secrets in a private runner-temporary
-directory and remove that directory only after verifying Compose cleanup. The
-candidate archive includes env examples, but no populated env file or secret
-values. Run
+For an OperatorOS Docker Compose deployment, keep the API env file outside the
+repository and release archive with mode `0600`. Keep its parent directories at
+mode `0700`.
+
+The synthetic CI rehearsal keeps secret files at mode `0600` in a runner-owned
+private directory. After it transfers the synthetic database to UID/GID 1000,
+the directory uses group `1000` and mode `0710`. Group members can traverse the
+directory but cannot list or create entries. CI removes the directory only
+after it verifies Compose cleanup. The candidate archive includes env examples,
+but no populated env file or secret values. Run
 `bun scripts/check-backup-dir.ts <backup-dir>` to find unexpected entries,
 incomplete encrypted pairs, and non-regular artifact or audit files. A clean
 result verifies directory layout, not artifact encryption or recoverability.

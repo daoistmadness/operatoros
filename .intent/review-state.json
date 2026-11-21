@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "7c7f44bf5427748b316bc4a24facb76e656b7af444bdf155436c6bc24d9817cd",
+      "fingerprint": "0e627442e06f2cf81758e54075400b15e0c0f90ad034c7781f5abb09f29cd271",
       "snapshot": {
         ".github/CI.md": "a5863c0eccd4cc5cad9787214d4dd65e2c8fde0dee851d492e3bd361ea2f50a9",
         ".github/workflows/ci.yml": "e0dea5081bdc7ac6702dadca3fce9f3985157c4b79c0111d2483bd1d05d7b5d5",
@@ -14,7 +14,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "ce1d960e2cbb5b46a8d7d97a4047783adf156859ad9f6992ef354dfc4e14ba97",
+        "docs/reference/security-model.md": "970fae53ae2a9ced41336af8e4c9d05bed2ac82e8da1f75ba341e69ead5ad445",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -44,15 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
+      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
       "outcome": "no-change",
-      "reason": "The change adds Docker Compose startup diagnostics and separates protected-main artifact attestation; it does not change Elysia implementation or framework guidance.",
+      "reason": "This change only adjusts CI runner filesystem permissions for synthetic Docker qualification. It does not change Elysia behavior or backend guidance.",
       "evidence": [
-        "Reviewed the mapped .github/CI.md, .github/workflows/ci.yml, and Docker-specific security-model diff; Elysia skill references and apps/api source are unchanged."
+        "Reviewed the changed security-model documentation and Docker qualification script; both describe runner-owned synthetic fixture handling, outside the Elysia skill contract."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "0dd985dadecf7aad385557260dd09700e445d28063a30f24a867f16dc4f056c2",
+      "fingerprint": "933d7e1252ef1f9b2689ce0cc3505dda0000a9e592179427270b84f31fec4fcc",
       "snapshot": {
         ".github/CI.md": "a5863c0eccd4cc5cad9787214d4dd65e2c8fde0dee851d492e3bd361ea2f50a9",
         ".github/workflows/ci.yml": "e0dea5081bdc7ac6702dadca3fce9f3985157c4b79c0111d2483bd1d05d7b5d5",
@@ -66,7 +66,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "ce1d960e2cbb5b46a8d7d97a4047783adf156859ad9f6992ef354dfc4e14ba97",
+        "docs/reference/security-model.md": "970fae53ae2a9ced41336af8e4c9d05bed2ac82e8da1f75ba341e69ead5ad445",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
+      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
       "outcome": "no-change",
-      "reason": "The change is confined to Docker release qualification, rollback evidence, and existing runbooks; it adds no skill batch or planned library work.",
+      "reason": "The patch records no new product or architecture decision.",
       "evidence": [
-        "Reviewed the complete ten-file diff; _artifacts/domain_map.yaml, skill_spec.md, and skill_tree.yaml are unchanged."
+        "The change is a scoped CI fixture permission fix and an operational security clarification; existing task planning artifacts remain accurate."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -10851,15 +10851,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "ed0f3c3a27266e483a3abdce8feb59eae16e41df481d224e6d0d26cc245b5aaf",
+      "fingerprint": "5d47cd7da535a7f67cb34594c363c19a911f5426d130af1a3ddfc54a80a29b19",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "0b0d49221b516707e6619f6493d34ffb09325cb7a31358c823a6d2aaace93f77"
+        "scripts/docker-candidate-qualification.py": "c66695e2e076b8e1568031676d0c8aed420dbe9073fb237ff6c223f0169cd54d"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
+      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "reason": "The Elysia skill does not own the CI Docker qualification runner.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Changed only the Docker qualification script; no Elysia route, backend, or package code changed."
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10876,15 +10876,15 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "f9d6ebd4eb0156a81b833ad2e4b2e1aacc8f20c71e182fa1847581d870b1bb55",
+      "fingerprint": "935a870ad9e7e51d3e98b5df12234d3c58a06065e34188b4920a611539038bab",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "fb14352171a2ea67dde29d7585c07d994e3a0c53256d77482f386af943950fb9"
+        "scripts/tests/test_docker_candidate_qualification.py": "b7b9fe6c2f6f0a63950c653a28fb1b21f7cfe3e40453683a9924d049c0bfef00"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
+      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "reason": "The Elysia skill does not own the CI Docker qualification runner tests.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Changed only focused Python tests for synthetic runner permissions; no Elysia route, backend, or package code changed."
       ]
     }
   }
