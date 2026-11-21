@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "27d9e5c161abf3f1336c435b927c819c43ca7405724224cf38ce08b322912be1",
+      "fingerprint": "41c8b154bb73075e5d86f1e294543e4c59d379f17252794ba6ccbbfe254e6c2e",
       "snapshot": {
-        ".github/CI.md": "c2532fd568af6d8f8b0c195a3611979de6d5abcd80ef97a382bc74c6c8f7e921",
-        ".github/workflows/ci.yml": "ef0e5a0cc6be81ec29e5c8376e5bd892a23ae83f74b2dc08481f3e07b5053038",
+        ".github/CI.md": "2dacafe6cd95df25b0a31e6571925638498dac0cb84900b24f5cb37a70f5c934",
+        ".github/workflows/ci.yml": "84f89f627aa3035f495c9317dcd03dff458cf0a9e0b1a767d2cb280470aa2c7b",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
@@ -14,7 +14,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "7f83d60e846b857779bb22205b3d020780316bdcae5745c5d0db111d2a575f17",
+        "docs/reference/security-model.md": "95b9f3bce9927408a80e664b24a359fe9749c57432023e3e86ca07f27252e430",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "no-change",
-      "reason": "The Bun 1.4.5 runtime update changes toolchain pins and SQLite qualification, not Elysia usage. Elysia remains 1.4.29, and the existing Elysia skill and references need no update.",
+      "reason": "The Docker and backup changes add no Elysia route, plugin, or API pattern; the registered Elysia skill remains accurate.",
       "evidence": [
-        "Reviewed the changed CI, runtime, package, development, testing, and security guidance; none changes Elysia APIs or framework practices.",
-        "packages/agent-skills/skills/elysiajs/SKILL.md and its references are unchanged."
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged",
+        "docs/decisions/docker-compose-deployment.md"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "322febbd6096425f0b32856a467430b611551458a82dff7a94f9837227576a2a",
+      "fingerprint": "edcb935c9c6a53fd1106a4758e25f8f1fe407ba2e804b566be2b19c591acc6d6",
       "snapshot": {
-        ".github/CI.md": "c2532fd568af6d8f8b0c195a3611979de6d5abcd80ef97a382bc74c6c8f7e921",
-        ".github/workflows/ci.yml": "ef0e5a0cc6be81ec29e5c8376e5bd892a23ae83f74b2dc08481f3e07b5053038",
+        ".github/CI.md": "2dacafe6cd95df25b0a31e6571925638498dac0cb84900b24f5cb37a70f5c934",
+        ".github/workflows/ci.yml": "84f89f627aa3035f495c9317dcd03dff458cf0a9e0b1a767d2cb280470aa2c7b",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -67,7 +67,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "7f83d60e846b857779bb22205b3d020780316bdcae5745c5d0db111d2a575f17",
+        "docs/reference/security-model.md": "95b9f3bce9927408a80e664b24a359fe9749c57432023e3e86ca07f27252e430",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -97,12 +97,12 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "no-change",
-      "reason": "This change is a Bun toolchain/runtime qualification update, not a skill batch; it adds no new skill domain or planning scope.",
+      "reason": "This work prepares a Docker release candidate and does not create or alter a skill planning record.",
       "evidence": [
-        "intent maintainer status --json --base origin/main reports no planning problems or stale files.",
-        "No domain_map.yaml, skill_spec.md, or skill_tree.yaml changes are needed for this non-skill update."
+        "docs/decisions/docker-compose-deployment.md",
+        "No skill batch or planning artifact change in this diff"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -384,15 +384,16 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "c4430e550c8b2f8e30560c34c46398edf08649c3afdebaeb9a01616f85f456cb",
+      "fingerprint": "36552381b7169bf38aa802a8aaa439c58bd7521a996e6816ee9ec3b2d085f98f",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "f129c9004480540e8edc1931d5ee61b018089d302eb8539ac0e9f14cb9bd796e"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "2513ad190a70828c0e07787e86cc04fde38b4c010be030b3818b7d8909167ed1"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Reviewed against the registered Elysia guidance; the CI, security, and test changes do not alter Elysia framework behavior or recommendations.",
       "evidence": [
-        "Changed: apps/api/tests/backup-cli-restore-safety.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Diff: apps/api/tests/backup-cli-restore-safety.test.ts",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -1523,16 +1524,16 @@
       ]
     },
     "source:apps/api/tests/backup-retention.test.ts": {
-      "fingerprint": "81a5ac19f9f965d90e914778bacf3c34c5915efc8cc892a5db5d4de39425c4f0",
+      "fingerprint": "51c1b6146df40e5fce10df07ee8b97a07ca0847661c52a0c9360084f9afd36e6",
       "snapshot": {
-        "apps/api/tests/backup-retention.test.ts": "3befb6d30366cefc3e68e204798a7e888f939fb68c63dbe7510229bebcd275d6"
+        "apps/api/tests/backup-retention.test.ts": "930d3f2d49eb2f9be15489a145d7ed815b4bb52e612110d8a99dc339289bdb19"
       },
-      "head": "abd1104d387e44e28aae87fdb9be9b457f4eee58",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "This is a repository-specific backup-retention test fixture and failure diagnostic, not reusable Elysia skill guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "The fixture uses a private tmpdir() root and removes only that root.",
-        "Focused retention passed 3/3 and full Turbo passed API 378/378."
+        "Diff: apps/api/tests/backup-retention.test.ts",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:turbo.json": {
@@ -1728,15 +1729,16 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "74dd7545fd406e1b82271feefe8f7bcc27e27f104ea302d7bb8448ff5b9aecb2",
+      "fingerprint": "086644733b560440f7dbfa1f916f6c89e95fde8f7fdda784a965a41e7a5bcf18",
       "snapshot": {
-        "docs/README.md": "75ac43d856c9ea1606441df560af2d3b8c9225d4e83bf0d412be6e6c6b8bbbdb"
+        "docs/README.md": "4b39c50d8cc1d6145be54ebb1432ee05368103fba4138ecaead939e687fc78ba"
       },
-      "head": "ee576b0d1c80038435277bf63a5f92dd0718eae5",
-      "outcome": "no-change",
-      "reason": "This docs index update clarifies hosted rehearsal status only; no library source or skill guidance changed.",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Changed: docs/README.md at ee576b0d1c80038435277bf63a5f92dd0718eae5"
+        "Diff: docs/README.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2953,15 +2955,16 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "0496b24b25e6ce8130ce2841f17f2220be1f275efbee397fd07ba641208a2c8c",
+      "fingerprint": "b3664647e6f4d4447400775d8a6061b027bad881be19f5dc424a6e3e0442d6b1",
       "snapshot": {
-        "CHANGELOG.md": "58412db652ed8acbad8cf7d3491e2812dacb32789be3d6d980a6860968ade8c9"
+        "CHANGELOG.md": "edddfdd84e697e5ae11afea47a67fbcf947fb18b2d3deedd286ba26e370ab8cd"
       },
-      "head": "c5ee417d0c56d3ddce3fcf1db0802883ac5075fc",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "The changelog entry records the Bun 1.4.5 release-history change and PR number; it introduces no skill or planning guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "CHANGELOG.md contains one Unreleased bullet for PR #396; the existing Bun entry was consolidated and numbered after GitHub assigned the PR."
+        "Diff: CHANGELOG.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:COMMANDS.md": {
@@ -4611,15 +4614,16 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "ec883e07bd896a254fe551a8e9693e25ec640c7ace9ae4ec6f9f03ceb971b2bb",
+      "fingerprint": "0c709531cdb85d362a8369a3def4d3d2efa8d1f6b5741e2999d261164fd6c236",
       "snapshot": {
-        "docs/reference/runtime-support.md": "3bd2d9b4ef113abe2533ba72c3bc5128594ccae0ff6de4f82f1915dbdaa6ed86"
+        "docs/reference/runtime-support.md": "31ba413a781eb66224deac1bec669c1f19ed2ef142ecaa5283670541d5af7404"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
-      "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Changed: docs/reference/runtime-support.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Diff: docs/reference/runtime-support.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4749,15 +4753,16 @@
       ]
     },
     "source:docs/runbooks/backup-restore.md": {
-      "fingerprint": "84c001c082f0bae2cae17794709d8c7bf3a51beb0c7fec9f3a51791833009af8",
+      "fingerprint": "307162b904755d535d073a15d80c64b233463da1d7f279948391c6326ca57040",
       "snapshot": {
-        "docs/runbooks/backup-restore.md": "e16a95bcb603844bd53623c642735da45dceb14442aa2fec80af4f7ef8350914"
+        "docs/runbooks/backup-restore.md": "58b30e18b327b4584c9dd04851e1d1cf74ee9c06ad295af31aaae18cf7b9ba47"
       },
-      "head": "33819c0673cb05de59c9bbaa39fe2ea38cf85c84",
-      "outcome": "no-change",
-      "reason": "Reviewed these three operational guides against current scripts, package tasks, API source, and service configuration. The changes correct command/setup guidance and do not change the Elysia skill instructions.",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Changed: docs/runbooks/backup-restore.md at 33819c0673cb05de59c9bbaa39fe2ea38cf85c84"
+        "Diff: docs/runbooks/backup-restore.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:docs/runbooks/data-reset.md": {
@@ -9941,15 +9946,16 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "d8fbcb9865655ecb9425ffc81b9905d58ebdb566617ce014b7969baddb6e65ad",
+      "fingerprint": "a688a32cf8c07a4d8c40d087be2f34ad650db39fe68e8fd4cbb0471b85f008ef",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "97a382c178f6e75db83a60bb4e2b55ab069f3c83f9b3780af79ef6afbf4f0520"
+        "docs/runbooks/release-bundles.md": "a053cdfcf4e86a9b04ac9d5a8df8d3ba6e2276e143f314847dea2d637763f044"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Reviewed docs/runbooks/release-bundles.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Diff: docs/runbooks/release-bundles.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9979,15 +9985,16 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "bf1356f7b743d5698582f8eaea5d6be81c50a5371b46fed0b24e6d44bb1a6d48",
+      "fingerprint": "3fe75145f8dab728bb1a6b23da7a4d4e41a24c7e8872b244e5bf4eeea31a9d5f",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "47bbeec255779f88bb5ec23d8bc47e77fab0760f9ef3e1b04932cee2b9380cba"
+        "scripts/tests/test_release_bundle.py": "8122ab0ea78f5e22cfe0386dcff2fd9634ccc755f4a14cb8cd2de748b547dcfe"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Reviewed scripts/tests/test_release_bundle.py in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Diff: scripts/tests/test_release_bundle.py",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10235,27 +10242,29 @@
       ]
     },
     "source:scripts/check-bun-sqlite-runtime.py": {
-      "fingerprint": "793cf040d591c9cec5fecea2d21c66e864c23d5d7da920fdf4ab28d1174b97b2",
+      "fingerprint": "7bb1fc03aa56f922969e03bce7ca7ec41797f091211c1605fd665a5d619b2b52",
       "snapshot": {
-        "scripts/check-bun-sqlite-runtime.py": "1a54100f37c59324d98c0320f46fc50e4669162ec7a821561ceb2e5dc5b11774"
+        "scripts/check-bun-sqlite-runtime.py": "3ff2544ed8908a44940af0184c272668ad25f862407d1de8a122f0e6fcbc827b"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Reviewed scripts/check-bun-sqlite-runtime.py in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Diff: scripts/check-bun-sqlite-runtime.py",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:scripts/tests/test_bun_sqlite_runtime.py": {
-      "fingerprint": "5deb2ab6c074fbc3c697929529ad8fad90934daf8ff3b3962e7ff1539c09c15d",
+      "fingerprint": "cd0706d08fd11354dc060eaad65b52cace3732e45d984684acdd9c208db0fcf2",
       "snapshot": {
-        "scripts/tests/test_bun_sqlite_runtime.py": "606de1d90d7bdb4e20f3764af9c9e7752b622934effa39d1d00b1c53a3ef0b15"
+        "scripts/tests/test_bun_sqlite_runtime.py": "cf73b012f9921067b85a05fdaf94feedd0eeea34e60810a0698f9298472b6eb0"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
       "evidence": [
-        "Reviewed scripts/tests/test_bun_sqlite_runtime.py in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Diff: scripts/tests/test_bun_sqlite_runtime.py",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
     "source:DECISIONS.md": {
@@ -10782,6 +10791,110 @@
         "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
         "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
         "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
+      ]
+    },
+    "source:deploy/docker/Caddyfile": {
+      "fingerprint": "3383a16de1cea363f0b637bef1f90eba471cc2e93ec85044a46b9ff0d06f6ac0",
+      "snapshot": {
+        "deploy/docker/Caddyfile": "34af332a43e10c580a27039d58c5f37b8e6dfce751811e7e6d722d0f6a2ac77f"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: deploy/docker/Caddyfile",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:deploy/docker/api.env.example": {
+      "fingerprint": "ebeb90873a5b0cc3ebfbcf145de67590a6d8e358c42b10c3dfb5383b9d8b96eb",
+      "snapshot": {
+        "deploy/docker/api.env.example": "0f96e026d2f37d06dda644b56b174ad407a2eba41e55be4088d530065e277604"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: deploy/docker/api.env.example",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:deploy/docker/docker-compose.yml": {
+      "fingerprint": "1f430649558b592772ecac73a7d859f01824e02318bc25385b21120e29ebf315",
+      "snapshot": {
+        "deploy/docker/docker-compose.yml": "7b5ed456f93f06b8f836387b9a0cc1f6dd5b79b87ff7eb13c259943b073f3fe6"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: deploy/docker/docker-compose.yml",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:docs/decisions/docker-compose-deployment.md": {
+      "fingerprint": "26cdc74c8eb4636ec9f94b307d2219398e577f3e01a3df3fd7a73a765aef86a6",
+      "snapshot": {
+        "docs/decisions/docker-compose-deployment.md": "4d50e19c894915c85ef43f468cb8ea7808af9c8a74e6f133891b024571ae6ff5"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: docs/decisions/docker-compose-deployment.md",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:scripts/check-backup-dir.ts": {
+      "fingerprint": "62e71e347c5a8c847ba05820b99098a40801296c2060423079f9fa4753cc12f9",
+      "snapshot": {
+        "scripts/check-backup-dir.ts": "eda543b0bd4e8b79ff719e2b968fc315cc5a4945dc249949ce29864ebdf0d061"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: scripts/check-backup-dir.ts",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:scripts/docker-candidate-qualification.py": {
+      "fingerprint": "cc92a0ed7e0043785a0f038f2d9038929620297fc52958d657808ea5e2233a24",
+      "snapshot": {
+        "scripts/docker-candidate-qualification.py": "3ddf3804aaa16703161e52b81decc6289dc667f6c8c03e9d2e36a26e6d01995a"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: scripts/docker-candidate-qualification.py",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:scripts/tests/check-backup-dir.test.ts": {
+      "fingerprint": "35093ce4f0d5c9751a2b84cb190b067abe1d66906f9ee6708b3e17a2466443ed",
+      "snapshot": {
+        "scripts/tests/check-backup-dir.test.ts": "0c7ef0ec18de8ef4de5fc0d799472e58c08d382a781d4a29aaba4fbaf233dc41"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: scripts/tests/check-backup-dir.test.ts",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+      ]
+    },
+    "source:scripts/tests/test_docker_candidate_qualification.py": {
+      "fingerprint": "6f72a8e3c5957b17bb2fdbcfe92904b047b6ca8a6a2bd18b88bad29e2c843e0f",
+      "snapshot": {
+        "scripts/tests/test_docker_candidate_qualification.py": "0c86cd0906b32a9789e1c31d4378ecfed3b2421202bffdb2995574223fad05ae"
+      },
+      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "outcome": "out-of-scope",
+      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "evidence": [
+        "Diff: scripts/tests/test_docker_candidate_qualification.py",
+        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     }
   }

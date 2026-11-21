@@ -1,12 +1,8 @@
 name: operatoros
 
-# Reviewed copy of the running single-host deployment definition.
-#
-# This file contains no secret values. The API reads its secrets from the
-# host-managed env file named by OPERATOROS_API_ENV_FILE, which stays outside
-# the repository with mode 0600. Host paths and the image tag are supplied
-# through the environment so a fresh clone can render the same topology without
-# hard-coding one host.
+# This file contains no secret values. The API reads its secrets from a
+# host-managed env file named by OPERATOROS_API_ENV_FILE, outside the repository
+# with mode 0600. Host paths and image tags are supplied through the environment.
 #
 #   OPERATOROS_API_IMAGE       reviewed image tag (required)
 #   OPERATOROS_API_ENV_FILE    host-managed env file (required)

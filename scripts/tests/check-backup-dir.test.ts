@@ -26,6 +26,12 @@ describe("backup directory containment", () => {
     expect(problems).toEqual([`not a regular file: ${artifact}`]);
   });
 
+  it("requires allowed audit logs to be regular files", () => {
+    for (const name of [audit, "backup_restore_audit.jsonl"]) {
+      expect(inspectBackupDirectory([name], () => false)).toEqual([`not a regular file: ${name}`]);
+    }
+  });
+
   it("accepts collision-suffixed artifacts the runtime can publish", () => {
     const suffixed = "backup_2026-11-18T19-00-14Z_1.sqlite3";
     expect(inspectBackupDirectory([suffixed, `${suffixed}.meta.json`], regular)).toEqual([]);

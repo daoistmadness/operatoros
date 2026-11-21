@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -124,11 +125,15 @@ def assess_runtime(runtime: Any) -> dict[str, Any]:
 def inspect_image(
     image: str,
     runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    *,
+    engine: str = "podman",
 ) -> dict[str, Any]:
     if not image or image.startswith("-"):
         raise RuntimeGateError("A local OCI image identifier is required")
+    if engine not in {"podman", "docker"}:
+        raise RuntimeGateError("Container engine must be docker or podman")
     command: Sequence[str] = (
-        "podman",
+        engine,
         "run",
         "--pull=never",
         "--rm",
@@ -148,7 +153,7 @@ def inspect_image(
         "-e",
         PROBE,
     )
-    inspect_command: Sequence[str] = ("podman", "image", "inspect", image)
+    inspect_command: Sequence[str] = (engine, "image", "inspect", image)
 
     def inspected_id() -> str:
         inspected = runner(inspect_command, capture_output=True, text=True, check=False, timeout=15)
@@ -190,12 +195,12 @@ def inspect_image(
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = list(sys.argv[1:] if argv is None else argv)
-    if len(args) != 1:
-        print("Usage: check-bun-sqlite-runtime.py <local-image-id>", file=sys.stderr)
-        return 2
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--engine", choices=("podman", "docker"), default="podman")
+    parser.add_argument("image", help="local image identifier")
+    args = parser.parse_args(argv)
     try:
-        report = inspect_image(args[0])
+        report = inspect_image(args.image, engine=args.engine)
     except (RuntimeGateError, subprocess.TimeoutExpired) as error:
         report = {"status": "BLOCKED", "reason": str(error)}
         if isinstance(error, RuntimeGateError) and error.runtime is not None:

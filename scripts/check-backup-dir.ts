@@ -2,11 +2,6 @@
 /**
  * Read-only containment check for the backup directory.
  *
- * The backup runtime publishes only complete `backup_<timestamp>.sqlite3` +
- * `.meta.json` pairs and the operations audit log. Anything else in that
- * directory, including a plaintext database snapshot, is outside the encrypted
- * chain and outside retention. This check reports it and exits non-zero.
- *
  * Usage: bun scripts/check-backup-dir.ts <backup-dir>
  */
 import { lstatSync, readdirSync } from "node:fs";
@@ -22,14 +17,18 @@ export function inspectBackupDirectory(names: string[], isRegularFile: (name: st
   const present = new Set(names);
   const problems: string[] = [];
   for (const name of names) {
-    if (AUDIT_FILES.has(name)) continue;
+    const isRegular = isRegularFile(name);
+    if (AUDIT_FILES.has(name)) {
+      if (!isRegular) problems.push(`not a regular file: ${name}`);
+      continue;
+    }
     const isArtifact = ARTIFACT.test(name);
     const isMetadata = METADATA.test(name);
     if (!isArtifact && !isMetadata) {
       problems.push(`unexpected entry: ${name}`);
       continue;
     }
-    if (!isRegularFile(name)) {
+    if (!isRegular) {
       problems.push(`not a regular file: ${name}`);
       continue;
     }

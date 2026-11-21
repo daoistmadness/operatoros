@@ -132,6 +132,7 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
           python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
+          python3 -m unittest discover -s scripts/tests -p "test_docker_candidate_qualification.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
       - name: Bun SQLite release gate and image identity tests
         working-directory: ${{ github.workspace }}
@@ -598,6 +599,83 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+
+  docker-candidate-qualification:
+    name: Docker Compose release candidate qualification
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/p0-4-docker-source-of-truth'
+    needs: [preflight]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out selected candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Build static SPA client
+        run: bun run --filter @operatoros/web build
+      - name: Fetch current main for rollback fixture
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Build and rehearse Docker candidate
+        env:
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          CANDIDATE_API_IMAGE: localhost/operatoros-api:candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          ROLLBACK_API_IMAGE: localhost/operatoros-api:rollback-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          CANDIDATE_CADDY_IMAGE: localhost/operatoros-caddy:candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python3 scripts/docker-candidate-qualification.py \
+            --output-dir "$CANDIDATE_ROOT" \
+            --api-image "$CANDIDATE_API_IMAGE" \
+            --rollback-image "$ROLLBACK_API_IMAGE" \
+            --caddy-image "$CANDIDATE_CADDY_IMAGE"
+          python3 - "$CANDIDATE_ROOT/compose-rehearsal.json" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          if report.get("status") != "PASS" or report.get("cleanup_verified") is not True:
+              raise SystemExit("Docker candidate qualification or cleanup did not pass")
+          runtime = report["runtime"]
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Docker Compose candidate qualification\n\n")
+              summary.write(f"- Source commit: `{report['source_commit']}`\n")
+              summary.write(f"- Bun: `{runtime['bun']}`; SQLite: `{runtime['sqlite']}`; FTS5: `{runtime['fts5']}`\n")
+              summary.write(f"- Compose deploy, health/readiness, SPA and security routes, and synthetic image rollback: passed\n")
+              summary.write(f"- Cleanup verified: `{report['cleanup_verified']}`\n")
+              summary.write(f"- Registry-independent archive SHA-256: `{report['artifact']['sha256']}`\n")
+              summary.write("- Candidate archive is attested in the next step; this is not a production release.\n\n")
+          PY
+      - name: Attest Docker candidate archive
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/operatoros-docker-candidate.tar
+      - name: Retain registry-independent Docker candidate
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-docker-candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/operatoros-docker-candidate.tar
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/operatoros-docker-candidate.tar.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - name: Retain sanitized Docker rehearsal report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-docker-candidate-report-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/compose-rehearsal.json
+          if-no-files-found: warn
+          retention-days: 7
 
   release-bundle:
     name: Manual release bundle
