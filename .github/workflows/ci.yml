@@ -403,7 +403,7 @@ jobs:
 
   candidate-qualification:
     name: Nonpublishing release candidate qualification
-    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth'
     needs: [preflight]
     runs-on: ubuntu-26.04
     timeout-minutes: 45

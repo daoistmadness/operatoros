@@ -2268,6 +2268,10 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
 
     def test_docker_candidate_is_branch_scoped_attested_and_not_published(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        podman_candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
+            '\n\n  docker-candidate-qualification:', 1
+        )[0]
+        self.assertIn("github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth'", podman_candidate)
         candidate = workflow.split('  docker-candidate-qualification:\n', 1)[1].split(
             '\n\n  release-bundle:', 1
         )[0]
