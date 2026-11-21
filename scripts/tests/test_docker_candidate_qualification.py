@@ -121,14 +121,23 @@ class DockerCandidatePathTests(unittest.TestCase):
             patch.object(qualification, "run", return_value=json.dumps(state)) as command,
         ):
             result = qualification.synthetic_database_status(Path("/private/synthetic"), schema)
-            container_result = qualification.synthetic_database_status(
-                Path("/private/synthetic"), schema, as_container_user=True
+            root_result = qualification.synthetic_database_status(
+                Path("/private/synthetic"), schema, as_root=True
             )
 
         self.assertEqual(command.call_args_list[0].args[0][0], "/usr/bin/bun")
         self.assertEqual(
             command.call_args_list[1].args[0][:8],
-            ["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", "/usr/bin/bun"],
+            [
+                "sudo",
+                "-n",
+                "--",
+                "/usr/bin/bun",
+                "packages/db/src/dev-db-cli.ts",
+                "status",
+                "--repo",
+                str(qualification.ROOT),
+            ],
         )
         self.assertEqual(result["schema_head"], schema)
         self.assertEqual(result["integrity"], "ok")
@@ -137,7 +146,7 @@ class DockerCandidatePathTests(unittest.TestCase):
         self.assertEqual(result["file_size_bytes"], 1234)
         self.assertNotIn("path", result)
         self.assertNotIn("users_count", result)
-        self.assertEqual(container_result, result)
+        self.assertEqual(root_result, result)
 
         state["integrity"] = "not-a-database"
         with (
@@ -146,6 +155,25 @@ class DockerCandidatePathTests(unittest.TestCase):
             self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_invalid"),
         ):
             qualification.synthetic_database_status(Path("/private/synthetic"), schema)
+
+    def test_container_database_access_checks_only_expected_mount_permissions(self):
+        with patch.object(qualification, "run") as command:
+            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
+
+        self.assertEqual(
+            command.call_args.args[0],
+            [
+                "sudo", "-n", "-u", "#1000", "-g", "#1000", "--", "test",
+                "-x", "/private", "-a", "-x", "/private/data", "-a", "-w", "/private/data",
+                "-a", "-r", "/private/data/operatoros.sqlite", "-a", "-w", "/private/data/operatoros.sqlite",
+            ],
+        )
+
+        with (
+            patch.object(qualification, "run", side_effect=qualification.QualificationFailure("command_failed")),
+            self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_permissions_invalid"),
+        ):
+            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
 
     def test_readiness_requires_sqlite_persistence(self):
         for body, expected in (

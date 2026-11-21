@@ -502,14 +502,14 @@ def synthetic_database_status(
     data_dir: Path,
     expected_schema: str,
     *,
-    as_container_user: bool = False,
+    as_root: bool = False,
 ) -> dict[str, Any]:
     bun = shutil.which("bun")
     if not bun:
         raise QualificationFailure("bun_not_found")
     command = [bun, "packages/db/src/dev-db-cli.ts", "status"]
-    if as_container_user:
-        command = ["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", *command]
+    if as_root:
+        command = ["sudo", "-n", "--", *command]
     raw = run(
         [
             *command,
@@ -541,6 +541,31 @@ def synthetic_database_status(
         "schema_checksum_valid": state["schema_checksum_valid"],
         "file_size_bytes": state.get("file_size", 0),
     }
+
+
+def verify_container_database_access(data_dir: Path, private_root: Path) -> None:
+    database = data_dir / "operatoros.sqlite"
+    check = [
+        "test",
+        "-x",
+        str(private_root),
+        "-a",
+        "-x",
+        str(data_dir),
+        "-a",
+        "-w",
+        str(data_dir),
+        "-a",
+        "-r",
+        str(database),
+        "-a",
+        "-w",
+        str(database),
+    ]
+    try:
+        run(["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", *check], timeout=30)
+    except QualificationFailure as error:
+        raise QualificationFailure("synthetic_database_permissions_invalid") from error
 
 
 def rollback_source_commit(source: str, source_ref: str) -> str:
@@ -826,8 +851,10 @@ def qualify(args: argparse.Namespace) -> int:
         stage = "synthetic_deploy_directory_ownership"
         run(["sudo", "chown", "-R", "1000:1000", "--", str(deploy_dir)], timeout=30)
         stage = "synthetic_database_container_verification"
+        verify_container_database_access(data_dir, private_root)
+        report["synthetic_database"]["container_user_access_verified"] = True
         report["synthetic_database"]["after_container_ownership"] = synthetic_database_status(
-            data_dir, expected_schema, as_container_user=True
+            data_dir, expected_schema, as_root=True
         )
 
         api_port = get_free_port()
@@ -872,7 +899,7 @@ def qualify(args: argparse.Namespace) -> int:
             raise QualificationFailure("candidate_container_image_mismatch")
         stage = "candidate_synthetic_database_verification"
         report["synthetic_database"]["candidate"] = synthetic_database_status(
-            data_dir, expected_schema, as_container_user=True
+            data_dir, expected_schema, as_root=True
         )
         report["stages"]["candidate_compose_deploy"] = "PASS"
         report["stages"]["health_readiness_spa_and_security_routes"] = "PASS"
@@ -904,7 +931,7 @@ def qualify(args: argparse.Namespace) -> int:
             raise QualificationFailure("rollback_container_image_mismatch")
         stage = "rollback_synthetic_database_verification"
         report["synthetic_database"]["rollback"] = synthetic_database_status(
-            data_dir, expected_schema, as_container_user=True
+            data_dir, expected_schema, as_root=True
         )
         report["stages"]["synthetic_image_rollback"] = "PASS"
 
@@ -925,7 +952,7 @@ def qualify(args: argparse.Namespace) -> int:
             if data_dir is not None and expected_schema:
                 try:
                     report["synthetic_database"]["at_failure"] = synthetic_database_status(
-                        data_dir, expected_schema, as_container_user=True
+                        data_dir, expected_schema, as_root=True
                     )
                 except QualificationFailure as diagnostic_error:
                     report["synthetic_database"]["at_failure"] = {"status": diagnostic_error.code}
