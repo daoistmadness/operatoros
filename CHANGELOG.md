@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Prepare an attested, registry-independent Docker candidate with isolated Compose startup and rollback evidence; reject non-regular backup audit files.
+- Prepare an attested, registry-independent Docker candidate with isolated Compose startup and rollback evidence; reject non-regular backup audit files. (#397)
 - Pin Bun 1.4.5 across mise, CI, development containers, and release images; require the fixed embedded SQLite runtime in release evidence. (#396)
 - Align application and release guidance with the accepted pinned Bun runtime.
   Reopen exact-source release qualification. (#395)

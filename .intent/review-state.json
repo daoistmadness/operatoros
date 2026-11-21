@@ -2955,15 +2955,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b3664647e6f4d4447400775d8a6061b027bad881be19f5dc424a6e3e0442d6b1",
+      "fingerprint": "817465487e40e495d9b3ec12b33802525b5163c043d4ffd0b2a4cf64ec32e18c",
       "snapshot": {
-        "CHANGELOG.md": "edddfdd84e697e5ae11afea47a67fbcf947fb18b2d3deedd286ba26e370ab8cd"
+        "CHANGELOG.md": "5e7806b07779021435ed7eed6de37dafd6f6b43db34b664a95084123c63f8c16"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "e1011cc5ca35f4e7d5c0c7c47e0d5f478b9924fd",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "reason": "This PR-number annotation records the Docker release candidate change and does not alter Elysia skill guidance.",
       "evidence": [
-        "Diff: CHANGELOG.md",
+        "CHANGELOG.md PR #397 Unreleased entry",
         "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
       ]
     },
