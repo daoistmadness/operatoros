@@ -116,9 +116,20 @@ class DockerCandidatePathTests(unittest.TestCase):
             "path": "/private/synthetic/operatoros.sqlite",
         }
 
-        with patch.object(qualification, "run", return_value=json.dumps(state)):
+        with (
+            patch.object(qualification.shutil, "which", return_value="/usr/bin/bun"),
+            patch.object(qualification, "run", return_value=json.dumps(state)) as command,
+        ):
             result = qualification.synthetic_database_status(Path("/private/synthetic"), schema)
+            container_result = qualification.synthetic_database_status(
+                Path("/private/synthetic"), schema, as_container_user=True
+            )
 
+        self.assertEqual(command.call_args_list[0].args[0][0], "/usr/bin/bun")
+        self.assertEqual(
+            command.call_args_list[1].args[0][:8],
+            ["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", "/usr/bin/bun"],
+        )
         self.assertEqual(result["schema_head"], schema)
         self.assertEqual(result["integrity"], "ok")
         self.assertEqual(result["quick_check"], "ok")
@@ -126,10 +137,13 @@ class DockerCandidatePathTests(unittest.TestCase):
         self.assertEqual(result["file_size_bytes"], 1234)
         self.assertNotIn("path", result)
         self.assertNotIn("users_count", result)
+        self.assertEqual(container_result, result)
 
         state["integrity"] = "not-a-database"
-        with patch.object(qualification, "run", return_value=json.dumps(state)), self.assertRaisesRegex(
-            qualification.QualificationFailure, "synthetic_database_invalid"
+        with (
+            patch.object(qualification.shutil, "which", return_value="/usr/bin/bun"),
+            patch.object(qualification, "run", return_value=json.dumps(state)),
+            self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_invalid"),
         ):
             qualification.synthetic_database_status(Path("/private/synthetic"), schema)
 
@@ -176,7 +190,8 @@ class DockerCandidatePathTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             runner_temp = Path(temporary)
             private_root = runner_temp / "operatoros-docker-rehearsal-test"
-            private_root.mkdir(mode=0o700)
+            private_root.mkdir(mode=0o710)
+            private_root.chmod(0o710)
 
             def remove_exact_path(args, **kwargs):
                 self.assertEqual(args, ["sudo", "rm", "-rf", "--", str(private_root)])
@@ -190,6 +205,26 @@ class DockerCandidatePathTests(unittest.TestCase):
                 self.assertTrue(qualification.remove_private_root(private_root))
 
             self.assertFalse(private_root.exists())
+
+    def test_private_root_cleanup_refuses_modes_broader_than_private_or_traverse_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            runner_temp = Path(temporary)
+            private_roots = []
+            for mode in (0o740, 0o711, 0o770):
+                private_root = runner_temp / f"operatoros-docker-rehearsal-{mode:o}"
+                private_root.mkdir(mode=mode)
+                private_root.chmod(mode)
+                private_roots.append((private_root, mode))
+
+            with (
+                patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}),
+                patch.object(qualification.subprocess, "run") as command,
+            ):
+                for private_root, mode in private_roots:
+                    with self.subTest(mode=oct(mode)):
+                        self.assertFalse(qualification.remove_private_root(private_root))
+
+            command.assert_not_called()
 
     def test_private_root_cleanup_refuses_a_path_outside_runner_temp(self):
         with tempfile.TemporaryDirectory() as temporary:
