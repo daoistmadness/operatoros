@@ -13,6 +13,7 @@ import re
 import secrets
 import shutil
 import socket
+import stat
 import subprocess
 import sys
 import tarfile
@@ -48,7 +49,28 @@ def run(args: list[str], *, cwd: Path = ROOT, timeout: int = 120) -> str:
         timeout=timeout,
     )
     if completed.returncode != 0:
-        raise QualificationFailure("command_failed")
+        message = f"{completed.stdout}\n{completed.stderr}".casefold()
+        if (
+            "port is already allocated" in message
+            or "address already in use" in message
+            or "failed to bind" in message
+        ):
+            code = "port_conflict"
+        elif "unhealthy" in message:
+            code = "container_unhealthy"
+        elif "permission denied" in message or "operation not permitted" in message:
+            code = "permission_denied"
+        elif (
+            "no such object" in message
+            or "no such container" in message
+            or "no such file or directory" in message
+        ):
+            code = "resource_not_found"
+        elif "invalid mount config" in message or "mount denied" in message:
+            code = "mount_configuration_failed"
+        else:
+            code = "command_failed"
+        raise QualificationFailure(code)
     return completed.stdout.strip()
 
 
@@ -314,6 +336,42 @@ def record_cleanup_result(report: dict[str, Any], details: dict[str, Any]) -> bo
         report["cleanup_failure_code"] = "cleanup_unverified"
         report.setdefault("failure_code", "cleanup_unverified")
     return verified
+
+
+def remove_private_root(private_root: Path) -> bool:
+    raw_runner_temp = os.environ.get("RUNNER_TEMP")
+    if (
+        not raw_runner_temp
+        or private_root.is_symlink()
+        or not private_root.name.startswith("operatoros-docker-rehearsal-")
+    ):
+        return False
+    try:
+        runner_temp = Path(raw_runner_temp).resolve(strict=True)
+        if private_root.parent.resolve(strict=True) != runner_temp:
+            return False
+        if not private_root.exists():
+            return True
+        metadata = private_root.lstat()
+        if (
+            not stat.S_ISDIR(metadata.st_mode)
+            or metadata.st_uid != os.getuid()
+            or metadata.st_mode & 0o077
+        ):
+            return False
+        resolved = private_root.resolve(strict=True)
+        if resolved.parent != runner_temp or not resolved.is_dir():
+            return False
+        removed = subprocess.run(
+            ["sudo", "rm", "-rf", "--", str(resolved)],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+        return removed.returncode == 0 and not resolved.exists()
+    except (OSError, subprocess.TimeoutExpired):
+        return False
 
 
 def make_synthetic_database(data_dir: Path) -> None:
@@ -628,17 +686,20 @@ def qualify(args: argparse.Namespace) -> int:
         run(compose_command(project, env_file, override, "config", "--quiet"), timeout=30)
         report["stages"]["compose_config"] = "PASS"
 
-        stage = "candidate_compose_deploy"
+        stage = "compose_up"
         run(compose_command(project, env_file, override, "up", "--detach"), timeout=180)
+        stage = "candidate_api_readiness"
         wait_ready(f"http://127.0.0.1:{http_port}/ready")
+        stage = "candidate_route_verification"
         verify_routes(http_port)
+        stage = "candidate_container_identity"
         running_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if running_id != api_id:
             raise QualificationFailure("candidate_container_image_mismatch")
         report["stages"]["candidate_compose_deploy"] = "PASS"
         report["stages"]["health_readiness_spa_and_security_routes"] = "PASS"
 
-        stage = "synthetic_image_rollback"
+        stage = "rollback_image_selection"
         write_private_file(
             env_file,
             compose_environment(
@@ -653,9 +714,13 @@ def qualify(args: argparse.Namespace) -> int:
                 http_port=http_port,
             ),
         )
+        stage = "rollback_compose_up"
         run(compose_command(project, env_file, override, "up", "--detach", "--no-deps", "operatoros-api"), timeout=180)
+        stage = "rollback_api_readiness"
         wait_ready(f"http://127.0.0.1:{http_port}/ready")
+        stage = "rollback_route_verification"
         verify_routes(http_port)
+        stage = "rollback_container_identity"
         rolled_back_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if rolled_back_id != rollback_id:
             raise QualificationFailure("rollback_container_image_mismatch")
@@ -711,11 +776,7 @@ def qualify(args: argparse.Namespace) -> int:
             and cleanup_details["owned_images_absent"] is True
             and private_root is not None
         ):
-            try:
-                shutil.rmtree(private_root)
-                cleanup_details["private_root_removed"] = not private_root.exists()
-            except OSError:
-                cleanup_details["private_root_removed"] = False
+            cleanup_details["private_root_removed"] = remove_private_root(private_root)
         elif private_root is None:
             cleanup_details["private_root_removed"] = True
         else:

@@ -10856,15 +10856,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "efa3c6ef59f4d7c9cd1c4b646ce1b79632cc55ce4dcead4283f87bfc4a1db5ac",
+      "fingerprint": "d2a6b26f29702a4d42e56edeb79a9dc64337b5465aae5d994cf828b25e0a28bf",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "ededed17f22007b3cfee32b51be517040f4b06f71dcb68833a7acf9a02edf86e"
+        "scripts/docker-candidate-qualification.py": "a5c3201521f57b951bc9384a5af3238a5f1182f67399fe0db69461b95745da80"
       },
-      "head": "a10e3f69d7f516b854c58054c433ca54777154eb",
+      "head": "0153a57003e9af37c87503fc1e4cc5e95e7d802f",
       "outcome": "out-of-scope",
-      "reason": "These Python files implement and verify a Docker candidate runner, outside the registered Elysia skill and planning-record scope.",
+      "reason": "These Python files qualify and clean a Docker-only release candidate, outside the registered Elysia skill and planning-record scope.",
       "evidence": [
-        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all six tests passed."
+        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all ten tests passed."
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10881,15 +10881,15 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "8caf9d74d5781ae96bae74aef42db2573b5ef5ebfcce2657bf52b9c6bb682efb",
+      "fingerprint": "488f7a2a00d145310b9eef0528fc3bd4b84634b7cf434ef02c37b8c5cdb527a4",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "a7507038a7a362466f119efda23232cb146d58c5ba0b77a5197faf79b5c19148"
+        "scripts/tests/test_docker_candidate_qualification.py": "2c565e99c635d0f9568be47362bc3143201ef80b687dc5008f4dbb6b3aa8b7c4"
       },
-      "head": "a10e3f69d7f516b854c58054c433ca54777154eb",
+      "head": "0153a57003e9af37c87503fc1e4cc5e95e7d802f",
       "outcome": "out-of-scope",
-      "reason": "These Python files implement and verify a Docker candidate runner, outside the registered Elysia skill and planning-record scope.",
+      "reason": "These Python files qualify and clean a Docker-only release candidate, outside the registered Elysia skill and planning-record scope.",
       "evidence": [
-        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all six tests passed."
+        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all ten tests passed."
       ]
     }
   }

@@ -16,6 +16,75 @@ spec.loader.exec_module(qualification)
 
 
 class DockerCandidatePathTests(unittest.TestCase):
+    def test_run_reports_only_a_safe_failure_category(self):
+        for message, expected in (
+            ("bind: address already in use", "port_conflict"),
+            ("dependency container is unhealthy", "container_unhealthy"),
+            ("No such object: candidate-container", "resource_not_found"),
+            ("unclassified synthetic-secret-sentinel", "command_failed"),
+        ):
+            completed = subprocess.CompletedProcess(
+                args=[], returncode=1, stdout=message, stderr=""
+            )
+            with self.subTest(expected=expected), patch.object(
+                qualification.subprocess, "run", return_value=completed
+            ), self.assertRaises(qualification.QualificationFailure) as raised:
+                qualification.run(["docker", "compose", "up"])
+            self.assertEqual(raised.exception.code, expected)
+            self.assertNotIn("synthetic-secret-sentinel", str(raised.exception))
+
+    def test_private_root_cleanup_removes_only_the_runner_owned_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            runner_temp = Path(temporary)
+            private_root = runner_temp / "operatoros-docker-rehearsal-test"
+            private_root.mkdir(mode=0o700)
+
+            def remove_exact_path(args, **kwargs):
+                self.assertEqual(args, ["sudo", "rm", "-rf", "--", str(private_root)])
+                qualification.shutil.rmtree(private_root)
+                return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+            with (
+                patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}),
+                patch.object(qualification.subprocess, "run", side_effect=remove_exact_path),
+            ):
+                self.assertTrue(qualification.remove_private_root(private_root))
+
+            self.assertFalse(private_root.exists())
+
+    def test_private_root_cleanup_refuses_a_path_outside_runner_temp(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runner_temp = root / "runner"
+            runner_temp.mkdir()
+            outside = root / "operatoros-docker-rehearsal-unowned"
+            outside.mkdir()
+
+            with (
+                patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}),
+                patch.object(qualification.subprocess, "run") as command,
+            ):
+                self.assertFalse(qualification.remove_private_root(outside))
+
+            command.assert_not_called()
+
+    def test_private_root_cleanup_refuses_a_symlink(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            runner_temp = Path(temporary)
+            target = runner_temp / "target"
+            target.mkdir()
+            private_root = runner_temp / "operatoros-docker-rehearsal-link"
+            private_root.symlink_to(target, target_is_directory=True)
+
+            with (
+                patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}),
+                patch.object(qualification.subprocess, "run") as command,
+            ):
+                self.assertFalse(qualification.remove_private_root(private_root))
+
+            command.assert_not_called()
+            self.assertTrue(target.exists())
+
     def test_cleanup_report_preserves_failure_and_requires_verified_resources(self):
         report = {"failure_code": "service_not_ready"}
 
@@ -157,9 +226,8 @@ class DockerCandidatePathTests(unittest.TestCase):
                 )
 
             self.assertIn("operatoros-docker-candidate/deploy/docker/api.env.example", members)
-            self.assertFalse(
-                any(member.endswith(("/api.env", "/compose.env", "/operatoros.sqlite")) for member in members)
-            )
+            for member in members:
+                self.assertFalse(member.endswith(("/api.env", "/compose.env", "/operatoros.sqlite")))
             for sentinel in (
                 b"synthetic-secret-sentinel",
                 b"synthetic-key-sentinel",
