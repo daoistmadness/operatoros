@@ -45,7 +45,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 30s
     mem_limit: 512m
     cpus: 1.0
     networks:
