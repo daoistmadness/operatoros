@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-21
 ---
 
 # CI release bundles
@@ -15,12 +15,13 @@ Scheduled validation, PRs, and ordinary pushes cannot create release bundles.
 The validation and bundle jobs explicitly check out the event's full commit SHA;
 a later movement of main does not change the candidate. Bundle creation is serialized.
 
-A manual dispatch on a non-main branch performs nonpublishing qualification. It
-runs full validation and E2E, builds an ephemeral API OCI image, scans it, and
-probes Bun and its embedded `bun:sqlite` runtime before retaining non-image
-reports for seven days. The image is discarded with the runner and receives no
-signature, attestation, or release-bundle upload. The previous accepted finding applied
-only to Bun 1.4.4 with SQLite 3.53.4, source ID
+A manual dispatch on a non-main branch runs the generic Podman candidate job.
+It builds an ephemeral API OCI image, scans it, and probes Bun and its embedded
+`bun:sqlite` runtime before retaining non-image reports for seven days. That
+image is discarded with the runner and receives no signature or release-bundle
+upload. The branch-scoped Docker candidate described below is a separate
+attested artifact. The previous accepted finding applied only to Bun 1.4.4
+with SQLite 3.53.4, source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
 and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1. The new candidate must pass the normal runtime probe, SBOM, and scan with the finding resolved; the old acceptance does not apply to it. Any affected SQLite identity remains blocked. A workflow success does not make the candidate a release artifact.
 
@@ -30,12 +31,103 @@ pinned Bun runtime from the Linux amd64 Containerfile and production lockfile
 install. The SPA uses the Vite/Start build. There is no server-side source build,
 GHCR publication, automatic deployment, or database migration.
 
+The `codex/p0-4-docker-source-of-truth` branch also defines a separate
+manual-only Docker Compose qualification job. Run it with
+`gh workflow run ci.yml --repo daoistmadness/operatoros --ref codex/p0-4-docker-source-of-truth`.
+It builds the API with Docker, qualifies the image's Bun/SQLite runtime, pulls
+the digest-pinned Caddy 2.11.7 image, and runs the repository Compose template
+with a synthetic database and random secrets on a GitHub-hosted runner. It
+checks API health/readiness, SPA deep routes, missing static files, dotfile
+denial, and rollback to an API image built from the current main common
+ancestor. The rehearsal uses no production data or credentials and verifies
+that its unique Compose resources and private temporary root are removed.
+
+On success, CI saves the API and Caddy images, deployment files, and static
+client in `operatoros-docker-candidate.tar`, signs that exact archive with
+GitHub build provenance, and retains it for 30 days. The archive uses Docker's
+`docker load` format and needs no image registry after download. The attestation
+is separate from the archive; verify it before loading:
+
+```bash
+gh attestation verify operatoros-docker-candidate.tar \
+  --repo daoistmadness/operatoros \
+  --signer-workflow daoistmadness/operatoros/.github/workflows/ci.yml \
+  --source-ref refs/heads/codex/p0-4-docker-source-of-truth \
+  --source-digest "$SOURCE_SHA" \
+  --deny-self-hosted-runners
+```
+
+This branch-scoped archive is a review candidate, not the official main-only
+release bundle or a supported production release. CI does not publish it to
+GHCR. The synthetic rollback proves image-reference rollback in Compose only;
+production rollback, backup verification, and runtime acceptance still require
+separate operator authorization.
+
+## Prepare a Docker host change
+
+Use this procedure only after Docker support is accepted and an operator has
+authorized a host change. The current branch and its candidate archive do not
+authorize production use.
+
+Download the archive and checksum sidecar from the same successful workflow
+run. Set `SOURCE_SHA` to that run's full source commit SHA. Verify the checksum
+before checking the attestation:
+
+```bash
+sha256sum --check --strict operatoros-docker-candidate.tar.sha256
+gh attestation verify operatoros-docker-candidate.tar \
+  --repo daoistmadness/operatoros \
+  --signer-workflow daoistmadness/operatoros/.github/workflows/ci.yml \
+  --source-ref refs/heads/codex/p0-4-docker-source-of-truth \
+  --source-digest "$SOURCE_SHA" \
+  --deny-self-hosted-runners
+```
+
+Before the change, verify a recent authenticated encrypted backup. Preserve the
+authoritative SQLite database and the current API and Caddy images. Stage the
+archive, environment file, data directory, and deployment directory with
+restrictive permissions. Keep the API environment file at mode `0600` and its
+parent directories at `0700`. Do not print the environment file or place it in
+command output.
+
+Load the verified Docker archive with `docker load`. Compare each loaded image
+ID with the corresponding config digest in `manifest.json`. Extract the
+versioned static client and deployment files from the archive. Set the Compose
+environment file to the reviewed API and Caddy image references and the staged
+host paths. Set `COMPOSE_FILE` to the extracted Compose file and `COMPOSE_ENV`
+to the private Compose environment file. Run this check before starting the
+services:
+
+```bash
+docker compose --env-file "$COMPOSE_ENV" --file "$COMPOSE_FILE" config --quiet
+```
+
+Keep the previous client directory and image references available.
+
+After the authorized change, start the API and Caddy services:
+
+```bash
+docker compose --env-file "$COMPOSE_ENV" --file "$COMPOSE_FILE" up --detach
+```
+
+Verify the API `/health` and `/ready` routes, the browser login flow, and
+Caddy's SPA, missing asset, and dotfile responses. Do not run authenticated
+checks without an authorized operator session.
+
+To roll back the application, set `OPERATOROS_API_IMAGE` to the preserved prior
+image and `OPERATOROS_WEB_ROOT` to the prior versioned client directory. Keep
+the prior Caddy image and Caddyfile reference if either changed. Recheck the
+resolved Compose configuration, then rerun the command above for the existing
+project. Verify readiness and the browser flow. Do not restore or replace the
+SQLite database as part of an image rollback. Database recovery is a separate
+authorized operation.
+
 The signed Node bundle from run `43408580871` covers source
-`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only. It does not qualify the
-current Bun source. After the Bun implementation is reviewed and merged, run
-full validation and the manual main-branch release for that exact commit. Task 9
-remains open until the new Bun image, runtime evidence, SBOM, scan, attestation,
-and isolated consumer all match that source and artifact.
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only. PR #396 merged Bun 1.4.5,
+but that does not make an image a release. Task 9 remains open until full
+validation and the authorized main-only release produce Bun/SQLite runtime
+evidence, SBOM, scan, attestation, and isolated-consumer results for the same
+source commit and artifact.
 
 The artifact name includes source SHA, workflow run ID, and attempt. Download it
 by that run ID using `gh run download RUN_ID --repo daoistmadness/operatoros

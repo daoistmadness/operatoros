@@ -53,6 +53,13 @@ class RuntimeAssessmentTests(unittest.TestCase):
         self.assertEqual(report["findingDisposition"], "NOT_REQUIRED")
         self.assertEqual(report["sqlite"], "3.54.1")
 
+    def test_main_selects_the_requested_container_engine(self):
+        output = io.StringIO()
+        inspected = {**gate.assess_runtime(self.runtime()), "imageId": "sha256:" + "b" * 64}
+        with patch.object(gate, "inspect_image", return_value=inspected) as inspect, patch("sys.stdout", output):
+            self.assertEqual(gate.main(["--engine", "docker", "local-image-id"]), 0)
+        inspect.assert_called_once_with("local-image-id", engine="docker")
+
     def test_blocked_report_retains_exact_embedded_runtime_identity(self):
         runtime = self.runtime(source_id="embedded-source-id")
         blocked_runtime = {
@@ -155,6 +162,24 @@ class RuntimeAssessmentTests(unittest.TestCase):
 
         with self.assertRaisesRegex(gate.RuntimeGateError, "changed during"):
             gate.inspect_image("mutable-local-tag", Mock(side_effect=run))
+
+    def test_docker_runtime_probe_is_local_read_only_and_network_isolated(self):
+        image_id = "sha256:" + "c" * 64
+        runtime = self.runtime()
+
+        def run(command, **kwargs):
+            if "image" in command and "inspect" in command:
+                return subprocess.CompletedProcess(command, 0, json.dumps([{"Id": image_id.removeprefix("sha256:")}]), "")
+            return subprocess.CompletedProcess(command, 0, json.dumps(runtime) + "\n", "")
+
+        runner = Mock(side_effect=run)
+        report = gate.inspect_image("sha256:local", runner, engine="docker")
+        command = next(call.args[0] for call in runner.call_args_list if "--network=none" in call.args[0])
+        self.assertEqual(command[0], "docker")
+        self.assertIn("--pull=never", command)
+        self.assertIn("--network=none", command)
+        self.assertIn("--read-only", command)
+        self.assertEqual(report["imageId"], image_id)
 
     def test_release_consumer_checks_bun_sqlite_before_starting_api(self):
         consumer = (ROOT / "scripts/test-release-consumer.sh").read_text(encoding="utf-8")

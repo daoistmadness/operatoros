@@ -2249,7 +2249,7 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
     def test_candidate_qualification_requires_manual_non_main_dispatch_and_is_unattested(self):
         workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
         candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
-            '\n\n  release-bundle:', 1
+            '\n\n  docker-candidate-qualification:', 1
         )[0]
         self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
         self.assertIn("github.ref != 'refs/heads/main'", candidate)
@@ -2265,3 +2265,24 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         retained = candidate.split('      - name: Retain non-image candidate reports', 1)[1]
         self.assertNotIn('image.oci.tar', retained)
         self.assertIn('RUNTIME_GATE_PASS', candidate)
+
+    def test_docker_candidate_is_branch_scoped_attested_and_not_published(self):
+        workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+        podman_candidate = workflow.split('  candidate-qualification:\n', 1)[1].split(
+            '\n\n  docker-candidate-qualification:', 1
+        )[0]
+        self.assertIn("github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth'", podman_candidate)
+        candidate = workflow.split('  docker-candidate-qualification:\n', 1)[1].split(
+            '\n\n  release-bundle:', 1
+        )[0]
+        self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
+        self.assertIn("github.ref == 'refs/heads/codex/p0-4-docker-source-of-truth'", candidate)
+        self.assertIn('needs: [preflight]', candidate)
+        self.assertIn('contents: read', candidate)
+        self.assertIn('id-token: write', candidate)
+        self.assertIn('attestations: write', candidate)
+        self.assertIn('fetch-depth: 0', candidate)
+        self.assertIn('actions/attest-build-provenance@', candidate)
+        self.assertIn('operatoros-docker-candidate.tar', candidate)
+        self.assertNotIn('ghcr.io', candidate)
+        self.assertNotIn('docker push', candidate)

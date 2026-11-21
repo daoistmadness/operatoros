@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-21
 ---
 
 # Security model
@@ -66,6 +66,24 @@ is explicitly enabled.
 
 `BACKUP_ENCRYPTION_KEY` must differ from `AUTH_COOKIE_SECRET`. Never commit
 either secret. See [the rotation runbook](../runbooks/secret-rotation.md).
+
+For a Docker Compose candidate, keep the API env file outside the repository and
+release archive with mode `0600`; its parent directories must be `0700`. CI
+rehearsals generate distinct synthetic secrets in a private runner-temporary
+directory and remove that directory only after verifying Compose cleanup. The
+candidate archive includes env examples, but no populated env file or secret
+values. Run
+`bun scripts/check-backup-dir.ts <backup-dir>` to find unexpected entries,
+incomplete encrypted pairs, and non-regular artifact or audit files. A clean
+result verifies directory layout, not artifact encryption or recoverability.
+
+The application currently has no FTS5 query path. Startup and restore checks
+reject virtual tables by requiring ordinary table objects from SQLite's
+`PRAGMA table_list`. This limits application exposure but does not patch the
+SQLite engine embedded in Bun. The image runtime gate must verify Bun 1.4.5 and
+SQLite 3.54.1. CI provenance for an image does not show that production runs it;
+production acceptance requires a separate authorized deployment and runtime
+check.
 
 ## Dependency audit
 

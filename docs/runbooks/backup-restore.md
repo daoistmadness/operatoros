@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-21
 ---
 
 # Backup and Restore Security
@@ -27,6 +27,16 @@ Backup creation:
 The connection layer sets `PRAGMA foreign_keys = ON` and does not configure WAL. A freshly bootstrapped database therefore uses SQLite's default rollback journal; an existing database may still be in WAL mode. Backup uses the checkpoint-then-serialize path, not the separate SQLite online-backup API. That path is supported only with the single API process described below.
 
 Backup directories use mode `0700`; backup, metadata, and audit files use `0600`. The directory must not be web-served or inside the frontend. The live SQLite database remains unencrypted.
+
+Only complete `backup_<timestamp>.sqlite3` and `.meta.json` pairs plus
+`backup_operations_audit.jsonl` and `backup_restore_audit.jsonl` belong in the
+backup directory. Run
+`bun scripts/check-backup-dir.ts <backup-dir>` to verify containment. The check
+is read-only and exits non-zero for any other entry, a non-regular artifact or
+audit file, or an incomplete pair. A plaintext database snapshot in that
+directory sits outside the encrypted chain and outside retention, so it is
+never aged out and never reported by backup status. Remove it only after
+verifying an encrypted equivalent covers the same data.
 
 Before publishing a backup, API and CLI creation flush the encrypted artifact and
 metadata files; after their atomic renames they flush both source and destination

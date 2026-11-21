@@ -74,6 +74,16 @@ function backupFiles(dir: string): string[] {
   return readdirSync(dir).filter((name) => /^backup_\d{4}-\d{2}-\d{2}T.*\.sqlite3$/.test(name)).sort();
 }
 
+async function setSchedulerTiers(app: ReturnType<typeof createApp>, cookie: string, keep: { keep_daily: number; keep_weekly: number; keep_monthly: number }): Promise<any> {
+  const response = await app.handle(new Request("http://local/api/admin/backups/scheduler", {
+    method: "PUT",
+    headers: { cookie, origin, "content-type": "application/json" },
+    body: JSON.stringify({ enabled: false, schedule_type: "daily", interval_minutes: 60, hour_utc: 2, minute_utc: 0, weekday_utc: 0, ...keep }),
+  }));
+  expect(response.status).toBe(200);
+  return response.json();
+}
+
 function auditEvents(dir: string): any[] {
   if (!existsSync(`${dir}/backup_operations_audit.jsonl`)) return [];
   return readFileSync(`${dir}/backup_operations_audit.jsonl`, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line));
@@ -111,6 +121,25 @@ describe("backup retention eviction (P4-16)", () => {
       }
     } finally { h.cleanup(); }
   }, 60000);
+
+  it("keeps the count-based limit when tier fields request a smaller history", async () => {
+    const h = harness("tiers-inert");
+    try {
+      const cookie = await login(h.app);
+      const saved = await setSchedulerTiers(h.app, cookie, { keep_daily: 1, keep_weekly: 1, keep_monthly: 1 });
+      expect(saved.keep_daily).toBe(1);
+      expect(saved.keep_weekly).toBe(1);
+      expect(saved.keep_monthly).toBe(1);
+
+      for (let index = 0; index < BACKUP_RETENTION_LIMIT + 1; index++) await createBackup(h.app, cookie);
+
+      // Tier fields are persisted configuration, not an eviction policy. Saving
+      // smaller tiers must not change how many artifacts survive.
+      expect(backupFiles(h.backupDir)).toHaveLength(BACKUP_RETENTION_LIMIT);
+      expect((await status(h.app, cookie)).retention_limit).toBe(BACKUP_RETENTION_LIMIT);
+      expect(auditEvents(h.backupDir).filter((event) => event.event === "backup_evicted")).toHaveLength(1);
+    } finally { h.cleanup(); }
+  }, 90000);
 
   it("keeps the only backup and does not evict at the limit", async () => {
     const h = harness("single");

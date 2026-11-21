@@ -56,7 +56,7 @@ The E2E job keeps its fixed admin credentials scoped to the test job. The runner
 
 ## Security settings and rollback
 
-Workflow files request only `contents: read`. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
+Workflow jobs default to `contents: read`. Only the manual, branch-scoped Docker candidate job adds `id-token: write` and `attestations: write` to attest its archive. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
 
 The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires pull requests and strict, up-to-date status checks. It requires zero approving reviews, no code-owner review, and no last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
 
@@ -90,6 +90,15 @@ reports are retained for seven days. It must use the pinned Bun 1.4.5 image and
 SQLite 3.54.1, with the finding resolved by the fixed version. Affected or
 mismatched runtime identities are rejected, so a successful workflow can still
 report the candidate as blocked.
+
+The `codex/p0-4-docker-source-of-truth` branch also adds a manual-only Docker
+Compose qualification job. It rehearses the exact Compose source with synthetic
+SQLite data and random credentials, validates runtime and routes, switches to a
+main-ancestor API image to rehearse rollback, and verifies cleanup. It attests
+the resulting Docker-loadable archive, retains that archive for 30 days, and
+retains a sanitized report for seven days. It does not change the main-only
+official release bundle, publish to a registry, or deploy. See the
+[Docker release candidate procedure](../docs/runbooks/release-bundles.md#prepare-a-docker-host-change).
 
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.

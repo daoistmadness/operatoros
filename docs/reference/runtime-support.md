@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-21
 ---
 
 # Platform portability
@@ -19,9 +19,14 @@ workflow establishes production container support.
 
 A single-host Podman deployment is proposed in
 [the Podman deployment decision](../decisions/podman-deployment.md). It remains
-unsupported. A draft production image and service configuration exist locally,
-but they are uncommitted and unreviewed. Deployment requires architecture
-acceptance and a successful authorized Ubuntu rehearsal.
+unsupported. The repository contains a proposed production image and service
+configuration, but they do not establish production support. Deployment
+requires architecture acceptance and a successful authorized Ubuntu rehearsal.
+
+A Docker Compose source-of-truth candidate is under review in
+[its draft decision](../decisions/docker-compose-deployment.md). It also remains
+unsupported and does not change the local runtime contract or authorize
+production use.
 
 Current application labels:
 

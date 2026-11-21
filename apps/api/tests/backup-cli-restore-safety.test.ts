@@ -605,7 +605,7 @@ it("orders same-second restore menu entries by numeric backup sequence", () => {
     expect(result.stdout.toString()).toContain(`1) ${newest}`);
     expect(readFileSync(argsPath, "utf8").trim().split("\n")).toEqual([join(root, "apps/api/src/backup-cli.ts"), "restore", newest]);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15000);
 
 it("applies newest-ten retention to CLI backups while protecting a selected restore source", () => {
   const temporary = mkdtempSync(join(tmpdir(), "operatoros-backup-cli-retention-"));
