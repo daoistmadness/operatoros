@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "70c7a9da61cfb14de8c38f1fd217f8c652df8382fca75002829b0a67fdbff115",
+      "fingerprint": "407024afecc37d9d2698fdbb077a3808603869f8b872c55f5119dba3403aff51",
       "snapshot": {
-        "CHANGELOG.md": "615afe6ac60565551ffcc52cc40c972e0f94c8ac7f3dc8ded80927572e9333be"
+        "CHANGELOG.md": "d43c03b431a9c9a476ca8d76b279020957b7e395fcb1c0eeabfd954da57775b7"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
+      "head": "6e2183ff58b4bd726789a5b35830c59cd32861e3",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "reason": "The changelog records this Docker release-qualification change but is not Elysia guidance or an Intent planning record.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Reviewed CHANGELOG.md entry referencing PR #398; Elysia skill source files and _artifacts planning records are unchanged."
       ]
     },
     "source:COMMANDS.md": {
