@@ -10856,16 +10856,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "cc92a0ed7e0043785a0f038f2d9038929620297fc52958d657808ea5e2233a24",
+      "fingerprint": "efa3c6ef59f4d7c9cd1c4b646ce1b79632cc55ce4dcead4283f87bfc4a1db5ac",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "3ddf3804aaa16703161e52b81decc6289dc667f6c8c03e9d2e36a26e6d01995a"
+        "scripts/docker-candidate-qualification.py": "ededed17f22007b3cfee32b51be517040f4b06f71dcb68833a7acf9a02edf86e"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "a10e3f69d7f516b854c58054c433ca54777154eb",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "reason": "These Python files implement and verify a Docker candidate runner, outside the registered Elysia skill and planning-record scope.",
       "evidence": [
-        "Diff: scripts/docker-candidate-qualification.py",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all six tests passed."
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10882,16 +10881,15 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "6f72a8e3c5957b17bb2fdbcfe92904b047b6ca8a6a2bd18b88bad29e2c843e0f",
+      "fingerprint": "8caf9d74d5781ae96bae74aef42db2573b5ef5ebfcce2657bf52b9c6bb682efb",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "0c86cd0906b32a9789e1c31d4378ecfed3b2421202bffdb2995574223fad05ae"
+        "scripts/tests/test_docker_candidate_qualification.py": "a7507038a7a362466f119efda23232cb146d58c5ba0b77a5197faf79b5c19148"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "a10e3f69d7f516b854c58054c433ca54777154eb",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "reason": "These Python files implement and verify a Docker candidate runner, outside the registered Elysia skill and planning-record scope.",
       "evidence": [
-        "Diff: scripts/tests/test_docker_candidate_qualification.py",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Reviewed the diff and ran python3 -m unittest discover -s scripts/tests -p test_docker_candidate_qualification.py; all six tests passed."
       ]
     }
   }

@@ -303,6 +303,19 @@ def remove_owned_images(images: list[str]) -> bool:
     return True
 
 
+def record_cleanup_result(report: dict[str, Any], details: dict[str, Any]) -> bool:
+    report["cleanup_details"] = details
+    verified = all(
+        details.get(key) is True
+        for key in ("project_resources_absent", "owned_images_absent", "private_root_removed")
+    )
+    report["cleanup_verified"] = verified
+    if not verified:
+        report["cleanup_failure_code"] = "cleanup_unverified"
+        report.setdefault("failure_code", "cleanup_unverified")
+    return verified
+
+
 def make_synthetic_database(data_dir: Path) -> None:
     schema = run(["bun", "packages/db/src/schema-version-cli.ts", "--format", "current"])
     run(
@@ -440,6 +453,7 @@ def qualify(args: argparse.Namespace) -> int:
     owned_images = [args.api_image, args.rollback_image, args.caddy_image]
     docker_context_verified = False
     cleanup_ok = True
+    stage = "runner_preflight"
     started = time.monotonic()
     try:
         output, private_root = ensure_ci_root(report_path)
@@ -476,6 +490,7 @@ def qualify(args: argparse.Namespace) -> int:
             raise QualificationFailure("rollback_source_invalid")
         extract_commit(rollback_source, rollback_context, work)
 
+        stage = "candidate_api_build"
         run_logged(
             [
                 "docker",
@@ -502,6 +517,7 @@ def qualify(args: argparse.Namespace) -> int:
             raise QualificationFailure("candidate_image_source_mismatch")
         api_id = image_id(args.api_image)
 
+        stage = "bun_sqlite_runtime_gate"
         runtime_raw = run(
             [sys.executable, "scripts/check-bun-sqlite-runtime.py", "--engine", "docker", args.api_image],
             timeout=75,
@@ -515,6 +531,7 @@ def qualify(args: argparse.Namespace) -> int:
         }
         report["stages"]["bun_sqlite_runtime"] = "PASS"
 
+        stage = "caddy_image_pull"
         run(["docker", "pull", "--platform=linux/amd64", CADDY_SOURCE_IMAGE], timeout=300)
         caddy_source_id = image_id(CADDY_SOURCE_IMAGE)
         run(["docker", "tag", CADDY_SOURCE_IMAGE, args.caddy_image])
@@ -522,6 +539,7 @@ def qualify(args: argparse.Namespace) -> int:
         if caddy_id != caddy_source_id:
             raise QualificationFailure("caddy_image_identity_mismatch")
 
+        stage = "rollback_api_build"
         run_logged(
             [
                 "docker",
@@ -555,6 +573,7 @@ def qualify(args: argparse.Namespace) -> int:
         run(["docker", "save", "--output", str(image_archive), args.api_image, args.caddy_image], timeout=300)
         report["docker_images_sha256"] = sha256_file(image_archive)
 
+        stage = "synthetic_fixture_setup"
         data_dir = private_root / "data"
         deploy_dir = private_root / "deploy"
         web_root = ROOT / "apps/web/build/client"
@@ -605,9 +624,11 @@ def qualify(args: argparse.Namespace) -> int:
                 http_port=http_port,
             ),
         )
+        stage = "compose_config"
         run(compose_command(project, env_file, override, "config", "--quiet"), timeout=30)
         report["stages"]["compose_config"] = "PASS"
 
+        stage = "candidate_compose_deploy"
         run(compose_command(project, env_file, override, "up", "--detach"), timeout=180)
         wait_ready(f"http://127.0.0.1:{http_port}/ready")
         verify_routes(http_port)
@@ -617,6 +638,7 @@ def qualify(args: argparse.Namespace) -> int:
         report["stages"]["candidate_compose_deploy"] = "PASS"
         report["stages"]["health_readiness_spa_and_security_routes"] = "PASS"
 
+        stage = "synthetic_image_rollback"
         write_private_file(
             env_file,
             compose_environment(
@@ -641,14 +663,16 @@ def qualify(args: argparse.Namespace) -> int:
 
         report["events"].append({"stage": "compose_rehearsal", "status": "PASS"})
     except (QualificationFailure, OSError, subprocess.TimeoutExpired, tarfile.TarError, json.JSONDecodeError) as error:
+        report["failure_stage"] = stage
         report["failure_code"] = error.code if isinstance(error, QualificationFailure) else "qualification_error"
     finally:
+        cleanup_details: dict[str, Any] = {}
         if project:
             compose_env = private_root / "compose.env" if private_root else Path()
             override = private_root / "compose.override.yml" if private_root else Path()
             if private_root and compose_env.is_file() and override.is_file():
                 try:
-                    subprocess.run(
+                    down = subprocess.run(
                         compose_command(
                             project,
                             compose_env,
@@ -664,25 +688,43 @@ def qualify(args: argparse.Namespace) -> int:
                         check=False,
                         timeout=60,
                     )
+                    cleanup_details["compose_down_exit_code"] = down.returncode
                 except (OSError, subprocess.TimeoutExpired):
-                    pass
-            cleanup_ok = project_resources(project, (api_container, caddy_container))
-            report["cleanup_verified"] = cleanup_ok
-        if cleanup_ok and private_root is not None:
+                    cleanup_details["compose_down_exit_code"] = None
+            else:
+                cleanup_details["compose_down_exit_code"] = None
+            cleanup_details["project_resources_absent"] = project_resources(
+                project, (api_container, caddy_container)
+            )
+        else:
+            cleanup_details["project_resources_absent"] = True
+
+        if cleanup_details["project_resources_absent"] is True and docker_context_verified:
+            cleanup_details["owned_images_absent"] = remove_owned_images(owned_images)
+        elif docker_context_verified:
+            cleanup_details["owned_images_absent"] = None
+        else:
+            cleanup_details["owned_images_absent"] = True
+
+        if (
+            cleanup_details["project_resources_absent"] is True
+            and cleanup_details["owned_images_absent"] is True
+            and private_root is not None
+        ):
             try:
-                if docker_context_verified and not remove_owned_images(owned_images):
-                    cleanup_ok = False
-                if cleanup_ok:
-                    shutil.rmtree(private_root)
-                    cleanup_ok = not private_root.exists()
+                shutil.rmtree(private_root)
+                cleanup_details["private_root_removed"] = not private_root.exists()
             except OSError:
-                cleanup_ok = False
-        report["cleanup_verified"] = cleanup_ok
+                cleanup_details["private_root_removed"] = False
+        elif private_root is None:
+            cleanup_details["private_root_removed"] = True
+        else:
+            cleanup_details["private_root_removed"] = False
+        cleanup_ok = record_cleanup_result(report, cleanup_details)
 
     report["duration_seconds"] = round(time.monotonic() - started, 2)
     if not cleanup_ok:
         report["status"] = "FAIL"
-        report["failure_code"] = "cleanup_unverified"
     elif report.get("failure_code"):
         report["status"] = "FAIL"
     else:
@@ -696,6 +738,7 @@ def qualify(args: argparse.Namespace) -> int:
         return 1
 
     try:
+        report["failure_stage"] = "release_artifact_packaging"
         archive = create_bundle(
             output,
             source=source,
@@ -713,6 +756,7 @@ def qualify(args: argparse.Namespace) -> int:
             "registry_independent": True,
             "attestation_subject": archive.name,
         }
+        report.pop("failure_stage", None)
         (output / "compose-rehearsal.json").write_text(
             json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
