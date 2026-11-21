@@ -461,7 +461,7 @@ def remove_private_root(private_root: Path) -> bool:
         if (
             not stat.S_ISDIR(metadata.st_mode)
             or metadata.st_uid != os.getuid()
-            or metadata.st_mode & 0o077
+            or stat.S_IMODE(metadata.st_mode) not in {0o700, 0o710}
         ):
             return False
         resolved = private_root.resolve(strict=True)
@@ -495,16 +495,24 @@ def make_synthetic_database(data_dir: Path) -> str:
         ],
         timeout=120,
     )
-    run(["sudo", "chown", "-R", "1000:1000", str(data_dir)], timeout=30)
     return schema
 
 
-def synthetic_database_status(data_dir: Path, expected_schema: str) -> dict[str, Any]:
+def synthetic_database_status(
+    data_dir: Path,
+    expected_schema: str,
+    *,
+    as_container_user: bool = False,
+) -> dict[str, Any]:
+    bun = shutil.which("bun")
+    if not bun:
+        raise QualificationFailure("bun_not_found")
+    command = [bun, "packages/db/src/dev-db-cli.ts", "status"]
+    if as_container_user:
+        command = ["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", *command]
     raw = run(
         [
-            "bun",
-            "packages/db/src/dev-db-cli.ts",
-            "status",
+            *command,
             "--repo",
             str(ROOT),
             "--data-dir",
@@ -804,11 +812,23 @@ def qualify(args: argparse.Namespace) -> int:
             api_env,
             f"AUTH_COOKIE_SECRET={auth_secret}\nBACKUP_ENCRYPTION_KEY={backup_key}\nENABLE_DESTRUCTIVE_OPERATIONS=false\n",
         )
+        stage = "synthetic_database_creation"
         expected_schema = make_synthetic_database(data_dir)
+        stage = "synthetic_database_initial_verification"
         report["synthetic_database"] = {
             "before": synthetic_database_status(data_dir, expected_schema),
         }
-        run(["sudo", "chown", "-R", "1000:1000", str(deploy_dir)], timeout=30)
+        stage = "synthetic_container_directory_permissions"
+        run(["sudo", "chgrp", "--", "1000", str(private_root)], timeout=30)
+        private_root.chmod(0o710)
+        stage = "synthetic_database_container_ownership"
+        run(["sudo", "chown", "-R", "1000:1000", "--", str(data_dir)], timeout=30)
+        stage = "synthetic_deploy_directory_ownership"
+        run(["sudo", "chown", "-R", "1000:1000", "--", str(deploy_dir)], timeout=30)
+        stage = "synthetic_database_container_verification"
+        report["synthetic_database"]["after_container_ownership"] = synthetic_database_status(
+            data_dir, expected_schema, as_container_user=True
+        )
 
         api_port = get_free_port()
         http_port = get_free_port()
@@ -850,7 +870,10 @@ def qualify(args: argparse.Namespace) -> int:
         running_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if running_id != api_id:
             raise QualificationFailure("candidate_container_image_mismatch")
-        report["synthetic_database"]["candidate"] = synthetic_database_status(data_dir, expected_schema)
+        stage = "candidate_synthetic_database_verification"
+        report["synthetic_database"]["candidate"] = synthetic_database_status(
+            data_dir, expected_schema, as_container_user=True
+        )
         report["stages"]["candidate_compose_deploy"] = "PASS"
         report["stages"]["health_readiness_spa_and_security_routes"] = "PASS"
 
@@ -879,7 +902,10 @@ def qualify(args: argparse.Namespace) -> int:
         rolled_back_id = run(["docker", "inspect", "--format", "{{.Image}}", api_container])
         if rolled_back_id != rollback_id:
             raise QualificationFailure("rollback_container_image_mismatch")
-        report["synthetic_database"]["rollback"] = synthetic_database_status(data_dir, expected_schema)
+        stage = "rollback_synthetic_database_verification"
+        report["synthetic_database"]["rollback"] = synthetic_database_status(
+            data_dir, expected_schema, as_container_user=True
+        )
         report["stages"]["synthetic_image_rollback"] = "PASS"
 
         report["events"].append({"stage": "compose_rehearsal", "status": "PASS"})
@@ -898,7 +924,9 @@ def qualify(args: argparse.Namespace) -> int:
             }
             if data_dir is not None and expected_schema:
                 try:
-                    report["synthetic_database"]["at_failure"] = synthetic_database_status(data_dir, expected_schema)
+                    report["synthetic_database"]["at_failure"] = synthetic_database_status(
+                        data_dir, expected_schema, as_container_user=True
+                    )
                 except QualificationFailure as diagnostic_error:
                     report["synthetic_database"]["at_failure"] = {"status": diagnostic_error.code}
     finally:
