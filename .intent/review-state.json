@@ -10851,15 +10851,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "5d47cd7da535a7f67cb34594c363c19a911f5426d130af1a3ddfc54a80a29b19",
+      "fingerprint": "7baead3374b3871941b2b3735f29965fdf2d74350f1156a7faf772670782694e",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "c66695e2e076b8e1568031676d0c8aed420dbe9073fb237ff6c223f0169cd54d"
+        "scripts/docker-candidate-qualification.py": "87f3d57bf099c236894633e1e3272a5aa16e1f02e0a7f689b5f39deb0a8ad99e"
       },
-      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
-      "outcome": "out-of-scope",
-      "reason": "The Elysia skill does not own the CI Docker qualification runner.",
+      "head": "0e20093c20201d84ade0ff0f2821571cfc62036b",
+      "outcome": "no-change",
+      "reason": "Docker qualification script and its unit tests are operational tooling; existing deployment/security guidance remains accurate, and no library skill guidance applies.",
       "evidence": [
-        "Changed only the Docker qualification script; no Elysia route, backend, or package code changed."
+        "Changed: scripts/docker-candidate-qualification.py at 0e20093c20201d84ade0ff0f2821571cfc62036b"
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10876,15 +10876,15 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "935a870ad9e7e51d3e98b5df12234d3c58a06065e34188b4920a611539038bab",
+      "fingerprint": "9810e61bbb7b8f0906400dc71bc214c4cc921ac29382fca8d90cf6b4e09ea2c6",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "b7b9fe6c2f6f0a63950c653a28fb1b21f7cfe3e40453683a9924d049c0bfef00"
+        "scripts/tests/test_docker_candidate_qualification.py": "c1283df0e61444adc721f833a2661d53d0926002f4024698a7ce1a682803d9f2"
       },
-      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
-      "outcome": "out-of-scope",
-      "reason": "The Elysia skill does not own the CI Docker qualification runner tests.",
+      "head": "0e20093c20201d84ade0ff0f2821571cfc62036b",
+      "outcome": "no-change",
+      "reason": "Docker qualification script and its unit tests are operational tooling; existing deployment/security guidance remains accurate, and no library skill guidance applies.",
       "evidence": [
-        "Changed only focused Python tests for synthetic runner permissions; no Elysia route, backend, or package code changed."
+        "Changed: scripts/tests/test_docker_candidate_qualification.py at 0e20093c20201d84ade0ff0f2821571cfc62036b"
       ]
     }
   }
