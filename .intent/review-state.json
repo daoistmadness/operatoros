@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "41c8b154bb73075e5d86f1e294543e4c59d379f17252794ba6ccbbfe254e6c2e",
+      "fingerprint": "c26943552c76aac8654abe56547743b3581c62886f142babc6e41253c78dd3a6",
       "snapshot": {
         ".github/CI.md": "2dacafe6cd95df25b0a31e6571925638498dac0cb84900b24f5cb37a70f5c934",
-        ".github/workflows/ci.yml": "84f89f627aa3035f495c9317dcd03dff458cf0a9e0b1a767d2cb280470aa2c7b",
+        ".github/workflows/ci.yml": "b05b0374295a2916d74bf02a36d07aeb358dd48c177a53bf887547f644ff02b0",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
@@ -44,19 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "53eff6bf403a8a96bfac5507dc961a00d1a22210",
       "outcome": "no-change",
-      "reason": "The Docker and backup changes add no Elysia route, plugin, or API pattern; the registered Elysia skill remains accurate.",
+      "reason": "The change only narrows workflow dispatch and adds a workflow policy assertion; it changes no Elysia implementation or guidance.",
       "evidence": [
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged",
-        "docs/decisions/docker-compose-deployment.md"
+        "Reviewed .github/workflows/ci.yml job conditions and scripts/tests/test_release_bundle.py assertion; Elysia callers, examples, and API behavior are untouched."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "edcb935c9c6a53fd1106a4758e25f8f1fe407ba2e804b566be2b19c591acc6d6",
+      "fingerprint": "76274fb8c3a29826ac20784840b755b0eb3a1b04a6464fa00d398a3e2fa31398",
       "snapshot": {
         ".github/CI.md": "2dacafe6cd95df25b0a31e6571925638498dac0cb84900b24f5cb37a70f5c934",
-        ".github/workflows/ci.yml": "84f89f627aa3035f495c9317dcd03dff458cf0a9e0b1a767d2cb280470aa2c7b",
+        ".github/workflows/ci.yml": "b05b0374295a2916d74bf02a36d07aeb358dd48c177a53bf887547f644ff02b0",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -97,12 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "53eff6bf403a8a96bfac5507dc961a00d1a22210",
       "outcome": "no-change",
-      "reason": "This work prepares a Docker release candidate and does not create or alter a skill planning record.",
+      "reason": "The change only selects the Docker-specific CI job for this branch; it does not alter package ownership, domain boundaries, or skills.",
       "evidence": [
-        "docs/decisions/docker-compose-deployment.md",
-        "No skill batch or planning artifact change in this diff"
+        "Reviewed the diff: .github/workflows/ci.yml and scripts/tests/test_release_bundle.py only; no package or planning artifact change is needed."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -9985,16 +9983,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "3fe75145f8dab728bb1a6b23da7a4d4e41a24c7e8872b244e5bf4eeea31a9d5f",
+      "fingerprint": "0a89db280a9827ac7079210084bbea3b9ab44eadf13e1d411fe14bed1430cf87",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "8122ab0ea78f5e22cfe0386dcff2fd9634ccc755f4a14cb8cd2de748b547dcfe"
+        "scripts/tests/test_release_bundle.py": "4561dbbe52eb140d2dd225bb34db681c86f1766ce258953bdf3d151047e261b5"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
+      "head": "53eff6bf403a8a96bfac5507dc961a00d1a22210",
       "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "reason": "This is a Python CI policy test for workflow job conditions, outside the mapped Elysia skill and planning artifact maintenance scope.",
       "evidence": [
-        "Diff: scripts/tests/test_release_bundle.py",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "The test asserts that Docker branch dispatch skips the pre-existing Podman candidate job; the focused release-bundle test suite passes."
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
