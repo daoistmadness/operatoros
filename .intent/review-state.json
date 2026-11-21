@@ -10817,16 +10817,15 @@
       ]
     },
     "source:deploy/docker/docker-compose.yml": {
-      "fingerprint": "1f430649558b592772ecac73a7d859f01824e02318bc25385b21120e29ebf315",
+      "fingerprint": "0614e038f48ce727c5d2480ccbaca4773f846482f07e700178269bd66fbdc224",
       "snapshot": {
-        "deploy/docker/docker-compose.yml": "7b5ed456f93f06b8f836387b9a0cc1f6dd5b79b87ff7eb13c259943b073f3fe6"
+        "deploy/docker/docker-compose.yml": "909f926c8e4b8c9ca508f1c1c3ce5d7e87765536efb43ebe2551435e0ea847a0"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "head": "8ef93980d34c4d5b6201a8dce91209e19a660778",
+      "outcome": "no-change",
+      "reason": "Docker Compose API healthcheck now matches the existing 30s API container setting; this deployment config change does not require skill guidance updates.",
       "evidence": [
-        "Diff: deploy/docker/docker-compose.yml",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Changed: deploy/docker/docker-compose.yml at 8ef93980d34c4d5b6201a8dce91209e19a660778"
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
