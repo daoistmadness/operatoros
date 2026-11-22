@@ -92,9 +92,11 @@ The application currently has no FTS5 query path. Startup and restore checks
 reject virtual tables by requiring ordinary table objects from SQLite's
 `PRAGMA table_list`. This limits application exposure but does not patch the
 SQLite engine embedded in Bun. The image runtime gate must verify Bun 1.4.5 and
-SQLite 3.54.1. CI provenance for an image does not show that production runs it;
-production acceptance requires a separate authorized deployment and runtime
-check.
+SQLite 3.54.1. Protected-main Docker candidate run 44982611327 verified that
+engine version and attested the archive for its exact source. This is an
+engine-level fix in the candidate image, not a production deployment. CI
+provenance for an image does not show that production runs it; production
+acceptance requires a separate authorized deployment and runtime check.
 
 ## Dependency audit
 

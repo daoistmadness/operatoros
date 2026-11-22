@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-16
+last_reviewed: 2026-11-22
 ---
 
 # OperatorOS stability decisions
@@ -66,18 +66,24 @@ production NO-GO boundary in place.
 - Keep the existing single-server design: Elysia API, browser frontend, and
   file-backed SQLite. Do not add a database service or broaden the runtime
   migration without evidence and review.
-- The current toolchain change pins Bun 1.4.5 across mise, package metadata, CI,
-  development containers, and the proposed API image. Bun's release notes
-  report SQLite 3.54.1, above the affected range for CVE-2026-119373. The
-  2026-11-16 acceptance remains limited to the prior Bun 1.4.4 / SQLite 3.53.4
-  image identity. The new exact-source image still needs runtime, SBOM, scan,
-  provenance, and release checks. This decision does not approve deployment.
-- The current working source returns the production API image and application
-  execution to Bun. No exact-source release candidate or signed artifact for
-  this source is recorded yet. After review and merge, run the full release
-  workflow on the exact main commit and record its runtime probe, SBOM, scan,
-  attestation, artifact identity, and consumer result before accepting task 9.
-  The prior Node artifact below does not qualify this source.
+- Bun 1.4.5 is pinned across mise, package metadata, CI, development containers,
+  and the proposed API image. Bun's release notes report SQLite 3.54.1, above
+  the affected range for CVE-2026-119373. Application controls still reject
+  virtual tables and have no FTS5 query path; they do not patch SQLite. The
+  exact-source Docker candidate report independently verifies the embedded
+  SQLite 3.54.1 engine and marks the finding `RESOLVED_BY_FIXED_VERSION`.
+  This evidence applies to the candidate image only; no production runtime was
+  checked or changed.
+- PR #399 was merged as `99574ecffe84d470e19ab374f3dc7804e158bf63`.
+  Protected-main run [44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+  passed full release validation, E2E, Docker Compose startup and rollback, and
+  protected-main archive attestation. Artifact `14738472380` has source SHA
+  `99574ecffe84d470e19ab374f3dc7804e158bf63` and archive SHA-256
+  `6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`.
+  The Docker selector skipped the separate Manual release bundle job; there is
+  no SBOM, Trivy image scan, or isolated-consumer result for this archive.
+  Keep it a review candidate until those release checks and target-host gates
+  pass. The prior Node artifact below does not qualify this source.
 - PR #380 was squash-merged at `e410a562bce588e70573cc8eb0d0d83b6e0e9106`
   after all seven required checks passed. Keep the embedded-runtime release
   gate in force; the merge does not qualify the current Bun/SQLite runtime.
@@ -90,10 +96,11 @@ production NO-GO boundary in place.
   `d4ea92904c7b5bb6f87d8c4418fe12082c829de154d606b4bf007a2f584e272e`; OCI
   manifest is `sha256:0485346284956100517d06d4b4448eb4dcf10ca79f7cbe31412121c8e4e81d81`.
   This evidence applies to that Node-based source only. It does not qualify the
-  current Bun source. The artifact was not imported to OPRSERVER; host rehearsal,
-  recovery, access-control, and current-source release gates remain open. The
-  owner accepted the exact pinned Bun finding above, but did not authorize a
-  deployment.
+  current Bun source. The artifact was not imported to OPRSERVER. The current
+  Docker candidate fixes the embedded SQLite version for its exact image, but
+  host rehearsal, recovery, access-control, and full release checks remain
+  open. The prior Bun acceptance was limited to its recorded image identity;
+  no deployment was authorized.
 - PR #388 merged at `37bfa038b3054bf2a113bbd58925320cd6b2c55f`. Post-merge
   CI run `43418614983` and CodeQL run `43418614165` passed. Hosted rehearsal
   [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)

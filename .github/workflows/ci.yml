@@ -139,6 +139,7 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p "test_release_bundle.py"
           python3 -m unittest discover -s scripts/tests -p "test_embedded_runtime.py"
           python3 -m unittest discover -s scripts/tests -p "test_docker_candidate_qualification.py"
+          python3 -m unittest discover -s scripts/tests -p "test_docker_candidate_release.py"
           python3 -m unittest discover -s scripts/tests -p "test_operatoros_deploy.py"
       - name: Bun SQLite release gate and image identity tests
         working-directory: ${{ github.workspace }}
@@ -653,13 +654,42 @@ jobs:
               summary.write("## Docker Compose candidate qualification\n\n")
               summary.write(f"- Source commit: `{report['source_commit']}`\n")
               summary.write(f"- Bun: `{runtime['bun']}`; SQLite: `{runtime['sqlite']}`; FTS5: `{runtime['fts5']}`\n")
-              summary.write(f"- Compose deploy, health/readiness, SPA and security routes, and synthetic image rollback: passed\n")
               summary.write(f"- Cleanup verified: `{report['cleanup_verified']}`\n")
-              summary.write(f"- Registry-independent archive SHA-256: `{report['artifact']['sha256']}`\n")
-              summary.write("- Only protected-main qualification retains and attests the archive; this is not a production release.\n\n")
+              summary.write("- Compose deploy, health/readiness, SPA and security routes, and synthetic image rollback passed.\n")
+              summary.write("- The next step scans both archived images and verifies the finalized archive.\n\n")
+          PY
+      - name: Scan and bind Docker image evidence
+        env:
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python3 scripts/docker-candidate-release.py finalize \
+            "$CANDIDATE_ROOT/operatoros-docker-candidate.tar" \
+            "$GITHUB_SHA" \
+            --report "$CANDIDATE_ROOT/compose-rehearsal.json" \
+            > "$CANDIDATE_ROOT/release-evidence.json"
+          python3 scripts/docker-candidate-release.py verify \
+            "$CANDIDATE_ROOT/operatoros-docker-candidate.tar" "$GITHUB_SHA" \
+            > "$CANDIDATE_ROOT/release-verification.json"
+          python3 - "$CANDIDATE_ROOT/release-evidence.json" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          evidence = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          if evidence.get("status") != "PASS":
+              raise SystemExit("Docker candidate security evidence did not pass")
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Docker candidate image security evidence\n\n")
+              summary.write(f"- Source: `{evidence['source_commit']}`\n")
+              summary.write(f"- Final archive SHA-256: `{evidence['archive_sha256']}`\n")
+              summary.write(f"- Pinned Trivy image: `{evidence['scanner']['image']}`\n")
+              for role, image in evidence["images"].items():
+                  summary.write(f"- `{role}` config digest: `{image['config_digest']}`; scan `{image['scan_sha256']}`; SBOM `{image['sbom_sha256']}`\n")
+              summary.write("- Reports are in the checksummed archive and identify the exact API and Caddy config digests.\n\n")
           PY
       - name: Retain registry-independent Docker candidate
-        if: success() && github.ref == 'refs/heads/main'
+        if: success()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: operatoros-docker-candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -668,7 +698,7 @@ jobs:
             ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/operatoros-docker-candidate.tar.sha256
           if-no-files-found: error
           compression-level: 0
-          retention-days: 30
+          retention-days: ${{ github.ref == 'refs/heads/main' && 30 || 1 }}
       - name: Retain sanitized Docker rehearsal report
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -677,11 +707,77 @@ jobs:
           path: ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/compose-rehearsal.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Retain bounded Docker scan failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-docker-scan-diagnostics-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-evidence.json
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.json
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.log
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.txt
+          if-no-files-found: warn
+          retention-days: 7
+
+  docker-candidate-consumer:
+    name: Isolated Docker candidate consumer
+    if: github.event_name == 'workflow_dispatch' && inputs.docker_qualification == true
+    needs: [docker-candidate-qualification]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out selected candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up locked toolchain and dependencies
+        uses: ./.github/actions/setup-bun
+      - name: Download the exact candidate archive
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: operatoros-docker-candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-docker-consumer-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Verify and consume the archived Docker release
+        env:
+          CANDIDATE_ROOT: ${{ runner.temp }}/operatoros-docker-consumer-${{ github.run_id }}-${{ github.run_attempt }}
+          CONSUMER_REPORT: ${{ runner.temp }}/operatoros-docker-consumer-report-${{ github.run_id }}-${{ github.run_attempt }}.json
+        run: |
+          set -euo pipefail
+          python3 scripts/docker-candidate-release.py consume \
+            "$CANDIDATE_ROOT/operatoros-docker-candidate.tar" \
+            "$GITHUB_SHA" --report "$CONSUMER_REPORT"
+          python3 - "$CONSUMER_REPORT" "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          report = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+          if report.get("status") != "PASS" or report.get("cleanup_verified") is not True:
+              raise SystemExit("isolated Docker candidate consumer did not pass")
+          with open(sys.argv[2], "a", encoding="utf-8") as summary:
+              summary.write("## Isolated Docker candidate consumer\n\n")
+              summary.write(f"- Source: `{report['source_commit']}`\n")
+              summary.write(f"- Archive SHA-256: `{report['archive_sha256']}`\n")
+              summary.write(f"- Bun: `{report['runtime']['bun']}`; SQLite: `{report['runtime']['sqlite']}`; FTS5: `{report['runtime']['fts5']}`\n")
+              summary.write("- Imported image IDs, Compose startup, health/readiness, SPA/security routes, synthetic SQLite restart persistence, and cleanup passed.\n\n")
+          PY
+      - name: Retain sanitized Docker consumer report
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: operatoros-docker-consumer-report-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/operatoros-docker-consumer-report-${{ github.run_id }}-${{ github.run_attempt }}.json
+          if-no-files-found: warn
+          retention-days: 7
 
   docker-candidate-attestation:
     name: Protected-main Docker candidate attestation
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.docker_qualification == true
-    needs: [docker-candidate-qualification]
+    needs: [docker-candidate-qualification, docker-candidate-consumer]
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
@@ -689,6 +785,11 @@ jobs:
       id-token: write
       attestations: write
     steps:
+      - name: Check out the selected source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - name: Download the exact candidate archive
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
@@ -701,24 +802,8 @@ jobs:
           set -euo pipefail
           cd "$CANDIDATE_ROOT"
           sha256sum --check --strict operatoros-docker-candidate.tar.sha256
-          python3 - "$GITHUB_SHA" operatoros-docker-candidate.tar <<'PY'
-          import json
-          import sys
-          import tarfile
-
-          source_sha, archive_path = sys.argv[1:]
-          with tarfile.open(archive_path, "r:") as archive:
-              member = archive.extractfile("operatoros-docker-candidate/manifest.json")
-              if member is None:
-                  raise SystemExit("candidate manifest missing")
-              manifest = json.load(member)
-          runtime = manifest.get("runtime", {})
-          if manifest.get("source_commit") != source_sha:
-              raise SystemExit("candidate source SHA mismatch")
-          if runtime.get("bun") != "1.4.5" or runtime.get("sqlite") != "3.54.1":
-              raise SystemExit("candidate runtime mismatch")
-          print(f"verified source={source_sha} bun={runtime['bun']} sqlite={runtime['sqlite']}")
-          PY
+          python3 "$GITHUB_WORKSPACE/scripts/docker-candidate-release.py" \
+            verify operatoros-docker-candidate.tar "$GITHUB_SHA"
       - name: Attest the protected-main Docker candidate
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a
         with:

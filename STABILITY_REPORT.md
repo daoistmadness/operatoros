@@ -1,14 +1,15 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-22
 ---
 
 # OperatorOS stability report
 
-**Readiness: NO-GO for production.** The working source returns the API image
-and application runtime to Bun. It has no exact-source release qualification or
-signed artifact yet. The earlier signed Node bundle applies only to its own
-source and does not qualify the current Bun source.
+**Readiness: NO-GO for production.** Protected main now has an attested,
+registry-independent Docker candidate for Bun 1.4.5 / SQLite 3.54.1. The
+candidate passed its hosted Compose startup and image rollback rehearsal. It
+does not establish production host acceptance, encrypted recovery, access
+controls, monitoring, or deployment authorization.
 
 ## Current source and accepted runtime
 
@@ -17,19 +18,39 @@ the prior Bun 1.4.4 image with source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`
 from `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. The finding remains
 `OPEN` with disposition `ACCEPTED` for that historical identity only. The
-current toolchain change pins Bun 1.4.5 and its digest-pinned API image; Bun's
-[release notes](https://bun.com/blog/release-notes/bun-v1.4.5) report SQLite
-3.54.1. The runtime gate now requires Bun 1.4.5 and SQLite 3.54.1 and rejects
-vulnerable or otherwise mismatched runtimes. The new exact-source image has not
-yet been built or qualified, so release evidence and production readiness
-remain open.
+current toolchain pins Bun 1.4.5 and its digest-pinned API image; Bun's [release
+notes](https://bun.com/blog/release-notes/bun-v1.4.5) report SQLite 3.54.1.
+The application has no FTS5 query path and rejects virtual tables during
+startup and restore. Those application controls reduce exposure but do not
+patch SQLite. The protected-main Docker candidate now verifies the engine-level
+SQLite 3.54.1 runtime for its exact image; no production host runtime was
+checked or changed.
 
-The application, Containerfile, release checks, and deployment helpers now use
-Bun in this uncommitted source change. This report records no exact-source
-candidate run, release artifact, digest, or new host rehearsal for it. Task 2
-still needs exact-source runtime evidence. Task 9 needs a fresh release after
-review and merge. Do not use the earlier signed Node artifact for current-source
-qualification or D1.
+## Protected-main Docker candidate
+
+PR #399 was merged as `99574ecffe84d470e19ab374f3dc7804e158bf63`. Post-merge
+CI run `44982092702` and CodeQL run `44982092663` passed. Protected-main
+qualification [run 44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+passed full release validation, full E2E, Docker Compose candidate
+qualification, and the main-only attestation job. It retained artifact
+`14738472380`,
+`operatoros-docker-candidate-99574ecffe84d470e19ab374f3dc7804e158bf63-44982611327-1`.
+The Docker archive SHA-256 is
+`6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`.
+
+The sanitized report records Bun 1.4.5, SQLite 3.54.1, FTS5 enabled, and
+`RESOLVED_BY_FIXED_VERSION`. Compose startup, health/readiness, SPA and security
+routes, and image rollback passed. A synthetic S5.4 database passed integrity,
+quick-check, schema-checksum, and foreign-key checks before deployment, after
+the candidate, and after rollback. Cleanup was verified. The local archive
+checksum and GitHub provenance were independently verified against the exact
+main source and repository workflow.
+
+The Docker selector skipped the separate Manual release bundle job. No SBOM,
+Trivy image scan, or isolated release-consumer result is recorded for this
+archive. The hosted rollback used synthetic data and does not prove sentinel
+preservation after a real process or host failure. No target Ubuntu host,
+production data, credentials, or listeners were accessed.
 
 ## Earlier release and recovery evidence
 
@@ -71,22 +92,24 @@ qualification or D1.
 
 ## Remaining evidence gaps
 
-- The earlier signed release artifact contains Node 24.22.3 and SQLite 3.54.1
-  in `node:sqlite` and `better-sqlite3`. Main release run 43408580871 passed
-  runtime qualification, scan, SBOM, provenance attestation, and isolated
-  consumer verification for exact source
-  `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. That evidence remains valid for
-  that Node source only. It does not qualify the current Bun source. The owner
-  accepted SQLite 3.53.4 only for the prior Bun 1.4.4 runtime identity above.
-  The new Bun 1.4.5 candidate must pass exact-source runtime qualification with
-  SQLite 3.54.1, scan, SBOM, provenance, and artifact checks before Task 9 can
-  close.
+- The current Bun Docker candidate fixes the engine-level SQLite finding for
+  its exact image and has protected-main provenance. Task 9 remains partial
+  until that artifact has its own SBOM, Trivy scan, and isolated release
+  consumer. Target-host release acceptance remains separately gated by Tasks 8
+  and 10. The earlier
+  signed Node artifact contains Node 24.22.3 and SQLite 3.54.1 in `node:sqlite`
+  and `better-sqlite3`; it remains valid for its historical source only.
   See the [SQLite bug record](https://sqlite.org/bugs/info/f08a04413a70909eda7e9cfb98dbb1fa1142ff8cc9d2420f38f5bb5fcf3a78ab),
   [SQLite release history](https://sqlite.org/changes.html), and [Bun release
   list](https://github.com/oven-sh/bun/releases).
 - No independent Windows restore or real-device Identity A/B result is
   available. The hardened package is static-only; PowerShell and actual identity
   mapping remain unverified.
+- The previously named pre-cutover snapshot and its containing backup
+  directory were not found in the reviewed workstation paths. Their current
+  modes and an authenticated encrypted equivalent therefore remain
+  unverified; the earlier reported permission correction is not treated as
+  current-host evidence.
 - The s48 source candidate now relaunches with a restored synthetic s48
   database. Real operational data remains untested and untouched.
 - Gate E still lacks independent off-host restore, full host recovery, crash or
@@ -110,16 +133,14 @@ qualification or D1.
 
 ## Readiness boundary
 
-Local tests establish behavior only for their synthetic inputs. Main release
-run 43408580871 retained a signed Node bundle for source
-`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`; its isolated consumer passed for
-that source. Hosted rehearsal [43419441002](https://github.com/daoistmadness/operatoros/actions/runs/43419441002)
-used that exact Node artifact on disposable Ubuntu 24.04 and passed its
-synthetic deployment, SQLite preservation, rollback, and interrupted-recovery
-checks. It did not qualify the current Bun source, import the bundle to
-OPRSERVER, or use production data. A fresh release is required for current
-source. The hosted rehearsal and release consumer do not close independent
-Windows recovery, D2, Gate E, target-host acceptance, or Gate F.
+Local and hosted tests establish behavior only for their synthetic inputs. The
+current Bun Docker candidate is attested for exact source
+`99574ecffe84d470e19ab374f3dc7804e158bf63`; its Docker selector did not run the
+manual release bundle, SBOM/scan, or isolated consumer. The earlier signed Node
+bundle and Podman rehearsal qualify only their recorded historical source and
+runtime. None of these artifacts were imported to OPRSERVER or used with
+production data. Independent Windows recovery, D2, Gate E, target-host
+acceptance, current-source Podman acceptance, and Gate F remain open.
 Production stays NO-GO until the full gate matrix passes and the owner
 explicitly authorizes deployment.
 

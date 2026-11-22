@@ -59,16 +59,52 @@ database. It does not publish to GHCR and can be loaded without an image
 registry. Each artifact qualifies only its exact source SHA and synthetic
 runner environment.
 
+Protected-main result: [CI run 44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327) qualified source `99574ecffe84d470e19ab374f3dc7804e158bf63`. Full release validation, full E2E, Docker Compose deployment/rollback, and protected-main attestation passed. Artifact `14738472380` is named `operatoros-docker-candidate-99574ecffe84d470e19ab374f3dc7804e158bf63-44982611327-1`; its archive SHA-256 is `6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`. The sanitized report records Bun 1.4.5, SQLite 3.54.1, FTS5 enabled, `RESOLVED_BY_FIXED_VERSION`, and verified cleanup. The exact archive checksum and GitHub provenance were also verified locally against the repository workflow, `refs/heads/main`, and the source SHA.
+
+The Docker selector skips the separate Manual release bundle job. PR #400 adds
+Docker-specific Trivy and CycloneDX reports for the exact API and Caddy image
+config digests, stores the report hashes in the checksummed Docker archive, and
+gates protected-main attestation on a separate GitHub-hosted Compose consumer.
+Feature-ref transfer archives expire after one day and receive no attestation.
+These new checks are not verified until the changed workflow passes on a
+protected-main run. The current candidate's rollback exercised synthetic S5.4
+data and did not establish recovery after a live process or host failure. No
+workflow run qualifies the target host or authorizes deployment.
+
 ## Acceptance still required
 
 The repository template, candidate artifact, and CI rehearsal do not establish
-the current host image identity or production acceptance. Before any
-production use, an authorized operator must verify the rendered host Compose
-configuration, match the Caddy image and API image to reviewed identities,
-confirm a recent authenticated encrypted backup, and authorize a separate
-change window. The live Docker daemon was not available to this review, so no
-running container, application runtime, or database state was inspected.
+the target host image identity or production acceptance. Before any production
+use:
 
-The candidate rehearsal is not a backup/restore, full disaster-recovery, or
-production rollback test. Production data, credentials, listeners, containers,
-and monitoring remain outside this draft's authorization.
+1. The owner must explicitly accept Docker Compose and reconcile `AGENTS.md`,
+   this draft, the Podman proposal, and the Ubuntu runbook. Keep Docker
+   unsupported until that decision is recorded.
+2. An authorized operator must identify the Ubuntu host and verify the rendered
+   Compose configuration, exact API/Caddy image identities, loopback binds,
+   firewall, and HTTPS ingress. The current Caddyfile speaks HTTP; secure
+   cookies and exact `ALLOWED_ORIGINS` / proxy trust require a verified HTTPS
+   path.
+3. Verify host full-disk encryption, OS account isolation, private environment
+   file and data-directory modes, and Docker daemon access. The rootful Docker
+   socket is host-root-equivalent: do not expose it remotely or mount it into
+   application containers; limit host access to named operators.
+4. Authenticate a fresh encrypted backup and restore it into an independent
+   disposable root. Record key recovery, off-host custody, retention, RPO, RTO,
+   and a named restore owner. A checksum or backup status alone is insufficient.
+5. Record an authorized S4.3-to-S5.4 migration plan, fresh pre-change backup,
+   rollback criteria, and the separate migration approval. Startup validates
+   SQLite and does not migrate it.
+6. Pass an isolated Ubuntu rehearsal with synthetic data for boot/restart,
+   HTTPS and browser authentication, encrypted backup and independent restore,
+   cross-release rollback with a post-backup sentinel, and cleanup. Production
+   authentication requires an authorized operator session.
+7. Verify monitoring coverage, alert delivery, named alert ownership, disk and
+   log thresholds, and retention. Then record a separate change window and
+   explicit production GO.
+
+No target Docker daemon, production application, database, backup, listener,
+or monitoring state was inspected for this review. The hosted rehearsal used
+only synthetic data. It is not a backup/restore, full disaster-recovery, or
+production rollback test. Production resources remain outside this draft's
+authorization.

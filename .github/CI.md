@@ -56,7 +56,7 @@ The E2E job keeps its fixed admin credentials scoped to the test job. The runner
 
 ## Security settings and rollback
 
-Workflow jobs default to `contents: read`. The Docker Compose rehearsal keeps that permission and retains no candidate archive on feature refs. Within this Docker qualification path, a separate protected-main job receives `id-token: write` and `attestations: write` only after the rehearsal, full release validation, and E2E checks succeed. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
+Workflow jobs default to `contents: read`. Docker qualification retains a feature-ref archive for one day only so a separate GitHub-hosted job can import and consume the exact bytes. It receives no attestation permissions. On protected `main`, the candidate archive is retained for 30 days. The attestation job receives `id-token: write` and `attestations: write` only after Compose rehearsal, image SBOM and Trivy checks, full release validation, E2E, and the isolated consumer succeed. GitHub's separate default CodeQL setup scans JavaScript/TypeScript and Actions; its required `CodeQL` result must remain enforced. Repository secret scanning and push protection remain enabled.
 
 The active [`main` ruleset](https://github.com/daoistmadness/operatoros/rules/24918867) requires pull requests and strict, up-to-date status checks. It requires zero approving reviews, no code-owner review, and no last-push approval. It has no bypass actors, including administrators, and blocks branch deletion and force-push. This is ruleset enforcement; the classic branch-protection endpoint can return 404 even while these rules apply. The repository has a personal-account owner, so there is no parent organization ruleset.
 
@@ -96,16 +96,28 @@ qualification without starting the Podman candidate or release-bundle jobs. On
 any explicitly selected feature ref, the job rehearses the exact Compose source
 with synthetic SQLite data and random credentials, validates runtime and routes,
 switches to a prior-main API image to rehearse rollback, checks database
-integrity before and after both images, and verifies cleanup. It retains only a
-sanitized report on a feature ref. On protected `main`, after full release
-validation and E2E succeed, a separate job verifies the archive checksum,
-source SHA, Bun/SQLite versions, and GitHub build provenance before retaining
-the Docker-loadable archive for 30 days. The workflow does not publish to a
-registry or deploy. See the
+integrity before and after both images, scans the exact API and Caddy images,
+and verifies the final archive checksum and report identities. It retains the
+archive for one day only so a separate GitHub-hosted consumer can load those
+images and run the archived Compose files with synthetic data. The feature run
+receives no attestation permissions. On protected `main`, the archive is
+retained for 30 days; full release validation, E2E, image evidence, and isolated
+consumption must pass before a separate job verifies the source SHA and GitHub
+build provenance. The workflow does not publish to a registry or deploy. See the
 [Docker release candidate procedure](../docs/runbooks/release-bundles.md#prepare-a-docker-host-change).
+
+Protected-main run [44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+passed full release validation, full E2E, Docker Compose candidate
+qualification, and archive attestation for source
+`99574ecffe84d470e19ab374f3dc7804e158bf63`. That run predates the Docker image
+SBOM, Trivy, and separate-consumer gates added in PR #400; it does not produce
+those results for the Docker archive. The candidate is not production
+acceptance. The new gates remain unverified until a hosted run completes on the
+merged protected-main source.
 
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.
 Failed compatibility or release build/scan steps retain only allowlisted
-non-sensitive JSON/log/text diagnostics for seven days; scanner failures remain
-blocking. Both scanner report identities must match the exported image config.
+non-sensitive JSON/log/text diagnostics for seven days; Docker scan failures
+retain the same bounded files, and scanner failures remain blocking. Both
+scanner report identities must match the exported image config.

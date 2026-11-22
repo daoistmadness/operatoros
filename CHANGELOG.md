@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Scan both Docker images, verify the archived Compose candidate on a fresh runner, and keep host acceptance gates open. (#400)
 - Fix Docker candidate startup fixtures and allow explicit Docker rehearsal on any feature ref. (#399)
 - Diagnose Docker Compose startup with sanitized health evidence, verify synthetic SQLite persistence, and isolate protected-main archive attestation. (#398)
 - Prepare an attested, registry-independent Docker candidate with isolated Compose startup and rollback evidence; reject non-regular backup audit files. (#397)

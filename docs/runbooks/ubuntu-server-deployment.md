@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-16
+last_reviewed: 2026-11-22
 ---
 
 # Ubuntu server deployment runbook
@@ -19,7 +19,7 @@ verification and deployment.
 
 ## Status and scope
 
-This runbook covers OPRSERVER. It follows the accepted [Podman deployment architecture](../decisions/podman-deployment.md). The UID 1002 synthetic runtime passed D1 with an older Bun release on 2026-11-10. The current Bun source has no exact-source release or OPRSERVER qualification. The earlier signed Node artifact does not qualify it. No production deployment is approved.
+This runbook covers OPRSERVER and documents the [Podman deployment proposal](../decisions/podman-deployment.md); Candidate B is approved only for synthetic D1 qualification. The UID 1002 synthetic runtime passed D1 with an older Bun release on 2026-11-10. Current protected main has a CI-qualified, attested Docker candidate for Bun 1.4.5 / SQLite 3.54.1, but that candidate does not qualify this Podman path or OPRSERVER. The separate SBOM, scan, and isolated-consumer checks for the Docker archive remain open. The earlier signed Node artifact does not qualify the current Bun runtime. No production deployment is approved.
 
 ## D1 isolated synthetic qualification
 
@@ -335,22 +335,24 @@ gates, and explicit deployment authorization are complete.
 
 ## Release artifact and future builds
 
-No signed artifact for the current Bun source is recorded. The earlier signed
-Node artifact covers source `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only.
-Do not use it to qualify or bootstrap the current source. After the Bun
-implementation is reviewed and merged, run full validation and the main-only
-release workflow on that exact commit. Task 9 stays open until the release
-passes runtime qualification, SBOM and scan checks, provenance verification,
-and the isolated consumer. D1 still requires separate execution
-authorization.
+No Podman OCI release artifact for the current Bun source is recorded. The
+protected-main Docker candidate from [run
+44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+is attested and verifies Bun 1.4.5 / SQLite 3.54.1, but does not qualify the
+Podman artifact format or D1 host. Its Docker selector skipped the separate
+SBOM, image scan, and isolated-consumer checks. The earlier signed Node
+artifact covers source `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only; do not
+use it to qualify or bootstrap the current source. D1 still requires separate
+execution authorization.
 
 The current source pins Bun 1.4.5 from
 `docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31`
 and uses the source entrypoint `apps/api/src/server.ts`. Bun's release notes
-report embedded SQLite 3.54.1 with FTS5. Exact-image runtime, SBOM, scan,
-provenance, and consumer evidence is still required before release. The earlier
-accepted finding applied only to the 1.4.4 image and does not cover this
-candidate. The image uses production dependencies, runs as UID/GID
+report embedded SQLite 3.54.1 with FTS5. The Docker candidate's exact-image
+runtime report marks the finding resolved by the fixed engine version; that
+does not qualify a Podman image or target host. The earlier accepted finding
+applied only to the 1.4.4 image. A Podman artifact needs its own runtime, SBOM,
+scan, provenance, and isolated-consumer evidence. The image uses production dependencies, runs as UID/GID
 `10000:10000`, and excludes web files, test data, databases, environment files,
 private keys, and Git metadata. See the [current integration
 audit](../audits/host-integration-2026-11-06.md) for the earlier host review.
