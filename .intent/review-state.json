@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "f36b2b7958f2ae5a0ae047409adbe759e2cf71b7bc561e3abab55d0cd639a3ee",
+      "fingerprint": "df88aa694fb377802a2d18a78b047bd162490bc7fde22a39d2775623e2cc8a95",
       "snapshot": {
         ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
         ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
-        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
+        "bun.lock": "3608886f030d453b1e33f4d52979ba6688ca313474f089602437f40d54d69c5d",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
+        "package.json": "7739bf4f857e6967697bdcc42637a55d66104433494a8899073bf3cdf7c9f29c",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,15 +44,15 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
+      "head": "b888d3796ab5dfef02e7606ebb9b92677d71e5f3",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "Turborepo 2.11.13 update does not modify skill guidance or library contracts",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
+        "Changed: bun.lock, package.json at b888d3796ab5dfef02e7606ebb9b92677d71e5f3"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a9f26d45b727b363d1e325b9d8ef3396f0a70fb8ac6f153dc0208d3ce8fcecba",
+      "fingerprint": "433d10a1c02ec7439adee08edcadf1c6c77898e9dd8268e52749ea8238bc7e48",
       "snapshot": {
         ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
         ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
@@ -62,12 +62,12 @@
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
-        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
+        "bun.lock": "3608886f030d453b1e33f4d52979ba6688ca313474f089602437f40d54d69c5d",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
+        "package.json": "7739bf4f857e6967697bdcc42637a55d66104433494a8899073bf3cdf7c9f29c",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
+      "head": "b888d3796ab5dfef02e7606ebb9b92677d71e5f3",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "Turborepo 2.11.13 update does not modify skill guidance or library contracts",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
+        "Changed: bun.lock, package.json at b888d3796ab5dfef02e7606ebb9b92677d71e5f3"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d167b5a45e11edf650749506e470fedcd8c4ce84ceab434d6514b4e076b588c2",
+      "fingerprint": "b5740036d67ca4a34098eed5868ae8732ea3a9ac041e2fc61d3a44f2d224e90a",
       "snapshot": {
-        "CHANGELOG.md": "c73d9db4c04f4d43c6b84bc62e8e3ccb9cdcfc56733ae8aaced2f85aec5428d9"
+        "CHANGELOG.md": "1872b2d7595395fe42c17aa9c51a0ca84ffac20c5d27a9373b2b4d5cea580cb6"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "b888d3796ab5dfef02e7606ebb9b92677d71e5f3",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "Turborepo 2.11.13 update does not modify skill guidance or library contracts",
       "evidence": [
-        "Changed: CHANGELOG.md at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: CHANGELOG.md at b888d3796ab5dfef02e7606ebb9b92677d71e5f3"
       ]
     },
     "source:COMMANDS.md": {
