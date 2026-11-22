@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-21
+last_reviewed: 2026-11-22
 ---
 
 # Backup and Restore Security
@@ -184,6 +184,12 @@ runtime. They are not contractual SLAs and do not authorize a production deploym
 | Retention | Newest 10 complete generations; the newest backup and a restore source are protected; one audit line per eviction; manual deletion remains available. |
 | Backup durability | Backups are written under the configured data root on the same host. Copy encrypted backups off-host to survive host or disk loss. |
 | Verification | Every created API or CLI backup is checked for SQLite integrity, quick-check, foreign-key violations, required schema, and encryption; API restore preflight verifies checksum, integrity, quick-check, foreign keys, schema, identity columns, and an active, unlocked administrator with a runtime-parseable password hash or open first-admin setup. API restore verifies one backup administrator password before and after replacement. CLI restore verifies encrypted artifact identity/checksum/authentication, SQLite integrity, quick-check, foreign keys, schema, administrator/setup eligibility, and an unlocked administrator credential before and after replacement. Periodic restore rehearsal remains an operator responsibility. |
+
+The Docker Compose candidate rehearsal uses only a disposable synthetic
+database. Read-only status checks confirm that its schema, integrity, quick
+check, and foreign-key results remain valid across candidate startup and image
+rollback. This does not verify an encrypted backup, measure recovery time, or
+demonstrate full disaster recovery.
 
 Limitations:
 

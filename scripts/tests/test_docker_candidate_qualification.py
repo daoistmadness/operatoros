@@ -1,11 +1,12 @@
 import importlib.util
+import json
 import os
 from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location(
@@ -33,11 +34,192 @@ class DockerCandidatePathTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, expected)
             self.assertNotIn("synthetic-secret-sentinel", str(raised.exception))
 
+    def test_container_diagnostics_keep_health_signals_and_drop_log_text(self):
+        inspected = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps(
+                [{
+                    "RestartCount": 2,
+                    "State": {
+                        "Status": "running",
+                        "ExitCode": 0,
+                        "OOMKilled": False,
+                        "Health": {
+                            "Status": "unhealthy",
+                            "Log": [
+                                {"ExitCode": 1, "Output": "DATABASE_MIGRATION_REQUIRED synthetic-secret-sentinel"},
+                                {"ExitCode": 1, "Output": "probe failed"},
+                            ],
+                        },
+                    },
+                }]
+            ),
+            stderr="",
+        )
+        logs = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="SqliteError: unable to open database file synthetic-secret-sentinel",
+            stderr="",
+        )
+
+        with patch.object(qualification.subprocess, "run", side_effect=[inspected, logs]):
+            result = qualification.container_diagnostics("synthetic-api")
+
+        self.assertEqual(result["state"], "running")
+        self.assertEqual(result["health_status"], "unhealthy")
+        self.assertEqual(result["health_exit_codes"], [1, 1])
+        self.assertEqual(
+            result["startup_signals"],
+            ["database_migration_required", "sqlite_open_failed"],
+        )
+        self.assertNotIn("synthetic-secret-sentinel", json.dumps(result))
+
+    def test_container_diagnostics_collect_logs_while_health_is_starting(self):
+        inspected = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout=json.dumps([{"State": {
+                "Status": "running",
+                "ExitCode": 0,
+                "OOMKilled": False,
+                "Health": {
+                    "Status": "starting",
+                    "Log": [{"ExitCode": 1, "Output": "probe still starting"}],
+                },
+            }}]),
+            stderr="",
+        )
+        logs = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="SqliteError: database is locked", stderr=""
+        )
+
+        with patch.object(qualification.subprocess, "run", side_effect=[inspected, logs]) as command:
+            result = qualification.container_diagnostics("synthetic-api")
+
+        self.assertEqual(result["health_status"], "starting")
+        self.assertEqual(result["startup_signals"], ["sqlite_busy"])
+        self.assertEqual(command.call_args_list[1].args[0], ["docker", "logs", "--tail", "100", "synthetic-api"])
+
+    def test_synthetic_database_status_reports_only_integrity_metadata(self):
+        schema = "20261027_s54"
+        state = {
+            "layout": "CANONICAL",
+            "schema_head": schema,
+            "integrity": "ok",
+            "quick_check": "ok",
+            "foreign_key_violations": 0,
+            "schema_checksum_valid": True,
+            "file_size": 1234,
+            "users_count": 99,
+            "path": "/private/synthetic/operatoros.sqlite",
+        }
+
+        with (
+            patch.object(qualification.shutil, "which", return_value="/usr/bin/bun"),
+            patch.object(qualification, "run", return_value=json.dumps(state)) as command,
+        ):
+            result = qualification.synthetic_database_status(Path("/private/synthetic"), schema)
+            root_result = qualification.synthetic_database_status(
+                Path("/private/synthetic"), schema, as_root=True
+            )
+
+        self.assertEqual(command.call_args_list[0].args[0][0], "/usr/bin/bun")
+        self.assertEqual(
+            command.call_args_list[1].args[0][:8],
+            [
+                "sudo",
+                "-n",
+                "--",
+                "/usr/bin/bun",
+                "packages/db/src/dev-db-cli.ts",
+                "status",
+                "--repo",
+                str(qualification.ROOT),
+            ],
+        )
+        self.assertEqual(result["schema_head"], schema)
+        self.assertEqual(result["integrity"], "ok")
+        self.assertEqual(result["quick_check"], "ok")
+        self.assertEqual(result["foreign_key_violations"], 0)
+        self.assertEqual(result["file_size_bytes"], 1234)
+        self.assertNotIn("path", result)
+        self.assertNotIn("users_count", result)
+        self.assertEqual(root_result, result)
+
+        state["integrity"] = "not-a-database"
+        with (
+            patch.object(qualification.shutil, "which", return_value="/usr/bin/bun"),
+            patch.object(qualification, "run", return_value=json.dumps(state)),
+            self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_invalid"),
+        ):
+            qualification.synthetic_database_status(Path("/private/synthetic"), schema)
+
+    def test_container_database_access_checks_only_expected_mount_permissions(self):
+        with patch.object(qualification, "run") as command:
+            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
+
+        self.assertEqual(
+            command.call_args.args[0],
+            [
+                "sudo", "-n", "-u", "#1000", "-g", "#1000", "--", "test",
+                "-x", "/private", "-a", "-x", "/private/data", "-a", "-w", "/private/data",
+                "-a", "-r", "/private/data/operatoros.sqlite", "-a", "-w", "/private/data/operatoros.sqlite",
+            ],
+        )
+
+        with (
+            patch.object(qualification, "run", side_effect=qualification.QualificationFailure("command_failed")),
+            self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_permissions_invalid"),
+        ):
+            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
+
+    def test_readiness_requires_sqlite_persistence(self):
+        for body, expected in (
+            ({"ready": True, "persistence": "sqlite"}, True),
+            ({"ready": True, "persistence": "not-configured"}, False),
+            ({"ready": False, "persistence": "sqlite"}, False),
+        ):
+            response = MagicMock()
+            response.__enter__.return_value = response
+            response.status = 200
+            response.read.return_value = json.dumps(body).encode()
+            with self.subTest(body=body), patch.object(qualification, "urlopen", return_value=response):
+                self.assertEqual(qualification.is_sqlite_ready("http://127.0.0.1/ready"), expected)
+
+    def test_rollback_source_uses_dispatched_main_parent_if_main_has_advanced(self):
+        source = "a" * 40
+        parent = "b" * 40
+
+        def git(args, **_kwargs):
+            if args == ["git", "rev-parse", f"{source}^1"]:
+                return parent
+            raise AssertionError(args)
+
+        with patch.object(qualification, "run", side_effect=git):
+            self.assertEqual(qualification.rollback_source_commit(source, "refs/heads/main"), parent)
+
+    def test_rollback_source_uses_merge_base_for_feature_ref(self):
+        main = "a" * 40
+        branch = "c" * 40
+
+        def git(args, **_kwargs):
+            if args == ["git", "rev-parse", "origin/main"]:
+                return main
+            if args == ["git", "merge-base", branch, main]:
+                return main
+            raise AssertionError(args)
+
+        with patch.object(qualification, "run", side_effect=git):
+            self.assertEqual(qualification.rollback_source_commit(branch, "refs/heads/feature"), main)
+
     def test_private_root_cleanup_removes_only_the_runner_owned_directory(self):
         with tempfile.TemporaryDirectory() as temporary:
             runner_temp = Path(temporary)
             private_root = runner_temp / "operatoros-docker-rehearsal-test"
-            private_root.mkdir(mode=0o700)
+            private_root.mkdir(mode=0o710)
+            private_root.chmod(0o710)
 
             def remove_exact_path(args, **kwargs):
                 self.assertEqual(args, ["sudo", "rm", "-rf", "--", str(private_root)])
@@ -51,6 +233,26 @@ class DockerCandidatePathTests(unittest.TestCase):
                 self.assertTrue(qualification.remove_private_root(private_root))
 
             self.assertFalse(private_root.exists())
+
+    def test_private_root_cleanup_refuses_modes_broader_than_private_or_traverse_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            runner_temp = Path(temporary)
+            private_roots = []
+            for mode in (0o740, 0o711, 0o770):
+                private_root = runner_temp / f"operatoros-docker-rehearsal-{mode:o}"
+                private_root.mkdir(mode=mode)
+                private_root.chmod(mode)
+                private_roots.append((private_root, mode))
+
+            with (
+                patch.dict(os.environ, {"RUNNER_TEMP": str(runner_temp)}),
+                patch.object(qualification.subprocess, "run") as command,
+            ):
+                for private_root, mode in private_roots:
+                    with self.subTest(mode=oct(mode)):
+                        self.assertFalse(qualification.remove_private_root(private_root))
+
+            command.assert_not_called()
 
     def test_private_root_cleanup_refuses_a_path_outside_runner_temp(self):
         with tempfile.TemporaryDirectory() as temporary:
