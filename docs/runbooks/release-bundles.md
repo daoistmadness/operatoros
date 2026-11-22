@@ -25,7 +25,7 @@ no signature or release-bundle upload. The Docker path is described below. The
 previous accepted finding applied only to Bun 1.4.4
 with SQLite 3.53.4, source ID
 `2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc`,
-and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1. The new candidate must pass the normal runtime probe, SBOM, and scan with the finding resolved; the old acceptance does not apply to it. Any affected SQLite identity remains blocked. A workflow success does not make the candidate a release artifact.
+and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab884376f18e07bbb6676cc86e9e1e1e710690`. Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1. The protected-main Docker candidate now verifies that runtime and has exact-source provenance, but this Docker selector does not run the separate image SBOM, Trivy scan, or isolated release consumer. The old acceptance does not apply to Bun 1.4.5; any affected or mismatched runtime identity remains blocked. A workflow success alone does not make the candidate a supported production release.
 
 The locked setup action installs the workspace toolchain. The runner installs
 Ubuntu's Podman package and records its actual version. The API image runs the
@@ -86,6 +86,21 @@ gh attestation verify operatoros-docker-candidate.tar \
   --source-digest "$SOURCE_SHA" \
   --deny-self-hosted-runners
 ```
+
+The protected-main qualification completed on 2026-11-22 in [run
+44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+for source `99574ecffe84d470e19ab374f3dc7804e158bf63`. Artifact
+`14738472380` is named
+`operatoros-docker-candidate-99574ecffe84d470e19ab374f3dc7804e158bf63-44982611327-1`;
+its archive SHA-256 is
+`6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`.
+The sanitized rehearsal report verified Bun 1.4.5 / SQLite 3.54.1, Compose
+startup, health/readiness and SPA/security routes, synthetic image rollback,
+SQLite integrity and foreign keys, and resource cleanup. Local checksum and
+GitHub attestation verification passed. This proves an offline candidate for
+that source, not an authorized production release. The same run skipped the
+Manual release bundle job, so SBOM, Trivy scan, and isolated-consumer evidence
+are not available for this archive.
 
 The archive uses Docker's `docker load` format and needs no image registry after
 download. It is a review candidate, not a supported production release. CI does
@@ -154,11 +169,12 @@ SQLite database as part of an image rollback. Database recovery is a separate
 authorized operation.
 
 The signed Node bundle from run `43408580871` covers source
-`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only. PR #396 merged Bun 1.4.5,
-but that does not make an image a release. Task 9 remains open until full
-validation and the authorized main-only release produce Bun/SQLite runtime
-evidence, SBOM, scan, attestation, and isolated-consumer results for the same
-source commit and artifact.
+`fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98` only. The current Bun Docker
+candidate has full validation, E2E, Compose rehearsal, runtime, checksum, and
+main provenance evidence, but its selector skipped the Manual release bundle
+job. Task 9 remains partial until the exact candidate receives SBOM, image scan,
+and isolated-consumer checks, and a separate target-host rehearsal and
+acceptance. Do not use the historical Node bundle for current Bun qualification.
 
 The artifact name includes source SHA, workflow run ID, and attempt. Download it
 by that run ID using `gh run download RUN_ID --repo daoistmadness/operatoros

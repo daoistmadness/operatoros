@@ -104,6 +104,14 @@ the Docker-loadable archive for 30 days. The workflow does not publish to a
 registry or deploy. See the
 [Docker release candidate procedure](../docs/runbooks/release-bundles.md#prepare-a-docker-host-change).
 
+Protected-main run [44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+passed full release validation, full E2E, Docker Compose candidate
+qualification, and archive attestation for source
+`99574ecffe84d470e19ab374f3dc7804e158bf63`. The Docker selector skipped the
+separate Manual release bundle job, so it did not produce the SBOM, Trivy scan,
+or isolated-consumer result for that Docker archive. The candidate is not
+production acceptance.
+
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.
 Failed compatibility or release build/scan steps retain only allowlisted

@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-22
 ---
 
 # Podman single-host deployment
@@ -41,7 +41,7 @@ handoff and the reviewed helper-adoption boundary.
 
 ## Status
 
-**Candidate B remains the accepted design for a synthetic D1 rehearsal; current-source target-host D1 remains open.** This decision does not authorize host changes or production data. The earlier signed Node artifact and hosted rehearsal apply only to source `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. They do not qualify the current Bun source. The owner accepted the known SQLite 3.53.4 FTS5 finding only for the prior Bun 1.4.4 image, source ID, and identity described in the [stability report](../../STABILITY_REPORT.md). Current source pins Bun 1.4.5, whose release reports SQLite 3.54.1; exact-image runtime, SBOM, scan, provenance, and consumer checks are still required. No exact-source Bun release or current-source host rehearsal is recorded yet. Host Podman, independent recovery, access controls, and operational storage remain unverified. Production remains NO-GO.
+**Candidate B remains the accepted design for a synthetic D1 rehearsal; current-source target-host D1 remains open.** This decision does not authorize host changes or production data. The earlier signed Node artifact and hosted rehearsal apply only to source `fe05ad2ca6c115616ec97bfc5a3ad36cf55a2e98`. Current protected main has a Docker candidate for source `99574ecffe84d470e19ab374f3dc7804e158bf63`; its [qualification run](https://github.com/daoistmadness/operatoros/actions/runs/44982611327) verified Bun 1.4.5 / SQLite 3.54.1 and provenance. That Docker run does not qualify this Podman/Quadlet design or a target host. The owner accepted the known SQLite 3.53.4 FTS5 finding only for the prior Bun 1.4.4 image, source ID, and identity described in the [stability report](../../STABILITY_REPORT.md). The Docker selector skipped the separate SBOM, scan, and isolated-consumer checks. Current-source Podman qualification, host rehearsal, independent recovery, access controls, and operational storage remain open. Production remains NO-GO.
 
 Gate C source baseline: harness `b328987fa25338ea518dd15600ea3628fc00449e`, with release source `b9718ab1a6f8b1d855c8a5c62e973bfad2f8ea84`.
 
@@ -174,7 +174,7 @@ Rootful Podman is not the default. It can simplify host networking, but gives th
 
 Build the API image and static client from the same reviewed source commit. Pin the API image by immutable OCI digest. Record the source commit, build tool versions, base image digest, lockfile checksum, image digest, static archive checksum, and build attestations in one release record.
 
-The repository has a production API Containerfile and Quadlet template under `deploy/podman/`, a Caddyfile for the rootless Caddy container, and a local synthetic validation harness. Do not reuse the development Podman image. Current source pins digest-locked Bun 1.4.5 from `docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31` and uses the source entrypoint `apps/api/src/server.ts`. Bun's release notes report SQLite 3.54.1 with FTS5. The earlier SQLite 3.53.4 acceptance applies only to the prior Bun 1.4.4 image and its recorded source ID. Runtime reports for the new image must show the finding resolved by the fixed SQLite version. Exact-source release checks and a Bun host rehearsal remain open. The earlier signed Node artifact and hosted rehearsal apply only to their recorded source and do not qualify the current image.
+The repository has a production API Containerfile and Quadlet template under `deploy/podman/`, a Caddyfile for the rootless Caddy container, and a local synthetic validation harness. Do not reuse the development Podman image. Current source pins digest-locked Bun 1.4.5 from `docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31` and uses the source entrypoint `apps/api/src/server.ts`. Bun's release notes report SQLite 3.54.1 with FTS5. The earlier SQLite 3.53.4 acceptance applies only to the prior Bun 1.4.4 image and its recorded source ID. The protected-main Docker candidate reports the fixed SQLite 3.54.1 engine, but its selector skipped the separate SBOM, scan, and isolated-consumer checks and does not exercise this Podman path. Current-source Podman image qualification and a Bun host rehearsal remain open. The earlier signed Node artifact and hosted rehearsal apply only to their recorded source and do not qualify the current image.
 
 The API image records the source revision, dirty-tree state, and source-manifest
 SHA-256 in OCI labels and `/usr/share/operatoros/build-provenance`. The local

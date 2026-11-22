@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-22
 ---
 
 # Dependency audit exceptions
@@ -25,14 +25,20 @@ and image `docker.io/oven/bun:1.4.4-alpine@sha256:5a1fe2d60106ee903ee62008deab88
 `OPEN` with disposition `ACCEPTED`. That acceptance remains limited to the
 listed historical image. Current source pins Bun 1.4.5; its [release
 notes](https://bun.com/blog/release-notes/bun-v1.4.5) report bundled SQLite
-3.54.1, above the affected range. The new image still needs exact-source
-runtime, SBOM, scan, provenance, and consumer checks before it can qualify a
-release. See the [stability report](../../STABILITY_REPORT.md) for the release
-boundary and other evidence limits.
+3.54.1, above the affected range. Protected-main Docker candidate run
+[44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327)
+verified Bun 1.4.5, SQLite 3.54.1, FTS5 enabled, and
+`RESOLVED_BY_FIXED_VERSION` for exact source
+`99574ecffe84d470e19ab374f3dc7804e158bf63`; the candidate archive was
+attested. This closes the engine-version finding for that candidate only. The
+Docker selector skipped the separate SBOM, Trivy image scan, and isolated
+release-consumer checks; production acceptance and the deployed engine version
+remain unverified. See the [stability report](../../STABILITY_REPORT.md) for
+the release boundary and other evidence limits.
 
 | Advisory | Package and range | Reason | Compensating control | Owner | Review date |
 | --- | --- | --- | --- | --- | --- |
-| _none_ | _none_ | No JavaScript dependency advisories are excepted. Bun's embedded SQLite runtime is qualified separately; current Bun 1.4.5 uses SQLite 3.54.1, and the earlier acceptance remains limited to the prior image. | _n/a_ | OperatorOS maintainers | _n/a_ |
+| _none_ | _none_ | No JavaScript dependency advisories are excepted. Bun's embedded SQLite runtime is qualified separately; the protected-main Docker candidate uses SQLite 3.54.1, while the earlier acceptance remains limited to the prior image. | _n/a_ | OperatorOS maintainers | _n/a_ |
 
 ## Removed exceptions
 
