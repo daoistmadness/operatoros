@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "24815d1a51b5849b11de8a543bb55729be541da37faf2daf2c8cda11a8c4b1e0",
+      "fingerprint": "4113e3cea397adf45009f314105f78735f6b2740415011eb81235f018747326c",
       "snapshot": {
-        "CHANGELOG.md": "1c0f14954c16530c8ae9362702c547feaf1cbd752d8de9f89baa78c0075b88e0"
+        "CHANGELOG.md": "37784c6db0e5efda971d13ab641778008a4265719092fe523f99197f3dd86e45"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "e749a115e5236a7f46674cf71f18609527a2c0f0",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "The only new change is adding assigned PR #400 to the required Unreleased changelog bullet. It does not alter skill guidance, planning records, API behavior, or architecture.",
       "evidence": [
-        "Changed: CHANGELOG.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: CHANGELOG.md at e749a115e5236a7f46674cf71f18609527a2c0f0"
       ]
     },
     "source:COMMANDS.md": {
