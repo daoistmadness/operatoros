@@ -713,6 +713,7 @@ jobs:
         with:
           name: operatoros-docker-scan-diagnostics-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-evidence.json
             ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.json
             ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.log
             ${{ runner.temp }}/operatoros-docker-candidate-${{ github.run_id }}-${{ github.run_attempt }}/release-diagnostics/*.txt

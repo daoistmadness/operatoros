@@ -2290,6 +2290,7 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertLess(candidate.index('Scan and bind Docker image evidence'), candidate.index('Retain registry-independent Docker candidate'))
         self.assertIn('Retain bounded Docker scan failure diagnostics', candidate)
         self.assertIn('if: failure()', candidate)
+        self.assertIn('release-evidence.json', candidate)
         self.assertIn('release-diagnostics/*.log', candidate)
         self.assertNotIn('ghcr.io', candidate)
         self.assertNotIn('docker push', candidate)

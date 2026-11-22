@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "209b07ca4ce118700862cb13d1aebc50b813eb139079dd504a8efc6e2426028e",
+      "fingerprint": "f36b2b7958f2ae5a0ae047409adbe759e2cf71b7bc561e3abab55d0cd639a3ee",
       "snapshot": {
         ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
-        ".github/workflows/ci.yml": "ab14b011f1b3a22d4e4b45d69c8c00592ab338d9d9eb38b4e85e04dbca86421d",
+        ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "566ab232504b6e2fa9d4f69e5289b8b9d3cc2c89d58efef680aff6e6e2cc12be",
+      "fingerprint": "a9f26d45b727b363d1e325b9d8ef3396f0a70fb8ac6f153dc0208d3ce8fcecba",
       "snapshot": {
         ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
-        ".github/workflows/ci.yml": "ab14b011f1b3a22d4e4b45d69c8c00592ab338d9d9eb38b4e85e04dbca86421d",
+        ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -9980,15 +9980,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "2b840d7a7521acd5ad1c38df1b6fc56a4828cb48f41b10c8b4b72cd6b8c66dbf",
+      "fingerprint": "5af18701893f2c6049c8fe456d3120cac756e84bf5ef2f2f5dea4c466dd6c790",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "8e831a7ca03d44554936831ae988d3929ef67d9b7c1412a750436a2c5b3c01ea"
+        "scripts/tests/test_release_bundle.py": "c5e01b84aac94c30da2f77c4a1570890b31427b469249d565b078e0ad5bf756b"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: scripts/tests/test_release_bundle.py at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
