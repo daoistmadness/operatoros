@@ -34,9 +34,11 @@ install. The SPA uses the Vite/Start build. There is no server-side source build
 GHCR publication, automatic deployment, or database migration.
 
 The Docker qualification selector runs full release validation and E2E before
-its Compose rehearsal. The feature-ref diagnostic run uses no production data
-or credentials and receives only `contents: read`; the Docker rehearsal job
-retains no release archive or attestation on that ref. Run a feature ref with:
+its Compose rehearsal. The feature-ref run uses no production data or
+credentials and receives only `contents: read`; it retains the candidate archive
+for one day only so a separate GitHub-hosted job can consume the exact bytes.
+The consumer job has `contents: read`, no attestation permissions, and retains
+only its sanitized report for seven days. Run a feature ref with:
 
 ```bash
 FEATURE_REF=codex/my-docker-fix
@@ -51,11 +53,19 @@ and starts the repository Compose template with a synthetic database and random
 secrets. It checks health/readiness, SPA deep routes, missing static files,
 dotfile denial, and image rollback to the previous main revision. Read-only
 SQLite status checks verify schema, integrity, quick-check, and foreign keys
-before and after both application images. On startup failure, the report keeps
-container state, health probe exit codes, and allowlisted log categories; raw
-container logs and database contents are not retained. Cleanup must verify that
-its unique Compose resources, owned images, and private temporary root are
-removed.
+before and after both application images. It then scans the exact API and Caddy
+Docker-save images with the pinned Trivy image and stores both scan and
+CycloneDX reports in the candidate archive. Report identities and hashes are
+recorded in its manifest. A fresh GitHub-hosted job verifies the archive,
+imports those images, and runs the archived Compose files with another synthetic
+database. It checks the image IDs, Bun/SQLite runtime, health/readiness, SPA and
+security routes, database integrity after an API restart, a synthetic audit
+marker that survives startup and restart, and cleanup. Scan failures retain
+only bounded JSON/log/text diagnostics for seven days. On startup failure, the
+rehearsal report keeps container state, health probe exit codes, and allowlisted
+log categories; raw container logs and database contents are not retained.
+Cleanup must verify that each job's unique Compose resources, owned images, and
+private temporary root are removed.
 
 After this change is merged, run the same selector on protected `main` to build
 the candidate from the main SHA and produce its release artifact:
@@ -66,10 +76,11 @@ gh workflow run ci.yml --repo daoistmadness/operatoros \
   -f docker_qualification=true
 ```
 
-The Docker-only selector skips the Podman release-bundle job. Once the Compose
-rehearsal, full release validation, and E2E succeed, CI retains the Docker-loadable
-archive and checksum for 30 days. A separate job checks the checksum, embedded
-source SHA, and Bun 1.4.5/SQLite 3.54.1 versions, then attests the exact archive
+The Docker-only selector skips the Podman release-bundle job and runs the
+Docker-specific image scan and consumer above. Once Compose rehearsal, full
+release validation, E2E, image scans, and consumer succeed on protected `main`,
+CI retains the Docker-loadable archive and checksum for 30 days. The attestation
+job checks the archive manifest and exact source SHA, then attests the archive
 with GitHub build provenance. Download the archive and checksum sidecar from
 that workflow run and set `SOURCE_SHA` to its full main source commit SHA:
 
@@ -101,6 +112,9 @@ GitHub attestation verification passed. This proves an offline candidate for
 that source, not an authorized production release. The same run skipped the
 Manual release bundle job, so SBOM, Trivy scan, and isolated-consumer evidence
 are not available for this archive.
+PR #400 adds Docker-specific image reports and a separate archived-Compose
+consumer. Task 9 remains partial until a protected-main run passes those gates
+and attests its final archive.
 
 The archive uses Docker's `docker load` format and needs no image registry after
 download. It is a review candidate, not a supported production release. CI does
@@ -173,8 +187,9 @@ The signed Node bundle from run `43408580871` covers source
 candidate has full validation, E2E, Compose rehearsal, runtime, checksum, and
 main provenance evidence, but its selector skipped the Manual release bundle
 job. Task 9 remains partial until the exact candidate receives SBOM, image scan,
-and isolated-consumer checks, and a separate target-host rehearsal and
-acceptance. Do not use the historical Node bundle for current Bun qualification.
+and isolated-consumer checks. Target-host rehearsal and production acceptance
+are separately tracked by Tasks 8 and 10. Do not use the historical Node
+bundle for current Bun qualification.
 
 The artifact name includes source SHA, workflow run ID, and attempt. Download it
 by that run ID using `gh run download RUN_ID --repo daoistmadness/operatoros

@@ -95,7 +95,8 @@ production data, credentials, or listeners were accessed.
 - The current Bun Docker candidate fixes the engine-level SQLite finding for
   its exact image and has protected-main provenance. Task 9 remains partial
   until that artifact has its own SBOM, Trivy scan, and isolated release
-  consumer, and until a target-host release is separately accepted. The earlier
+  consumer. Target-host release acceptance remains separately gated by Tasks 8
+  and 10. The earlier
   signed Node artifact contains Node 24.22.3 and SQLite 3.54.1 in `node:sqlite`
   and `better-sqlite3`; it remains valid for its historical source only.
   See the [SQLite bug record](https://sqlite.org/bugs/info/f08a04413a70909eda7e9cfb98dbb1fa1142ff8cc9d2420f38f5bb5fcf3a78ab),

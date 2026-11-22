@@ -61,11 +61,15 @@ runner environment.
 
 Protected-main result: [CI run 44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327) qualified source `99574ecffe84d470e19ab374f3dc7804e158bf63`. Full release validation, full E2E, Docker Compose deployment/rollback, and protected-main attestation passed. Artifact `14738472380` is named `operatoros-docker-candidate-99574ecffe84d470e19ab374f3dc7804e158bf63-44982611327-1`; its archive SHA-256 is `6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`. The sanitized report records Bun 1.4.5, SQLite 3.54.1, FTS5 enabled, `RESOLVED_BY_FIXED_VERSION`, and verified cleanup. The exact archive checksum and GitHub provenance were also verified locally against the repository workflow, `refs/heads/main`, and the source SHA.
 
-The Docker selector skips the separate Manual release bundle job. This
-candidate has no recorded SBOM, Trivy image scan, or isolated release-consumer
-result. Its rollback exercised synthetic S5.4 data and did not establish
-recovery after a live process or host failure. The run does not qualify the
-target host or authorize deployment.
+The Docker selector skips the separate Manual release bundle job. PR #400 adds
+Docker-specific Trivy and CycloneDX reports for the exact API and Caddy image
+config digests, stores the report hashes in the checksummed Docker archive, and
+gates protected-main attestation on a separate GitHub-hosted Compose consumer.
+Feature-ref transfer archives expire after one day and receive no attestation.
+These new checks are not verified until the changed workflow passes on a
+protected-main run. The current candidate's rollback exercised synthetic S5.4
+data and did not establish recovery after a live process or host failure. No
+workflow run qualifies the target host or authorizes deployment.
 
 ## Acceptance still required
 

@@ -2285,16 +2285,31 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertNotIn('attestations: write', candidate)
         self.assertIn('fetch-depth: 0', candidate)
         self.assertIn('operatoros-docker-candidate.tar', candidate)
-        self.assertIn("if: success() && github.ref == 'refs/heads/main'", candidate)
+        self.assertIn("if: success()", candidate)
+        self.assertIn("retention-days: ${{ github.ref == 'refs/heads/main' && 30 || 1 }}", candidate)
+        self.assertLess(candidate.index('Scan and bind Docker image evidence'), candidate.index('Retain registry-independent Docker candidate'))
+        self.assertIn('Retain bounded Docker scan failure diagnostics', candidate)
+        self.assertIn('if: failure()', candidate)
+        self.assertIn('release-diagnostics/*.log', candidate)
         self.assertNotIn('ghcr.io', candidate)
         self.assertNotIn('docker push', candidate)
+
+        consumer = workflow.split('  docker-candidate-consumer:\n', 1)[1].split(
+            '\n\n  docker-candidate-attestation:', 1
+        )[0]
+        self.assertIn("github.event_name == 'workflow_dispatch'", consumer)
+        self.assertIn('needs: [docker-candidate-qualification]', consumer)
+        self.assertIn('contents: read', consumer)
+        self.assertNotIn('id-token:', consumer)
+        self.assertIn('scripts/docker-candidate-release.py consume', consumer)
+        self.assertIn('operatoros-docker-candidate.tar', consumer)
 
         attestation = workflow.split('  docker-candidate-attestation:\n', 1)[1].split(
             '\n\n  release-bundle:', 1
         )[0]
         self.assertIn("github.ref == 'refs/heads/main'", attestation)
         self.assertIn('inputs.docker_qualification == true', attestation)
-        self.assertIn('needs: [docker-candidate-qualification]', attestation)
+        self.assertIn('needs: [docker-candidate-qualification, docker-candidate-consumer]', attestation)
         self.assertIn('id-token: write', attestation)
         self.assertIn('attestations: write', attestation)
         self.assertIn('actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333', attestation)
@@ -2302,5 +2317,6 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
         self.assertIn('--source-ref refs/heads/main', attestation)
         self.assertIn('--source-digest "$GITHUB_SHA"', attestation)
         self.assertIn('--deny-self-hosted-runners', attestation)
+        self.assertIn('docker-candidate-release.py', attestation)
         release = workflow.split('  release-bundle:\n', 1)[1]
         self.assertIn('inputs.docker_qualification != true', release)
