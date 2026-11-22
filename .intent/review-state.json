@@ -9942,15 +9942,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "e253acb9100ddb87bbc932cc68a34173cbae6420b9eb8bd30196831bfd030144",
+      "fingerprint": "af173cba4492dc929b0fbe95ecb0ac368ad8b7c6e16f79274edc267c456b0e84",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "612972c8a7bf383aa6c4ab2fd9914ca86e6e164fe2639e25d916f22f1c193e4d"
+        "docs/runbooks/release-bundles.md": "ed758982ce2dede3e9def5ccbcc3bf70a34a6dc72e7842f5e9fd12b92255b445"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: docs/runbooks/release-bundles.md at 036b8126602120999b7065b2d5bb153da8054d0f"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10851,15 +10851,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "8fc923ab1a053bbf3ef1fdaec10fd303a297bde5ed2bffd96c87e0b642a7efe7",
+      "fingerprint": "c238d663f3a214c2738d0cbee2ca11599a54e73b7e8c9f5d25876accc5a635e6",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "5b8d80156825a7cf0bb4a962d12b5c30fd67fefb48f8173b8c9240fa4a86a63e"
+        "scripts/docker-candidate-qualification.py": "17ed25a1c491e5c431fd10398904092011afb5c1ab8f3b7d9f00a077a76d7324"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
       "evidence": [
-        "Changed: scripts/docker-candidate-qualification.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: scripts/docker-candidate-qualification.py at 036b8126602120999b7065b2d5bb153da8054d0f"
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10876,39 +10876,39 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "564fe7e985b3d553ff7752bcee83b93121821a7190d3a02110dfe50acf3863a4",
+      "fingerprint": "9577af7b25d71f595edf3daa43bee012448320b015bdb43b8f5c538840153345",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "5cbae2e4f36259861922be021d3e45f3e1de0fe47152882b208809f05f7e0ae5"
+        "scripts/tests/test_docker_candidate_qualification.py": "08323e7797e731522d327dfb02491ee0beeb8c8b8b00201be1fe61bb7104fdbb"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
       "evidence": [
-        "Changed: scripts/tests/test_docker_candidate_qualification.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: scripts/tests/test_docker_candidate_qualification.py at 036b8126602120999b7065b2d5bb153da8054d0f"
       ]
     },
     "source:scripts/docker-candidate-release.py": {
-      "fingerprint": "f854811eae113c126680f95cb875c381e87426b7e90d9a693e542625bd43989e",
+      "fingerprint": "17495274839b436493c1735722beef092dc61179e9ebf6f278999167187841c4",
       "snapshot": {
-        "scripts/docker-candidate-release.py": "627854a783eece58baf829cf8bec413a9629ae305666cf4e5ec2f1e947a1359b"
+        "scripts/docker-candidate-release.py": "9cfd4975f2b486b673e37938b75becc0958dba9ce180792a3e67de7817b1fa64"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
       "evidence": [
-        "Changed: scripts/docker-candidate-release.py at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: scripts/docker-candidate-release.py at 036b8126602120999b7065b2d5bb153da8054d0f"
       ]
     },
     "source:scripts/tests/test_docker_candidate_release.py": {
-      "fingerprint": "4a4743755a6a654c4ffaa182228e25bc0a864189794db88c60009e980acac718",
+      "fingerprint": "bbda321e1445bda1c1b96e45b2f5e1776c46acfb26092fb2e528f4c8bb04a46e",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_release.py": "387596191c4483242e804f5764982ddb9d4f4923c163f0ee7eab03d7fa2b8951"
+        "scripts/tests/test_docker_candidate_release.py": "f3c4a3623537f14bc3fbe7b0478a115c0831f7cd0b843b9bac384fb57b0413c5"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "Reviewed Docker release/archive identity changes and their existing runbook updates. These changes do not affect Elysia source guidance, library skills, or the planning records; the new runtime identity contract is documented in the release bundle runbook.",
       "evidence": [
-        "Changed: scripts/tests/test_docker_candidate_release.py at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: scripts/tests/test_docker_candidate_release.py at 036b8126602120999b7065b2d5bb153da8054d0f"
       ]
     }
   }

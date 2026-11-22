@@ -365,9 +365,9 @@ class DockerCandidatePathTests(unittest.TestCase):
                     source="a" * 40,
                     rollback_source="b" * 40,
                     api_image="localhost/operatoros-api:candidate",
-                    api_id="sha256:" + "c" * 64,
+                    api_config_digest="sha256:" + "c" * 64,
                     caddy_image="localhost/operatoros-caddy:candidate",
-                    caddy_source_id="sha256:" + "d" * 64,
+                    caddy_config_digest="sha256:" + "d" * 64,
                     runtime={},
                     web_root=client,
                 )
@@ -395,9 +395,9 @@ class DockerCandidatePathTests(unittest.TestCase):
                 source="a" * 40,
                 rollback_source="b" * 40,
                 api_image="localhost/operatoros-api:candidate",
-                api_id="sha256:" + "c" * 64,
+                api_config_digest="sha256:" + "c" * 64,
                 caddy_image="localhost/operatoros-caddy:candidate",
-                caddy_source_id="sha256:" + "d" * 64,
+                caddy_config_digest="sha256:" + "d" * 64,
                 runtime={
                     "bun": "1.4.5",
                     "bunBinarySha256": "e" * 64,
@@ -411,12 +411,18 @@ class DockerCandidatePathTests(unittest.TestCase):
 
             with tarfile.open(archive_path, "r:") as archive:
                 members = archive.getnames()
+                manifest_bytes = archive.extractfile(
+                    "operatoros-docker-candidate/manifest.json"
+                ).read()
                 contents = b"".join(
                     archive.extractfile(member).read()
                     for member in archive.getmembers()
                     if member.isfile()
                 )
 
+            manifest = json.loads(manifest_bytes)
+            self.assertEqual(manifest["api_image"]["config_digest"], "sha256:" + "c" * 64)
+            self.assertEqual(manifest["caddy_image"]["config_digest"], "sha256:" + "d" * 64)
             self.assertIn("operatoros-docker-candidate/deploy/docker/api.env.example", members)
             for member in members:
                 self.assertFalse(member.endswith(("/api.env", "/compose.env", "/operatoros.sqlite")))

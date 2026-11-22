@@ -58,8 +58,9 @@ Docker-save images with the pinned Trivy image and stores both scan and
 CycloneDX reports in the candidate archive. Report identities and hashes are
 recorded in its manifest. A fresh GitHub-hosted job verifies the archive,
 imports those images, and runs the archived Compose files with another synthetic
-database. It checks the image IDs, Bun/SQLite runtime, health/readiness, SPA and
-security routes, database integrity after an API restart, a synthetic audit
+database. It checks the image config digests from the imported Docker archive,
+Bun/SQLite runtime, health/readiness, SPA and security routes, database
+integrity after an API restart, a synthetic audit
 marker that survives startup and restart, and cleanup. Scan failures retain
 only bounded JSON/log/text diagnostics for seven days. On startup failure, the
 rehearsal report keeps container state, health probe exit codes, and allowlisted
@@ -150,9 +151,12 @@ restrictive permissions. Keep the API environment file at mode `0600` and its
 parent directories at `0700`. Do not print the environment file or place it in
 command output.
 
-Load the verified Docker archive with `docker load`. Compare each loaded image
-ID with the corresponding config digest in `manifest.json`. Extract the
-versioned static client and deployment files from the archive. Set the Compose
+Load the verified Docker archive with `docker load`. Verify each imported image
+by saving the referenced images back to a Docker archive and checking the hash
+of each `Config` JSON member against the config digest in `manifest.json`.
+This checks the actual image payload without relying on a Docker daemon's
+backend-specific image ID. Extract the versioned static client and deployment
+files from the archive. Set the Compose
 environment file to the reviewed API and Caddy image references and the staged
 host paths. Set `COMPOSE_FILE` to the extracted Compose file and `COMPOSE_ENV`
 to the private Compose environment file. Run this check before starting the

@@ -1,3 +1,4 @@
+from contextlib import redirect_stdout
 import importlib.util
 import io
 import json
@@ -102,6 +103,42 @@ def report_pair(image_id, *, severity=None):
 
 
 class DockerCandidateReleaseTests(unittest.TestCase):
+    def test_verifies_config_digests_from_docker_save_archive(self):
+        files, manifest, api_digest, caddy_digest = fixture()
+
+        digests = release.verify_docker_image_identities(
+            files["docker-images.tar"], manifest["api_image"], manifest["caddy_image"]
+        )
+
+        self.assertEqual(digests[API_REF][1], api_digest)
+        self.assertEqual(digests[CADDY_REF][1], caddy_digest)
+
+    def test_image_digests_command_reports_saved_config_hashes(self):
+        files, _manifest, api_digest, caddy_digest = fixture()
+        with tempfile.TemporaryDirectory() as temporary:
+            archive_path = Path(temporary) / "docker-images.tar"
+            archive_path.write_bytes(files["docker-images.tar"])
+            output = io.StringIO()
+            with redirect_stdout(output):
+                status = release.main([
+                    "image-digests", str(archive_path), API_REF, CADDY_REF
+                ])
+
+        self.assertEqual(status, 0)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["status"], "PASS")
+        self.assertEqual(report["config_digests"][API_REF], api_digest)
+        self.assertEqual(report["config_digests"][CADDY_REF], caddy_digest)
+
+    def test_rejects_manifest_digest_that_differs_from_saved_config(self):
+        files, manifest, _api_digest, _caddy_digest = fixture()
+        manifest["api_image"]["config_digest"] = "sha256:" + "e" * 64
+
+        with self.assertRaisesRegex(ValueError, "API image config digest does not match the archive"):
+            release.verify_docker_image_identities(
+                files["docker-images.tar"], manifest["api_image"], manifest["caddy_image"]
+            )
+
     def test_binds_sbom_and_scan_to_both_exact_images(self):
         files, manifest, api_digest, caddy_digest = fixture()
 

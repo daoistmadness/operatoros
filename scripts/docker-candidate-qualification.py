@@ -565,9 +565,9 @@ def create_bundle(
     source: str,
     rollback_source: str,
     api_image: str,
-    api_id: str,
+    api_config_digest: str,
     caddy_image: str,
-    caddy_source_id: str,
+    caddy_config_digest: str,
     runtime: dict[str, Any],
     web_root: Path,
 ) -> Path:
@@ -625,11 +625,11 @@ def create_bundle(
         "schema_version": 1,
         "source_commit": source,
         "rollback_fixture_commit": rollback_source,
-        "api_image": {"reference": api_image, "config_digest": api_id},
+        "api_image": {"reference": api_image, "config_digest": api_config_digest},
         "caddy_image": {
             "reference": caddy_image,
             "source_reference": CADDY_SOURCE_IMAGE,
-            "config_digest": caddy_source_id,
+            "config_digest": caddy_config_digest,
         },
         "runtime": {
             "bun": runtime["bun"],
@@ -798,6 +798,28 @@ def qualify(args: argparse.Namespace) -> int:
         image_archive = output / "docker-images.tar"
         run(["docker", "save", "--output", str(image_archive), args.api_image, args.caddy_image], timeout=300)
         report["docker_images_sha256"] = sha256_file(image_archive)
+        image_identity = json.loads(
+            run([
+                sys.executable,
+                str(ROOT / "scripts/docker-candidate-release.py"),
+                "image-digests",
+                str(image_archive),
+                args.api_image,
+                args.caddy_image,
+            ])
+        )
+        if image_identity.get("status") != "PASS":
+            raise QualificationFailure("docker_image_archive_identity_failed")
+        image_config_digests = image_identity.get("config_digests")
+        if not isinstance(image_config_digests, dict):
+            raise QualificationFailure("docker_image_archive_identity_invalid")
+        api_config_digest = image_config_digests.get(args.api_image)
+        caddy_config_digest = image_config_digests.get(args.caddy_image)
+        if not all(
+            isinstance(digest, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", digest)
+            for digest in (api_config_digest, caddy_config_digest)
+        ):
+            raise QualificationFailure("docker_image_archive_identity_invalid")
 
         stage = "synthetic_fixture_setup"
         data_dir = private_root / "data"
@@ -1007,9 +1029,9 @@ def qualify(args: argparse.Namespace) -> int:
             source=source,
             rollback_source=report["rollback_fixture_commit"],
             api_image=args.api_image,
-            api_id=api_id,
+            api_config_digest=api_config_digest,
             caddy_image=args.caddy_image,
-            caddy_source_id=caddy_source_id,
+            caddy_config_digest=caddy_config_digest,
             runtime=runtime,
             web_root=ROOT / "apps/web/build/client",
         )

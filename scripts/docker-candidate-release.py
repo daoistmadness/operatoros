@@ -135,6 +135,17 @@ def docker_image_entries(archive_data: bytes, expected_refs: set[str]) -> dict[s
     return result
 
 
+def verify_docker_image_identities(
+    archive_data: bytes, api: dict[str, Any], caddy: dict[str, Any]
+) -> dict[str, tuple[dict[str, Any], str]]:
+    images = docker_image_entries(archive_data, {api["reference"], caddy["reference"]})
+    if images[api["reference"]][1] != api["config_digest"]:
+        raise ValueError("API image config digest does not match the archive")
+    if images[caddy["reference"]][1] != caddy["config_digest"]:
+        raise ValueError("Caddy image config digest does not match the archive")
+    return images
+
+
 def image_tar(archive_data: bytes, entry: dict[str, Any]) -> bytes:
     files = read_tar_files(archive_data)
     names = [entry["Config"], *entry["Layers"]]
@@ -211,13 +222,7 @@ def validate_manifest(files: dict[str, bytes], source_sha: str, *, require_secur
         or not re.fullmatch(r"sha256:[0-9a-f]{64}", str(caddy.get("config_digest", "")))
     ):
         raise ValueError("candidate image identity is malformed")
-    images = docker_image_entries(
-        files["docker-images.tar"], {api["reference"], caddy["reference"]}
-    )
-    if images[api["reference"]][1] != api["config_digest"]:
-        raise ValueError("API image config digest does not match the archive")
-    if images[caddy["reference"]][1] != caddy["config_digest"]:
-        raise ValueError("Caddy image config digest does not match the archive")
+    images = verify_docker_image_identities(files["docker-images.tar"], api, caddy)
     api_config = json.loads(
         read_tar_files(files["docker-images.tar"])[images[api["reference"]][0]["Config"]]
     )
@@ -650,10 +655,16 @@ def consume_archive(archive_path: Path, source_sha: str, report_path: Path) -> d
 
         stage = "candidate_image_import"
         qualification.run(["docker", "load", "--input", str(bundle / "docker-images.tar")], timeout=300)
+        imported_archive = workspace / "imported-docker-images.tar"
+        qualification.run(
+            ["docker", "save", "--output", str(imported_archive), api_image, caddy_image],
+            timeout=300,
+        )
+        imported_config_digests = verify_docker_image_identities(
+            imported_archive.read_bytes(), manifest["api_image"], manifest["caddy_image"]
+        )
         api_id = qualification.run(["docker", "image", "inspect", "--format", "{{.Id}}", api_image])
         caddy_id = qualification.run(["docker", "image", "inspect", "--format", "{{.Id}}", caddy_image])
-        if api_id != manifest["api_image"]["config_digest"] or caddy_id != manifest["caddy_image"]["config_digest"]:
-            raise ValueError("consumer imported an image with a different config digest")
         runtime_report = json.loads(qualification.run(
             ["python3", "scripts/check-bun-sqlite-runtime.py", api_image], timeout=90
         ))
@@ -668,7 +679,10 @@ def consume_archive(archive_path: Path, source_sha: str, report_path: Path) -> d
         ):
             raise ValueError("consumer runtime does not match the candidate manifest")
         report["stages"]["archive_image_import"] = "PASS"
-        report["images"] = {"api_config_digest": api_id, "caddy_config_digest": caddy_id}
+        report["images"] = {
+            "api_config_digest": imported_config_digests[api_image][1],
+            "caddy_config_digest": imported_config_digests[caddy_image][1],
+        }
         report["runtime"] = {
             "bun": runtime_report["bun"],
             "sqlite": runtime_report["sqlite"],
@@ -810,6 +824,9 @@ def main(argv: list[str] | None = None) -> int:
     extractor.add_argument("archive", type=Path)
     extractor.add_argument("source_sha")
     extractor.add_argument("destination", type=Path)
+    image_digests = sub.add_parser("image-digests")
+    image_digests.add_argument("archive", type=Path)
+    image_digests.add_argument("references", nargs="+")
     consumer = sub.add_parser("consume")
     consumer.add_argument("archive", type=Path)
     consumer.add_argument("source_sha")
@@ -823,6 +840,13 @@ def main(argv: list[str] | None = None) -> int:
             result = {"source_commit": args.source_sha, "archive_sha256": digest, "manifest": manifest}
         elif args.command == "extract":
             result = extract_candidate(args.archive, args.source_sha, args.destination)
+        elif args.command == "image-digests":
+            entries = docker_image_entries(args.archive.read_bytes(), set(args.references))
+            result = {
+                "config_digests": {
+                    reference: digest for reference, (_entry, digest) in entries.items()
+                }
+            }
         else:
             result = consume_archive(args.archive, args.source_sha, args.report)
     except (OSError, tarfile.TarError, json.JSONDecodeError, subprocess.TimeoutExpired, ValueError) as error:
