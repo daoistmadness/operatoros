@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b5740036d67ca4a34098eed5868ae8732ea3a9ac041e2fc61d3a44f2d224e90a",
+      "fingerprint": "a128196c2f76742d0f839e9846e4db81e98ac703d4c978bc562047afd09d72f1",
       "snapshot": {
-        "CHANGELOG.md": "1872b2d7595395fe42c17aa9c51a0ca84ffac20c5d27a9373b2b4d5cea580cb6"
+        "CHANGELOG.md": "f83dc734270d1d5e5b434e27d06efecfde70d07539d78406f270c15acf2ade95"
       },
-      "head": "b888d3796ab5dfef02e7606ebb9b92677d71e5f3",
+      "head": "b4a3ff0f2521dfeec762a21e3bc8dd4b4da9f460",
       "outcome": "no-change",
-      "reason": "Turborepo 2.11.13 update does not modify skill guidance or library contracts",
+      "reason": "Record PR number in CHANGELOG.md",
       "evidence": [
-        "Changed: CHANGELOG.md at b888d3796ab5dfef02e7606ebb9b92677d71e5f3"
+        "Changed: CHANGELOG.md at b4a3ff0f2521dfeec762a21e3bc8dd4b4da9f460"
       ]
     },
     "source:COMMANDS.md": {
