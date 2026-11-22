@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2bc8c4bfd2a2a62769e9533e204316883657f4aeff97a7036fa31213bc6f7145",
+      "fingerprint": "3b3b85d1a74263b7c972994eadfd2d637f12e0eb1d52228c96ca5baf6d5dc9cf",
       "snapshot": {
-        "CHANGELOG.md": "ba324d5528bfe965e2303d393ba92ebec7adf92e7b074ea2ecea5060289e6a70"
+        "CHANGELOG.md": "7a5ab067d1064d1b353edc9cd0e1650ed0d897934a547ce46f1f9a69f1a0d8e4"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "eee55445045d5256a2e93293733173c67d1d0784",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "Docker qualification documentation and workflow changes do not alter library guidance or planning artifacts.",
       "evidence": [
-        "Changed: CHANGELOG.md at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: CHANGELOG.md at eee55445045d5256a2e93293733173c67d1d0784"
       ]
     },
     "source:COMMANDS.md": {
