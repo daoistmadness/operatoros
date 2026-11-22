@@ -2272,13 +2272,13 @@ class ReleaseQualificationWorkflowTests(unittest.TestCase):
             '\n\n  docker-candidate-qualification:', 1
         )[0]
         self.assertIn("inputs.docker_qualification != true", podman_candidate)
-        self.assertIn("github.ref != 'refs/heads/codex/loop19-docker-startup-20261121'", podman_candidate)
+        self.assertNotIn("codex/loop19-docker-startup-20261121", podman_candidate)
         candidate = workflow.split('  docker-candidate-qualification:\n', 1)[1].split(
             '\n\n  docker-candidate-attestation:', 1
         )[0]
         self.assertIn("github.event_name == 'workflow_dispatch'", candidate)
-        self.assertIn("github.ref == 'refs/heads/codex/loop19-docker-startup-20261121'", candidate)
         self.assertIn("inputs.docker_qualification == true", candidate)
+        self.assertNotIn("codex/loop19-docker-startup-20261121", candidate)
         self.assertIn('needs: [preflight, release, result]', candidate)
         self.assertIn('contents: read', candidate)
         self.assertNotIn('id-token: write', candidate)

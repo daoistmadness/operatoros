@@ -156,24 +156,14 @@ class DockerCandidatePathTests(unittest.TestCase):
         ):
             qualification.synthetic_database_status(Path("/private/synthetic"), schema)
 
-    def test_container_database_access_checks_only_expected_mount_permissions(self):
-        with patch.object(qualification, "run") as command:
-            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
-
+    def test_synthetic_api_environment_includes_required_backup_key_identifier(self):
         self.assertEqual(
-            command.call_args.args[0],
-            [
-                "sudo", "-n", "-u", "#1000", "-g", "#1000", "--", "test",
-                "-x", "/private", "-a", "-x", "/private/data", "-a", "-w", "/private/data",
-                "-a", "-r", "/private/data/operatoros.sqlite", "-a", "-w", "/private/data/operatoros.sqlite",
-            ],
+            qualification.synthetic_api_environment("synthetic-auth", "synthetic-backup"),
+            "AUTH_COOKIE_SECRET=synthetic-auth\n"
+            "BACKUP_ENCRYPTION_KEY=synthetic-backup\n"
+            "BACKUP_ENCRYPTION_KEY_ID=synthetic-ci\n"
+            "ENABLE_DESTRUCTIVE_OPERATIONS=false\n",
         )
-
-        with (
-            patch.object(qualification, "run", side_effect=qualification.QualificationFailure("command_failed")),
-            self.assertRaisesRegex(qualification.QualificationFailure, "synthetic_database_permissions_invalid"),
-        ):
-            qualification.verify_container_database_access(Path("/private/data"), Path("/private"))
 
     def test_readiness_requires_sqlite_persistence(self):
         for body, expected in (

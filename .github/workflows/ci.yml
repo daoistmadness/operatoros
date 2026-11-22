@@ -409,7 +409,7 @@ jobs:
 
   candidate-qualification:
     name: Nonpublishing release candidate qualification
-    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth' && github.ref != 'refs/heads/codex/loop19-docker-startup-20261121' && inputs.docker_qualification != true
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/codex/p0-4-docker-source-of-truth' && inputs.docker_qualification != true
     needs: [preflight]
     runs-on: ubuntu-26.04
     timeout-minutes: 45
@@ -608,7 +608,7 @@ jobs:
 
   docker-candidate-qualification:
     name: Docker Compose release candidate qualification
-    if: github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/codex/loop19-docker-startup-20261121' || (github.ref == 'refs/heads/main' && inputs.docker_qualification == true))
+    if: github.event_name == 'workflow_dispatch' && inputs.docker_qualification == true
     needs: [preflight, release, result]
     runs-on: ubuntu-26.04
     timeout-minutes: 60
