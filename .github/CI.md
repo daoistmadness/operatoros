@@ -93,8 +93,8 @@ report the candidate as blocked.
 
 The manual `docker_qualification` selector runs a Docker-only Compose
 qualification without starting the Podman candidate or release-bundle jobs. On
-the Loop 19 diagnostic branch, the job rehearses the exact Compose source with
-synthetic SQLite data and random credentials, validates runtime and routes,
+any explicitly selected feature ref, the job rehearses the exact Compose source
+with synthetic SQLite data and random credentials, validates runtime and routes,
 switches to a prior-main API image to rehearse rollback, checks database
 integrity before and after both images, and verifies cleanup. It retains only a
 sanitized report on a feature ref. On protected `main`, after full release

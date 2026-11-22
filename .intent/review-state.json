@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "0e627442e06f2cf81758e54075400b15e0c0f90ad034c7781f5abb09f29cd271",
+      "fingerprint": "019803059bd4362e794e449bc59f3f3acdce306ad28dcb2509cad5c60bc403e1",
       "snapshot": {
-        ".github/CI.md": "a5863c0eccd4cc5cad9787214d4dd65e2c8fde0dee851d492e3bd361ea2f50a9",
-        ".github/workflows/ci.yml": "e0dea5081bdc7ac6702dadca3fce9f3985157c4b79c0111d2483bd1d05d7b5d5",
+        ".github/CI.md": "3fb888ce2a8b129041e2cf867487fb6f0f926c0e29b74e0e819e4141c3fd15b5",
+        ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
       "outcome": "no-change",
-      "reason": "This change only adjusts CI runner filesystem permissions for synthetic Docker qualification. It does not change Elysia behavior or backend guidance.",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "Reviewed the changed security-model documentation and Docker qualification script; both describe runner-owned synthetic fixture handling, outside the Elysia skill contract."
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "933d7e1252ef1f9b2689ce0cc3505dda0000a9e592179427270b84f31fec4fcc",
+      "fingerprint": "a429dfa4c5dc28f798e0a3972468afacbd1afcd7d5bb2b5dcc75e57efedca024",
       "snapshot": {
-        ".github/CI.md": "a5863c0eccd4cc5cad9787214d4dd65e2c8fde0dee851d492e3bd361ea2f50a9",
-        ".github/workflows/ci.yml": "e0dea5081bdc7ac6702dadca3fce9f3985157c4b79c0111d2483bd1d05d7b5d5",
+        ".github/CI.md": "3fb888ce2a8b129041e2cf867487fb6f0f926c0e29b74e0e819e4141c3fd15b5",
+        ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "21250d652691472be2928cc8281b6e4dbd7d1f6a",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
       "outcome": "no-change",
-      "reason": "The patch records no new product or architecture decision.",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "The change is a scoped CI fixture permission fix and an operational security clarification; existing task planning artifacts remain accurate."
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "407024afecc37d9d2698fdbb077a3808603869f8b872c55f5119dba3403aff51",
+      "fingerprint": "3b3b85d1a74263b7c972994eadfd2d637f12e0eb1d52228c96ca5baf6d5dc9cf",
       "snapshot": {
-        "CHANGELOG.md": "d43c03b431a9c9a476ca8d76b279020957b7e395fcb1c0eeabfd954da57775b7"
+        "CHANGELOG.md": "7a5ab067d1064d1b353edc9cd0e1650ed0d897934a547ce46f1f9a69f1a0d8e4"
       },
-      "head": "6e2183ff58b4bd726789a5b35830c59cd32861e3",
-      "outcome": "out-of-scope",
-      "reason": "The changelog records this Docker release-qualification change but is not Elysia guidance or an Intent planning record.",
+      "head": "eee55445045d5256a2e93293733173c67d1d0784",
+      "outcome": "no-change",
+      "reason": "Docker qualification documentation and workflow changes do not alter library guidance or planning artifacts.",
       "evidence": [
-        "Reviewed CHANGELOG.md entry referencing PR #398; Elysia skill source files and _artifacts planning records are unchanged."
+        "Changed: CHANGELOG.md at eee55445045d5256a2e93293733173c67d1d0784"
       ]
     },
     "source:COMMANDS.md": {
@@ -9942,15 +9942,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "31a52504dc5dee6735583e9256b84623f120e449605bd09616f335e0c2da6962",
+      "fingerprint": "cc6829ddc37cd293c2672dbc58113ad5657ca1e68bd818510c6f7f0992d2d271",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "980e84bbb77a061290ea7be40e667a35abcc4dd2d6273077a76c7e3d47998db1"
+        "docs/runbooks/release-bundles.md": "aaf6d6e3bdfbb1286b72f9d89ecbed90f0d29bb75e3b7f2e4f7ce7f4fccd88f7"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "outcome": "no-change",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Changed: docs/runbooks/release-bundles.md at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9980,15 +9980,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "b5825f0c74d213d3f150447f37373acb8776835aeabbe162cdb486e35fc9a268",
+      "fingerprint": "d321992111c2423d58aced07ae0c4a2c76bea00122eb8f5e938347c859deb1e9",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "3b87dae865f0da1a95ecb4307940911ce47e6aba07d9302f33d68854b6f465e3"
+        "scripts/tests/test_release_bundle.py": "03f8034b9ed062994e670905a663b64db017e7b026291f0a9919e3ff01434d52"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "outcome": "no-change",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Changed: scripts/tests/test_release_bundle.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10851,15 +10851,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "7baead3374b3871941b2b3735f29965fdf2d74350f1156a7faf772670782694e",
+      "fingerprint": "8fc923ab1a053bbf3ef1fdaec10fd303a297bde5ed2bffd96c87e0b642a7efe7",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "87f3d57bf099c236894633e1e3272a5aa16e1f02e0a7f689b5f39deb0a8ad99e"
+        "scripts/docker-candidate-qualification.py": "5b8d80156825a7cf0bb4a962d12b5c30fd67fefb48f8173b8c9240fa4a86a63e"
       },
-      "head": "0e20093c20201d84ade0ff0f2821571cfc62036b",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
       "outcome": "no-change",
-      "reason": "Docker qualification script and its unit tests are operational tooling; existing deployment/security guidance remains accurate, and no library skill guidance applies.",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "Changed: scripts/docker-candidate-qualification.py at 0e20093c20201d84ade0ff0f2821571cfc62036b"
+        "Changed: scripts/docker-candidate-qualification.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10876,15 +10876,15 @@
       ]
     },
     "source:scripts/tests/test_docker_candidate_qualification.py": {
-      "fingerprint": "9810e61bbb7b8f0906400dc71bc214c4cc921ac29382fca8d90cf6b4e09ea2c6",
+      "fingerprint": "564fe7e985b3d553ff7752bcee83b93121821a7190d3a02110dfe50acf3863a4",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_qualification.py": "c1283df0e61444adc721f833a2661d53d0926002f4024698a7ce1a682803d9f2"
+        "scripts/tests/test_docker_candidate_qualification.py": "5cbae2e4f36259861922be021d3e45f3e1de0fe47152882b208809f05f7e0ae5"
       },
-      "head": "0e20093c20201d84ade0ff0f2821571cfc62036b",
+      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
       "outcome": "no-change",
-      "reason": "Docker qualification script and its unit tests are operational tooling; existing deployment/security guidance remains accurate, and no library skill guidance applies.",
+      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
-        "Changed: scripts/tests/test_docker_candidate_qualification.py at 0e20093c20201d84ade0ff0f2821571cfc62036b"
+        "Changed: scripts/tests/test_docker_candidate_qualification.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
       ]
     }
   }

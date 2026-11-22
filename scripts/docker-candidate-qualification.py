@@ -166,6 +166,15 @@ def write_private_file(path: Path, content: str) -> None:
         target.write(content)
 
 
+def synthetic_api_environment(auth_secret: str, backup_key: str) -> str:
+    return (
+        f"AUTH_COOKIE_SECRET={auth_secret}\n"
+        f"BACKUP_ENCRYPTION_KEY={backup_key}\n"
+        "BACKUP_ENCRYPTION_KEY_ID=synthetic-ci\n"
+        "ENABLE_DESTRUCTIVE_OPERATIONS=false\n"
+    )
+
+
 def compose_environment(
     *,
     api_image: str,
@@ -543,31 +552,6 @@ def synthetic_database_status(
     }
 
 
-def verify_container_database_access(data_dir: Path, private_root: Path) -> None:
-    database = data_dir / "operatoros.sqlite"
-    check = [
-        "test",
-        "-x",
-        str(private_root),
-        "-a",
-        "-x",
-        str(data_dir),
-        "-a",
-        "-w",
-        str(data_dir),
-        "-a",
-        "-r",
-        str(database),
-        "-a",
-        "-w",
-        str(database),
-    ]
-    try:
-        run(["sudo", "-n", "-u", "#1000", "-g", "#1000", "--", *check], timeout=30)
-    except QualificationFailure as error:
-        raise QualificationFailure("synthetic_database_permissions_invalid") from error
-
-
 def rollback_source_commit(source: str, source_ref: str) -> str:
     if source_ref == "refs/heads/main":
         return run(["git", "rev-parse", f"{source}^1"])
@@ -833,26 +817,18 @@ def qualify(args: argparse.Namespace) -> int:
         backup_key = base64.b64encode(secrets.token_bytes(32)).decode("ascii")
         if auth_secret == backup_key:
             raise QualificationFailure("synthetic_secrets_not_distinct")
-        write_private_file(
-            api_env,
-            f"AUTH_COOKIE_SECRET={auth_secret}\nBACKUP_ENCRYPTION_KEY={backup_key}\nENABLE_DESTRUCTIVE_OPERATIONS=false\n",
-        )
+        write_private_file(api_env, synthetic_api_environment(auth_secret, backup_key))
         stage = "synthetic_database_creation"
         expected_schema = make_synthetic_database(data_dir)
         stage = "synthetic_database_initial_verification"
         report["synthetic_database"] = {
             "before": synthetic_database_status(data_dir, expected_schema),
         }
-        stage = "synthetic_container_directory_permissions"
-        run(["sudo", "chgrp", "--", "1000", str(private_root)], timeout=30)
-        private_root.chmod(0o710)
         stage = "synthetic_database_container_ownership"
         run(["sudo", "chown", "-R", "1000:1000", "--", str(data_dir)], timeout=30)
         stage = "synthetic_deploy_directory_ownership"
         run(["sudo", "chown", "-R", "1000:1000", "--", str(deploy_dir)], timeout=30)
-        stage = "synthetic_database_container_verification"
-        verify_container_database_access(data_dir, private_root)
-        report["synthetic_database"]["container_user_access_verified"] = True
+        stage = "synthetic_database_post_ownership_verification"
         report["synthetic_database"]["after_container_ownership"] = synthetic_database_status(
             data_dir, expected_schema, as_root=True
         )

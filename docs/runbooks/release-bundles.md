@@ -36,12 +36,12 @@ GHCR publication, automatic deployment, or database migration.
 The Docker qualification selector runs full release validation and E2E before
 its Compose rehearsal. The feature-ref diagnostic run uses no production data
 or credentials and receives only `contents: read`; the Docker rehearsal job
-retains no release archive or attestation on that ref. Run the current
-Loop 19 diagnostic branch with:
+retains no release archive or attestation on that ref. Run a feature ref with:
 
 ```bash
+FEATURE_REF=codex/my-docker-fix
 gh workflow run ci.yml --repo daoistmadness/operatoros \
-  --ref codex/loop19-docker-startup-20261121 \
+  --ref "$FEATURE_REF" \
   -f docker_qualification=true
 ```
 

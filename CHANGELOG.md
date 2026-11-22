@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Fix Docker candidate startup fixtures and allow explicit Docker rehearsal on any feature ref. (#399)
 - Diagnose Docker Compose startup with sanitized health evidence, verify synthetic SQLite persistence, and isolate protected-main archive attestation. (#398)
 - Prepare an attested, registry-independent Docker candidate with isolated Compose startup and rollback evidence; reject non-regular backup audit files. (#397)
 - Pin Bun 1.4.5 across mise, CI, development containers, and release images; require the fixed embedded SQLite runtime in release evidence. (#396)
