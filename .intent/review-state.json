@@ -3,10 +3,10 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "873f728961891846015a8dbe84a0b9fa66f20b859525d0a9dbaefadeef0e3c47",
+      "fingerprint": "209b07ca4ce118700862cb13d1aebc50b813eb139079dd504a8efc6e2426028e",
       "snapshot": {
-        ".github/CI.md": "29c2ea925028b8fb6e4107fb0746e1e94c13f8790d87af6cd94f9d8b0b0dd4d2",
-        ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
+        ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
+        ".github/workflows/ci.yml": "ab14b011f1b3a22d4e4b45d69c8c00592ab338d9d9eb38b4e85e04dbca86421d",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
@@ -44,18 +44,18 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: .github/CI.md, docs/reference/security-model.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "7d2b41c6c1c84f79cf4d363b780a93a96a8852fd565b30a2c75982695b81b6b7",
+      "fingerprint": "566ab232504b6e2fa9d4f69e5289b8b9d3cc2c89d58efef680aff6e6e2cc12be",
       "snapshot": {
-        ".github/CI.md": "29c2ea925028b8fb6e4107fb0746e1e94c13f8790d87af6cd94f9d8b0b0dd4d2",
-        ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
+        ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
+        ".github/workflows/ci.yml": "ab14b011f1b3a22d4e4b45d69c8c00592ab338d9d9eb38b4e85e04dbca86421d",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: .github/CI.md, docs/reference/security-model.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: .github/CI.md, .github/workflows/ci.yml at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4113e3cea397adf45009f314105f78735f6b2740415011eb81235f018747326c",
+      "fingerprint": "d167b5a45e11edf650749506e470fedcd8c4ce84ceab434d6514b4e076b588c2",
       "snapshot": {
-        "CHANGELOG.md": "37784c6db0e5efda971d13ab641778008a4265719092fe523f99197f3dd86e45"
+        "CHANGELOG.md": "c73d9db4c04f4d43c6b84bc62e8e3ccb9cdcfc56733ae8aaced2f85aec5428d9"
       },
-      "head": "e749a115e5236a7f46674cf71f18609527a2c0f0",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "The only new change is adding assigned PR #400 to the required Unreleased changelog bullet. It does not alter skill guidance, planning records, API behavior, or architecture.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at e749a115e5236a7f46674cf71f18609527a2c0f0"
+        "Changed: CHANGELOG.md at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:COMMANDS.md": {
@@ -9942,15 +9942,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "c51370ad4d01428f4e6791363e43442b21a73ff3256fbeffbed7961a6615fd79",
+      "fingerprint": "e253acb9100ddb87bbc932cc68a34173cbae6420b9eb8bd30196831bfd030144",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "195f28289f517c2c65eb3433f77f3796dcd81dda68255beb65b3ca14a3bfdde8"
+        "docs/runbooks/release-bundles.md": "612972c8a7bf383aa6c4ab2fd9914ca86e6e164fe2639e25d916f22f1c193e4d"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: docs/runbooks/release-bundles.md at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -9980,15 +9980,15 @@
       ]
     },
     "source:scripts/tests/test_release_bundle.py": {
-      "fingerprint": "d321992111c2423d58aced07ae0c4a2c76bea00122eb8f5e938347c859deb1e9",
+      "fingerprint": "2b840d7a7521acd5ad1c38df1b6fc56a4828cb48f41b10c8b4b72cd6b8c66dbf",
       "snapshot": {
-        "scripts/tests/test_release_bundle.py": "03f8034b9ed062994e670905a663b64db017e7b026291f0a9919e3ff01434d52"
+        "scripts/tests/test_release_bundle.py": "8e831a7ca03d44554936831ae988d3929ef67d9b7c1412a750436a2c5b3c01ea"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: scripts/tests/test_release_bundle.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: scripts/tests/test_release_bundle.py at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:apps/web/src/lib/cn.ts": {
@@ -10274,27 +10274,27 @@
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "b0a2599da3ef6d0cd901000da565b8136005c76f4549e9ff77d088b844268122",
+      "fingerprint": "3d62a31c662ea18efd7d2053ea11ad613dddc74d2547b0008c47eeaf994ac867",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "ca08326e3b8de538f3f50437c82e2bedc7d64eb93e1153c5d55883c9753defc1"
+        "MASTER_CHECKLIST.md": "7ec4f4dfc9b86a564a5e7a588e07636c077bec21855e904647876373a17c2bb3"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: MASTER_CHECKLIST.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: MASTER_CHECKLIST.md at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "95a76e996d2626bed328644f1ca425760ecc6f8d436af54b5b04fd463eb6b5b2",
+      "fingerprint": "d03c9bf89016d3359f166909d366ed64b01d691f9d050022d426eaaed83195dd",
       "snapshot": {
-        "STABILITY_REPORT.md": "bb7fefe2f51adf3a7f079436035e2a95a1a2c5cbcaaa341c2e90da2d81fbad82"
+        "STABILITY_REPORT.md": "d82664e0be1b6336f6e7206951e17743beba131c665a50832db2bd25758a6094"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: STABILITY_REPORT.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: STABILITY_REPORT.md at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
@@ -10826,15 +10826,15 @@
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "46dfd22f772ed7125c5b5dd74d2bfadd97f049d6b9746a8da2ad86fe1e348f54",
+      "fingerprint": "9088a07be3365f8596aea9c35860ce17876874f543d34d35eda8034b8f7571cc",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "fd2ad68b0695aff7526e346a7498fd74cd635f77935d08ab0d9b2079d9674e8f"
+        "docs/decisions/docker-compose-deployment.md": "99f8bd8b54399e590cf4e9c19a0e7f919ea1ff8c1de6a258c4c241b3701c7e21"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
       "evidence": [
-        "Changed: docs/decisions/docker-compose-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: docs/decisions/docker-compose-deployment.md at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     },
     "source:scripts/check-backup-dir.ts": {
@@ -10885,6 +10885,30 @@
       "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
       "evidence": [
         "Changed: scripts/tests/test_docker_candidate_qualification.py at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+      ]
+    },
+    "source:scripts/docker-candidate-release.py": {
+      "fingerprint": "f854811eae113c126680f95cb875c381e87426b7e90d9a693e542625bd43989e",
+      "snapshot": {
+        "scripts/docker-candidate-release.py": "627854a783eece58baf829cf8bec413a9629ae305666cf4e5ec2f1e947a1359b"
+      },
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "outcome": "no-change",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "evidence": [
+        "Changed: scripts/docker-candidate-release.py at 8aa54fd377352b29847457cef90543c538654ec4"
+      ]
+    },
+    "source:scripts/tests/test_docker_candidate_release.py": {
+      "fingerprint": "4a4743755a6a654c4ffaa182228e25bc0a864189794db88c60009e980acac718",
+      "snapshot": {
+        "scripts/tests/test_docker_candidate_release.py": "387596191c4483242e804f5764982ddb9d4f4923c163f0ee7eab03d7fa2b8951"
+      },
+      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "outcome": "no-change",
+      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "evidence": [
+        "Changed: scripts/tests/test_docker_candidate_release.py at 8aa54fd377352b29847457cef90543c538654ec4"
       ]
     }
   }
