@@ -3,9 +3,9 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "019803059bd4362e794e449bc59f3f3acdce306ad28dcb2509cad5c60bc403e1",
+      "fingerprint": "873f728961891846015a8dbe84a0b9fa66f20b859525d0a9dbaefadeef0e3c47",
       "snapshot": {
-        ".github/CI.md": "3fb888ce2a8b129041e2cf867487fb6f0f926c0e29b74e0e819e4141c3fd15b5",
+        ".github/CI.md": "29c2ea925028b8fb6e4107fb0746e1e94c13f8790d87af6cd94f9d8b0b0dd4d2",
         ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -14,7 +14,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "970fae53ae2a9ced41336af8e4c9d05bed2ac82e8da1f75ba341e69ead5ad445",
+        "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -44,17 +44,17 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: .github/CI.md, docs/reference/security-model.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a429dfa4c5dc28f798e0a3972468afacbd1afcd7d5bb2b5dcc75e57efedca024",
+      "fingerprint": "7d2b41c6c1c84f79cf4d363b780a93a96a8852fd565b30a2c75982695b81b6b7",
       "snapshot": {
-        ".github/CI.md": "3fb888ce2a8b129041e2cf867487fb6f0f926c0e29b74e0e819e4141c3fd15b5",
+        ".github/CI.md": "29c2ea925028b8fb6e4107fb0746e1e94c13f8790d87af6cd94f9d8b0b0dd4d2",
         ".github/workflows/ci.yml": "3035741320d6fd28861d984567e2e32c58b8af3c200a9e0d5302061aa86cf60f",
         "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
@@ -66,7 +66,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
         "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
-        "docs/reference/security-model.md": "970fae53ae2a9ced41336af8e4c9d05bed2ac82e8da1f75ba341e69ead5ad445",
+        "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
         "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Changed: .github/CI.md, .github/workflows/ci.yml at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: .github/CI.md, docs/reference/security-model.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2953,15 +2953,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3b3b85d1a74263b7c972994eadfd2d637f12e0eb1d52228c96ca5baf6d5dc9cf",
+      "fingerprint": "24815d1a51b5849b11de8a543bb55729be541da37faf2daf2c8cda11a8c4b1e0",
       "snapshot": {
-        "CHANGELOG.md": "7a5ab067d1064d1b353edc9cd0e1650ed0d897934a547ce46f1f9a69f1a0d8e4"
+        "CHANGELOG.md": "1c0f14954c16530c8ae9362702c547feaf1cbd752d8de9f89baa78c0075b88e0"
       },
-      "head": "eee55445045d5256a2e93293733173c67d1d0784",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
       "outcome": "no-change",
-      "reason": "Docker qualification documentation and workflow changes do not alter library guidance or planning artifacts.",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Changed: CHANGELOG.md at eee55445045d5256a2e93293733173c67d1d0784"
+        "Changed: CHANGELOG.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:COMMANDS.md": {
@@ -4463,15 +4463,15 @@
       ]
     },
     "source:docs/reference/dependency-audit-exceptions.md": {
-      "fingerprint": "09cde93dff8e64d986e29af8d3e6758e00404c9d55d107f0ae96f0e262cd5ea5",
+      "fingerprint": "2af1fdfb5d313da9d11f4b71b59900aa2ff4f8c24e967e3ebe2803bdb8b93987",
       "snapshot": {
-        "docs/reference/dependency-audit-exceptions.md": "b787fee0b8859b8f7e776b7df3e6166cbf9f5ccdad52645f7d06bee723417090"
+        "docs/reference/dependency-audit-exceptions.md": "8adef3f5ef7540332d354fb6b566f7a3fa79bc2acf9262db141c7d26a12ce0f5"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed docs/reference/dependency-audit-exceptions.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: docs/reference/dependency-audit-exceptions.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:docs/reference/employee-management.md": {
@@ -4826,15 +4826,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "630b56cf116f14d9b0b99c6cff3921879d29428d2f3933412714beda3fe953e9",
+      "fingerprint": "14d9457d57ecc4946a366cbdaef57c519f8dd424140909ca71113549f26a21e9",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "f46f59820a11f6d57d12196e6b432ad2acd5ff776232861632ce9644c7bd1aad"
+        "docs/runbooks/ubuntu-server-deployment.md": "2fc2daedead7b4c531ba4fc71d5f7854d1f35352243f33d7b544e24eedc842f4"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed docs/runbooks/ubuntu-server-deployment.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9758,15 +9758,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "2f5d150f45317b69238a248a11656694df138bc6755389866f1ae9c19dd5eb05",
+      "fingerprint": "f764fd89e7d6e5ee4c34ab41ca8a0f460fa9eb5b74c911f9c882ea12c178e266",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "c47d41d878dd999c2495baa5fa48bddecbbf0f69a87b59a27f73c6cfaac7b588"
+        "docs/decisions/podman-deployment.md": "b9be11499a509dc7b055ea2a72557e51e6d9f3c449c774d34b1f968e94e7301d"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed docs/decisions/podman-deployment.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: docs/decisions/podman-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -9942,15 +9942,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "cc6829ddc37cd293c2672dbc58113ad5657ca1e68bd818510c6f7f0992d2d271",
+      "fingerprint": "c51370ad4d01428f4e6791363e43442b21a73ff3256fbeffbed7961a6615fd79",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "aaf6d6e3bdfbb1286b72f9d89ecbed90f0d29bb75e3b7f2e4f7ce7f4fccd88f7"
+        "docs/runbooks/release-bundles.md": "195f28289f517c2c65eb3433f77f3796dcd81dda68255beb65b3ca14a3bfdde8"
       },
-      "head": "6a482389b3ae7c7c233a98695feca5dd56739ef2",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
       "outcome": "no-change",
-      "reason": "This change fixes Docker release qualification tooling and its existing runbook; it does not alter Elysia guidance or create a new library, skill, or planning artifact.",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 6a482389b3ae7c7c233a98695feca5dd56739ef2"
+        "Changed: docs/runbooks/release-bundles.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10262,39 +10262,39 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "128840af775c90b8c0d78b3617d2d31a73a1f9693548d6beee60ee59054802d0",
+      "fingerprint": "fd5213806954aa5ce8e9c7763e5c849f8571feeb9c1857156f571e1c874cec60",
       "snapshot": {
-        "DECISIONS.md": "b4242c3a875f5b6e3c1e42352e643949796ab681c855908ecf65a4a340682387"
+        "DECISIONS.md": "fa5bb2a5c62d022a766724ff5d68c410b69b6e684207446113a9b149e9027e90"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed DECISIONS.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: DECISIONS.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
-      "fingerprint": "9172924108d331e5f7c9533d0f626664c52fcf0e2e142980fd1e139752b0cf2b",
+      "fingerprint": "b0a2599da3ef6d0cd901000da565b8136005c76f4549e9ff77d088b844268122",
       "snapshot": {
-        "MASTER_CHECKLIST.md": "b16a1f2729539dda62deef654dd111534a9b332aff2fd2da5941f1dabeb26966"
+        "MASTER_CHECKLIST.md": "ca08326e3b8de538f3f50437c82e2bedc7d64eb93e1153c5d55883c9753defc1"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed MASTER_CHECKLIST.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: MASTER_CHECKLIST.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:STABILITY_REPORT.md": {
-      "fingerprint": "6391b350361c7ac15095e98e90a1e13045f60a652ce2fd30aece6a9e306235c3",
+      "fingerprint": "95a76e996d2626bed328644f1ca425760ecc6f8d436af54b5b04fd463eb6b5b2",
       "snapshot": {
-        "STABILITY_REPORT.md": "2bd32bab03a7e54347ef1811dd12b9b6cf3704149ac83334d9a33049582424f2"
+        "STABILITY_REPORT.md": "bb7fefe2f51adf3a7f079436035e2a95a1a2c5cbcaaa341c2e90da2d81fbad82"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed STABILITY_REPORT.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: STABILITY_REPORT.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:scripts/record-embedded-runtime.py": {
@@ -10826,15 +10826,15 @@
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "5c5e77c906d98edca6de0fea162b9933dcf1e2bad39aadfcc1ba54d8e8bbe30e",
+      "fingerprint": "46dfd22f772ed7125c5b5dd74d2bfadd97f049d6b9746a8da2ad86fe1e348f54",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "3c5f0b6ebeaa4f9adb2f70eea5be73405c89b40ab8c7e0f314412520c2c179ed"
+        "docs/decisions/docker-compose-deployment.md": "fd2ad68b0695aff7526e346a7498fd74cd635f77935d08ab0d9b2079d9674e8f"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "outcome": "no-change",
+      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "Changed: docs/decisions/docker-compose-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
       ]
     },
     "source:scripts/check-backup-dir.ts": {
