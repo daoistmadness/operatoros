@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-23
 ---
 
 # Test strategy
@@ -16,14 +16,20 @@ normal gate for documentation-only work. `mise run check:full` delegates to
 `make test-pr` and `make test-release` targets remain the implementation
 authority. `mise run db:fresh` delegates to `make fresh-db-parity`.
 
-`mise run check:affected` is a separate Turbo package check. It uses the
-current `origin/main` remote-tracking ref through `TURBO_SCM_BASE` and does not
-replace the classifier or the full PR/release gate. Use
-`mise run check:affected -- --dry=json` to inspect selection without running.
+`mise run check:affected` is a separate Turbo package check and does not replace
+the classifier or full PR/release gate. It resolves the base and head refs to
+commit SHAs once. On a clean tree it passes those immutable SHAs to Turbo's
+affected graph. If staged, unstaged, untracked, deleted, renamed, or other
+working-tree changes exist, it runs the full Turbo graph because those changes
+are not represented by commit refs. Use
+`mise run check:affected -- --dry=json` to inspect clean-tree selection without
+running tasks; dirty-tree checks intentionally use the full graph.
 
-Workspace and launcher CLI typechecks use the root-pinned TypeScript 7.0.2
-compiler. CI also runs Bun 1.4.5's `bun check` across its six workspaces. The
-TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
+Workspace and launcher CLI typechecks use the pinned TSRS 7.1.0-beta.tsrs4
+runner, which checks the same project configs and strict flags as the prior
+TypeScript 7.0.2 CLI. `scripts/typecheck-tsrs.sh` maps TSRS diagnostic exit 2 to
+the existing `tsc` exit 1. CI also runs Bun 1.4.5's `bun check` across its six
+workspaces. TypeScript 5.9.3 remains for compiler-API and TypeScript 5 peer
 consumers; it is not the CLI typecheck compiler.
 
 The single repository-owned CI workflow runs API, frontend, and complete
@@ -114,13 +120,15 @@ tests whose in-file concurrency has been separately audited. Use
 `--rerun-each=<n>` for focused flake investigation; retries must not hide a
 failure.
 
-The API suite remains serial in the normal gate. Attendance-import and
-Excel-heavy tests create disposable SQLite databases with process-unique
-filenames. The API suite timed out under Bun worker contention during a
-parallel audit, so keep it serial until a new audit confirms that parallel
-workers stay within the CI timeout and use isolated resources. The small
-contracts, database, Excel, UI, architecture, and boundary suites passed the
-parallel audit.
+The API suite uses `bun test --parallel=2` in the normal gate. Four workers
+caused contention among Argon2 hashing and SQLite-heavy fixtures; serial
+execution was slower and still allowed individual tests to hit the default
+timeout. Test fixtures now reuse synthetic password hashes within each worker,
+and API SQLite fixture paths follow `TMPDIR`. The full suite passed with two
+workers (442 tests), including the NISN filter test. Keep the bounded worker
+count unless a new measurement demonstrates a safer and faster setting. The
+small contracts, database, Excel, UI, architecture, and boundary suites retain
+their proven file-level parallelism.
 
 Tests that allocate worker-sensitive resources should use `BUN_TEST_WORKER_ID`
 when process identity alone is insufficient. Current API tests use unique
@@ -159,7 +167,8 @@ isolated edit. A documentation-only change exits immediately. Measure an
 ordinary API-domain loop in the low tens of seconds.
 
 Tier 2 is pre-PR readiness. `mise run check:affected` runs the cached Turbo
-typecheck, unit-test, and web-build tasks affected since `origin/main`. Add
+typecheck, unit-test, and web-build tasks affected since the captured base SHA
+when the tree is clean; it runs the full graph when the worktree is dirty. Add
 `make e2e-critical` only when the change affects cross-layer user behavior.
 Do not run the full regression before every commit.
 
@@ -172,9 +181,9 @@ or difficult changes, and before merge when Tier 2 cannot cover the risk.
 
 Tiers already execute serially: one heavyweight lane at a time. Do not run a
 Turbo check, a full API suite, a production build, and Playwright
-simultaneously on the modest development host. Full API stays serial;
-lightweight independent package tests (contracts, DB, Excel, UI, architecture
-and boundary checks) keep their proven file-level parallelism.
+simultaneously on the modest development host. The API suite stays at two
+workers; lightweight independent package tests (contracts, DB, Excel, UI,
+architecture and boundary checks) keep their proven file-level parallelism.
 
 `make test-fast`, `make test-pr`, and `make test-release` take a nonblocking
 per-worktree lock and fail with exit 75 if another tier is already running in

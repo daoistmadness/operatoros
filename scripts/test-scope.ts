@@ -96,18 +96,36 @@ export function pathsFromNameStatus(output: string): string[] {
   }));
 }
 
+export function pathsFromNameStatusZ(output: string): string[] {
+  const fields = output.split("\0");
+  const paths: string[] = [];
+  for (let index = 0; index < fields.length;) {
+    const status = fields[index++];
+    if (!status) continue;
+    const count = /^[RC]/.test(status) ? 2 : 1;
+    for (let pathIndex = 0; pathIndex < count; pathIndex++) {
+      const path = fields[index++];
+      if (path) paths.push(path);
+    }
+  }
+  return sorted(paths);
+}
+
 export function gitPaths(repo: string, base?: string, head?: string): string[] {
   const env = { ...process.env };
   const local = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { cwd: repo, stdout: "pipe", stderr: "pipe" });
   if (local.exitCode !== 0) throw new Error(local.stderr.toString().trim());
   for (const name of local.stdout.toString().trim().split("\n")) delete env[name];
-  const commands = base ? [["diff", "--name-status", "--find-renames", `${base}...${head || "HEAD"}`]] : [
-    ["diff", "--name-status", "--find-renames"], ["diff", "--cached", "--name-status", "--find-renames"], ["ls-files", "--others", "--exclude-standard"],
+  const commands = [
+    ...(base ? [["diff", "--name-status", "--find-renames", "-z", `${base}...${head || "HEAD"}`]] : []),
+    ["diff", "--name-status", "--find-renames", "-z"],
+    ["diff", "--cached", "--name-status", "--find-renames", "-z"],
+    ["ls-files", "--others", "--exclude-standard", "-z"],
   ];
   return sorted(commands.flatMap((args) => {
     const result = Bun.spawnSync(["git", ...args], { cwd: repo, env, stdout: "pipe", stderr: "pipe" });
     if (result.exitCode !== 0) throw new Error(result.stderr.toString().trim());
-    return args.includes("--name-status") ? pathsFromNameStatus(result.stdout.toString()) : result.stdout.toString().split("\n");
+    return args.includes("--name-status") ? pathsFromNameStatusZ(result.stdout.toString()) : result.stdout.toString().split("\0");
   }).filter((path) => path && !PRESERVED.has(path)));
 }
 
@@ -116,13 +134,16 @@ if (import.meta.main) {
     const { values } = parseArgs({ options: {
       base: { type: "string" }, head: { type: "string" }, repo: { type: "string", default: resolve(import.meta.dir, "..") },
       "changed-file": { type: "string", multiple: true },
+      "paths-only": { type: "boolean" },
       report: { type: "string" },
     } });
     if (values.report) {
       console.log(scopeSummary(await Bun.file(values.report).json()));
     } else {
       const paths = values["changed-file"]?.length ? sorted(values["changed-file"]) : gitPaths(values.repo!, values.base, values.head);
-      console.log(JSON.stringify(buildScope(paths.filter((path) => !PRESERVED.has(path)))));
+      const selected = paths.filter((path) => !PRESERVED.has(path));
+      if (values["paths-only"]) process.stdout.write(selected.map((path) => `${path}\0`).join(""));
+      else console.log(JSON.stringify(buildScope(selected)));
     }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

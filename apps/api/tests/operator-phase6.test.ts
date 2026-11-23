@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { mkdtempSync, rmSync } from "node:fs";
 import { dueState } from "../src/domains/operator";
+import { testPasswordHash } from "./fixtures/password-hash";
 
 const secret = "synthetic-phase6-cookie-secret-32-chars-long";
 
@@ -17,7 +18,15 @@ function cookie(response: Response): string {
   return `astyx_session=${value}`;
 }
 
-async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z", includeMonthlyPtk = true) {
+async function createTestContext({
+  initialNow = "2026-08-01T12:00:00.000Z",
+  includeMonthlyPtk = true,
+  includeStaff = false,
+}: {
+  initialNow?: string;
+  includeMonthlyPtk?: boolean;
+  includeStaff?: boolean;
+} = {}) {
   const dir = mkdtempSync(join(tmpdir(), "operatoros-phase6-test-"));
   const dbPath = join(dir, "test.sqlite");
   createFreshDatabase(dbPath);
@@ -26,8 +35,8 @@ async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z", includ
 
   const adminPass = "phase6-admin-pass-1";
   const staffPass = "phase6-staff-pass-1";
-  const adminHash = await Bun.password.hash(adminPass, "argon2id");
-  const staffHash = await Bun.password.hash(staffPass, "argon2id");
+  const adminHash = testPasswordHash(adminPass);
+  const staffHash = testPasswordHash(staffPass);
 
   // Insert test admin and regular user
   const adminId = Number(
@@ -142,7 +151,7 @@ async function createTestContext(initialNow = "2026-08-01T12:00:00.000Z", includ
     );
 
   const adminCookie = cookie(await login("admin_test", adminPass));
-  const staffCookie = cookie(await login("staff_test", staffPass));
+  const staffCookie = includeStaff ? cookie(await login("staff_test", staffPass)) : undefined;
 
   return { dir, handle, db, app, adminId, staffUserId, adminCookie, staffCookie, currentYear, currentMonth, unitId, setNow };
 }
@@ -156,7 +165,7 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
   });
 
   it("counts eligible PTK as pending and exposes generation work before a month is generated", async () => {
-    const { dir, handle, db, app, adminCookie, unitId, currentYear, currentMonth } = await createTestContext("2026-08-01T12:00:00.000Z", false);
+    const { dir, handle, db, app, adminCookie, unitId, currentYear, currentMonth } = await createTestContext({ initialNow: "2026-08-01T12:00:00.000Z", includeMonthlyPtk: false });
     try {
       db.run(`INSERT INTO staff_school_unit_assignment_versions
         (staff_member_id,school_unit_id,effective_from,ptk_applicability,reason,created_by)
@@ -216,8 +225,9 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
   });
 
   it("calculates Annual BOSP reminder countdown and persists operator acknowledgment", async () => {
-    const { dir, handle, db, app, adminCookie, staffCookie, currentYear, setNow } = await createTestContext();
+    const { dir, handle, db, app, adminCookie, staffCookie, currentYear, setNow } = await createTestContext({ includeStaff: true });
     try {
+      if (!staffCookie) throw new Error("staff authentication fixture is required");
       const getStatus = async () => app.handle(new Request("http://local/api/operator/bosp-reminder", { headers: { Cookie: adminCookie, Origin: "http://local" } }));
       setNow("2026-07-02T16:59:58.999Z");
       expect((await (await getStatus()).json() as any).is_in_notice_window).toBe(false);
@@ -309,8 +319,9 @@ describe("Phase 6: Operational Dashboard & BOSP Reminder & Work Queue", () => {
   });
 
   it("populates administrative work queue with actionable items across Modules A, B, C, D", async () => {
-    const { dir, handle, app, adminCookie, staffCookie } = await createTestContext();
+    const { dir, handle, app, adminCookie, staffCookie } = await createTestContext({ includeStaff: true });
     try {
+      if (!staffCookie) throw new Error("staff authentication fixture is required");
       const res = await app.handle(
         new Request("http://local/api/operator/work-queue", {
           headers: { Cookie: adminCookie, Origin: "http://local" },

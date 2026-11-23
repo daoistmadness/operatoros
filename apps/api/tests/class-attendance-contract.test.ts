@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { Value } from "@sinclair/typebox/value";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
@@ -21,10 +22,10 @@ function sessionCookie(response: Response): string {
 
 describe("class attendance response contract", () => {
   it("validates the actual route payload and preserves the public field shape", async () => {
-    const path = `/tmp/operatoros-class-attendance-contract-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-class-attendance-contract-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-contract-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-class-attendance-contract-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const response = await app.handle(new Request("http://local/api/attendance/classes/1/dates/2026-08-03", { headers: { cookie: sessionCookie(login), origin: "http://localhost:5173" } }));
@@ -82,10 +83,10 @@ describe("class attendance response contract", () => {
   });
 
   it("derives manual on-time/late from the canonical cutoff when an arrival time is entered", async () => {
-    const path = `/tmp/operatoros-class-attendance-canonical-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-class-attendance-canonical-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-canonical-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-class-attendance-canonical-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const cookie = sessionCookie(login);
@@ -114,10 +115,10 @@ describe("class attendance response contract", () => {
   }, 30000);
 
   it("records dated paper-book S/I/A with structured provenance and never fabricates scans", async () => {
-    const path = `/tmp/operatoros-paper-book-attendance-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-paper-book-attendance-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-paper-book-attendance-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-paper-book-attendance-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const cookie = sessionCookie(login); const auth = { cookie, origin: "http://localhost:5173" };
@@ -174,10 +175,10 @@ describe("class attendance response contract", () => {
   }, 30000);
 
   it("preserves raw attendance across repeated authorized class corrections and rolls back failures", async () => {
-    const path = `/tmp/operatoros-class-attendance-revisions-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-class-attendance-revisions-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-class-attendance-revisions-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-class-attendance-revisions-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "contract-admin", password: "contract-admin-pass-1" }) }));
       const cookie = sessionCookie(login); const auth = { cookie, origin: "http://localhost:5173" };

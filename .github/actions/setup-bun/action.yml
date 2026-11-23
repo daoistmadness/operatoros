@@ -90,11 +90,13 @@ runs:
         test "$(mise --version | awk '{print $1}')" = "2026.10.19"
         test "$(bun --version)" = "1.4.5"
         test "$(hk --version)" = "hk 2.8.1"
+        test "$(node --version)" = "v24.19.0"
+        expected_turbo="$(node -p 'require("./package.json").devDependencies.turbo')"
         mise_download_cache="$(mise cache path)/downloads-cas"
         test -n "$(find "$mise_download_cache" -type f -print -quit)"
         mise ls --current
         bun install --frozen-lockfile
-        test "$(bun run turbo:version)" = "2.11.4"
+        test "$(bun run turbo:version)" = "$expected_turbo"
     - name: Save checksummed mise downloads
       if: ${{ inputs['cache-write'] == 'true' && success() && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

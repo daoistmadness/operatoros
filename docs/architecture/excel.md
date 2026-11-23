@@ -27,7 +27,7 @@ apps/api -> @operatoros/excel -> @operatoros/contracts
 
 The web application does not depend on Excel. Excel package imports of DB,
 apps, UI, React, Elysia, and Drizzle are forbidden by the architecture
-checker and ESLint rules.
+checker and Oxlint import restrictions.
 
 ## Import and export flows
 

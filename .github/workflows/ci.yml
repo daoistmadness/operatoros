@@ -122,9 +122,9 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo
-          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-
       - name: Dependency security audit
         working-directory: ${{ github.workspace }}
         run: bun run security:audit
@@ -187,7 +187,7 @@ jobs:
       - name: Typecheck development launcher
         working-directory: ${{ github.workspace }}
         run: bun run typecheck:launcher
-      - name: TypeScript 7 native typecheck
+      - name: Bun native TypeScript checks
         working-directory: ${{ github.workspace }}
         run: bun run typecheck:native
       - name: Validate Turbo invalidation proofs
@@ -235,7 +235,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo
-          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-2.11.4-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
+          key: ${{ runner.os }}-${{ runner.arch }}-ubuntu-26.04-turbo-${{ hashFiles('bun.lock', 'turbo.json', 'mise.toml', 'mise.lock') }}-${{ github.sha }}
       - name: Report Turbo cache result
         if: always()
         env:

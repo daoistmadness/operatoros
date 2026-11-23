@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -19,10 +20,10 @@ function cookie(response: Response): string {
 }
 
 async function setup(label: string, clock?: Date) {
-  const path = `/tmp/operatoros-calendar-${label}-${process.pid}-${Date.now()}.db`;
+  const path = testTempPath(`operatoros-calendar-${label}-${process.pid}-${Date.now()}.db`);
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, clock: clock ? () => clock : undefined, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-calendar-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, clock: clock ? () => clock : undefined, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-calendar-audit-${process.pid}`) } });
   const adminResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "calendar-admin", password: "calendar-admin-pass-1" }) }));
   const staffResponse = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "calendar-staff", password: "calendar-staff-pass-1" }) }));
   return { app, database, admin: cookie(adminResponse), staff: cookie(staffResponse), cleanup: () => { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); } };

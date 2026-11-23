@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "f36b2b7958f2ae5a0ae047409adbe759e2cf71b7bc561e3abab55d0cd639a3ee",
+      "fingerprint": "a2c1ee88ed19c9c304b79cdb409a22c11bde0b87821e7ea473dbe0741642ebb7",
       "snapshot": {
-        ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
-        ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
-        "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
+        ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
+        ".github/workflows/ci.yml": "9e12c7161d7c09c28f8f8029494a2eacaab587f77fb44dde9c1541fb062ba538",
+        "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
-        "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
-        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
+        "apps/api/package.json": "82669cefe62d8e1b9736c39a6740873c3ce9ff8e1397cb794144562025616f83",
+        "bun.lock": "5cf95b4b70849b0117d65501d5cfb69b5bd1dab2bbaf90fad09753ea0a0e0239",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
-        "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
+        "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
+        "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
+        "package.json": "72c1829bbe389c7ab082d303a6b12003dd93a7028027e7fb3990797a4cee0992",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -41,33 +41,35 @@
         "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
         "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
         "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
-        "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
+        "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "Reviewed the full source set mapped to the Elysia v2 skill. OperatorOS remains on Elysia 1.4.29; this change changes lint/typecheck tooling, CI and API test isolation, not Elysia route, plugin, lifecycle, or validation APIs. The skill still says to use the project test runner, app.handle() for port-free tests, and the project type check; those instructions remain accurate.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
+        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs/references/testing.md were inspected.",
+        "apps/api/package.json and docs/guides/testing.md retain Bun test execution and a project typecheck; API tests use the same Elysia app.handle() patterns.",
+        "mise run check:affected passed at HEAD e4223763eff9b070a61b4cf1950256cd467f86e1 against base fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9; @operatoros/api ran 442 tests with 0 failures."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "a9f26d45b727b363d1e325b9d8ef3396f0a70fb8ac6f153dc0208d3ce8fcecba",
+      "fingerprint": "6649e09e22bfc9dff90499003fe6ff0f593fb71538226646279d6fd4dc735503",
       "snapshot": {
-        ".github/CI.md": "32c42d258bad81e1049e2c81211de463f992dc0c31d0169af4f31d2a073a835c",
-        ".github/workflows/ci.yml": "0c877d9af3f8bc2a0bbe82e6422010cc135897a64273db05334aeb1129cb81b2",
-        "AGENTS.md": "572e89977df21d684726458f22913ebbae37b78ce78fa357bc9c3d75d7258370",
+        ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
+        ".github/workflows/ci.yml": "9e12c7161d7c09c28f8f8029494a2eacaab587f77fb44dde9c1541fb062ba538",
+        "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
-        "apps/api/package.json": "d28cf8bdc84cf2edd8a75c1ab4d6fd395a931a6d6d34be68fcf6120300e2f246",
-        "bun.lock": "635ad19264c0d1562414add4196377f4e38a07c05b7f60fc9a84c040a0625ba5",
+        "apps/api/package.json": "82669cefe62d8e1b9736c39a6740873c3ce9ff8e1397cb794144562025616f83",
+        "bun.lock": "5cf95b4b70849b0117d65501d5cfb69b5bd1dab2bbaf90fad09753ea0a0e0239",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "92a4ae963f05fdad1b5490df2d97f832001a1c4a92435c8ad577787a3dcaad12",
-        "docs/guides/testing.md": "4f8479b214ccd71f6a7b5732415c64cdba27f3fd447b89b60fd199ad56430173",
+        "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
+        "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "fc7b7eb0c6d7442f49b94f031b91d5062d2d1b640dedebb328d02f56ff1350fc",
+        "package.json": "72c1829bbe389c7ab082d303a6b12003dd93a7028027e7fb3990797a4cee0992",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -93,14 +95,16 @@
         "packages/agent-skills/docs/elysiajs/references/validation.md": "4b79bfde09aa988ea37e35705b31fbca86cc9493ef8c0ac5d2f83f07637fa63a",
         "packages/agent-skills/docs/elysiajs/references/versions.md": "8285e4c6ba8d7c068fe84db048568011ba59260e7128f262ea01c842d3821126",
         "packages/agent-skills/docs/elysiajs/references/websocket.md": "023deb2d976b594b4ed76b5977be9b12ed5d1a543ad54e1f36cf3efc0ea26722",
-        "packages/agent-skills/package.json": "091388bfc7660883874244ae667cd06d2ddff276de89ddb919c2f6e665a336fa",
+        "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "The current change adds repository-local test/toolchain validation and no independently useful Elysia skill task. The domain map, skill spec, and skill tree all still accurately describe the sole registered Elysia backend skill and its source scope; the project toolchain commands remain in the canonical testing/development docs.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
+        "_artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml were inspected and retain the existing backend/elysiajs scope.",
+        "bun run skills:validate passed; docs/guides/testing.md and docs/guides/development.md document the new toolchain behavior.",
+        "mise run check:affected passed at HEAD e4223763eff9b070a61b4cf1950256cd467f86e1 against base fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -117,16 +121,17 @@
       ]
     },
     "source:packages/config/eslint/index.mjs": {
-      "fingerprint": "e905741b4713906327267a43c1cdd8e424ce9a23185560d031018b826e569834",
+      "fingerprint": "e781bd7c2c0cf8bf6146178eea6e1f6b321d96143a4372b2154c7a67236fb67d",
       "snapshot": {
-        "packages/config/eslint/index.mjs": "04fdedcb482c4782ad083edc2825f842a41d85831e2f08647d916eb67252477f"
+        "packages/config/eslint/index.mjs": null
       },
-      "head": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This change registers the new workspace path for existing ESLint boundary rules; it changes no Elysia source or skill recommendation.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "The new package entry has no imports; scripts/check-architecture.ts and hk architecture checks pass with 2,845 source edges and zero exceptions.",
-        "The package-specific typecheck and ESLint checks pass."
+        "packages/config/eslint/index.mjs was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/src/pages/StudentManagement.test.tsx": {
@@ -382,16 +387,17 @@
       ]
     },
     "source:apps/api/tests/backup-cli-restore-safety.test.ts": {
-      "fingerprint": "36552381b7169bf38aa802a8aaa439c58bd7521a996e6816ee9ec3b2d085f98f",
+      "fingerprint": "75a214455091da4c5d2fb8d75570729f1c318bf987bc1cba5167b17f3cbb9803",
       "snapshot": {
-        "apps/api/tests/backup-cli-restore-safety.test.ts": "2513ad190a70828c0e07787e86cc04fde38b4c010be030b3818b7d8909167ed1"
+        "apps/api/tests/backup-cli-restore-safety.test.ts": "7c6f1e3cb2d1b0545232ede1da793388831a1aa052fa7ff082892e12df5a53e4"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
-      "outcome": "no-change",
-      "reason": "Reviewed against the registered Elysia guidance; the CI, security, and test changes do not alter Elysia framework behavior or recommendations.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Diff: apps/api/tests/backup-cli-restore-safety.test.ts",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "apps/api/tests/backup-cli-restore-safety.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/src/auth/admin-state.ts": {
@@ -589,15 +595,17 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "fb87a590441cea9f83ce8c49941a93b9c24b6acfe5552d2cfb9d708207960c97",
+      "fingerprint": "3cfb1ff103c5f8a8ce329fb2821f688aff89467b62a45e3780b46ec7f6cfad3e",
       "snapshot": {
-        "README.md": "bc5e9fd863df49ce890be3aefe54de4d180841a4204324e05bf8e41991e134e2"
+        "README.md": "56019bedb4a99e8689f13440279021614f62222cbfe4cf61478609c5d8c2e8e0"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed README.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "README.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -868,15 +876,17 @@
       ]
     },
     "source:apps/api/tests/backup-disk-space.test.ts": {
-      "fingerprint": "974a8f388fd333ab3647497dd3358dc44cc9edf5597dbf8fb43bdf7bbda5ffff",
+      "fingerprint": "5b31e3c9306e811c461452892acf2d6075864c7a8cea48a8d2577af38b24af5d",
       "snapshot": {
-        "apps/api/tests/backup-disk-space.test.ts": "af5af2d41303f5931af5cf9fd7d431b83e5fcc4bddc0856010621946598b0cd3"
+        "apps/api/tests/backup-disk-space.test.ts": "032e73530f46500edd034fbd22327aefda6ebbeb79a8d2e1cf2b1f89ae719e56"
       },
-      "head": "fa930f4829dbdc8f6e7cf3327b2472b816120a8f",
-      "outcome": "no-change",
-      "reason": "The backend Elysia skill and all three planning records remain accurate: the change adds no framework task or guidance, and its API/CLI backup behavior is documented in docs/security/backup-restore.md. The synthetic backup/restore tests, API typecheck, security tier, architecture, lint, dependency audit, skill validation, and documentation checks passed.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/backup-disk-space.test.ts at fa930f4829dbdc8f6e7cf3327b2472b816120a8f"
+        "apps/api/tests/backup-disk-space.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/tests/security.test.ts": {
@@ -1264,15 +1274,17 @@
       ]
     },
     "source:apps/api/tests/attendance-analytics.test.ts": {
-      "fingerprint": "fec28119c9d97174a0f886c5f1d764a651b822fd985279132cdbcf7ca4d4ba11",
+      "fingerprint": "1e73e347de9d4c926d3d92bc7fb7d47ef77b445e646c5f43731c1f8eda9a9abd",
       "snapshot": {
-        "apps/api/tests/attendance-analytics.test.ts": "74d0d4e8f0a4f832cd7f28a30bd8c0dc7372f97417cc6364bc41ef06a6e8dead"
+        "apps/api/tests/attendance-analytics.test.ts": "09ff8d4c786e60e2ff001d699a0de91f4bb86df492ac784309f74271b21d0179"
       },
-      "head": "ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107",
-      "outcome": "no-change",
-      "reason": "The attendance SQL and regression test do not change repository guidance or agent skills.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/attendance-analytics.test.ts at ff71d1ebf8a5a1cf7b9fffb9f4ee1566015da107"
+        "apps/api/tests/attendance-analytics.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/src/pages/AttendanceAnalytics.test.tsx": {
@@ -1312,15 +1324,17 @@
       ]
     },
     "source:.github/actions/setup-bun/action.yml": {
-      "fingerprint": "8e9db827c7ba1b7533467327149bfb87548b4331b4e487a460bd449e48d5a28b",
+      "fingerprint": "7ec51c66c02b972c7adac61807303e2bd97b0bf6148f38ac70fe2d25099009e3",
       "snapshot": {
-        ".github/actions/setup-bun/action.yml": "bd06502d2ae28df6250e6d5aad5a564b3afa2b3d6a253f75d7fa10743b485ec6"
+        ".github/actions/setup-bun/action.yml": "64214abc83ca3345340f99ecc0641d3a086205c86527132f074c366dbb3644dc"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed .github/actions/setup-bun/action.yml in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        ".github/actions/setup-bun/action.yml was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:Containerfile.podman": {
@@ -1402,27 +1416,31 @@
       ]
     },
     "source:mise.lock": {
-      "fingerprint": "eb9d70e9a8be03ae5736ec8162b604922cc82b8b2f51a3e097ff82cd74c5ff50",
+      "fingerprint": "ba1a8ddaf1697fff35533e0a1bf28b2ac286b70ed808932a1e97e1f3fb30c1c5",
       "snapshot": {
-        "mise.lock": "a93b0bb94ea10adf6f1df48e7ce63e98fd5b9511ea14c94427ccf2bab83e5b3b"
+        "mise.lock": "0284e3c3ec41eb5e5d3f7e5cd0167f56160275ab41aabe90f67b4fffe4592b25"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed mise.lock in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "mise.lock was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:mise.toml": {
-      "fingerprint": "17630c4d539c35514af08e86ee60196baa759dd6d699fab4cd4d68bd6fc312a1",
+      "fingerprint": "f80dae11839c1df8de2b70f546df34a2d8c6a2d17eb200596a61e915e9c58c08",
       "snapshot": {
-        "mise.toml": "1a1968767a08262e746b1edd8d5adf5ee078863290899609cc4bbf7b40c982eb"
+        "mise.toml": "0231b786c1e99ba1034b89cc2535c5f81aef4944d9da17152242c93fdf65e660"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed mise.toml in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "mise.toml was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/tsconfig.json": {
@@ -1438,15 +1456,17 @@
       ]
     },
     "source:apps/api/tests/app.test.ts": {
-      "fingerprint": "5acd690e868d4e967c1bb0764eee2da93af176088a4a75d6046f35dec358d89b",
+      "fingerprint": "30897aac655c0eaf9f5dc2de217b36bc5ea36e6fa82df1b14512c6054aa2dccc",
       "snapshot": {
-        "apps/api/tests/app.test.ts": "1e9ba06f94c66e6ea3652e27f641e1c84595d0711f0af6d6d4c28ad97f82d8fd"
+        "apps/api/tests/app.test.ts": "c96c991cfc39feb463d03f5643b2c5b77e2935ab157e2820e77b64945f13eaeb"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
-      "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/app.test.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "apps/api/tests/app.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/src/domains/early-departure.ts": {
@@ -1535,17 +1555,17 @@
       ]
     },
     "source:turbo.json": {
-      "fingerprint": "aa753ff3c3e049caaa445fa89dcc441515ff0b3f589d95d31c8096a2f5ee5c53",
+      "fingerprint": "23de23fa8846e90721efbecacb4bc83df6a71f16c40510a890badb6d64891e1b",
       "snapshot": {
-        "turbo.json": "dbba7d485f512bc93ce0c57bd2c60b7f9df0b9651506a31062f1bfec20320633"
+        "turbo.json": "ae1a5e0ea4cd83727b4c34c346abc85ce8b5b0a5720d7811631eb095d229f5e5"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed turbo.json in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "turbo.json was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:PROJECT_CONTEXT.md": {
@@ -1779,16 +1799,17 @@
       ]
     },
     "source:hk.pkl": {
-      "fingerprint": "22d3716b2f43c4560b7d9483fa9e84ed6f2066b334a2dd308d851f3eab7ea126",
+      "fingerprint": "16c9da82664e434e9dad1ad05ec1ce28595a4ae76e379bafbc924fd2690067fb",
       "snapshot": {
-        "hk.pkl": "e051dd6bc7e86e6ef4a2b8af8f4f0725fe414f3e94ec83b7a6fc4b214f062cc1"
+        "hk.pkl": "4034a2e6aa86fccf3422328aa61f1b8227b98cf04207686cf5a59bd1da97bd55"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "The hk change wires repository pre-push checks and does not affect Elysia guidance or package behavior.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "hk.pkl",
-        "scripts/check-pre-push.sh"
+        "hk.pkl was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/src/App.tsx": {
@@ -2953,29 +2974,31 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d167b5a45e11edf650749506e470fedcd8c4ce84ceab434d6514b4e076b588c2",
+      "fingerprint": "7f0f35dedb4abd985a6aac4faf23cb96ec756b72847b8d87b72c589eb3af0e11",
       "snapshot": {
-        "CHANGELOG.md": "c73d9db4c04f4d43c6b84bc62e8e3ccb9cdcfc56733ae8aaced2f85aec5428d9"
+        "CHANGELOG.md": "ad7abce81ce4d61fbf69289003cf1aaf0767dae0caa80ee6738f925c8697a576"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
-      "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: CHANGELOG.md at 8aa54fd377352b29847457cef90543c538654ec4"
+        "CHANGELOG.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:COMMANDS.md": {
-      "fingerprint": "ec722e4ef1d0cace885c9a112418709d2ce4b3d549f5cffb6f6da298b5ab1fdc",
+      "fingerprint": "7f7ee7c1192af7e04499d62008a74b8af61813ab3ef3123892e9e3f65618e9b2",
       "snapshot": {
-        "COMMANDS.md": "ef9b5208469d6aad29e5594ff841ddef1fbe7bae5a019ec8cb4b9f9908bc3f7d"
+        "COMMANDS.md": "97b6a3c19ecc9550f75b868c102e24180642add337c4fd1a59139330994f2963"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "COMMANDS.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:ERRORS.md": {
@@ -3285,15 +3308,17 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "5e3c6b5e38d732f3a61a8469124c764a8f1ab8ccfcdb6db4ec6a933a648c665b",
+      "fingerprint": "24455ed82c2c0cf98b09fcbd3994e9e38a656fcd3d025e8655dd87d6a9891878",
       "snapshot": {
-        "docs/architecture/excel.md": "21df9fe8a2a387f0f50a5dc42d41380fedff03738bf9ecb3e744467ae9c212fe"
+        "docs/architecture/excel.md": "12ebb8f02d04e804e13a7cc6c7f9cc591003c2983fd60fdcd472978b17887821"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
-      "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "docs/architecture/excel.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -3443,15 +3468,17 @@
       ]
     },
     "source:docs/decisions/bun-toolchain.md": {
-      "fingerprint": "6b0d3bb574acfa621e7cad176f05f39bc03ee2ae9be4a3f8a58692ff92798d1d",
+      "fingerprint": "26e69be903abcc56d5e7bcc0fcd28bc488dceade328937dee5d146605cd14d0a",
       "snapshot": {
-        "docs/decisions/bun-toolchain.md": "5a8cc0035618fd23eb9f5d7be1e92ff0eeff1ffd651e0989097932170dfc4444"
+        "docs/decisions/bun-toolchain.md": "1ce3207d9997e37e91e46bef9727bfa805e5c1c0ad0fae78d33d7ec9bcec43eb"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed docs/decisions/bun-toolchain.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "docs/decisions/bun-toolchain.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:docs/decisions/documentation-system.md": {
@@ -4451,15 +4478,17 @@
       ]
     },
     "source:docs/reference/ci-performance.md": {
-      "fingerprint": "4bf859c28c0e34f0b76ebc1f311145cd52a9528b4deed3b3f3db61e3061a2c7b",
+      "fingerprint": "6def327e2ee35441689e5e51d2ed7d7e61944b5e101cc9d11a0d5ea7701d8c5e",
       "snapshot": {
-        "docs/reference/ci-performance.md": "acdfc23f07c4417aed135f4d66325fb21670893e33845c409bc68cc027eb8a0f"
+        "docs/reference/ci-performance.md": "ca246a30f57e12da4e4c3a110c2554f1d6bae8d2c69ca57b3305f0f98b5a8f1c"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Reviewed docs/reference/ci-performance.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "docs/reference/ci-performance.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:docs/reference/dependency-audit-exceptions.md": {
@@ -5241,15 +5270,17 @@
       ]
     },
     "source:apps/api/tests/system.test.ts": {
-      "fingerprint": "a5f125c14a9cc4f8e519dcf30f42e64d18f40f3a2a8c0322b1f9e97d22b4c59d",
+      "fingerprint": "ed8c3bb8513811e3a8da49d0c043db9cdfe895b12d133b8b02349af708ea9a1d",
       "snapshot": {
-        "apps/api/tests/system.test.ts": "ab05cb173400dd7db0c9f44868959d1ba33934afb7c3fa0182b816cb498b6ad3"
+        "apps/api/tests/system.test.ts": "a1270163b1ef543683d942ce18d0fed179e89c7c4d6f94f37ad34d46caca0e7e"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
-      "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/system.test.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "apps/api/tests/system.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/src/api/staff.ts": {
@@ -5555,15 +5586,17 @@
       ]
     },
     "source:apps/api/tests/operator-phase6.test.ts": {
-      "fingerprint": "e83a7cff9b367297a78d17e7899012252ce74136587090692f56939eb36e2668",
+      "fingerprint": "7ae3187c8528d70c80f58a809faa43821419c27dff7c9cc562557b97266f9e60",
       "snapshot": {
-        "apps/api/tests/operator-phase6.test.ts": "afb8c4548b605b77d2565e6891764846a3c6cca95ab1a3192c1242ff666623ee"
+        "apps/api/tests/operator-phase6.test.ts": "931fb6ddcd5e8b2cbe0b179cf9305bb2e797ff9bf4829bfe8b92d005de71580a"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
-      "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/operator-phase6.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "apps/api/tests/operator-phase6.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/src/features/operator-work-queue/api/operator.ts": {
@@ -5931,15 +5964,17 @@
       ]
     },
     "source:apps/api/tests/readiness.test.ts": {
-      "fingerprint": "4cc28c2eba57d759304fcaabc75954b46d0f3d1be795e804906bbba09af80bd2",
+      "fingerprint": "bc276f6e623506cd4b834b82b034f557cc69ed87b303a92a9dbed972967f7ddb",
       "snapshot": {
-        "apps/api/tests/readiness.test.ts": "2099d7b2f5b5674f4b7b4d4cce7f3138e1190f0ccff045bfe0431479d86d8545"
+        "apps/api/tests/readiness.test.ts": "08a2de2ec916370b06993110c62fae91489d3ec421f853cc1fe89d66d94c6d23"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/readiness.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "apps/api/tests/readiness.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:.audit/tanstack-router-review.tsv": {
@@ -7017,51 +7052,59 @@
       ]
     },
     "source:eslint.config.mjs": {
-      "fingerprint": "6b1a7732f2675a7b420924765fceced38614f4c38473916ae027f520841889c7",
+      "fingerprint": "511c24370b6c6e066375335798c46e5c087a998f652d5d11aa693b264ececffe",
       "snapshot": {
-        "eslint.config.mjs": "c010f22bb61bf009838767e9798f4bd0e821cbabe97b5b9131b2855cfd5b7bde"
+        "eslint.config.mjs": null
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
-      "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: eslint.config.mjs at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "eslint.config.mjs was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/local-feedback-loop.sh": {
-      "fingerprint": "46408c38194ce6c7dab297592ec236fb1d2fc0f22d245865760ccba35c15bd04",
+      "fingerprint": "387525056bc8fe7d66aa9726660c00bc10c6a78209649527a2f6bd5661e65604",
       "snapshot": {
-        "scripts/local-feedback-loop.sh": "7d08c4fc83ba8d6586d9b3cfce68b1bd118e0290b7d003762dcf55b0dd21a2cb"
+        "scripts/local-feedback-loop.sh": "728f82471863399a5840cba04082511aec557b08fe13da20d51a02fd6dd45ed3"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
-      "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: scripts/local-feedback-loop.sh at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "scripts/local-feedback-loop.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/test-scope.ts": {
-      "fingerprint": "df691d80945105d59a935f221215710f18b3618d55130cb3a974abdbca48d1ce",
+      "fingerprint": "0c11e2b83239e456894ea2d3e5479c72e1479dc483fb79d7fa96dc810c3bc658",
       "snapshot": {
-        "scripts/test-scope.ts": "a04aa380f9623af55b667f902a866877704f379bc68c902f486fc0b685922009"
+        "scripts/test-scope.ts": "8cf9495133aaf790b82122258887160378192f6300618330092935d65ada6a90"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
-      "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: scripts/test-scope.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "scripts/test-scope.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/tests/test-scope.test.ts": {
-      "fingerprint": "52d95b7944c1c9d29ea62801685487db2d05b946f9ce4ab6e906f9923dec172f",
+      "fingerprint": "f3f3bba68d133086ff9f30a39791cea0b8b6bed256569173682e828b4c5e5544",
       "snapshot": {
-        "scripts/tests/test-scope.test.ts": "0e4a1896a9f9497830b77920776fd709afb7e1b324bc146eba5d8be0a48ffdf8"
+        "scripts/tests/test-scope.test.ts": "3f9f1048b44564b1ec9ced103341eecabeab3851092bbfcecd37e0ec2344a196"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
-      "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "head": "49bb43149535fd5333995a63a9d76d33215af928",
+      "outcome": "out-of-scope",
+      "reason": "This change preserves the mise-pinned Node runtime in the isolated test-tier PATH so the TSRS CLI can run after PATH sanitization. It is repository validation infrastructure and does not change Elysia API behavior or its skill guidance.",
       "evidence": [
-        "Changed: scripts/tests/test-scope.test.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "scripts/tests/test-scope.test.ts was inspected in the current worktree.",
+        "mise run test:fast passed with MISE_TRUSTED_CONFIG_PATHS set to this worktree and an isolated TMPDIR; classifier/tooling tests passed 219/219 and database tests passed 10/10.",
+        "The Elysia skill and route-testing reference remain accurate and unchanged."
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
@@ -7077,16 +7120,17 @@
       ]
     },
     "source:scripts/check-pre-push.sh": {
-      "fingerprint": "36f44e839a432fb62cc58dc919c6b93169796eb36f84f680319c8605c5dda9fd",
+      "fingerprint": "edb261d9a61efc623fe06de6b113187b4ebc25696de617f9dfcb3384a3700f12",
       "snapshot": {
-        "scripts/check-pre-push.sh": "2527aacbca90897507741d6ba447d51338dc6b0b3268af030c08587e59b02bb6"
+        "scripts/check-pre-push.sh": "49dc8fb00214c13d98e24d05c6ff95e88a76fd687e90a287fe0dba36d8d67073"
       },
-      "head": "caed4f6e97d9cdca1dcd0f6776c21a0cd1366ec1",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
       "outcome": "out-of-scope",
-      "reason": "This script runs repository-level fast CI checks before a push and does not change an Elysia task.",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "scripts/check-pre-push.sh",
-        "package.json"
+        "scripts/check-pre-push.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:.audit/dependency-optimization.tsv": {
@@ -8432,17 +8476,17 @@
       ]
     },
     "source:scripts/test-tier.sh": {
-      "fingerprint": "6007a44e8892d970ec7f05f7c5516cba2360457ea72100affffbec2fe9abb0d3",
+      "fingerprint": "7a8a53c9ed3386659776782fe0ca88481d4e93392f933fef4ab75633e5d99403",
       "snapshot": {
-        "scripts/test-tier.sh": "a5c8b805e8e307df00a453b1209dc5f8c1aba4e861fd581ac479a365c703a433"
+        "scripts/test-tier.sh": "6fe5b17652bc15390fc5356dc9ef67fe1d797115fc33ea2a7cbc1e0e3cd9f3e3"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
-      "outcome": "no-change",
-      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
+      "head": "49bb43149535fd5333995a63a9d76d33215af928",
+      "outcome": "out-of-scope",
+      "reason": "This change preserves the mise-pinned Node runtime in the isolated test-tier PATH so the TSRS CLI can run after PATH sanitization. It is repository validation infrastructure and does not change Elysia API behavior or its skill guidance.",
       "evidence": [
-        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
-        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
-        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
+        "scripts/test-tier.sh was inspected in the current worktree.",
+        "mise run test:fast passed with MISE_TRUSTED_CONFIG_PATHS set to this worktree and an isolated TMPDIR; classifier/tooling tests passed 219/219 and database tests passed 10/10.",
+        "The Elysia skill and route-testing reference remain accurate and unchanged."
       ]
     },
     "source:apps/api/src/domains/upload-conflicts.ts": {
@@ -8458,15 +8502,17 @@
       ]
     },
     "source:apps/api/tests/machine-attendance-preview.test.ts": {
-      "fingerprint": "e894538c1af26cd3afbf4d99b3be8809b7529ab14cd1aeae7b035742805d85ca",
+      "fingerprint": "1c22a1facddc50d55880de10a3c804b4ae75a91e6582d418d03d152dda4b57d1",
       "snapshot": {
-        "apps/api/tests/machine-attendance-preview.test.ts": "e98cf3233a8c1996d4e85b8444ae2600bc160bf4af0392044970cbd1c2958c0d"
+        "apps/api/tests/machine-attendance-preview.test.ts": "7e13fe14e2ada01dd7a7811741be634a29c3fd0ef0eda8ce3cd70e0b674547a1"
       },
-      "head": "b564d7438f8247639ae32c51a5ecb649d15da781",
-      "outcome": "no-change",
-      "reason": "Reviewed the retry service, route tests, TypeBox and authorization boundaries, SQLite transaction and audit behavior, and existing testing guidance; no maintainer skill guidance needs updating.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/machine-attendance-preview.test.ts at b564d7438f8247639ae32c51a5ecb649d15da781"
+        "apps/api/tests/machine-attendance-preview.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/web/index.html": {
@@ -9880,17 +9926,17 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "dc58cb40dfb09cb5e67b55212cd71a79197cb8465ed766cd96ed080b3543022b",
+      "fingerprint": "a5719b3e9b49103e42fa7f99383accd46c00f53d17c629d4b35234a4039a013e",
       "snapshot": {
-        "scripts/check": "091ffd07bf014fe324674bb2e75d30d25af916e5f1df9fd32df4906a5e6f9c97"
+        "scripts/check": "3a67d159c848632311523fb21f6d7c16b6bcffc88b06c1061d4f426e0e61473d"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
-      "outcome": "no-change",
-      "reason": "This is runtime, build, CI, or release-evidence plumbing for the existing Bun application; the release guidance was updated, with no new product domain or Intent skill task.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
-        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
-        "The release checks continue to require exact image/source identity and keep host qualification and production authorization open."
+        "scripts/check was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/dev": {
@@ -9906,15 +9952,17 @@
       ]
     },
     "source:scripts/doctor": {
-      "fingerprint": "cbe0a22c2b23f102af03c997066447ea1df2dfae7618853c214e160c19616783",
+      "fingerprint": "a09d224bcd40e1a179b3a9272f936b9266b2603542b6897fdcde3bab64e628e3",
       "snapshot": {
-        "scripts/doctor": "2f9cd0e1b852215043446ad1cd8064570820bf54149b6f43be6fdecf2acff8f1"
+        "scripts/doctor": "e79c1e782fec401515681fdca6cb3caa19823b5d178ae81f43a7b8d899ba1684"
       },
-      "head": "56744b4f294f7e5b6e27d0889e35159659e84540",
-      "outcome": "no-change",
-      "reason": "Dev tooling, documentation, and tests only; no agent skill or product guidance changed.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "Changed: scripts/doctor at 56744b4f294f7e5b6e27d0889e35159659e84540"
+        "scripts/doctor was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/stop": {
@@ -10360,15 +10408,17 @@
       ]
     },
     "source:apps/api/tests/admin-recovery.test.ts": {
-      "fingerprint": "a1b8f3156c0cc7cb5bd1b886d4d398c08acce98b51455153d470943123810930",
+      "fingerprint": "52dd57381db5aaa187ee785aa3b2709ff3e8b8b365a8a979e4c257efc7531f4b",
       "snapshot": {
-        "apps/api/tests/admin-recovery.test.ts": "e395818e3ac831a498d7583e1126282805c2edc1d057a14be781aa227fe1a0ce"
+        "apps/api/tests/admin-recovery.test.ts": "246aae8d8b8c26f62f1c572c0fbf537a74d7de3c13391bef80e7244fbd07a45d"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/admin-recovery.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "apps/api/tests/admin-recovery.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/tests/analytics-phase16.test.ts": {
@@ -10396,15 +10446,17 @@
       ]
     },
     "source:apps/api/tests/e3a-pilot-readiness.test.ts": {
-      "fingerprint": "a3ffdfb80d4a93ab221f209b56023ad973af8dc2e82dfb7924b8b6c4db7f6647",
+      "fingerprint": "3134035bc9d1ad8a0f4646449ab106b662dd4373b7b3083103844cb7c3c939a9",
       "snapshot": {
-        "apps/api/tests/e3a-pilot-readiness.test.ts": "366d3ff20f7d1f56cbda1ec80e077a3916cadb1f8eb84bbb4847b86c9c9d032c"
+        "apps/api/tests/e3a-pilot-readiness.test.ts": "c0fa9706c6f77674810d8299d2629be8b5770a567d2ebd1f96f16e9b4ab8b2fc"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/e3a-pilot-readiness.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "apps/api/tests/e3a-pilot-readiness.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/tests/fixtures/database.ts": {
@@ -10432,15 +10484,17 @@
       ]
     },
     "source:apps/api/tests/fixtures/golden.ts": {
-      "fingerprint": "15f98f3d3b3e82a3d4b6eeda7b836e0062e8b54ca508d74de46b7f3206a9ef4c",
+      "fingerprint": "5cd0dff25a18632700e3d97f5962f6ae3782f65c0a4db866e25be6e4705d87d9",
       "snapshot": {
-        "apps/api/tests/fixtures/golden.ts": "56be894ae3947ada83ba1cbdc005fc948855d140e1621a1dbd7f041fa5858f9e"
+        "apps/api/tests/fixtures/golden.ts": "e6b682f10d4f282888b3dd30e5b82302f20227597b0bbafda1328d441a0742e3"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/fixtures/golden.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "apps/api/tests/fixtures/golden.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/tests/management-review-profile.test.ts": {
@@ -10531,15 +10585,17 @@
       ]
     },
     "source:apps/api/tests/tardiness-display.test.ts": {
-      "fingerprint": "07204af1ea2e10c638eac26a5de94049d6c34c713e9a8415578ca131a39d3a42",
+      "fingerprint": "d17418485678c0841cd1205fb3524ffcf16b7cb14a570aa79d94474a9d0919df",
       "snapshot": {
-        "apps/api/tests/tardiness-display.test.ts": "2260430074f62d90f268722253aa6e18ac4321d40ce2cb86e2651238f39bb84e"
+        "apps/api/tests/tardiness-display.test.ts": "2a198025bcfe272a4f33b8306fd6caa349c5b5c2697dcdfedcbdddabd0ceee07"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
-      "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
       "evidence": [
-        "Changed: apps/api/tests/tardiness-display.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "apps/api/tests/tardiness-display.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:apps/api/tests/term-attendance.test.ts": {
@@ -10746,17 +10802,17 @@
       ]
     },
     "source:e2e/run-readiness.sh": {
-      "fingerprint": "c6caf26e0e51a26d347c1a4bc3f2d2b37b76f7c0070acb983774be16fca5f6ba",
+      "fingerprint": "7ed7e2d4de7d546fc390cb685485d04228c9cd30ee65331dbd41c14234744d25",
       "snapshot": {
-        "e2e/run-readiness.sh": "2a4cf3fc0cc70d0c39ae9321584dc3d10134b664904a8fcad61ff42407cbb318"
+        "e2e/run-readiness.sh": "d35f270174b335c75159656523d0ca718a9aa5303f9909e8f3c603d7fef179ca"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
-      "outcome": "no-change",
-      "reason": "This adapts existing browser verification to Bun-compatible tooling; it changes test infrastructure, not application routes, business behavior, or the skill/domain map.",
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
       "evidence": [
-        "mise run check:full passed (950 seconds): API 441 tests twice, database 63 tests, backend/browser smoke 8/67, readiness 3/3, package checks, and docs checks; no failures.",
-        "bun install --frozen-lockfile completed: 610 installs across 675 packages, no changes.",
-        "Local smoke passed with 8 backend and 67 browser tests; readiness passed 3/3."
+        "e2e/run-readiness.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     },
     "source:scripts/tests/test_bun_image_lifecycle.py": {
@@ -10909,6 +10965,398 @@
       "reason": "Reviewed Docker release/archive identity changes and their existing runbook updates. These changes do not affect Elysia source guidance, library skills, or the planning records; the new runtime identity contract is documented in the release bundle runbook.",
       "evidence": [
         "Changed: scripts/tests/test_docker_candidate_release.py at 036b8126602120999b7065b2d5bb153da8054d0f"
+      ]
+    },
+    "source:apps/api/tests/academic-analytics.test.ts": {
+      "fingerprint": "ac3feb4eafb69c41277d2ae827fd46325db98b5d2ac4f30b037291cf8ce8232d",
+      "snapshot": {
+        "apps/api/tests/academic-analytics.test.ts": "39823ad24f4ba5d5b4adcc3b590b4eb236c28608e3ba9434997dbfac90cfdc76"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/academic-analytics.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/academic-logic.test.ts": {
+      "fingerprint": "b4100925768acbfc38fcd5e216012aaedb647a9148660a6d438d183393fa9696",
+      "snapshot": {
+        "apps/api/tests/academic-logic.test.ts": "38887c03e56563d954844b12fede6788fe073293dc95b0069a4f8513dbbebdf9"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/academic-logic.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/admin-accountability.test.ts": {
+      "fingerprint": "71d08546dc46450aad63a1ecee7646bfdfedc1ae5b31355c5cefcd1687fb67f8",
+      "snapshot": {
+        "apps/api/tests/admin-accountability.test.ts": "93c169a479068d7049345091f8fd2b3052feea72ccd3302fde17db89af8383ed"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/admin-accountability.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/assessment-operations.test.ts": {
+      "fingerprint": "b4f2fc5e807685bb1f3b14f2de950240bb9c76877632e311f2a2296aba704353",
+      "snapshot": {
+        "apps/api/tests/assessment-operations.test.ts": "f2f72a8d84efab1524ec3615bd706314943a1188d6813ed698a15175cc36a40a"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/assessment-operations.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/assigned-class-attendance-export.test.ts": {
+      "fingerprint": "a9950e6188643e099ab325dbab51039e785325fa9d506b70a9dc948406219d1e",
+      "snapshot": {
+        "apps/api/tests/assigned-class-attendance-export.test.ts": "b99dd2f587d0926a78c23e962f5e7542ea8a501c8db9c3be7aa78ce56e1460e1"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/assigned-class-attendance-export.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/attendance-calendar.test.ts": {
+      "fingerprint": "e076c3bd82f8416cef41b0f591b6a8625d99185f9026cea63aaac3c4d2d7b33e",
+      "snapshot": {
+        "apps/api/tests/attendance-calendar.test.ts": "92775fc0b22ace6afcc01e78ed20030f63d40f0b81ede8744cf9ff0237bbeca0"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/attendance-calendar.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/attendance-correction-review.test.ts": {
+      "fingerprint": "8026323c4e91a9d20868b78a396c1624bee606462ca882b20b6db7808a34143f",
+      "snapshot": {
+        "apps/api/tests/attendance-correction-review.test.ts": "7a589cd46e2acac1a1b63ae4d013b02252fc999b091e484eaaef494005167fb0"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/attendance-correction-review.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/class-attendance-contract.test.ts": {
+      "fingerprint": "d5dfeb9f08b964298c2d75b62ccc4f42f227fbe916a050d79a0f36753bb4e291",
+      "snapshot": {
+        "apps/api/tests/class-attendance-contract.test.ts": "5b7e8074649830b33303aeaf3d9b04fb7342f9c8f5b81ace9ee5657b4c24710b"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/class-attendance-contract.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/daily-attendance.test.ts": {
+      "fingerprint": "8f803c281ecdcd5364050374277e3fa892666a7fdad3b6761838693ea4657abd",
+      "snapshot": {
+        "apps/api/tests/daily-attendance.test.ts": "7d85e4bab59d4b961a26978c0d97761658702ccc384c0205e86106ad3b45b622"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/daily-attendance.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/data-quality.test.ts": {
+      "fingerprint": "528a9b927a2bb50a93f3106ead581ccc1be499b5368e4d60b4fae44d921a6a8b",
+      "snapshot": {
+        "apps/api/tests/data-quality.test.ts": "7ade23c1f18eb5e1ff9995812cc96309d5e534b58f1ede3d17ee8b11b132a054"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/data-quality.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/fixtures/accounts.ts": {
+      "fingerprint": "77cf878ebea5ecb576dfcccafe9d77952ec8c35bc83d489bd8e46bbc45f4ad04",
+      "snapshot": {
+        "apps/api/tests/fixtures/accounts.ts": "3f746cf3f5aef524e0d14fc7bbfbb9291f035e45d711ff7915f0eca6af61e54a"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/fixtures/accounts.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/fixtures/password-hash.ts": {
+      "fingerprint": "fba4bb34810bfc999e16c6905765bf7900925d9deb0cf2f3373f666d5335674c",
+      "snapshot": {
+        "apps/api/tests/fixtures/password-hash.ts": "c854bb30bcadf6eadc1446a130b1e602b6424fb05176cf4b744d236c77b3e284"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/fixtures/password-hash.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/fixtures/test-temp-path.ts": {
+      "fingerprint": "9c972709930113e85f252e00fdb377a3e4d5fca1db84d346f0adfc6ae6272b5a",
+      "snapshot": {
+        "apps/api/tests/fixtures/test-temp-path.ts": "acaec04d5ab0b984e9b99d67662e7ca8d921ba5646c8db90d0a2f6a99be31a35"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/fixtures/test-temp-path.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/grades.test.ts": {
+      "fingerprint": "4adefdc09370ee9c7fe23d633e804d826f434d57d9ab313bbdd4cdc67013bb3c",
+      "snapshot": {
+        "apps/api/tests/grades.test.ts": "5ef7a1ac6ba306f486a5cd1ef70cfe4f20953bdfc9c12b00942f8d8856b51bee"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/grades.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/management-overview.test.ts": {
+      "fingerprint": "b30ac5cd41ef282ea933ccca6e8966c950ac54e851e3756d1ad969c78a3e3030",
+      "snapshot": {
+        "apps/api/tests/management-overview.test.ts": "3e57a046439f922c731f0f3f29aaa2070d5c855c6558b598e1839b0a5c301c0c"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/management-overview.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/management-review-attendance-export.test.ts": {
+      "fingerprint": "84ead7d6b06db13a6bb6fdb77c896b336ecf25d31051b93000485791a8449279",
+      "snapshot": {
+        "apps/api/tests/management-review-attendance-export.test.ts": "aa8b5d36b3bfe9243db65d0cd7bd920e45a3af23bfae2ab201b333489d44740a"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/management-review-attendance-export.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/report-builder.test.ts": {
+      "fingerprint": "28d99e87a952b32cd9d5d2da0c9fce87bb856ae75655a665e36d4a07cbf099fa",
+      "snapshot": {
+        "apps/api/tests/report-builder.test.ts": "caaebcb7deb4ca557afd1a10e3e8cf5cb8a3d2b2db94d0adf960bf2657bb987d"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/report-builder.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/roster.test.ts": {
+      "fingerprint": "e690af3a94fce8b178a372ce104c4fab4111cd2b7fb9022f68bf42b876b433de",
+      "snapshot": {
+        "apps/api/tests/roster.test.ts": "b48cb6217d24bad36668c3cc85d27f9da0496b5105aaddda41527a0bfe786711"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/roster.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:apps/api/tests/student-attendance-export.test.ts": {
+      "fingerprint": "eff67d3eafc26080ee07ee7217c2fd67e030c452cd11b5c690b4a89d13519b29",
+      "snapshot": {
+        "apps/api/tests/student-attendance-export.test.ts": "96a66c9af17ccd99805878c2e427713f5020755b6d4d2c367cfe1d51d4ed8ba0"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This API test or fixture change isolates test-owned files or bounds API test workers; it does not change an Elysia API contract or introduce a reusable framework task, and the registered Elysia route-testing guidance remains sufficient.",
+      "evidence": [
+        "apps/api/tests/student-attendance-export.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:oxlint.config.mjs": {
+      "fingerprint": "c959c7ad4693038c61afd60b3db7e263ec64f23e4909c64e007475b6d03419db",
+      "snapshot": {
+        "oxlint.config.mjs": "e33c0148a0c91826b25af68eb009845948449f58d57f905ccbfa0a744b997ba7"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "oxlint.config.mjs was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:packages/config/eslint/README.md": {
+      "fingerprint": "35fec9fbf395c0166b32485b816718347da3c1145b63ddeff95505b7fea1b003",
+      "snapshot": {
+        "packages/config/eslint/README.md": null
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "packages/config/eslint/README.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:packages/config/lint/README.md": {
+      "fingerprint": "af5bba66cdd4e92d3df4dd7adb45e05300948b9159b87a2c5c16c1184258e246",
+      "snapshot": {
+        "packages/config/lint/README.md": "156590eb1abeb17ae950ac880ab4004f3205352c03ba00643fa6cae624cfdf14"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "packages/config/lint/README.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:packages/config/lint/boundaries.mjs": {
+      "fingerprint": "7485d1d38e207834fd127346ec2b33b5c5b40bb0ee3a978b5328d5612ad45918",
+      "snapshot": {
+        "packages/config/lint/boundaries.mjs": "04fdedcb482c4782ad083edc2825f842a41d85831e2f08647d916eb67252477f"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "packages/config/lint/boundaries.mjs was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:scripts/check-affected.sh": {
+      "fingerprint": "55a64558e0c7f8a0545819c3ecd869f6181b7d1d5983e4c6c3519ac524e7207b",
+      "snapshot": {
+        "scripts/check-affected.sh": "67138185b29f96cb3905fa3136d7be3333bf62d230c9b69593b2940a9047839b"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "scripts/check-affected.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:scripts/test-turbo-invalidation.ts": {
+      "fingerprint": "30824262ba50e0cc5ebf1d49368550e603cef46ac3e4e5f532e4c237927c4eaa",
+      "snapshot": {
+        "scripts/test-turbo-invalidation.ts": "d0c78b4c012d27c858aed9f21470a1c9f81ffd89dfec3919b4fe69c0620f5c95"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "scripts/test-turbo-invalidation.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:scripts/tests/check-affected.test.ts": {
+      "fingerprint": "873cb4735c028abffb388995530ac111aa568c04ba986f317343d47e63c6a7d8",
+      "snapshot": {
+        "scripts/tests/check-affected.test.ts": "c61e0ad4ad20a3db49f76e97cf6b7505efe6e09011140f2484cfa65c711fd562"
+      },
+      "head": "bec6ea64fda2802ad506d79ba4dbd2d8ff5be61d",
+      "outcome": "out-of-scope",
+      "reason": "This regression test verifies that the repository affected-check script ignores inherited real-repository Turbo base/head variables when testing synthetic Git repositories. It changes no Elysia framework behavior or backend guidance and does not warrant another library skill.",
+      "evidence": [
+        "scripts/tests/check-affected.test.ts was inspected; the helper clears TURBO_SCM_BASE and TURBO_SCM_HEAD before invoking the disposable-repository fixture.",
+        "With the pre-push base/head variables set to fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9 and bec6ea64fda2802ad506d79ba4dbd2d8ff5be61d, bun test scripts/tests/check-affected.test.ts passed all 8 tests.",
+        "packages/agent-skills/skills/elysiajs/SKILL.md and its route-testing reference remain unaffected."
+      ]
+    },
+    "source:scripts/tests/typecheck-tsrs.test.ts": {
+      "fingerprint": "051b6d0d23c30fab4acf4ca4efda7c8d6bcaef2e8bdc0d6ccf66b44b31dbf819",
+      "snapshot": {
+        "scripts/tests/typecheck-tsrs.test.ts": "92808416c754e722f66a2d27cb511bfc7ab9f1f059f4986653faa64684d1f4e1"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "scripts/tests/typecheck-tsrs.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:scripts/typecheck-tsrs.sh": {
+      "fingerprint": "0123161d4b2fbfe96cb1403387c945e3194a34ae562faaa0e9480a0af863f254",
+      "snapshot": {
+        "scripts/typecheck-tsrs.sh": "b9bad016d44fa18bd350ec0c75342b91672be34228ed5f7256c50d2e0ebac6b8"
+      },
+      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "outcome": "out-of-scope",
+      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "evidence": [
+        "scripts/typecheck-tsrs.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
+        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
+        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
       ]
     }
   }

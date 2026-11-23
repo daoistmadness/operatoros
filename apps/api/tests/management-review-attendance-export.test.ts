@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { openDatabase } from "@operatoros/db";
@@ -19,8 +20,8 @@ function cookie(response: Response): string {
 }
 
 async function setup() {
-  const path = `/tmp/operatoros-management-review-attendance-${process.pid}-${Date.now()}.db`;
-  const auditDir = `/tmp/operatoros-management-review-attendance-audit-${process.pid}`;
+  const path = testTempPath(`operatoros-management-review-attendance-${process.pid}-${Date.now()}.db`);
+  const auditDir = testTempPath(`operatoros-management-review-attendance-audit-${process.pid}`);
   seed(path);
   const database = openDatabase(path);
   const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });

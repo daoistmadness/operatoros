@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
-import { dirname } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { createApp } from "../src/app";
 import { openDatabase } from "@operatoros/db";
 import { isEncryptedBackup, parseBackupEncryptionConfig } from "../src/security/backup-crypto";
@@ -22,27 +23,34 @@ function cookie(response: Response): string {
 }
 
 async function setup(label: string) {
-  const dataDir = `/tmp/operatoros-reset-${label}-${process.pid}-${Date.now()}`;
+  const dataDir = mkdtempSync(join(tmpdir(), `operatoros-reset-${label}-`));
   const path = `${dataDir}/operatoros.sqlite`;
   const backupDir = `${dataDir}/backups`;
   const auditDir = `${dataDir}/logs`;
-  mkdirSync(dataDir, { recursive: true });
-  seed(path);
-  mkdirSync(backupDir, { recursive: true });
-  const database = openDatabase(path);
-  const backupEncryption = parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret });
-  const auth = { authCookieSecret: secret, auditDir };
-  const disabled = createApp({ databaseHandle: database, auth, backupDir, backupEncryption, destructiveOperationsEnabled: false });
-  const enabled = createApp({ databaseHandle: database, auth, backupDir, backupEncryption, destructiveOperationsEnabled: true });
-  const adminLogin = await enabled.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
-  const staffLogin = await enabled.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
-  return {
-    path, backupDir, database, disabled, enabled, admin: cookie(adminLogin), staff: cookie(staffLogin),
-    cleanup() {
-      database.close();
-      rmSync(dataDir, { recursive: true, force: true });
-    },
-  };
+  let closeDatabase: (() => void) | undefined;
+  try {
+    seed(path);
+    mkdirSync(backupDir, { recursive: true });
+    const database = openDatabase(path);
+    closeDatabase = () => database.close();
+    const backupEncryption = parseBackupEncryptionConfig({ activeKey: backupKey, activeKeyId: "test", authCookieSecret: secret });
+    const auth = { authCookieSecret: secret, auditDir };
+    const disabled = createApp({ databaseHandle: database, auth, backupDir, backupEncryption, destructiveOperationsEnabled: false });
+    const enabled = createApp({ databaseHandle: database, auth, backupDir, backupEncryption, destructiveOperationsEnabled: true });
+    const adminLogin = await enabled.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
+    const staffLogin = await enabled.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
+    return {
+      path, backupDir, database, disabled, enabled, admin: cookie(adminLogin), staff: cookie(staffLogin),
+      cleanup() {
+        database.close();
+        rmSync(dataDir, { recursive: true, force: true });
+      },
+    };
+  } catch (error) {
+    closeDatabase?.();
+    rmSync(dataDir, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 function post(app: ReturnType<typeof createApp>, url: string, body: unknown, session?: string): Promise<Response> {

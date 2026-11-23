@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-23
 ---
 
 # ADR: Bun-native frontend and tooling environment
@@ -69,7 +69,7 @@ No app behavior, API contract, schema, dependency, linker, deployment, or data
 path changed. The 1.4.2 Elysia/AsyncLocalStorage fixes and 1.4.4 SQLite fixes
 are taken through the existing regression suite; no new runtime API was needed.
 
-## TypeScript 7.0 CLI and Bun native checking
+## Previous TypeScript 7.0 CLI and Bun native checking (superseded 2026-11-23)
 
 The stable TypeScript 7.0.2 CLI is the primary `typecheck` compiler. The root
 pins it as `@typescript/native` (`npm:typescript@7.0.2`), and the seven workspace
@@ -119,6 +119,139 @@ References: [TypeScript 7.0 release](https://devblogs.microsoft.com/typescript/a
 [VS Code TypeScript 7 extension](https://marketplace.visualstudio.com/items?itemName=TypeScriptTeam.native-preview).
 
 References: [Bun 1.4](https://bun.com/blog/bun-v1.4), [1.4.1](https://bun.com/blog/bun-v1.4.1), [1.4.2](https://bun.com/blog/bun-v1.4.2), [1.4.3](https://bun.com/blog/bun-v1.4.3), [1.4.4](https://bun.com/blog/bun-v1.4.4), [1.4.5](https://bun.com/blog/release-notes/bun-v1.4.5), [Bun docs](https://bun.com/docs), [mise Bun guidance](https://mise.jdx.dev/lang/bun.html).
+
+## Oxlint and TSRS toolchain (2026-11-23)
+
+The current development toolchain keeps Bun 1.4.5 as runtime and package
+manager, pins Node.js 24.19.0 for Oxlint's JavaScript config, uses Oxlint
+1.94.0 for the existing workspace import restrictions, and uses TSRS
+7.1.0-beta.tsrs4 for the existing no-emit TypeScript projects. `bun check`
+remains an independent blocking CI validation. TypeScript 5.9.3 remains for the
+architecture checker's compiler API and TypeScript 5 peer consumers.
+
+The change was evaluated in an isolated workspace on a four-core Linux x86_64
+host. Five alternating full-workload runs compared the previous ESLint +
+TypeScript 7 CLI + Bun check + architecture sequence with Oxlint + TSRS + Bun
+check + architecture. Oxlint retained the current `no-restricted-imports`
+policy only; all other Oxlint categories stay off. ESLint and Oxlint both
+reported zero diagnostics across the same 703 repository files. Five denied
+static-import fixtures and two allowed fixtures produced matching results.
+One literal dynamic-import fixture differed: ESLint emitted no lint diagnostic,
+while Oxlint did. The existing architecture checker rejects that same import,
+so the full validation gate has the same boundary coverage and outcome. This is
+an additional, explained Oxlint diagnostic rather than exact rule-output
+parity. TSRS's standalone checks passed all eight existing project scopes and
+matched synthetic TS2322, TS2345, and strict-index diagnostics. Its wrapper
+normalizes TSRS's type-diagnostic exit 2 to the existing `tsc` exit 1.
+
+The combined Oxlint `--type-aware --type-check` mode is not adopted. The final
+qualification reported 30 diagnostics, all outside the existing TypeScript
+project configs: 16 in `apps/api/benchmarks/attendance-import-preview-client.ts`,
+5 in `apps/api/benchmarks/attendance-import-preview.ts`, 4 in
+`apps/api/benchmarks/attendance-import-stage-profile.ts`, and 5 in
+`packages/excel/scripts/create-browser-fixtures.ts`. These files are outside
+the existing CLI typecheck projects. No in-scope type-aware diagnostics were
+reported, and the existing Oxlint config enables no type-aware rules. TSRS
+continues to check all eight configured projects independently. An earlier
+27-diagnostic count was not reproduced and is superseded by this final result.
+The TSRS `--fast` option is also not adopted; the default mode was
+measured at 2.20 seconds versus 1.99 seconds for `--fast`, and correctness
+parity outweighs that small difference. TSRS is currently a prerelease, so
+retaining TypeScript 5.9.3 and Bun's check as separate compatibility gates is
+part of the rollout. Reevaluate TSRS when a stable release is available.
+
+The qualification compared the previous ESLint + TypeScript 7 + Bun check +
+architecture sequence with Oxlint/TSRS candidates on the same four-core host.
+The original and adopted rows below are the final five-run remeasurement after
+the test fixes; the three intermediate Oxlint rows are from the initial
+qualification. Every workload covered the same eight workspaces and kept Bun
+check and the architecture checker enabled. The primary comparison used a warm
+filesystem; cold/warm Turbo cache results are reported separately below. No CI
+performance claim is implied.
+
+| Candidate | Median wall (range) | Median user / system CPU | Median peak RSS | Result |
+| --- | ---: | ---: | ---: | --- |
+| ESLint + TypeScript 7 + Bun check + architecture, final five-run remeasurement | 22.10s (22.05–22.50) | 47.83s / 3.14s | 1,025,328 KiB | Pass |
+| Oxlint, no type-aware analysis + TypeScript 7 + Bun check + architecture | 12.86s (11.64–13.54) | 31.43s / 3.17s | 1,027,312 KiB | Pass |
+| Oxlint `--type-aware` + TypeScript 7 + Bun check + architecture | 13.37s (11.98–13.57) | 32.60s / 3.41s | 1,026,940 KiB | Pass; no current type-aware lint rule benefits |
+| Oxlint `--type-aware --type-check` + TypeScript 7 + Bun check + architecture | 14.57s (13.28–15.01) | 35.16s / 3.72s | 1,005,760 KiB | Fail; 30 diagnostics outside the configured project scopes |
+| Oxlint (three threads) + TSRS project checks + Bun check + architecture, final five-run remeasurement | 6.96s (6.90–6.99) | 16.08s / 1.30s | 298,592 KiB | Pass |
+
+The final remeasurement used the same warm-filesystem sequence in the isolated
+original and candidate clones after the test fixes. Across five runs, the
+adopted candidate reduced median wall time by 68.5%, user CPU by 66.4%, and
+peak RSS by 70.9% against the original sequence on this host. All ten runs
+exited 0; the ESLint and Oxlint full-repository runs both covered 703 files
+with zero diagnostics. These are measured local deltas, not CI targets.
+Standalone package checks measured TypeScript 7
+at 7.41s median (7.03–7.88s, 20.95s user CPU, 1,022,164 KiB peak RSS) and
+TSRS at 2.20s median (2.17–2.54s, 5.17s user CPU, 296,832 KiB peak RSS).
+TSRS `--fast` measured 1.99s median (1.85–2.08s) but remains unused because
+the small gain does not justify choosing a less conservative mode.
+
+After the test fixes, three cold/warm pairs ran `turbo run typecheck build
+--concurrency=4` in both isolated clones. Each cold run used a distinct
+external local-only cache directory; each matching warm run reused it. All
+eight tasks missed on cold runs and hit on warm runs. The original toolchain's
+cold median was 10.35s (10.23–10.38s, 30.16s user CPU, 1,073,732 KiB peak RSS);
+its warm median was 0.09s (0.09–0.09s, 93,084 KiB peak RSS). The adopted
+toolchain's cold median was 6.51s (6.49–6.63s, 15.09s user CPU, 985,168 KiB
+peak RSS); its warm median was 0.09s (0.09–0.09s, 91,336 KiB peak RSS).
+Remote caching was disabled for every run. These results demonstrate local
+cache hits and task hashing, not CI or remote-cache performance.
+
+The current ESLint config has no type-aware rules, so the `--type-aware` run
+added analysis time without adding a needed diagnostic. The architecture
+checker remains separate: its 2.60s standalone median is not an equivalent
+replacement for the import-rule file scope, and it protects additional
+cross-workspace source and manifest edges. The measured adopted sequence is
+68.5% faster than the old validation sequence while keeping both checks.
+
+The reset regression was reproduced on both the original and migrated source.
+It occurred while API tests created SQLite fixtures, before the reset route
+ran: fixture helpers wrote to hard-coded `/tmp/operatoros-*` locations while
+the host `/tmp` was a heavily used tmpfs, producing `SQLITE_IOERR_WRITE` during
+database seeding. This was a fixture/environment interaction, not an
+application reset defect. API fixtures now derive temporary paths from
+`node:os` `tmpdir()`, and the release-readiness launcher honors `TMPDIR`. The
+isolated NISN test passed five repeated runs and in the complete API suite.
+API suite worker contention was reduced by bounding its Bun file parallelism to
+two workers and reusing synthetic Argon2 hashes within a test worker; test
+assertions and application authentication behavior remain intact. One restore
+rollback test uses a 15-second test-specific limit, matching neighboring
+restore-safety cases, after its multi-stage backup/recovery work exceeded
+Bun's 5-second default under load.
+
+Turbo remains pinned in `bun.lock`; CI compares the executable version with
+the root `package.json` declaration. Turbo global inputs include the lockfile,
+root and workspace package manifests, mise tool pins and lock, TSRS wrapper,
+shared TypeScript configuration, and architecture/tooling scripts. Invalidation
+regression tests mutate these inputs in a disposable workspace and verify task
+hashes change. The affected wrapper resolves base and head to immutable commit
+SHAs once. For a clean tree it passes those SHAs to Turbo's affected graph; any
+staged, unstaged, untracked, deleted, renamed, or configuration change selects
+the full graph because commit refs do not represent working-tree content.
+Pre-push captures one merge-base SHA and one HEAD SHA and passes the same pair
+to lint, architecture, and affected-test selection. A synthetic Git fixture
+advances the remote-tracking ref during selection and verifies Turbo still
+receives the captured SHA.
+
+The release-sensitive gate was run against an isolated disposable data root
+and local caches. Standard validation, affected validation, the complete
+release tier, and unfiltered browser/E2E checks passed. This local evidence
+does not alter CI required checks, release artifacts, provenance, or deployment
+policy.
+
+Rollback is a focused revert through the protected PR workflow: restore the
+ESLint config and pinned dependencies, restore the TypeScript 7 CLI scripts,
+remove the TSRS wrapper and Oxlint config, and reverse the Node/mise and cache
+input changes. Keep Bun check, architecture checks, test suites, CI/release
+gates, and the public command names unchanged.
+
+References: [TSRS announcement](https://oxc.rs/blog/2026-11-17-faster-type-aware-linting-with-tsrs.html),
+[Oxlint type-aware linting](https://oxc.rs/docs/guide/usage/linter/type-aware.html),
+[TSRS typechecker](https://oxc.rs/docs/guide/usage/typechecker), and
+[Turbo task inputs](https://turborepo.dev/docs/reference/configuration#inputs).
 
 ## HK 2.8.1 compatibility upgrade
 

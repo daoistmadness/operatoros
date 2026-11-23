@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "bun test",
-    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
+    "test": "bun test --parallel=2",
+    "typecheck": "bash ../../scripts/typecheck-tsrs.sh --noEmit",
     "start": "bun run src/server.ts"
   },
   "dependencies": {

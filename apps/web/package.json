@@ -56,7 +56,7 @@
     "dev": "bun run --bun vite",
     "build": "bun run --bun vite build && bun ../../scripts/frontend-bundle-report.mjs --check",
     "build:redact": "bun run --bun vite build --config vite.redact.config.js",
-    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit",
+    "typecheck": "bash ../../scripts/typecheck-tsrs.sh --noEmit",
     "test:e2e": "bun run --bun playwright test",
     "e2e:release": "bun run --bun playwright test --config playwright.config.ts --grep @release",
     "preview": "bun run --bun vite preview --config vite.preview.config.js",

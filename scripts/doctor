@@ -139,7 +139,7 @@ fi
 # 7. Existing toolchain/prerequisite/development-database doctor.
 command -v mise >/dev/null 2>&1 || fail "MISE_UNAVAILABLE" \
   "mise is not on PATH." \
-  "install mise >= 2024.1.0, then run: mise install"
+  "install mise >= 2026.10.19, then run: mise install"
 
 cd "$ROOT"
 exec mise run doctor

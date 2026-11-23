@@ -51,7 +51,7 @@ flowchart LR
   end
 
   subgraph Server ["Backend API Authority"]
-    API["Elysia HTTP API<br/>(Bun 1.4.5 + TypeScript 7.0.2 CLI)"]
+    API["Elysia HTTP API<br/>(Bun 1.4.5 + TSRS 7.1.0-beta.tsrs4)"]
     Excel["Excel & PDF Engines<br/>(ExcelJS 4.4 + pdf-lib 1.17)"]
     DB[("SQLite Database<br/>(Drizzle ORM 0.45)")]
   end
@@ -140,12 +140,12 @@ flowchart TD
 
 | Layer | Technologies & Dependencies | Version Authority |
 | --- | --- | --- |
-| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.5`, Node `24.19.0`, hk `2.8.1`, Turbo `2.11.4` (pinned in `mise.toml` / `mise.lock`) |
-| **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TypeScript `7.0.2` CLI; `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
+| **Runtime & Toolchain** | Bun, Node.js, hk, Turborepo | Bun `1.4.5`, Node `24.19.0`, hk `2.8.1`, Turbo `2.11.13` (pinned in `bun.lock`) |
+| **Backend API** | Elysia, TypeScript, Drizzle ORM, SQLite | TSRS `7.1.0-beta.tsrs4`; TypeScript `5.9.3` for compiler-API compatibility, Elysia `1.4`, Drizzle `0.45`, `bun:sqlite` |
 | **Spreadsheet & PDF Engines** | ExcelJS, @operatoros/sheetjs-fork, pdf-lib | ExcelJS `4.4`, `@operatoros/sheetjs-fork` `0.20`, pdf-lib `1.17` |
 | **Type Contracts** | TypeBox | `@sinclair/typebox` (monorepo root catalog) |
 | **Frontend Web Client** | React, Vite, TanStack Start, TanStack Router, TanStack Query, TanStack Table, Tailwind CSS, Chart.js, Framer Motion, lucide-react | React `19.2.7`, Vite `8.3.4`, Start `1.169.4`, TanStack Router `1.170.46`, TanStack Query `5`, TanStack Table `9.3.1`, Tailwind CSS `4`, Chart.js `4` |
-| **Testing & Quality** | Bun test, Vitest, Playwright | Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
+| **Testing & Quality** | Oxlint, TSRS, Bun test, Vitest, Playwright | Oxlint `1.94.0`, TSRS `7.1.0-beta.tsrs4`, Bun-native test runner, Vitest (web unit), Playwright `1.61.1` (E2E) |
 
 ---
 
@@ -157,7 +157,7 @@ flowchart TD
 - [`packages/contracts/`](packages/contracts/): Shared TypeBox schemas and types.
 - [`packages/ui/`](packages/ui/): Domain-neutral UI primitives and source-owned shadcn components.
 - [`packages/excel/`](packages/excel/): Excel infrastructure and workbook handling.
-- [`packages/config/`](packages/config/): Shared ESLint and TypeScript configurations.
+- [`packages/config/`](packages/config/): Shared lint-boundary and TypeScript configurations.
 - [`docs/`](docs/): Canonical architecture, security, operations, testing, and product references.
 - [`e2e/`](e2e/): Playwright and Bun end-to-end infrastructure and synthetic suites.
 - [`scripts/`](scripts/): Validation, launcher helpers, and browser smoke test.
@@ -173,7 +173,7 @@ flowchart TD
 - **Native Linux Bun Toolchain**: Bun `1.4.5` installed natively on Linux.
   > [!WARNING]
   > Do not use Windows binaries, `/mnt/c`, or Windows-mounted checkouts.
-- **mise-en-place**: Version `2024.1.0` or higher (CI uses `2026.10.3`).
+- **mise-en-place**: Version `2026.10.19` or higher; CI pins `2026.10.19`.
 - **Installed via mise**: Node.js `24.19.0` and hk `2.8.1` (managed automatically by `mise install`).
 - **Browser Smoke Test (Optional)**: Agent Browser installed on the system `PATH` if executing UI smoke verification. Guidance is documented in [COMMANDS.md](COMMANDS.md).
 
@@ -377,7 +377,7 @@ Per the active branch protection ruleset for `main`, merging requires all of the
 Contributors must run corresponding local commands before submitting changes:
 
 ```bash
-# Complete quality check: lint, formatting, architecture, typecheck, tests
+# Complete quality check: lint, architecture, typecheck, tests
 mise run check
 
 # Execute automated test suites

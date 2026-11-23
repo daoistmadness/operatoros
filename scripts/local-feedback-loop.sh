@@ -12,14 +12,14 @@ if [[ "$hook" != "pre-commit" && "$hook" != "pre-push" ]]; then
   exit 2
 fi
 
-base_ref="${TURBO_SCM_BASE:-origin/main}"
-head_ref="${TURBO_SCM_HEAD:-HEAD}"
 paths_file="$(mktemp "${TMPDIR:-/tmp}/operatoros-local-feedback.XXXXXX")"
 trap 'rm -f -- "$paths_file"' EXIT
 
 if [[ "$hook" == "pre-commit" ]]; then
   git diff --cached --name-only -z --diff-filter=ACMR -- >"$paths_file"
 else
+  base_ref="${TURBO_SCM_BASE:-origin/main}"
+  head_ref="${TURBO_SCM_HEAD:-HEAD}"
   git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || {
     printf 'Local feedback cannot resolve base %s.\n' "$base_ref" >&2
     printf 'Next: git fetch origin main\n' >&2
@@ -29,14 +29,16 @@ else
     printf 'Local feedback cannot resolve head %s.\n' "$head_ref" >&2
     exit 2
   }
-  git diff --name-only -z --diff-filter=ACMR "${base_ref}...${head_ref}" -- >"$paths_file"
+  base_sha="$(git rev-parse --verify "${base_ref}^{commit}")"
+  head_sha="$(git rev-parse --verify "${head_ref}^{commit}")"
+  bun "$repo/scripts/test-scope.ts" --base "$base_sha" --head "$head_sha" --paths-only >"$paths_file"
 fi
 
 mapfile -d '' changed_paths <"$paths_file"
 
 is_documentation_path() {
   case "$1" in
-    PROJECT_CONTEXT.md|f22|docs/student-data/dapodik-roster-import-design.md|*.md|*.txt)
+    PROJECT_CONTEXT.md|f22|docs/*|*.md|*.txt)
       return 0
       ;;
     *)
@@ -64,7 +66,7 @@ for path in "${changed_paths[@]}"; do
   if ! is_documentation_path "$path"; then
     has_source_change=true
   fi
-  if is_lint_path "$path"; then
+  if is_lint_path "$path" && [[ -f "$path" ]]; then
     lint_paths+=("$path")
   fi
 done
@@ -76,7 +78,7 @@ case "$mode" in
       exit 0
     fi
     printf 'local_feedback_lint=staged (%s files)\n' "${#lint_paths[@]}"
-    bun run eslint --max-warnings=0 --no-warn-ignored "${lint_paths[@]}"
+    bun run oxlint --config oxlint.config.mjs --max-warnings=0 --threads=3 "${lint_paths[@]}"
     ;;
   architecture)
     if [[ "$has_source_change" != true ]]; then

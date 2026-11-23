@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,7 +10,7 @@ const secret = "astryx-test-only-cookie-secret-32-chars";
 
 
 function pathFor(label: string): string {
-  return `/tmp/operatoros-recovery-${label}-${process.pid}-${Date.now()}.db`;
+  return testTempPath(`operatoros-recovery-${label}-${process.pid}-${Date.now()}.db`);
 }
 
 function seed(path: string): void {
@@ -18,7 +19,7 @@ function seed(path: string): void {
 
 function setup(label: string) {
   const path = pathFor(label);
-  const auditDir = `/tmp/operatoros-recovery-audit-${process.pid}-${Date.now()}`;
+  const auditDir = testTempPath(`operatoros-recovery-audit-${process.pid}-${Date.now()}`);
   mkdirSync(auditDir, { recursive: true });
   seed(path);
   const database = openDatabase(path);

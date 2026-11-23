@@ -2,13 +2,15 @@
   "$schema": "https://turborepo.dev/schema.json",
   "globalDependencies": [
     "bun.lock",
+    "package.json",
     "mise.toml",
     "mise.lock",
-    "eslint.config.mjs",
     "scripts/check-architecture.ts",
     "scripts/check-typebox-resolution.ts",
+    "scripts/typecheck-tsrs.sh",
     "scripts/frontend-bundle-report.mjs",
-    "scripts/frontend-bundle-report.test.mjs"
+    "scripts/frontend-bundle-report.test.mjs",
+    "packages/config/typescript/base.json"
   ],
   "globalPassThroughEnv": ["TMPDIR"],
   "tasks": {

@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, it, expect } from "bun:test";
 import { createApp, createTestApp } from "../src/app";
 import { startServer } from "../src/server";
@@ -130,7 +131,7 @@ describe("configuration isolation", () => {
   });
 
   it("derives the database, backup, and log paths from the canonical root", () => {
-    const root = mkdtempSync("/tmp/operatoros-config-");
+    const root = mkdtempSync(testTempPath("operatoros-config-"));
     try {
       const config = loadConfig({
         NODE_ENV: "test",
@@ -147,7 +148,7 @@ describe("configuration isolation", () => {
   });
 
   it("fails fast when DATABASE_URL disagrees with the canonical root", () => {
-    const root = mkdtempSync("/tmp/operatoros-config-conflict-");
+    const root = mkdtempSync(testTempPath("operatoros-config-conflict-"));
     try {
       expect(() => loadConfig({ NODE_ENV: "test", OPERATOROS_DATA_DIR: root, DATABASE_URL: "sqlite:////tmp/other.sqlite" })).toThrow("DATABASE_URL conflicts");
       expect(() => loadConfig({ NODE_ENV: "test", OPERATOROS_DATA_DIR: root, DATABASE_URL: "sqlite:///relative.sqlite" })).toThrow("DATABASE_URL conflicts");

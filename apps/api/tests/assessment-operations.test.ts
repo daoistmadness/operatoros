@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import { rm } from "node:fs/promises";
 import { openDatabase } from "@operatoros/db";
@@ -34,10 +35,10 @@ describe("academic assessment operations", () => {
   let mathId: number;
 
   beforeAll(async () => {
-    path = `/tmp/operatoros-assessment-operations-${process.pid}-${Date.now()}.db`;
+    path = testTempPath(`operatoros-assessment-operations-${process.pid}-${Date.now()}.db`);
     seed(path);
     database = openDatabase(path);
-    app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-assessment-operations-audit-${process.pid}` } });
+    app = createApp({ environment: "test", databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-assessment-operations-audit-${process.pid}`) } });
     admin = await login(app, "golden-admin", "golden-admin-pass-1");
     staff = await login(app, "golden-staff", "golden-staff-pass-1");
     yearId = Number((database.client.query("SELECT id FROM academic_years WHERE label = '2026/2027-academic'").get() as { id: number }).id);

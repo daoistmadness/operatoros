@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { openTestDatabase } from "./fixtures/database";
@@ -12,7 +13,7 @@ function bootstrap(path: string): void {
 }
 
 async function seed(withCutoff: boolean): Promise<{ path: string; cleanup: () => void }> {
-  const path = `/tmp/operatoros-tardiness-display-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.db`;
+  const path = testTempPath(`operatoros-tardiness-display-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1e6)}.db`);
   bootstrap(path);
   const seedClient = openTestDatabase(path).client;
   const run = (sql: string, ...params: any[]) => (seedClient as any).run(sql, ...params);
@@ -52,7 +53,7 @@ async function seed(withCutoff: boolean): Promise<{ path: string; cleanup: () =>
 
 async function fetchReport(path: string): Promise<any> {
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-tardiness-display-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-tardiness-display-audit-${process.pid}`) } });
   try {
     const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "display-admin", password: "display-admin-pass-1" }) }));
     const cookieValue = login.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];

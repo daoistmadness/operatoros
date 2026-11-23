@@ -4,6 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Speed up lint and typechecking with pinned Oxlint and TSRS, and run the full check graph when the worktree is dirty.
+- Update Turborepo to 2.11.13 and verify full workspace package graph checks. (#401)
 - Scan both Docker images, verify the archived Compose candidate on a fresh runner, and keep host acceptance gates open. (#400)
 - Fix Docker candidate startup fixtures and allow explicit Docker rehearsal on any feature ref. (#399)
 - Diagnose Docker Compose startup with sanitized health evidence, verify synthetic SQLite persistence, and isolate protected-main archive attestation. (#398)
