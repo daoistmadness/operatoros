@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "4eca201a8c901eef984fe785323192353ec27035d465e794e590ea94c7917afb",
+      "fingerprint": "5823a0c809bf1289c2f179d8efe7811d90fb36afc34b7b21b135dbfe381d48af",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
@@ -12,10 +12,10 @@
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
+        "docs/guides/development.md": "e76592bd670703572839da56e8599d45956b3da80a6bd027ec06e42077db8132",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "1d80edf32993498c27892e83c26a1c2d184e0bb1e3e8314108ba506daa81b6a1",
+        "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,15 +44,17 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
+      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
       "outcome": "no-change",
-      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
+      "reason": "Reviewed the root manifest and corrected development guide against the registered Elysia skill. The manifest change only adds the direct dev script; the guide now accurately documents the Bun watch launcher, lock retry, and shutdown behavior. The skill itself remains accurate: it still directs OperatorOS work to the installed Elysia version and package source notes, and no Elysia API guidance changed.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, apps/api/package.json, bun.lock, package.json at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
+        "package.json at 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 adds only the root dev script; apps/api/package.json and bun.lock are unchanged.",
+        "docs/guides/development.md at 292b7bead3296e7cc212b37baf36cfac7802cbd0 now documents bun run dev, Bun --watch, bounded lock retry, Vite HMR, route generation, and shutdown behavior.",
+        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs.md remain accurate for Elysia 1.4.29 and the existing v1/v2 guidance."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "428f59e32a91ffcdea3607f2e9e4257b848d0afd315f868430118633ea80a4bf",
+      "fingerprint": "26631efabeb5c7f0d455929cbbe569c5fc24ea6fd75151a93e5efcea08a9c431",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
@@ -64,10 +66,10 @@
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
+        "docs/guides/development.md": "e76592bd670703572839da56e8599d45956b3da80a6bd027ec06e42077db8132",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "1d80edf32993498c27892e83c26a1c2d184e0bb1e3e8314108ba506daa81b6a1",
+        "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -96,11 +98,14 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
+      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
       "outcome": "no-change",
-      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
+      "reason": "Reviewed all three planning records against the implementation and documentation commits. The domain map still correctly defines only the Elysia backend skill and its tasks; the spec retains the package scope, decisions, and known coverage limits; the tree still matches the registered skill. The dev-guide correction adds no new skill, task, domain, mapping, decision, or future-work item.",
       "evidence": [
-        "Changed: .github/workflows/ci.yml, apps/api/package.json, bun.lock, package.json at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
+        "_artifacts/domain_map.yaml: one Elysia backend domain and the existing four Elysia tasks; no new task was introduced by 292b7bead3296e7cc212b37baf36cfac7802cbd0.",
+        "_artifacts/skill_spec.md: existing scope, decisions, exclusions, and remaining evidence remain accurate; no skill batch was added.",
+        "_artifacts/skill_tree.yaml: registered skill identity, package, source list, and task coverage remain aligned with SKILL.md.",
+        "The only documentation commit changes docs/guides/development.md; none of the three planning records changed."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -698,17 +703,17 @@
       ]
     },
     "source:apps/api/src/domains/backup-operation-lock.ts": {
-      "fingerprint": "69dd668a4a19afe2578456ad7c551085798deb1fdcd8d33a3c03d54fae0d20a0",
+      "fingerprint": "ecb03a170a97e17ce580fe06e3ec8e625331fa61592c4f9b5e5afcee3889df00",
       "snapshot": {
-        "apps/api/src/domains/backup-operation-lock.ts": "6f32071dbb7353c84b81fb58a4e8f0615ba0f371f6c65f454217825b2796e363"
+        "apps/api/src/domains/backup-operation-lock.ts": "edd30f6929b21b509ce46b4d68244f8b19cf12f3b5a24675e18c75d702e4baf7"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
-      "outcome": "no-change",
-      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
+      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "outcome": "out-of-scope",
+      "reason": "The changed application lock worker is not mapped to the registered Elysia skill and implements OS flock process locking and restart cleanup rather than Elysia framework behavior. Preserve the independent review finding that there is no independent watchdog for a nonresponsive lock worker.",
       "evidence": [
-        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
-        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
-        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
+        "The source review identifies this exact file as an unmapped source item; _artifacts/skill_tree.yaml registers only the Elysia framework skill.",
+        "apps/api/src/domains/backup-operation-lock.ts at 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 contains flock acquisition, retry, and child-process cleanup.",
+        "Independent NATIVE_AMENDED Revision 2.1 review finding retained: no independent bounded watchdog for a nonresponsive backup lock worker."
       ]
     },
     "source:apps/api/src/domains/durable-files.ts": {
@@ -724,17 +729,16 @@
       ]
     },
     "source:apps/api/src/server.ts": {
-      "fingerprint": "06fb8bfd97ff24447b3ae9be6dc9ae73770249255d75b1cc6d2468cf53a16980",
+      "fingerprint": "3a0c7ad6bffad73d2e1b245731e4297fa5663dc407701c51d6c0951ee2aa907f",
       "snapshot": {
-        "apps/api/src/server.ts": "ff2f1981343aea9ac800f13a359b7f17c6a1300d3fb64edcfe07740f17eb4af6"
+        "apps/api/src/server.ts": "daeb77930dc8803d48a757071533a55cd4076153477e69d3a4bcaf08edc6122c"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
-      "outcome": "no-change",
-      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
+      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "outcome": "out-of-scope",
+      "reason": "The server.ts diff only reformats the existing shutdown callback and does not change Elysia behavior or registered skill guidance.",
       "evidence": [
-        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
-        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
-        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
+        "apps/api/src/server.ts diff from 23c49638ac99dccb96202906e05f671dfbd0b63c to 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 changes only callback formatting.",
+        "The source review identifies this file as unmapped; the registered Elysia skill sources do not include apps/api/src/server.ts."
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
@@ -1782,16 +1786,17 @@
       ]
     },
     "source:start-dev.sh": {
-      "fingerprint": "9a0969b40bd67614072853c94af4410e8a1553bd085423e28d61a64089166cac",
+      "fingerprint": "386a95f31e273c50a98ed27c524db55838ce4e95ad181b167aa2395d8e5f5622",
       "snapshot": {
-        "start-dev.sh": "8fcc5a25c4245b567cd570bc58d4c49916a7d20f9776f486d20aebdf673dd849"
+        "start-dev.sh": "380d7c64bb2471dd9bf66573f4f2b10c5c9bba5850050d23298ca4025667b425"
       },
-      "head": "2d6ec2a826cee98d0d784b934947f820bb97ef72",
-      "outcome": "no-change",
-      "reason": "Reviewed start-dev.sh; it does not change registered Agent Skills or generated skill documentation.",
+      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "outcome": "out-of-scope",
+      "reason": "The shell launcher is not mapped to the registered Elysia skill and its Bun watch flag is development process supervision, not Elysia framework guidance. The registered development guide now accurately documents the launcher behavior.",
       "evidence": [
-        "Reviewed candidate path start-dev.sh.",
-        "No Agent Skills guidance or generated skill documentation is changed."
+        "start-dev.sh at 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 adds Bun --watch to the managed API process; the source review classifies this path as unmapped.",
+        "docs/guides/development.md at 292b7bead3296e7cc212b37baf36cfac7802cbd0 now documents the canonical command, watch restart, lock lifecycle, and limitation.",
+        "_artifacts/skill_tree.yaml registers only the Elysia framework skill; no launcher-specific skill or mapping exists."
       ]
     },
     "source:hk.pkl": {
@@ -2970,15 +2975,17 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "40150b2ee051f6c4659f8d3fad06f3be6a15aa1894d198271eade51fb3700a77",
+      "fingerprint": "44fbe435adf0b625577d4e9b87dcdeedc154fe8909e9f81d030bed89f7833532",
       "snapshot": {
-        "CHANGELOG.md": "550c6a0e6ab7c8420a56c6937487392ac600fdaa4c18432d6ed2130f0e77e63e"
+        "CHANGELOG.md": "e159ccdbf631d2686eefb108f02eb0c0b42c01eb57fc47267d640bbae21d5033"
       },
-      "head": "495c30266f5aaf7a49332aaede3b64565affa16c",
-      "outcome": "no-change",
-      "reason": "Record PR 403 number assignment in CHANGELOG.md",
+      "head": "1a907cb7066f67a84bd75b4ad703c63cc79ca276",
+      "outcome": "out-of-scope",
+      "reason": "This source review item is a release-note entry for the already-qualified native development launcher. The only registered Intent skill is @operatoros/agent-skills#elysiajs, scoped to Elysia backend implementation and route work; the changelog entry adds no Elysia guidance, reusable skill behavior, or planning decision. The authoritative development instructions were already corrected in docs/guides/development.md, so no skill or planning record change is warranted.",
       "evidence": [
-        "Changed: CHANGELOG.md at 495c30266f5aaf7a49332aaede3b64565affa16c"
+        "intent list reports one registered skill, elysiajs, scoped to Elysia backend implementation and route work.",
+        "The changelog-only commit 1a907cb7066f67a84bd75b4ad703c63cc79ca276 changes only CHANGELOG.md.",
+        "docs/guides/development.md contains the corrected native command and Bun watch workflow in commit 292b7bead3296e7cc212b37baf36cfac7802cbd0."
       ]
     },
     "source:COMMANDS.md": {

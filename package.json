@@ -18,6 +18,7 @@
     }
   },
   "scripts": {
+    "dev": "./scripts/dev",
     "dev:api": "bun --filter @operatoros/api start",
     "dev:web": "bun --filter @operatoros/web dev",
     "test:contracts": "bun --filter @operatoros/contracts test",
