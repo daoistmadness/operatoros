@@ -2975,15 +2975,17 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "40150b2ee051f6c4659f8d3fad06f3be6a15aa1894d198271eade51fb3700a77",
+      "fingerprint": "44fbe435adf0b625577d4e9b87dcdeedc154fe8909e9f81d030bed89f7833532",
       "snapshot": {
-        "CHANGELOG.md": "550c6a0e6ab7c8420a56c6937487392ac600fdaa4c18432d6ed2130f0e77e63e"
+        "CHANGELOG.md": "e159ccdbf631d2686eefb108f02eb0c0b42c01eb57fc47267d640bbae21d5033"
       },
-      "head": "495c30266f5aaf7a49332aaede3b64565affa16c",
-      "outcome": "no-change",
-      "reason": "Record PR 403 number assignment in CHANGELOG.md",
+      "head": "1a907cb7066f67a84bd75b4ad703c63cc79ca276",
+      "outcome": "out-of-scope",
+      "reason": "This source review item is a release-note entry for the already-qualified native development launcher. The only registered Intent skill is @operatoros/agent-skills#elysiajs, scoped to Elysia backend implementation and route work; the changelog entry adds no Elysia guidance, reusable skill behavior, or planning decision. The authoritative development instructions were already corrected in docs/guides/development.md, so no skill or planning record change is warranted.",
       "evidence": [
-        "Changed: CHANGELOG.md at 495c30266f5aaf7a49332aaede3b64565affa16c"
+        "intent list reports one registered skill, elysiajs, scoped to Elysia backend implementation and route work.",
+        "The changelog-only commit 1a907cb7066f67a84bd75b4ad703c63cc79ca276 changes only CHANGELOG.md.",
+        "docs/guides/development.md contains the corrected native command and Bun watch workflow in commit 292b7bead3296e7cc212b37baf36cfac7802cbd0."
       ]
     },
     "source:COMMANDS.md": {
