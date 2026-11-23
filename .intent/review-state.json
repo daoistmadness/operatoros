@@ -7094,17 +7094,17 @@
       ]
     },
     "source:scripts/tests/test-scope.test.ts": {
-      "fingerprint": "0e78413946f69b646cc593792390a3051484cd1a297fcf2bb251b1749e539dd5",
+      "fingerprint": "f3f3bba68d133086ff9f30a39791cea0b8b6bed256569173682e828b4c5e5544",
       "snapshot": {
-        "scripts/tests/test-scope.test.ts": "43709ae92ce54ba5e85230ce2fbafc57d7a4a8ad0ca85641119e76dd1d6827bb"
+        "scripts/tests/test-scope.test.ts": "3f9f1048b44564b1ec9ced103341eecabeab3851092bbfcecd37e0ec2344a196"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "head": "49bb43149535fd5333995a63a9d76d33215af928",
       "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "reason": "This change preserves the mise-pinned Node runtime in the isolated test-tier PATH so the TSRS CLI can run after PATH sanitization. It is repository validation infrastructure and does not change Elysia API behavior or its skill guidance.",
       "evidence": [
-        "scripts/tests/test-scope.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "scripts/tests/test-scope.test.ts was inspected in the current worktree.",
+        "mise run test:fast passed with MISE_TRUSTED_CONFIG_PATHS set to this worktree and an isolated TMPDIR; classifier/tooling tests passed 219/219 and database tests passed 10/10.",
+        "The Elysia skill and route-testing reference remain accurate and unchanged."
       ]
     },
     "source:apps/web/src/components/AppShell.auth-transitions.test.tsx": {
@@ -8476,17 +8476,17 @@
       ]
     },
     "source:scripts/test-tier.sh": {
-      "fingerprint": "b5c60d2dc2f1e1405e439f1613314e5fbad8e206f78dd9d1e53c52e3565074b4",
+      "fingerprint": "7a8a53c9ed3386659776782fe0ca88481d4e93392f933fef4ab75633e5d99403",
       "snapshot": {
-        "scripts/test-tier.sh": "9b5a4fc4a4082c85313b793c5002eef2ca3e55c1ae62ec2a3c23f2a0fc4e3747"
+        "scripts/test-tier.sh": "6fe5b17652bc15390fc5356dc9ef67fe1d797115fc33ea2a7cbc1e0e3cd9f3e3"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "head": "49bb43149535fd5333995a63a9d76d33215af928",
       "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "reason": "This change preserves the mise-pinned Node runtime in the isolated test-tier PATH so the TSRS CLI can run after PATH sanitization. It is repository validation infrastructure and does not change Elysia API behavior or its skill guidance.",
       "evidence": [
-        "scripts/test-tier.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "scripts/test-tier.sh was inspected in the current worktree.",
+        "mise run test:fast passed with MISE_TRUSTED_CONFIG_PATHS set to this worktree and an isolated TMPDIR; classifier/tooling tests passed 219/219 and database tests passed 10/10.",
+        "The Elysia skill and route-testing reference remain accurate and unchanged."
       ]
     },
     "source:apps/api/src/domains/upload-conflicts.ts": {

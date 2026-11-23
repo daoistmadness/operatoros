@@ -94,6 +94,15 @@ describe("test scope decisions", () => {
     for (const required of ["fresh-db-parity", "backend_full", "bun run test", "bun run build", "e2e-validate", "e2e-smoke", "e2e-clean", "passes=2", "schema_sensitive", "RELEASE_DOUBLE_BACKEND"]) expect(release).toContain(required);
     expect(runner).toContain("test-tier-environment.sh"); expect(runner).not.toContain("protected_db_snapshot.py");
   });
+  test("test tiers retain the mise-pinned Node runtime after sanitizing PATH", () => {
+    const runner = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
+    const nodeResolution = runner.indexOf('node_path="$(mise which node 2>/dev/null || true)"');
+    const pathReset = runner.indexOf('export PATH="$bun_bin:$node_bin:');
+    expect(nodeResolution).toBeGreaterThan(-1);
+    expect(nodeResolution).toBeLessThan(pathReset);
+    expect(runner).toContain('mise_node_version="$(mise current node 2>/dev/null || true)"');
+    expect(runner).toContain('node_version="$("$node_path" --version 2>/dev/null || true)"');
+  });
   test("test tiers use a nonblocking per-worktree flock", () => {
     const runner = readFileSync(join(repository, "scripts/test-tier.sh"), "utf8");
     expect(runner).toContain('exec {tier_lock_fd}<"$repo/.git"');

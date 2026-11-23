@@ -20,7 +20,19 @@ if ! operatoros_wsl_prepare_bun "$repo"; then
   exit 1
 fi
 bun_bin="$(dirname -- "$OPERATOROS_BUN_REALPATH")"
-export PATH="$bun_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+node_path="$(mise which node 2>/dev/null || true)"
+mise_node_version="$(mise current node 2>/dev/null || true)"
+node_version=""
+if [[ -n "$node_path" && -x "$node_path" ]]; then
+  node_version="$("$node_path" --version 2>/dev/null || true)"
+fi
+if [[ -z "$mise_node_version" || "$node_version" != "v$mise_node_version" ]]; then
+  printf '%s\n' "The mise-pinned Node.js runtime is unavailable or does not match mise.toml." >&2
+  printf '%s\n' "Next: run mise install and verify the trusted project toolchain." >&2
+  exit 1
+fi
+node_bin="$(dirname -- "$node_path")"
+export PATH="$bun_bin:$node_bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 unset NODE_PATH npm_config_prefix npm_config_script_shell NPM_CONFIG_SCRIPT_SHELL COMSPEC ComSpec PATHEXT INIT_CWD
 export SHELL=/bin/bash
 hash -r
