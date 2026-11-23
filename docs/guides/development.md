@@ -5,10 +5,11 @@ last_reviewed: 2026-11-23
 
 # Development
 
-Use `mise run dev` for normal development. The task delegates process
-supervision to `./start-dev.sh`. Verified commands are maintained in
-[`COMMANDS.md`](../../COMMANDS.md); architecture and operations authorities are indexed in
-[`MEMORY.md`](../../MEMORY.md).
+Use `mise run dev` for the normal managed workflow. The direct native entry
+point is `bun run dev` (or `./scripts/dev`); the root script delegates process
+supervision to `./start-dev.sh` and forwards its flags. Verified commands are
+maintained in [`COMMANDS.md`](../../COMMANDS.md); architecture and operations
+authorities are indexed in [`MEMORY.md`](../../MEMORY.md).
 
 Install the repository-pinned tools with `mise install`; Bun 1.4.5, hk 2.8.1,
 and Node.js 24.19.0 are pinned. Oxlint 1.94.0 enforces the workspace import
@@ -59,11 +60,22 @@ Use an explicit disposable `OPERATOROS_DATA_DIR` for tests. The data-root
 hashing scheme is unchanged. Never point development tooling at protected
 operational databases.
 
-The managed Bun API currently runs without a watcher. A live Bun watch reload
-restarted the API before its previous instance released the SQLite operation
-lock, so the new process failed with `BACKUP_OPERATION_LOCKED`. Backend reload
-remains manual until that lifecycle is safe. Normal launcher shutdown closes
-the API's SQLite handle, and the database remains persistent across restarts.
+The managed API runs with Bun `--watch` and restarts when supported API source
+files change. During shutdown, the API closes its SQLite handle and releases
+the backup-operation lock; the lock-holder worker is terminated with its
+parent. In non-test environments, a new process retries lock conflicts within
+a default 3000 ms window while the previous process releases the lock. If it
+remains held, startup reports `BACKUP_OPERATION_LOCKED`. This retry has no
+independent watchdog for a nonresponsive lock worker, so it does not guarantee
+recovery from every stuck-worker case. The database remains persistent across
+restarts.
+
+The frontend remains managed by Vite: supported component and CSS edits use
+HMR. TanStack Start generates `apps/web/src/routeTree.gen.ts` from file-based
+routes and updates it when route files are added or removed. Use `Ctrl+C` in
+the managed launcher or run `./stop-dev.sh` from the owning checkout for normal
+shutdown; see the session commands above for status and ownership checks.
+
 Managed startup disables Bun and Vite environment-file loading for child
 processes and supplies the selected loopback bind, origin, cookie, HMR, and
 proxy settings explicitly. `backend/.env` is inspected only for a stale
