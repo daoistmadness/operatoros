@@ -11376,15 +11376,15 @@
       ]
     },
     "source:scripts/openapi-contracts.mjs": {
-      "fingerprint": "66f3e728982f9607711df0289655c0c3d0c9a2c38137bba9837b64f609cdc127",
+      "fingerprint": "343fd5c53beb9abd23a4d208bcfe9b2cbe3e9e35e025498362946a04b3161311",
       "snapshot": {
-        "scripts/openapi-contracts.mjs": "e9c722825cae1ba711f69ab12809895a112f52f5c211619ead350f5520485c62"
+        "scripts/openapi-contracts.mjs": "bca0b19cd87b61a2702e487c48fa010ed5fcf7efb4ab94b98479068f2f3b6d54"
       },
-      "head": "3da093b133e7a8912a50e06e88f8af9f35f1c136",
+      "head": "994e1dffe9dd5a7ab2d0d949892284259be258c4",
       "outcome": "no-change",
-      "reason": "Scope TypeScript 6 compatibility resolution hook to openapi-contracts generator",
+      "reason": "Resolve real Node binary path and sanitize PATH against Bun node shims in openapi contract generator",
       "evidence": [
-        "Changed: scripts/openapi-contracts.mjs at 3da093b133e7a8912a50e06e88f8af9f35f1c136"
+        "Changed: scripts/openapi-contracts.mjs at 994e1dffe9dd5a7ab2d0d949892284259be258c4"
       ]
     }
   }
