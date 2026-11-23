@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, scopeSummary } from "../test-scope";
+import { buildScope, classifyPath, FOCUSED_TESTS, gitPaths, pathsFromNameStatus, pathsFromNameStatusZ, scopeSummary } from "../test-scope";
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
@@ -72,6 +72,9 @@ describe("test scope decisions", () => {
   test("deleted paths and both sides of rename/copy contribute", () => {
     expect(pathsFromNameStatus("D\tbackend/src/models/old.py\nR100\tapps/web/src/routes/old.tsx\tdocs/new.md\nC100\tpackages/db/a.ts\tpackages/contracts/b.ts\n")).toEqual([
       "apps/web/src/routes/old.tsx", "backend/src/models/old.py", "docs/new.md", "packages/contracts/b.ts", "packages/db/a.ts",
+    ]);
+    expect(pathsFromNameStatusZ("D\0backend/src/models/old.py\0R100\0apps/web/src/routes/new.tsx\0apps/web/src/routes/old.tsx\0")).toEqual([
+      "apps/web/src/routes/new.tsx", "apps/web/src/routes/old.tsx", "backend/src/models/old.py",
     ]);
   });
   test("every mapped test exists", () => {
@@ -215,7 +218,39 @@ describe("Git change discovery", () => {
     writeFileSync(join(repo, "untracked.ts"), "synthetic untracked source\n");
     writeFileSync(join(repo, "PROJECT_CONTEXT.md"), "preserved\n");
     expect(gitPaths(repo)).toEqual(["deleted.ts", "packages/db/new.ts", "packages/db/old.ts", "untracked.ts"]);
-    expect(gitPaths(repo, "HEAD~1", "HEAD")).toEqual(["deleted.ts", "packages/db/old.ts"]);
+    expect(gitPaths(repo, "HEAD~1", "HEAD")).toEqual(["deleted.ts", "packages/db/new.ts", "packages/db/old.ts", "untracked.ts"]);
+  });
+  test("base scope includes staged, unstaged, untracked, deleted, renamed, shared, and config changes", () => {
+    const repo = fixture();
+    const initial = [
+      "apps/api/src/old.ts", "apps/api/src/unstaged.ts", "packages/contracts/src/index.ts", "packages/db/src/deleted.ts",
+    ];
+    for (const path of initial) {
+      mkdirSync(join(repo, path, ".."), { recursive: true });
+      writeFileSync(join(repo, path), "synthetic source\n");
+    }
+    git(repo, "add", ...initial);
+    git(repo, "-c", "user.name=Synthetic Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "tracked source");
+    const base = git(repo, "rev-parse", "HEAD");
+
+    git(repo, "mv", "apps/api/src/old.ts", "apps/api/src/new.ts");
+    writeFileSync(join(repo, "apps/api/src/unstaged.ts"), "unstaged source\n");
+    writeFileSync(join(repo, "packages/contracts/src/index.ts"), "staged shared source\n");
+    git(repo, "add", "packages/contracts/src/index.ts");
+    rmSync(join(repo, "packages/db/src/deleted.ts"));
+    mkdirSync(join(repo, "apps/web/src"), { recursive: true });
+    writeFileSync(join(repo, "apps/web/src/untracked.ts"), "untracked source\n");
+    writeFileSync(join(repo, "turbo.json"), "{}\n");
+
+    const paths = gitPaths(repo, base, base);
+    expect(paths).toEqual([
+      "apps/api/src/new.ts", "apps/api/src/old.ts", "apps/api/src/unstaged.ts", "apps/web/src/untracked.ts",
+      "packages/contracts/src/index.ts", "packages/db/src/deleted.ts", "turbo.json",
+    ]);
+    const scope = buildScope(paths);
+    expect(scope.backend_full_passes_required).toBe(2);
+    expect(scope.schema_sensitive).toBe(true);
+    expect(scope.frontend_changed).toBe(true);
   });
   test("explicit repo wins over inherited hook Git state", () => {
     const selected = fixture(), outer = fixture();

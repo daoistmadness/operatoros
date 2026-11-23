@@ -132,6 +132,24 @@ withTemporaryChange("packages/excel/src/index.ts", "\n// turbo invalidation proo
 withTemporaryChange("scripts/check-architecture.ts", "\n// turbo global invalidation proof\n", () => {
   assertAllChanged(baseline, taskMap(dryRun()), "architecture configuration");
 });
+withTemporaryChange("packages/config/typescript/base.json", "\n", () => {
+  assertAllChanged(baseline, taskMap(dryRun()), "shared TypeScript configuration");
+});
+withTemporaryChange("scripts/typecheck-tsrs.sh", "\n# turbo global invalidation proof\n", () => {
+  assertAllChanged(baseline, taskMap(dryRun()), "TSRS wrapper");
+});
+withTemporaryChange("package.json", "\n", () => {
+  assertAllChanged(baseline, taskMap(dryRun()), "root package toolchain versions");
+});
+withTemporaryChange("apps/api/package.json", "\n", () => {
+  assertChanged(baseline, taskMap(dryRun()), ["@operatoros/api#test"], "API test runner command");
+});
+withTemporaryChange("mise.toml", "\n", () => {
+  assertAllChanged(baseline, taskMap(dryRun()), "mise tool versions");
+});
+withTemporaryChange("mise.lock", "\n", () => {
+  assertAllChanged(baseline, taskMap(dryRun()), "locked mise tool versions");
+});
 withTemporaryChange("bun.lock", "\n", () => {
   assertAllChanged(baseline, taskMap(dryRun()), "bun.lock");
 });

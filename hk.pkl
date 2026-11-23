@@ -25,15 +25,6 @@ hooks {
       ["fast-ci-checks"] {
         check = "bun run check:pre-push"
       }
-      ["affected-lint"] {
-        check = "bash scripts/local-feedback-loop.sh lint pre-push"
-      }
-      ["architecture"] {
-        check = "bash scripts/local-feedback-loop.sh architecture pre-push"
-      }
-      ["affected-tests"] {
-        check = "bash scripts/local-feedback-loop.sh affected-tests pre-push"
-      }
     }
   }
 }

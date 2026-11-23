@@ -220,8 +220,9 @@ Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
 resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.5
 in its local development image and does not change the supported runtime.
-The active CLI typechecker is TypeScript 7.0.2 through the root
-`@typescript/native` alias; Bun 1.4.5's `bun check` also runs in CI. TypeScript
+Workspace and launcher CLI typechecks use the root-pinned TSRS 7.1.0-beta.tsrs4
+runner under the pinned Node.js 24.19.0 compatibility runtime; Bun 1.4.5's
+`bun check` also runs in CI. TypeScript
 5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
 CLI typechecks.
 HK 2.8.1 is pinned in `mise.toml` and uses the matching versioned Pkl schema in

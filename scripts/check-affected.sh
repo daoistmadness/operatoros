@@ -19,4 +19,10 @@ head_sha="$(git rev-parse --verify "${head_ref}^{commit}" 2>/dev/null)" || {
 printf 'affected_base=%s (%s)\n' "$base_ref" "$base_sha"
 printf 'affected_head=%s (%s)\n' "$head_ref" "$head_sha"
 
-TURBO_SCM_BASE="$base_ref" TURBO_SCM_HEAD="$head_ref" bun run turbo:check -- --affected "$@"
+if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
+  printf 'affected_mode=full (working-tree changes are not represented by commit refs)\n'
+  bun run turbo:check -- "$@"
+else
+  printf 'affected_mode=commit-range\n'
+  TURBO_SCM_BASE="$base_sha" TURBO_SCM_HEAD="$head_sha" bun run turbo:check -- --affected "$@"
+fi

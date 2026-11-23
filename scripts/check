@@ -19,7 +19,7 @@ if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
 fi
 
 command -v mise >/dev/null 2>&1 || {
-  printf 'FAIL: mise is unavailable.\nNext: install mise >= 2024.1.0, then run `mise install`.\n' >&2
+  printf 'FAIL: mise is unavailable.\nNext: install mise >= 2026.10.19, then run `mise install`.\n' >&2
   exit 1
 }
 

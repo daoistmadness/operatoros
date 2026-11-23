@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-19
+last_reviewed: 2026-11-23
 ---
 
 # Development
@@ -10,9 +10,10 @@ supervision to `./start-dev.sh`. Verified commands are maintained in
 [`COMMANDS.md`](../../COMMANDS.md); architecture and operations authorities are indexed in
 [`MEMORY.md`](../../MEMORY.md).
 
-Install the repository-pinned tools with `mise install`; the active Bun runtime
-is 1.4.5. Workspace and launcher CLI typechecks use TypeScript 7.0.2. The
-TypeScript 5.9.3 package remains for compiler-API and TypeScript 5 peer
+Install the repository-pinned tools with `mise install`; Bun 1.4.5, hk 2.8.1,
+and Node.js 24.19.0 are pinned. Oxlint 1.94.0 enforces the workspace import
+restrictions, and TSRS 7.1.0-beta.tsrs4 runs the workspace and launcher CLI
+typechecks. TypeScript 5.9.3 remains for compiler-API and TypeScript 5 peer
 consumers. See the [toolchain decision](../decisions/bun-toolchain.md).
 
 Use `mise run test:fast` for Tier 1, `mise run check:affected` for Tier 2 Turbo

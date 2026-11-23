@@ -65,7 +65,7 @@ frontend_static() {
 }
 backend_full() {
   (cd "$repo" && PATH="$bun_bin:$PATH" bun run check:typebox && bun run check:contracts && bun --filter @operatoros/contracts typecheck && bun --filter @operatoros/contracts test && bun --filter @operatoros/db typecheck && bun --filter @operatoros/db test)
-  (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test)
+  (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun run test)
 }
 tooling_tests() {
   bun test "$repo"/scripts/tests/*.test.ts
@@ -97,7 +97,7 @@ case "$tier" in
       if [[ "$backend_changed" == yes ]]; then
         mapfile -t backend_tests < <(bun -e '(await Bun.file(process.argv[1]).json()).focused_tests.filter(path=>path.startsWith("backend/")||path.startsWith("apps/api/")).forEach(path=>console.log(path))' "$scope_file")
         ((${#backend_tests[@]})) || backend_tests=("apps/api/tests/app.test.ts")
-        (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test "${backend_tests[@]#apps/api/}")
+        (cd "$repo/apps/api" && PATH="$bun_bin:$PATH" bun run typecheck && bun test --parallel=2 "${backend_tests[@]#apps/api/}")
       fi
     fi
     ;;

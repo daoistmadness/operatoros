@@ -40,9 +40,20 @@ Set `OPERATOROS_DATA_DIR` only when an approved absolute override is intentional
 - `bun .github/scripts/check-markdown-links.ts` — validate Markdown links.
 - `bun .github/scripts/check-current-developer-docs.ts` — validate current command documentation.
 
-The affected check requires a current `origin/main`; run `git fetch origin
-main` first when the remote-tracking ref is stale or missing. Full PR and CI
-validation remains authoritative even when affected checks pass.
+The affected check requires a locally available `origin/main`; run `git fetch
+origin main` first when the remote-tracking ref is stale or missing. It captures
+base and head commit SHAs once. A clean tree uses that exact commit range;
+staged, unstaged, untracked, deleted, renamed, or configuration changes select
+the full Turbo graph. Full PR and CI validation remains authoritative even when
+affected checks pass. The pre-push hook fetches once, captures one merge base,
+and supplies the same base/head SHAs to all affected local checks.
+
+## Formatting
+
+There is no repository-wide formatter command or automatic formatting hook.
+`bun run lint`, `hk check --all`, and `mise run check` do not format files.
+Keep formatting edits scoped to files being changed and follow their existing
+style; do not run a whole-repository formatter.
 
 ## Lower-level ownership commands
 

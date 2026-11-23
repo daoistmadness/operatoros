@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "typecheck": "../../node_modules/@typescript/native/bin/tsc --noEmit"
+    "typecheck": "bash ../../scripts/typecheck-tsrs.sh --noEmit"
   },
   "dependencies": {
     "@sinclair/typebox": "catalog:"

@@ -1,4 +1,4 @@
-min_version = "2024.1.0"
+min_version = "2026.10.19"
 
 [settings]
 lockfile = true
@@ -6,6 +6,7 @@ lockfile = true
 [tools]
 bun = "1.4.5"
 hk = "2.8.1"
+node = "24.19.0"
 
 [env]
 HK_MISE = "1"
@@ -24,6 +25,7 @@ git rev-parse --verify 'origin/main^{commit}' >/dev/null 2>&1 || fail "origin/ma
 command -v bun >/dev/null 2>&1 || fail "Bun is unavailable" "mise install"
 [ "$(bun --version)" = "1.4.5" ] || fail "Bun 1.4.5 is not active" "put mise's Bun before other Bun installations on PATH, then run mise install"
 command -v hk >/dev/null 2>&1 || fail "hk is unavailable" "mise install"
+[ "$(node --version)" = "v24.19.0" ] || fail "Node.js 24.19.0 is not active" "run mise install"
 [ -f bun.lock ] || fail "bun.lock is missing" "restore the repository lockfile"
 [ -f mise.lock ] || fail "mise.lock is missing" "restore the repository lockfile"
 [ -d node_modules ] && [ -x node_modules/.bin/turbo ] || fail "workspace dependencies are missing" "bun install --frozen-lockfile"
@@ -32,7 +34,7 @@ bash scripts/check-prerequisites.sh
 for forbidden_lockfile in package-lock.json apps/web/package-lock.json yarn.lock pnpm-lock.yaml; do
   [ ! -e "$forbidden_lockfile" ] || fail "$forbidden_lockfile exists" "remove the obsolete project lockfile and use bun.lock"
 done
-printf 'PASS: toolchain Bun=%s hk=%s\n' "$(bun --version)" "$(hk --version)"
+printf 'PASS: toolchain Bun=%s hk=%s Node=%s mise-min=%s\n' "$(bun --version)" "$(hk --version)" "$(node --version)" "$(mise --version | awk 'NR == 1 { print $1 }')"
 printf 'PASS: workspace dependencies and native Linux Bun\n'
 printf 'PASS: origin/main=%s\n' "$(git rev-parse 'origin/main^{commit}')"
 printf 'PASS: checkout=%s branch=%s\n' "$(git rev-parse --show-toplevel)" "$(git branch --show-current)"
