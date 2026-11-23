@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
@@ -52,10 +53,10 @@ async function identityFixture(identifier: string, name: string): Promise<Uint8A
 }
 
 async function setup(label: string, includeCutoffPolicy = true) {
-  const path = `/tmp/operatoros-machine-preview-${label}-${process.pid}-${Date.now()}.db`;
+  const path = testTempPath(`operatoros-machine-preview-${label}-${process.pid}-${Date.now()}.db`);
   seed(path, includeCutoffPolicy);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-machine-preview-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-machine-preview-audit-${process.pid}`) } });
   const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "preview-admin", password: "preview-admin-pass-1" }) }));
   const cookie = login.headers.get("set-cookie")?.match(/astyx_session=([^;]+)/)?.[1];
   if (!cookie) throw new Error("session cookie missing");

@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { existsSync, readdirSync, rmSync, statfsSync, statSync } from "node:fs";
 import { dirname } from "node:path";
@@ -15,9 +16,9 @@ type ProbeFactory = (paths: { databasePath: string; backupDir: string }) => Disk
 
 function harness(name: string, probe?: ProbeFactory) {
   const stamp = `${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
-  const databasePath = `/tmp/operatoros-p302-${name}-${stamp}.db`;
-  const backupDir = `/tmp/operatoros-p302-${name}-backups-${stamp}`;
-  const auditDir = `/tmp/operatoros-p302-${name}-audit-${stamp}`;
+  const databasePath = testTempPath(`operatoros-p302-${name}-${stamp}.db`);
+  const backupDir = testTempPath(`operatoros-p302-${name}-backups-${stamp}`);
+  const auditDir = testTempPath(`operatoros-p302-${name}-audit-${stamp}`);
   createAccountFixture(databasePath, "golden-active");
   const database = openDatabase(databasePath);
   const app = createApp({

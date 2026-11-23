@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -17,10 +18,10 @@ function cookie(response: Response): string {
 }
 
 async function setup(label: string) {
-  const path = `/tmp/operatoros-daily-attendance-${label}-${process.pid}-${Date.now()}.db`;
+  const path = testTempPath(`operatoros-daily-attendance-${label}-${process.pid}-${Date.now()}.db`);
   seed(path);
   const database = openDatabase(path);
-  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-daily-attendance-audit-${process.pid}` } });
+  const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-daily-attendance-audit-${process.pid}`) } });
   const admin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
   const staff = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-staff", password: "golden-staff-pass-1" }) }));
   return { app, database, admin: cookie(admin), staff: cookie(staff), cleanup: () => { database.close(); rmSync(path, { force: true }); rmSync(`${path}-wal`, { force: true }); rmSync(`${path}-shm`, { force: true }); } };

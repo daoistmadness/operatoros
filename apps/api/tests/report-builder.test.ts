@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -19,7 +20,7 @@ async function cookie(app: ReturnType<typeof createApp>): Promise<string> {
 
 describe("report builder candidates", () => {
   it("supports sections, template CRUD, preview, branding, and exports", async () => {
-    const path = `/tmp/operatoros-report-builder-${process.pid}-${Date.now()}.db`; seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-report-builder-audit-${process.pid}` } });
+    const path = testTempPath(`operatoros-report-builder-${process.pid}-${Date.now()}.db`); seed(path); const database = openDatabase(path); const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-report-builder-audit-${process.pid}`) } });
     try {
       const auth = { cookie: await cookie(app), origin: "http://localhost:5173" };
       const sections = await app.handle(new Request("http://local/api/report-builder/sections", { headers: auth })); expect(sections.status).toBe(200); expect(Object.keys(await sections.json() as Record<string, unknown>)).toContain("attendance");

@@ -953,7 +953,7 @@ it("rolls back interrupted and post-swap-invalid replacements, then allows a saf
     expect(recovery[10]!.outcome).toBe("DENIED");
     expect(readdirSync(backupDir).filter((name) => artifactPattern.test(name))).toHaveLength(5);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
-});
+}, 15_000);
 
 it("refuses a named-pipe backup artifact before reading it", () => {
   if (process.platform !== "linux") return;

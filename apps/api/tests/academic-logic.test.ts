@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -19,10 +20,10 @@ async function auth(app: ReturnType<typeof createApp>, username: string, passwor
 
 describe("academic progression and intervention parity slices", () => {
   it("creates and closes an academic intervention with duplicate protection", async () => {
-    const path = `/tmp/operatoros-intervention-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-intervention-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-intervention-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-intervention-audit-${process.pid}`) } });
     try {
       const admin = await auth(app, "golden-admin", "golden-admin-pass-1");
       const year = database.client.query("SELECT id FROM academic_years ORDER BY start_date DESC LIMIT 1").get() as { id: number };
@@ -45,10 +46,10 @@ describe("academic progression and intervention parity slices", () => {
   }, 30000);
 
   it("previews and commits progression in one transaction", async () => {
-    const path = `/tmp/operatoros-progression-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-progression-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-progression-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-progression-audit-${process.pid}`) } });
     try {
       const admin = await auth(app, "golden-admin", "golden-admin-pass-1");
       const years = database.client.query("SELECT id, start_date FROM academic_years ORDER BY start_date").all() as { id: number; start_date: string }[];
@@ -82,10 +83,10 @@ describe("academic progression and intervention parity slices", () => {
   }, 30000);
 
   it("uses grade sequence fallback and marks a sole graduate", async () => {
-    const path = `/tmp/operatoros-progression-auto-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-progression-auto-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-progression-auto-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-progression-auto-audit-${process.pid}`) } });
     try {
       const admin = await auth(app, "golden-admin", "golden-admin-pass-1");
       const years = database.client.query("SELECT id FROM academic_years ORDER BY start_date").all() as { id: number }[];

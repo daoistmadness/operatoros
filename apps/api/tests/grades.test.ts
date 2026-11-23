@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -19,10 +20,10 @@ async function adminAuth(app: ReturnType<typeof createApp>): Promise<{ cookie: s
 
 describe("grades and academic parity slices", () => {
   it("saves grades, preserves uniqueness, and returns ledger analytics", async () => {
-    const path = `/tmp/operatoros-grades-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-grades-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-grades-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-grades-audit-${process.pid}`) } });
     try {
       const auth = await adminAuth(app);
       const enrollment = database.client.query("SELECT id, jenjang_id, academic_year_id FROM student_enrollments WHERE lifecycle_state = 'ACTIVE' ORDER BY id LIMIT 1").get() as { id: number; jenjang_id: number; academic_year_id: number };
@@ -58,10 +59,10 @@ describe("grades and academic parity slices", () => {
   }, 30000);
 
   it("preserves KKM fallback and configured precedence", async () => {
-    const path = `/tmp/operatoros-kkm-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-kkm-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-kkm-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-kkm-audit-${process.pid}`) } });
     try {
       const auth = await adminAuth(app);
       const year = database.client.query("SELECT id FROM academic_years ORDER BY id LIMIT 1").get() as { id: number };
@@ -78,10 +79,10 @@ describe("grades and academic parity slices", () => {
   }, 30000);
 
   it("authors components while preserving scored component identity", async () => {
-    const path = `/tmp/operatoros-components-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-components-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-components-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-components-audit-${process.pid}`) } });
     try {
       const auth = await adminAuth(app);
       const enrollment = database.client.query("SELECT id, academic_year_id, jenjang_id FROM student_enrollments WHERE lifecycle_state = 'ACTIVE' ORDER BY id LIMIT 1").get() as { id: number; academic_year_id: number; jenjang_id: number };

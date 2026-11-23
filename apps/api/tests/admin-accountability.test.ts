@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { createApp } from "../src/app";
@@ -43,8 +44,8 @@ function parseJson(value: unknown): unknown {
 
 describe("administration accountability", () => {
   it("audits staff mutations transactionally without copying staff or education contents", async () => {
-    const path = `/tmp/operatoros-admin-accountability-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-admin-accountability-audit-${process.pid}-${Date.now()}`;
+    const path = testTempPath(`operatoros-admin-accountability-${process.pid}-${Date.now()}.db`);
+    const auditDir = testTempPath(`operatoros-admin-accountability-audit-${process.pid}-${Date.now()}`);
     seedAcademic(path);
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });
@@ -156,8 +157,8 @@ describe("administration accountability", () => {
   }, 30000);
 
   it("binds HEB authorship to the admin session and preserves CRUD validation", async () => {
-    const path = `/tmp/operatoros-heb-accountability-${process.pid}-${Date.now()}.db`;
-    const auditDir = `/tmp/operatoros-heb-accountability-audit-${process.pid}-${Date.now()}`;
+    const path = testTempPath(`operatoros-heb-accountability-${process.pid}-${Date.now()}.db`);
+    const auditDir = testTempPath(`operatoros-heb-accountability-audit-${process.pid}-${Date.now()}`);
     seedAcademic(path);
     const database = openDatabase(path);
     const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir } });

@@ -1,3 +1,4 @@
+import { testTempPath } from "./fixtures/test-temp-path";
 import { describe, expect, it } from "bun:test";
 import { rmSync } from "node:fs";
 import { appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
@@ -46,10 +47,10 @@ async function previewResponse(app: ReturnType<typeof createApp>, auth: Record<s
 
 describe("academic roster candidates", () => {
   it("previews a 30-row Roster sheet and ignores Instructions without mutating domain data", async () => {
-    const path = `/tmp/operatoros-roster-30-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-roster-30-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-30-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-roster-30-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
@@ -67,10 +68,10 @@ describe("academic roster candidates", () => {
   }, 30000);
 
   it("returns controlled workbook errors for missing headers, corrupt XLSX, and unsupported types", async () => {
-    const path = `/tmp/operatoros-roster-errors-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-roster-errors-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-errors-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-roster-errors-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
@@ -99,10 +100,10 @@ describe("academic roster candidates", () => {
   }, 30000);
 
   it("previews and commits a disposable roster with provenance", async () => {
-    const path = `/tmp/operatoros-roster-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-roster-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-roster-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login), origin: "http://localhost:5173" };
@@ -120,10 +121,10 @@ describe("academic roster candidates", () => {
   }, 30000);
 
   it("uses the canonical year/class hierarchy and explains each class failure", async () => {
-    const path = `/tmp/operatoros-roster-class-${process.pid}-${Date.now()}.db`;
+    const path = testTempPath(`operatoros-roster-class-${process.pid}-${Date.now()}.db`);
     seed(path);
     const database = openDatabase(path);
-    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: `/tmp/operatoros-roster-class-audit-${process.pid}` } });
+    const app = createApp({ databaseHandle: database, auth: { authCookieSecret: secret, auditDir: testTempPath(`operatoros-roster-class-audit-${process.pid}`) } });
     try {
       const login = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "golden-admin", password: "golden-admin-pass-1" }) }));
       const auth = { cookie: cookie(login), origin: "http://localhost:5173" };

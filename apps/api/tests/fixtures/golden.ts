@@ -1,6 +1,7 @@
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import type { SqliteClient } from "@operatoros/db";
 import { seedFixtureDefaults, seedGradeDefaults } from "./defaults";
+import { testPasswordHash } from "./password-hash";
 
 /** Maintained fixture data used by current API tests, independent of migration evidence. */
 export function createGoldenFixture(path: string, kind: "academic" | "reports" | "academic-with-defaults" | "reports-with-defaults" | "reports-with-grade-defaults"): void {
@@ -14,7 +15,7 @@ export function createGoldenFixture(path: string, kind: "academic" | "reports" |
         ["golden-admin", "golden-admin-pass-1", "admin", 1],
         ["golden-staff", "golden-staff-pass-1", "staff", 1],
         ["golden-inactive", "golden-inactive-pass", "staff", 0],
-      ] as const) handle.client.run("INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,?)", [username, Bun.password.hashSync(password, "argon2id"), role, active]);
+      ] as const) handle.client.run("INSERT INTO users (username,password_hash,role,is_active) VALUES (?,?,?,?)", [username, testPasswordHash(password), role, active]);
       if (kind.startsWith("academic")) academic(handle.client); else reports(handle.client);
       if (kind === "reports-with-defaults") seedFixtureDefaults(handle.client);
     })();

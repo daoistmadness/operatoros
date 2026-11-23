@@ -9,7 +9,8 @@ if [[ "${1:-}" == "--validate" ]]; then
   bun test "$repo_root/scripts/tests/readiness-seeder.test.ts"
   exit 0
 fi
-runtime_root="$(mktemp -d /tmp/operatoros-readiness-e2e.XXXXXX)"
+runtime_parent="${TMPDIR:-/tmp}"
+runtime_root="$(mktemp -d "$runtime_parent/operatoros-readiness-e2e.XXXXXX")"
 workspace="$runtime_root/workspace"
 database="$workspace/state/operatoros.sqlite"
 mkdir -p "$workspace/runtime" "$workspace/logs"
