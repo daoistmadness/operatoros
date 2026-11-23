@@ -10,6 +10,8 @@ const cleanEnv = { ...process.env };
 const localVars = Bun.spawnSync(["git", "rev-parse", "--local-env-vars"], { stdout: "pipe", stderr: "pipe" });
 if (localVars.exitCode !== 0) throw new Error("Git local environment discovery failed");
 for (const name of localVars.stdout.toString().trim().split("\n")) delete cleanEnv[name];
+delete cleanEnv.TURBO_SCM_BASE;
+delete cleanEnv.TURBO_SCM_HEAD;
 
 function git(repo: string, ...args: string[]) {
   const result = Bun.spawnSync(["git", "-C", repo, ...args], { env: cleanEnv, stdout: "pipe", stderr: "pipe" });

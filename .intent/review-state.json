@@ -11318,17 +11318,17 @@
       ]
     },
     "source:scripts/tests/check-affected.test.ts": {
-      "fingerprint": "11ff5098022c1a8030f570f986157a1a9e9092b946cd716d365b77d0219a7284",
+      "fingerprint": "873cb4735c028abffb388995530ac111aa568c04ba986f317343d47e63c6a7d8",
       "snapshot": {
-        "scripts/tests/check-affected.test.ts": "384feb48cdbf730954647e54f0f96265c0f37fc32c05b7a01e632ccbbd945a20"
+        "scripts/tests/check-affected.test.ts": "c61e0ad4ad20a3db49f76e97cf6b7505efe6e09011140f2484cfa65c711fd562"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "head": "bec6ea64fda2802ad506d79ba4dbd2d8ff5be61d",
       "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "reason": "This regression test verifies that the repository affected-check script ignores inherited real-repository Turbo base/head variables when testing synthetic Git repositories. It changes no Elysia framework behavior or backend guidance and does not warrant another library skill.",
       "evidence": [
-        "scripts/tests/check-affected.test.ts was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "scripts/tests/check-affected.test.ts was inspected; the helper clears TURBO_SCM_BASE and TURBO_SCM_HEAD before invoking the disposable-repository fixture.",
+        "With the pre-push base/head variables set to fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9 and bec6ea64fda2802ad506d79ba4dbd2d8ff5be61d, bun test scripts/tests/check-affected.test.ts passed all 8 tests.",
+        "packages/agent-skills/skills/elysiajs/SKILL.md and its route-testing reference remain unaffected."
       ]
     },
     "source:scripts/tests/typecheck-tsrs.test.ts": {
