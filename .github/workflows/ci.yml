@@ -65,6 +65,8 @@ jobs:
         run: bun .github/scripts/check-markdown-links.ts
       - name: Validate Markdown organization and index
         run: bun .github/scripts/check-markdown-organization.ts
+      - name: Enforce TypeScript minimum version guard
+        run: bun scripts/check-typescript-version.ts
       - name: Validate agent skills
         run: bun run skills:validate
       - name: Check agent skill maintainer review

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, relative, resolve } from "node:path";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".cts"]);
 const IGNORED_DIRECTORIES = new Set([".git", "node_modules", "build", "dist", "coverage", ".runtime", "e2e-results"]);

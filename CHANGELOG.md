@@ -4,7 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Speed up lint and typechecking with pinned Oxlint and TSRS, and run the full check graph when the worktree is dirty.
+- Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility. (#403)
+- Speed up lint and typechecking with pinned Oxlint and TSRS, and run the full check graph when the worktree is dirty. (#402)
 - Update Turborepo to 2.11.13 and verify full workspace package graph checks. (#401)
 - Scan both Docker images, verify the archived Compose candidate on a fresh runner, and keep host acceptance gates open. (#400)
 - Fix Docker candidate startup fixtures and allow explicit Docker rehearsal on any feature ref. (#399)

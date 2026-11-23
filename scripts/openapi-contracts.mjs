@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, copyFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, copyFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const frontendRoot = join(repositoryRoot, "apps", "web");
@@ -10,10 +10,33 @@ const generator = join(frontendRoot, "node_modules", "openapi-typescript", "bin"
 const committedSpec = join(repositoryRoot, "openapi", "operatoros.openapi.json");
 const committedTypes = join(frontendRoot, "src", "generated", "openapi", "schema.ts");
 
+function resolveNodeBinary() {
+  const mise = spawnSync("mise", ["which", "node"], { encoding: "utf8" });
+  if (mise.status === 0 && mise.stdout.trim()) {
+    return mise.stdout.trim();
+  }
+  const cleanPath = (process.env.PATH || "")
+    .split(":")
+    .filter((entry) => !entry.includes("bun-node"))
+    .join(":");
+  const whichNode = spawnSync("which", ["node"], {
+    env: { ...process.env, PATH: cleanPath },
+    encoding: "utf8",
+  });
+  if (whichNode.status === 0 && whichNode.stdout.trim()) {
+    return whichNode.stdout.trim();
+  }
+  return "node";
+}
+
 function run(command, args) {
+  const cleanPath = (process.env.PATH || "")
+    .split(":")
+    .filter((entry) => !entry.includes("bun-node"))
+    .join(":");
   const result = spawnSync(command, args, {
     cwd: repositoryRoot,
-    env: { ...process.env },
+    env: { ...process.env, PATH: cleanPath },
     encoding: "utf8",
   });
   if (result.stdout) process.stdout.write(result.stdout);
@@ -25,7 +48,23 @@ function generateInto(directory) {
   const specification = join(directory, "operatoros.openapi.json");
   const types = join(directory, "schema.ts");
   copyFileSync(committedSpec, specification);
-  run(process.execPath, [generator, specification, "--output", types]);
+  const loaderPath = join(directory, "ts-compat-loader.mjs");
+  const registerPath = join(directory, "ts-compat-register.mjs");
+  writeFileSync(
+    loaderPath,
+    'export async function resolve(specifier, context, nextResolve) {\n' +
+    '  if (specifier === "typescript") {\n' +
+    '    return nextResolve("@typescript/typescript6", context);\n' +
+    '  }\n' +
+    '  return nextResolve(specifier, context);\n' +
+    '}\n'
+  );
+  writeFileSync(
+    registerPath,
+    'import { register } from "node:module";\n' +
+    'register(' + JSON.stringify(pathToFileURL(loaderPath).href) + ', import.meta.url);\n'
+  );
+  run(resolveNodeBinary(), ["--import", registerPath, generator, specification, "--output", types]);
   return { specification, types };
 }
 

@@ -3,19 +3,19 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "a2c1ee88ed19c9c304b79cdb409a22c11bde0b87821e7ea473dbe0741642ebb7",
+      "fingerprint": "4eca201a8c901eef984fe785323192353ec27035d465e794e590ea94c7917afb",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
-        ".github/workflows/ci.yml": "9e12c7161d7c09c28f8f8029494a2eacaab587f77fb44dde9c1541fb062ba538",
+        ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
         "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
-        "apps/api/package.json": "82669cefe62d8e1b9736c39a6740873c3ce9ff8e1397cb794144562025616f83",
-        "bun.lock": "5cf95b4b70849b0117d65501d5cfb69b5bd1dab2bbaf90fad09753ea0a0e0239",
+        "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
+        "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "72c1829bbe389c7ab082d303a6b12003dd93a7028027e7fb3990797a4cee0992",
+        "package.json": "1d80edf32993498c27892e83c26a1c2d184e0bb1e3e8314108ba506daa81b6a1",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -44,32 +44,30 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
       "outcome": "no-change",
-      "reason": "Reviewed the full source set mapped to the Elysia v2 skill. OperatorOS remains on Elysia 1.4.29; this change changes lint/typecheck tooling, CI and API test isolation, not Elysia route, plugin, lifecycle, or validation APIs. The skill still says to use the project test runner, app.handle() for port-free tests, and the project type check; those instructions remain accurate.",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
       "evidence": [
-        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs/references/testing.md were inspected.",
-        "apps/api/package.json and docs/guides/testing.md retain Bun test execution and a project typecheck; API tests use the same Elysia app.handle() patterns.",
-        "mise run check:affected passed at HEAD e4223763eff9b070a61b4cf1950256cd467f86e1 against base fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9; @operatoros/api ran 442 tests with 0 failures."
+        "Changed: .github/workflows/ci.yml, apps/api/package.json, bun.lock, package.json at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "6649e09e22bfc9dff90499003fe6ff0f593fb71538226646279d6fd4dc735503",
+      "fingerprint": "428f59e32a91ffcdea3607f2e9e4257b848d0afd315f868430118633ea80a4bf",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
-        ".github/workflows/ci.yml": "9e12c7161d7c09c28f8f8029494a2eacaab587f77fb44dde9c1541fb062ba538",
+        ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
         "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
-        "apps/api/package.json": "82669cefe62d8e1b9736c39a6740873c3ce9ff8e1397cb794144562025616f83",
-        "bun.lock": "5cf95b4b70849b0117d65501d5cfb69b5bd1dab2bbaf90fad09753ea0a0e0239",
+        "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
+        "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "3ac09a1b2fcb0838ae43caf3ebf5dd311a7437b63f55db390baf5bb3a69c40b7",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
-        "package.json": "72c1829bbe389c7ab082d303a6b12003dd93a7028027e7fb3990797a4cee0992",
+        "package.json": "1d80edf32993498c27892e83c26a1c2d184e0bb1e3e8314108ba506daa81b6a1",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
         "packages/agent-skills/docs/elysiajs/references/ai-sdk.md": "34c4c070a0853a2786013e26f18486cb3fe9e76152b26a72e2676ec951c48d40",
@@ -98,13 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
       "outcome": "no-change",
-      "reason": "The current change adds repository-local test/toolchain validation and no independently useful Elysia skill task. The domain map, skill spec, and skill tree all still accurately describe the sole registered Elysia backend skill and its source scope; the project toolchain commands remain in the canonical testing/development docs.",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
       "evidence": [
-        "_artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml were inspected and retain the existing backend/elysiajs scope.",
-        "bun run skills:validate passed; docs/guides/testing.md and docs/guides/development.md document the new toolchain behavior.",
-        "mise run check:affected passed at HEAD e4223763eff9b070a61b4cf1950256cd467f86e1 against base fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: .github/workflows/ci.yml, apps/api/package.json, bun.lock, package.json at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2974,17 +2970,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "7f0f35dedb4abd985a6aac4faf23cb96ec756b72847b8d87b72c589eb3af0e11",
+      "fingerprint": "40150b2ee051f6c4659f8d3fad06f3be6a15aa1894d198271eade51fb3700a77",
       "snapshot": {
-        "CHANGELOG.md": "ad7abce81ce4d61fbf69289003cf1aaf0767dae0caa80ee6738f925c8697a576"
+        "CHANGELOG.md": "550c6a0e6ab7c8420a56c6937487392ac600fdaa4c18432d6ed2130f0e77e63e"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
-      "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "head": "495c30266f5aaf7a49332aaede3b64565affa16c",
+      "outcome": "no-change",
+      "reason": "Record PR 403 number assignment in CHANGELOG.md",
       "evidence": [
-        "CHANGELOG.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: CHANGELOG.md at 495c30266f5aaf7a49332aaede3b64565affa16c"
       ]
     },
     "source:COMMANDS.md": {
@@ -9154,15 +9148,15 @@
       ]
     },
     "source:scripts/check-architecture.ts": {
-      "fingerprint": "36da1c3c4b8d2296789cd2d1da245917f52a8a51ab8d5e1f1a0b801b8ced335e",
+      "fingerprint": "255ef5f44bfa38d97ef1ecd8cae5ae5c285e9351c7a46510f1bbc0e372eaf50b",
       "snapshot": {
-        "scripts/check-architecture.ts": "c9ef22bcc2263fd1641dba35cd950b27788aa6c65e9e9ed258a5631189975582"
+        "scripts/check-architecture.ts": "7badad7ca56628c5b2d720da70669bee9cecc3b64a7b15402dafa2914604a46d"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
       "evidence": [
-        "Changed: scripts/check-architecture.ts at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: scripts/check-architecture.ts at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
       ]
     },
     "source:scripts/tests/architecture-fixtures.ts": {
@@ -9926,17 +9920,15 @@
       ]
     },
     "source:scripts/check": {
-      "fingerprint": "a5719b3e9b49103e42fa7f99383accd46c00f53d17c629d4b35234a4039a013e",
+      "fingerprint": "feb10e63ed291439ea4495bed2c28e3a0a4d515bf904f7fdf48b31ca76cd0b76",
       "snapshot": {
-        "scripts/check": "3a67d159c848632311523fb21f6d7c16b6bcffc88b06c1061d4f426e0e61473d"
+        "scripts/check": "00834bde551d7d3ff7799b2680501bcfdb2abb5869575232b2e5bd1256b76290"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
-      "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
+      "outcome": "no-change",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
       "evidence": [
-        "scripts/check was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: scripts/check at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
       ]
     },
     "source:scripts/dev": {
@@ -11357,6 +11349,42 @@
         "scripts/typecheck-tsrs.sh was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
         "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
         "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+      ]
+    },
+    "source:scripts/check-typescript-version.ts": {
+      "fingerprint": "01e07641ada419e73911c186ddcc6ca77c99d6c4198391d33df9b916707ba9cd",
+      "snapshot": {
+        "scripts/check-typescript-version.ts": "95fc43b2f709399a3a30d3cba87d745e8cd353c1ab698947e0fcf17a61c1e4a3"
+      },
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
+      "outcome": "no-change",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
+      "evidence": [
+        "Changed: scripts/check-typescript-version.ts at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
+      ]
+    },
+    "source:scripts/tests/check-typescript-version.test.ts": {
+      "fingerprint": "378f5652127122c018d6605f8ad431312f676ec6d1bcbe359674f486b6c3cfc8",
+      "snapshot": {
+        "scripts/tests/check-typescript-version.test.ts": "b2967173f5b68525ab2b1ccff8328a49e14f48144a6f04ea9cb5e159855c2dcf"
+      },
+      "head": "f65a88e78f33ac634f12ad061e3024d47ad1ed5f",
+      "outcome": "no-change",
+      "reason": "Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility without affecting skill guidance",
+      "evidence": [
+        "Changed: scripts/tests/check-typescript-version.test.ts at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
+      ]
+    },
+    "source:scripts/openapi-contracts.mjs": {
+      "fingerprint": "343fd5c53beb9abd23a4d208bcfe9b2cbe3e9e35e025498362946a04b3161311",
+      "snapshot": {
+        "scripts/openapi-contracts.mjs": "bca0b19cd87b61a2702e487c48fa010ed5fcf7efb4ab94b98479068f2f3b6d54"
+      },
+      "head": "994e1dffe9dd5a7ab2d0d949892284259be258c4",
+      "outcome": "no-change",
+      "reason": "Resolve real Node binary path and sanitize PATH against Bun node shims in openapi contract generator",
+      "evidence": [
+        "Changed: scripts/openapi-contracts.mjs at 994e1dffe9dd5a7ab2d0d949892284259be258c4"
       ]
     }
   }
