@@ -652,7 +652,7 @@ LAUNCHER_STATE=STARTING_BACKEND
   export HOST="$BACKEND_HOST"
   export PORT="$BACKEND_PORT"
   cd "$API_DIR"
-    exec setsid "$BUN_EXECUTABLE" --no-env-file run "$API_DIR/src/server.ts"
+    exec setsid "$BUN_EXECUTABLE" --no-env-file --watch "$API_DIR/src/server.ts"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 (( SHUTDOWN_REQUESTED == 0 )) || exit "$REQUESTED_EXIT_CODE"

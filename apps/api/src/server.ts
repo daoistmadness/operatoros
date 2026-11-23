@@ -70,7 +70,12 @@ if (import.meta.main) {
   }
   console.log(`OperatorOS security\n  Backup encryption: ${config.backupEncryption ? "configured" : "not configured"}\n  Active backup key ID: ${config.backupEncryption?.activeKeyId ?? "none"}\n  Trusted proxy: ${config.auth?.trustedProxyAddresses?.length ? "enabled" : "disabled"}\n  Allowed origins: ${config.auth?.allowedOrigins?.length ?? 0}`);
   console.log(`operatoros-api listening on 127.0.0.1:${instance.port}`);
-  const shutdown = () => { void instance.stop().catch((error) => { console.error("OperatorOS API shutdown failed.", error); process.exitCode = 1; }); };
+  const shutdown = () => {
+    void instance.stop().catch((error) => {
+      console.error("OperatorOS API shutdown failed.", error);
+      process.exitCode = 1;
+    });
+  };
   process.once("SIGINT", shutdown);
   process.once("SIGTERM", shutdown);
 }
