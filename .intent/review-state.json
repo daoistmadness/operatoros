@@ -11374,6 +11374,18 @@
       "evidence": [
         "Changed: scripts/tests/check-typescript-version.test.ts at f65a88e78f33ac634f12ad061e3024d47ad1ed5f"
       ]
+    },
+    "source:scripts/openapi-contracts.mjs": {
+      "fingerprint": "66f3e728982f9607711df0289655c0c3d0c9a2c38137bba9837b64f609cdc127",
+      "snapshot": {
+        "scripts/openapi-contracts.mjs": "e9c722825cae1ba711f69ab12809895a112f52f5c211619ead350f5520485c62"
+      },
+      "head": "3da093b133e7a8912a50e06e88f8af9f35f1c136",
+      "outcome": "no-change",
+      "reason": "Scope TypeScript 6 compatibility resolution hook to openapi-contracts generator",
+      "evidence": [
+        "Changed: scripts/openapi-contracts.mjs at 3da093b133e7a8912a50e06e88f8af9f35f1c136"
+      ]
     }
   }
 }
