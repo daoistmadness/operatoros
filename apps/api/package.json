@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "openapi-types": "12.1.3",
-    "bun-types": "1.4.0"
+    "bun-types": "1.4.0",
+    "typescript": "7.0.2"
   }
 }

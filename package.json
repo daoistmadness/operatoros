@@ -52,17 +52,19 @@
     "skills:validate": "intent validate packages/agent-skills/skills --check",
     "skills:check": "bun run skills:validate && intent maintainer check",
     "lint": "oxlint --config oxlint.config.mjs --max-warnings=0 --threads=3 apps/api apps/web packages/db packages/contracts packages/excel packages/ui packages/config packages/agent-skills",
-    "check": "bun run lint && bun run check:typebox && bun run check:architecture && bun run test:architecture && bun run check:contracts && bun run check:ui && bun run typecheck && bun run test"
+    "check:typescript": "bun scripts/check-typescript-version.ts",
+    "check": "bun run lint && bun run check:typescript && bun run check:typebox && bun run check:architecture && bun run test:architecture && bun run check:contracts && bun run check:ui && bun run typecheck && bun run test"
   },
   "devDependencies": {
     "@operatoros/agent-skills": "workspace:*",
     "@operatoros/db": "workspace:*",
     "@tanstack/intent": "0.5.6",
+    "@typescript/typescript6": "6.0.2",
     "oxlint": "1.94.0",
     "saxes": "5.0.1",
     "tsrs": "7.1.0-beta.tsrs4",
     "turbo": "2.11.13",
-    "typescript": "5.9.3"
+    "typescript": "7.0.2"
   },
   "intent": {
     "skills": [

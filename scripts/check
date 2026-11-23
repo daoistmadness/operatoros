@@ -33,7 +33,8 @@ mise exec -- bun test \
   scripts/tests/e2e-summaries.test.ts \
   scripts/tests/readiness-seeder.test.ts \
   scripts/tests/podman-source-manifest.test.ts \
-  scripts/tests/dev-scripts.test.ts
+  scripts/tests/dev-scripts.test.ts \
+  scripts/tests/check-typescript-version.test.ts
 
 python3 -m unittest discover -s scripts/tests -p test_release_bundle.py
 python3 -m unittest discover -s scripts/tests -p test_embedded_runtime.py
