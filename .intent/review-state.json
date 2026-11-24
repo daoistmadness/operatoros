@@ -2967,15 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2cef03a941cd443ab15cbcde76dcdace20c7668b1796684f47d87f8e3e23d5ea",
+      "fingerprint": "0fc6af9dbff6dc8638bef9506e50513ed834df7cf17a8b7fbb4280e45218d1f8",
       "snapshot": {
-        "CHANGELOG.md": "856092c9df4ff0069b46ce647b013c8ef3cc4ff5133d292b3c5fd1e04e0d6437"
+        "CHANGELOG.md": "d934855d0efe50ccad204687ee0ce064973dbb38241a274eb8d921fb65204679"
       },
-      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
+      "head": "41e611d0743ec6ce1e265060ea491bc4bbcc56ff",
       "outcome": "out-of-scope",
-      "reason": "This is a release-history bullet describing the development-only watchdog. It is not framework guidance and no registered Intent skill maps to CHANGELOG.md.",
+      "reason": "This follow-up appends the assigned #406 reference to the existing Unreleased watchdog bullet, as required by the repository PR template. It does not alter Elysia behavior, guidance, or the registered Elysia skill.",
       "evidence": [
-        "CHANGELOG.md; implementation commit 3c59b2073a64dcf92196eb2063cab1ee1a7698f2."
+        "CHANGELOG.md one-line diff in commit 41e611d0743ec6ce1e265060ea491bc4bbcc56ff; .github/pull_request_template.md requires the assigned PR number to be added after opening; packages/agent-skills/skills/elysiajs/SKILL.md is the only registered skill and contains no changelog process guidance."
       ]
     },
     "source:COMMANDS.md": {
