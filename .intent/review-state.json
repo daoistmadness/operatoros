@@ -3,7 +3,7 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "5823a0c809bf1289c2f179d8efe7811d90fb36afc34b7b21b135dbfe381d48af",
+      "fingerprint": "a974bec918b69defb0b9f701b36bb66e337555f452b9d9fb5eedd453fe0a4ea7",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
@@ -12,7 +12,7 @@
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "e76592bd670703572839da56e8599d45956b3da80a6bd027ec06e42077db8132",
+        "docs/guides/development.md": "8cc7b1670f623aee783bf318266b9b4074878af81e65183f649b6751ca5a597e",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
@@ -44,17 +44,15 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
       "outcome": "no-change",
-      "reason": "Reviewed the root manifest and corrected development guide against the registered Elysia skill. The manifest change only adds the direct dev script; the guide now accurately documents the Bun watch launcher, lock retry, and shutdown behavior. The skill itself remains accurate: it still directs OperatorOS work to the installed Elysia version and package source notes, and no Elysia API guidance changed.",
+      "reason": "The development guide change documents the development-only backup-lock worker watchdog and its remaining runtime-monitoring limitation. It does not change Elysia APIs, lifecycle hooks, route behavior, dependency guidance, or the v1/v2 boundary; the existing Elysia skill remains accurate.",
       "evidence": [
-        "package.json at 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 adds only the root dev script; apps/api/package.json and bun.lock are unchanged.",
-        "docs/guides/development.md at 292b7bead3296e7cc212b37baf36cfac7802cbd0 now documents bun run dev, Bun --watch, bounded lock retry, Vite HMR, route generation, and shutdown behavior.",
-        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs.md remain accurate for Elysia 1.4.29 and the existing v1/v2 guidance."
+        "packages/agent-skills/skills/elysiajs/SKILL.md; packages/agent-skills/docs/elysiajs.md; docs/guides/development.md; implementation commit 3c59b2073a64dcf92196eb2063cab1ee1a7698f2; 9/9 backup-operation-lock tests and 446/446 affected API tests passed; independent read-only review found no blocking issue."
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "26631efabeb5c7f0d455929cbbe569c5fc24ea6fd75151a93e5efcea08a9c431",
+      "fingerprint": "fe39e0cbfbf5a5edef102180274d669968d7722a395040f85450f83338169c6d",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
@@ -66,7 +64,7 @@
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
-        "docs/guides/development.md": "e76592bd670703572839da56e8599d45956b3da80a6bd027ec06e42077db8132",
+        "docs/guides/development.md": "8cc7b1670f623aee783bf318266b9b4074878af81e65183f649b6751ca5a597e",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
         "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
@@ -98,14 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
       "outcome": "no-change",
-      "reason": "Reviewed all three planning records against the implementation and documentation commits. The domain map still correctly defines only the Elysia backend skill and its tasks; the spec retains the package scope, decisions, and known coverage limits; the tree still matches the registered skill. The dev-guide correction adds no new skill, task, domain, mapping, decision, or future-work item.",
+      "reason": "The three planning records describe the original Elysia skill scope, source mapping, package decisions, and remaining skill-package work. This backup-lock fix changes none of those decisions, coverage mappings, tasks, or future-work statements; the development guide remains a mapped source reviewed without requiring a skill or plan update.",
       "evidence": [
-        "_artifacts/domain_map.yaml: one Elysia backend domain and the existing four Elysia tasks; no new task was introduced by 292b7bead3296e7cc212b37baf36cfac7802cbd0.",
-        "_artifacts/skill_spec.md: existing scope, decisions, exclusions, and remaining evidence remain accurate; no skill batch was added.",
-        "_artifacts/skill_tree.yaml: registered skill identity, package, source list, and task coverage remain aligned with SKILL.md.",
-        "The only documentation commit changes docs/guides/development.md; none of the three planning records changed."
+        "_artifacts/domain_map.yaml; _artifacts/skill_spec.md; _artifacts/skill_tree.yaml; docs/guides/development.md; implementation commit 3c59b2073a64dcf92196eb2063cab1ee1a7698f2."
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -703,17 +698,15 @@
       ]
     },
     "source:apps/api/src/domains/backup-operation-lock.ts": {
-      "fingerprint": "ecb03a170a97e17ce580fe06e3ec8e625331fa61592c4f9b5e5afcee3889df00",
+      "fingerprint": "48c689ebab4d4fc47613c92fe270bfd0f295c5082a5edb9fb1ae1fbb0ca89304",
       "snapshot": {
-        "apps/api/src/domains/backup-operation-lock.ts": "edd30f6929b21b509ce46b4d68244f8b19cf12f3b5a24675e18c75d702e4baf7"
+        "apps/api/src/domains/backup-operation-lock.ts": "00c2cc7721e6dca622c9c036d987ab14095ad6e5be9225815678522f9a416826"
       },
-      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
       "outcome": "out-of-scope",
-      "reason": "The changed application lock worker is not mapped to the registered Elysia skill and implements OS flock process locking and restart cleanup rather than Elysia framework behavior. Preserve the independent review finding that there is no independent watchdog for a nonresponsive lock worker.",
+      "reason": "The change is application-specific SQLite/flock process supervision. No registered skill mapping covers this lock domain; the Elysia skill does not prescribe this worker implementation.",
       "evidence": [
-        "The source review identifies this exact file as an unmapped source item; _artifacts/skill_tree.yaml registers only the Elysia framework skill.",
-        "apps/api/src/domains/backup-operation-lock.ts at 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 contains flock acquisition, retry, and child-process cleanup.",
-        "Independent NATIVE_AMENDED Revision 2.1 review finding retained: no independent bounded watchdog for a nonresponsive backup lock worker."
+        "apps/api/src/domains/backup-operation-lock.ts; 9/9 synthetic and existing lock tests passed; 446/446 affected API tests passed; independent read-only review found no blocking correctness or security issue."
       ]
     },
     "source:apps/api/src/domains/durable-files.ts": {
@@ -729,28 +722,27 @@
       ]
     },
     "source:apps/api/src/server.ts": {
-      "fingerprint": "3a0c7ad6bffad73d2e1b245731e4297fa5663dc407701c51d6c0951ee2aa907f",
+      "fingerprint": "dd346ffed9bc662c1899678c2da976f99eabc3c85130df88a396d0711556b5f5",
       "snapshot": {
-        "apps/api/src/server.ts": "daeb77930dc8803d48a757071533a55cd4076153477e69d3a4bcaf08edc6122c"
+        "apps/api/src/server.ts": "c2c1503fa96f2acdfe6e0f4cb7d2a9e06652eb426800982f9b59ed17f5a53191"
       },
-      "head": "292b7bead3296e7cc212b37baf36cfac7802cbd0",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
       "outcome": "out-of-scope",
-      "reason": "The server.ts diff only reformats the existing shutdown callback and does not change Elysia behavior or registered skill guidance.",
+      "reason": "The only behavior change passes an explicit development-only watchdog option into the existing lock acquisition. It does not change Elysia route, hook, or server lifecycle APIs, and no registered skill mapping covers this lock-policy wiring.",
       "evidence": [
-        "apps/api/src/server.ts diff from 23c49638ac99dccb96202906e05f671dfbd0b63c to 4f63cae9bb245b7346c7ac16821fb41ae6c7f2c8 changes only callback formatting.",
-        "The source review identifies this file as unmapped; the registered Elysia skill sources do not include apps/api/src/server.ts."
+        "apps/api/src/server.ts; apps/api/tests/backup-operation-lock.test.ts; production configuration sets environment=production and passes watchdog=false; 446/446 affected API tests passed."
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
-      "fingerprint": "568dd55c17dbc6c0791c94ea6c630e196d96eb880c78787cd8f1478e01fc4ce9",
+      "fingerprint": "5e38df79137657b17b1545d3ed904a834354b3741cb68e2ce03bb0e0e5336ec3",
       "snapshot": {
-        "apps/api/tests/backup-operation-lock.test.ts": "e92961fd4a4c4d4a31b0bf1c3b11b1e8e7c3e75e824b177cbc3703c64fd66b07"
+        "apps/api/tests/backup-operation-lock.test.ts": "5cbbaf6b0b40e02c5cece40091b58d2e6ecb91c4563fd2c2ab8f1cf392d6abc9"
       },
-      "head": "cb99b2b27cdf34885a0483fe01ef51a3338f68ec",
-      "outcome": "no-change",
-      "reason": "Reviewed API and CLI backup scratch cleanup, tests, and operator guide; behavior changes do not change Elysia guidance or the loaded framework skill.",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
+      "outcome": "out-of-scope",
+      "reason": "These are application-specific synthetic Linux flock/process lifecycle tests. No registered skill mapping covers the backup-operation lock test file; the framework skill’s route-test guidance remains accurate and was followed by running project tests and typechecking.",
       "evidence": [
-        "Changed: apps/api/tests/backup-operation-lock.test.ts at cb99b2b27cdf34885a0483fe01ef51a3338f68ec"
+        "apps/api/tests/backup-operation-lock.test.ts; targeted result 9 passed/0 failed; affected API suite 446 passed/0 failed; API typecheck exit 0."
       ]
     },
     "source:apps/api/tests/durable-files.test.ts": {
@@ -2975,17 +2967,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "44fbe435adf0b625577d4e9b87dcdeedc154fe8909e9f81d030bed89f7833532",
+      "fingerprint": "2cef03a941cd443ab15cbcde76dcdace20c7668b1796684f47d87f8e3e23d5ea",
       "snapshot": {
-        "CHANGELOG.md": "e159ccdbf631d2686eefb108f02eb0c0b42c01eb57fc47267d640bbae21d5033"
+        "CHANGELOG.md": "856092c9df4ff0069b46ce647b013c8ef3cc4ff5133d292b3c5fd1e04e0d6437"
       },
-      "head": "1a907cb7066f67a84bd75b4ad703c63cc79ca276",
+      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
       "outcome": "out-of-scope",
-      "reason": "This source review item is a release-note entry for the already-qualified native development launcher. The only registered Intent skill is @operatoros/agent-skills#elysiajs, scoped to Elysia backend implementation and route work; the changelog entry adds no Elysia guidance, reusable skill behavior, or planning decision. The authoritative development instructions were already corrected in docs/guides/development.md, so no skill or planning record change is warranted.",
+      "reason": "This is a release-history bullet describing the development-only watchdog. It is not framework guidance and no registered Intent skill maps to CHANGELOG.md.",
       "evidence": [
-        "intent list reports one registered skill, elysiajs, scoped to Elysia backend implementation and route work.",
-        "The changelog-only commit 1a907cb7066f67a84bd75b4ad703c63cc79ca276 changes only CHANGELOG.md.",
-        "docs/guides/development.md contains the corrected native command and Bun watch workflow in commit 292b7bead3296e7cc212b37baf36cfac7802cbd0."
+        "CHANGELOG.md; implementation commit 3c59b2073a64dcf92196eb2063cab1ee1a7698f2."
       ]
     },
     "source:COMMANDS.md": {
