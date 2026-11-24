@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "bdb7c3b120305b988126c92727c538c4ddb698b025cc7b7e91349fc549a7ea92",
+      "fingerprint": "3c257275191d6e8fbfefdbc9922be60b2bed31be305a4a5fdf1e549d54272460",
       "snapshot": {
-        "CHANGELOG.md": "a8b9edbef0cad901448c295c3e43cbe404190ccfaa9788bbd758f70e6918c6bb"
+        "CHANGELOG.md": "5c3aeaae7988c64d2662e819a27e7283209730e95c59e9134ecbab8408078c22"
       },
-      "head": "e62b6b44971eb34b9102cf97f2eac4f3941cc57f",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Record changelog bullet for container prune; no skill documentation changes needed.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: CHANGELOG.md at e62b6b44971eb34b9102cf97f2eac4f3941cc57f"
+        "Changed: CHANGELOG.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:COMMANDS.md": {
@@ -9974,15 +9974,15 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "af173cba4492dc929b0fbe95ecb0ac368ad8b7c6e16f79274edc267c456b0e84",
+      "fingerprint": "57e0f1c9deb93c5cab840377db89ae67f157241fcb8a9bdf19d30e505ef022aa",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "ed758982ce2dede3e9def5ccbcc3bf70a34a6dc72e7842f5e9fd12b92255b445"
+        "docs/runbooks/release-bundles.md": "d9e45a8daf0cf3fd6a17c090eee9a4ad583d30199afb692f984c56f907ee0d36"
       },
-      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 036b8126602120999b7065b2d5bb153da8054d0f"
+        "Changed: docs/runbooks/release-bundles.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10854,27 +10854,27 @@
       ]
     },
     "source:deploy/docker/docker-compose.yml": {
-      "fingerprint": "0614e038f48ce727c5d2480ccbaca4773f846482f07e700178269bd66fbdc224",
+      "fingerprint": "1f0fec08373581986fd80f836c667f1dc426c9298a976c1296b754a88a5acb2f",
       "snapshot": {
-        "deploy/docker/docker-compose.yml": "909f926c8e4b8c9ca508f1c1c3ce5d7e87765536efb43ebe2551435e0ea847a0"
+        "deploy/docker/docker-compose.yml": "d21bc49cb1482465b8918d42f0d8544b720317aceb1a2083bb6f13bf4f124dbc"
       },
-      "head": "8ef93980d34c4d5b6201a8dce91209e19a660778",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Docker Compose API healthcheck now matches the existing 30s API container setting; this deployment config change does not require skill guidance updates.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: deploy/docker/docker-compose.yml at 8ef93980d34c4d5b6201a8dce91209e19a660778"
+        "Changed: deploy/docker/docker-compose.yml at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "0c387d0489dfc28cee5988acaa8023c3c3ac75e400d479d7c83a3aa2531896ef",
+      "fingerprint": "0dcd6364d54172418e9b0d79b62d36cb0e5d44b7adb28078ed39a54e0a6ec1ff",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "b76ec205c853f66757822ae92912b4a6aa1af8e2e09e2b238a4e0bd1a7a1f62a"
+        "docs/decisions/docker-compose-deployment.md": "b19432c219f82c38b6144d95eaa1554fe3f5fd9bb17ed0daba8885f98813e3d6"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: docs/decisions/docker-compose-deployment.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: docs/decisions/docker-compose-deployment.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:scripts/check-backup-dir.ts": {
@@ -10891,15 +10891,15 @@
       ]
     },
     "source:scripts/docker-candidate-qualification.py": {
-      "fingerprint": "c238d663f3a214c2738d0cbee2ca11599a54e73b7e8c9f5d25876accc5a635e6",
+      "fingerprint": "1accab4c1c9254428846f5a56443cfc816ff3651d682c3d46c3b6244b1433955",
       "snapshot": {
-        "scripts/docker-candidate-qualification.py": "17ed25a1c491e5c431fd10398904092011afb5c1ab8f3b7d9f00a077a76d7324"
+        "scripts/docker-candidate-qualification.py": "7f7ff3d8211b57814fb3ef1343ee35e010e9ffa8490b80dc8ed2fc715702eb74"
       },
-      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: scripts/docker-candidate-qualification.py at 036b8126602120999b7065b2d5bb153da8054d0f"
+        "Changed: scripts/docker-candidate-qualification.py at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:scripts/tests/check-backup-dir.test.ts": {
@@ -10928,15 +10928,15 @@
       ]
     },
     "source:scripts/docker-candidate-release.py": {
-      "fingerprint": "17495274839b436493c1735722beef092dc61179e9ebf6f278999167187841c4",
+      "fingerprint": "37c9db1de5152228386637aa63c81b74738ccac123486ecebfe33bab23b2b9a2",
       "snapshot": {
-        "scripts/docker-candidate-release.py": "9cfd4975f2b486b673e37938b75becc0958dba9ce180792a3e67de7817b1fa64"
+        "scripts/docker-candidate-release.py": "f9b9575aee5dfb0d0bc84cbb0e2f6b7a051951f1318c3712068bd6fa47cc2888"
       },
-      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
+      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release artifact changes against the Elysia guidance and planning records. They now bind CI image identity to the Docker-save Config JSON digest and validate the imported archive; no Elysia API, skill guidance, or planning artifact changed.",
+      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
       "evidence": [
-        "Changed: scripts/docker-candidate-release.py at 036b8126602120999b7065b2d5bb153da8054d0f"
+        "Changed: scripts/docker-candidate-release.py at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
       ]
     },
     "source:scripts/tests/test_docker_candidate_release.py": {

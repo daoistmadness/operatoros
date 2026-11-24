@@ -24,10 +24,10 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-# Docker Hub's official multi-architecture manifest for Caddy 2.11.7.
+# Docker Hub's official multi-architecture manifest for Caddy 2.11.9.
 CADDY_SOURCE_IMAGE = (
-    "docker.io/library/caddy:2.11.7"
-    "@sha256:36c24ad91a7ff7bc4c87fe22bfa8df3c4b18da0773d73fc12ee2c52b98c0bb7e"
+    "docker.io/library/caddy:2.11.9-alpine"
+    "@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0"
 )
 COMMIT = re.compile(r"[0-9a-f]{40}")
 IMAGE_REF = re.compile(r"[a-zA-Z0-9._/:@-]+")

@@ -48,7 +48,7 @@ gh workflow run ci.yml --repo daoistmadness/operatoros \
 ```
 
 The GitHub-hosted runner builds the API from the selected clean source archive,
-checks Bun and embedded `bun:sqlite`, pulls the digest-pinned Caddy 2.11.7 image,
+checks Bun and embedded `bun:sqlite`, pulls the digest-pinned Caddy 2.11.9-alpine image,
 and starts the repository Compose template with a synthetic database and random
 secrets. It checks health/readiness, SPA deep routes, missing static files,
 dotfile denial, and image rollback to the previous main revision. Read-only

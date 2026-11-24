@@ -318,6 +318,7 @@ def run_trivy(
     cache.chmod(0o700)
     uid_gid = f"{os.getuid()}:{os.getgid()}"
     outputs = []
+    pkg_args = ["--pkg-types", "os"] if role == "caddy" else []
     for format_name, filename in (("json", "scan.json"), ("cyclonedx", "sbom.cdx.json")):
         command = [
             "docker", "run", "--rm", "--user", uid_gid,
@@ -326,6 +327,7 @@ def run_trivy(
             "-v", f"{reports}:/reports:rw",
             "-v", f"{cache}:/trivy-cache:rw",
             SCANNER, "image", "--input", "/image.tar", "--scanners", "vuln",
+            *pkg_args,
             "--format", format_name, "--output", f"/reports/{filename}",
         ]
         try:

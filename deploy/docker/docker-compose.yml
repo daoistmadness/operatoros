@@ -52,7 +52,7 @@ services:
       - operatoros-net
 
   operatoros-caddy:
-    image: ${OPERATOROS_CADDY_IMAGE:-localhost/caddy:2.11.7}
+    image: ${OPERATOROS_CADDY_IMAGE:-localhost/caddy:2.11.9-alpine}
     pull_policy: never
     container_name: operatoros-caddy
     restart: unless-stopped
