@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createFreshDatabase, ensureOperatorOSDirectories, resolveOperatorOSPaths } from "@operatoros/db";
 import type { BackendConfig } from "../src/config";
-import { BACKUP_OPERATION_LOCK_FILENAME } from "../src/domains/backup-operation-lock";
+import { acquireBackupOperationLock, BACKUP_OPERATION_LOCK_FILENAME } from "../src/domains/backup-operation-lock";
 import { parseBackupEncryptionConfig } from "../src/security/backup-crypto";
 import { startServer } from "../src/server";
 
@@ -35,17 +35,254 @@ function lockProbe(lockPath: string) {
   return Bun.spawnSync(["flock", "--nonblock", "--exclusive", "--conflict-exit-code", "75", lockPath, "true"]);
 }
 
+function makeUnresponsiveFlock(dataDir: string, reportReady: boolean): string {
+  const binDir = join(dataDir, "bin");
+  mkdirSync(binDir, { mode: 0o700 });
+  const executable = join(binDir, "flock");
+  const workerCode = [
+    reportReady ? 'process.stdout.write("LOCKED\\n");' : "",
+    "const parent = process.ppid;",
+    'process.on("SIGTERM", () => {});',
+    "setInterval(() => { if (process.ppid !== parent) process.exit(0); }, 25);",
+  ].join("");
+  writeFileSync(executable, [
+    "#!/bin/sh",
+    "exec /usr/bin/flock --nonblock --exclusive --conflict-exit-code 75 --no-fork \"$6\" \"$7\" -e '" + workerCode + "'",
+    "",
+  ].join("\n"), { mode: 0o700 });
+  chmodSync(executable, 0o700);
+  return binDir;
+}
+
+function spawnLockChild(binDir: string, source: string) {
+  return Bun.spawn(["setsid", process.execPath, "-e", source], {
+    env: {
+      ...process.env,
+      NODE_ENV: "development",
+      PATH: [binDir, process.env.PATH].filter(Boolean).join(":"),
+    },
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+}
+
+function waitForExit(child: Bun.Subprocess, timeoutMs = 1000): Promise<boolean> {
+  return Promise.race([child.exited.then(() => true), Bun.sleep(timeoutMs).then(() => false)]);
+}
+
+async function cleanupLockChild(child: Bun.Subprocess, reader: ChildOutputReader, lockPath: string, dataDir: string) {
+  try {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+    }
+    const exited = await waitForExit(child);
+    expect(exited).toBe(true);
+    const canceled = await Promise.race([reader.cancel().then(() => true), Bun.sleep(1000).then(() => false)]);
+    expect(canceled).toBe(true);
+    expect(await waitForLockFree(lockPath)).toBe(true);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+}
+
+type ChildOutputReader = {
+  read(): Promise<{ done: boolean; value?: Uint8Array<ArrayBuffer> }>;
+  cancel(): Promise<void>;
+};
+
+async function readUntil(reader: ChildOutputReader, marker: string): Promise<string> {
+  let output = "";
+  const decoder = new TextDecoder();
+  while (!output.includes(marker)) {
+    const result = await reader.read();
+    if (result.done) break;
+    output += decoder.decode(result.value, { stream: true });
+  }
+  return output;
+}
+
+async function readRemaining(reader: ChildOutputReader): Promise<string> {
+  let output = "";
+  const decoder = new TextDecoder();
+  while (true) {
+    const result = await reader.read();
+    if (result.done) break;
+    output += decoder.decode(result.value, { stream: true });
+  }
+  return output;
+}
+
+async function waitForLockFree(lockPath: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    if (lockProbe(lockPath).exitCode === 0) return true;
+    await Bun.sleep(25);
+  }
+  return false;
+}
+
 async function holdLock(lockPath: string) {
   writeFileSync(lockPath, "", { flag: "a", mode: 0o600 });
   const holder = Bun.spawn([
     "flock", "--nonblock", "--exclusive", "--no-fork", lockPath,
     process.execPath, "-e", "process.stdout.write('LOCKED\\n'); setInterval(() => {}, 2147483647);",
   ], { stdout: "pipe", stderr: "ignore" });
-  await holder.stdout.getReader().read();
-  return holder;
+  const reader = holder.stdout.getReader();
+  try {
+    const ready = await Promise.race([
+      readUntil(reader, "LOCKED\n").then(output => output.includes("LOCKED\n")),
+      Bun.sleep(1000).then(() => false),
+    ]);
+    if (!ready) throw new Error("Synthetic lock holder did not report readiness");
+    return holder;
+  } catch (error) {
+    if (holder.exitCode === null) holder.kill("SIGKILL");
+    const exited = await waitForExit(holder);
+    if (!exited && holder.exitCode === null) holder.kill("SIGKILL");
+    throw error;
+  } finally {
+    await Promise.race([reader.cancel(), Bun.sleep(1000)]);
+  }
 }
 
 describe("API and CLI backup operation lock", () => {
+  it.skipIf(process.platform !== "linux")("bounds a nonresponsive startup worker and releases its synthetic lock", async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "operatoros-lock-watchdog-timeout-"));
+    const lockPath = join(dataDir, BACKUP_OPERATION_LOCK_FILENAME);
+    const binDir = makeUnresponsiveFlock(dataDir, false);
+    const moduleUrl = pathToFileURL(join(root, "apps/api/src/domains/backup-operation-lock.ts")).href;
+    const source = [
+      "import { acquireBackupOperationLock } from " + JSON.stringify(moduleUrl) + ";",
+      "try { await acquireBackupOperationLock(" + JSON.stringify(dataDir) + ", { timeoutMs: 100, watchdog: true });",
+      'process.stdout.write("UNEXPECTED_ACQUIRE\\n"); process.exitCode = 1; }',
+      'catch (error) { process.stdout.write("ERROR:" + error.code + "\\n"); }',
+    ].join("\n");
+    const child = spawnLockChild(binDir, source);
+    const reader = child.stdout.getReader();
+    try {
+      const result = await Promise.race([
+        Promise.all([readUntil(reader, "ERROR:"), child.exited]),
+        Bun.sleep(5000).then(() => null),
+      ]);
+      expect(result).not.toBeNull();
+      const [prefix, exitCode] = result as [string, number];
+      const remaining = await Promise.race([
+        readRemaining(reader).then(output => ({ output })),
+        Bun.sleep(1000).then(() => null),
+      ]);
+      expect(remaining).not.toBeNull();
+      const output = prefix + (remaining as { output: string }).output;
+      expect(exitCode).toBe(0);
+      expect(output).toContain("ERROR:BACKUP_OPERATION_LOCK_UNAVAILABLE");
+      expect(await waitForLockFree(lockPath)).toBe(true);
+    } finally {
+      await cleanupLockChild(child, reader, lockPath, dataDir);
+    }
+  }, 10000);
+
+  it.skipIf(process.platform !== "linux")("bounds release of a nonresponsive worker without dropping exclusivity early", async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "operatoros-lock-watchdog-release-"));
+    const lockPath = join(dataDir, BACKUP_OPERATION_LOCK_FILENAME);
+    const binDir = makeUnresponsiveFlock(dataDir, true);
+    const moduleUrl = pathToFileURL(join(root, "apps/api/src/domains/backup-operation-lock.ts")).href;
+    const source = [
+      "import { acquireBackupOperationLock } from " + JSON.stringify(moduleUrl) + ";",
+      "const lock = await acquireBackupOperationLock(" + JSON.stringify(dataDir) + ", { timeoutMs: 1000, watchdog: true });",
+      'process.stdout.write("ACQUIRED\\n"); await Bun.sleep(1000); await lock.release(); process.stdout.write("RELEASED\\n");',
+    ].join("\n");
+    const child = spawnLockChild(binDir, source);
+    const reader = child.stdout.getReader();
+    try {
+      const acquired = await Promise.race([
+        readUntil(reader, "ACQUIRED\n"),
+        Bun.sleep(5000).then(() => null),
+      ]);
+      expect(acquired).not.toBeNull();
+      expect(lockProbe(lockPath).exitCode).toBe(75);
+      const result = await Promise.race([
+        Promise.all([readRemaining(reader), child.exited]),
+        Bun.sleep(5000).then(() => null),
+      ]);
+      expect(result).not.toBeNull();
+      const [output, exitCode] = result as [string, number];
+      expect(exitCode).toBe(0);
+      expect(output).toContain("RELEASED");
+      expect(await waitForLockFree(lockPath)).toBe(true);
+    } finally {
+      await cleanupLockChild(child, reader, lockPath, dataDir);
+    }
+  }, 10000);
+
+  it.skipIf(process.platform !== "linux")("terminates a nonresponsive pending worker on API interruption", async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "operatoros-lock-watchdog-interrupt-"));
+    const lockPath = join(dataDir, BACKUP_OPERATION_LOCK_FILENAME);
+    const binDir = makeUnresponsiveFlock(dataDir, false);
+    const moduleUrl = pathToFileURL(join(root, "apps/api/src/domains/backup-operation-lock.ts")).href;
+    const source = [
+      "import { acquireBackupOperationLock } from " + JSON.stringify(moduleUrl) + ";",
+      "const pending = acquireBackupOperationLock(" + JSON.stringify(dataDir) + ", { timeoutMs: 5000, watchdog: true });",
+      'process.stdout.write("WAITING\\n");',
+      'try { await pending; process.stdout.write("UNEXPECTED_ACQUIRE\\n"); process.exitCode = 1; }',
+      'catch (error) { process.stdout.write("INTERRUPTED:" + error.code + "\\n"); }',
+    ].join("\n");
+    const child = spawnLockChild(binDir, source);
+    const reader = child.stdout.getReader();
+    try {
+      const waiting = await Promise.race([
+        readUntil(reader, "WAITING\n"),
+        Bun.sleep(5000).then(() => null),
+      ]);
+      expect(waiting).not.toBeNull();
+      child.kill("SIGTERM");
+      const result = await Promise.race([
+        Promise.all([readRemaining(reader), child.exited]),
+        Bun.sleep(5000).then(() => null),
+      ]);
+      expect(result).not.toBeNull();
+      const [output, exitCode] = result as [string, number];
+      expect(exitCode).toBe(0);
+      expect(output).toContain("INTERRUPTED:BACKUP_OPERATION_LOCK_UNAVAILABLE");
+      expect(await waitForLockFree(lockPath)).toBe(true);
+    } finally {
+      await cleanupLockChild(child, reader, lockPath, dataDir);
+    }
+  }, 10000);
+
+  it.skipIf(process.platform !== "linux")("retries a transient lock conflict and recovers after the holder exits", async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), "operatoros-lock-watchdog-retry-"));
+    const lockPath = join(dataDir, BACKUP_OPERATION_LOCK_FILENAME);
+    let holder: Awaited<ReturnType<typeof holdLock>> | undefined;
+    let lock: Awaited<ReturnType<typeof acquireBackupOperationLock>> | undefined;
+    try {
+      holder = await holdLock(lockPath);
+      const pending = acquireBackupOperationLock(dataDir, { timeoutMs: 1000, watchdog: true });
+      await Bun.sleep(100);
+      holder.kill();
+      expect(await waitForExit(holder)).toBe(true);
+      lock = await pending;
+      expect(lockProbe(lockPath).exitCode).toBe(75);
+      await lock.release();
+      expect(await waitForLockFree(lockPath)).toBe(true);
+    } finally {
+      try {
+        if (holder && holder.exitCode === null) {
+          holder.kill();
+          const exited = await waitForExit(holder);
+          if (!exited && holder.exitCode === null) holder.kill("SIGKILL");
+          expect(exited || await waitForExit(holder)).toBe(true);
+        }
+        if (lock) {
+          const released = await Promise.race([lock.release().then(() => true), Bun.sleep(2000).then(() => false)]);
+          expect(released).toBe(true);
+        }
+        expect(await waitForLockFree(lockPath)).toBe(true);
+      } finally {
+        rmSync(dataDir, { recursive: true, force: true });
+      }
+    }
+  }, 10000);
+
   it.skipIf(process.platform !== "linux")("cleans recognized API plaintext scratch after acquiring the data-root lock", async () => {
     const fixture = setup();
     const restoreScratch = join(fixture.dataDir, ".operatoros-restore-api-Ab12Cd");

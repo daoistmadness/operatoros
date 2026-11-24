@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-23
+last_reviewed: 2026-11-24
 ---
 
 # Development
@@ -63,12 +63,17 @@ operational databases.
 The managed API runs with Bun `--watch` and restarts when supported API source
 files change. During shutdown, the API closes its SQLite handle and releases
 the backup-operation lock; the lock-holder worker is terminated with its
-parent. In non-test environments, a new process retries lock conflicts within
-a default 3000 ms window while the previous process releases the lock. If it
-remains held, startup reports `BACKUP_OPERATION_LOCKED`. This retry has no
-independent watchdog for a nonresponsive lock worker, so it does not guarantee
-recovery from every stuck-worker case. The database remains persistent across
-restarts.
+parent. In development, the API bounds lock acquisition and release with a
+worker watchdog. It retries lock conflicts within the default 3000 ms window.
+On timeout or shutdown, it sends SIGTERM to the worker and sends SIGKILL after
+250 ms if the worker has not exited. It waits up to another 250 ms for exit.
+If the worker still does not exit, startup or shutdown reports
+`BACKUP_OPERATION_LOCK_UNAVAILABLE`. Startup does not open the database when
+lock acquisition fails. This bounds acquisition, interruption, and release;
+it does not monitor a lock worker that becomes unresponsive while the API is
+serving. Do not remove the lock file to force a restart. The production server
+does not enable the development watchdog. The database remains persistent
+across restarts.
 
 The frontend remains managed by Vite: supported component and CSS edits use
 HMR. TanStack Start generates `apps/web/src/routeTree.gen.ts` from file-based

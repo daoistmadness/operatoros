@@ -26,7 +26,11 @@ export async function startServer(overrides: Partial<import("./config").BackendC
     if (canonicalDatabase) {
       assertDatabaseMigrationSafe(dataPaths);
       ensureOperatorOSDirectories(dataPaths);
-      if (process.platform === "linux") operationLock = await acquireBackupOperationLock(dataPaths.dataDir);
+      if (process.platform === "linux") {
+        operationLock = await acquireBackupOperationLock(dataPaths.dataDir, {
+          watchdog: config.environment === "development",
+        });
+      }
       cleanupInterruptedBackupScratch(dataPaths.databasePath, dataPaths.backupDir);
     }
     databaseHandle ??= config.databasePath ? openDatabase(config.databasePath) : undefined;
