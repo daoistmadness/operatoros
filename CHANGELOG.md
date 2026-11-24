@@ -6,6 +6,7 @@ Notable user-facing changes are recorded here.
 
 - Bound development API backup-lock worker startup and shutdown waits without changing production behavior. (#406)
 - Add a managed native development command with automatic Bun watch reload for API source changes.
+- Fix native Bun watch reload for atomically saved workspace files while preserving managed process cleanup.
 - Standardize direct TypeScript dependencies on 7.0.2 with CI minimum-version enforcement and isolated architecture checker compatibility. (#403)
 - Speed up lint and typechecking with pinned Oxlint and TSRS, and run the full check graph when the worktree is dirty. (#402)
 - Update Turborepo to 2.11.13 and verify full workspace package graph checks. (#401)

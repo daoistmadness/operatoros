@@ -190,6 +190,8 @@ test("native Bun validation rejects a version other than the mise pin", () => {
 test("only exact backend entrypoint or Vite identity matches a service", () => {
   const f = fixture(), info: ProcessInfo = { pid: 1, ppid: 0, pgid: 1, start_ticks: "1", cwd: join(f.repo, "apps/api"), argv: ["bun", "src/server.ts"], uid: process.getuid!(), state: "S" };
   expect(matchingService(info, f.repo, "backend")).toBe(true);
+  expect(matchingService({ ...info, cwd: f.repo, argv: ["bun", join(f.repo, "apps/api/src/server.ts")] }, f.repo, "backend")).toBe(true);
+  expect(matchingService({ ...info, cwd: f.repo, argv: ["bun", "src/server.ts"] }, f.repo, "backend")).toBe(false);
   for (const word of ["src/server.ts.evil", "--server.ts", "other/server.ts", join(f.root, "server.ts")]) expect(matchingService({ ...info, argv: ["bun", word] }, f.repo, "backend")).toBe(false);
   expect(matchingService({ ...info, cwd: join(f.root, "outside") }, f.repo, "backend")).toBe(false);
 });

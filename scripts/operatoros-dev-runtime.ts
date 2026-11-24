@@ -197,7 +197,7 @@ function valid(record: Json | undefined, repo: string, role: string): ProcessInf
 }
 export function matchingService(info: ProcessInfo, repo: string, role: string): boolean {
   const app = join(repo, role === "frontend" ? "apps/web" : "apps/api");
-  if (!contained(info.cwd, app)) return false;
+  if (!contained(info.cwd, app) && !(role === "backend" && info.cwd === repo)) return false;
   return role === "frontend" ? info.argv.some((word) => ["vite", "vite.js"].includes(basename(word)))
     : info.argv.some((word) => resolve(info.cwd, word) === join(app, "src/server.ts"));
 }

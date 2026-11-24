@@ -60,11 +60,13 @@ Use an explicit disposable `OPERATOROS_DATA_DIR` for tests. The data-root
 hashing scheme is unchanged. Never point development tooling at protected
 operational databases.
 
-The managed API runs with Bun `--watch` and restarts when supported API source
-files change. During shutdown, the API closes its SQLite handle and releases
-the backup-operation lock; the lock-holder worker is terminated with its
-parent. In development, the API bounds lock acquisition and release with a
-worker watchdog. It retries lock conflicts within the default 3000 ms window.
+The managed API runs Bun `--watch` from the workspace root so changes to API
+source and imported workspace-package source files restart the backend,
+including files saved by an atomic editor rename. During shutdown, the API
+closes its SQLite handle and releases the backup-operation lock; the lock-holder
+worker is terminated with its parent. In development, the API bounds lock
+acquisition and release with a worker watchdog. It retries lock conflicts
+within the default 3000 ms window.
 On timeout or shutdown, it sends SIGTERM to the worker and sends SIGKILL after
 250 ms if the worker has not exited. It waits up to another 250 ms for exit.
 If the worker still does not exit, startup or shutdown reports
