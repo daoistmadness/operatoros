@@ -9728,15 +9728,15 @@
       ]
     },
     "source:deploy/podman/Containerfile.api": {
-      "fingerprint": "1be0537270ca3dd191315b080750fe44b9143af87fe1d6893531a1f5b9db4e84",
+      "fingerprint": "7e5126386f7c2e7f21912c08e4c5e912232519c39ae325614372e95d6c09d26f",
       "snapshot": {
-        "deploy/podman/Containerfile.api": "81f0bcee19c864d788f519da3579c38eec7d005bb1aa7edc3bfc222ca2b7e06c"
+        "deploy/podman/Containerfile.api": "baca8180e3f8c291ad6dc0afb37f8b94f5ea272e6e46673d2e69b4a603e9fa55"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "7aee8860d22284cbc11ed5cf5603739cd1cb3e92",
+      "outcome": "no-change",
+      "reason": "Prune dev TypeScript binaries from production API container; no skill documentation changes needed.",
       "evidence": [
-        "Reviewed deploy/podman/Containerfile.api in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: deploy/podman/Containerfile.api at 7aee8860d22284cbc11ed5cf5603739cd1cb3e92"
       ]
     },
     "source:deploy/podman/api-healthcheck.sh": {
@@ -11392,15 +11392,15 @@
       ]
     },
     "source:deploy/docker/Containerfile.api": {
-      "fingerprint": "3c5d3efab30d7551be12f307efb68f1b86af306a39982d80bccfcab2fab263a0",
+      "fingerprint": "96efaeccbf09dad737de57b65ced8f6baa7bfb781dcca88524a8b408d805b1da",
       "snapshot": {
-        "deploy/docker/Containerfile.api": "81f0bcee19c864d788f519da3579c38eec7d005bb1aa7edc3bfc222ca2b7e06c"
+        "deploy/docker/Containerfile.api": "baca8180e3f8c291ad6dc0afb37f8b94f5ea272e6e46673d2e69b4a603e9fa55"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "7aee8860d22284cbc11ed5cf5603739cd1cb3e92",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Prune dev TypeScript binaries from production API container; no skill documentation changes needed.",
       "evidence": [
-        "Changed: deploy/docker/Containerfile.api at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: deploy/docker/Containerfile.api at 7aee8860d22284cbc11ed5cf5603739cd1cb3e92"
       ]
     },
     "source:deploy/docker/api-healthcheck.sh": {

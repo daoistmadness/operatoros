@@ -8,7 +8,9 @@ COPY apps ./apps
 COPY packages ./packages
 COPY openapi ./openapi
 
-RUN bun install --frozen-lockfile --production --filter '@operatoros/api'
+RUN bun install --frozen-lockfile --production --filter '@operatoros/api' \
+    && rm -rf /app/node_modules/.bun/@typescript* /app/node_modules/@typescript* /app/node_modules/typescript \
+    && find /app/node_modules -name tsc -delete
 
 FROM --platform=linux/amd64 docker.io/oven/bun:1.4.5-alpine@sha256:0a00c7befef11ec66adbc46655c64274108124546e32b5be8e571270d8c8ba31 AS runtime
 
