@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "d82f190d370e9575397bf3d9f60bef7fd155dc90f28d6faf20a773b3a5f006e5",
+      "fingerprint": "071b0ed0bbf5d7faf75edfc8b1e5a17224bf883b62ae65bf08b140fee5bae58e",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
+        "AGENTS.md": "d8cea768ecb6b9f393d130e0fb973cdf82b6149709127bad86872fd972137a54",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "The changed development guide describes the Bun watch working directory and atomic-save reload. The registered Elysia skill contains no launcher or watch-workflow instructions; its Elysia v1/v2, route, lifecycle, and dependency guidance remains accurate. The source-map signal warranted review but no skill edit.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "packages/agent-skills/skills/elysiajs/SKILL.md; packages/agent-skills/docs/elysiajs.md; docs/guides/development.md; commit 5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6; affected check 14/14 passed."
+        "Changed: AGENTS.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "5ef3864cff75eea9e96a28e963fab610af8d97dfac0e909d1cd385ea7ecd869b",
+      "fingerprint": "e1e5ff5361e0b86d2edb6af00264a2a8071d1729d2e574899e857f3f2b9e794b",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "06a9b6d055ec1c0a7cf87e62a2e025095b624080d545f339f408046940f8bc2b",
+        "AGENTS.md": "d8cea768ecb6b9f393d130e0fb973cdf82b6149709127bad86872fd972137a54",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "The three planning records describe the Elysia skill scope, source map, package decisions, and remaining skill-package work. This launcher correction changes none of those decisions, mappings, tasks, or future-work statements.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "_artifacts/domain_map.yaml; _artifacts/skill_spec.md; _artifacts/skill_tree.yaml; commit 5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6."
+        "Changed: AGENTS.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -591,17 +591,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "3cfb1ff103c5f8a8ce329fb2821f688aff89467b62a45e3780b46ec7f6cfad3e",
+      "fingerprint": "3fa88b0af0a0401a5fb53bcd36d6d4d3845e0b15fa49cf810bdbabd0c2aa4a7e",
       "snapshot": {
-        "README.md": "56019bedb4a99e8689f13440279021614f62222cbfe4cf61478609c5d8c2e8e0"
+        "README.md": "d2c56fa295e8c0a67cce7bce92ba7cb5244cf512e38d84e02521e03a379ed618"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
-      "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "README.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: README.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1739,16 +1737,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "086644733b560440f7dbfa1f916f6c89e95fde8f7fdda784a965a41e7a5bcf18",
+      "fingerprint": "1986d4c2d5d8e2619f9cd724afba3840031f403caead6b2d25ae6214e53a0763",
       "snapshot": {
-        "docs/README.md": "4b39c50d8cc1d6145be54ebb1432ee05368103fba4138ecaead939e687fc78ba"
+        "docs/README.md": "ae480ec41b7c251be43a7db6a00a8c1a6fe8daedff5618e0a9acacdfecd5d065"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Diff: docs/README.md",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Changed: docs/README.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2965,17 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ccf68c16c25fc07a8c152e6c2b3dcad2d7908a5de45ff1efcefe96880501546d",
+      "fingerprint": "afa9839f6e7f1af0d9871d1a0c0d5d9e8c4a18baf5f1c581bf70d4b5c7fd1dde",
       "snapshot": {
-        "CHANGELOG.md": "fd77aee4fc302c4fdd141bca7c33ff0c618f00dddefdb86002d9a02ac04dda5d"
+        "CHANGELOG.md": "4a835778aa4d3bf90c03e6b5b9837edb23354fd814b99da39ac5353b03830645"
       },
-      "head": "a15a3864f4a7ca2841822b5a9ccf022549ddc649",
-      "outcome": "out-of-scope",
-      "reason": "The two corrected Unreleased entries record PR #404 and PR #408 development-tooling changes. Neither changes the registered Elysia skill, its guidance, or the three planning records; the current development guide already documents the relevant Bun watch runtime.",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "CHANGELOG.md contains only release-history bullets for the two native development PRs; no Elysia skill source or planning files changed.",
-        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs.md remain unchanged and accurate.",
-        "docs/guides/development.md documents the managed Bun watch workflow and lock behavior."
+        "Changed: CHANGELOG.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:COMMANDS.md": {
@@ -4605,15 +4600,15 @@
       ]
     },
     "source:docs/reference/production-profile.md": {
-      "fingerprint": "9fcf63f3128cf4918ae93696192e94e2a91e40555abe624a9d94ffc03f04fadb",
+      "fingerprint": "b847b27862e1b993099be2f52ced9ed6e24c4fdcdc8ef2f71d326a3c33d11059",
       "snapshot": {
-        "docs/reference/production-profile.md": "144ba8f7d6b0db656abbc1cac4b501522efd6294584f6a6d584e16db129d3290"
+        "docs/reference/production-profile.md": "1bce1902e88786b910eec28e96cfa763b3f54a7bb3812ef64e924c0c343127ab"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: docs/reference/production-profile.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/reference/production-profile.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:docs/reference/risk-threshold-validation.md": {
@@ -4846,15 +4841,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "14d9457d57ecc4946a366cbdaef57c519f8dd424140909ca71113549f26a21e9",
+      "fingerprint": "f6bf095b4bbe8d63e5431d26b277ee75b425ccf73385ab3ad40d0cbea9c176b0",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "2fc2daedead7b4c531ba4fc71d5f7854d1f35352243f33d7b544e24eedc842f4"
+        "docs/runbooks/ubuntu-server-deployment.md": "cc10bb69ebd8fa0eb0fe38de728453960031d860f1c4eff568873c1c568271fb"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9795,15 +9790,15 @@
       ]
     },
     "source:docs/decisions/podman-deployment.md": {
-      "fingerprint": "f764fd89e7d6e5ee4c34ab41ca8a0f460fa9eb5b74c911f9c882ea12c178e266",
+      "fingerprint": "a4ab0c84508d2b05c5a70b67dd23c13bc699a27875d971310fe3017a23f230f0",
       "snapshot": {
-        "docs/decisions/podman-deployment.md": "b9be11499a509dc7b055ea2a72557e51e6d9f3c449c774d34b1f968e94e7301d"
+        "docs/decisions/podman-deployment.md": "de8d24ba5c38584c19ca55622a6d2b319cf301b501c24b61deec65cd55398cfe"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: docs/decisions/podman-deployment.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: docs/decisions/podman-deployment.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:e2e/runner-cleanup.sh": {
@@ -10113,15 +10108,15 @@
       ]
     },
     "source:scripts/operatoros-deploy.sh": {
-      "fingerprint": "3817c8aabb40cdf859efd172c58dad442ca0d8553fb7eb761fc8934721e4a69f",
+      "fingerprint": "4e2d12635a90d0ac902681265fecb067f57113275168d849bd85a1dfe7544bbd",
       "snapshot": {
-        "scripts/operatoros-deploy.sh": "b78b263dd8bd2d7e49a13216212f912ade61ee67a55905e6e125aca77ee55096"
+        "scripts/operatoros-deploy.sh": "fbdcd714001a5347026a5fceba9bbdfdc8af81dcef5d3df52a8bade575b0495f"
       },
-      "head": "a65917021725c62f3326abac03a654b5438ad4b6",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "The release workflow change only adds the deployment helper regression suite; it does not change Elysia behavior or examples. No planning artifacts or skill guidance were edited. New deployment implementation and operational contracts are covered by the changed deployment runbooks, while the remaining source files are scoped tests, command wiring, and the wrapper.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: scripts/operatoros-deploy.sh at a65917021725c62f3326abac03a654b5438ad4b6"
+        "Changed: scripts/operatoros-deploy.sh at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:scripts/operatoros_deploy.py": {
@@ -10299,15 +10294,15 @@
       ]
     },
     "source:DECISIONS.md": {
-      "fingerprint": "fd5213806954aa5ce8e9c7763e5c849f8571feeb9c1857156f571e1c874cec60",
+      "fingerprint": "9a8c715bc1a72379b0f1185ddec80dd567b033e5c6d76c2ab5c66c44ba5e252a",
       "snapshot": {
-        "DECISIONS.md": "fa5bb2a5c62d022a766724ff5d68c410b69b6e684207446113a9b149e9027e90"
+        "DECISIONS.md": "b2764f680216713442f69dfa48f2c179e33e0e9a80777e3d9399e3588659ee20"
       },
-      "head": "2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "This branch only records protected-main Docker candidate evidence and production gates in existing operations and status docs. It changes no API behavior, Elysia examples, authored skills, or planning artifacts, so existing ElysiaJS guidance and planning records remain accurate.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: DECISIONS.md at 2f1b6d01ddb6e8d1de89a59dc916af98f510b9f1"
+        "Changed: DECISIONS.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:MASTER_CHECKLIST.md": {
@@ -10871,15 +10866,15 @@
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "9088a07be3365f8596aea9c35860ce17876874f543d34d35eda8034b8f7571cc",
+      "fingerprint": "0c387d0489dfc28cee5988acaa8023c3c3ac75e400d479d7c83a3aa2531896ef",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "99f8bd8b54399e590cf4e9c19a0e7f919ea1ff8c1de6a258c4c241b3701c7e21"
+        "docs/decisions/docker-compose-deployment.md": "b76ec205c853f66757822ae92912b4a6aa1af8e2e09e2b238a4e0bd1a7a1f62a"
       },
-      "head": "8aa54fd377352b29847457cef90543c538654ec4",
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
       "outcome": "no-change",
-      "reason": "Reviewed the Docker release automation, runbook, and CI changes against the Elysia skill and planning records. This task adds release artifact handling and synthetic Docker qualification; it does not change Elysia application APIs, developer guidance, or the skill catalog, so no skill or planning update is needed.",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
-        "Changed: docs/decisions/docker-compose-deployment.md at 8aa54fd377352b29847457cef90543c538654ec4"
+        "Changed: docs/decisions/docker-compose-deployment.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     },
     "source:scripts/check-backup-dir.ts": {
@@ -11382,6 +11377,78 @@
       "reason": "Resolve real Node binary path and sanitize PATH against Bun node shims in openapi contract generator",
       "evidence": [
         "Changed: scripts/openapi-contracts.mjs at 994e1dffe9dd5a7ab2d0d949892284259be258c4"
+      ]
+    },
+    "source:deploy/docker/.dockerignore": {
+      "fingerprint": "40cf8f4bfc6b5c59bd8b1ad889d5418cf55241be27dd301687ce0ed20ac7c175",
+      "snapshot": {
+        "deploy/docker/.dockerignore": "1f0102b62a1a515bfc1084b11472ae874c717cacb4b75fdeb03ef22bd6c6f4a6"
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: deploy/docker/.dockerignore at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:deploy/docker/Containerfile.api": {
+      "fingerprint": "3c5d3efab30d7551be12f307efb68f1b86af306a39982d80bccfcab2fab263a0",
+      "snapshot": {
+        "deploy/docker/Containerfile.api": "81f0bcee19c864d788f519da3579c38eec7d005bb1aa7edc3bfc222ca2b7e06c"
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: deploy/docker/Containerfile.api at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:deploy/docker/api-healthcheck.sh": {
+      "fingerprint": "2cc43c75849dc83faeccbffa8abe72d218e60a27877db8bd8629ce0b776d788a",
+      "snapshot": {
+        "deploy/docker/api-healthcheck.sh": "61d84aa16c8883d632421ca0e7efdbc4667690a5120fbd2d9c1b5fbe0d8cc7ae"
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: deploy/docker/api-healthcheck.sh at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:scripts/docker-deploy.sh": {
+      "fingerprint": "ac0bb4791108b2a225372bdeb22811b1291eb3a1cb3caaf064bfae2335fcc3d2",
+      "snapshot": {
+        "scripts/docker-deploy.sh": "acc0aaf00612c582418816c6d28e683fe1f52aef06515bd3e9523230ff51f2b5"
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: scripts/docker-deploy.sh at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:scripts/podman-dev.sh": {
+      "fingerprint": "fe61e2a5dc756b57b72905a22517469acb18a86cc02dea29a78a0570c43b6e91",
+      "snapshot": {
+        "scripts/podman-dev.sh": null
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: scripts/podman-dev.sh at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:scripts/tests/podman-dev.test.ts": {
+      "fingerprint": "781caf042f44d89e09543060f9969b743e7335bceb655bd0bd9f88b839082c13",
+      "snapshot": {
+        "scripts/tests/podman-dev.test.ts": null
+      },
+      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "outcome": "no-change",
+      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "evidence": [
+        "Changed: scripts/tests/podman-dev.test.ts at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
       ]
     }
   }
