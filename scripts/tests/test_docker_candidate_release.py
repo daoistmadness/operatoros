@@ -297,6 +297,17 @@ class DockerCandidateReleaseTests(unittest.TestCase):
             self.assertTrue(release.has_persistence_marker(data_dir, marker, SOURCE))
             self.assertFalse(release.has_persistence_marker(data_dir, marker, "b" * 40))
 
+    def test_persistence_marker_root_delegation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            data_dir = Path(temporary)
+            with patch.object(
+                release.subprocess,
+                "run",
+                return_value=release.subprocess.CompletedProcess(args=[], returncode=0, stdout="1\n"),
+            ) as mocked:
+                self.assertTrue(release.has_persistence_marker(data_dir, "m1", SOURCE, as_root=True))
+                self.assertIn("sudo", mocked.call_args[0][0])
+
 
 if __name__ == "__main__":
     unittest.main()
