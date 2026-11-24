@@ -1,13 +1,13 @@
 ---
-status: draft
-last_reviewed: 2026-11-01
+status: current
+last_reviewed: 2026-11-24
 ---
 
 # Production origin and cookie profile
 
-Draft environment profile for a single local Elysia API process per SQLite data
-root with a browser frontend. The application runtime is local-first; this
-profile is not an approved production deployment procedure.
+Environment profile for the canonical Docker Compose production deployment on
+OPRSERVER with Elysia API and Caddy reverse proxy over Tailscale HTTPS.
+The application runtime is local-first SQLite S5.4 with persistent volume mounts.
 
 The defaults in `apps/api/src/config.ts` are loopback-oriented. A LAN, hostname,
 or HTTPS deployment must set the variables below explicitly; the origin checks

@@ -1,11 +1,17 @@
 ---
-status: current
-last_reviewed: 2026-11-22
+status: deprecated
+last_reviewed: 2026-11-24
 ---
 
 # Podman single-host deployment
 
-## Current synthetic host
+> [!NOTE]
+> **Superseded on 2026-11-24 by [Docker Compose deployment](docker-compose-deployment.md).**
+> Podman and Quadlet deployment architectures are discontinued for OperatorOS.
+> Docker Engine and Docker Compose are the single canonical production container
+> architecture on OPRSERVER. This document is preserved for historical reference only.
+
+## Current synthetic host (Historical)
 
 The existing synthetic host runs both Elysia API and Caddy in separate rootless
 Podman containers supervised by user Quadlet services. Caddy serves the static

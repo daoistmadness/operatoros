@@ -235,7 +235,8 @@ and operating procedures linked below.
 ## Canonical decisions and runbooks
 
 - [SQLite-only local runtime](docs/decisions/sqlite-only-runtime.md)
-- [Podman single-host deployment](docs/decisions/podman-deployment.md)
+- [Docker Compose deployment](docs/decisions/docker-compose-deployment.md)
+- [Podman single-host deployment (Superseded)](docs/decisions/podman-deployment.md)
 - [Database operations](docs/runbooks/database-operations.md)
 - [Ubuntu server deployment](docs/runbooks/ubuntu-server-deployment.md)
 - [Backup and restore security](docs/runbooks/backup-restore.md)

@@ -166,15 +166,18 @@ production deployment or suppress unrelated findings.
 
 OperatorOS is an offline-first school attendance and academic analytics system.
 Local runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
-and `POSTGRESQL_NOT_SUPPORTED`. Native Elysia and browser workflows remain the
-current local development path; the optional Podman launcher is development
-only. A single-host Podman production deployment is proposed, not supported,
-until its decision is accepted and an authorized Ubuntu rehearsal passes. See
-`docs/decisions/podman-deployment.md` and
+and `POSTGRESQL_NOT_SUPPORTED`. Native Elysia and browser workflows via
+`./start-dev.sh` or `bun run dev` are the single canonical local development path.
+Container-based development is discontinued. Docker Engine and Docker Compose
+(`deploy/docker/docker-compose.yml`) are the single canonical production container
+architecture on OPRSERVER. Podman and Quadlet are discontinued and unsupported.
+See `docs/decisions/docker-compose-deployment.md` and
 `docs/runbooks/ubuntu-server-deployment.md`. Run the local Elysia backend
 (`apps/api/`) and React browser frontend (`apps/web/`). Tauri is removed.
 `backend/` holds migration, fixture, and operations tooling; it is not the
-production backend.
+production backend. Production consumes CI-built, scanned, attested, immutable
+release artifacts verified by `scripts/docker-candidate-release.py` and deployed
+by `scripts/docker-deploy.sh`.
 
 - `@operatoros/db` owns Drizzle schema, SQLite lifecycle, and `packages/db/src/data-dir.ts`. Business services, HTTP, backup policy, and scheduling belong in `apps/api/`.
 - `@operatoros/contracts` owns cross-boundary TypeBox DTO schemas/types. Keep HTTP transport in API and database rows in DB. Use explicit internal-to-DTO mappers.
@@ -218,8 +221,8 @@ Implementation prompts start with `/plan`; keep code identifiers exact.
 
 Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
 `Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
-resolved by mise. The optional `scripts/podman-dev.sh` workflow pins Bun 1.4.5
-in its local development image and does not change the supported runtime.
+resolved by mise. Container-based development is removed; the native Bun
+runner is the authoritative development environment.
 Workspace and launcher CLI typechecks use the root-pinned TSRS 7.1.0-beta.tsrs4
 runner under the pinned Node.js 24.19.0 compatibility runtime; Bun 1.4.5's
 `bun check` also runs in CI. TypeScript
@@ -303,3 +306,17 @@ edits, or security/auth changes outside the authorized task. Never weaken DB,
 authorization, audit, or Git safeguards. Sensitive authorized changes require
 positive/negative tests, authorization and transaction checks, and relevant
 collision, retry, idempotency, failure, and recovery coverage.
+
+## Agent execution discipline
+
+Agents must optimize for completed operational outcomes rather than the volume
+of generated evidence. Mandatory operating rules:
+
+1. Establish actual runtime state before making architectural claims.
+2. Distinguish verified facts from assumptions, obsolete scripts, and historical records.
+3. Reuse existing valid evidence; do not reopen completed work without a material regression.
+4. Do not create recursive audit, requalification, or remediation loops.
+5. Do not expand into adjacent infrastructure without explicit authorization.
+6. Do not launch overlapping subagents or switch providers when quota is exhausted.
+7. Escalate genuine authority boundaries promptly; stop when the objective is achieved.
+
