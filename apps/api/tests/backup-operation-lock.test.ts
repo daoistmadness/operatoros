@@ -55,7 +55,7 @@ function makeUnresponsiveFlock(dataDir: string, reportReady: boolean): string {
 }
 
 function spawnLockChild(binDir: string, source: string) {
-  return Bun.spawn([process.execPath, "-e", source], {
+  return Bun.spawn(["setsid", process.execPath, "-e", source], {
     env: {
       ...process.env,
       NODE_ENV: "development",
@@ -66,7 +66,31 @@ function spawnLockChild(binDir: string, source: string) {
   });
 }
 
-type ChildOutputReader = { read(): Promise<{ done: boolean; value?: Uint8Array<ArrayBuffer> }> };
+function waitForExit(child: Bun.Subprocess, timeoutMs = 1000): Promise<boolean> {
+  return Promise.race([child.exited.then(() => true), Bun.sleep(timeoutMs).then(() => false)]);
+}
+
+async function cleanupLockChild(child: Bun.Subprocess, reader: ChildOutputReader, lockPath: string, dataDir: string) {
+  try {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+    }
+    const exited = await waitForExit(child);
+    expect(exited).toBe(true);
+    const canceled = await Promise.race([reader.cancel().then(() => true), Bun.sleep(1000).then(() => false)]);
+    expect(canceled).toBe(true);
+    expect(await waitForLockFree(lockPath)).toBe(true);
+  } finally {
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+}
+
+type ChildOutputReader = {
+  read(): Promise<{ done: boolean; value?: Uint8Array<ArrayBuffer> }>;
+  cancel(): Promise<void>;
+};
 
 async function readUntil(reader: ChildOutputReader, marker: string): Promise<string> {
   let output = "";
@@ -104,8 +128,22 @@ async function holdLock(lockPath: string) {
     "flock", "--nonblock", "--exclusive", "--no-fork", lockPath,
     process.execPath, "-e", "process.stdout.write('LOCKED\\n'); setInterval(() => {}, 2147483647);",
   ], { stdout: "pipe", stderr: "ignore" });
-  await holder.stdout.getReader().read();
-  return holder;
+  const reader = holder.stdout.getReader();
+  try {
+    const ready = await Promise.race([
+      readUntil(reader, "LOCKED\n").then(output => output.includes("LOCKED\n")),
+      Bun.sleep(1000).then(() => false),
+    ]);
+    if (!ready) throw new Error("Synthetic lock holder did not report readiness");
+    return holder;
+  } catch (error) {
+    if (holder.exitCode === null) holder.kill("SIGKILL");
+    const exited = await waitForExit(holder);
+    if (!exited && holder.exitCode === null) holder.kill("SIGKILL");
+    throw error;
+  } finally {
+    await Promise.race([reader.cancel(), Bun.sleep(1000)]);
+  }
 }
 
 describe("API and CLI backup operation lock", () => {
@@ -129,15 +167,17 @@ describe("API and CLI backup operation lock", () => {
       ]);
       expect(result).not.toBeNull();
       const [prefix, exitCode] = result as [string, number];
-      const output = prefix + await readRemaining(reader);
+      const remaining = await Promise.race([
+        readRemaining(reader).then(output => ({ output })),
+        Bun.sleep(1000).then(() => null),
+      ]);
+      expect(remaining).not.toBeNull();
+      const output = prefix + (remaining as { output: string }).output;
       expect(exitCode).toBe(0);
       expect(output).toContain("ERROR:BACKUP_OPERATION_LOCK_UNAVAILABLE");
       expect(await waitForLockFree(lockPath)).toBe(true);
     } finally {
-      if (child.exitCode === null) { child.kill("SIGKILL"); await child.exited; }
-      await readRemaining(reader);
-      expect(await waitForLockFree(lockPath)).toBe(true);
-      rmSync(dataDir, { recursive: true, force: true });
+      await cleanupLockChild(child, reader, lockPath, dataDir);
     }
   }, 10000);
 
@@ -170,10 +210,7 @@ describe("API and CLI backup operation lock", () => {
       expect(output).toContain("RELEASED");
       expect(await waitForLockFree(lockPath)).toBe(true);
     } finally {
-      if (child.exitCode === null) { child.kill("SIGKILL"); await child.exited; }
-      await readRemaining(reader);
-      expect(await waitForLockFree(lockPath)).toBe(true);
-      rmSync(dataDir, { recursive: true, force: true });
+      await cleanupLockChild(child, reader, lockPath, dataDir);
     }
   }, 10000);
 
@@ -208,10 +245,7 @@ describe("API and CLI backup operation lock", () => {
       expect(output).toContain("INTERRUPTED:BACKUP_OPERATION_LOCK_UNAVAILABLE");
       expect(await waitForLockFree(lockPath)).toBe(true);
     } finally {
-      if (child.exitCode === null) { child.kill("SIGKILL"); await child.exited; }
-      await readRemaining(reader);
-      expect(await waitForLockFree(lockPath)).toBe(true);
-      rmSync(dataDir, { recursive: true, force: true });
+      await cleanupLockChild(child, reader, lockPath, dataDir);
     }
   }, 10000);
 
@@ -225,16 +259,27 @@ describe("API and CLI backup operation lock", () => {
       const pending = acquireBackupOperationLock(dataDir, { timeoutMs: 1000, watchdog: true });
       await Bun.sleep(100);
       holder.kill();
-      await holder.exited;
+      expect(await waitForExit(holder)).toBe(true);
       lock = await pending;
       expect(lockProbe(lockPath).exitCode).toBe(75);
       await lock.release();
       expect(await waitForLockFree(lockPath)).toBe(true);
     } finally {
-      if (holder && holder.exitCode === null) { holder.kill(); await holder.exited; }
-      await lock?.release();
-      expect(await waitForLockFree(lockPath)).toBe(true);
-      rmSync(dataDir, { recursive: true, force: true });
+      try {
+        if (holder && holder.exitCode === null) {
+          holder.kill();
+          const exited = await waitForExit(holder);
+          if (!exited && holder.exitCode === null) holder.kill("SIGKILL");
+          expect(exited || await waitForExit(holder)).toBe(true);
+        }
+        if (lock) {
+          const released = await Promise.race([lock.release().then(() => true), Bun.sleep(2000).then(() => false)]);
+          expect(released).toBe(true);
+        }
+        expect(await waitForLockFree(lockPath)).toBe(true);
+      } finally {
+        rmSync(dataDir, { recursive: true, force: true });
+      }
     }
   }, 10000);
 
