@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3c257275191d6e8fbfefdbc9922be60b2bed31be305a4a5fdf1e549d54272460",
+      "fingerprint": "b3e3fa6e1c9db225353b98c21cc28fe747b7672c572446d62b6a218469084075",
       "snapshot": {
-        "CHANGELOG.md": "5c3aeaae7988c64d2662e819a27e7283209730e95c59e9134ecbab8408078c22"
+        "CHANGELOG.md": "c20f42e22c41f8c656a50e5c423f50e034a344bc2bf110282a8fd2914531a7fa"
       },
-      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
+      "head": "dfb0c16e79d1be31461162ce612fcc094482fc9b",
       "outcome": "no-change",
-      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
+      "reason": "Pass Docker container engine to embedded runtime probe in Docker candidate consumer",
       "evidence": [
-        "Changed: CHANGELOG.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
+        "Changed: CHANGELOG.md at dfb0c16e79d1be31461162ce612fcc094482fc9b"
       ]
     },
     "source:COMMANDS.md": {
@@ -10928,15 +10928,15 @@
       ]
     },
     "source:scripts/docker-candidate-release.py": {
-      "fingerprint": "37c9db1de5152228386637aa63c81b74738ccac123486ecebfe33bab23b2b9a2",
+      "fingerprint": "8cbba5578780578e553e807de67374e66ffe1af0b9b8f501fd2830d863445583",
       "snapshot": {
-        "scripts/docker-candidate-release.py": "f9b9575aee5dfb0d0bc84cbb0e2f6b7a051951f1318c3712068bd6fa47cc2888"
+        "scripts/docker-candidate-release.py": "ae5828f7204b8e4ab9470886882f25d32786aface0a1541eb750d25a803c01ed"
       },
-      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
+      "head": "dfb0c16e79d1be31461162ce612fcc094482fc9b",
       "outcome": "no-change",
-      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
+      "reason": "Pass Docker container engine to embedded runtime probe in Docker candidate consumer",
       "evidence": [
-        "Changed: scripts/docker-candidate-release.py at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
+        "Changed: scripts/docker-candidate-release.py at dfb0c16e79d1be31461162ce612fcc094482fc9b"
       ]
     },
     "source:scripts/tests/test_docker_candidate_release.py": {

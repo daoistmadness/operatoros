@@ -4,7 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Pin Caddy reverse proxy to 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings.
+- Pass Docker container engine to embedded runtime probe in Docker candidate consumer.
+- Pin Caddy reverse proxy to 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings. (#411)
 - Prune development TypeScript compiler binaries from production API container to eliminate unresolved Trivy findings. (#410)
 
 - Establish Docker Compose as the canonical production container architecture, discontinue obsolete Podman and Quadlet deployment paths, and provide verified Docker Compose deployment and rollback tooling.
