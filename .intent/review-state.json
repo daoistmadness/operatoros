@@ -9852,27 +9852,27 @@
       ]
     },
     "source:scripts/podman-local-deploy.sh": {
-      "fingerprint": "15d1b4a8773b3b32ca5849c225761a2268c7b6d93991eedede99087ee52aab83",
+      "fingerprint": "8bc54eafa52592f5d01cc53199f9d472b84bd790dc964c6f077ae8cca1697afa",
       "snapshot": {
-        "scripts/podman-local-deploy.sh": "302d045017e92ab67cb578892456997cc6a49b8a4dec1cb0c6f59d1030c66e34"
+        "scripts/podman-local-deploy.sh": null
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "10921f66525fe73afa3503010d8cf6a9304e6bc7",
+      "outcome": "no-change",
+      "reason": "Obsolete Podman scripts removed in Docker convergence",
       "evidence": [
-        "Reviewed scripts/podman-local-deploy.sh in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: scripts/podman-local-deploy.sh at 10921f66525fe73afa3503010d8cf6a9304e6bc7"
       ]
     },
     "source:scripts/podman-local-teardown.sh": {
-      "fingerprint": "8f942361c0571a157082c61b5edcc1744065c0e8dc8d8421f629383962e9395e",
+      "fingerprint": "b4e824e6936ec6290037f93c6a13f24c3abbbec1e9dedf2b06cb15bfb0bb7988",
       "snapshot": {
-        "scripts/podman-local-teardown.sh": "aacbc21224834bf3e57384c319ea075c1ca8c89aaf14dc952efa7cf9384e0069"
+        "scripts/podman-local-teardown.sh": null
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "10921f66525fe73afa3503010d8cf6a9304e6bc7",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Obsolete Podman scripts removed in Docker convergence",
       "evidence": [
-        "Changed: scripts/podman-local-teardown.sh at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: scripts/podman-local-teardown.sh at 10921f66525fe73afa3503010d8cf6a9304e6bc7"
       ]
     },
     "source:scripts/podman-source-manifest.mjs": {
@@ -9888,15 +9888,15 @@
       ]
     },
     "source:scripts/render-operatoros-quadlet.sh": {
-      "fingerprint": "66732a37020ef8a818ba2c4e14f7264643a9b5355bb3dbe6e170a6b4502d4fb2",
+      "fingerprint": "4c82854dfd8b1ebd6cf20eeaf8ab71655ebbd9602d10f3ae9dcb67d9af46227b",
       "snapshot": {
-        "scripts/render-operatoros-quadlet.sh": "6d519310914ca133e3258320caef7114f5d23250b27d315fa3895536fd40b877"
+        "scripts/render-operatoros-quadlet.sh": null
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "10921f66525fe73afa3503010d8cf6a9304e6bc7",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Obsolete Podman scripts removed in Docker convergence",
       "evidence": [
-        "Changed: scripts/render-operatoros-quadlet.sh at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: scripts/render-operatoros-quadlet.sh at 10921f66525fe73afa3503010d8cf6a9304e6bc7"
       ]
     },
     "source:scripts/tests/podman-source-manifest.test.ts": {
