@@ -2965,17 +2965,17 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "ef21d4aec1443d1cf022f358c17b959733ec99f76d254c288770449ff1c6287e",
+      "fingerprint": "ccf68c16c25fc07a8c152e6c2b3dcad2d7908a5de45ff1efcefe96880501546d",
       "snapshot": {
-        "CHANGELOG.md": "b53d57a2a955cf937a19f7283cb9d632d07beef90c96d045d38cb96a3bcd12ea"
+        "CHANGELOG.md": "fd77aee4fc302c4fdd141bca7c33ff0c618f00dddefdb86002d9a02ac04dda5d"
       },
-      "head": "d8ad942c12f6791c448799650e155b5dde184e69",
+      "head": "a15a3864f4a7ca2841822b5a9ccf022549ddc649",
       "outcome": "out-of-scope",
-      "reason": "The new Unreleased entry records PR #408 developer tooling behavior; it changes no Elysia implementation guidance, registered skill source, planning decision, or skill task. The registered Elysia skill remains accurate, and the development guide contains the relevant runtime instructions.",
+      "reason": "The two corrected Unreleased entries record PR #404 and PR #408 development-tooling changes. Neither changes the registered Elysia skill, its guidance, or the three planning records; the current development guide already documents the relevant Bun watch runtime.",
       "evidence": [
-        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs.md are unchanged from the reviewed base.",
-        "The only changed line is the required Unreleased changelog bullet for PR #408; it does not add or change Elysia guidance.",
-        "docs/guides/development.md documents the Bun watch workflow and lock lifecycle; no additional skill task or planning record is needed."
+        "CHANGELOG.md contains only release-history bullets for the two native development PRs; no Elysia skill source or planning files changed.",
+        "packages/agent-skills/skills/elysiajs/SKILL.md and packages/agent-skills/docs/elysiajs.md remain unchanged and accurate.",
+        "docs/guides/development.md documents the managed Bun watch workflow and lock behavior."
       ]
     },
     "source:COMMANDS.md": {
