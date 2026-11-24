@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b3e3fa6e1c9db225353b98c21cc28fe747b7672c572446d62b6a218469084075",
+      "fingerprint": "e6d8731c584b3c09eb5fd50d210e86abfe12957b6b3ee0d636c35aba0415c78a",
       "snapshot": {
-        "CHANGELOG.md": "c20f42e22c41f8c656a50e5c423f50e034a344bc2bf110282a8fd2914531a7fa"
+        "CHANGELOG.md": "04a5b411b4292ba5a318247c09ab7a41915aa7197415f6c41c24729c1e6ad32e"
       },
-      "head": "dfb0c16e79d1be31461162ce612fcc094482fc9b",
+      "head": "02828df658798cee867e73566c20c4b1dfa88b4a",
       "outcome": "no-change",
-      "reason": "Pass Docker container engine to embedded runtime probe in Docker candidate consumer",
+      "reason": "Docker consumer root persistence check",
       "evidence": [
-        "Changed: CHANGELOG.md at dfb0c16e79d1be31461162ce612fcc094482fc9b"
+        "Changed: CHANGELOG.md at 02828df658798cee867e73566c20c4b1dfa88b4a"
       ]
     },
     "source:COMMANDS.md": {
@@ -10928,27 +10928,27 @@
       ]
     },
     "source:scripts/docker-candidate-release.py": {
-      "fingerprint": "8cbba5578780578e553e807de67374e66ffe1af0b9b8f501fd2830d863445583",
+      "fingerprint": "6c20f350bfb217f2b21d8fe61aac26539aaef2cb75b1740aeaad3a24ab57223d",
       "snapshot": {
-        "scripts/docker-candidate-release.py": "ae5828f7204b8e4ab9470886882f25d32786aface0a1541eb750d25a803c01ed"
+        "scripts/docker-candidate-release.py": "386795d534e280d1bbb3e4a94cb93e4bd692e3a79704551e88fec9f4b5b1335f"
       },
-      "head": "dfb0c16e79d1be31461162ce612fcc094482fc9b",
+      "head": "02828df658798cee867e73566c20c4b1dfa88b4a",
       "outcome": "no-change",
-      "reason": "Pass Docker container engine to embedded runtime probe in Docker candidate consumer",
+      "reason": "Docker consumer root persistence check",
       "evidence": [
-        "Changed: scripts/docker-candidate-release.py at dfb0c16e79d1be31461162ce612fcc094482fc9b"
+        "Changed: scripts/docker-candidate-release.py at 02828df658798cee867e73566c20c4b1dfa88b4a"
       ]
     },
     "source:scripts/tests/test_docker_candidate_release.py": {
-      "fingerprint": "bbda321e1445bda1c1b96e45b2f5e1776c46acfb26092fb2e528f4c8bb04a46e",
+      "fingerprint": "18d17eb03b812ae94d1fcc8fa4a3ba5ef8bee746d2dc7bb3534f2118cf6de8a9",
       "snapshot": {
-        "scripts/tests/test_docker_candidate_release.py": "f3c4a3623537f14bc3fbe7b0478a115c0831f7cd0b843b9bac384fb57b0413c5"
+        "scripts/tests/test_docker_candidate_release.py": "90856f01080a4be2a4dbccedc81057f346ffee5602ce5e6a0edb81fa78120c76"
       },
-      "head": "036b8126602120999b7065b2d5bb153da8054d0f",
+      "head": "02828df658798cee867e73566c20c4b1dfa88b4a",
       "outcome": "no-change",
-      "reason": "Reviewed Docker release/archive identity changes and their existing runbook updates. These changes do not affect Elysia source guidance, library skills, or the planning records; the new runtime identity contract is documented in the release bundle runbook.",
+      "reason": "Docker consumer root persistence check",
       "evidence": [
-        "Changed: scripts/tests/test_docker_candidate_release.py at 036b8126602120999b7065b2d5bb153da8054d0f"
+        "Changed: scripts/tests/test_docker_candidate_release.py at 02828df658798cee867e73566c20c4b1dfa88b4a"
       ]
     },
     "source:apps/api/tests/academic-analytics.test.ts": {

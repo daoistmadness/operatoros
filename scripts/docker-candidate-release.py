@@ -14,6 +14,7 @@ import re
 import sqlite3
 import stat
 import subprocess
+import sys
 import tarfile
 import tempfile
 from typing import Any, Callable
@@ -568,20 +569,22 @@ def add_persistence_marker(data_dir: Path, source_sha: str) -> str:
 
 def has_persistence_marker(data_dir: Path, marker: str, source_sha: str, *, as_root: bool = False) -> bool:
     database = data_dir / "operatoros.sqlite"
-    if database.is_symlink() or not database.is_file():
+    if not as_root and (database.is_symlink() or not database.is_file()):
         return False
     try:
         if as_root:
             query = (
-                "import sqlite3,sys; "
+                "import pathlib,sqlite3,sys; "
                 "db,marker,source=sys.argv[1:]; "
+                "p=pathlib.Path(db); "
+                "sys.exit(1) if p.is_symlink() or not p.is_file() else None; "
                 "c=sqlite3.connect('file:'+db+'?mode=ro',uri=True,timeout=10); "
                 "r=c.execute(\"SELECT 1 FROM operations_audit_events WHERE event_id=? "
                 "AND entity_reference=? AND operation='ARCHIVE_CONSUMER_PERSISTENCE' LIMIT 1\", "
                 "(marker,source)).fetchone(); print('1' if r==(1,) else '0')"
             )
             checked = subprocess.run(
-                ["sudo", "-n", "--", "python3", "-c", query, str(database), marker, source_sha],
+                ["sudo", "-n", "--", sys.executable or "python3", "-c", query, str(database), marker, source_sha],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -772,6 +775,7 @@ def consume_archive(archive_path: Path, source_sha: str, report_path: Path) -> d
     except Exception as error:
         report["failure_stage"] = stage
         report["failure_code"] = getattr(error, "code", "consumer_qualification_failed")
+        report["failure_message"] = f"{type(error).__name__}: {error}"
         if project:
             report["compose_diagnostics"] = {
                 "api": qualification.container_diagnostics("operatoros-api"),
