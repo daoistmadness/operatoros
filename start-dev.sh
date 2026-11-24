@@ -651,7 +651,7 @@ LAUNCHER_STATE=STARTING_BACKEND
   export OPERATOROS_MANAGED_DEV_SETUP=true
   export HOST="$BACKEND_HOST"
   export PORT="$BACKEND_PORT"
-  cd "$API_DIR"
+  cd "$PROJECT_ROOT"
     exec setsid "$BUN_EXECUTABLE" --no-env-file --watch "$API_DIR/src/server.ts"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
