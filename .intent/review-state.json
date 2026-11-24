@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "afa9839f6e7f1af0d9871d1a0c0d5d9e8c4a18baf5f1c581bf70d4b5c7fd1dde",
+      "fingerprint": "bdb7c3b120305b988126c92727c538c4ddb698b025cc7b7e91349fc549a7ea92",
       "snapshot": {
-        "CHANGELOG.md": "4a835778aa4d3bf90c03e6b5b9837edb23354fd814b99da39ac5353b03830645"
+        "CHANGELOG.md": "a8b9edbef0cad901448c295c3e43cbe404190ccfaa9788bbd758f70e6918c6bb"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "e62b6b44971eb34b9102cf97f2eac4f3941cc57f",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Record changelog bullet for container prune; no skill documentation changes needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: CHANGELOG.md at e62b6b44971eb34b9102cf97f2eac4f3941cc57f"
       ]
     },
     "source:COMMANDS.md": {
