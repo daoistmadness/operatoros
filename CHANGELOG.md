@@ -4,6 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Prune development TypeScript compiler binaries from production API container to eliminate unresolved Trivy findings.
+
 - Establish Docker Compose as the canonical production container architecture, discontinue obsolete Podman and Quadlet deployment paths, and provide verified Docker Compose deployment and rollback tooling.
 - Bound development API backup-lock worker startup and shutdown waits without changing production behavior. (#406)
 - Add a managed native development command with automatic Bun watch reload for API source changes. (#404)
