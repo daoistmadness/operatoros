@@ -1,16 +1,17 @@
 ---
-status: draft
-last_reviewed: 2026-11-22
+status: current
+last_reviewed: 2026-11-24
 ---
 
 # Docker Compose deployment source-of-truth candidate
 
 ## Status
 
-This draft prepares the Docker Compose files and a CI-built candidate archive
-for review. It does not accept Docker as a production runtime or authorize a
-host change. The SQLite-only runtime contract and the current unsupported
-production-container status remain in force.
+Accepted on 2026-11-24. Docker Engine and Docker Compose are the single
+canonical production container deployment architecture for OperatorOS on OPRSERVER.
+Production runs under UID/GID 1000:1000 with Caddy reverse proxy, Tailscale HTTPS
+ingress, and persistent SQLite storage (schema S5.4). Podman and Quadlet alternatives
+are discontinued. Native Bun is the single canonical development runtime.
 
 ## Candidate definition
 

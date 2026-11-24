@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Establish Docker Compose as the canonical production container architecture, discontinue obsolete Podman and Quadlet deployment paths, and provide verified Docker Compose deployment and rollback tooling.
 - Bound development API backup-lock worker startup and shutdown waits without changing production behavior. (#406)
 - Add a managed native development command with automatic Bun watch reload for API source changes. (#404)
 - Fix native Bun watch reload for atomically saved workspace files while preserving managed process cleanup. (#408)

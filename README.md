@@ -10,11 +10,11 @@ OperatorOS delivers school attendance processing, automated Hari Efektif Belajar
 
 The current local runtime is a native Elysia/TypeScript backend paired with a
 React frontend in the browser, backed by SQLite (`bun:sqlite` via Drizzle ORM).
-The web app uses TanStack Start in SPA mode. PostgreSQL is unsupported. The
-repository includes an optional rootless Podman development workflow. A
-single-host Podman server deployment has a draft local implementation, but
-remains unsupported pending architecture acceptance and an authorized Ubuntu
-rehearsal.
+The web app uses TanStack Start in SPA mode. PostgreSQL is unsupported. Local
+development runs natively via `./start-dev.sh` (or `bun run dev`). Production is
+orchestrated with Docker Engine and Docker Compose (`deploy/docker/docker-compose.yml`)
+consuming CI-attested release artifacts. Podman and Quadlet alternatives are
+discontinued.
 
 Current developer and operational guidance is indexed in [docs/README.md](docs/README.md); [AGENTS.md](AGENTS.md) is the authoritative execution contract.
 

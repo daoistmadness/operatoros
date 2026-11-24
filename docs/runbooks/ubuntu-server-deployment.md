@@ -1,27 +1,29 @@
 ---
-status: draft
-last_reviewed: 2026-11-22
+status: current
+last_reviewed: 2026-11-24
 ---
 
 # Ubuntu server deployment runbook
 
-## Current synthetic host
+## Canonical Docker Compose deployment
 
-The existing synthetic host runs both Elysia API and Caddy in separate rootless
-Podman containers supervised by user Quadlet services. Caddy serves the static
-SPA and proxies the API over loopback. SQLite uses a persistent host bind mount;
-access remains loopback/private. The existing stack uses a historical
-`deploy.sh`; D1 does not use it as evidence or as the deployment interface.
-Candidate B is approved for isolated synthetic qualification. Production
-activation and private HTTPS ingress remain pending. See [CI release
-bundles](../runbooks/release-bundles.md) for repository-managed artifact
-verification and deployment.
+OperatorOS production on OPRSERVER is deployed via Docker Engine and Docker
+Compose using `deploy/docker/docker-compose.yml` and `scripts/docker-deploy.sh`.
+Releases consume CI-built, verified, immutable artifacts attested by the
+canonical GitHub Actions workflow. Services run under UID/GID 1000:1000 with
+persistent SQLite storage mounted from `/mnt/podman-data/operatoros/data` and
+ingress routed through Caddy and Tailscale HTTPS (`oprserver.taile856.ts.net`).
+Historical Podman and Quadlet rehearsal instructions below are superseded and
+preserved for historical reference only.
 
 ## Status and scope
 
-This runbook covers OPRSERVER and documents the [Podman deployment proposal](../decisions/podman-deployment.md); Candidate B is approved only for synthetic D1 qualification. The UID 1002 synthetic runtime passed D1 with an older Bun release on 2026-11-10. Current protected main has a CI-qualified, attested Docker candidate for Bun 1.4.5 / SQLite 3.54.1, but that candidate does not qualify this Podman path or OPRSERVER. The separate SBOM, scan, and isolated-consumer checks for the Docker archive remain open. The earlier signed Node artifact does not qualify the current Bun runtime. No production deployment is approved.
+The Docker Compose production architecture was formally accepted by owner
+decision on 2026-11-24. Podman and Quadlet deployment paths are discontinued.
+Deployments are executed using the canonical deployment command:
+`scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha>`.
 
-## D1 isolated synthetic qualification
+## Historical D1 synthetic qualification (Superseded)
 
 The approved D1 design uses Candidate B under a rootless identity and a
 separate root at `/mnt/podman-data/operatoros-d1-synthetic`. The existing
