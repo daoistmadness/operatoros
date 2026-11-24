@@ -40,7 +40,7 @@ is introduced.
 Manual Docker-only CI qualification runs on a GitHub-hosted runner after full
 release validation and E2E checks. A feature-ref run builds the API from a clean
 committed source archive, checks Bun and embedded `bun:sqlite`, and pulls the
-pinned Docker Official Image for Caddy 2.11.7. It starts Compose with a
+pinned Docker Official Image for Caddy 2.11.9-alpine. It starts Compose with a
 synthetic database and distinct random API secrets, checks health/readiness,
 SPA routes, missing-asset and dotfile responses, then switches to a prior-main
 API image to verify rollback. Read-only database status checks confirm the
