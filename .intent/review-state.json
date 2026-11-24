@@ -734,15 +734,15 @@
       ]
     },
     "source:apps/api/tests/backup-operation-lock.test.ts": {
-      "fingerprint": "5e38df79137657b17b1545d3ed904a834354b3741cb68e2ce03bb0e0e5336ec3",
+      "fingerprint": "450ab9fe9105ab17a5308a63f580408b362677e15013d0588a81dee9c1610395",
       "snapshot": {
-        "apps/api/tests/backup-operation-lock.test.ts": "5cbbaf6b0b40e02c5cece40091b58d2e6ecb91c4563fd2c2ab8f1cf392d6abc9"
+        "apps/api/tests/backup-operation-lock.test.ts": "856d27765f136592b4243977f181c856c43f603559dfb50eba4394f575f17ebb"
       },
-      "head": "3c59b2073a64dcf92196eb2063cab1ee1a7698f2",
+      "head": "6b2fa3a2b7ee42f0f45429b6ba3dde342f56697c",
       "outcome": "out-of-scope",
-      "reason": "These are application-specific synthetic Linux flock/process lifecycle tests. No registered skill mapping covers the backup-operation lock test file; the framework skill’s route-test guidance remains accurate and was followed by running project tests and typechecking.",
+      "reason": "The new delta bounds synthetic fixture readiness, process exit, output cancellation, lock release, and cleanup. No registered skill maps this application-specific Linux flock test harness or its fixture lifecycle; the Elysia skill covers framework guidance, not subprocess-test cleanup. No skill or planning update is warranted.",
       "evidence": [
-        "apps/api/tests/backup-operation-lock.test.ts; targeted result 9 passed/0 failed; affected API suite 446 passed/0 failed; API typecheck exit 0."
+        "apps/api/tests/backup-operation-lock.test.ts; watchdog-targeted-test-final.log (9/9, 49 assertions); watchdog-check-affected-final.log (446 API tests, 14/14 tasks); watchdog-api-typecheck-final.log (exit 0); watchdog-test-cleanup.log (0 fixtures remaining); independent-review.md"
       ]
     },
     "source:apps/api/tests/durable-files.test.ts": {
