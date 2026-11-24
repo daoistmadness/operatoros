@@ -668,7 +668,7 @@ def consume_archive(archive_path: Path, source_sha: str, report_path: Path) -> d
         api_id = qualification.run(["docker", "image", "inspect", "--format", "{{.Id}}", api_image])
         caddy_id = qualification.run(["docker", "image", "inspect", "--format", "{{.Id}}", caddy_image])
         runtime_report = json.loads(qualification.run(
-            ["python3", "scripts/check-bun-sqlite-runtime.py", api_image], timeout=90
+            ["python3", "scripts/check-bun-sqlite-runtime.py", "--engine", "docker", api_image], timeout=90
         ))
         runtime = manifest["runtime"]
         if not isinstance(runtime_report, dict) or (
