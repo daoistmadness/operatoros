@@ -81,37 +81,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "required": ["detail"],
+                  "required": [
+                    "detail"
+                  ],
                   "properties": {
-                    "detail": { "type": "string" }
-                  }
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Login rate limit exceeded",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["detail"],
-                  "properties": {
-                    "detail": { "type": "string" }
-                  }
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Authentication service is temporarily unavailable",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": ["detail"],
-                  "properties": {
-                    "detail": { "type": "string" }
+                    "detail": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -126,6 +102,42 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "description": "Login rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Authentication service is temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "detail"
+                  ],
+                  "properties": {
+                    "detail": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "Login",
@@ -4487,591 +4499,6 @@
         "tags": [
           "student-masters"
         ]
-      }
-    },
-    "/api/student-masters/{student_master_id}/identity-verifications": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIdentity-verifications"
-      },
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "IDENTIFIER_ENTERED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "IDENTIFIER_ENTERED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "identifier_type",
-                  "verification_status"
-                ],
-                "properties": {
-                  "identifier_type": {
-                    "type": "string",
-                    "enum": [
-                      "NIK",
-                      "KK"
-                    ]
-                  },
-                  "verification_status": {
-                    "type": "string",
-                    "enum": [
-                      "UNVERIFIED",
-                      "IDENTIFIER_ENTERED",
-                      "VERIFIED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idIdentity-verifications"
-      }
-    },
-    "/api/student-masters/{student_master_id}/dapodik-status": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idDapodik-status"
-      },
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "NOT_STARTED",
-                      "PENDING_EXTERNAL_PROCESSING",
-                      "ENTERED",
-                      "SYNCHRONIZED",
-                      "NEEDS_CORRECTION"
-                    ]
-                  },
-                  "external_reference": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "notes": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "correction_reason": {
-                    "nullable": true,
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idDapodik-status"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIom-documents"
-      },
-      "post": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "iom_type",
-                  "description",
-                  "file"
-                ],
-                "properties": {
-                  "iom_type": {
-                    "type": "string",
-                    "enum": [
-                      "TRANSFER_IN",
-                      "TRANSFER_OUT"
-                    ]
-                  },
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "file": {
-                    "default": "File",
-                    "maxSize": 26214400,
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "postApiStudent-mastersByStudent_master_idIom-documents"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
-      "patch": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "description"
-                ],
-                "properties": {
-                  "description": {
-                    "minLength": 1,
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "operationId": "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"
-      }
-    },
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
-      "get": {
-        "parameters": [
-          {
-            "name": "student_master_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "doc_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "operationId": "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"
       }
     },
     "/api/staff": {
@@ -11563,6 +10990,591 @@
             "description": "The request was refused."
           }
         }
+      }
+    },
+    "/api/student-masters/{student_master_id}/identity-verifications": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIdentity-verifications"
+      },
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier_type",
+                  "verification_status"
+                ],
+                "properties": {
+                  "identifier_type": {
+                    "type": "string",
+                    "enum": [
+                      "NIK",
+                      "KK"
+                    ]
+                  },
+                  "verification_status": {
+                    "type": "string",
+                    "enum": [
+                      "UNVERIFIED",
+                      "IDENTIFIER_ENTERED",
+                      "VERIFIED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idIdentity-verifications"
+      }
+    },
+    "/api/student-masters/{student_master_id}/dapodik-status": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idDapodik-status"
+      },
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "NOT_STARTED",
+                      "PENDING_EXTERNAL_PROCESSING",
+                      "ENTERED",
+                      "SYNCHRONIZED",
+                      "NEEDS_CORRECTION"
+                    ]
+                  },
+                  "external_reference": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correction_reason": {
+                    "nullable": true,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idDapodik-status"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIom-documents"
+      },
+      "post": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "iom_type",
+                  "description",
+                  "file"
+                ],
+                "properties": {
+                  "iom_type": {
+                    "type": "string",
+                    "enum": [
+                      "TRANSFER_IN",
+                      "TRANSFER_OUT"
+                    ]
+                  },
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "file": {
+                    "default": "File",
+                    "maxSize": 26214400,
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiStudent-mastersByStudent_master_idIom-documents"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
+      "get": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"
+      }
+    },
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
+      "patch": {
+        "parameters": [
+          {
+            "name": "student_master_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "description"
+                ],
+                "properties": {
+                  "description": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"
       }
     },
     "/api/config/jenjang": {
@@ -36100,6 +36112,2057 @@
         "tags": [
           "attendance"
         ]
+      }
+    },
+    "/api/inventory/summary": {
+      "get": {
+        "operationId": "getApiInventorySummary"
+      }
+    },
+    "/api/inventory/assets": {
+      "get": {
+        "parameters": [
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "current_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "IT",
+                "FRN",
+                "ELK",
+                "LAB",
+                "LIB",
+                "SPT",
+                "EDU",
+                "OFF",
+                "OTH"
+              ]
+            }
+          },
+          {
+            "name": "funding_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BOS",
+                "BOP",
+                "YAYASAN",
+                "KOMITE",
+                "HIBAH",
+                "LAINNYA"
+              ]
+            }
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BAIK",
+                "RUSAK_RINGAN",
+                "RUSAK_BERAT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "RETIRED"
+              ]
+            }
+          },
+          {
+            "name": "budget_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiInventoryAssets"
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryAssets"
+      }
+    },
+    "/api/inventory/assets/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiInventoryAssetsById"
+      },
+      "put": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "putApiInventoryAssetsById"
+      }
+    },
+    "/api/inventory/assets/batch": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "quantity",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "minimum": 1,
+                    "maximum": 100,
+                    "type": "integer"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price_per_unit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "quantity",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "minimum": 1,
+                    "maximum": 100,
+                    "type": "integer"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price_per_unit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "school_unit_id",
+                  "category",
+                  "item_name",
+                  "quantity",
+                  "funding_source",
+                  "budget_year"
+                ],
+                "properties": {
+                  "school_unit_id": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "current_unit_id": {
+                    "anyOf": [
+                      {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "IT",
+                      "FRN",
+                      "ELK",
+                      "LAB",
+                      "LIB",
+                      "SPT",
+                      "EDU",
+                      "OFF",
+                      "OTH"
+                    ]
+                  },
+                  "item_name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "minimum": 1,
+                    "maximum": 100,
+                    "type": "integer"
+                  },
+                  "brand": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "model": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "serial_number": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "location": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "funding_source": {
+                    "type": "string",
+                    "enum": [
+                      "BOS",
+                      "BOP",
+                      "YAYASAN",
+                      "KOMITE",
+                      "HIBAH",
+                      "LAINNYA"
+                    ]
+                  },
+                  "budget_year": {
+                    "minimum": 2000,
+                    "maximum": 2100,
+                    "type": "integer"
+                  },
+                  "arkas_account_code": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "purchase_document_reference": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "acquisition_date": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "price_per_unit": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "condition": {
+                    "type": "string",
+                    "enum": [
+                      "BAIK",
+                      "RUSAK_RINGAN",
+                      "RUSAK_BERAT"
+                    ]
+                  },
+                  "notes": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryAssetsBatch"
+      }
+    },
+    "/api/inventory/assets/{id}/retire": {
+      "post": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "retired_reason"
+                ],
+                "properties": {
+                  "retired_reason": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "retired_at": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "retired_reason"
+                ],
+                "properties": {
+                  "retired_reason": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "retired_at": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "retired_reason"
+                ],
+                "properties": {
+                  "retired_reason": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "retired_at": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryAssetsByIdRetire"
+      }
+    },
+    "/api/inventory/export/xlsx": {
+      "get": {
+        "parameters": [
+          {
+            "name": "school_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "current_unit_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "IT",
+                "FRN",
+                "ELK",
+                "LAB",
+                "LIB",
+                "SPT",
+                "EDU",
+                "OFF",
+                "OTH"
+              ]
+            }
+          },
+          {
+            "name": "funding_source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BOS",
+                "BOP",
+                "YAYASAN",
+                "KOMITE",
+                "HIBAH",
+                "LAINNYA"
+              ]
+            }
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BAIK",
+                "RUSAK_RINGAN",
+                "RUSAK_BERAT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "RETIRED"
+              ]
+            }
+          },
+          {
+            "name": "budget_year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "operationId": "getApiInventoryExportXlsx"
+      }
+    },
+    "/api/inventory/labels/preview": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryLabelsPreview"
+      }
+    },
+    "/api/inventory/labels/pdf": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "asset_ids",
+                  "template_id"
+                ],
+                "properties": {
+                  "asset_ids": {
+                    "minItems": 1,
+                    "maxItems": 300,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "template_id": {
+                    "type": "string",
+                    "enum": [
+                      "103",
+                      "107"
+                    ]
+                  },
+                  "starting_index": {
+                    "minimum": 0,
+                    "maximum": 29,
+                    "type": "integer"
+                  },
+                  "offset_x_mm": {
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryLabelsPdf"
       }
     },
     "/api/admin/backups/status": {

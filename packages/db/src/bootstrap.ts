@@ -12,6 +12,7 @@ const uppReportsSql = readFileSync(new URL("./s51-migration.sql", import.meta.ur
 const studentAdminSql = readFileSync(new URL("./s52-migration.sql", import.meta.url), "utf8");
 const studentVerificationSql = readFileSync(new URL("./s53-migration.sql", import.meta.url), "utf8");
 const bospReminderSql = readFileSync(new URL("./s54-migration.sql", import.meta.url), "utf8");
+const inventorySql = readFileSync(new URL("./s55-migration.sql", import.meta.url), "utf8");
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
 const schoolUnitTriggerStart = schoolUnitsSql.indexOf("CREATE TRIGGER ");
 if (triggerStart < 0) throw new Error("BOOTSTRAP_TRIGGERS_MISSING");
@@ -57,6 +58,10 @@ export function installS54BospReminderSchema(client: SqliteClient): void {
   client.exec(bospReminderSql);
 }
 
+export function installS55InventorySchema(client: SqliteClient): void {
+  client.exec(inventorySql);
+}
+
 export function createFreshDatabase(path: string): void {
   assertDatabasePath(path);
   if (existsSync(path)) throw new Error("DATABASE_ALREADY_EXISTS");
@@ -77,6 +82,7 @@ export function createFreshDatabase(path: string): void {
       installS52StudentAdminSchema(client!);
       installS53StudentVerificationSchema(client!);
       installS54BospReminderSchema(client!);
+      installS55InventorySchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +

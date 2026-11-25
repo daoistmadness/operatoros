@@ -38,6 +38,12 @@ export const queryKeys = {
     list: (month: string) => ["upp-reports", "list", { month }] as const,
     detail: (reportId: number) => ["upp-reports", "detail", reportId] as const,
   },
+  inventory: {
+    all: ["inventory"] as const,
+    list: (params: Record<string, unknown> = {}) => ["inventory", "list", canonicalizeQueryFilters(params as any)] as const,
+    summary: (params: Record<string, unknown> = {}) => ["inventory", "summary", canonicalizeQueryFilters(params as any)] as const,
+    detail: (id: string) => ["inventory", "detail", id] as const,
+  },
   reports: {
     all: ["reports"] as const,
     filters: (academicYearId?: number | null, scope?: ReportScope) => ["reports", "filters", { academicYearId: academicYearId ?? null, scope: scope ?? null }] as const,

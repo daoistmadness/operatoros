@@ -193,17 +193,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "a3be231affd85aae363bf8c90688347c5ed23593b2dc0494c4ca27cdc4ecfd3c",
+      "fingerprint": "eee040fd3a571f8938cf1191e866c54ebb8019571cfa025945467e6ea29c9342",
       "snapshot": {
-        "apps/api/src/app.ts": "6bea6a484776b6587f4693ea3a969c00694087dc16287d00e7cf09a2c416f4bd"
+        "apps/api/src/app.ts": "0d24b8a95dd92b3ebf35bb8d1fb71a899c2ae6361850a821b2572636d173e10b"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
-        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
-        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
+        "Changed: apps/api/src/app.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -495,15 +493,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "fded21db6eb7d5f7aa88415820bc170234789a594607aacd291a7d4c5bc0f638",
+      "fingerprint": "40af328ec7cbc94cd836f64b271bc81fa5e7f0b523bfecf973e78764d5c0b728",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "c2edcf5a878246ad5ad005369ad3dfe66b0ce4c993aebee0de5ff416e3092970"
+        "apps/web/src/generated/openapi/schema.ts": "0ef63081c191f67e880dd97b4c9ef5bb7e711b9f9fbf6dfab29caef068646a43"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: apps/web/src/generated/openapi/schema.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -519,15 +517,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "6422579b622b63771f603f1dc0661352c20e808d709af3cf0e6d3c986045818d",
+      "fingerprint": "bc4965c4b555603eff5e5acf64f279bfa96efc8d6b3d2a5c01d6995a4aaffc6d",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "3830d602789f60b6f388f113f03fc5c791e4ded024a12434332f3b22ecde11e6"
+        "openapi/operatoros.openapi.json": "2e645b94212eae6bad709c982d70a341000ac4f739ea79b85b406495316b32cc"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: openapi/operatoros.openapi.json at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -794,15 +792,15 @@
       ]
     },
     "source:packages/contracts/src/index.ts": {
-      "fingerprint": "08fca84c6ade6f88e72c65471d8b6321d71742353ee23f261608e00f02fb5129",
+      "fingerprint": "dd0d48556e818f7700d38bc8f1efabb1dc19394120629810840d2cb9064955de",
       "snapshot": {
-        "packages/contracts/src/index.ts": "ce8946fd7cb4c847d44d9c082a8b108d4022dcc5d4f7448b036cfce8c097574f"
+        "packages/contracts/src/index.ts": "a2037138ad0abb7929741606bf83a3cc12ec1dfbccf95766a88a58a2de976369"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: packages/contracts/src/index.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/contracts/src/index.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:packages/contracts/tests/backup.test.ts": {
@@ -1070,17 +1068,15 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "07d62fb23d4669220617338c06d7838d5a1a8b9683dcbff57a7df095102d7c28",
+      "fingerprint": "37aa1ea20777e2b5b8c98c81ed00263708bcabaf5926cccbd798da3c5781c3fd",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "0651258915d1351b19ca4f3d23cbc4ac929a49c6f900119a3aea948eedd5bf99"
+        "apps/web/src/components/SidebarNav.test.tsx": "eac2b16df77f437b3cdf9988fa43912aff0bbd3c44a44224fe96648396c6f9df"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "33b5ed335686cf1fce183f23311bde8edcde8b41",
+      "outcome": "no-change",
+      "reason": "SidebarNav test alignment for Asset Inventory navigation item",
       "evidence": [
-        "Reviewed apps/web/src/components/SidebarNav.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at 33b5ed335686cf1fce183f23311bde8edcde8b41"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
@@ -2962,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "85a3a6f1ba8233f0b094a0ba6a8a23db08f147d428de25a86d103d1b6835800e",
+      "fingerprint": "eb47e5c03b91cc2bb27cf1c2ab9e2b02a2653a8fd56e7e40ec4096b4bbc2236c",
       "snapshot": {
-        "CHANGELOG.md": "d1a565d93c10413195401c0fc8a3e7277f1b6075852c7ef41c0a7d8a16e380f3"
+        "CHANGELOG.md": "3e986cf8614881fa8995a83310a2ce9205525d10391fa76d2cfcb10be8173434"
       },
-      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: CHANGELOG.md at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+        "Changed: CHANGELOG.md at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:COMMANDS.md": {
@@ -5230,15 +5226,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "4feb53e7ff1d5b2809dbc1ed393f471f6ff9f808ec3cd5d3f539583066e9ff43",
+      "fingerprint": "0672c97c3ec2a1c66a66c2739729e3aaa81b8c978ff80f0f7470c2ad02bd3d83",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "27bdb08fe3e18ee3312a58bac8b1425d27b9833903c69549f22359e8bb4b33a5"
+        "apps/api/tests/openapi-contract.test.ts": "daf46ddc8a7b2afd315cf97c5336284619e08bd0e9c8103f0aff8b57ea37674e"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/api/tests/openapi-contract.test.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5280,17 +5276,15 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "833385c21c170bab7c1037d7011ca71363182b1832383df803430b5c34d19735",
+      "fingerprint": "581a80a2bac90fa81ad32315b026e4262a8d2674216df4af2a2d89a817bbf0ae",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "ea3ad9fcf97545853e6241c86bd77817f6b98d0cd23b800ea0b5af3c773734f8"
+        "apps/web/src/lib/query/queryKeys.ts": "19459cacc8bf1dc8db37f02eaccb5fd169ef1f27519b4671fb0cbc6265236900"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Reviewed apps/web/src/lib/query/queryKeys.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/query/queryKeys.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5318,15 +5312,15 @@
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "b41daac7e4be5d9d33735eb707722f63762a5b9d9c4c46c1fe08822febf277c9",
+      "fingerprint": "ddfdc6b1de13595882df74810ebf85c0fa7e7941b49ddb2b6a29a4957497e2f5",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "9b53f0be2ad9cfbf3aef4c7d6fe66a8ae3a24cc7ff2a43a1513ba0c21043f277"
+        "packages/db/src/bootstrap.ts": "3f71508ec65c730ae7484bd8692fcf8d5850811425e55a338dcc9afcc7739e65"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/src/bootstrap.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:packages/db/src/index.ts": {
@@ -5342,27 +5336,27 @@
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "2685aa1f3b5b8762872d122845490feb677baa53419711512ee0a7a57d6f9a86",
+      "fingerprint": "8c0fd4c582d9ada8dde70129661d7636b1f511df1f48ff32d81a959664a7d5ef",
       "snapshot": {
-        "packages/db/src/manifest.ts": "19bd9c0bf44f5ba2b989e339e2fcddf87413709c3a377a783b7be64fdc573e26"
+        "packages/db/src/manifest.ts": "81204fd4808d761e999e8c46c48a2842c050ee77a6038d4c0a4b86c2ea5221d1"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/src/manifest.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "019059ea49cf1f2b145ccc944b32fe187a8e1d494eb67dfca7830d33264c3b74",
+      "fingerprint": "cfb0d17b3c73628baaa8b21fc63b632d77d32dc48a989e8c448c85f67e6bb674",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "d52ac1fe194acd2c140cad5b3da70fa6e97aff0a0ef66830ff52083a477a2c73"
+        "packages/db/src/migrate-existing.ts": "125f748ceebc0c1055a344da2711c779fa2905fae074c33d85c90544c519cadb"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/src/migrate-existing.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5378,51 +5372,51 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "a6ba49704360dea23d915ae399c3f5046a8f0749d22b85b1c63e3c2aafd9f02f",
+      "fingerprint": "0ee40a163dfc079bc9a66d49ddd3f68e7cddefa5187faf2b58c856d93145fbdd",
       "snapshot": {
-        "packages/db/src/schema.ts": "0c4f7bcf42a7f7a2282b1efb8ab0c712775c3178f6321245394084a9ed6a1ee7"
+        "packages/db/src/schema.ts": "4d1dd228b0e1b7b55df534009d5c9848b4588b8c4b848dc833a6708101754298"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: packages/db/src/schema.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
-      "fingerprint": "806e1825878c43d2b2b14bcc914de338c3876a64385399944d4f72bc9b1680e9",
+      "fingerprint": "109f969c6b6b664c4625c9168d0da8ccebc4c94230466c88adc27f401364c331",
       "snapshot": {
-        "packages/db/tests/bootstrap.test.ts": "14577806c030c73454a212386789b68460824e18e99aaaa7d5451fb1c8e1d68a"
+        "packages/db/tests/bootstrap.test.ts": "9a1c3b81e1fc789bfdab23380f1b7b534f97e6be0523e03bcd31f06ebf0626b4"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: packages/db/tests/bootstrap.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/tests/bootstrap.test.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "0fabac50e40f1ae08eb4adbe3a3f160a2bf7bceccba55cac8e2eff67b53ca6ea",
+      "fingerprint": "1f3cfbcb2fca0a39478d0c98853c653da942536d1b595f4ffed9e9f2bcc40834",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "1fc9c71897bc7185c46b49b710139dfe5c267c8f97d45142689bd14f327646af"
+        "packages/db/tests/db.test.ts": "fa37c209472df910288735ba6ef64b6248bdfb892c883f7e2fedb18e16ee9aaa"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/tests/db.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "9dd986397de3f6e8ddea8afa5c27feae8958b3c7cd9429dde9a9421df433eb76",
+      "fingerprint": "26fb8da62d05191ea3a9b7f4e724743822a7763f925a4601104d8a87d0df9478",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "a2ade8602ecb62b78c446eed93584d8ac73ad99815c1b5709f21e5598b576b9e"
+        "packages/db/tests/migrate-existing.test.ts": "dcea03fe011a7701ba8df6146cac152d43ea5395bd3f1c04999cf46a07a71ac1"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/tests/migrate-existing.test.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -6048,15 +6042,15 @@
       ]
     },
     "source:apps/web/src/lib/router/access.ts": {
-      "fingerprint": "76c277499c0ce01e09aa6f1a91bdc2a169acf77297302e188f08bf149a335f6f",
+      "fingerprint": "7097a589e0592af5f6c6928085524fd4d1d05bf31ed39da29f02b9c326ea8373",
       "snapshot": {
-        "apps/web/src/lib/router/access.ts": "149cb3082bebd2e5d11d8af202efe1142c9fc22d5d5938078977d4cd8128b1d4"
+        "apps/web/src/lib/router/access.ts": "59db5dce3bec1ee8ccd6102d2b487eb7ede033a0bfaebbf93b59f5d8a42caf91"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: apps/web/src/lib/router/access.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: apps/web/src/lib/router/access.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:apps/web/src/lib/router/search.test.tsx": {
@@ -6088,15 +6082,15 @@
       ]
     },
     "source:apps/web/src/routeTree.gen.ts": {
-      "fingerprint": "008e50c5ba9626a885cf76d7dfec5a3daef28224323f05cbde8f77ee1ef01e31",
+      "fingerprint": "2ecded08b499d0c3bbafb1b52cc14ee8daafb2c0c6839d77b4b812a239e6a416",
       "snapshot": {
-        "apps/web/src/routeTree.gen.ts": "75e8fa52b9ddd91e0a088bb1664f53e600aec560a4bbd56f2d7e045128db25d4"
+        "apps/web/src/routeTree.gen.ts": "d07b7ab2d0f7b5f7bf07f99b253e5f31a3c6c75755ff8f5e3ed75973320fd4a1"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "2abce0702f1109064495e60673de567771e44338",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Changed: apps/web/src/routeTree.gen.ts at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: apps/web/src/routeTree.gen.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:apps/web/src/router.ts": {
@@ -7704,17 +7698,15 @@
       ]
     },
     "source:apps/web/src/lib/navigation/registry.ts": {
-      "fingerprint": "729fc24ae47d2687989fd2a4880280dd87e4f2e4896a6eac6b01a5795db02121",
+      "fingerprint": "4f1d1b039c2fc903e50394607e31426eebd5725113cfebd83e7002cf3003accc",
       "snapshot": {
-        "apps/web/src/lib/navigation/registry.ts": "0d2a215a0f3a3df92a87726215b7b6479c6a00142f57529a602fb2c418467dec"
+        "apps/web/src/lib/navigation/registry.ts": "c8da0cd552a89cddf92e25d7606b750e27e3b187ca7af81133de862b8a4f4c70"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "2abce0702f1109064495e60673de567771e44338",
+      "outcome": "no-change",
+      "reason": "Add inventory asset register and precision label printing v1",
       "evidence": [
-        "Reviewed apps/web/src/lib/navigation/registry.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/navigation/registry.ts at 2abce0702f1109064495e60673de567771e44338"
       ]
     },
     "source:apps/web/src/lib/query/backupInvalidation.test.ts": {
@@ -11482,6 +11474,126 @@
       "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
       "evidence": [
         "Changed: scripts/verify-rollback-schema.py at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+      ]
+    },
+    "source:apps/api/src/auth/capabilities.ts": {
+      "fingerprint": "25cd876ebe5f0ea785087b9cb72304c6eaa90bc67c912b8aaee69d3c06dd9d72",
+      "snapshot": {
+        "apps/api/src/auth/capabilities.ts": "1b7ca37173e7b083c847d390e9a7d6d6ae0825e4426f8e511838a1ab1a1898bb"
+      },
+      "head": "2abce0702f1109064495e60673de567771e44338",
+      "outcome": "no-change",
+      "reason": "Add inventory asset register and precision label printing v1",
+      "evidence": [
+        "Changed: apps/api/src/auth/capabilities.ts at 2abce0702f1109064495e60673de567771e44338"
+      ]
+    },
+    "source:apps/api/src/domains/inventory-labels.ts": {
+      "fingerprint": "52662fabc991220b4838b2c71a9b8eb44b22ff9cde2b440192b30ee87d293848",
+      "snapshot": {
+        "apps/api/src/domains/inventory-labels.ts": "2245daec85c8ed67a0bbba041decc1b4bf05cec683b69e6e20e0da3978b7db0c"
+      },
+      "head": "2abce0702f1109064495e60673de567771e44338",
+      "outcome": "no-change",
+      "reason": "Add inventory asset register and precision label printing v1",
+      "evidence": [
+        "Changed: apps/api/src/domains/inventory-labels.ts at 2abce0702f1109064495e60673de567771e44338"
+      ]
+    },
+    "source:apps/api/src/domains/inventory.ts": {
+      "fingerprint": "762a332878a5da1c326f7b1b14adc91c06d61ec11feccace75071a3cbf8543bc",
+      "snapshot": {
+        "apps/api/src/domains/inventory.ts": "fcade2272407270ff0041f08d32313833d1347e84364883a4da09756d408c8a8"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: apps/api/src/domains/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:apps/api/tests/inventory.test.ts": {
+      "fingerprint": "328928e8f3c98e55de4ac29dcd0ec3921dc77aec397704fb2dcfcb8df8fbad28",
+      "snapshot": {
+        "apps/api/tests/inventory.test.ts": "6bf4d5700cfad06846796290f3211614588a395cfc031bd08082ff9dbf4bd67a"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: apps/api/tests/inventory.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:apps/web/src/api/inventory.ts": {
+      "fingerprint": "4f98d51559285731f2376d5911bda6b93a265d79216daeb6f4378128efd2f9df",
+      "snapshot": {
+        "apps/web/src/api/inventory.ts": "4279fb59cdb3b23232256f30d861d07829979c765e17fd5d8778b603ec3571b2"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: apps/web/src/api/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:apps/web/src/pages/InventoryManagement.test.tsx": {
+      "fingerprint": "faebe2919e8d2eaffff50eb69c8edf56f3c719a287260d6d872f8bd91cfe9198",
+      "snapshot": {
+        "apps/web/src/pages/InventoryManagement.test.tsx": "ad7caea55ec6859ca8c228e2e2bab6be991c233caea6e8c10ea75e0fa4beaa95"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:apps/web/src/pages/InventoryManagement.tsx": {
+      "fingerprint": "1428418512fceb81a1605fadaa73f7343d2ecc56ab1c0c2145b09596602aead5",
+      "snapshot": {
+        "apps/web/src/pages/InventoryManagement.tsx": "7660be6901e3b47ea97c4d9a2aa75b464d7091048641f33da77b65cbff3a364a"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: apps/web/src/pages/InventoryManagement.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:apps/web/src/routes/_authenticated/inventory.tsx": {
+      "fingerprint": "b9d673f1f05b6f40641c3e89924f991af5b5fab4da57751f0890d4fccbcea82d",
+      "snapshot": {
+        "apps/web/src/routes/_authenticated/inventory.tsx": "3bb5a5f8486f3fd309fd8c1bd952c74ce8d668e977838594904eff768ed0557e"
+      },
+      "head": "2abce0702f1109064495e60673de567771e44338",
+      "outcome": "no-change",
+      "reason": "Add inventory asset register and precision label printing v1",
+      "evidence": [
+        "Changed: apps/web/src/routes/_authenticated/inventory.tsx at 2abce0702f1109064495e60673de567771e44338"
+      ]
+    },
+    "source:packages/contracts/src/inventory.ts": {
+      "fingerprint": "c7c8acd87b67e40a8c30ac819bbf3773440992a4c53963bbba287431830544eb",
+      "snapshot": {
+        "packages/contracts/src/inventory.ts": "a8ecba88342b32ecb6ea91fc76d8fe273f40acbd40e30ca09ab2d26dc518e512"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: packages/contracts/src/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:packages/db/src/s55-migration.sql": {
+      "fingerprint": "8cd40369805dbae738e37f6b35adeaed7917965bf7569dc209d47709f45c41da",
+      "snapshot": {
+        "packages/db/src/s55-migration.sql": "1b05c3e13faeb49ddda9133cee48ce8f34f68cd853936f1b05c4a0279711b5b2"
+      },
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "outcome": "no-change",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "evidence": [
+        "Changed: packages/db/src/s55-migration.sql at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     }
   }

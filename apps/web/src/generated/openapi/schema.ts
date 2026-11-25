@@ -980,86 +980,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/student-masters/{student_master_id}/identity-verifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStudent-mastersByStudent_master_idIdentity-verifications"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patchApiStudent-mastersByStudent_master_idIdentity-verifications"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/dapodik-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStudent-mastersByStudent_master_idDapodik-status"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patchApiStudent-mastersByStudent_master_idDapodik-status"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/iom-documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStudent-mastersByStudent_master_idIom-documents"];
-        put?: never;
-        post: operations["postApiStudent-mastersByStudent_master_idIom-documents"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch: operations["patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"];
-        trace?: never;
-    };
-    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/staff": {
         parameters: {
             query?: never;
@@ -1787,6 +1707,86 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/identity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIdentity-verifications"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/dapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idDapodik-status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idDapodik-status"];
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documents"];
+        put?: never;
+        post: operations["postApiStudent-mastersByStudent_master_idIom-documents"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/student-masters/{student_master_id}/iom-documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id"];
         trace?: never;
     };
     "/api/config/jenjang": {
@@ -6333,6 +6333,134 @@ export interface paths {
         put?: never;
         /** Apply controlled attendance-machine XLSX import */
         post: operations["applyAttendanceMachineImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiInventorySummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiInventoryAssets"];
+        put?: never;
+        post: operations["postApiInventoryAssets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiInventoryAssetsById"];
+        put: operations["putApiInventoryAssetsById"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/assets/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryAssetsBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/assets/{id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryAssetsByIdRetire"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/export/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiInventoryExportXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/labels/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryLabelsPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/labels/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryLabelsPdf"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12198,200 +12326,6 @@ export interface operations {
             };
         };
     };
-    "getApiStudent-mastersByStudent_master_idIdentity-verifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
-    };
-    "patchApiStudent-mastersByStudent_master_idIdentity-verifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    identifier_type: "NIK" | "KK";
-                    /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-                "application/x-www-form-urlencoded": {
-                    /** @enum {string} */
-                    identifier_type: "NIK" | "KK";
-                    /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-                "multipart/form-data": {
-                    /** @enum {string} */
-                    identifier_type: "NIK" | "KK";
-                    /** @enum {string} */
-                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-            };
-        };
-        responses: never;
-    };
-    "getApiStudent-mastersByStudent_master_idDapodik-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
-    };
-    "patchApiStudent-mastersByStudent_master_idDapodik-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
-                    external_reference?: (string | null) | null;
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-                "application/x-www-form-urlencoded": {
-                    /** @enum {string} */
-                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
-                    external_reference?: (string | null) | null;
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-                "multipart/form-data": {
-                    /** @enum {string} */
-                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
-                    external_reference?: (string | null) | null;
-                    notes?: (string | null) | null;
-                    correction_reason?: (string | null) | null;
-                };
-            };
-        };
-        responses: never;
-    };
-    "getApiStudent-mastersByStudent_master_idIom-documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
-    };
-    "postApiStudent-mastersByStudent_master_idIom-documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @enum {string} */
-                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
-                    description: string;
-                    /**
-                     * Format: binary
-                     * @default File
-                     */
-                    file: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    /** @enum {string} */
-                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
-                    description: string;
-                    /**
-                     * Format: binary
-                     * @default File
-                     */
-                    file: string;
-                };
-                "multipart/form-data": {
-                    /** @enum {string} */
-                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
-                    description: string;
-                    /**
-                     * Format: binary
-                     * @default File
-                     */
-                    file: string;
-                };
-            };
-        };
-        responses: never;
-    };
-    "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-                doc_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    description: string;
-                };
-                "application/x-www-form-urlencoded": {
-                    description: string;
-                };
-                "multipart/form-data": {
-                    description: string;
-                };
-            };
-        };
-        responses: never;
-    };
-    "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                student_master_id: string;
-                doc_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: never;
-    };
     list_staff_api_staff_get: {
         parameters: {
             query?: {
@@ -14657,6 +14591,200 @@ export interface operations {
                 content?: never;
             };
         };
+    };
+    "getApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIdentity-verifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    identifier_type: "NIK" | "KK";
+                    /** @enum {string} */
+                    verification_status: "UNVERIFIED" | "IDENTIFIER_ENTERED" | "VERIFIED" | "NEEDS_CORRECTION";
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idDapodik-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    status: "NOT_STARTED" | "PENDING_EXTERNAL_PROCESSING" | "ENTERED" | "SYNCHRONIZED" | "NEEDS_CORRECTION";
+                    external_reference?: (string | null) | null;
+                    notes?: (string | null) | null;
+                    correction_reason?: (string | null) | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "postApiStudent-mastersByStudent_master_idIom-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+                "multipart/form-data": {
+                    /** @enum {string} */
+                    iom_type: "TRANSFER_IN" | "TRANSFER_OUT";
+                    description: string;
+                    /**
+                     * Format: binary
+                     * @default File
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    "getApiStudent-mastersByStudent_master_idIom-documentsByDoc_idDownload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    "patchApiStudent-mastersByStudent_master_idIom-documentsByDoc_id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                student_master_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    description: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    description: string;
+                };
+                "multipart/form-data": {
+                    description: string;
+                };
+            };
+        };
+        responses: never;
     };
     get_jenjang_configs_api_config_jenjang_get: {
         parameters: {
@@ -24665,6 +24793,407 @@ export interface operations {
                 content?: never;
             };
         };
+    };
+    getApiInventorySummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    getApiInventoryAssets: {
+        parameters: {
+            query?: {
+                school_unit_id?: string;
+                current_unit_id?: string;
+                category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                status?: "ACTIVE" | "RETIRED";
+                budget_year?: string;
+                search?: string;
+                limit?: string;
+                offset?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    postApiInventoryAssets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "multipart/form-data": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    getApiInventoryAssetsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    putApiInventoryAssetsById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    item_name?: string;
+                    /** @enum {string} */
+                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    current_unit_id?: number | null;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year?: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    item_name?: string;
+                    /** @enum {string} */
+                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    current_unit_id?: number | null;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year?: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "multipart/form-data": {
+                    item_name?: string;
+                    /** @enum {string} */
+                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    current_unit_id?: number | null;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year?: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    postApiInventoryAssetsBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    quantity: number;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price_per_unit?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "application/x-www-form-urlencoded": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    quantity: number;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price_per_unit?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+                "multipart/form-data": {
+                    school_unit_id: number;
+                    current_unit_id?: number | null;
+                    /** @enum {string} */
+                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    item_name: string;
+                    quantity: number;
+                    brand?: string | null;
+                    model?: string | null;
+                    serial_number?: string | null;
+                    location?: string | null;
+                    /** @enum {string} */
+                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    budget_year: number;
+                    arkas_account_code?: string | null;
+                    purchase_document_reference?: string | null;
+                    acquisition_date?: string | null;
+                    price_per_unit?: number | null;
+                    /** @enum {string} */
+                    condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: never;
+    };
+    postApiInventoryAssetsByIdRetire: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    retired_reason: string;
+                    retired_at?: string;
+                };
+                "application/x-www-form-urlencoded": {
+                    retired_reason: string;
+                    retired_at?: string;
+                };
+                "multipart/form-data": {
+                    retired_reason: string;
+                    retired_at?: string;
+                };
+            };
+        };
+        responses: never;
+    };
+    getApiInventoryExportXlsx: {
+        parameters: {
+            query?: {
+                school_unit_id?: string;
+                current_unit_id?: string;
+                category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
+                status?: "ACTIVE" | "RETIRED";
+                budget_year?: string;
+                search?: string;
+                limit?: string;
+                offset?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: never;
+    };
+    postApiInventoryLabelsPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+                "application/x-www-form-urlencoded": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+                "multipart/form-data": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+            };
+        };
+        responses: never;
+    };
+    postApiInventoryLabelsPdf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+                "application/x-www-form-urlencoded": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+                "multipart/form-data": {
+                    asset_ids: string[];
+                    /** @enum {string} */
+                    template_id: "103" | "107";
+                    starting_index?: number;
+                    offset_x_mm?: number;
+                    offset_y_mm?: number;
+                    monochrome?: boolean;
+                };
+            };
+        };
+        responses: never;
     };
     backup_status_api_admin_backups_status_get: {
         parameters: {

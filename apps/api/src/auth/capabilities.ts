@@ -19,6 +19,7 @@ const ADMIN_CAPABILITIES = [
   "destructive_data_reset",
   "view_sensitive_student_fields", "view_staff", "view_staff_analytics", "view_staff_audit", "view_staff_sensitive", "view_student",
   "view_student_audit",
+  "view_inventory", "manage_inventory", "export_inventory",
 ] as const;
 
 const STAFF_CAPABILITIES = [
@@ -28,7 +29,7 @@ const STAFF_CAPABILITIES = [
   "request_assigned_attendance_correction", "request_attendance_correction", "resolve_attendance_followup",
   "update_attendance_followup", "view_assigned_attendance", "view_attendance", "view_attendance_corrections",
   "view_attendance_followup_audit", "view_attendance_followups", "view_early_departure", "view_progression_preview",
-  "view_student",
+  "view_student", "view_inventory",
 ] as const;
 
 export function capabilitiesForRole(role: string): string[] {

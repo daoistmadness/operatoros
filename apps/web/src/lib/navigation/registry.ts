@@ -116,6 +116,7 @@ export const navigationGroups: readonly NavigationGroup[] = [
       { name: 'Employee Directory', path: '/staff', icon: UsersIcon, keywords: ['staff', 'employees'] },
       { name: 'Staff Monthly Activity', path: '/staff/monthly-activities', icon: CalendarCheck, keywords: ['staff activity', 'monthly staff'] },
       { name: 'Monthly UPP Reports', path: '/reports/upp', icon: FileText, keywords: ['upp report'] },
+      { name: 'Asset Inventory', path: '/inventory', icon: ClipboardList, keywords: ['inventory', 'assets', 'labels', 'arkas', 'bos'] },
       { name: 'Settings', path: '/settings', icon: SettingsIcon, nested: true, keywords: ['preferences', 'configuration'] },
     ],
   },

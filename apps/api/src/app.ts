@@ -53,6 +53,7 @@ import { machineAttendancePreviewRoutes } from "./domains/machine-attendance-pre
 import { staffMonthlyActivityRoutes } from "./domains/staff-monthly-activities";
 import { uppReportRoutes } from "./domains/upp-reports";
 import { registerStudentAdmin } from "./domains/student-admin";
+import { inventoryRoutes } from "./domains/inventory";
 import { openApiDocumentation } from "./openapi-contract";
 
 export interface AppError { error: { code: string; message: string } }
@@ -141,6 +142,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     dailyAttendanceRoutes(app, context);
     attendanceCalendarRoutes(app, context);
     machineAttendancePreviewRoutes(app, context);
+    inventoryRoutes(app, context);
     const safetyConfig = {
       backupDir: _config.backupDir ?? context.config.auditDir,
       destructiveOperationsEnabled: _config.destructiveOperationsEnabled ?? false,

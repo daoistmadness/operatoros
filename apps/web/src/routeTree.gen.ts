@@ -20,6 +20,7 @@ import { Route as AuthenticatedAttendanceReviewRouteImport } from './routes/_aut
 import { Route as AuthenticatedDataPortabilityRouteImport } from './routes/_authenticated/data-portability'
 import { Route as AuthenticatedEnrollmentRouteImport } from './routes/_authenticated/enrollment'
 import { Route as AuthenticatedGradesRouteRouteImport } from './routes/_authenticated/grades/route'
+import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedMappingRouteImport } from './routes/_authenticated/mapping'
 import { Route as AuthenticatedReportsRouteRouteImport } from './routes/_authenticated/reports/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
@@ -139,6 +140,11 @@ const AuthenticatedGradesRouteRoute =
     path: '/grades',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedInventoryRoute = AuthenticatedInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMappingRoute = AuthenticatedMappingRouteImport.update({
   id: '/mapping',
   path: '/mapping',
@@ -493,6 +499,7 @@ export interface FileRoutesByFullPath {
   '/attendance-review': typeof AuthenticatedAttendanceReviewRoute
   '/data-portability': typeof AuthenticatedDataPortabilityRoute
   '/enrollment': typeof AuthenticatedEnrollmentRoute
+  '/inventory': typeof AuthenticatedInventoryRoute
   '/mapping': typeof AuthenticatedMappingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/teacher-class-assignments': typeof AuthenticatedTeacherClassAssignmentsRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByTo {
   '/attendance-review': typeof AuthenticatedAttendanceReviewRoute
   '/data-portability': typeof AuthenticatedDataPortabilityRoute
   '/enrollment': typeof AuthenticatedEnrollmentRoute
+  '/inventory': typeof AuthenticatedInventoryRoute
   '/mapping': typeof AuthenticatedMappingRoute
   '/setup': typeof AuthenticatedSetupRoute
   '/teacher-class-assignments': typeof AuthenticatedTeacherClassAssignmentsRoute
@@ -627,6 +635,7 @@ export interface FileRoutesById {
   '/_authenticated/attendance-review': typeof AuthenticatedAttendanceReviewRoute
   '/_authenticated/data-portability': typeof AuthenticatedDataPortabilityRoute
   '/_authenticated/enrollment': typeof AuthenticatedEnrollmentRoute
+  '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/mapping': typeof AuthenticatedMappingRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
   '/_authenticated/teacher-class-assignments': typeof AuthenticatedTeacherClassAssignmentsRoute
@@ -700,6 +709,7 @@ export interface FileRouteTypes {
     | '/attendance-review'
     | '/data-portability'
     | '/enrollment'
+    | '/inventory'
     | '/mapping'
     | '/setup'
     | '/teacher-class-assignments'
@@ -763,6 +773,7 @@ export interface FileRouteTypes {
     | '/attendance-review'
     | '/data-portability'
     | '/enrollment'
+    | '/inventory'
     | '/mapping'
     | '/setup'
     | '/teacher-class-assignments'
@@ -833,6 +844,7 @@ export interface FileRouteTypes {
     | '/_authenticated/attendance-review'
     | '/_authenticated/data-portability'
     | '/_authenticated/enrollment'
+    | '/_authenticated/inventory'
     | '/_authenticated/mapping'
     | '/_authenticated/setup'
     | '/_authenticated/teacher-class-assignments'
@@ -972,6 +984,13 @@ declare module '@tanstack/react-router' {
       path: '/grades'
       fullPath: '/grades'
       preLoaderRoute: typeof AuthenticatedGradesRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/inventory': {
+      id: '/_authenticated/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AuthenticatedInventoryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/mapping': {
@@ -1553,6 +1572,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAttendanceReviewRoute: typeof AuthenticatedAttendanceReviewRoute
   AuthenticatedDataPortabilityRoute: typeof AuthenticatedDataPortabilityRoute
   AuthenticatedEnrollmentRoute: typeof AuthenticatedEnrollmentRoute
+  AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedMappingRoute: typeof AuthenticatedMappingRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
   AuthenticatedTeacherClassAssignmentsRoute: typeof AuthenticatedTeacherClassAssignmentsRoute
@@ -1593,6 +1613,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAttendanceReviewRoute: AuthenticatedAttendanceReviewRoute,
   AuthenticatedDataPortabilityRoute: AuthenticatedDataPortabilityRoute,
   AuthenticatedEnrollmentRoute: AuthenticatedEnrollmentRoute,
+  AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedMappingRoute: AuthenticatedMappingRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
   AuthenticatedTeacherClassAssignmentsRoute:

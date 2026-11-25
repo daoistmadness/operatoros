@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase } from "../src";
 import { openSqliteConnection } from "../src/sqlite-client";
 
-describe("SQLite S5.4 fresh bootstrap", () => {
+describe("SQLite S5.5 fresh bootstrap", () => {
   it("creates a startup-valid database and enforces approved identities", () => {
     const root = mkdtempSync(join(tmpdir(), "operatoros-ts-bootstrap-"));
     const path = join(root, "operatoros.sqlite");
@@ -29,6 +29,9 @@ describe("SQLite S5.4 fresh bootstrap", () => {
         ]);
         expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('bosp_annual_reminder_settings','bosp_reminder_acknowledgments') ORDER BY name").all()).toEqual([
           { name: "bosp_annual_reminder_settings" }, { name: "bosp_reminder_acknowledgments" },
+        ]);
+        expect(db.query("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('inventory_assets','inventory_asset_sequences') ORDER BY name").all()).toEqual([
+          { name: "inventory_asset_sequences" }, { name: "inventory_assets" },
         ]);
         expect(db.query("SELECT advance_notice_days FROM bosp_annual_reminder_settings WHERE id=1").get()).toEqual({ advance_notice_days: 60 });
         const unitId = Number(db.run("INSERT INTO school_units (name) VALUES ('Synthetic UPP Unit')").lastInsertRowid);

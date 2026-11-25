@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT, S54_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
 
@@ -16,6 +16,7 @@ const s50Sql = readFileSync(new URL("../src/s50-migration.sql", import.meta.url)
 const s51Sql = readFileSync(new URL("../src/s51-migration.sql", import.meta.url), "utf8");
 const s52Sql = readFileSync(new URL("../src/s52-migration.sql", import.meta.url), "utf8");
 const s53Sql = readFileSync(new URL("../src/s53-migration.sql", import.meta.url), "utf8");
+const s54Sql = readFileSync(new URL("../src/s54-migration.sql", import.meta.url), "utf8");
 const variantB = await Bun.file(new URL("./fixtures/s46-variant-b.json", import.meta.url)).json() as { targetObjects: string[]; fingerprint: string };
 
 function withDatabases(run: (root: string, source: string, fresh: string) => void): void {
@@ -372,6 +373,34 @@ describe("Bun S4.6 through S5.4 migrations", () => {
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
     } finally { migrated.close(); fresh.close(); }
   }));
+
+  it("upgrades an S5.4 database to S5.5 and preserves reminder and inventory structure", () => withDatabases((_, path, freshPath) => {
+    const db = openSqliteConnection(path).client;
+    db.exec("PRAGMA foreign_keys=ON");
+    db.exec(s47Sql);
+    db.exec(s48Sql);
+    db.exec(s49Sql);
+    db.exec(s50Sql);
+    db.exec(s51Sql);
+    db.exec(s52Sql);
+    db.exec(s53Sql);
+    db.exec(s54Sql);
+    expect(schemaFingerprint(db)).toBe(S54_SCHEMA_FINGERPRINT);
+    db.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES ('20261027_s54','20261027_s53',?,'{}','SYNTHETIC_FIXTURE','2026-10-27T00:00:00Z')", [S54_SCHEMA_FINGERPRINT]);
+    db.close();
+
+    createFreshDatabase(freshPath);
+    expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+    expect(migrateExistingDatabase(path)).toBe("NOOP");
+    const migrated = openDatabase(path);
+    const fresh = openDatabase(freshPath, { readonly: true });
+    try {
+      expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+      expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s54" });
+      expect(migrated.client.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND name LIKE 'inventory_%'").get()).toEqual({ count: 2 });
+      expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { migrated.close(); fresh.close(); }
+  }), 20000);
 
   it("transforms synthetic attendance, preserves identities, and matches fresh structure", () => withDatabases((_, path, freshPath) => {
     const db = source(path);

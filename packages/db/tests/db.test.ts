@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { assertDatabasePath, assertOrdinarySchemaObjects, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, schemaFingerprint, validateDatabase } from "../src/index";
-import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema } from "../src/bootstrap";
+import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
 import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
@@ -53,9 +53,9 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(103);
+    expect(REQUIRED_TABLES.length).toBe(105);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
-    for (const domain of ["staff_members", "school_units", "staff_school_unit_assignment_versions", "staff_monthly_activity_periods", "staff_monthly_activities", "staff_monthly_activity_history", "dismissal_policies", "teacher_class_assignments", "student_identity_verifications", "student_dapodik_registrations", "student_iom_documents", "bosp_annual_reminder_settings", "bosp_reminder_acknowledgments"]) {
+    for (const domain of ["staff_members", "school_units", "staff_school_unit_assignment_versions", "staff_monthly_activity_periods", "staff_monthly_activities", "staff_monthly_activity_history", "dismissal_policies", "teacher_class_assignments", "student_identity_verifications", "student_dapodik_registrations", "student_iom_documents", "bosp_annual_reminder_settings", "bosp_reminder_acknowledgments", "inventory_assets", "inventory_asset_sequences"]) {
       expect(REQUIRED_TABLES).toContain(domain);
     }
     expect(declared.length).toBeGreaterThan(0);
@@ -85,6 +85,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     installS52StudentAdminSchema(client);
     installS53StudentVerificationSchema(client);
     installS54BospReminderSchema(client);
+    installS55InventorySchema(client);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', 'test', ?)",
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"]);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, ?, ?, '{}', 'test', ?)",
@@ -142,6 +143,40 @@ describe("@operatoros/db existing-schema validation authority", () => {
       expect(() => client.run("DELETE FROM staff_monthly_activity_history WHERE activity_id=?", [activityId])).toThrow("STAFF_MONTHLY_ACTIVITY_HISTORY_IMMUTABLE");
       expect(() => client.run("DELETE FROM staff_monthly_activities WHERE id=?", [activityId])).toThrow("STAFF_MONTHLY_ACTIVITY_IMMUTABLE");
       expect(() => client.run("DELETE FROM staff_monthly_activity_periods WHERE id=?", [periodId])).toThrow("STAFF_MONTHLY_ACTIVITY_PERIOD_IMMUTABLE");
+    } finally {
+      client.close();
+    }
+  });
+
+  it("keeps inventory assets append-only and protects asset_code immutability", () => {
+    const { client } = openSqliteConnection(":memory:");
+    installS47Schema(client);
+    installS48EmployeeSchema(client);
+    installS49SchoolUnitSchema(client);
+    installS50StaffMonthlyActivitySchema(client);
+    installS51UppReportsSchema(client);
+    installS52StudentAdminSchema(client);
+    installS53StudentVerificationSchema(client);
+    installS54BospReminderSchema(client);
+    installS55InventorySchema(client);
+    try {
+      client.run("INSERT INTO school_units (id, name) VALUES (1, 'SD Edelweiss')");
+      client.run(
+        "INSERT INTO inventory_assets (id, asset_code, school_unit_id, category, item_name, funding_source, budget_year) " +
+        "VALUES ('ast-1', 'SD-IT-0001', 1, 'IT', 'Laptop Guru', 'BOS', 2026)"
+      );
+      // Verify no delete
+      expect(() => client.run("DELETE FROM inventory_assets WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_NO_DELETE");
+      // Verify immutable code and origin acquiring unit
+      expect(() => client.run("UPDATE inventory_assets SET asset_code = 'SD-IT-0002' WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
+      expect(() => client.run("UPDATE inventory_assets SET school_unit_id = 2 WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
+      // Mutable fields like category, current_unit_id, location, condition, notes work
+      client.run("UPDATE inventory_assets SET category = 'FRN', current_unit_id = 2, location = 'Lab Komputer', condition = 'RUSAK_RINGAN' WHERE id = 'ast-1'");
+      const updated = client.query("SELECT category, current_unit_id, location, condition FROM inventory_assets WHERE id = 'ast-1'").get() as any;
+      expect(updated.category).toBe("FRN");
+      expect(updated.current_unit_id).toBe(2);
+      expect(updated.location).toBe("Lab Komputer");
+      expect(updated.condition).toBe("RUSAK_RINGAN");
     } finally {
       client.close();
     }
