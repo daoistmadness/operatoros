@@ -4,7 +4,8 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Delegate synthetic persistence check to root in Docker candidate consumer when database directory is container-owned.
+- Consolidate production runbook and add concurrent locking, pre-deploy SQLite integrity verification, and project isolation to canonical Docker deployment tooling.
+- Delegate synthetic persistence check to root in Docker candidate consumer when database directory is container-owned. (#413)
 - Pass Docker container engine to embedded runtime probe in Docker candidate consumer. (#412)
 - Pin Caddy reverse proxy to 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings. (#411)
 - Prune development TypeScript compiler binaries from production API container to eliminate unresolved Trivy findings. (#410)
