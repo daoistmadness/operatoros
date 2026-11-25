@@ -2958,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "6f5eb71e25f4a10ced1c1bb6ab4f9f3a637ca2073800db812413e84f811cec7b",
+      "fingerprint": "a9e452ecbe9b53bc39776e5234691271df457514e3c669ac43bc301f7e343df5",
       "snapshot": {
-        "CHANGELOG.md": "4749c0db410b587ae5ce081b47cbb4261163fcc9a0086d7d0245fb99e97b8c85"
+        "CHANGELOG.md": "007fd7603d510ebb0e1c4f723ea6663122cf129f910a5260d7b8e7f355869311"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Operational migration wrapper and compose image tag sync",
       "evidence": [
-        "Changed: CHANGELOG.md at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: CHANGELOG.md at e85eed8e45c2863deaf77a0b6be63f663997305d"
       ]
     },
     "source:COMMANDS.md": {
@@ -5396,15 +5396,15 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "1f3cfbcb2fca0a39478d0c98853c653da942536d1b595f4ffed9e9f2bcc40834",
+      "fingerprint": "7b7434371f5f55bf14d2c31a5cfe98467fa775ed4fc9fe1e4ff005540a1a8151",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "fa37c209472df910288735ba6ef64b6248bdfb892c883f7e2fedb18e16ee9aaa"
+        "packages/db/tests/db.test.ts": "9e42b19c7e2d793d45c557f956e99212a05a2e6a246b323687c8ec4a628f1acc"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Operational migration wrapper and compose image tag sync",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: packages/db/tests/db.test.ts at e85eed8e45c2863deaf77a0b6be63f663997305d"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
@@ -11405,15 +11405,15 @@
       ]
     },
     "source:scripts/docker-deploy.sh": {
-      "fingerprint": "ef6434bc7779985d403ae974bdae8671c8ca4dfc46b32d7fb8330f5f9a885663",
+      "fingerprint": "af8beceedc2d8caadb4cc28db08a6eec430dc7cfec0dd93db26bdab1bbafe3d2",
       "snapshot": {
-        "scripts/docker-deploy.sh": "bfdd375bb8c27fb95607637d861266011156eb98689710fc69e110a2a8398a35"
+        "scripts/docker-deploy.sh": "c315f33ee541fd6a91a1f77dcfec09303a5e7683cf2bfb2864e678eb1fa67708"
       },
-      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
       "outcome": "no-change",
-      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "reason": "Operational migration wrapper and compose image tag sync",
       "evidence": [
-        "Changed: scripts/docker-deploy.sh at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+        "Changed: scripts/docker-deploy.sh at e85eed8e45c2863deaf77a0b6be63f663997305d"
       ]
     },
     "source:scripts/podman-dev.sh": {
@@ -11453,15 +11453,15 @@
       ]
     },
     "source:scripts/tests/test_docker_deploy.py": {
-      "fingerprint": "bb940e4db6048c9c19db2f425338a65a622c17eb07498c1b5a937b6192ef3fe4",
+      "fingerprint": "886044daca055530ec73a85db7dacf033c734cd28acfb7900bb116046f636de2",
       "snapshot": {
-        "scripts/tests/test_docker_deploy.py": "5019c06a28bef505282f1329bccf3af3df6983896a8cb19c43dcc4e1ff962041"
+        "scripts/tests/test_docker_deploy.py": "7d704597fa869f98d807265a06712c113d8986259ee2a6d715a6eab806ee9b62"
       },
-      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
       "outcome": "no-change",
-      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "reason": "Operational migration wrapper and compose image tag sync",
       "evidence": [
-        "Changed: scripts/tests/test_docker_deploy.py at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+        "Changed: scripts/tests/test_docker_deploy.py at e85eed8e45c2863deaf77a0b6be63f663997305d"
       ]
     },
     "source:scripts/verify-rollback-schema.py": {
@@ -11606,6 +11606,18 @@
       "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
         "Changed: packages/contracts/src/inventory-labels.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+      ]
+    },
+    "source:packages/db/src/db-cli.ts": {
+      "fingerprint": "8fa2fa7ce14b12468fbe0c42a97ff093867a59e6ef995488bbaa6008c722c9b1",
+      "snapshot": {
+        "packages/db/src/db-cli.ts": "b99d89819af1561f30f770a487dfbe2e0357892020ebea49d681f19241078f0c"
+      },
+      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
+      "outcome": "no-change",
+      "reason": "Operational migration wrapper and compose image tag sync",
+      "evidence": [
+        "Changed: packages/db/src/db-cli.ts at e85eed8e45c2863deaf77a0b6be63f663997305d"
       ]
     }
   }

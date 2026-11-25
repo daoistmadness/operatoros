@@ -1,4 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { assertDatabasePath, assertOrdinarySchemaObjects, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, schemaFingerprint, validateDatabase } from "../src/index";
 import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
@@ -204,6 +207,54 @@ describe("@operatoros/db existing-schema validation authority", () => {
       expect(() => validateDatabase(client)).toThrow(/staff_members/);
     } finally {
       client.close();
+    }
+  });
+
+  it("enforces wrapper and target authorization on db-cli migrate-operational", () => {
+    const dir = mkdtempSync(join(tmpdir(), "operatoros-db-cli-op-"));
+    try {
+      const boot = Bun.spawnSync(["bun", "src/db-cli.ts", "bootstrap", "--data-dir", dir], {
+        cwd: join(import.meta.dir, ".."),
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      expect(boot.exitCode).toBe(0);
+
+      // Without wrapper env -> rejected
+      const noWrapper = Bun.spawnSync(
+        ["bun", "src/db-cli.ts", "migrate-operational", "--data-dir", dir, "--authorize-target", CURRENT_SCHEMA_VERSION],
+        { cwd: join(import.meta.dir, ".."), stdout: "pipe", stderr: "pipe" },
+      );
+      expect(noWrapper.exitCode).toBe(1);
+      expect(noWrapper.stderr.toString()).toContain("OPERATIONAL_MIGRATION_WRAPPER_REQUIRED");
+
+      // With wrapper env but wrong target -> rejected
+      const wrongTarget = Bun.spawnSync(
+        ["bun", "src/db-cli.ts", "migrate-operational", "--data-dir", dir, "--authorize-target", "20261027_s54"],
+        {
+          cwd: join(import.meta.dir, ".."),
+          env: { ...process.env, OPERATOROS_OPERATIONAL_MIGRATION_WRAPPER: "docker-deploy-v1" },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      expect(wrongTarget.exitCode).toBe(1);
+      expect(wrongTarget.stderr.toString()).toContain("OPERATIONAL_MIGRATION_TARGET_MISMATCH");
+
+      // With wrapper env and exact target -> NOOP on current schema
+      const valid = Bun.spawnSync(
+        ["bun", "src/db-cli.ts", "migrate-operational", "--data-dir", dir, "--authorize-target", CURRENT_SCHEMA_VERSION],
+        {
+          cwd: join(import.meta.dir, ".."),
+          env: { ...process.env, OPERATOROS_OPERATIONAL_MIGRATION_WRAPPER: "docker-deploy-v1" },
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      expect(valid.exitCode).toBe(0);
+      expect(valid.stdout.toString()).toContain(`NOOP ${CURRENT_SCHEMA_VERSION}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

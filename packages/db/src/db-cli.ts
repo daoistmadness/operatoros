@@ -7,9 +7,25 @@ import { CURRENT_SCHEMA_VERSION } from "./manifest";
 import { migrateExistingDatabase } from "./migrate-existing";
 
 try {
-  const [action, flag, dataDir] = process.argv.slice(2);
-  if (!(["bootstrap", "migrate-existing", "validate"].includes(action ?? "")) || flag !== "--data-dir" || !dataDir || process.argv.length !== 5) {
-    throw new Error("Usage: db-cli.ts <bootstrap|migrate-existing|validate> --data-dir <absolute-directory>");
+  const [action, flag, dataDir, authFlag, authorizedTarget] = process.argv.slice(2);
+  const isOperational = action === "migrate-operational";
+  const validBaseArgs =
+    ["bootstrap", "migrate-existing", "validate"].includes(action ?? "") &&
+    flag === "--data-dir" &&
+    Boolean(dataDir) &&
+    process.argv.length === 5;
+  const validOperationalArgs =
+    isOperational &&
+    flag === "--data-dir" &&
+    Boolean(dataDir) &&
+    authFlag === "--authorize-target" &&
+    Boolean(authorizedTarget) &&
+    process.argv.length === 7;
+
+  if (!validBaseArgs && !validOperationalArgs) {
+    throw new Error(
+      "Usage: db-cli.ts <bootstrap|migrate-existing|validate> --data-dir <absolute-directory> | migrate-operational --data-dir <absolute-directory> --authorize-target <schema-version>",
+    );
   }
   const paths = resolveOperatorOSPaths({ env: { OPERATOROS_DATA_DIR: dataDir } });
   assertDatabaseMigrationSafe(paths);
@@ -20,6 +36,17 @@ try {
   } else if (action === "migrate-existing") {
     if (!existsSync(paths.dataDir) || !realpathSync(paths.dataDir).startsWith(`${realpathSync(tmpdir())}/`)) {
       throw new Error("OPERATIONAL_MIGRATION_WRAPPER_REQUIRED");
+    }
+    console.log(`${migrateExistingDatabase(paths.databasePath)} ${CURRENT_SCHEMA_VERSION}`);
+  } else if (isOperational) {
+    if (process.env.OPERATOROS_OPERATIONAL_MIGRATION_WRAPPER !== "docker-deploy-v1") {
+      throw new Error("OPERATIONAL_MIGRATION_WRAPPER_REQUIRED");
+    }
+    if (authorizedTarget !== CURRENT_SCHEMA_VERSION) {
+      throw new Error(`OPERATIONAL_MIGRATION_TARGET_MISMATCH: expected=${CURRENT_SCHEMA_VERSION} got=${authorizedTarget}`);
+    }
+    if (!existsSync(paths.databasePath)) {
+      throw new Error(`OPERATIONAL_DATABASE_MISSING: ${paths.databasePath}`);
     }
     console.log(`${migrateExistingDatabase(paths.databasePath)} ${CURRENT_SCHEMA_VERSION}`);
   } else {

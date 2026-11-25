@@ -363,5 +363,50 @@ class TestDeploymentLockReentrancy(unittest.TestCase):
         self.assertIn("REENTRANT_SUCCESS", res.stdout)
 
 
+class TestOperationalMigrationAndComposeSync(unittest.TestCase):
+    """Test operational migration wrapper safeguards and compose image tag synchronization."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="operatoros-test-sync-")
+        self.work = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_sync_compose_images_updates_hardcoded_candidate_tags(self):
+        compose_path = self.work / "docker-compose.yml"
+        compose_path.write_text(
+            "services:\n"
+            "  operatoros-api:\n"
+            "    image: localhost/operatoros-api:candidate-oldsha-1-1\n"
+            "  operatoros-caddy:\n"
+            "    image: localhost/operatoros-caddy:candidate-oldsha-1-1\n",
+            encoding="utf-8",
+        )
+        script = f"""
+        source "{DEPLOY_SCRIPT}"
+        sync_compose_images "{compose_path}" "localhost/operatoros-api:candidate-newsha-2-1" "localhost/operatoros-caddy:candidate-newsha-2-1"
+        """
+        res = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        updated = compose_path.read_text(encoding="utf-8")
+        self.assertIn("localhost/operatoros-api:candidate-newsha-2-1", updated)
+        self.assertIn("localhost/operatoros-caddy:candidate-newsha-2-1", updated)
+        self.assertNotIn("oldsha", updated)
+
+    def test_backup_sqlite_hot_creates_verified_backup(self):
+        data_dir = self.work / "data"
+        db_path = data_dir / "operatoros.sqlite"
+        create_synthetic_database(db_path, ["20261027_s54"])
+        script = f"""
+        source "{DEPLOY_SCRIPT}"
+        backup_sqlite_hot "{data_dir}" "pre_migrate_20261125_s55"
+        """
+        res = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        backups = list((data_dir / "backups").glob("pre_migrate_20261125_s55_*.sqlite3"))
+        self.assertEqual(len(backups), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
