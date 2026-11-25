@@ -9,6 +9,11 @@ import {
   UpdateAssetRequest,
   RetireAssetRequest,
   LabelPrintRequest,
+  LabelCalibrationRequest,
+  getLabelTemplate,
+  getRegisteredLabelTemplates,
+  paginateLabelItems,
+  validateCalibrationOffsets,
   type AssetDtoType,
   type AssetCategoryDto,
   type FundingSourceDto,
@@ -18,7 +23,7 @@ import {
 import { randomUUID } from "node:crypto";
 import {
   generateAssetLabelsPdf,
-  LABEL_TEMPLATES,
+  generateCalibrationPdf,
   type LabelAssetItem,
 } from "./inventory-labels";
 import {
@@ -843,12 +848,45 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     }
   }, { query: AssetQuery });
 
+  app.get("/api/inventory/labels/templates", ({ set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
+    if (!user) return { detail: "Authentication required" };
+
+    return {
+      items: getRegisteredLabelTemplates(),
+    };
+  });
+
   app.post("/api/inventory/labels/preview", ({ body, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
     if (!user) return { detail: "Authentication required" };
 
+    const template = getLabelTemplate(body.template_id);
+    if (!template) {
+      set.status = 400;
+      return { detail: `Unknown label template: ${body.template_id}` };
+    }
+
+    const startingIndex = body.starting_index ?? 0;
+    if (startingIndex < 0 || startingIndex >= template.slotsPerPage) {
+      set.status = 400;
+      return {
+        detail: `Invalid starting_index ${startingIndex} for template ${template.id} (valid: 0..${template.slotsPerPage - 1})`,
+      };
+    }
+
+    try {
+      validateCalibrationOffsets(
+        template,
+        body.offset_x_mm ?? template.defaultOffsetXMm,
+        body.offset_y_mm ?? template.defaultOffsetYMm,
+      );
+    } catch (err: any) {
+      set.status = 400;
+      return { detail: err.message };
+    }
+
     const db = context.database.client;
-    const template = (LABEL_TEMPLATES as any)[body.template_id] ?? LABEL_TEMPLATES["103"];
     const placeholders = body.asset_ids.map(() => "?").join(", ");
     const rows = db.query(
       `SELECT a.id, a.asset_code, a.item_name, a.category, a.brand, a.location, a.funding_source, a.budget_year, a.condition, u.name AS school_unit_name
@@ -861,54 +899,79 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const assetMap = new Map(rows.map((r) => [r.id, r]));
     const assets = body.asset_ids.map((id: string) => assetMap.get(id)).filter(Boolean) as Row[];
 
-    const slotsPerPage = template.columns * template.rows;
-    const startingIndex = Math.min(Math.max(body.starting_index ?? 0, 0), slotsPerPage - 1);
-    const totalSlotsNeeded = startingIndex + assets.length;
-    const totalPages = Math.ceil(totalSlotsNeeded / slotsPerPage) || 1;
+    const pages = paginateLabelItems(template, assets, startingIndex);
+    const items = pages.flatMap((page) =>
+      page.slots.map(({ slot, item: asset }) => ({
+        page_number: page.pageNumber,
+        slot_index: slot.index,
+        asset_code: asset.asset_code,
+        item_name: asset.item_name,
+        school_unit_name: asset.school_unit_name,
+      })),
+    );
 
     return {
       template: {
         id: template.id,
         name: template.name,
+        family: template.family,
         columns: template.columns,
         rows: template.rows,
-        slots_per_page: slotsPerPage,
-        label_width_mm: template.id === "103" ? 64 : 50,
-        label_height_mm: template.id === "103" ? 32 : 18,
+        slots_per_page: template.slotsPerPage,
+        page_width_mm: template.pageWidthMm,
+        page_height_mm: template.pageHeightMm,
+        orientation: template.orientation,
+        label_width_mm: template.labelWidthMm,
+        label_height_mm: template.labelHeightMm,
+        supports_cutting_guides: template.supportsCuttingGuides,
+        verification_status: template.verificationStatus,
       },
       total_assets: assets.length,
       starting_index: startingIndex,
-      total_pages: totalPages,
-      items: assets.map((asset, slotOffset) => ({
-        slot_index: startingIndex + slotOffset,
-        asset_code: asset.asset_code,
-        item_name: asset.item_name,
-        school_unit_name: asset.school_unit_name,
+      total_pages: pages.length,
+      items,
+      pages: pages.map((page) => ({
+        page_number: page.pageNumber,
+        start_slot: page.startSlot,
+        labels_on_page: page.slots.length,
+        labels: page.slots.map(({ slot, item: asset }) => ({
+          slot_index: slot.index,
+          asset_code: asset.asset_code,
+          item_name: asset.item_name,
+          school_unit_name: asset.school_unit_name,
+        })),
       })),
-      pages: Array.from({ length: totalPages }, (_, pageIdx) => {
-        const pageStartSlot = pageIdx === 0 ? startingIndex : 0;
-        const pageAvailableSlots = slotsPerPage - pageStartSlot;
-        const assetsBeforeThisPage = pageIdx === 0 ? 0 : slotsPerPage - startingIndex + (pageIdx - 1) * slotsPerPage;
-        const pageAssets = assets.slice(assetsBeforeThisPage, assetsBeforeThisPage + pageAvailableSlots);
-
-        return {
-          page_number: pageIdx + 1,
-          start_slot: pageStartSlot,
-          labels_on_page: pageAssets.length,
-          labels: pageAssets.map((asset, slotOffset) => ({
-            slot_index: pageStartSlot + slotOffset,
-            asset_code: asset.asset_code,
-            item_name: asset.item_name,
-            school_unit_name: asset.school_unit_name,
-          })),
-        };
-      }),
     };
   }, { body: LabelPrintRequest });
 
   app.post("/api/inventory/labels/pdf", async ({ body, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
     if (!user) return { detail: "Authentication required" };
+
+    const template = getLabelTemplate(body.template_id);
+    if (!template) {
+      set.status = 400;
+      return { detail: `Unknown label template: ${body.template_id}` };
+    }
+
+    const startingIndex = body.starting_index ?? 0;
+    if (startingIndex < 0 || startingIndex >= template.slotsPerPage) {
+      set.status = 400;
+      return {
+        detail: `Invalid starting_index ${startingIndex} for template ${template.id} (valid: 0..${template.slotsPerPage - 1})`,
+      };
+    }
+
+    try {
+      validateCalibrationOffsets(
+        template,
+        body.offset_x_mm ?? template.defaultOffsetXMm,
+        body.offset_y_mm ?? template.defaultOffsetYMm,
+      );
+    } catch (err: any) {
+      set.status = 400;
+      return { detail: err.message };
+    }
 
     const db = context.database.client;
     const placeholders = body.asset_ids.map(() => "?").join(", ");
@@ -944,10 +1007,11 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     try {
       const pdfBytes = await generateAssetLabelsPdf(assets, {
         templateId: body.template_id,
-        startingIndex: body.starting_index ?? 0,
-        offsetXmm: body.offset_x_mm ?? 0,
-        offsetYmm: body.offset_y_mm ?? 0,
+        startingIndex,
+        offsetXmm: body.offset_x_mm ?? template.defaultOffsetXMm,
+        offsetYmm: body.offset_y_mm ?? template.defaultOffsetYMm,
         monochrome: body.monochrome ?? false,
+        cuttingGuides: body.cutting_guides,
       });
 
       audit(
@@ -959,7 +1023,7 @@ export function inventoryRoutes(app: any, context: AuthContext) {
         {
           count: assets.length,
           template_id: body.template_id,
-          starting_index: body.starting_index ?? 0,
+          starting_index: startingIndex,
         },
         "view_inventory",
         "LOW",
@@ -979,4 +1043,43 @@ export function inventoryRoutes(app: any, context: AuthContext) {
       return { detail: `Failed to generate PDF labels: ${err.message}` };
     }
   }, { body: LabelPrintRequest });
+
+  app.post("/api/inventory/labels/calibration-pdf", async ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
+    if (!user) return { detail: "Authentication required" };
+
+    const template = getLabelTemplate(body.template_id);
+    if (!template) {
+      set.status = 400;
+      return { detail: `Unknown label template: ${body.template_id}` };
+    }
+
+    try {
+      validateCalibrationOffsets(
+        template,
+        body.offset_x_mm ?? template.defaultOffsetXMm,
+        body.offset_y_mm ?? template.defaultOffsetYMm,
+      );
+    } catch (err: any) {
+      set.status = 400;
+      return { detail: err.message };
+    }
+
+    const pdfBytes = await generateCalibrationPdf({
+      templateId: body.template_id,
+      offsetXmm: body.offset_x_mm ?? template.defaultOffsetXMm,
+      offsetYmm: body.offset_y_mm ?? template.defaultOffsetYMm,
+      monochrome: body.monochrome ?? false,
+      cuttingGuides: body.cutting_guides,
+    });
+
+    const filename = `kalibrasi-label-${body.template_id}.pdf`;
+    return new Response(pdfBytes, {
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": `inline; filename="${filename}"`,
+        "cache-control": "no-store",
+      },
+    });
+  }, { body: LabelCalibrationRequest });
 }

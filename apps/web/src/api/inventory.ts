@@ -5,7 +5,9 @@ import type {
   BatchCreateAssetRequestDto,
   CreateAssetRequestDto,
   InventorySummaryResponseDto,
+  LabelCalibrationRequestDto,
   LabelPrintRequestDto,
+  ResolvedLabelTemplate,
   RetireAssetRequestDto,
   UpdateAssetRequestDto,
 } from "@operatoros/contracts/inventory";
@@ -67,6 +69,12 @@ export async function retireAsset(id: string, body: RetireAssetRequestDto): Prom
   })).data;
 }
 
+export async function fetchLabelTemplates(): Promise<{ items: ResolvedLabelTemplate[] }> {
+  return (await apiRequest<{ items: ResolvedLabelTemplate[] }>({
+    path: "/api/inventory/labels/templates",
+  })).data;
+}
+
 export async function previewLabels(body: LabelPrintRequestDto): Promise<any> {
   return (await apiRequest<any>({
     path: "/api/inventory/labels/preview",
@@ -78,6 +86,16 @@ export async function previewLabels(body: LabelPrintRequestDto): Promise<any> {
 export async function downloadLabelsPdf(body: LabelPrintRequestDto): Promise<Blob> {
   return (await apiRequest<Blob>({
     path: "/api/inventory/labels/pdf",
+    method: "POST",
+    body,
+    responseType: "blob",
+    expectedBlobTypes: ["application/pdf"],
+  })).data;
+}
+
+export async function downloadCalibrationPdf(body: LabelCalibrationRequestDto): Promise<Blob> {
+  return (await apiRequest<Blob>({
+    path: "/api/inventory/labels/calibration-pdf",
     method: "POST",
     body,
     responseType: "blob",

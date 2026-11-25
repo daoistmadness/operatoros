@@ -182,18 +182,27 @@ export const InventorySummaryResponse = Type.Object({
 });
 export type InventorySummaryResponseDto = Static<typeof InventorySummaryResponse>;
 
-export const LabelTemplateId = Type.Union([
-  Type.Literal("103"),
-  Type.Literal("107"),
-]);
+export * from "./inventory-labels";
+
+export const LabelTemplateId = Type.String({ minLength: 1 });
 export type LabelTemplateIdDto = Static<typeof LabelTemplateId>;
 
 export const LabelPrintRequest = Type.Object({
   asset_ids: Type.Array(Type.String(), { minItems: 1, maxItems: 300 }),
   template_id: LabelTemplateId,
-  starting_index: Type.Optional(Type.Integer({ minimum: 0, maximum: 29 })),
-  offset_x_mm: Type.Optional(Type.Number()),
-  offset_y_mm: Type.Optional(Type.Number()),
+  starting_index: Type.Optional(Type.Integer({ minimum: 0, maximum: 500 })),
+  offset_x_mm: Type.Optional(Type.Number({ minimum: -25, maximum: 25 })),
+  offset_y_mm: Type.Optional(Type.Number({ minimum: -25, maximum: 25 })),
   monochrome: Type.Optional(Type.Boolean()),
+  cutting_guides: Type.Optional(Type.Boolean()),
 });
 export type LabelPrintRequestDto = Static<typeof LabelPrintRequest>;
+
+export const LabelCalibrationRequest = Type.Object({
+  template_id: LabelTemplateId,
+  offset_x_mm: Type.Optional(Type.Number({ minimum: -25, maximum: 25 })),
+  offset_y_mm: Type.Optional(Type.Number({ minimum: -25, maximum: 25 })),
+  monochrome: Type.Optional(Type.Boolean()),
+  cutting_guides: Type.Optional(Type.Boolean()),
+});
+export type LabelCalibrationRequestDto = Static<typeof LabelCalibrationRequest>;

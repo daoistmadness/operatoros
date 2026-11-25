@@ -19,6 +19,8 @@ vi.mock("../api/inventory", () => ({
   retireAsset: vi.fn(),
   previewLabels: vi.fn(),
   downloadLabelsPdf: vi.fn(),
+  downloadCalibrationPdf: vi.fn(),
+  fetchLabelTemplates: vi.fn(),
   downloadInventoryXlsx: vi.fn(),
 }));
 
@@ -262,9 +264,27 @@ describe("InventoryManagement Page", () => {
     await flush();
 
     expect(document.body.textContent).toContain("Cetak Label Stiker Presisi");
+    expect(document.body.textContent).toContain("Lembar Stiker Pabrikan");
+    expect(document.body.textContent).toContain("Kertas Standar");
     expect(document.body.textContent).toContain("Labelindo No. 103");
     expect(document.body.textContent).toContain("Labelindo No. 107");
+    expect(document.body.textContent).toContain("A4 Standar");
+    expect(document.body.textContent).toContain("A4 Kompak");
     expect(document.body.textContent).toContain("Posisi Awal Stiker");
     expect(document.body.textContent).toContain("Kalibrasi Margin Printer");
+    expect(document.body.textContent).toContain("Lembar Kalibrasi PDF");
+
+    // Switch to A4 Standar and verify cutting guides option appears and slot count updates to 24
+    const a4Btn = Array.from(document.body.querySelectorAll("button")).find(
+      (b) => b.textContent?.includes("A4 Standar"),
+    );
+    expect(a4Btn).toBeDefined();
+    await act(async () => {
+      a4Btn?.click();
+    });
+    await flush();
+
+    expect(document.body.textContent).toContain("Kapasitas: 24/lembar");
+    expect(document.body.textContent).toContain("Tampilkan Garis Bantu Potong");
   });
 });

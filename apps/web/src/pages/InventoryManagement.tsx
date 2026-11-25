@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -9,15 +9,19 @@ import {
   Trash2,
   FileSpreadsheet,
 } from "lucide-react";
-import type {
-  AssetDtoType,
-  AssetCategoryDto,
-  FundingSourceDto,
-  AssetConditionDto,
-  CreateAssetRequestDto,
-  BatchCreateAssetRequestDto,
-  UpdateAssetRequestDto,
-  LabelTemplateIdDto,
+import {
+  DEFAULT_LABEL_TEMPLATE_ID,
+  getLabelTemplate,
+  getRegisteredLabelTemplates,
+  paginateLabelItems,
+  type AssetDtoType,
+  type AssetCategoryDto,
+  type FundingSourceDto,
+  type AssetConditionDto,
+  type CreateAssetRequestDto,
+  type BatchCreateAssetRequestDto,
+  type UpdateAssetRequestDto,
+  type ResolvedLabelTemplate,
 } from "@operatoros/contracts/inventory";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
@@ -40,6 +44,7 @@ import {
   retireAsset,
   downloadInventoryXlsx,
   downloadLabelsPdf,
+  downloadCalibrationPdf,
 } from "../api/inventory";
 import { useAuth } from "../context/AuthContext";
 
@@ -1493,6 +1498,42 @@ function RetireAssetModal({
   );
 }
 
+const LABEL_PREFS_STORAGE_KEY = "operatoros:label-print-prefs:v1";
+
+interface TemplateCalibrationPrefs {
+  offsetX: number;
+  offsetY: number;
+  monochrome: boolean;
+  cuttingGuides?: boolean;
+}
+
+interface LabelPrintPrefs {
+  lastTemplateId?: string;
+  byTemplate: Record<string, TemplateCalibrationPrefs>;
+}
+
+function loadLabelPrintPrefs(): LabelPrintPrefs {
+  try {
+    const raw = window.localStorage.getItem(LABEL_PREFS_STORAGE_KEY);
+    if (!raw) return { byTemplate: {} };
+    const parsed = JSON.parse(raw) as LabelPrintPrefs;
+    return {
+      lastTemplateId: typeof parsed.lastTemplateId === "string" ? parsed.lastTemplateId : undefined,
+      byTemplate: parsed.byTemplate && typeof parsed.byTemplate === "object" ? parsed.byTemplate : {},
+    };
+  } catch {
+    return { byTemplate: {} };
+  }
+}
+
+function saveLabelPrintPrefs(prefs: LabelPrintPrefs): void {
+  try {
+    window.localStorage.setItem(LABEL_PREFS_STORAGE_KEY, JSON.stringify(prefs));
+  } catch {
+    // Ignore storage failures in restricted contexts
+  }
+}
+
 function LabelPrintModal({
   selectedIds,
   onClose,
@@ -1500,33 +1541,101 @@ function LabelPrintModal({
   selectedIds: string[];
   onClose: () => void;
 }) {
-  const [templateId, setTemplateId] = useState<LabelTemplateIdDto>("103");
+  const templates = useMemo(() => getRegisteredLabelTemplates(), []);
+  const manufacturerTemplates = useMemo(
+    () => templates.filter((t) => t.family === "manufacturer"),
+    [templates],
+  );
+  const standardPaperTemplates = useMemo(
+    () => templates.filter((t) => t.family === "standard_paper"),
+    [templates],
+  );
+
+  const initialPrefs = useMemo(() => loadLabelPrintPrefs(), []);
+  const initialTemplateId = useMemo(() => {
+    if (initialPrefs.lastTemplateId && getLabelTemplate(initialPrefs.lastTemplateId)) {
+      return initialPrefs.lastTemplateId;
+    }
+    return DEFAULT_LABEL_TEMPLATE_ID;
+  }, [initialPrefs]);
+
+  const [templateId, setTemplateId] = useState<string>(initialTemplateId);
+  const activeTemplate: ResolvedLabelTemplate = useMemo(
+    () => getLabelTemplate(templateId) ?? templates[0]!,
+    [templateId, templates],
+  );
+
+  const initialCal = initialPrefs.byTemplate[initialTemplateId];
   const [startingIndex, setStartingIndex] = useState<number>(0);
-  const [offsetX, setOffsetX] = useState<number>(0);
-  const [offsetY, setOffsetY] = useState<number>(0);
-  const [monochrome, setMonochrome] = useState<boolean>(false);
+  const [offsetX, setOffsetX] = useState<number>(initialCal?.offsetX ?? activeTemplate.defaultOffsetXMm);
+  const [offsetY, setOffsetY] = useState<number>(initialCal?.offsetY ?? activeTemplate.defaultOffsetYMm);
+  const [monochrome, setMonochrome] = useState<boolean>(initialCal?.monochrome ?? false);
+  const [cuttingGuides, setCuttingGuides] = useState<boolean>(
+    initialCal?.cuttingGuides ?? activeTemplate.defaultCuttingGuides,
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const totalSlots = templateId === "103" ? 12 : 30;
-  const cols = 3;
-  const rows = templateId === "103" ? 4 : 10;
+  const handleSelectTemplate = (nextTemplate: ResolvedLabelTemplate) => {
+    setTemplateId(nextTemplate.id);
+    if (startingIndex >= nextTemplate.slotsPerPage) {
+      setStartingIndex(0);
+    }
+    const saved = loadLabelPrintPrefs().byTemplate[nextTemplate.id];
+    setOffsetX(saved?.offsetX ?? nextTemplate.defaultOffsetXMm);
+    setOffsetY(saved?.offsetY ?? nextTemplate.defaultOffsetYMm);
+    setMonochrome(saved?.monochrome ?? false);
+    setCuttingGuides(saved?.cuttingGuides ?? nextTemplate.defaultCuttingGuides);
+  };
 
-  const handlePrint = async () => {
+  useEffect(() => {
+    const current = loadLabelPrintPrefs();
+    current.lastTemplateId = activeTemplate.id;
+    current.byTemplate[activeTemplate.id] = {
+      offsetX,
+      offsetY,
+      monochrome,
+      cuttingGuides: activeTemplate.supportsCuttingGuides ? cuttingGuides : undefined,
+    };
+    saveLabelPrintPrefs(current);
+  }, [activeTemplate.id, activeTemplate.supportsCuttingGuides, offsetX, offsetY, monochrome, cuttingGuides]);
+
+  const pages = useMemo(
+    () => paginateLabelItems(activeTemplate, selectedIds, startingIndex),
+    [activeTemplate, selectedIds, startingIndex],
+  );
+  const totalPages = pages.length;
+
+  const handleResetCalibration = () => {
+    setOffsetX(activeTemplate.defaultOffsetXMm);
+    setOffsetY(activeTemplate.defaultOffsetYMm);
+  };
+
+  const handleGeneratePdf = async (mode: "preview" | "download") => {
     setIsGenerating(true);
     setErrorMsg("");
     try {
       const blob = await downloadLabelsPdf({
         asset_ids: selectedIds,
-        template_id: templateId,
+        template_id: activeTemplate.id,
         starting_index: startingIndex,
         offset_x_mm: offsetX,
         offset_y_mm: offsetY,
         monochrome,
+        cutting_guides: activeTemplate.supportsCuttingGuides ? cuttingGuides : false,
       });
 
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
+      if (mode === "download") {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `label-aset-${activeTemplate.id}-${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        window.open(url, "_blank");
+      }
     } catch (err) {
       setErrorMsg(getPageApiError(err, "Gagal membuat dokumen PDF label."));
     } finally {
@@ -1534,16 +1643,63 @@ function LabelPrintModal({
     }
   };
 
+  const handleCalibrationPdf = async () => {
+    setIsGenerating(true);
+    setErrorMsg("");
+    try {
+      const blob = await downloadCalibrationPdf({
+        template_id: activeTemplate.id,
+        offset_x_mm: offsetX,
+        offset_y_mm: offsetY,
+        monochrome,
+        cutting_guides: activeTemplate.supportsCuttingGuides ? cuttingGuides : false,
+      });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      setErrorMsg(getPageApiError(err, "Gagal membuat dokumen kalibrasi PDF."));
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const renderTemplateCard = (tpl: ResolvedLabelTemplate) => {
+    const isSelected = tpl.id === activeTemplate.id;
+    return (
+      <button
+        key={tpl.id}
+        type="button"
+        onClick={() => handleSelectTemplate(tpl)}
+        className={`text-left cursor-pointer rounded-lg border p-3 transition-all ${
+          isSelected ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border hover:bg-muted/30"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold text-sm text-foreground">{tpl.shortLabel}</span>
+          <Badge variant="secondary" className="text-[10px]">
+            {tpl.slotsPerPage} label
+          </Badge>
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          {tpl.labelWidthMm} × {tpl.labelHeightMm} mm · {tpl.columns} × {tpl.rows}
+        </div>
+        <div className="mt-1 text-[11px] text-muted-foreground">
+          Kertas: {tpl.pageWidthMm.toFixed(1)} × {tpl.pageHeightMm.toFixed(1)} mm ({tpl.orientation === "landscape" ? "Lanskap" : "Potret"})
+        </div>
+      </button>
+    );
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Printer className="size-5 text-primary" />
             Cetak Label Stiker Presisi
           </DialogTitle>
           <DialogDescription>
-            Pilih jenis lembar stiker, tentukan posisi awal cetak (untuk memanfaatkan sisa lembar), dan cetak melalui mesin PDF server.
+            Pilih standar stiker pabrikan atau kertas A4 standar, tentukan posisi awal cetak, dan hasilkan PDF presisi.
           </DialogDescription>
         </DialogHeader>
 
@@ -1552,27 +1708,42 @@ function LabelPrintModal({
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{errorMsg}</div>
           )}
 
-          {/* Template Selection */}
-          <div className="grid grid-cols-2 gap-3">
-            <div
-              className={`cursor-pointer rounded-lg border p-3.5 transition-all ${templateId === "103" ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border hover:bg-muted/30"}`}
-              onClick={() => {
-                setTemplateId("103");
-                if (startingIndex >= 12) setStartingIndex(0);
-              }}
-            >
-              <div className="font-semibold text-foreground">Labelindo No. 103</div>
-              <div className="text-xs text-muted-foreground">64 × 32 mm · 12 label/lembar (3 × 4)</div>
-              <Badge variant="secondary" className="mt-2 text-[10px]">Ukuran Standar Lega</Badge>
+          {/* Grouped Template Selection */}
+          <div className="space-y-3">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Lembar Stiker Pabrikan — Utama
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {manufacturerTemplates.map(renderTemplateCard)}
+              </div>
             </div>
 
-            <div
-              className={`cursor-pointer rounded-lg border p-3.5 transition-all ${templateId === "107" ? "border-primary bg-primary/5 ring-2 ring-primary" : "border-border hover:bg-muted/30"}`}
-              onClick={() => setTemplateId("107")}
-            >
-              <div className="font-semibold text-foreground">Labelindo No. 107</div>
-              <div className="text-xs text-muted-foreground">50 × 18 mm · 30 label/lembar (3 × 10)</div>
-              <Badge variant="secondary" className="mt-2 text-[10px]">Ukuran Kompak</Badge>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                Kertas Standar — Alternatif
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {standardPaperTemplates.map(renderTemplateCard)}
+              </div>
+            </div>
+          </div>
+
+          {/* Active Template Info & Geometry Status */}
+          <div className="rounded-md border bg-muted/20 p-2.5 text-xs space-y-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-medium text-foreground">{activeTemplate.name}</span>
+              <Badge variant="secondary" className="text-[10px]">
+                {activeTemplate.verificationStatus === "verified_standard_paper"
+                  ? "Standar ISO A4"
+                  : "PDF Resmi (Kalibrasi Fisik)"}
+              </Badge>
+            </div>
+            <div className="text-[11px] text-muted-foreground">{activeTemplate.verificationNote}</div>
+            <div className="flex flex-wrap gap-3 pt-1 text-[11px] font-mono text-foreground">
+              <span>Aset: {selectedIds.length}</span>
+              <span>Kapasitas: {activeTemplate.slotsPerPage}/lembar</span>
+              <span>Halaman: {totalPages}</span>
             </div>
           </div>
 
@@ -1588,12 +1759,13 @@ function LabelPrintModal({
             </div>
 
             <div
-              className="mt-2 grid gap-1.5 rounded-md border bg-muted/20 p-2.5"
+              className="mt-2 grid gap-1.5 rounded-md border bg-muted/20 p-2.5 max-h-56 overflow-y-auto"
               style={{
-                gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                gridTemplateColumns: `repeat(${activeTemplate.columns}, minmax(0, 1fr))`,
               }}
             >
-              {Array.from({ length: totalSlots }, (_, idx) => {
+              {activeTemplate.slots.map((slot) => {
+                const idx = slot.index;
                 const isSelectedStart = idx === startingIndex;
                 const isUsedBefore = idx < startingIndex;
                 const isFilledInThisBatch = idx >= startingIndex && idx < startingIndex + selectedIds.length;
@@ -1603,7 +1775,7 @@ function LabelPrintModal({
                     key={idx}
                     type="button"
                     onClick={() => setStartingIndex(idx)}
-                    className={`flex h-10 flex-col items-center justify-center rounded border text-xs font-mono font-medium transition-all ${
+                    className={`flex h-9 flex-col items-center justify-center rounded border text-xs font-mono font-medium transition-all ${
                       isSelectedStart
                         ? "border-primary bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-1"
                         : isFilledInThisBatch
@@ -1628,7 +1800,27 @@ function LabelPrintModal({
 
           {/* Calibration & Ink Options */}
           <div className="rounded-lg border bg-muted/10 p-3 space-y-3">
-            <div className="text-xs font-semibold text-foreground">Kalibrasi Margin Printer & Tinta</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs font-semibold text-foreground">
+                Kalibrasi Margin Printer (+X kanan, +Y atas)
+              </div>
+              <div className="flex gap-1.5">
+                <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-[11px]" onClick={handleResetCalibration}>
+                  Reset Kalibrasi
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-6 px-2 text-[11px]"
+                  onClick={handleCalibrationPdf}
+                  disabled={isGenerating}
+                >
+                  Lembar Kalibrasi PDF
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="cal-x" className="text-xs">Offset Horizontal X (mm)</Label>
@@ -1636,6 +1828,8 @@ function LabelPrintModal({
                   id="cal-x"
                   type="number"
                   step="0.5"
+                  min={-25}
+                  max={25}
                   value={offsetX}
                   onChange={(e) => setOffsetX(parseFloat(e.target.value) || 0)}
                   className="h-8 text-xs font-mono"
@@ -1648,6 +1842,8 @@ function LabelPrintModal({
                   id="cal-y"
                   type="number"
                   step="0.5"
+                  min={-25}
+                  max={25}
                   value={offsetY}
                   onChange={(e) => setOffsetY(parseFloat(e.target.value) || 0)}
                   className="h-8 text-xs font-mono"
@@ -1656,30 +1852,60 @@ function LabelPrintModal({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                id="mono-chk"
-                type="checkbox"
-                checked={monochrome}
-                onChange={(e) => setMonochrome(e.target.checked)}
-                className="rounded border-gray-300"
-              />
-              <Label htmlFor="mono-chk" className="text-xs cursor-pointer">
-                Mode Hemat Tinta (Hitam Putih Murni / Monokrom)
-              </Label>
+            <div className="flex flex-wrap items-center gap-4 pt-1">
+              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                <input
+                  id="mono-chk"
+                  type="checkbox"
+                  checked={monochrome}
+                  onChange={(e) => setMonochrome(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                Mode Hemat Tinta (Monokrom)
+              </label>
+
+              {activeTemplate.supportsCuttingGuides && (
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input
+                    id="cut-guides-chk"
+                    type="checkbox"
+                    checked={cuttingGuides}
+                    onChange={(e) => setCuttingGuides(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Tampilkan Garis Bantu Potong
+                </label>
+              )}
             </div>
+
+            <p className="text-[11px] text-muted-foreground border-t pt-2">
+              Penting: Cetak pada skala <strong>100% (Actual Size)</strong>, matikan <em>Fit to Page</em>, dan pastikan ukuran kertas printer sesuai template ({activeTemplate.pageWidthMm.toFixed(1)} × {activeTemplate.pageHeightMm.toFixed(1)} mm).
+            </p>
           </div>
         </div>
 
-        <DialogFooter className="flex items-center justify-between sm:justify-between">
+        <DialogFooter className="flex flex-wrap items-center justify-between gap-2 sm:justify-between">
           <div className="text-xs text-muted-foreground">
-            {selectedIds.length} stiker akan dicetak
+            {selectedIds.length} stiker · {totalPages} halaman
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Tutup
             </Button>
-            <Button onClick={handlePrint} disabled={isGenerating || selectedIds.length === 0} className="gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleGeneratePdf("download")}
+              disabled={isGenerating || selectedIds.length === 0}
+            >
+              Unduh PDF
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleGeneratePdf("preview")}
+              disabled={isGenerating || selectedIds.length === 0}
+              className="gap-1.5"
+            >
               <Printer className="size-4" />
               {isGenerating ? "Menyusun PDF…" : "Cetak Dokumen PDF"}
             </Button>
