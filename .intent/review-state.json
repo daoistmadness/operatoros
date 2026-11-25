@@ -5278,15 +5278,15 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "6556d4e2c8f9282367cb14290f6a840302989153a6b3cff74ace94a69e7c9755",
+      "fingerprint": "581a80a2bac90fa81ad32315b026e4262a8d2674216df4af2a2d89a817bbf0ae",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "08af8303d98b47964e0f2629e249bc85fe0a64a6f4cbdb81dee15dddfb883bef"
+        "apps/web/src/lib/query/queryKeys.ts": "19459cacc8bf1dc8db37f02eaccb5fd169ef1f27519b4671fb0cbc6265236900"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5338,15 +5338,15 @@
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "ca9804923a19bb34b7e5705a42f5a2ed7bd2bc5dedcc3ac211fbfab2811bdba6",
+      "fingerprint": "8c0fd4c582d9ada8dde70129661d7636b1f511df1f48ff32d81a959664a7d5ef",
       "snapshot": {
-        "packages/db/src/manifest.ts": "6314aba60a463df8db82a6ebbc6788be581b01a2a556d36df7405c109de3caf4"
+        "packages/db/src/manifest.ts": "81204fd4808d761e999e8c46c48a2842c050ee77a6038d4c0a4b86c2ea5221d1"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/src/manifest.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
@@ -5374,15 +5374,15 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "0c6930e61c2d453cbb55d98e5052ebd182528d8b997ae93a9b0dfe13cc4f9a82",
+      "fingerprint": "0ee40a163dfc079bc9a66d49ddd3f68e7cddefa5187faf2b58c856d93145fbdd",
       "snapshot": {
-        "packages/db/src/schema.ts": "b460aa857e6ece1c4e723e86dcd11d8dba5c1469ce023d6f2fd9c765a34dd309"
+        "packages/db/src/schema.ts": "4d1dd228b0e1b7b55df534009d5c9848b4588b8c4b848dc833a6708101754298"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/src/schema.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
@@ -5398,15 +5398,15 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "f9c56c6c98bf1fd9db30b1a1c8d94812e413c481242451cf6706191afb22b1f0",
+      "fingerprint": "1f3cfbcb2fca0a39478d0c98853c653da942536d1b595f4ffed9e9f2bcc40834",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "ad1ba6274678c6b80c72df7021da859a3878afab8c93c290c2be82e593a50806"
+        "packages/db/tests/db.test.ts": "fa37c209472df910288735ba6ef64b6248bdfb892c883f7e2fedb18e16ee9aaa"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/tests/db.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
@@ -11503,63 +11503,63 @@
       ]
     },
     "source:apps/api/src/domains/inventory.ts": {
-      "fingerprint": "a466c88d7f1789b1741206ed2b959fab2069f04fffba1392b95d91eb57077e66",
+      "fingerprint": "762a332878a5da1c326f7b1b14adc91c06d61ec11feccace75071a3cbf8543bc",
       "snapshot": {
-        "apps/api/src/domains/inventory.ts": "ab72d5b2232c043cc3b1eee97265549c96bd28ab7c0802a04de6f9ffd3413754"
+        "apps/api/src/domains/inventory.ts": "fcade2272407270ff0041f08d32313833d1347e84364883a4da09756d408c8a8"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/api/src/domains/inventory.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/api/src/domains/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:apps/api/tests/inventory.test.ts": {
-      "fingerprint": "e24d8a19ab52cc8049f16811eb75fa70d52f53dd8781edd81bdcbed7782a8b4f",
+      "fingerprint": "328928e8f3c98e55de4ac29dcd0ec3921dc77aec397704fb2dcfcb8df8fbad28",
       "snapshot": {
-        "apps/api/tests/inventory.test.ts": "ab04cc288294da7b2987e8429dd5ebe2fbfa0df3a129e5e9fb7f946af622befc"
+        "apps/api/tests/inventory.test.ts": "6bf4d5700cfad06846796290f3211614588a395cfc031bd08082ff9dbf4bd67a"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/api/tests/inventory.test.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/api/tests/inventory.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:apps/web/src/api/inventory.ts": {
-      "fingerprint": "d80f5f6fc932f3be1fde94c7c8d95f0ca6a750ba9c8f70a1dee797ea6dd6da7a",
+      "fingerprint": "4f98d51559285731f2376d5911bda6b93a265d79216daeb6f4378128efd2f9df",
       "snapshot": {
-        "apps/web/src/api/inventory.ts": "c3165456796d1847c8efc942cb449afccaa6ce7887e04634d8d05c722adeb061"
+        "apps/web/src/api/inventory.ts": "4279fb59cdb3b23232256f30d861d07829979c765e17fd5d8778b603ec3571b2"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/web/src/api/inventory.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/web/src/api/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.test.tsx": {
-      "fingerprint": "94694bfee7f9a7df7fed215ed1a902e8c5dcd91e8b53b8751c670d0b2dafb09a",
+      "fingerprint": "faebe2919e8d2eaffff50eb69c8edf56f3c719a287260d6d872f8bd91cfe9198",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.test.tsx": "1568d4d3eca664e82b3ce084a998ed7283589db42341382897c8cd6d78483a65"
+        "apps/web/src/pages/InventoryManagement.test.tsx": "ad7caea55ec6859ca8c228e2e2bab6be991c233caea6e8c10ea75e0fa4beaa95"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.tsx": {
-      "fingerprint": "ebc973e7f0deac8fb3f8ae40335e1f5d7cb0ea5cbb90e27dcd51914b39f1c909",
+      "fingerprint": "1428418512fceb81a1605fadaa73f7343d2ecc56ab1c0c2145b09596602aead5",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.tsx": "0ae44928e1279d0feb391ef305a02de07e5de348bdb99086e58de0cc09b57efa"
+        "apps/web/src/pages/InventoryManagement.tsx": "7660be6901e3b47ea97c4d9a2aa75b464d7091048641f33da77b65cbff3a364a"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.tsx at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/web/src/pages/InventoryManagement.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:apps/web/src/routes/_authenticated/inventory.tsx": {
@@ -11575,27 +11575,27 @@
       ]
     },
     "source:packages/contracts/src/inventory.ts": {
-      "fingerprint": "e40dbb6f9e7c1b94c905253696ece8072a3290583184dd4bfbadbb68d0f156ad",
+      "fingerprint": "c7c8acd87b67e40a8c30ac819bbf3773440992a4c53963bbba287431830544eb",
       "snapshot": {
-        "packages/contracts/src/inventory.ts": "5231f303b57263fe91cde2fc01cd2425313e4b86de9cd0c649ec98a473be2dbf"
+        "packages/contracts/src/inventory.ts": "a8ecba88342b32ecb6ea91fc76d8fe273f40acbd40e30ca09ab2d26dc518e512"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/contracts/src/inventory.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/contracts/src/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     },
     "source:packages/db/src/s55-migration.sql": {
-      "fingerprint": "8726d1d6886d0504aef051ee051f1f574133c003fc2348ac7e98ba6756b6e1c5",
+      "fingerprint": "8cd40369805dbae738e37f6b35adeaed7917965bf7569dc209d47709f45c41da",
       "snapshot": {
-        "packages/db/src/s55-migration.sql": "354d35c496fc298e9428fc559bf37c3e433fbb6b86863bac0b674ade75de6354"
+        "packages/db/src/s55-migration.sql": "1b05c3e13faeb49ddda9133cee48ce8f34f68cd853936f1b05c4a0279711b5b2"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
-        "Changed: packages/db/src/s55-migration.sql at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/src/s55-migration.sql at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
       ]
     }
   }

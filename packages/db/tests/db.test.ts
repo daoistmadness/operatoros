@@ -167,13 +167,14 @@ describe("@operatoros/db existing-schema validation authority", () => {
       );
       // Verify no delete
       expect(() => client.run("DELETE FROM inventory_assets WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_NO_DELETE");
-      // Verify immutable code, unit, category
+      // Verify immutable code and origin acquiring unit
       expect(() => client.run("UPDATE inventory_assets SET asset_code = 'SD-IT-0002' WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
       expect(() => client.run("UPDATE inventory_assets SET school_unit_id = 2 WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
-      expect(() => client.run("UPDATE inventory_assets SET category = 'FRN' WHERE id = 'ast-1'")).toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
-      // Mutable fields like location, condition, notes work
-      client.run("UPDATE inventory_assets SET location = 'Lab Komputer', condition = 'RUSAK_RINGAN' WHERE id = 'ast-1'");
-      const updated = client.query("SELECT location, condition FROM inventory_assets WHERE id = 'ast-1'").get() as any;
+      // Mutable fields like category, current_unit_id, location, condition, notes work
+      client.run("UPDATE inventory_assets SET category = 'FRN', current_unit_id = 2, location = 'Lab Komputer', condition = 'RUSAK_RINGAN' WHERE id = 'ast-1'");
+      const updated = client.query("SELECT category, current_unit_id, location, condition FROM inventory_assets WHERE id = 'ast-1'").get() as any;
+      expect(updated.category).toBe("FRN");
+      expect(updated.current_unit_id).toBe(2);
       expect(updated.location).toBe("Lab Komputer");
       expect(updated.condition).toBe("RUSAK_RINGAN");
     } finally {

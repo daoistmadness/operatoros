@@ -1,27 +1,19 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Box,
   Plus,
   Layers,
   Printer,
-  Download,
   Search,
-  Filter,
   Edit2,
   Trash2,
-  CheckSquare,
-  Square,
   FileSpreadsheet,
-  AlertTriangle,
-  RotateCcw,
 } from "lucide-react";
 import type {
   AssetDtoType,
   AssetCategoryDto,
   FundingSourceDto,
   AssetConditionDto,
-  AssetStatusDto,
   CreateAssetRequestDto,
   BatchCreateAssetRequestDto,
   UpdateAssetRequestDto,
@@ -41,13 +33,13 @@ import { getPageApiError } from "../lib/api/errors";
 import { fetchSchoolUnits } from "../api/staff";
 import {
   fetchAssets,
+  fetchInventorySummary,
   createAsset,
   batchCreateAssets,
   updateAsset,
   retireAsset,
   downloadInventoryXlsx,
   downloadLabelsPdf,
-  previewLabels,
 } from "../api/inventory";
 import { useAuth } from "../context/AuthContext";
 
@@ -72,10 +64,10 @@ const FUNDING_SOURCES: { value: FundingSourceDto; label: string }[] = [
   { value: "LAINNYA", label: "Lainnya" },
 ];
 
-const CONDITIONS: { value: AssetConditionDto; label: string; variant: "success" | "warning" | "destructive" }[] = [
+const CONDITIONS: { value: AssetConditionDto; label: string; variant: "success" | "warning" | "danger" }[] = [
   { value: "BAIK", label: "Baik", variant: "success" },
   { value: "RUSAK_RINGAN", label: "Rusak Ringan", variant: "warning" },
-  { value: "RUSAK_BERAT", label: "Rusak Berat", variant: "destructive" },
+  { value: "RUSAK_BERAT", label: "Rusak Berat", variant: "danger" },
 ];
 
 function formatRupiah(amount: number | null): string {
@@ -131,14 +123,28 @@ export default function InventoryManagement() {
     return p;
   }, [search, selectedUnit, selectedCategory, selectedFunding, selectedCondition, selectedStatus, budgetYear, page]);
 
+  const summaryParams = useMemo(() => {
+    const p: Record<string, any> = {};
+    if (selectedUnit) p.school_unit_id = selectedUnit;
+    if (selectedFunding) p.funding_source = selectedFunding;
+    if (budgetYear) p.budget_year = budgetYear;
+    return p;
+  }, [selectedUnit, selectedFunding, budgetYear]);
+
   const assetsQuery = useQuery({
     queryKey: queryKeys.inventory.list(queryParams),
     queryFn: () => fetchAssets(queryParams),
   });
 
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.inventory.summary(summaryParams),
+    queryFn: () => fetchInventorySummary(summaryParams),
+  });
+
   const assets = assetsQuery.data?.items ?? [];
   const totalAssets = assetsQuery.data?.total ?? 0;
   const totalPages = Math.ceil(totalAssets / pageSize);
+  const summary = summaryQuery.data;
 
   const toggleSelectAll = () => {
     if (selectedAssetIds.size === assets.length && assets.length > 0) {
@@ -206,6 +212,36 @@ export default function InventoryManagement() {
           </div>
         }
       />
+
+      {/* Summary Statistics Cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Card className="p-4">
+          <div className="text-xs font-medium text-muted-foreground">Total Aset</div>
+          <div className="mt-1 text-2xl font-bold">{summary?.total_assets ?? "-"}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Semua unit terdaftar</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-muted-foreground">Total Nilai Buku</div>
+          <div className="mt-1 text-2xl font-bold font-mono text-emerald-700">
+            {summary ? formatRupiah(summary.total_value) : "-"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">Biaya perolehan aset</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-muted-foreground">Aset Aktif</div>
+          <div className="mt-1 text-2xl font-bold text-primary">{summary?.active_count ?? "-"}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">Operasional sekolah</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-xs font-medium text-muted-foreground">Kondisi Baik</div>
+          <div className="mt-1 text-2xl font-bold text-emerald-600">
+            {summary?.by_condition.baik ?? "-"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            Rusak: {(summary?.by_condition.rusak_ringan ?? 0) + (summary?.by_condition.rusak_berat ?? 0)}
+          </div>
+        </Card>
+      </div>
 
       {/* Filter and Search Bar */}
       <Card>
@@ -327,14 +363,14 @@ export default function InventoryManagement() {
 
       {/* Main Asset Table */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between border-b px-6 py-4">
-          <CardTitle className="text-base font-semibold">
-            Daftar Aset ({totalAssets} barang)
-          </CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base font-semibold">Daftar Buku Inventaris</CardTitle>
           {selectedAssetIds.size > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{selectedAssetIds.size} barang terpilih</span>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedAssetIds(new Set())}>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                {selectedAssetIds.size} aset dipilih
+              </span>
+              <Button size="sm" variant="outline" onClick={() => setSelectedAssetIds(new Set())}>
                 Batal Pilih
               </Button>
             </div>
@@ -343,9 +379,12 @@ export default function InventoryManagement() {
 
         <CardContent className="p-0">
           {assetsQuery.isPending ? (
-            <LoadingState message="Memuat buku inventaris aset…" />
+            <LoadingState title="Memuat buku inventaris aset…" />
           ) : assetsQuery.isError ? (
-            <ErrorState message={getPageApiError(assetsQuery.error, "Gagal memuat inventaris aset.")} />
+            <ErrorState
+              title="Gagal memuat inventaris aset"
+              description={getPageApiError(assetsQuery.error, "Gagal memuat inventaris aset.")}
+            />
           ) : assets.length === 0 ? (
             <EmptyState
               title="Belum ada data aset"
@@ -407,12 +446,15 @@ export default function InventoryManagement() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className="text-xs font-normal">
+                          <Badge variant="secondary" className="text-xs font-normal">
                             {CATEGORIES.find((c) => c.value === asset.category)?.label ?? asset.category}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {asset.school_unit_name}
+                          <div>{asset.current_unit_name || asset.school_unit_name}</div>
+                          {asset.current_unit_id && asset.current_unit_id !== asset.school_unit_id && (
+                            <div className="text-[10px] text-muted-foreground">Asal: {asset.school_unit_name}</div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs">
                           <div>{asset.brand || "-"}</div>
@@ -436,7 +478,7 @@ export default function InventoryManagement() {
                               Dihapus
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-700">
+                            <Badge variant="secondary" className="text-xs border border-emerald-500 text-emerald-700 bg-emerald-50">
                               Aktif
                             </Badge>
                           )}
@@ -449,18 +491,18 @@ export default function InventoryManagement() {
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="h-8 w-8 p-0"
-                                    title="Edit data aset"
                                     onClick={() => setEditingAsset(asset)}
+                                    title="Edit data aset"
+                                    className="h-8 w-8 p-0"
                                   >
                                     <Edit2 className="size-3.5" />
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
-                                    title="Hapusbuku / Berhentikan aset"
                                     onClick={() => setRetiringAsset(asset)}
+                                    title="Hapusbukukan aset"
+                                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                                   >
                                     <Trash2 className="size-3.5" />
                                   </Button>
@@ -477,28 +519,31 @@ export default function InventoryManagement() {
             </div>
           )}
 
-          {/* Pagination controls */}
+          {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t px-6 py-3">
+            <div className="flex items-center justify-between border-t p-4">
               <span className="text-xs text-muted-foreground">
-                Halaman {page + 1} dari {totalPages} ({totalAssets} total aset)
+                Menampilkan {page * pageSize + 1}–{Math.min((page + 1) * pageSize, totalAssets)} dari {totalAssets} aset
               </span>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
                 >
                   Sebelumnya
                 </Button>
+                <span className="text-xs font-medium">
+                  Halaman {page + 1} dari {totalPages}
+                </span>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={page >= totalPages - 1}
+                  disabled={page + 1 >= totalPages}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  Berikutnya
+                  Selanjutnya
                 </Button>
               </div>
             </div>
@@ -506,9 +551,9 @@ export default function InventoryManagement() {
         </CardContent>
       </Card>
 
-      {/* Single Asset Register Modal */}
+      {/* Modals */}
       {isRegisterOpen && (
-        <AssetRegisterModal
+        <SingleAssetRegisterModal
           schoolUnits={schoolUnitsQuery.data ?? []}
           onClose={() => setIsRegisterOpen(false)}
           onSuccess={() => {
@@ -518,9 +563,8 @@ export default function InventoryManagement() {
         />
       )}
 
-      {/* Batch Asset Register Modal */}
       {isBatchOpen && (
-        <AssetBatchRegisterModal
+        <BatchAssetRegisterModal
           schoolUnits={schoolUnitsQuery.data ?? []}
           onClose={() => setIsBatchOpen(false)}
           onSuccess={() => {
@@ -530,10 +574,10 @@ export default function InventoryManagement() {
         />
       )}
 
-      {/* Edit Asset Modal */}
       {editingAsset && (
-        <AssetEditModal
+        <EditAssetModal
           asset={editingAsset}
+          schoolUnits={schoolUnitsQuery.data ?? []}
           onClose={() => setEditingAsset(null)}
           onSuccess={() => {
             setEditingAsset(null);
@@ -542,9 +586,8 @@ export default function InventoryManagement() {
         />
       )}
 
-      {/* Retire Asset Modal */}
       {retiringAsset && (
-        <AssetRetireModal
+        <RetireAssetModal
           asset={retiringAsset}
           onClose={() => setRetiringAsset(null)}
           onSuccess={() => {
@@ -554,10 +597,9 @@ export default function InventoryManagement() {
         />
       )}
 
-      {/* Print Labels Modal */}
       {isLabelModalOpen && (
         <LabelPrintModal
-          selectedIds={Array.from(selectedAssetIds.size > 0 ? selectedAssetIds : assets.map((a) => a.id))}
+          selectedIds={selectedAssetIds.size > 0 ? Array.from(selectedAssetIds) : assets.map((a) => a.id)}
           onClose={() => setIsLabelModalOpen(false)}
         />
       )}
@@ -565,16 +607,12 @@ export default function InventoryManagement() {
   );
 }
 
-// -------------------------------------------------------------
-// Modals
-// -------------------------------------------------------------
-
-function AssetRegisterModal({
+function SingleAssetRegisterModal({
   schoolUnits,
   onClose,
   onSuccess,
 }: {
-  schoolUnits: Array<{ id: number; name: string }>;
+  schoolUnits: { id: number; name: string }[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -582,10 +620,14 @@ function AssetRegisterModal({
   const [category, setCategory] = useState<AssetCategoryDto>("IT");
   const [itemName, setItemName] = useState("");
   const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
   const [location, setLocation] = useState("");
   const [fundingSource, setFundingSource] = useState<FundingSourceDto>("BOS");
   const [budgetYear, setBudgetYear] = useState<number>(new Date().getFullYear());
-  const [acquisitionDate, setAcquisitionDate] = useState(new Date().toISOString().slice(0, 10));
+  const [arkasCode, setArkasCode] = useState("");
+  const [docRef, setDocRef] = useState("");
+  const [acquisitionDate, setAcquisitionDate] = useState("");
   const [price, setPrice] = useState<string>("");
   const [condition, setCondition] = useState<AssetConditionDto>("BAIK");
   const [notes, setNotes] = useState("");
@@ -594,7 +636,7 @@ function AssetRegisterModal({
   const createMutation = useMutation({
     mutationFn: createAsset,
     onSuccess,
-    onError: (err) => setErrorMsg(getPageApiError(err, "Gagal mendaftarkan aset.")),
+    onError: (err) => setErrorMsg(getPageApiError(err, "Gagal mendaftarkan aset baru.")),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -609,9 +651,13 @@ function AssetRegisterModal({
       category,
       item_name: itemName.trim(),
       brand: brand.trim() || undefined,
+      model: model.trim() || undefined,
+      serial_number: serialNumber.trim() || undefined,
       location: location.trim() || undefined,
       funding_source: fundingSource,
       budget_year: Number(budgetYear),
+      arkas_account_code: arkasCode.trim() || undefined,
+      purchase_document_reference: docRef.trim() || undefined,
       acquisition_date: acquisitionDate || undefined,
       price: price ? Number(price) : undefined,
       condition,
@@ -677,16 +723,58 @@ function AssetRegisterModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="reg-brand">Merk / Model</Label>
+              <Label htmlFor="reg-brand">Merk</Label>
               <Input
                 id="reg-brand"
-                placeholder="Contoh: ASUS Vivobook 14"
+                placeholder="Contoh: ASUS"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
               />
             </div>
+            <div>
+              <Label htmlFor="reg-model">Model / Tipe</Label>
+              <Input
+                id="reg-model"
+                placeholder="Contoh: Vivobook 14"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="reg-sn">No. Seri (S/N)</Label>
+              <Input
+                id="reg-sn"
+                placeholder="Contoh: SN-923847"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="reg-arkas">Kode Rekening ARKAS</Label>
+              <Input
+                id="reg-arkas"
+                placeholder="Contoh: 5.1.02.01.01.0024"
+                value={arkasCode}
+                onChange={(e) => setArkasCode(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="reg-doc">No. Bukti / Kuitansi</Label>
+              <Input
+                id="reg-doc"
+                placeholder="Contoh: INV/2026/04/001"
+                value={docRef}
+                onChange={(e) => setDocRef(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="reg-loc">Lokasi / Ruangan</Label>
               <Input
@@ -695,6 +783,20 @@ function AssetRegisterModal({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
+            </div>
+            <div>
+              <Label htmlFor="reg-cond">Kondisi Barang</Label>
+              <select
+                id="reg-cond"
+                aria-label="Pilih Kondisi Barang"
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value as AssetConditionDto)}
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -738,38 +840,21 @@ function AssetRegisterModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="reg-date">Tanggal Perolehan</Label>
-              <Input
-                id="reg-date"
-                type="date"
-                value={acquisitionDate}
-                onChange={(e) => setAcquisitionDate(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="reg-cond">Kondisi</Label>
-              <select
-                id="reg-cond"
-                aria-label="Pilih Kondisi Barang"
-                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-                value={condition}
-                onChange={(e) => setCondition(e.target.value as AssetConditionDto)}
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <Label htmlFor="reg-date">Tanggal Perolehan</Label>
+            <Input
+              id="reg-date"
+              type="date"
+              value={acquisitionDate}
+              onChange={(e) => setAcquisitionDate(e.target.value)}
+            />
           </div>
 
           <div>
             <Label htmlFor="reg-notes">Catatan Tambahan</Label>
             <Textarea
               id="reg-notes"
-              placeholder="Keterangan pengadaan, nomor seri pabrik, dsb."
+              placeholder="Keterangan spesifikasi, garansi, dsb."
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -781,7 +866,7 @@ function AssetRegisterModal({
               Batal
             </Button>
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Menyimpan…" : "Simpan Aset"}
+              {createMutation.isPending ? "Menyimpan…" : "Daftarkan Aset"}
             </Button>
           </DialogFooter>
         </form>
@@ -790,12 +875,12 @@ function AssetRegisterModal({
   );
 }
 
-function AssetBatchRegisterModal({
+function BatchAssetRegisterModal({
   schoolUnits,
   onClose,
   onSuccess,
 }: {
-  schoolUnits: Array<{ id: number; name: string }>;
+  schoolUnits: { id: number; name: string }[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -804,9 +889,12 @@ function AssetBatchRegisterModal({
   const [quantity, setQuantity] = useState<number>(10);
   const [itemName, setItemName] = useState("");
   const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
   const [location, setLocation] = useState("");
   const [fundingSource, setFundingSource] = useState<FundingSourceDto>("BOS");
   const [budgetYear, setBudgetYear] = useState<number>(new Date().getFullYear());
+  const [arkasCode, setArkasCode] = useState("");
+  const [docRef, setDocRef] = useState("");
   const [pricePerUnit, setPricePerUnit] = useState<string>("");
   const [condition, setCondition] = useState<AssetConditionDto>("BAIK");
   const [notes, setNotes] = useState("");
@@ -835,9 +923,12 @@ function AssetBatchRegisterModal({
       item_name: itemName.trim(),
       quantity: Number(quantity),
       brand: brand.trim() || undefined,
+      model: model.trim() || undefined,
       location: location.trim() || undefined,
       funding_source: fundingSource,
       budget_year: Number(budgetYear),
+      arkas_account_code: arkasCode.trim() || undefined,
+      purchase_document_reference: docRef.trim() || undefined,
       price_per_unit: pricePerUnit ? Number(pricePerUnit) : undefined,
       condition,
       notes: notes.trim() || undefined,
@@ -917,22 +1008,69 @@ function AssetBatchRegisterModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="batch-brand">Merk / Model</Label>
+              <Label htmlFor="batch-brand">Merk</Label>
               <Input
                 id="batch-brand"
-                placeholder="Contoh: Informa School"
+                placeholder="Contoh: Chitose"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="batch-loc">Lokasi Awal</Label>
+              <Label htmlFor="batch-model">Model / Tipe</Label>
+              <Input
+                id="batch-model"
+                placeholder="Contoh: Standard School Chair"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="batch-arkas">Kode Rekening ARKAS</Label>
+              <Input
+                id="batch-arkas"
+                placeholder="Contoh: 5.1.02.01.01.0024"
+                value={arkasCode}
+                onChange={(e) => setArkasCode(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="batch-doc">No. Bukti / Dokumen</Label>
+              <Input
+                id="batch-doc"
+                placeholder="Contoh: SPK/2026/02/11"
+                value={docRef}
+                onChange={(e) => setDocRef(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="batch-loc">Lokasi / Ruangan</Label>
               <Input
                 id="batch-loc"
-                placeholder="Contoh: Ruang Kelas 1"
+                placeholder="Contoh: Kelas 7A"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
+            </div>
+            <div>
+              <Label htmlFor="batch-cond">Kondisi</Label>
+              <select
+                id="batch-cond"
+                aria-label="Pilih Kondisi"
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value as AssetConditionDto)}
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -965,7 +1103,7 @@ function AssetBatchRegisterModal({
             </div>
 
             <div>
-              <Label htmlFor="batch-price">Harga Satuan (Rp)</Label>
+              <Label htmlFor="batch-price">Harga per Unit (Rp)</Label>
               <Input
                 id="batch-price"
                 type="number"
@@ -976,12 +1114,22 @@ function AssetBatchRegisterModal({
             </div>
           </div>
 
+          <div>
+            <Label htmlFor="batch-notes">Catatan Tambahan</Label>
+            <Textarea
+              id="batch-notes"
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Batal
             </Button>
             <Button type="submit" disabled={batchMutation.isPending}>
-              {batchMutation.isPending ? `Mendaftarkan ${quantity} Aset…` : `Daftarkan ${quantity} Aset`}
+              {batchMutation.isPending ? "Menyimpan Massal…" : `Daftarkan ${quantity} Aset`}
             </Button>
           </DialogFooter>
         </form>
@@ -990,20 +1138,28 @@ function AssetBatchRegisterModal({
   );
 }
 
-function AssetEditModal({
+function EditAssetModal({
   asset,
+  schoolUnits,
   onClose,
   onSuccess,
 }: {
   asset: AssetDtoType;
+  schoolUnits: { id: number; name: string }[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [itemName, setItemName] = useState(asset.item_name);
+  const [category, setCategory] = useState<AssetCategoryDto>(asset.category);
+  const [currentUnitId, setCurrentUnitId] = useState<number>(asset.current_unit_id ?? asset.school_unit_id);
   const [brand, setBrand] = useState(asset.brand ?? "");
+  const [model, setModel] = useState(asset.model ?? "");
+  const [serialNumber, setSerialNumber] = useState(asset.serial_number ?? "");
   const [location, setLocation] = useState(asset.location ?? "");
   const [fundingSource, setFundingSource] = useState<FundingSourceDto>(asset.funding_source);
   const [budgetYear, setBudgetYear] = useState<number>(asset.budget_year);
+  const [arkasCode, setArkasCode] = useState(asset.arkas_account_code ?? "");
+  const [docRef, setDocRef] = useState(asset.purchase_document_reference ?? "");
   const [acquisitionDate, setAcquisitionDate] = useState(asset.acquisition_date ?? "");
   const [price, setPrice] = useState<string>(asset.price != null ? String(asset.price) : "");
   const [condition, setCondition] = useState<AssetConditionDto>(asset.condition);
@@ -1025,10 +1181,16 @@ function AssetEditModal({
     setErrorMsg("");
     updateMutation.mutate({
       item_name: itemName.trim(),
+      category,
+      current_unit_id: currentUnitId,
       brand: brand.trim() || null,
+      model: model.trim() || null,
+      serial_number: serialNumber.trim() || null,
       location: location.trim() || null,
       funding_source: fundingSource,
       budget_year: Number(budgetYear),
+      arkas_account_code: arkasCode.trim() || null,
+      purchase_document_reference: docRef.trim() || null,
       acquisition_date: acquisitionDate || null,
       price: price ? Number(price) : null,
       condition,
@@ -1042,7 +1204,7 @@ function AssetEditModal({
         <DialogHeader>
           <DialogTitle>Edit Data Aset</DialogTitle>
           <DialogDescription>
-            Kode aset ({asset.asset_code}) dan unit asal ({asset.school_unit_name}) bersifat permanen dan tidak dapat diubah.
+            Kode aset permanen ({asset.asset_code}) dan unit perolehan asal ({asset.school_unit_name}) tetap terlindungi secara permanen.
           </DialogDescription>
         </DialogHeader>
 
@@ -1053,12 +1215,44 @@ function AssetEditModal({
 
           <div className="grid grid-cols-2 gap-3 rounded-md bg-muted/40 p-3 text-xs">
             <div>
-              <span className="font-semibold text-muted-foreground">Kode Aset:</span>
+              <span className="font-semibold text-muted-foreground">Kode Aset Permanen:</span>
               <div className="font-mono font-bold text-primary">{asset.asset_code}</div>
             </div>
             <div>
-              <span className="font-semibold text-muted-foreground">Unit Sekolah:</span>
+              <span className="font-semibold text-muted-foreground">Unit Perolehan Asal:</span>
               <div className="font-medium">{asset.school_unit_name}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="edit-unit">Unit Penugasan Saat Ini</Label>
+              <select
+                id="edit-unit"
+                aria-label="Pilih Unit Penugasan"
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={currentUnitId}
+                onChange={(e) => setCurrentUnitId(Number(e.target.value))}
+              >
+                {schoolUnits.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-cat">Klasifikasi / Kategori</Label>
+              <select
+                id="edit-cat"
+                aria-label="Pilih Klasifikasi"
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as AssetCategoryDto)}
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -1072,9 +1266,9 @@ function AssetEditModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="edit-brand">Merk / Model</Label>
+              <Label htmlFor="edit-brand">Merk</Label>
               <Input
                 id="edit-brand"
                 value={brand}
@@ -1082,12 +1276,64 @@ function AssetEditModal({
               />
             </div>
             <div>
+              <Label htmlFor="edit-model">Model</Label>
+              <Input
+                id="edit-model"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-sn">No. Seri (S/N)</Label>
+              <Input
+                id="edit-sn"
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="edit-arkas">Kode Rekening ARKAS</Label>
+              <Input
+                id="edit-arkas"
+                value={arkasCode}
+                onChange={(e) => setArkasCode(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-doc">No. Bukti / Dokumen</Label>
+              <Input
+                id="edit-doc"
+                value={docRef}
+                onChange={(e) => setDocRef(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <Label htmlFor="edit-loc">Lokasi / Ruangan</Label>
               <Input
                 id="edit-loc"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
+            </div>
+            <div>
+              <Label htmlFor="edit-cond">Kondisi</Label>
+              <select
+                id="edit-cond"
+                aria-label="Pilih Kondisi"
+                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value as AssetConditionDto)}
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -1120,41 +1366,25 @@ function AssetEditModal({
             </div>
 
             <div>
-              <Label htmlFor="edit-price">Harga (Rp)</Label>
+              <Label htmlFor="edit-price">Koreksi Harga (Rp)</Label>
               <Input
                 id="edit-price"
                 type="number"
+                placeholder="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="edit-cond">Kondisi</Label>
-              <select
-                id="edit-cond"
-                aria-label="Pilih Kondisi Barang"
-                className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-                value={condition}
-                onChange={(e) => setCondition(e.target.value as AssetConditionDto)}
-              >
-                {CONDITIONS.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="edit-date">Tanggal Perolehan</Label>
-              <Input
-                id="edit-date"
-                type="date"
-                value={acquisitionDate}
-                onChange={(e) => setAcquisitionDate(e.target.value)}
-              />
-            </div>
+          <div>
+            <Label htmlFor="edit-date">Tanggal Perolehan</Label>
+            <Input
+              id="edit-date"
+              type="date"
+              value={acquisitionDate}
+              onChange={(e) => setAcquisitionDate(e.target.value)}
+            />
           </div>
 
           <div>
@@ -1172,7 +1402,7 @@ function AssetEditModal({
               Batal
             </Button>
             <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Menyimpan…" : "Perbarui"}
+              {updateMutation.isPending ? "Menyimpan…" : "Simpan Perubahan"}
             </Button>
           </DialogFooter>
         </form>
@@ -1181,7 +1411,7 @@ function AssetEditModal({
   );
 }
 
-function AssetRetireModal({
+function RetireAssetModal({
   asset,
   onClose,
   onSuccess,
@@ -1191,11 +1421,10 @@ function AssetRetireModal({
   onSuccess: () => void;
 }) {
   const [reason, setReason] = useState("");
-  const [retiredAt, setRetiredAt] = useState(new Date().toISOString().slice(0, 10));
   const [errorMsg, setErrorMsg] = useState("");
 
   const retireMutation = useMutation({
-    mutationFn: () => retireAsset(asset.id, { retired_reason: reason.trim(), retired_at: retiredAt }),
+    mutationFn: (body: { retired_reason: string }) => retireAsset(asset.id, body),
     onSuccess,
     onError: (err) => setErrorMsg(getPageApiError(err, "Gagal menghapusbukukan aset.")),
   });
@@ -1207,19 +1436,18 @@ function AssetRetireModal({
       return;
     }
     setErrorMsg("");
-    retireMutation.mutate();
+    retireMutation.mutate({ retired_reason: reason.trim() });
   };
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
-            <AlertTriangle className="size-5" />
-            Penghapusan / Pembebasan Aset
+            Hapusbukukan Aset
           </DialogTitle>
           <DialogDescription>
-            Aset ini akan diubah statusnya menjadi <strong>DIHAPUSBUKUKAN (RETIRED)</strong>. Riwayat dan nomor kode aset tetap tersimpan secara permanen untuk audit.
+            Aset yang dihapusbukukan (rusak total, hilang, atau dilelang) tidak akan dapat diubah lagi dan akan ditandai pada laporan.
           </DialogDescription>
         </DialogHeader>
 
@@ -1228,20 +1456,15 @@ function AssetRetireModal({
             <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{errorMsg}</div>
           )}
 
-          <div className="rounded-md bg-muted/40 p-3 text-sm">
-            <div className="font-semibold text-foreground">{asset.item_name}</div>
-            <div className="font-mono text-xs text-muted-foreground">{asset.asset_code} · {asset.school_unit_name}</div>
-          </div>
-
-          <div>
-            <Label htmlFor="ret-date">Tanggal Penghapusan</Label>
-            <Input
-              id="ret-date"
-              type="date"
-              value={retiredAt}
-              onChange={(e) => setRetiredAt(e.target.value)}
-              required
-            />
+          <div className="rounded-md bg-muted/40 p-3 text-xs space-y-1">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Kode Aset:</span>
+              <span className="font-mono font-bold">{asset.asset_code}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Nama Barang:</span>
+              <span className="font-semibold">{asset.item_name}</span>
+            </div>
           </div>
 
           <div>
@@ -1260,7 +1483,7 @@ function AssetRetireModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Batal
             </Button>
-            <Button type="submit" variant="destructive" disabled={retireMutation.isPending}>
+            <Button type="submit" variant="danger" disabled={retireMutation.isPending}>
               {retireMutation.isPending ? "Memproses…" : "Hapusbukukan Aset"}
             </Button>
           </DialogFooter>
@@ -1340,7 +1563,7 @@ function LabelPrintModal({
             >
               <div className="font-semibold text-foreground">Labelindo No. 103</div>
               <div className="text-xs text-muted-foreground">64 × 32 mm · 12 label/lembar (3 × 4)</div>
-              <Badge variant="outline" className="mt-2 text-[10px]">Ukuran Standar Lega</Badge>
+              <Badge variant="secondary" className="mt-2 text-[10px]">Ukuran Standar Lega</Badge>
             </div>
 
             <div
@@ -1349,7 +1572,7 @@ function LabelPrintModal({
             >
               <div className="font-semibold text-foreground">Labelindo No. 107</div>
               <div className="text-xs text-muted-foreground">50 × 18 mm · 30 label/lembar (3 × 10)</div>
-              <Badge variant="outline" className="mt-2 text-[10px]">Ukuran Kompak</Badge>
+              <Badge variant="secondary" className="mt-2 text-[10px]">Ukuran Kompak</Badge>
             </div>
           </div>
 
@@ -1370,89 +1593,97 @@ function LabelPrintModal({
                 gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               }}
             >
-              {Array.from({ length: totalSlots }).map((_, index) => {
-                const isSkipped = index < startingIndex;
-                const isTarget = index >= startingIndex && index < startingIndex + selectedIds.length;
+              {Array.from({ length: totalSlots }, (_, idx) => {
+                const isSelectedStart = idx === startingIndex;
+                const isUsedBefore = idx < startingIndex;
+                const isFilledInThisBatch = idx >= startingIndex && idx < startingIndex + selectedIds.length;
 
                 return (
                   <button
-                    key={index}
+                    key={idx}
                     type="button"
-                    onClick={() => setStartingIndex(index)}
-                    className={`flex h-9 items-center justify-center rounded border text-xs font-mono transition-all ${
-                      index === startingIndex
-                        ? "border-primary bg-primary font-bold text-primary-foreground shadow"
-                        : isSkipped
-                        ? "border-dashed border-muted-foreground/30 bg-muted/60 text-muted-foreground"
-                        : isTarget
-                        ? "border-primary/50 bg-primary/10 text-primary"
-                        : "border-border bg-background hover:border-primary/40"
+                    onClick={() => setStartingIndex(idx)}
+                    className={`flex h-10 flex-col items-center justify-center rounded border text-xs font-mono font-medium transition-all ${
+                      isSelectedStart
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm ring-2 ring-primary ring-offset-1"
+                        : isFilledInThisBatch
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : isUsedBefore
+                            ? "border-dashed border-muted-foreground/30 bg-muted/50 text-muted-foreground/50 line-through"
+                            : "border-border bg-background hover:border-primary/50"
                     }`}
                   >
-                    {isSkipped ? "Lewati" : `#${index + 1}`}
+                    <span>#{idx + 1}</span>
+                    <span className="text-[9px] font-sans">
+                      {isSelectedStart ? "Awal" : isFilledInThisBatch ? "Isi" : isUsedBefore ? "Lewat" : "Kosong"}
+                    </span>
                   </button>
                 );
               })}
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Slot yang dilewati akan dibiarkan kosong pada lembar pertama, sehingga sisa lembar stiker bekas dapat digunakan kembali tanpa terbuang.
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Slot sebelum posisi awal ditandai sebagai stiker yang sudah terpakai pada lembaran fisik Anda.
             </p>
           </div>
 
-          {/* Precision Calibration Offsets */}
-          <div className="rounded-lg border bg-muted/10 p-3">
-            <div className="text-xs font-semibold text-foreground">Kalibrasi Margin Printer (Milimeter)</div>
-            <div className="mt-2 grid grid-cols-2 gap-3">
+          {/* Calibration & Ink Options */}
+          <div className="rounded-lg border bg-muted/10 p-3 space-y-3">
+            <div className="text-xs font-semibold text-foreground">Kalibrasi Margin Printer & Tinta</div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="offset-x" className="text-xs text-muted-foreground">Geser Horizontal (mm)</Label>
+                <Label htmlFor="cal-x" className="text-xs">Offset Horizontal X (mm)</Label>
                 <Input
-                  id="offset-x"
+                  id="cal-x"
                   type="number"
                   step="0.5"
-                  className="mt-1 h-8 text-xs"
-                  placeholder="0.0"
                   value={offsetX}
-                  onChange={(e) => setOffsetX(Number(e.target.value))}
+                  onChange={(e) => setOffsetX(parseFloat(e.target.value) || 0)}
+                  className="h-8 text-xs font-mono"
+                  placeholder="0.0"
                 />
               </div>
               <div>
-                <Label htmlFor="offset-y" className="text-xs text-muted-foreground">Geser Vertikal (mm)</Label>
+                <Label htmlFor="cal-y" className="text-xs">Offset Vertikal Y (mm)</Label>
                 <Input
-                  id="offset-y"
+                  id="cal-y"
                   type="number"
                   step="0.5"
-                  className="mt-1 h-8 text-xs"
-                  placeholder="0.0"
                   value={offsetY}
-                  onChange={(e) => setOffsetY(Number(e.target.value))}
+                  onChange={(e) => setOffsetY(parseFloat(e.target.value) || 0)}
+                  className="h-8 text-xs font-mono"
+                  placeholder="0.0"
                 />
               </div>
             </div>
-          </div>
 
-          {/* Options */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="mono-toggle"
-              checked={monochrome}
-              onChange={(e) => setMonochrome(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="mono-toggle" className="cursor-pointer text-xs">
-              Mode Hemat Tinta (Cetak hitam-putih / monokrom murni)
-            </Label>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                id="mono-chk"
+                type="checkbox"
+                checked={monochrome}
+                onChange={(e) => setMonochrome(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="mono-chk" className="text-xs cursor-pointer">
+                Mode Hemat Tinta (Hitam Putih Murni / Monokrom)
+              </Label>
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Batal
-          </Button>
-          <Button onClick={handlePrint} disabled={isGenerating} className="gap-1.5">
-            <Printer className="size-4" />
-            {isGenerating ? "Menyiapkan PDF Presisi…" : `Buka & Cetak PDF (${selectedIds.length} label)`}
-          </Button>
+        <DialogFooter className="flex items-center justify-between sm:justify-between">
+          <div className="text-xs text-muted-foreground">
+            {selectedIds.length} stiker akan dicetak
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Tutup
+            </Button>
+            <Button onClick={handlePrint} disabled={isGenerating || selectedIds.length === 0} className="gap-1.5">
+              <Printer className="size-4" />
+              {isGenerating ? "Menyusun PDF…" : "Cetak Dokumen PDF"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

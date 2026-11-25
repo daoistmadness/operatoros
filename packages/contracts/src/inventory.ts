@@ -44,12 +44,18 @@ export const AssetDto = Type.Object({
   asset_code: Type.String(),
   school_unit_id: Type.Integer({ minimum: 1 }),
   school_unit_name: Type.String(),
+  current_unit_id: Type.Optional(Type.Union([Type.Integer({ minimum: 1 }), Type.Null()])),
+  current_unit_name: Type.Optional(NullableString),
   category: AssetCategory,
   item_name: Type.String(),
   brand: NullableString,
+  model: NullableString,
+  serial_number: NullableString,
   location: NullableString,
   funding_source: FundingSource,
   budget_year: Type.Integer({ minimum: 2000, maximum: 2100 }),
+  arkas_account_code: NullableString,
+  purchase_document_reference: NullableString,
   acquisition_date: NullableString,
   price: NullableNumber,
   condition: AssetCondition,
@@ -64,12 +70,17 @@ export type AssetDtoType = Static<typeof AssetDto>;
 
 export const CreateAssetRequest = Type.Object({
   school_unit_id: Type.Integer({ minimum: 1 }),
+  current_unit_id: Type.Optional(Type.Union([Type.Integer({ minimum: 1 }), Type.Null()])),
   category: AssetCategory,
   item_name: Type.String({ minLength: 1 }),
   brand: Type.Optional(NullableString),
+  model: Type.Optional(NullableString),
+  serial_number: Type.Optional(NullableString),
   location: Type.Optional(NullableString),
   funding_source: FundingSource,
   budget_year: Type.Integer({ minimum: 2000, maximum: 2100 }),
+  arkas_account_code: Type.Optional(NullableString),
+  purchase_document_reference: Type.Optional(NullableString),
   acquisition_date: Type.Optional(NullableString),
   price: Type.Optional(NullableNumber),
   condition: Type.Optional(AssetCondition),
@@ -79,13 +90,18 @@ export type CreateAssetRequestDto = Static<typeof CreateAssetRequest>;
 
 export const BatchCreateAssetRequest = Type.Object({
   school_unit_id: Type.Integer({ minimum: 1 }),
+  current_unit_id: Type.Optional(Type.Union([Type.Integer({ minimum: 1 }), Type.Null()])),
   category: AssetCategory,
   item_name: Type.String({ minLength: 1 }),
   quantity: Type.Integer({ minimum: 1, maximum: 100 }),
   brand: Type.Optional(NullableString),
+  model: Type.Optional(NullableString),
+  serial_number: Type.Optional(NullableString),
   location: Type.Optional(NullableString),
   funding_source: FundingSource,
   budget_year: Type.Integer({ minimum: 2000, maximum: 2100 }),
+  arkas_account_code: Type.Optional(NullableString),
+  purchase_document_reference: Type.Optional(NullableString),
   acquisition_date: Type.Optional(NullableString),
   price_per_unit: Type.Optional(NullableNumber),
   condition: Type.Optional(AssetCondition),
@@ -95,10 +111,16 @@ export type BatchCreateAssetRequestDto = Static<typeof BatchCreateAssetRequest>;
 
 export const UpdateAssetRequest = Type.Object({
   item_name: Type.Optional(Type.String({ minLength: 1 })),
+  category: Type.Optional(AssetCategory),
+  current_unit_id: Type.Optional(Type.Union([Type.Integer({ minimum: 1 }), Type.Null()])),
   brand: Type.Optional(NullableString),
+  model: Type.Optional(NullableString),
+  serial_number: Type.Optional(NullableString),
   location: Type.Optional(NullableString),
   funding_source: Type.Optional(FundingSource),
   budget_year: Type.Optional(Type.Integer({ minimum: 2000, maximum: 2100 })),
+  arkas_account_code: Type.Optional(NullableString),
+  purchase_document_reference: Type.Optional(NullableString),
   acquisition_date: Type.Optional(NullableString),
   price: Type.Optional(NullableNumber),
   condition: Type.Optional(AssetCondition),
@@ -114,6 +136,7 @@ export type RetireAssetRequestDto = Static<typeof RetireAssetRequest>;
 
 export const AssetQuery = Type.Object({
   school_unit_id: Type.Optional(Type.String()),
+  current_unit_id: Type.Optional(Type.String()),
   category: Type.Optional(AssetCategory),
   funding_source: Type.Optional(FundingSource),
   condition: Type.Optional(AssetCondition),
@@ -132,6 +155,32 @@ export const AssetListResponse = Type.Object({
   offset: Type.Integer({ minimum: 0 }),
 });
 export type AssetListResponseDto = Static<typeof AssetListResponse>;
+
+export const InventorySummaryResponse = Type.Object({
+  total_assets: Type.Integer({ minimum: 0 }),
+  total_value: Type.Number({ minimum: 0 }),
+  active_count: Type.Integer({ minimum: 0 }),
+  retired_count: Type.Integer({ minimum: 0 }),
+  by_condition: Type.Object({
+    baik: Type.Integer({ minimum: 0 }),
+    rusak_ringan: Type.Integer({ minimum: 0 }),
+    rusak_berat: Type.Integer({ minimum: 0 }),
+  }),
+  by_category: Type.Array(Type.Object({
+    category: AssetCategory,
+    count: Type.Integer({ minimum: 0 }),
+  })),
+  by_funding: Type.Array(Type.Object({
+    funding_source: FundingSource,
+    count: Type.Integer({ minimum: 0 }),
+  })),
+  by_unit: Type.Array(Type.Object({
+    unit_id: Type.Integer({ minimum: 1 }),
+    unit_name: Type.String(),
+    count: Type.Integer({ minimum: 0 }),
+  })),
+});
+export type InventorySummaryResponseDto = Static<typeof InventorySummaryResponse>;
 
 export const LabelTemplateId = Type.Union([
   Type.Literal("103"),

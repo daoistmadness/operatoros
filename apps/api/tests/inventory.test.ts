@@ -44,7 +44,7 @@ function setup() {
   database.client.run("INSERT INTO school_units (id, name, status) VALUES (3, 'SMA Edelweiss Unit Khusus', 'INACTIVE')");
 
   const app = createApp({
-    auth: { authCookieSecret: secret, sessionTtlSeconds: 3600, allowedOrigins: ["http://local"] },
+    auth: { authCookieSecret: secret, allowedOrigins: ["http://local"] },
     databaseHandle: database,
     environment: "test",
   });
@@ -73,7 +73,7 @@ describe("Inventory & Asset Labels V1", () => {
       }));
 
       expect(createRes.status).toBe(201);
-      const created = await createRes.json();
+      const created = (await createRes.json()) as any;
       expect(created.asset_code).toBe("SD-IT-0001");
       expect(created.school_unit_name).toBe("SD Edelweiss");
       expect(created.item_name).toBe("Laptop ASUS Vivobook");
@@ -88,7 +88,7 @@ describe("Inventory & Asset Labels V1", () => {
         budget_year: 2026,
       }));
       expect(createRes2.status).toBe(201);
-      const created2 = await createRes2.json();
+      const created2 = (await createRes2.json()) as any;
       expect(created2.asset_code).toBe("SD-IT-0002");
 
       // Register asset in different category -> sequence starts at 1
@@ -100,7 +100,7 @@ describe("Inventory & Asset Labels V1", () => {
         budget_year: 2026,
       }));
       expect(createRes3.status).toBe(201);
-      const created3 = await createRes3.json();
+      const created3 = (await createRes3.json()) as any;
       expect(created3.asset_code).toBe("SD-FRN-0001");
 
       // Different school unit -> sequence independent
@@ -112,7 +112,7 @@ describe("Inventory & Asset Labels V1", () => {
         budget_year: 2026,
       }));
       expect(createRes4.status).toBe(201);
-      const created4 = await createRes4.json();
+      const created4 = (await createRes4.json()) as any;
       expect(created4.asset_code).toBe("SMP-IT-0001");
 
       // Inactive school unit rejected
@@ -126,7 +126,7 @@ describe("Inventory & Asset Labels V1", () => {
       expect(createRes5.status).toBe(400);
 
       // Audit logged in operations_audit_events
-      const audits = database.client.query("SELECT * FROM operations_audit_events WHERE entity_type = 'ASSET_INVENTORY'").all();
+      const audits = database.client.query("SELECT * FROM operations_audit_events WHERE entity_type = 'INVENTORY_ASSET'").all();
       expect(audits.length).toBeGreaterThanOrEqual(4);
     } finally {
       database.close();
@@ -152,7 +152,7 @@ describe("Inventory & Asset Labels V1", () => {
       }));
 
       expect(batchRes.status).toBe(201);
-      const batchData = await batchRes.json();
+      const batchData = (await batchRes.json()) as any;
       expect(batchData.created_count).toBe(5);
       expect(batchData.items.map((i: any) => i.asset_code)).toEqual([
         "SD-FRN-0001",
@@ -171,7 +171,7 @@ describe("Inventory & Asset Labels V1", () => {
         budget_year: 2026,
       }));
       expect(singleRes.status).toBe(201);
-      const singleData = await singleRes.json();
+      const singleData = (await singleRes.json()) as any;
       expect(singleData.asset_code).toBe("SD-FRN-0006");
     } finally {
       database.close();
@@ -207,14 +207,14 @@ describe("Inventory & Asset Labels V1", () => {
       // Filter by category
       const itRes = await app.handle(request("GET", "/api/inventory/assets?category=IT", cookie));
       expect(itRes.status).toBe(200);
-      const itData = await itRes.json();
+      const itData = (await itRes.json()) as any;
       expect(itData.total).toBe(1);
       expect(itData.items[0].item_name).toBe("Laptop Lenovo ThinkPad");
 
       // Search by brand
       const searchRes = await app.handle(request("GET", "/api/inventory/assets?search=panasonic", cookie));
       expect(searchRes.status).toBe(200);
-      const searchData = await searchRes.json();
+      const searchData = (await searchRes.json()) as any;
       expect(searchData.total).toBe(1);
       expect(searchData.items[0].item_name).toBe("AC Panasonic 1 PK");
     } finally {
@@ -232,22 +232,124 @@ describe("Inventory & Asset Labels V1", () => {
         school_unit_id: 1,
         category: "IT",
         item_name: "Printer Canon",
+        model: "Pixma G3010",
+        serial_number: "SN-CANON-1234",
+        arkas_account_code: "5.2.2.01.01",
+        purchase_document_reference: "BAST-2026-001",
+        funding_source: "BOS",
+        budget_year: 2026,
+        price: 2500000,
+      }));
+      const created = (await createRes.json()) as any;
+      expect(created.model).toBe("Pixma G3010");
+      expect(created.serial_number).toBe("SN-CANON-1234");
+      expect(created.arkas_account_code).toBe("5.2.2.01.01");
+      expect(created.purchase_document_reference).toBe("BAST-2026-001");
+      expect(created.current_unit_id).toBe(1);
+
+      // Perform update: modify location, condition, notes, category, current_unit_id (transfer), price
+      const updateRes = await app.handle(request("PUT", `/api/inventory/assets/${created.id}`, cookie, {
+        category: "OFF",
+        current_unit_id: 2,
+        location: "Tata Usaha SMP",
+        condition: "RUSAK_RINGAN",
+        price: 2600000,
+        model: "Pixma G3020",
+        serial_number: "SN-CANON-5678",
+        notes: "Dipindahkan ke unit SMP, update serial number dan harga per invoice revisi",
+      }));
+      expect(updateRes.status).toBe(200);
+      const updated = (await updateRes.json()) as any;
+      expect(updated.category).toBe("OFF");
+      expect(updated.current_unit_id).toBe(2);
+      expect(updated.current_unit_name).toBe("SMP Edelweiss");
+      expect(updated.school_unit_id).toBe(1); // Permanent origin preserved!
+      expect(updated.school_unit_name).toBe("SD Edelweiss"); // Permanent origin preserved!
+      expect(updated.location).toBe("Tata Usaha SMP");
+      expect(updated.condition).toBe("RUSAK_RINGAN");
+      expect(updated.price).toBe(2600000);
+      expect(updated.model).toBe("Pixma G3020");
+      expect(updated.serial_number).toBe("SN-CANON-5678");
+      expect(updated.notes).toContain("Dipindahkan ke unit SMP");
+      expect(updated.asset_code).toBe("SD-IT-0001"); // Permanent code preserved!
+
+      // Audit logged in operations_audit_events
+      const audits = database.client.query("SELECT * FROM operations_audit_events WHERE entity_reference = ?").all(created.id);
+      expect(audits.some((a: any) => a.operation === "UPDATE_ASSET")).toBe(true);
+
+      // Verify DB immutability triggers directly
+      expect(() => database.client.run("UPDATE inventory_assets SET asset_code = 'SMP-OFF-9999' WHERE id = ?", [created.id]))
+        .toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
+      expect(() => database.client.run("UPDATE inventory_assets SET school_unit_id = 2 WHERE id = ?", [created.id]))
+        .toThrow("INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN");
+      expect(() => database.client.run("DELETE FROM inventory_assets WHERE id = ?", [created.id]))
+        .toThrow("INVENTORY_ASSETS_IMMUTABLE_NO_DELETE");
+    } finally {
+      database.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("calculates summary statistics accurately across units and categories", async () => {
+    const { root, database, app } = setup();
+    try {
+      const cookie = await login(app, "admin");
+
+      // Register asset 1: SD, IT, Baik, 8500000
+      await app.handle(request("POST", "/api/inventory/assets", cookie, {
+        school_unit_id: 1,
+        category: "IT",
+        item_name: "Laptop 1",
+        price: 8500000,
+        condition: "BAIK",
         funding_source: "BOS",
         budget_year: 2026,
       }));
-      const created = await createRes.json();
 
-      const updateRes = await app.handle(request("PUT", `/api/inventory/assets/${created.id}`, cookie, {
-        location: "Tata Usaha",
+      // Register asset 2: SD, FRN, Rusak Ringan, 1500000
+      const a2Res = await app.handle(request("POST", "/api/inventory/assets", cookie, {
+        school_unit_id: 1,
+        category: "FRN",
+        item_name: "Meja Guru",
+        price: 1500000,
         condition: "RUSAK_RINGAN",
-        notes: "Perlu ganti cartridge",
+        funding_source: "BOS",
+        budget_year: 2026,
       }));
-      expect(updateRes.status).toBe(200);
-      const updated = await updateRes.json();
-      expect(updated.location).toBe("Tata Usaha");
-      expect(updated.condition).toBe("RUSAK_RINGAN");
-      expect(updated.notes).toBe("Perlu ganti cartridge");
-      expect(updated.asset_code).toBe("SD-IT-0001"); // Preserved!
+      const a2 = (await a2Res.json()) as any;
+
+      // Register asset 3: SMP, ELK, Baik, 500000, retired
+      const a3Res = await app.handle(request("POST", "/api/inventory/assets", cookie, {
+        school_unit_id: 2,
+        category: "ELK",
+        item_name: "Kipas Rusak",
+        price: 500000,
+        condition: "RUSAK_BERAT",
+        funding_source: "KOMITE",
+        budget_year: 2025,
+      }));
+      const a3 = (await a3Res.json()) as any;
+      await app.handle(request("POST", `/api/inventory/assets/${a3.id}/retire`, cookie, {
+        retired_reason: "Rusak total",
+      }));
+
+      // Fetch summary
+      const sumRes = await app.handle(request("GET", "/api/inventory/summary", cookie));
+      expect(sumRes.status).toBe(200);
+      const summary = (await sumRes.json()) as any;
+
+      expect(summary.total_assets).toBe(3);
+      expect(summary.active_count).toBe(2);
+      expect(summary.retired_count).toBe(1);
+      expect(summary.total_value).toBe(10500000);
+      expect(summary.by_condition.baik).toBe(1);
+      expect(summary.by_condition.rusak_ringan).toBe(1);
+      expect(summary.by_condition.rusak_berat).toBe(1);
+      expect(summary.by_category.find((c: any) => c.category === "IT")?.count).toBe(1);
+      expect(summary.by_category.find((c: any) => c.category === "FRN")?.count).toBe(1);
+      expect(summary.by_category.find((c: any) => c.category === "ELK")?.count).toBe(1);
+      expect(summary.by_unit.find((u: any) => u.unit_id === 1)?.count).toBe(2);
+      expect(summary.by_unit.find((u: any) => u.unit_id === 2)?.count).toBe(1);
     } finally {
       database.close();
       rmSync(root, { recursive: true, force: true });
@@ -266,13 +368,13 @@ describe("Inventory & Asset Labels V1", () => {
         funding_source: "KOMITE",
         budget_year: 2024,
       }));
-      const created = await createRes.json();
+      const created = (await createRes.json()) as any;
 
       const retireRes = await app.handle(request("POST", `/api/inventory/assets/${created.id}/retire`, cookie, {
         retired_reason: "Motor terbakar, biaya perbaikan melebihi nilai ekonomis",
       }));
       expect(retireRes.status).toBe(200);
-      const retired = await retireRes.json();
+      const retired = (await retireRes.json()) as any;
       expect(retired.status).toBe("RETIRED");
       expect(retired.retired_reason).toBe("Motor terbakar, biaya perbaikan melebihi nilai ekonomis");
       expect(retired.retired_at).toBeTruthy();
@@ -323,14 +425,14 @@ describe("Inventory & Asset Labels V1", () => {
     try {
       const cookie = await login(app, "admin");
 
-      const c1 = await (await app.handle(request("POST", "/api/inventory/assets", cookie, {
+      const c1: any = await (await app.handle(request("POST", "/api/inventory/assets", cookie, {
         school_unit_id: 1,
         category: "IT",
         item_name: "Laptop Lab 01",
         funding_source: "BOS",
         budget_year: 2026,
       }))).json();
-      const c2 = await (await app.handle(request("POST", "/api/inventory/assets", cookie, {
+      const c2: any = await (await app.handle(request("POST", "/api/inventory/assets", cookie, {
         school_unit_id: 1,
         category: "IT",
         item_name: "Laptop Lab 02",
@@ -345,7 +447,7 @@ describe("Inventory & Asset Labels V1", () => {
         starting_index: 2,
       }));
       expect(previewRes.status).toBe(200);
-      const previewData = await previewRes.json();
+      const previewData = (await previewRes.json()) as any;
       expect(previewData.template.id).toBe("103");
       expect(previewData.total_assets).toBe(2);
       expect(previewData.starting_index).toBe(2);

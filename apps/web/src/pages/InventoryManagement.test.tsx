@@ -11,6 +11,7 @@ import { AuthContext } from "../context/AuthContext";
 
 vi.mock("../api/inventory", () => ({
   fetchAssets: vi.fn(),
+  fetchInventorySummary: vi.fn(),
   fetchAsset: vi.fn(),
   createAsset: vi.fn(),
   batchCreateAssets: vi.fn(),
@@ -31,12 +32,18 @@ const sampleAssets: AssetDtoType[] = [
     asset_code: "SD-IT-0001",
     school_unit_id: 1,
     school_unit_name: "SD Edelweiss",
+    current_unit_id: 1,
+    current_unit_name: "SD Edelweiss",
     category: "IT",
     item_name: "Laptop Asus Guru",
     brand: "ASUS",
+    model: "Vivobook",
+    serial_number: "SN123",
     location: "Ruang Guru",
     funding_source: "BOS",
     budget_year: 2026,
+    arkas_account_code: "5.1.02.01.01.0024",
+    purchase_document_reference: "INV-001",
     acquisition_date: "2026-02-01",
     price: 8500000,
     condition: "BAIK",
@@ -52,12 +59,18 @@ const sampleAssets: AssetDtoType[] = [
     asset_code: "SD-FRN-0001",
     school_unit_id: 1,
     school_unit_name: "SD Edelweiss",
+    current_unit_id: 1,
+    current_unit_name: "SD Edelweiss",
     category: "FRN",
     item_name: "Meja Guru Kayu Jati",
     brand: "Informa",
+    model: null,
+    serial_number: null,
     location: "Ruang 1A",
     funding_source: "YAYASAN",
     budget_year: 2025,
+    arkas_account_code: null,
+    purchase_document_reference: null,
     acquisition_date: "2025-07-01",
     price: 1200000,
     condition: "BAIK",
@@ -109,6 +122,16 @@ describe("InventoryManagement Page", () => {
     vi.clearAllMocks();
     queryClient.clear();
     vi.mocked(api.fetchAssets).mockResolvedValue(mockAssetList);
+    vi.mocked(api.fetchInventorySummary).mockResolvedValue({
+      total_assets: 2,
+      total_value: 9700000,
+      active_count: 2,
+      retired_count: 0,
+      by_condition: { baik: 2, rusak_ringan: 0, rusak_berat: 0 },
+      by_category: [{ category: "IT", count: 1 }, { category: "FRN", count: 1 }],
+      by_funding: [{ funding_source: "BOS", count: 1 }, { funding_source: "YAYASAN", count: 1 }],
+      by_unit: [{ unit_id: 1, unit_name: "SD Edelweiss", count: 2 }],
+    });
     vi.mocked(staffApi.fetchSchoolUnits).mockResolvedValue(mockSchoolUnits);
   });
 

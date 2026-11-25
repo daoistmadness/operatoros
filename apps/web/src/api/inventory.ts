@@ -4,11 +4,21 @@ import type {
   AssetQueryDto,
   BatchCreateAssetRequestDto,
   CreateAssetRequestDto,
+  InventorySummaryResponseDto,
   LabelPrintRequestDto,
   RetireAssetRequestDto,
   UpdateAssetRequestDto,
 } from "@operatoros/contracts/inventory";
 import { apiRequest } from "../lib/api/client";
+
+export async function fetchInventorySummary(
+  query: Record<string, any> = {},
+): Promise<InventorySummaryResponseDto> {
+  return (await apiRequest<InventorySummaryResponseDto>({
+    path: "/api/inventory/summary",
+    params: query,
+  })).data;
+}
 
 export async function fetchAssets(query: Record<string, any> = {}): Promise<AssetListResponseDto> {
   return (await apiRequest<AssetListResponseDto>({

@@ -2,12 +2,17 @@ CREATE TABLE inventory_assets (
   id TEXT PRIMARY KEY,
   asset_code TEXT NOT NULL UNIQUE,
   school_unit_id INTEGER NOT NULL REFERENCES school_units(id) ON DELETE RESTRICT,
+  current_unit_id INTEGER REFERENCES school_units(id) ON DELETE RESTRICT,
   category TEXT NOT NULL,
   item_name TEXT NOT NULL,
   brand TEXT,
+  model TEXT,
+  serial_number TEXT,
   location TEXT,
   funding_source TEXT NOT NULL,
   budget_year INTEGER NOT NULL,
+  arkas_account_code TEXT,
+  purchase_document_reference TEXT,
   acquisition_date TEXT,
   price REAL,
   condition TEXT NOT NULL DEFAULT 'BAIK',
@@ -24,7 +29,11 @@ CREATE TABLE inventory_assets (
   CHECK (budget_year >= 2000 AND budget_year <= 2100),
   CHECK (length(trim(item_name)) > 0),
   CHECK (brand IS NULL OR length(trim(brand)) > 0),
+  CHECK (model IS NULL OR length(trim(model)) > 0),
+  CHECK (serial_number IS NULL OR length(trim(serial_number)) > 0),
   CHECK (location IS NULL OR length(trim(location)) > 0),
+  CHECK (arkas_account_code IS NULL OR length(trim(arkas_account_code)) > 0),
+  CHECK (purchase_document_reference IS NULL OR length(trim(purchase_document_reference)) > 0),
   CHECK (notes IS NULL OR length(trim(notes)) > 0),
   CHECK (retired_reason IS NULL OR length(trim(retired_reason)) > 0),
   CHECK (price IS NULL OR price >= 0),
@@ -42,6 +51,7 @@ CREATE TABLE inventory_assets (
 );
 
 CREATE INDEX idx_inventory_assets_unit ON inventory_assets(school_unit_id);
+CREATE INDEX idx_inventory_assets_current_unit ON inventory_assets(current_unit_id);
 CREATE INDEX idx_inventory_assets_category ON inventory_assets(category);
 CREATE INDEX idx_inventory_assets_status ON inventory_assets(status);
 CREATE INDEX idx_inventory_assets_funding ON inventory_assets(funding_source);
@@ -63,7 +73,7 @@ BEGIN
 END;
 
 CREATE TRIGGER trg_inventory_assets_immutable_code
-BEFORE UPDATE OF asset_code, school_unit_id, category ON inventory_assets
+BEFORE UPDATE OF asset_code, school_unit_id ON inventory_assets
 BEGIN
   SELECT RAISE(ABORT, 'INVENTORY_ASSETS_IMMUTABLE_CODE_AND_ORIGIN');
 END;
