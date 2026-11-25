@@ -4,7 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
-- Establish permanent OperatorOS engineering guardrails G01–G17, mandatory feature workflow, acceptance checklist, and multi-agent alignment in AGENTS.md.
+- Establish permanent OperatorOS engineering guardrails G01–G17, mandatory feature workflow, acceptance checklist, and multi-agent alignment in AGENTS.md. (#415)
 - Consolidate production runbook and add concurrent locking, pre-deploy SQLite integrity verification, and project isolation to canonical Docker deployment tooling.
 - Delegate synthetic persistence check to root in Docker candidate consumer when database directory is container-owned. (#413)
 - Pass Docker container engine to embedded runtime probe in Docker candidate consumer. (#412)

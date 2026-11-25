@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "52aebfc42ef184ddf2533c2678b9f20df403d3a9b983b50d5e9a8d307f6fcb10",
+      "fingerprint": "aabce150d7dd0ce46c1b105368d8a8f11c164a47e0ffa86ce9d32fee6a1c34fc",
       "snapshot": {
-        "CHANGELOG.md": "3c0c6943c41538644c4ce58fccc1a2b40a9896b56c9d5d6e0835de62bd43aadb"
+        "CHANGELOG.md": "33c381f3116f875f437667cd07f25118cb1905bd8b3decfdc89172c19828cd29"
       },
-      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
+      "head": "a0ad963e9ff9896c8daa1663b1d509e2a8cb2e47",
       "outcome": "no-change",
-      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
+      "reason": "Add PR #415 reference to CHANGELOG.md bullet",
       "evidence": [
-        "Changed: CHANGELOG.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
+        "Changed: CHANGELOG.md at a0ad963e9ff9896c8daa1663b1d509e2a8cb2e47"
       ]
     },
     "source:COMMANDS.md": {
