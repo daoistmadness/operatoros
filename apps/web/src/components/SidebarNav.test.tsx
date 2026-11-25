@@ -19,7 +19,7 @@ vi.mock('../hooks/useServerStatusQuery', () => ({
 }));
 
 const users: Record<'admin' | 'staff', AuthUser> = {
-  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'view_staff_analytics', 'manage_staff', 'export_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections'] },
+  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'view_staff_analytics', 'manage_staff', 'export_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections', 'view_inventory'] },
   staff: { id: 2, username: 'staff', role: 'staff', capabilities: ['view_student'] },
 };
 
@@ -93,6 +93,7 @@ describe('role-aware sidebar navigation', () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
     expect(container.querySelectorAll('nav a')).toHaveLength(navigationGroups.reduce((count, group) => count + group.items.length, 0));
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
+    expect(container.querySelector('a[href="/inventory"]')?.textContent).toContain('Asset Inventory');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
 
@@ -128,6 +129,7 @@ describe('role-aware sidebar navigation', () => {
     expect(activeNames('/analytics/indicators')).toEqual(['Student Insights']);
     expect(activeNames('/analytics/attendance')).toEqual(['Attendance']);
     expect(activeNames('/enrollment')).toEqual(['Student Enrollment']);
+    expect(activeNames('/inventory')).toEqual(['Asset Inventory']);
   });
 
   it.each([
@@ -210,7 +212,7 @@ describe('role-aware sidebar navigation', () => {
       ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
       ['Management Analytics', 'Population Overview', 'Data Quality', 'Attendance', 'Academic Analytics', 'Student Insights', 'Reports & Reviews'],
       ['Data Import & Export'],
-      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Staff Monthly Activity', 'Monthly UPP Reports', 'Settings'],
+      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Staff Monthly Activity', 'Monthly UPP Reports', 'Asset Inventory', 'Settings'],
     ]);
     for (const group of navigationGroups) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
   });

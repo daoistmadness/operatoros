@@ -1068,17 +1068,15 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "07d62fb23d4669220617338c06d7838d5a1a8b9683dcbff57a7df095102d7c28",
+      "fingerprint": "37aa1ea20777e2b5b8c98c81ed00263708bcabaf5926cccbd798da3c5781c3fd",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "0651258915d1351b19ca4f3d23cbc4ac929a49c6f900119a3aea948eedd5bf99"
+        "apps/web/src/components/SidebarNav.test.tsx": "eac2b16df77f437b3cdf9988fa43912aff0bbd3c44a44224fe96648396c6f9df"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "33b5ed335686cf1fce183f23311bde8edcde8b41",
+      "outcome": "no-change",
+      "reason": "SidebarNav test alignment for Asset Inventory navigation item",
       "evidence": [
-        "Reviewed apps/web/src/components/SidebarNav.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at 33b5ed335686cf1fce183f23311bde8edcde8b41"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
