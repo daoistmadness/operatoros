@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "071b0ed0bbf5d7faf75edfc8b1e5a17224bf883b62ae65bf08b140fee5bae58e",
+      "fingerprint": "fe694994d4abaf9b99a14626ad57f12d52661be458b635984ed6c4494db805d5",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "d8cea768ecb6b9f393d130e0fb973cdf82b6149709127bad86872fd972137a54",
+        "AGENTS.md": "92a77d8f177367c7dc63eb9263ffd45c2a2b330290b66d0e1dcc6ec1b4ec9b5c",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
       "evidence": [
-        "Changed: AGENTS.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: AGENTS.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "e1e5ff5361e0b86d2edb6af00264a2a8071d1729d2e574899e857f3f2b9e794b",
+      "fingerprint": "0205be8db3a5ad1f48963df12c8c0d6ccf11b06df832183cb23bfed99a18ac3d",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "d8cea768ecb6b9f393d130e0fb973cdf82b6149709127bad86872fd972137a54",
+        "AGENTS.md": "92a77d8f177367c7dc63eb9263ffd45c2a2b330290b66d0e1dcc6ec1b4ec9b5c",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
       "evidence": [
-        "Changed: AGENTS.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: AGENTS.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "644b4c90423dae8fc4c44b179a2a042148dd4667a24c9556d60e398eabd60721",
+      "fingerprint": "52aebfc42ef184ddf2533c2678b9f20df403d3a9b983b50d5e9a8d307f6fcb10",
       "snapshot": {
-        "CHANGELOG.md": "bedb868c16f7d852269fb8b836e2589ddc7853bddd5f479c2aef2a107fa0ec92"
+        "CHANGELOG.md": "3c0c6943c41538644c4ce58fccc1a2b40a9896b56c9d5d6e0835de62bd43aadb"
       },
-      "head": "7768172198c76c610908b6781f19515c5141a51a",
+      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
       "outcome": "no-change",
-      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
+      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
       "evidence": [
-        "Changed: CHANGELOG.md at 7768172198c76c610908b6781f19515c5141a51a"
+        "Changed: CHANGELOG.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
       ]
     },
     "source:COMMANDS.md": {
