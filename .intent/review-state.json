@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "aabce150d7dd0ce46c1b105368d8a8f11c164a47e0ffa86ce9d32fee6a1c34fc",
+      "fingerprint": "85a3a6f1ba8233f0b094a0ba6a8a23db08f147d428de25a86d103d1b6835800e",
       "snapshot": {
-        "CHANGELOG.md": "33c381f3116f875f437667cd07f25118cb1905bd8b3decfdc89172c19828cd29"
+        "CHANGELOG.md": "d1a565d93c10413195401c0fc8a3e7277f1b6075852c7ef41c0a7d8a16e380f3"
       },
-      "head": "a0ad963e9ff9896c8daa1663b1d509e2a8cb2e47",
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
       "outcome": "no-change",
-      "reason": "Add PR #415 reference to CHANGELOG.md bullet",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
       "evidence": [
-        "Changed: CHANGELOG.md at a0ad963e9ff9896c8daa1663b1d509e2a8cb2e47"
+        "Changed: CHANGELOG.md at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
       ]
     },
     "source:COMMANDS.md": {
@@ -10826,16 +10826,15 @@
       ]
     },
     "source:deploy/docker/Caddyfile": {
-      "fingerprint": "3383a16de1cea363f0b637bef1f90eba471cc2e93ec85044a46b9ff0d06f6ac0",
+      "fingerprint": "1362553768e3c1117213ccec33ea6f53a5910c334d99cfdc3bdd28ebe949ac23",
       "snapshot": {
-        "deploy/docker/Caddyfile": "34af332a43e10c580a27039d58c5f37b8e6dfce751811e7e6d722d0f6a2ac77f"
+        "deploy/docker/Caddyfile": "6ffc448c2029166223fc47d8f276beb2d111d5e24c0c6cde482f7a37212f5510"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "outcome": "no-change",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
       "evidence": [
-        "Diff: deploy/docker/Caddyfile",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Changed: deploy/docker/Caddyfile at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
       ]
     },
     "source:deploy/docker/api.env.example": {
@@ -11414,15 +11413,15 @@
       ]
     },
     "source:scripts/docker-deploy.sh": {
-      "fingerprint": "47766335eeea9842d7c2bcce5e8d308ec09dc1ed00cf0360e9280235a837ae90",
+      "fingerprint": "ef6434bc7779985d403ae974bdae8671c8ca4dfc46b32d7fb8330f5f9a885663",
       "snapshot": {
-        "scripts/docker-deploy.sh": "b6198432ae37d701f6b9bc62574e8c921e77916d627e0825d626210221e954c2"
+        "scripts/docker-deploy.sh": "bfdd375bb8c27fb95607637d861266011156eb98689710fc69e110a2a8398a35"
       },
-      "head": "7768172198c76c610908b6781f19515c5141a51a",
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
       "outcome": "no-change",
-      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
       "evidence": [
-        "Changed: scripts/docker-deploy.sh at 7768172198c76c610908b6781f19515c5141a51a"
+        "Changed: scripts/docker-deploy.sh at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
       ]
     },
     "source:scripts/podman-dev.sh": {
@@ -11447,6 +11446,42 @@
       "reason": "Docker Compose production convergence; no agent skill library changes apply.",
       "evidence": [
         "Changed: scripts/tests/podman-dev.test.ts at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+      ]
+    },
+    "source:packages/db/src/schema-version-cli.ts": {
+      "fingerprint": "242841ff91579f3fecafc5af3783a665b7428b78d852a52416b1bd82aefaa5be",
+      "snapshot": {
+        "packages/db/src/schema-version-cli.ts": "5ccb7142c2f0e94df321d35e1cb720ddf43ae063ba4a9cc48c67944c20ee94ce"
+      },
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "outcome": "no-change",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "evidence": [
+        "Changed: packages/db/src/schema-version-cli.ts at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+      ]
+    },
+    "source:scripts/tests/test_docker_deploy.py": {
+      "fingerprint": "bb940e4db6048c9c19db2f425338a65a622c17eb07498c1b5a937b6192ef3fe4",
+      "snapshot": {
+        "scripts/tests/test_docker_deploy.py": "5019c06a28bef505282f1329bccf3af3df6983896a8cb19c43dcc4e1ff962041"
+      },
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "outcome": "no-change",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "evidence": [
+        "Changed: scripts/tests/test_docker_deploy.py at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
+      ]
+    },
+    "source:scripts/verify-rollback-schema.py": {
+      "fingerprint": "71da115d31d9f6d13d61824f1a5c5f17008faa3a48ae1ddd96fcbe7b7c0e6e3d",
+      "snapshot": {
+        "scripts/verify-rollback-schema.py": "8366d088f1ecb815ae8fbdee1044ec271ce74888979ad270dbf3158817b25843"
+      },
+      "head": "832cb01961b6d60620fe56e672f6a42cc8939fbd",
+      "outcome": "no-change",
+      "reason": "Targeted deployment remediation: schema-aware rollback, compose resolution, and Caddy ingress",
+      "evidence": [
+        "Changed: scripts/verify-rollback-schema.py at 832cb01961b6d60620fe56e672f6a42cc8939fbd"
       ]
     }
   }

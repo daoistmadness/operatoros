@@ -24,6 +24,9 @@ DOCKER_CMD="${DOCKER_COMPOSE_COMMAND:-docker compose}"
 
 acquire_lock() {
   local deploy_dir="$1"
+  if [[ "${OPERATOROS_DEPLOY_LOCK_HELD:-0}" == "1" ]]; then
+    return 0
+  fi
   mkdir -p "$deploy_dir" || sudo -n mkdir -p "$deploy_dir"
   local lock_file="$deploy_dir/.deploy.lock"
   exec 200>"$lock_file"
@@ -31,6 +34,7 @@ acquire_lock() {
     printf 'Error: Concurrent deployment or rollback in progress (lock held on %s)\n' "$lock_file" >&2
     return 1
   fi
+  export OPERATOROS_DEPLOY_LOCK_HELD=1
 }
 
 cmd_verify() {
@@ -85,9 +89,24 @@ cmd_deploy() {
     fi
   done
 
+  # Record target release schema version
+  local target_schema=""
+  if [[ -f "$ROOT_DIR/packages/db/src/manifest.ts" ]]; then
+    target_schema="$(python3 -c "import re; from pathlib import Path; print(re.findall(r'\"([^\"]+)\"', re.search(r'SCHEMA_MIGRATIONS\s*=\s*\[(.*?)\]\s*as\s*const', Path('$ROOT_DIR/packages/db/src/manifest.ts').read_text(), re.DOTALL).group(1))[-1])" 2>/dev/null || true)"
+  fi
+  if [[ -z "$target_schema" ]] && command -v bun >/dev/null 2>&1; then
+    target_schema="$(bun "$ROOT_DIR/packages/db/src/schema-version-cli.ts" --format current 2>/dev/null || true)"
+  fi
+  if [[ -n "$target_schema" ]]; then
+    printf '%s\n' "$target_schema" > "$target_release/.schema_version"
+  fi
+
   # Record previous release for rollback
   if [[ -n "$prev_release" && "$prev_release" != "$target_release" ]]; then
     printf '%s\n' "$prev_release" > "$deploy_dir/.previous_release"
+    if [[ -f "$prev_release/.schema_version" ]]; then
+      cp -f "$prev_release/.schema_version" "$deploy_dir/.previous_schema_version" || true
+    fi
   fi
 
   # Atomic symlink switch
@@ -99,11 +118,12 @@ cmd_deploy() {
   fi
 
   # Find compose file
+  local fallback_compose="${OPERATOROS_COMPOSE_FALLBACK_FILE:-/home/mikhailryu/docker/operatoros/docker-compose.yml}"
   local compose_file=""
   if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
     compose_file="$deploy_dir/docker-compose.yml"
-  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
-    compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
+  elif [[ -f "$fallback_compose" ]]; then
+    compose_file="$fallback_compose"
   elif [[ -f "$target_release/deploy/docker/docker-compose.yml" ]]; then
     compose_file="$target_release/deploy/docker/docker-compose.yml"
   fi
@@ -140,6 +160,7 @@ cmd_deploy() {
 
 cmd_rollback() {
   local deploy_dir="${1:-${OPERATOROS_DEPLOY_DIR:-/mnt/podman-data/operatoros/deploy}}"
+  local data_dir="${OPERATOROS_DATA_DIR:-/mnt/podman-data/operatoros/data}"
   local prev_file="$deploy_dir/.previous_release"
   local current_link="$deploy_dir/current"
 
@@ -157,6 +178,28 @@ cmd_rollback() {
     return 1
   fi
 
+  # Resolve compose file before modifying symlinks (DEP-02)
+  local fallback_compose="${OPERATOROS_COMPOSE_FALLBACK_FILE:-/home/mikhailryu/docker/operatoros/docker-compose.yml}"
+  local compose_file=""
+  if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
+    compose_file="$deploy_dir/docker-compose.yml"
+  elif [[ -f "$fallback_compose" ]]; then
+    compose_file="$fallback_compose"
+  elif [[ -f "$prev_release/deploy/docker/docker-compose.yml" ]]; then
+    compose_file="$prev_release/deploy/docker/docker-compose.yml"
+  fi
+
+  if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
+    printf 'Error: No docker-compose.yml found for rollback in %s, %s, or %s\n' "$deploy_dir" "$fallback_compose" "$prev_release" >&2
+    return 1
+  fi
+
+  # Verify database schema compatibility before modifying symlinks or restarting containers (DEP-01)
+  if [[ -f "$ROOT_DIR/scripts/verify-rollback-schema.py" ]]; then
+    python3 "$ROOT_DIR/scripts/verify-rollback-schema.py" "$data_dir" "$prev_release" "$deploy_dir" || \
+      (command -v sudo >/dev/null 2>&1 && sudo -n python3 "$ROOT_DIR/scripts/verify-rollback-schema.py" "$data_dir" "$prev_release" "$deploy_dir")
+  fi
+
   printf 'Rolling back to previous release: %s\n' "$prev_release"
   ln -sfn "$prev_release" "$current_link"
 
@@ -164,18 +207,7 @@ cmd_rollback() {
     ln -sfn "$prev_release" "/mnt/podman-data/operatoros/web/current" || sudo -n ln -sfn "$prev_release" "/mnt/podman-data/operatoros/web/current"
   fi
 
-  local compose_file=""
-  if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
-    compose_file="$deploy_dir/docker-compose.yml"
-  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
-    compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
-  fi
-
-  if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
-    printf 'Error: No docker-compose.yml found for rollback\n' >&2
-    return 1
-  fi
-
+  printf 'Applying Docker Compose configuration from %s...\n' "$compose_file"
   $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans || sudo -n $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans
   printf 'Rollback complete. Checking health...\n'
   sleep 3
@@ -184,11 +216,14 @@ cmd_rollback() {
 
 cmd_status() {
   local deploy_dir="${1:-${OPERATOROS_DEPLOY_DIR:-/mnt/podman-data/operatoros/deploy}}"
+  local fallback_compose="${OPERATOROS_COMPOSE_FALLBACK_FILE:-/home/mikhailryu/docker/operatoros/docker-compose.yml}"
   local compose_file=""
   if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
     compose_file="$deploy_dir/docker-compose.yml"
-  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
-    compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
+  elif [[ -f "$fallback_compose" ]]; then
+    compose_file="$fallback_compose"
+  elif [[ -f "$deploy_dir/current/deploy/docker/docker-compose.yml" ]]; then
+    compose_file="$deploy_dir/current/deploy/docker/docker-compose.yml"
   fi
   if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
     printf 'Error: No docker-compose.yml found for status\n' >&2
@@ -197,22 +232,24 @@ cmd_status() {
   $DOCKER_CMD -p operatoros -f "$compose_file" ps || sudo -n $DOCKER_CMD -p operatoros -f "$compose_file" ps
 }
 
-case "${1:-}" in
-  verify)
-    [[ $# -ge 3 ]] || usage
-    cmd_verify "$2" "$3"
-    ;;
-  deploy)
-    [[ $# -ge 3 ]] || usage
-    cmd_deploy "$2" "$3" "${4:-}"
-    ;;
-  rollback)
-    cmd_rollback "${2:-}"
-    ;;
-  status)
-    cmd_status "${2:-}"
-    ;;
-  *)
-    usage
-    ;;
-esac
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  case "${1:-}" in
+    verify)
+      [[ $# -ge 3 ]] || usage
+      cmd_verify "$2" "$3"
+      ;;
+    deploy)
+      [[ $# -ge 3 ]] || usage
+      cmd_deploy "$2" "$3" "${4:-}"
+      ;;
+    rollback)
+      cmd_rollback "${2:-}"
+      ;;
+    status)
+      cmd_status "${2:-}"
+      ;;
+    *)
+      usage
+      ;;
+  esac
+fi

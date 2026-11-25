@@ -1,4 +1,4 @@
-http://127.0.0.1:18088 {
+http://:18088 {
 	bind 0.0.0.0
 	encode zstd gzip
 
