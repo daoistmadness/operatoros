@@ -1,18 +1,25 @@
-# AGENTS.md — AI Coding Agent Guidelines
+# AGENTS.md — AI Coding Agent Guidelines & Permanent Engineering Guardrails
 
-## Core Instructions
+## 1. Core Instructions
 
 You are a senior software engineer. Deliver simple, maintainable, reliable solutions that satisfy the user's requirements without unnecessary complexity.
 
 Before making changes:
 
-1. Read the project's `AGENTS.md` and any applicable nested `AGENTS.md` files.
+1. Read the project's `AGENTS.md` and any applicable nested agent instructions.
 2. Understand the existing architecture, conventions, and dependencies.
 3. Reuse existing utilities, components, and patterns wherever practical.
 4. Make the smallest safe change that fully solves the problem.
 5. Follow **KISS, YAGNI, and DRY** throughout implementation.
 
-## Engineering Principles
+### Permanent Engineering Principle
+
+> **Build new functionality without unnecessarily disturbing what already works.**
+> Stable architecture. Incremental features. Preserved data. Verified compatibility. Controlled releases. Minimal complexity.
+
+---
+
+## 2. Engineering Principles
 
 ### 1. KISS — Keep It Simple, Stupid
 
@@ -52,17 +59,7 @@ Maintain a single authoritative representation of shared knowledge and business 
 
 **Rule:** Abstract repeated knowledge, not every repeated line.
 
-## Implementation Workflow
-
-1. **Understand:** Identify the requested outcome and inspect relevant code.
-2. **Plan:** Choose the smallest viable implementation.
-3. **Reuse:** Check for existing solutions before writing new ones.
-4. **Implement:** Make focused changes consistent with the codebase.
-5. **Verify:** Run relevant tests, linting, and type checks when available.
-6. **Review:** Remove unnecessary complexity, duplication, and unrelated changes.
-7. **Report:** Summarize what changed and note any verification limitations.
-
-## Decision Priorities
+### Decision Priorities
 
 When making technical decisions, prioritize:
 
@@ -75,7 +72,7 @@ When making technical decisions, prioritize:
 
 If principles conflict, favor clarity and correctness over rigid adherence.
 
-## Avoid
+### Avoid
 
 - Overengineering simple requirements
 - Premature optimization
@@ -88,7 +85,7 @@ If principles conflict, favor clarity and correctness over rigid adherence.
 - Excessive boilerplate
 - Changing working code without a concrete reason
 
-## Definition of Done
+### Definition of Done
 
 A task is complete when:
 
@@ -126,197 +123,409 @@ Keep maintainer decisions and changes in the repository; do not require the user
 Use intent maintainer setup to initialize missing records, maintainer add to register skills, maintainer status to identify work, and maintainer sync to update generated metadata. Finish with intent maintainer check.
 <!-- intent-maintainer:end -->
 
-## Repository execution contract
+---
 
-This file owns execution rules. Nested `AGENTS.md` files may add local rules
-but cannot weaken safeguards. Follow the user's authorized scope; do not ask
-again for routine work already authorized. Source, lockfiles, and live GitHub
-settings establish current facts. Historical audits are evidence, not procedure.
-Start with [docs/README.md](docs/README.md).
+## 3. Permanent Guardrails (G01 – G17)
 
-## Documentation rules
+### G01 — Architecture stability
 
-Follow [the documentation system](docs/decisions/documentation-system.md).
-Keep maintained project docs in the architecture, guides, reference, decisions,
-runbooks, or session areas. docs/README.md is the only loose Markdown file in
-docs/. Use one topic per kebab-case page, add status and last_reviewed front
-matter, and link every maintained page from the index. The protected Dapodik
-design is the explicit content and front-matter exception. Keep package-owned,
-generated, release, and contributor docs with their existing owners.
-The program-level status deliverables `MASTER_CHECKLIST.md`, `DECISIONS.md`, and
-`STABILITY_REPORT.md` are explicit root exceptions. Give each status and
-last_reviewed front matter, link each once from docs/README.md, and keep
-canonical architecture and operational procedures in their existing docs pages.
+The established OperatorOS architecture is authoritative:
 
-Session logs belong only in docs/session/; they are non-authoritative.
-Promote durable facts into their canonical page. Add one user-facing
-CHANGELOG.md bullet under [Unreleased] for every PR. Add the PR number after
-GitHub assigns it. Use the skip-changelog label only when the change has no
-release-history impact. The repository CI checks the docs layout, front
-matter, index, links, and changelog bullet.
+- **Frontend:** TanStack Start SPA mode under Vite host (see [tanstack-start-spa.md](docs/decisions/tanstack-start-spa.md)).
+- **Backend API:** Elysia API (Elysia 1.4.29; see [v1 documentation](https://elysiajs.com/llms.txt) and [runtime-operations.md](docs/runbooks/runtime-operations.md)).
+- **Runtime:** Linux Bun (pinned 1.4.5 with SQLite 3.54.1; see [bun-toolchain.md](docs/decisions/bun-toolchain.md)).
+- **Authoritative Database:** SQLite (`operatoros.sqlite`, contracts: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`, `POSTGRESQL_NOT_SUPPORTED`; see [sqlite-only-runtime.md](docs/decisions/sqlite-only-runtime.md)).
+- **Local Development:** Native execution using `mise run dev` through `./start-dev.sh`. Container-based development is discontinued.
+- **Production Containers:** Docker Engine and Docker Compose (`deploy/docker/docker-compose.yml`, project `operatoros`). Podman and Quadlet are discontinued and unsupported (see [docker-compose-deployment.md](docs/decisions/docker-compose-deployment.md)).
+- **Reverse Proxy:** Caddy reverse proxy (`deploy/docker/Caddyfile`, pinned `2.11.9-alpine`).
+- **Ingress:** Tailscale Serve for private HTTPS ingress.
+- **CI/CD:** Repository-owned GitHub Actions (`.github/workflows/ci.yml`; see [.github/CI.md](.github/CI.md)).
+- **Release Qualification:** CI-qualified, scanned, attested, immutable release artifacts verified by `scripts/docker-candidate-release.py`.
+- **Deployment Script:** Canonical deployment script `scripts/docker-deploy.sh` with exclusive locking, integrity-verified SQLite backups, and project isolation.
+- **Production Runtime Identity:** Host UID/GID `1000:1000` (`mikhailryu`) matching container runtime UID/GID `1000:1000` (`bun`).
 
-## Runtime and ownership
+Do not replace, redesign, or introduce alternatives to these architectural components without demonstrated necessity and explicit owner approval. Architecture decisions evolve through accepted decisions in `docs/decisions/`, not through incidental feature implementation.
 
-The owner chose Bun as the application runtime and accepted the known SQLite
-issue only for the prior Bun 1.4.4 image on 2026-11-16. Do not migrate the
-application to another runtime solely to address that issue. Current source
-pins Bun 1.4.5 with SQLite 3.54.1; keep the prior runtime identity and accepted
-finding in its historical release evidence. This decision does not approve a
-production deployment or suppress unrelated findings.
+### G02 — Preserve existing functionality
 
-OperatorOS is an offline-first school attendance and academic analytics system.
-Local runtime contract: `SQLITE_ONLY_SUPPORTED`, `LOCAL_BROWSER_RUNTIME`,
-and `POSTGRESQL_NOT_SUPPORTED`. Native Elysia and browser workflows via
-`./start-dev.sh` or `bun run dev` are the single canonical local development path.
-Container-based development is discontinued. Docker Engine and Docker Compose
-(`deploy/docker/docker-compose.yml`) are the single canonical production container
-architecture on OPRSERVER. Podman and Quadlet are discontinued and unsupported.
-See `docs/decisions/docker-compose-deployment.md` and
-`docs/runbooks/ubuntu-server-deployment.md`. Run the local Elysia backend
-(`apps/api/`) and React browser frontend (`apps/web/`). Tauri is removed.
-`backend/` holds migration, fixture, and operations tooling; it is not the
-production backend. Production consumes CI-built, scanned, attested, immutable
-release artifacts verified by `scripts/docker-candidate-release.py` and deployed
-by `scripts/docker-deploy.sh`.
+Every change must preserve existing supported functionality unless an intentional breaking change has been explicitly authorized.
 
-- `@operatoros/db` owns Drizzle schema, SQLite lifecycle, and `packages/db/src/data-dir.ts`. Business services, HTTP, backup policy, and scheduling belong in `apps/api/`.
-- `@operatoros/contracts` owns cross-boundary TypeBox DTO schemas/types. Keep HTTP transport in API and database rows in DB. Use explicit internal-to-DTO mappers.
-- `@operatoros/ui` owns domain-neutral primitives and source-owned shadcn components; use Base UI for new primitives. Keep routes, fetching, business forms, and domain rules in web. Existing web Radix components may remain.
-- `@operatoros/excel` owns Excel infrastructure. Server DTOs supply attendance, grades, KKM, and rankings. ExcelJS `4.4.0` owns `.xlsx`; `@operatoros/sheetjs-fork` handles legacy `.xls` (lazy loaded). Preserve format parity. Authoritative exports use the API.
-- Cross-workspace imports use package exports. No deep `@operatoros/*/src`, relative cross-workspace source imports, or `packages/*` imports of `apps/*`. Contracts must not import Elysia, Drizzle, or React. UI must not import DB, contracts, API, Elysia, or Drizzle. API, DB, and contracts must not import UI. Web must not import DB, Excel, or API internals. Run `bun run check:architecture`.
+Before implementing a feature:
 
-## Backend skills and conventions
+1. Identify the affected modules, interfaces, database structures, and business workflows.
+2. Understand existing behavior and dependencies.
+3. Identify relevant regression tests.
+4. Define the smallest sufficient implementation.
 
-For Elysia backend implementation, debugging, review, or explicit migration,
-load `@operatoros/agent-skills#elysiajs` with
-`bun run skills:load @operatoros/agent-skills#elysiajs`. Read only the
-references needed for the task. The package is explicitly allowlisted in the
-workspace Intent config.
+Do not remove, rename, or change existing functionality merely to simplify implementation of a new feature.
 
-Check `apps/api/package.json`, `bun.lock`, and existing code. The backend uses
-Elysia 1.4.29; the installed skill describes v2. Use installed types
-and [v1 documentation](https://elysiajs.com/llms.txt) for v1 code. Do not copy
-v2 route signatures or TypeBox APIs, upgrade dependencies, add Eden, replace
-authentication, or change deployment merely because a skill example does so.
-Keep TypeBox on the root `catalog:` entry; never pin it per package.
+Preserve existing:
 
-Follow the [feature golden path](docs/architecture/change-safety-golden-path.md):
-identify canonical authority, domain owner, shared DTO, mapper, authorization
-scope, query-key owner, and mutation invalidations before cross-layer changes.
-Keep explicit route registration in `apps/api/src/app.ts`. Test affected routes,
-including rejection paths, and run API typechecking. Preserve stable ownership.
+- Application workflows.
+- API contracts (see [change-safety-golden-path.md](docs/architecture/change-safety-golden-path.md)).
+- Business rules.
+- Navigation and routes.
+- Authentication and authorization.
+- User permissions.
+- Database relationships.
+- Search functionality.
+- Error-handling behavior.
+- Existing integrations.
 
-## Frontend and domain rules
+Intentional behavioral changes must be documented and covered by tests.
 
-- Use canonical `/api/<domain>/...` paths through `apps/web/src/lib/api/client.ts`. Pages consume feature APIs. Keep OpenAPI contracts versioned and drift-checked. Follow [web design](apps/web/DESIGN.md), reuse primitives, and lazy-load routes.
-- Keep one in-memory TanStack Query client. Never persist authenticated queries or analytics in `localStorage`. Include every filter in query keys, invalidate targeted data after mutations, and clear protected data on logout.
-- Use sanitized API errors. Preserve loading, empty, error, conflict, and authorization states.
-- Compute metrics on the server using canonical SQL and [metric definitions](docs/reference/metrics.md). Browser code formats/adapts for Chart.js. No client recomputation or persisted rollups without benchmark evidence and review. Use TanStack Table only for a bounded justified table. Do not add TanStack Form, Zod, or another chart library without explicit architecture approval. The approved frontend optimization rollout includes the scoped TanStack Form staff pilot and Management Overview Unovis chart documented in [frontend architecture](docs/architecture/frontend.md); do not expand those integrations into wholesale migrations. The [accepted TanStack Start SPA decision](docs/decisions/tanstack-start-spa.md) authorizes migrating the current TanStack Router app to Start's SPA mode. Keep Vite as the web dev and preview host, preserve the same-origin HTTP proxy to the separately supervised Elysia API, and do not add SSR, Start server routes or functions, or in-process Elysia without a new decision.
+### G03 — Database evolution and data preservation
 
-## Verification workflow
+SQLite remains the authoritative database. Every database-changing feature must reuse the existing version-controlled migration mechanism (`packages/db/src/manifest.ts`, Drizzle schema migrations).
 
-Read scoped instructions and callers before editing. Make the smallest complete
-change, reuse existing patterns, and update affected tests with synthetic data.
-Implementation prompts start with `/plan`; keep code identifiers exact.
+Mandatory rules:
 
-Toolchain authorities: `mise.toml`, `mise.lock`, `package.json`, `bun.lock`,
-`Makefile`, and [COMMANDS.md](COMMANDS.md). Native workflows use Linux Bun
-resolved by mise. Container-based development is removed; the native Bun
-runner is the authoritative development environment.
-Workspace and launcher CLI typechecks use the root-pinned TSRS 7.1.0-beta.tsrs4
-runner under the pinned Node.js 24.19.0 compatibility runtime; Bun 1.4.5's
-`bun check` also runs in CI. TypeScript
-5.9.3 remains for compiler-API and TypeScript 5 peer consumers, not workspace
-CLI typechecks.
-HK 2.8.1 is pinned in `mise.toml` and uses the matching versioned Pkl schema in
-`hk.pkl`. Keep its hook-local configuration when preserving current behavior:
-top-level `steps` materializes implicit `check`, `fix`, and `pre-commit` hooks.
-This repository does not define a `fix` hook.
-Before running Bun, inspect `command -v`, `type -P` (in Bash), and `readlink -f`.
-Reject `/mnt/<drive>`, WindowsApps, Program Files, `.exe`, `.cmd`, `.bat`, and
-UNC-like paths. `operatoros_wsl_prepare_bun` and `validate-wsl-bun.sh` are legacy
-compatibility identifiers, not WSL onboarding requirements.
+- Prefer additive and backward-compatible schema changes.
+- Never rewrite a migration already released or applied to production.
+- Never reset, recreate, overwrite, truncate, or delete the production database at `/mnt/podman-data/operatoros/data/operatoros.sqlite`.
+- Never execute ad hoc production schema modifications outside the approved migration process.
+- Apply only pending migrations.
+- Record migration completion consistently and transactionally wherever supported.
+- Reject unsupported or unexpected database schema states.
+- Preserve existing records, primary keys, relationships, constraints, indexes, triggers, and FTS5 functionality.
+- Preserve existing business semantics during data transformations.
+- Never silently discard or replace records to make a migration succeed.
 
-1. Install locked tools with `mise install` and dependencies with `bun install --frozen-lockfile`. `mise run doctor` checks the checkout, prerequisites, and configured development DB; use an approved disposable data root for agent validation.
-2. Use `mise run dev` through `./start-dev.sh`; `./start-dev.sh --check` validates startup. Inspect managed sessions before starting services.
-3. Use `mise run test:fast` for iteration. Fetch `origin/main` before `mise run check:affected`. `bun run turbo:check` runs the complete package graph. See [test strategy](docs/guides/testing.md).
-4. For Markdown-only changes, run `mise run test:fast`, `bun .github/scripts/check-markdown-links.ts`, `bun .github/scripts/check-markdown-organization.ts`, and `bun .github/scripts/check-current-developer-docs.ts`. Do not run the local full release gate for documentation-only edits.
-5. Run `mise run check:full` for release-sensitive changes and `mise run db:fresh` for schema/bootstrap work. Use relevant security and Excel parity checks. `hk check --all` runs lint and architecture checks.
-6. Validate E2E tooling with `make e2e-validate`. Local smoke: `timeout 300 make e2e-smoke`. `make e2e-full` is CI-only without explicit owner approval. Verify user-visible UI in a real browser; `./scripts/verify-browser.sh` is the repository's live-stack smoke workflow.
+Use the expand–migrate–contract pattern for potentially breaking schema changes. Destructive, irreversible, or incompatible migrations require explicit owner authorization and a documented recovery strategy. Do not introduce a new migration framework when the existing mechanism satisfies the requirements.
 
-CI uses one repository-owned workflow, `.github/workflows/ci.yml`, with parallel
-package and complete browser/API smoke checks. GitHub-managed security workflows
-remain separate. Required checks and schedules are documented in
-[CI operations](.github/CI.md). No path exclusions satisfy a mandatory PR gate.
-Report files, checks actually run, uncertainty, and preserved worktree entries. Never claim pending checks, queued auto-merge, or unrun tests succeeded.
+### G04 — Database migration verification
 
-## Git and worktree safeguards
+Every database-changing feature must provide appropriate evidence that:
 
-Fetch `origin`, inspect the latest green `origin/main`, and use a focused
-`codex/` branch. Use a separate worktree when the shared checkout is dirty.
-Stage explicit paths only. Never amend, rebase, squash locally, force-push,
-push directly to `main`, use `--admin`/`--no-verify`, or bypass a failing check.
-`rebase.autoStash=true` does not authorize rebasing dirty branches; stop on an
-autostash conflict.
+1. A fresh database can be initialized successfully (`mise run db:fresh`).
+2. A representative database using the previous supported schema can be upgraded.
+3. Existing records and relationships are preserved.
+4. New functionality works with migrated data.
+5. Existing functionality continues working.
+6. Completed migrations are not incorrectly reapplied.
+7. Failed migrations do not leave partially applied state.
+8. Database integrity and foreign key checks pass (`PRAGMA integrity_check; PRAGMA foreign_key_check;`).
+9. Relevant FTS5 and search behavior remains correct.
+10. Previous-release compatibility is explicitly established or declared unsupported.
 
-Authorized PRs use GitHub squash merge with `--match-head-commit`; auto-merge may
-wait for checks. Zero human approvals does not remove technical gates. Preserve
-strict up-to-date validation, no administrator bypass, and force-push/deletion
-protection. Follow [CONTRIBUTING.md](CONTRIBUTING.md) for merge verification,
-post-merge checks, two focused correction attempts, and protected revert PRs.
+Use representative synthetic fixtures or authorized sanitized data. Never upload confidential production records to external CI systems or AI services. Reuse existing database tests in `packages/db/test/` and validation infrastructure.
 
-Preserve all user work, especially `PROJECT_CONTEXT.md`, `f22`, and
-`docs/student-data/dapodik-roster-import-design.md` when present. Never merge,
-copy, modify, or delete `wip/followups-api-preservation-20260728-013523` at
-`07b7211b73a59f0032dc33c0c43741d884b38741`.
+### G05 — Development and production isolation
 
-WIP reference clarification (2026-10-24): Read-only checks found both the
-local branch and `origin` tracking ref for
-`wip/followups-api-preservation-20260728-013523` at
-`0763b624c5d2f08a6e4c590d4d5e867bf07fe777`. These SHAs identify distinct
-commits and are not interchangeable. The provenance of the discrepancy and
-authorization for any ref movement are unknown. This note preserves the
-historical pin above and does not authorize changing either ref.
+Development must remain strictly isolated from production.
 
-Protect `~/code/repos/operatoros`, `~/code/worktrees/operatoros/`, and
-`~/.local/share/operatoros/development/`. Prune only clean integrated worktrees
-after fetching and verifying merged-main: inspect
-`wt step prune --dry-run --min-age=0s` before `--foreground`. Never force-delete,
-use `wt merge`, or clean before verification.
+Development and testing must use:
 
-## Data and security safeguards
+- Separate development databases (resolved under `XDG_DATA_HOME` or `~/.local/share/operatoros/`).
+- Separate runtime configuration (`OPERATOROS_DATA_DIR` owns the data root; `OPERATOROS_DEV_DATA_DIR` is deprecated).
+- Separate development ports (`PORT=18080`, Vite `PORT=18081`).
+- Disposable test databases where appropriate.
+- Existing managed development commands (`mise run dev`, `./start-dev.sh`).
 
-- `OPERATOROS_DATA_DIR` owns the data root and derives `operatoros.sqlite`, backups, and logs. `OPERATOROS_DEV_DATA_DIR` is deprecated. Never select a development database from ambient `DATABASE_URL`. Alternate ports do not isolate shared development data.
-- Startup validates existing DBs; it never migrates them. Schema authority is
-  `packages/db/src/manifest.ts`; fresh bootstrap installs the S4.7 base plus
-  S4.8 employee, S4.9 school-unit, S5.0 monthly PTK, S5.1 UPP archive, S5.2
-  student administration, S5.3 student identity verification, and S5.4 BOSP
-  reminder extensions. The current schema head is `20261027_s54`. The protected
-  operational DB stays S4.3 until separately authorized migration. Never
-  read/use/modify it or rollback backups for agent validation.
-- New migrations need synthetic current-schema, fresh-parity, failure, and recovery tests. Operational migration needs exact authorization, wrapper preflight, exclusive lock, fresh verified backup, and process-local context. Follow [database operations](docs/runbooks/database-operations.md) and [data reset](docs/runbooks/data-reset.md). A Git revert is not database recovery. PostgreSQL reconsideration needs a new ADR.
-- Keep `astyx_session` an HttpOnly server-side cookie; no JWT/localStorage auth. Unsafe cookie-authenticated requests require the configured exact Origin. Trust forwarded IPs only from exact direct peers in `TRUSTED_PROXY_ADDRESSES`. Backups require AES-256-GCM and a `BACKUP_ENCRYPTION_KEY` different from `AUTH_COOKIE_SECRET`. Follow [security hardening](docs/reference/security-model.md) and [rotation](docs/runbooks/secret-rotation.md).
-- Never commit personal data, credentials, backup paths, live checksums, or records. Do not hand-edit generated builds, dependencies, runtime state, local SQLite files, backups, logs, or generated Excel/PDF outputs. See [CONVENTIONS.md](CONVENTIONS.md).
-- Never kill unknown port owners or remove unverifiable processes. E2E owns temporary roots/ports and removes only its artifacts.
+Agents must **never** write to the production database at `/mnt/podman-data/operatoros/data/operatoros.sqlite`. Do not allow development commands, test fixtures, database resets, migration experiments, or seed operations to target production storage. Do not bypass existing development startup safeguards or select a development database from ambient `DATABASE_URL`. Production changes require separate, explicit authorization.
 
-Stop for genuinely ambiguous domain rules, conflicting requirements, missing
-access/data, unrelated failing tests, unapproved destructive/broad changes,
-dependency upgrades, API/schema changes, file deletes/renames, generated-file
-edits, or security/auth changes outside the authorized task. Never weaken DB,
-authorization, audit, or Git safeguards. Sensitive authorized changes require
-positive/negative tests, authorization and transaction checks, and relevant
-collision, retry, idempotency, failure, and recovery coverage.
+### G06 — Security and authorization preservation
 
-## Agent execution discipline
+Every feature must preserve existing security boundaries (see [security-model.md](docs/reference/security-model.md)).
 
-Agents must optimize for completed operational outcomes rather than the volume
-of generated evidence. Mandatory operating rules:
+Do not weaken:
 
-1. Establish actual runtime state before making architectural claims.
-2. Distinguish verified facts from assumptions, obsolete scripts, and historical records.
-3. Reuse existing valid evidence; do not reopen completed work without a material regression.
-4. Do not create recursive audit, requalification, or remediation loops.
-5. Do not expand into adjacent infrastructure without explicit authorization.
-6. Do not launch overlapping subagents or switch providers when quota is exhausted.
-7. Escalate genuine authority boundaries promptly; stop when the objective is achieved.
+- **Authentication:** `astyx_session` remains an HttpOnly, SameSite server-side cookie; no JWT or `localStorage` token storage.
+- **Origin Validation:** Unsafe cookie-authenticated requests require the configured exact Origin.
+- **Proxy Trust:** Trust forwarded IPs only from exact direct peers in `TRUSTED_PROXY_ADDRESSES`.
+- **Role-Based Authorization:** User permissions, role boundaries, and school/tenant isolation.
+- **Input Validation & Sanitization:** TypeBox DTO schemas at API boundaries; sanitized error messages.
+- **Secret Management:** AES-256-GCM encrypted backups using `BACKUP_ENCRYPTION_KEY` distinct from `AUTH_COOKIE_SECRET` (see [secret-rotation.md](docs/runbooks/secret-rotation.md)).
+- **Container Security:** Read-only root filesystems, dropped capabilities, `NoNewPrivileges`, non-root execution (UID/GID `1000:1000`).
+- **Database Access:** Local filesystem permissions and strict process boundary checks.
 
+Never hardcode credentials, tokens, passwords, or confidential production configuration. Do not disable security checks to make tests or CI pass. Do not expand privileges or expose new network interfaces without explicit authorization.
+
+### G07 — API and application compatibility
+
+Preserve compatibility between existing frontend components, backend APIs, database structures, and integrations.
+
+- Prefer additive API changes.
+- Maintain workspace layer boundaries:
+  - `@operatoros/db` owns Drizzle schema, SQLite lifecycle, and `packages/db/src/data-dir.ts`.
+  - `@operatoros/contracts` owns cross-boundary TypeBox DTO schemas and types. No Elysia, Drizzle, or React imports.
+  - `@operatoros/ui` owns domain-neutral primitives and source-owned shadcn components. No DB, contracts, API, Elysia, or Drizzle imports.
+  - `@operatoros/excel` owns Excel infrastructure. Server DTOs supply attendance, grades, KKM, rankings. Authoritative exports use API.
+  - `apps/api/` owns Elysia HTTP transport, business services, and backup policy. Explicit route registration in `apps/api/src/app.ts`.
+  - `apps/web/` consumes canonical `/api/<domain>/...` paths via `apps/web/src/lib/api/client.ts`. No DB, Excel, or API internal imports.
+  - Cross-workspace imports must use package exports (`bun run check:architecture`).
+- Do not silently change:
+  - Existing endpoint semantics.
+  - Response structures.
+  - Field types.
+  - Required request parameters.
+  - Error codes.
+  - Permission requirements.
+  - Existing persisted values or their meaning.
+- When an incompatible change is necessary, document affected consumers and provide a transition strategy.
+- Do not introduce API versioning infrastructure unless the actual change requires it.
+
+### G08 — Regression-first validation
+
+Every change must include validation proportionate to its impact (see [testing.md](docs/guides/testing.md)).
+
+- Use existing tests before creating new testing infrastructure.
+- For bug fixes: add or update a regression test that demonstrates the defect and verifies the fix.
+- For new features: test both the new behavior and affected existing behavior.
+- Never delete, skip, weaken, or rewrite valid existing tests merely to obtain a passing result.
+- Changes to expected behavior require a legitimate explanation and corresponding authorization when breaking compatibility.
+- Do not claim that a feature is complete while relevant tests are failing.
+
+### G09 — Scope and engineering simplicity
+
+Implement the smallest sufficient solution.
+
+Mandatory principles:
+
+- Reuse before creating.
+- Extend before replacing.
+- Evidence before assumptions.
+- Simplicity before abstraction (KISS).
+- Compatibility before convenience.
+- Stability before optimization (YAGNI, DRY).
+
+Do not introduce speculative abstractions, unnecessary dependencies, duplicated utilities, parallel implementations, new frameworks, or unrelated refactoring. Do not expand a feature request into an infrastructure or architectural redesign. A newly discovered unrelated issue should be reported separately unless it directly prevents safe completion of the authorized task.
+
+### G10 — Production deployment safety
+
+Production releases must use the existing canonical deployment process: `scripts/docker-deploy.sh` (see [ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md)).
+
+Preserve the existing requirements for:
+
+- Explicit production authorization.
+- CI-qualified release artifacts built by `.github/workflows/ci.yml`.
+- Artifact authentication and verification (`scripts/docker-deploy.sh verify`).
+- Exclusive deployment locking (`flock -n 200 "$deploy_dir/.deploy.lock"`).
+- Integrity-verified SQLite pre-deployment backup (`PRAGMA integrity_check`).
+- OperatorOS-specific Docker Compose project isolation (`-p operatoros`).
+- Runtime health and readiness verification (`/health`).
+- Existing Caddy reverse proxy and Tailscale ingress.
+- Preservation of unrelated OPRSERVER services.
+
+Database-changing releases must explicitly establish supported source and target schema versions and migration execution behavior. Where an exact pre-migration recovery point is necessary, establish write quiescence before creating the recovery snapshot. Do not rebuild production artifacts directly from an unqualified development checkout. Do not deploy automatically merely because a PR has merged.
+
+### G11 — Rollback and recovery safety
+
+Application rollback and database recovery are separate operations (see [database-operations.md](docs/runbooks/database-operations.md)).
+
+- An application rollback (`scripts/docker-deploy.sh rollback`) is permitted only when the previous release is compatible with the current database state.
+- Preserving the database file does not by itself establish schema compatibility.
+- If a migration fails before committing, recover transactionally using the existing migration mechanism.
+- If a new application release fails after a committed migration:
+  1. Preserve the current database.
+  2. Roll back the application only when compatibility is verified.
+  3. Otherwise, enter a safe failure state and report the required recovery decision.
+- Never automatically restore an older production database over newer committed data.
+- Database restoration, destructive recovery, and irreversible transformations require explicit owner approval.
+
+### G12 — Git and repository discipline
+
+Follow the repository Git and merge policies in this document and [CONTRIBUTING.md](CONTRIBUTING.md):
+
+- Work on authorized feature branches or clean worktrees (`codex/<topic>` branched from up-to-date `origin/main`).
+- If the shared checkout is dirty, use a separate worktree under `~/code/worktrees/operatoros/`.
+- Stage explicit named paths only. Never use broad `git add .` or `git commit -a`.
+- Never amend, rebase, squash locally, force-push, or push directly to `main`.
+- Never use `--admin` or `--no-verify` to bypass failing checks.
+- Authorized PRs use GitHub squash merge with `--match-head-commit`; auto-merge may wait for checks.
+- Zero human approvals does not remove technical gates. CI required checks are mandatory: `preflight`, `frontend`, `api`, `Select E2E scope`, `E2E regression result`, and `CodeQL`.
+- Follow two-attempt focused correction limit before escalating.
+- When the primary checkout is behind upstream, synchronize through the safe fast-forward procedure. Do not remove the `PRIMARY_CHECKOUT_BEHIND_ORIGIN` safeguard or introduce hidden automatic Git mutations.
+- Protect `~/code/repos/operatoros`, `~/code/worktrees/operatoros/`, and `~/.local/share/operatoros/development/`. Prune only clean integrated worktrees after verifying merged-main: inspect `wt step prune --dry-run --min-age=0s` before `--foreground`.
+- Preserve protected references and user work: `PROJECT_CONTEXT.md`, `f22`, `docs/student-data/dapodik-roster-import-design.md`, and the protected SHA for `wip/followups-api-preservation-20260728-013523` (`07b7211b73a59f0032dc33c0c43741d884b38741` / `0763b624c5d2f08a6e4c590d4d5e867bf07fe777`).
+
+### G13 — Documentation consistency
+
+Update existing documentation when a change modifies documented behavior, commands, architectural decisions, database operations, or deployment procedures.
+
+Authoritative document index:
+
+- `AGENTS.md` — Engineering and agent guardrails (primary entry point).
+- `COMMANDS.md` — Developer and deployment command discovery.
+- `docs/decisions/` — Architectural decisions (ADRs).
+- `docs/runbooks/ubuntu-server-deployment.md` — Production operations and deployment.
+- `docs/runbooks/database-operations.md` and `docs/runbooks/data-reset.md` — Database procedures.
+- `docs/README.md` — Authoritative documentation index.
+
+Rules (see [documentation-system.md](docs/decisions/documentation-system.md)):
+- Keep maintained docs in `architecture/`, `guides/`, `reference/`, `decisions/`, `runbooks/`, or `session/`.
+- `docs/README.md` is the only loose Markdown file in `docs/`.
+- Use kebab-case names, add `status` and `last_reviewed` front matter, and link maintained pages from `docs/README.md`.
+- Historical or superseded decisions must be clearly labeled.
+- Add one user-facing `CHANGELOG.md` bullet under `[Unreleased]` for every PR. Add the PR number after GitHub assigns it.
+- Agent skills must reference authoritative repository documentation rather than maintaining independent copies of engineering policy.
+
+### G14 — Validation efficiency and quota conservation
+
+Use the existing validation tiers according to the actual change:
+
+- **Documentation-only changes:** `mise run test:fast`, `bun .github/scripts/check-markdown-links.ts`, `bun .github/scripts/check-markdown-organization.ts`, and `bun .github/scripts/check-current-developer-docs.ts`. Do not run full release gates for doc-only edits.
+- **Fast iteration:** `mise run test:fast` (changed-path classifier).
+- **Package checks:** `mise run check:affected` (Turbo typecheck, test, build for affected packages against `origin/main`).
+- **Database/schema changes:** `mise run db:fresh` (schema bootstrap and parity).
+- **Full release / pre-merge:** `mise run check:full` and `hk check --all`.
+- **E2E verification:** Local smoke `timeout 300 make e2e-smoke` and `./scripts/verify-browser.sh`. `make e2e-full` is CI-only without explicit owner approval.
+
+Conservation rules:
+- Do not repeatedly execute expensive validation suites when relevant inputs have not changed.
+- Do not trigger CI for read-only inspection.
+- Do not repeat completed audits without new evidence.
+- Do not launch recursive agent reviews, background improvement loops, or repeated qualification cycles without a concrete failure or authorized requirement.
+- Quota efficiency must not be achieved by skipping mandatory safety gates.
+
+### G15 — Multi-agent consistency
+
+Antigravity, Codex, OpenCode, and future coding assistants must follow the same authoritative engineering rules.
+
+- `AGENTS.md` at repository root is the single shared repository policy entry point.
+- Server-level rules in `~/AGENTS.md` govern the host, storage locations, and service protection; repository `AGENTS.md` governs repository work and refines conventions without weakening host safeguards.
+- Nested instructions may specialize root policy for specific packages or tools, but must never weaken mandatory safety requirements.
+- Do not create independent or conflicting versions of the same guardrails across agent configurations.
+- Repository instructions are behavioral controls, not substitutes for executable tests, operating-system permissions, or CI enforcement.
+
+### G16 — Owner authorization boundaries
+
+Explicit owner authorization is required before:
+
+1. Production deployment, rollback, or runtime mutation.
+2. Production database modification, restore, or reset.
+3. Destructive, irreversible, or incompatible database migrations.
+4. Architecture replacement or runtime changes.
+5. Changes to container identity (UID/GID `1000:1000`) or storage ownership.
+6. Permission escalation, sudoers modifications, or Docker group changes.
+7. Changes to production network exposure or ingress routes.
+8. Removal of existing supported functionality.
+9. Bypassing established safeguards or CI gates.
+10. Any operation affecting unrelated OPRSERVER services or containers.
+
+If the requested implementation requires an unauthorized operation, stop and report the specific blocker. Do not interpret a general feature request as authorization for production changes.
+
+### G17 — Finite execution and stop conditions
+
+Every task must have a finite scope and clear acceptance criteria.
+
+Stop when:
+
+- The requested feature or fix is implemented.
+- Relevant regression tests pass.
+- Required validation passes.
+- Documentation is updated where necessary.
+- No unresolved critical defect remains within the authorized scope.
+
+Do not continue searching for unrelated improvements or initiate another improvement cycle without a new owner directive. If a critical blocker cannot be resolved within the authorized scope, report it clearly and request a decision.
+
+---
+
+## 4. Mandatory Workflow for Every Future Feature
+
+All agents and contributors must follow this sequence:
+
+```mermaid
+flowchart TD
+    S1["Step 1: Understand<br/>(Scope, code, tests, schema)"] --> S2["Step 2: Assess Impact<br/>(Classify change & safeguards)"]
+    S2 --> S3["Step 3: Implement<br/>(Smallest safe change, reuse)"]
+    S3 --> S4["Step 4: Verify<br/>(Tiered tests, regressions, parity)"]
+    S4 --> S5["Step 5: Deliver<br/>(Docs, changelog, focused PR)"]
+    S5 --> S6["Step 6: Stop<br/>(Finite execution, no endless loops)"]
+```
+
+### Step 1 — Understand
+- Read the applicable `AGENTS.md` instructions.
+- Understand the requested feature or fix.
+- Inspect existing implementations and relevant tests.
+- Identify affected interfaces, database structures, and callers.
+- Determine whether a database migration is necessary.
+
+### Step 2 — Assess impact
+Classify the change:
+- **Ordinary compatible feature:** Standard implementation and test coverage.
+- **Database-changing feature:** Requires versioned migration, fresh-parity, and upgrade verification (G03, G04).
+- **Compatibility-sensitive feature:** API DTO, mapper, contract drift, and consumer validation (G02, G07).
+- **Security-sensitive feature:** Auth, cookie, origin, proxy, or secret handling; positive/negative tests required (G06).
+- **Production-sensitive operation:** Deployment, backup, or runtime changes; requires explicit authorization (G10, G16).
+- **Breaking or architectural change:** Requires explicit owner decision (ADR) before implementation (G01, G16).
+
+Apply only the additional safeguards relevant to that classification.
+
+### Step 3 — Implement
+- Make the smallest sufficient change.
+- Reuse existing modules, components, and patterns.
+- Add versioned migrations when necessary (additive, expand-migrate-contract).
+- Preserve existing functionality.
+- Add or update focused tests.
+
+### Step 4 — Verify
+- Verify the requested new behavior.
+- Verify affected existing behavior.
+- Verify database migration and data preservation when applicable (`mise run db:fresh`).
+- Run the appropriate validation tier (`mise run test:fast`, `mise run check:affected`, etc.).
+- Fix failures attributable to the change.
+
+### Step 5 — Deliver
+- Keep changes focused on explicit files.
+- Update affected documentation and add a `CHANGELOG.md` entry under `[Unreleased]`.
+- Follow the Git and PR workflow (`CONTRIBUTING.md`).
+- Report verification evidence and limitations.
+- Leave production untouched unless separately authorized.
+
+### Step 6 — Stop
+Once the acceptance criteria are satisfied, stop. Do not search for speculative follow-ups or start unrequested refactoring.
+
+---
+
+## 5. Permanent Feature Acceptance Checklist
+
+Before declaring any feature complete, confirm:
+
+- [ ] Applicable `AGENTS.md` instructions were followed.
+- [ ] Requested functionality works.
+- [ ] Affected existing functionality remains working.
+- [ ] Existing API and business contracts are preserved or intentionally changed with authorization.
+- [ ] Existing data is preserved.
+- [ ] Database migrations are tested when applicable.
+- [ ] Security and permission boundaries are preserved.
+- [ ] Relevant regression tests pass.
+- [ ] Required repository validation passes.
+- [ ] No unrelated architectural changes were introduced.
+- [ ] Documentation is accurate where affected.
+- [ ] Production remains untouched unless explicitly authorized.
+- [ ] No unresolved critical issue remains within scope.
+
+Mark non-applicable items as N/A with a brief reason. Do not mark unverified requirements as PASS.
+
+---
+
+## 6. Enforcement Strategy
+
+Guardrails are enforced through existing executable mechanisms in the repository:
+
+| Guardrail | Executable Enforcement Mechanism | Command / Location |
+|---|---|---|
+| **G01 Architecture stability** | Architecture boundary checker, Turborepo boundary rules | `bun run check:architecture`, `hk check --all` |
+| **G02 Preserve functionality** | API unit/integration tests, E2E smoke tests | `mise run test:fast`, `make e2e-smoke` |
+| **G03 Database evolution** | Drizzle schema validator, migration manifest | `packages/db/src/manifest.ts`, `packages/db/test/` |
+| **G04 Migration verification** | Fresh database parity check, migration tests | `mise run db:fresh`, `packages/db/test/migrations.test.ts` |
+| **G05 Dev/prod isolation** | Startup root validation, dev script data root derivation | `./start-dev.sh --check`, `packages/db/src/data-dir.ts` |
+| **G06 Security preservation** | Security tests, Origin verification, AES-256 backup checks | `apps/api/test/security/`, `apps/api/test/backup/` |
+| **G07 API compatibility** | Contract generation and OpenAPI drift check | `bun run check:contracts`, TypeBox DTO tests |
+| **G08 Regression validation** | Changed-path classifier, package test suites | `mise run test:fast`, `mise run check:affected` |
+| **G09 Scope & simplicity** | Code review, lint rules, boundary checks | `hk check --all`, Oxlint |
+| **G10 Deployment safety** | Exclusive lock, pre-deploy SQLite integrity check, verify command | `scripts/docker-deploy.sh verify`, `scripts/docker-deploy.sh` |
+| **G11 Rollback safety** | App-only rollback script, transactional SQLite recovery | `scripts/docker-deploy.sh rollback` |
+| **G12 Git discipline** | Branch protection, mandatory CI checks, pre-push hook | `.github/workflows/ci.yml`, `hk` pre-push hook |
+| **G13 Documentation consistency** | Markdown link, organization, and developer doc checks | `bun .github/scripts/check-markdown-links.ts`, `check-current-developer-docs.ts` |
+| **G14 Validation efficiency** | Tiered validation commands (fast, affected, full) | `mise run test:fast`, `mise run check:affected` |
+| **G15 Multi-agent consistency** | Shared root `AGENTS.md` read by all provider tools | Repository root `AGENTS.md` |
+| **G16 Authorization boundaries** | Fail-closed deployment script, read-only dev defaults | Non-interactive root requirements, deployment locks |
+| **G17 Finite execution** | Explicit PR acceptance checklist and stop criteria | Section 5 checklist |
+
+### Confirmed Enforcement Gaps
+
+- **Non-critical gap:** Automated cross-version API client schema diffing is partially handled by OpenAPI drift checks; contract version deprecation warnings currently rely on code review. (Deferred for future feature work).
+- **Non-critical gap:** Automated schema rollback simulation across arbitrary non-consecutive migration versions is covered by individual migration tests, but full multi-step rollback matrices rely on manual test execution when complex migrations are proposed. (Deferred for future migration-specific work).
+- **Critical gap:** None identified that would permit unauthorized production modification or data loss; all production mutation paths require explicit interactive authorization, exclusive locking, and verified pre-deploy backups.
