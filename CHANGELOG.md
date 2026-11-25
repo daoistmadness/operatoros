@@ -4,6 +4,7 @@ Notable user-facing changes are recorded here.
 
 ## [Unreleased]
 
+- Reconcile Labelindo No. 103 and No. 107 label geometry with official templates, add A4 Standard and A4 Compact presets with optional cutting guides, and unify label templates into an extensible registry with calibration PDFs.
 - Add school inventory asset register and precision sticker label printing engine (Labelindo No. 103 and No. 107).
 - Enforce database schema compatibility and compose resolution before rollback mutation, support re-entrant deployment locks, and enable Tailscale ingress in Caddy.
 - Establish permanent OperatorOS engineering guardrails G01–G17, mandatory feature workflow, acceptance checklist, and multi-agent alignment in AGENTS.md. (#415)

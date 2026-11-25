@@ -493,15 +493,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "40af328ec7cbc94cd836f64b271bc81fa5e7f0b523bfecf973e78764d5c0b728",
+      "fingerprint": "ac74ec0206b96c7c6d38caa728a94c229e15f43bda7d3aff304bd22f4fd4dbb3",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "0ef63081c191f67e880dd97b4c9ef5bb7e711b9f9fbf6dfab29caef068646a43"
+        "apps/web/src/generated/openapi/schema.ts": "313521d2c2978dccbd66e6ae71da66c3c47126cdeb08af620bc8107cfd7fe58e"
       },
-      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "OpenAPI schema contract alignment for Inventory V1",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -517,15 +517,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "bc4965c4b555603eff5e5acf64f279bfa96efc8d6b3d2a5c01d6995a4aaffc6d",
+      "fingerprint": "052efda08fddae9898b353286f2ecb84df33f4fba9c852595f5123b1d08e19d8",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "2e645b94212eae6bad709c982d70a341000ac4f739ea79b85b406495316b32cc"
+        "openapi/operatoros.openapi.json": "578e2d880333b596628401d2a59c78380ed0e090b38d188881a2e81524050a39"
       },
-      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "OpenAPI schema contract alignment for Inventory V1",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at a062adefcf287bf3427b200f8ff2de508c25485c"
+        "Changed: openapi/operatoros.openapi.json at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -2958,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "eb47e5c03b91cc2bb27cf1c2ab9e2b02a2653a8fd56e7e40ec4096b4bbc2236c",
+      "fingerprint": "6f5eb71e25f4a10ced1c1bb6ab4f9f3a637ca2073800db812413e84f811cec7b",
       "snapshot": {
-        "CHANGELOG.md": "3e986cf8614881fa8995a83310a2ce9205525d10391fa76d2cfcb10be8173434"
+        "CHANGELOG.md": "4749c0db410b587ae5ce081b47cbb4261163fcc9a0086d7d0245fb99e97b8c85"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: CHANGELOG.md at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: CHANGELOG.md at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:COMMANDS.md": {
@@ -5226,15 +5226,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "0672c97c3ec2a1c66a66c2739729e3aaa81b8c978ff80f0f7470c2ad02bd3d83",
+      "fingerprint": "eb971122f8dcd2c23de4db401eb791e1432faf067d9edcc2f007ba223d98fc8d",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "daf46ddc8a7b2afd315cf97c5336284619e08bd0e9c8103f0aff8b57ea37674e"
+        "apps/api/tests/openapi-contract.test.ts": "c35e1b7ac662a331485a0e1890a8506c52b09980e71c0b7188c0c7bd8035795d"
       },
-      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "OpenAPI schema contract alignment for Inventory V1",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
+        "Changed: apps/api/tests/openapi-contract.test.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -11489,75 +11489,75 @@
       ]
     },
     "source:apps/api/src/domains/inventory-labels.ts": {
-      "fingerprint": "52662fabc991220b4838b2c71a9b8eb44b22ff9cde2b440192b30ee87d293848",
+      "fingerprint": "6d2e1a521b1b1a2cf4684d02580a382b203e065bde6c8f7eb07c9037cb2d0d8f",
       "snapshot": {
-        "apps/api/src/domains/inventory-labels.ts": "2245daec85c8ed67a0bbba041decc1b4bf05cec683b69e6e20e0da3978b7db0c"
+        "apps/api/src/domains/inventory-labels.ts": "1958e601d63fd58722883d7f0633aceb2fdcf9e90d319b310198868bbdb3dd2b"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/api/src/domains/inventory-labels.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/api/src/domains/inventory-labels.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/api/src/domains/inventory.ts": {
-      "fingerprint": "762a332878a5da1c326f7b1b14adc91c06d61ec11feccace75071a3cbf8543bc",
+      "fingerprint": "ca3775be154711df56f20236dc6042eb2a17566a16e024ad55c132303b7dbef8",
       "snapshot": {
-        "apps/api/src/domains/inventory.ts": "fcade2272407270ff0041f08d32313833d1347e84364883a4da09756d408c8a8"
+        "apps/api/src/domains/inventory.ts": "11baa5a47de75da41f3c204fc9b16a45641c67bcdc4369cb6f2ba6bac7bdf3d8"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/api/src/domains/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/api/src/domains/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/api/tests/inventory.test.ts": {
-      "fingerprint": "328928e8f3c98e55de4ac29dcd0ec3921dc77aec397704fb2dcfcb8df8fbad28",
+      "fingerprint": "0f6db626828af9f4822be2bc2008970ac2886f787f3c46e0b1b690937a0dc96c",
       "snapshot": {
-        "apps/api/tests/inventory.test.ts": "6bf4d5700cfad06846796290f3211614588a395cfc031bd08082ff9dbf4bd67a"
+        "apps/api/tests/inventory.test.ts": "52e6b912365e5a241847347d57f5d66289802e59ccdae1932dd57dce82a43476"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/api/tests/inventory.test.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/api/tests/inventory.test.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/web/src/api/inventory.ts": {
-      "fingerprint": "4f98d51559285731f2376d5911bda6b93a265d79216daeb6f4378128efd2f9df",
+      "fingerprint": "06e3694d5b4ccb7fb310b1363f0211a405e53de8628abd5657fb4046a23fb047",
       "snapshot": {
-        "apps/web/src/api/inventory.ts": "4279fb59cdb3b23232256f30d861d07829979c765e17fd5d8778b603ec3571b2"
+        "apps/web/src/api/inventory.ts": "00bce64f6d0484e93f5948dfa6c0f51072d03ba1d5c0abdcb357baa6ffc6cfaf"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/web/src/api/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/web/src/api/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.test.tsx": {
-      "fingerprint": "faebe2919e8d2eaffff50eb69c8edf56f3c719a287260d6d872f8bd91cfe9198",
+      "fingerprint": "bc720bba7b85517be8fb6f131b86a610579b2de4372dec5722243deb9c51df85",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.test.tsx": "ad7caea55ec6859ca8c228e2e2bab6be991c233caea6e8c10ea75e0fa4beaa95"
+        "apps/web/src/pages/InventoryManagement.test.tsx": "6c5f94e13f5f2087a4b54039cc1e538e7e9a914177db9d9066d4742ec67e0e6d"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.tsx": {
-      "fingerprint": "1428418512fceb81a1605fadaa73f7343d2ecc56ab1c0c2145b09596602aead5",
+      "fingerprint": "975ab2dbc0667d68d4b046b350b89cb5ec3163cf0cf43d538c606b3c5ffb1dda",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.tsx": "7660be6901e3b47ea97c4d9a2aa75b464d7091048641f33da77b65cbff3a364a"
+        "apps/web/src/pages/InventoryManagement.tsx": "592269cd6599528736f1bd12a562f860d1a2e5f76700122af7606e4a4b59f313"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.tsx at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/web/src/pages/InventoryManagement.tsx at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:apps/web/src/routes/_authenticated/inventory.tsx": {
@@ -11573,15 +11573,15 @@
       ]
     },
     "source:packages/contracts/src/inventory.ts": {
-      "fingerprint": "c7c8acd87b67e40a8c30ac819bbf3773440992a4c53963bbba287431830544eb",
+      "fingerprint": "604150004c583dc561f97489043020d6cf830e4816ef8a7ebece87a66aa2aefd",
       "snapshot": {
-        "packages/contracts/src/inventory.ts": "a8ecba88342b32ecb6ea91fc76d8fe273f40acbd40e30ca09ab2d26dc518e512"
+        "packages/contracts/src/inventory.ts": "e78ddf5369940cd769df0b22bc48e8dde2cf2a07eac531b4731f7028fad59e96"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
       "evidence": [
-        "Changed: packages/contracts/src/inventory.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: packages/contracts/src/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     },
     "source:packages/db/src/s55-migration.sql": {
@@ -11594,6 +11594,18 @@
       "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
       "evidence": [
         "Changed: packages/db/src/s55-migration.sql at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+      ]
+    },
+    "source:packages/contracts/src/inventory-labels.ts": {
+      "fingerprint": "ba982cba86027d901f432e8150d4ce801ef64ca9ab27261b4afab66fec350907",
+      "snapshot": {
+        "packages/contracts/src/inventory-labels.ts": "87b435f12448f357ecadd19df641dbfe8036dad18aee4d1a32385704db3af836"
+      },
+      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "outcome": "no-change",
+      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "evidence": [
+        "Changed: packages/contracts/src/inventory-labels.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
       ]
     }
   }

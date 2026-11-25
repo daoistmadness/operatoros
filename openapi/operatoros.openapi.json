@@ -37905,6 +37905,11 @@
         "operationId": "getApiInventoryExportXlsx"
       }
     },
+    "/api/inventory/labels/templates": {
+      "get": {
+        "operationId": "getApiInventoryLabelsTemplates"
+      }
+    },
     "/api/inventory/labels/preview": {
       "post": {
         "requestBody": {
@@ -38163,6 +38168,106 @@
           }
         },
         "operationId": "postApiInventoryLabelsPdf"
+      }
+    },
+    "/api/inventory/labels/calibration-pdf": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "template_id"
+                ],
+                "properties": {
+                  "template_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "offset_x_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  },
+                  "cutting_guides": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "template_id"
+                ],
+                "properties": {
+                  "template_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "offset_x_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  },
+                  "cutting_guides": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "template_id"
+                ],
+                "properties": {
+                  "template_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "offset_x_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "offset_y_mm": {
+                    "minimum": -25,
+                    "maximum": 25,
+                    "type": "number"
+                  },
+                  "monochrome": {
+                    "type": "boolean"
+                  },
+                  "cutting_guides": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "postApiInventoryLabelsCalibration-pdf"
       }
     },
     "/api/admin/backups/status": {

@@ -4,6 +4,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PDFDocument } from "pdf-lib";
 import { openDatabase } from "@operatoros/db";
+import {
+  getLabelTemplate,
+  getRegisteredLabelTemplates,
+  resolveLabelTemplate,
+} from "@operatoros/contracts/inventory";
+import { generateAssetLabelsPdf } from "../src/domains/inventory-labels";
 import { createApp } from "../src/app";
 import { createAccountFixture } from "./fixtures/accounts";
 
@@ -476,7 +482,7 @@ describe("Inventory & Asset Labels V1", () => {
       expect(Math.round(page103.getWidth())).toBe(610);
       expect(Math.round(page103.getHeight())).toBe(842);
 
-      // Test PDF generation for No. 107
+      // Test PDF generation for No. 107 (Landscape 296.93 x 254.00 mm)
       const pdfRes107 = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
         asset_ids: [c1.id, c2.id],
         template_id: "107",
@@ -487,10 +493,242 @@ describe("Inventory & Asset Labels V1", () => {
       const pdfBytes107 = await pdfRes107.arrayBuffer();
       const doc107 = await PDFDocument.load(pdfBytes107);
       expect(doc107.getPageCount()).toBe(1);
+      const page107 = doc107.getPage(0);
+      // Landscape 841.68 x 720.00 pt
+      expect(Math.round(page107.getWidth())).toBe(842);
+      expect(Math.round(page107.getHeight())).toBe(720);
     } finally {
       database.close();
       rmSync(root, { recursive: true, force: true });
     }
+  });
+
+  it("exposes authoritative template registry, A4 presets, multi-page pagination, and calibration PDF", async () => {
+    const { root, database, app } = setup();
+    try {
+      const cookie = await login(app, "admin");
+
+      // 1. Registry endpoint returns manufacturer + A4 templates
+      const tplRes = await app.handle(request("GET", "/api/inventory/labels/templates", cookie));
+      expect(tplRes.status).toBe(200);
+      const tplData = (await tplRes.json()) as any;
+      expect(tplData.items.map((t: any) => t.id)).toEqual(["103", "107", "a4-standard", "a4-compact"]);
+
+      // Verify No. 103 & No. 107 reference geometry
+      const t103 = getLabelTemplate("103")!;
+      expect(t103.slotsPerPage).toBe(12);
+      expect(t103.orientation).toBe("portrait");
+      expect(t103.slots[0]).toMatchObject({ xMm: 5.84, yTopMm: 14.14, widthMm: 64, heightMm: 32 });
+      expect(t103.slots[11]).toMatchObject({ xMm: 144.25, yTopMm: 124.82, widthMm: 64, heightMm: 32 });
+
+      const t107 = getLabelTemplate("107")!;
+      expect(t107.slotsPerPage).toBe(30);
+      expect(t107.orientation).toBe("landscape");
+      expect(t107.slots[0]).toMatchObject({ xMm: 10.84, yTopMm: 50.82, widthMm: 50, heightMm: 18 });
+      expect(t107.slots[29]).toMatchObject({ xMm: 119.16, yTopMm: 229.2, widthMm: 50, heightMm: 18 });
+
+      // Verify A4 Standard (210x297mm, 64x32mm -> 3x8 = 24) & A4 Compact (210x297mm, 50x18mm -> 3x13 = 39)
+      const a4Std = getLabelTemplate("a4-standard")!;
+      expect(a4Std.pageWidthMm).toBe(210);
+      expect(a4Std.pageHeightMm).toBe(297);
+      expect(a4Std.slotsPerPage).toBe(24);
+      expect(a4Std.supportsCuttingGuides).toBe(true);
+
+      const a4Cmp = getLabelTemplate("a4-compact")!;
+      expect(a4Cmp.pageWidthMm).toBe(210);
+      expect(a4Cmp.pageHeightMm).toBe(297);
+      expect(a4Cmp.slotsPerPage).toBe(39);
+
+      // 2. Create 15 batch assets and test multi-page partial sheet pagination (15 items starting at slot 10 on 12-slot 103 -> 3 pages)
+      const batchRes = await app.handle(request("POST", "/api/inventory/assets/batch", cookie, {
+        school_unit_id: 1,
+        category: "EDU",
+        item_name: "Alat Peraga Matematika",
+        quantity: 15,
+        funding_source: "YAYASAN",
+        budget_year: 2026,
+      }));
+      const batch = (await batchRes.json()) as any;
+      const ids = batch.items.map((i: any) => i.id);
+
+      const previewRes = await app.handle(request("POST", "/api/inventory/labels/preview", cookie, {
+        asset_ids: ids,
+        template_id: "103",
+        starting_index: 10,
+      }));
+      expect(previewRes.status).toBe(200);
+      const preview = (await previewRes.json()) as any;
+      expect(preview.total_pages).toBe(3);
+      expect(preview.pages[0].labels_on_page).toBe(2);
+      expect(preview.pages[1].labels_on_page).toBe(12);
+      expect(preview.pages[2].labels_on_page).toBe(1);
+
+      const multiPdfRes = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
+        asset_ids: ids,
+        template_id: "103",
+        starting_index: 10,
+      }));
+      expect(multiPdfRes.status).toBe(200);
+      const multiDoc = await PDFDocument.load(await multiPdfRes.arrayBuffer());
+      expect(multiDoc.getPageCount()).toBe(3);
+
+      // 3. A4 Standard PDF generation with cutting guides (210 x 297 mm -> ~595 x 842 pt)
+      const a4PdfRes = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
+        asset_ids: ids.slice(0, 4),
+        template_id: "a4-standard",
+        starting_index: 0,
+        cutting_guides: true,
+      }));
+      expect(a4PdfRes.status).toBe(200);
+      const a4Doc = await PDFDocument.load(await a4PdfRes.arrayBuffer());
+      expect(a4Doc.getPageCount()).toBe(1);
+      expect(Math.round(a4Doc.getPage(0).getWidth())).toBe(595);
+      expect(Math.round(a4Doc.getPage(0).getHeight())).toBe(842);
+
+      // 4. Calibration PDF generation
+      const calRes = await app.handle(request("POST", "/api/inventory/labels/calibration-pdf", cookie, {
+        template_id: "107",
+        offset_x_mm: 1.0,
+        offset_y_mm: -0.5,
+      }));
+      expect(calRes.status).toBe(200);
+      expect(calRes.headers.get("content-type")).toBe("application/pdf");
+      const calDoc = await PDFDocument.load(await calRes.arrayBuffer());
+      expect(calDoc.getPageCount()).toBe(1);
+      expect(Math.round(calDoc.getPage(0).getWidth())).toBe(842);
+      expect(Math.round(calDoc.getPage(0).getHeight())).toBe(720);
+
+      // 5. Reject unknown template, invalid starting_index, and unsafe calibration offsets
+      const badTplRes = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
+        asset_ids: ids.slice(0, 1),
+        template_id: "unknown-999",
+      }));
+      expect(badTplRes.status).toBe(400);
+
+      const badSlotRes = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
+        asset_ids: ids.slice(0, 1),
+        template_id: "103",
+        starting_index: 12,
+      }));
+      expect(badSlotRes.status).toBe(400);
+
+      const badOffsetRes = await app.handle(request("POST", "/api/inventory/labels/pdf", cookie, {
+        asset_ids: ids.slice(0, 1),
+        template_id: "103",
+        offset_x_mm: 20,
+      }));
+      expect(badOffsetRes.status).toBe(400);
+    } finally {
+      database.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("supports extensible synthetic templates and rejects invalid template geometry", async () => {
+    // Synthetic A5 standard paper template (148 x 210 mm, 64 x 32 mm labels)
+    const syntheticA5 = resolveLabelTemplate({
+      id: "synthetic-a5",
+      name: "A5 Synthetic Test (64 x 32 mm)",
+      shortLabel: "A5 Test",
+      description: "Synthetic extensibility test",
+      family: "standard_paper",
+      pageWidthMm: 148,
+      pageHeightMm: 210,
+      orientation: "portrait",
+      labelWidthMm: 64,
+      labelHeightMm: 32,
+      contentPreset: "standard",
+      safeInsetMm: 2,
+      defaultOffsetXMm: 0,
+      defaultOffsetYMm: 0,
+      supportsCuttingGuides: true,
+      defaultCuttingGuides: true,
+      supportsPartialSheet: true,
+      verificationStatus: "verified_standard_paper",
+      verificationNote: "Synthetic",
+      gridSpec: { minMarginXMm: 6, minMarginYMm: 8, gapXMm: 4, gapYMm: 4 },
+    });
+    expect(syntheticA5.columns).toBe(2);
+    expect(syntheticA5.rows).toBe(5);
+    expect(syntheticA5.slotsPerPage).toBe(10);
+
+    const pdfBytes = await generateAssetLabelsPdf(
+      [
+        {
+          id: "ast_syn_1",
+          asset_code: "SD-IT-0099",
+          item_name: "Router Sekolah",
+          school_unit_name: "SD Edelweiss",
+          category: "IT",
+          funding_source: "HIBAH",
+          budget_year: 2026,
+          condition: "BAIK",
+        },
+      ],
+      { templateId: syntheticA5.id, templateOverride: syntheticA5 },
+    );
+    const doc = await PDFDocument.load(pdfBytes);
+    expect(doc.getPageCount()).toBe(1);
+    expect(Math.round(doc.getPage(0).getWidth())).toBe(Math.round((148 * 72) / 25.4));
+
+    // Reject overlapping slots
+    expect(() =>
+      resolveLabelTemplate({
+        id: "bad-overlap",
+        name: "Bad",
+        shortLabel: "Bad",
+        description: "Bad",
+        family: "manufacturer",
+        pageWidthMm: 210,
+        pageHeightMm: 297,
+        orientation: "portrait",
+        labelWidthMm: 50,
+        labelHeightMm: 20,
+        contentPreset: "compact",
+        safeInsetMm: 1,
+        defaultOffsetXMm: 0,
+        defaultOffsetYMm: 0,
+        supportsCuttingGuides: false,
+        defaultCuttingGuides: false,
+        supportsPartialSheet: true,
+        verificationStatus: "verified_pdf_provisional_physical",
+        verificationNote: "Bad",
+        explicitSlots: [
+          { index: 0, row: 0, col: 0, xMm: 10, yTopMm: 10, widthMm: 50, heightMm: 20 },
+          { index: 1, row: 0, col: 1, xMm: 40, yTopMm: 10, widthMm: 50, heightMm: 20 },
+        ],
+      }),
+    ).toThrow("overlap");
+
+    // Reject out-of-bounds slots
+    expect(() =>
+      resolveLabelTemplate({
+        id: "bad-oob",
+        name: "Bad",
+        shortLabel: "Bad",
+        description: "Bad",
+        family: "manufacturer",
+        pageWidthMm: 100,
+        pageHeightMm: 100,
+        orientation: "portrait",
+        labelWidthMm: 50,
+        labelHeightMm: 20,
+        contentPreset: "compact",
+        safeInsetMm: 1,
+        defaultOffsetXMm: 0,
+        defaultOffsetYMm: 0,
+        supportsCuttingGuides: false,
+        defaultCuttingGuides: false,
+        supportsPartialSheet: true,
+        verificationStatus: "verified_pdf_provisional_physical",
+        verificationNote: "Bad",
+        explicitSlots: [
+          { index: 0, row: 0, col: 0, xMm: 60, yTopMm: 10, widthMm: 50, heightMm: 20 },
+        ],
+      }),
+    ).toThrow("exceeds page bounds");
+
+    expect(getRegisteredLabelTemplates().length).toBe(4);
   });
 
   it("enforces role-based capabilities on inventory routes", async () => {
