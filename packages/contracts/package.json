@@ -28,6 +28,7 @@
     "./staff": "./src/staff.ts",
     "./excel": "./src/excel.ts",
     "./backup": "./src/backup/index.ts",
-    "./upp-reports": "./src/upp-reports.ts"
+    "./upp-reports": "./src/upp-reports.ts",
+    "./inventory": "./src/inventory.ts"
   }
 }

@@ -18,6 +18,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s52",
   "20261027_s53",
   "20261027_s54",
+  "20261125_s55",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -54,8 +55,11 @@ export const S52_SCHEMA_FINGERPRINT =
 export const S53_SCHEMA_FINGERPRINT =
   "c7a4cceddff5cdb89e0eb6cbb16d867effe6c68021c3b2b9faf071b1bc1bbc55";
 
-export const CURRENT_SCHEMA_FINGERPRINT =
+export const S54_SCHEMA_FINGERPRINT =
   "4e469c743a4bd65eebe764488c96dcaed2ce913f65ebf9daff18f97e97449c25";
+
+export const CURRENT_SCHEMA_FINGERPRINT =
+  "c609df2e480691610ffee4da95d032fae3cb58fd80780414eb142c4453a2eddf";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -131,6 +135,9 @@ export const REQUIRED_TRIGGERS = [
   "trg_student_dapodik_history_no_delete",
   "trg_student_iom_documents_no_delete",
   "trg_student_iom_documents_immutable_fields",
+  "trg_inventory_assets_no_delete",
+  "trg_inventory_assets_immutable_code",
+  "trg_inventory_asset_sequences_no_delete",
 ] as const;
 
 export const PROTECTED_DATABASE_BASENAME = "attendance.db";

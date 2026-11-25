@@ -80,6 +80,7 @@ export const routeAuthorizations: Partial<Record<string, RouteAuthorization>> = 
   '/staff/analytics': { type: 'capability', capability: 'view_staff_analytics' },
   '/staff/monthly-activities': { type: 'capability', capability: 'view_staff_analytics' },
   '/reports/upp': { type: 'role', role: 'admin' },
+  '/inventory': { type: 'capability', capability: 'view_inventory' },
   '/staff/:id/edit': { type: 'capability', capability: 'manage_staff' },
   '/staff/:id': { type: 'capability', capability: 'view_staff' },
   '/students/operations': { type: 'capability', capability: 'view_student_audit' },

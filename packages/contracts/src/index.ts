@@ -14,3 +14,4 @@ export * from "./staff";
 export * from "./backup";
 export * from "./upp-reports";
 export * from "./admin-dashboard";
+export * from "./inventory";
