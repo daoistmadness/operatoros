@@ -82,8 +82,18 @@ describe("full OpenAPI contract", () => {
         const operation = reference.paths[path]?.get as { parameters?: Array<{ name?: string; in?: string }> };
         expect(operation.parameters).toContainEqual(expect.objectContaining({ name: "school_unit_id", in: "query" }));
       }
-      expect(Object.keys(candidateOperations)).toHaveLength(434);
-      expect(Object.keys(operations(reference))).toHaveLength(435);
+      expect(Object.keys(candidateOperations)).toHaveLength(444);
+      expect(Object.keys(operations(reference))).toHaveLength(445);
+      expect(reference.paths["/api/inventory/assets"]?.get).toBeDefined();
+      expect(reference.paths["/api/inventory/assets"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/assets/batch"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/assets/{id}"]?.get).toBeDefined();
+      expect(reference.paths["/api/inventory/assets/{id}"]?.put).toBeDefined();
+      expect(reference.paths["/api/inventory/assets/{id}/retire"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/summary"]?.get).toBeDefined();
+      expect(reference.paths["/api/inventory/export/xlsx"]?.get).toBeDefined();
+      expect(reference.paths["/api/inventory/labels/preview"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/labels/pdf"]?.post).toBeDefined();
       expect(reference.paths["/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel"]?.post).toBeDefined();
       for (const path of [
         "/api/staff/monthly-activities",

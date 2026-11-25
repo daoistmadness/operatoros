@@ -493,15 +493,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "fded21db6eb7d5f7aa88415820bc170234789a594607aacd291a7d4c5bc0f638",
+      "fingerprint": "40af328ec7cbc94cd836f64b271bc81fa5e7f0b523bfecf973e78764d5c0b728",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "c2edcf5a878246ad5ad005369ad3dfe66b0ce4c993aebee0de5ff416e3092970"
+        "apps/web/src/generated/openapi/schema.ts": "0ef63081c191f67e880dd97b4c9ef5bb7e711b9f9fbf6dfab29caef068646a43"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: apps/web/src/generated/openapi/schema.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -517,15 +517,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "6422579b622b63771f603f1dc0661352c20e808d709af3cf0e6d3c986045818d",
+      "fingerprint": "bc4965c4b555603eff5e5acf64f279bfa96efc8d6b3d2a5c01d6995a4aaffc6d",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "3830d602789f60b6f388f113f03fc5c791e4ded024a12434332f3b22ecde11e6"
+        "openapi/operatoros.openapi.json": "2e645b94212eae6bad709c982d70a341000ac4f739ea79b85b406495316b32cc"
       },
-      "head": "46fcee0d91279dc0dd3517263a7e2121346ee43e",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Reviewed the PR diff against the sole registered Elysia skill and its source notes. The auth, startup, import, export, OpenAPI, and test changes preserve existing Elysia 1.4.29 patterns and introduce no new framework guidance. The changed security model is already linked by packages/agent-skills/docs/elysiajs.md, so the skill remains accurate; CHANGELOG and generated OpenAPI files do not affect skill scope. The existing domain map, skill spec, and skill tree remain accurate because no skill was added, removed, or split.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 46fcee0d91279dc0dd3517263a7e2121346ee43e"
+        "Changed: openapi/operatoros.openapi.json at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -5226,15 +5226,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "4feb53e7ff1d5b2809dbc1ed393f471f6ff9f808ec3cd5d3f539583066e9ff43",
+      "fingerprint": "0672c97c3ec2a1c66a66c2739729e3aaa81b8c978ff80f0f7470c2ad02bd3d83",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "27bdb08fe3e18ee3312a58bac8b1425d27b9833903c69549f22359e8bb4b33a5"
+        "apps/api/tests/openapi-contract.test.ts": "daf46ddc8a7b2afd315cf97c5336284619e08bd0e9c8103f0aff8b57ea37674e"
       },
-      "head": "8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364",
+      "head": "a062adefcf287bf3427b200f8ff2de508c25485c",
       "outcome": "no-change",
-      "reason": "Phase 6 adds dashboard and work-queue behavior with existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed. Verified API, migration, backup, frontend, and browser workflows.",
+      "reason": "OpenAPI schema contract alignment for Inventory V1",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at 8b6cc70739f82f9cfbe5acf7851f3e83aeaf8364"
+        "Changed: apps/api/tests/openapi-contract.test.ts at a062adefcf287bf3427b200f8ff2de508c25485c"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
