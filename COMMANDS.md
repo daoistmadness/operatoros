@@ -55,6 +55,13 @@ There is no repository-wide formatter command or automatic formatting hook.
 Keep formatting edits scoped to files being changed and follow their existing
 style; do not run a whole-repository formatter.
 
+## Production deployment
+
+- `scripts/docker-deploy.sh verify <candidate-archive.tar> <source-sha>` — verify release archive digest, manifest, SBOM, scan, and attestation.
+- `scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha>` — deploy verified release artifact with pre-deploy SQLite backup, atomic symlink switch, and healthcheck validation.
+- `scripts/docker-deploy.sh rollback` — rollback to recorded previous release.
+- `scripts/docker-deploy.sh status` — report current Docker Compose container status.
+
 ## Lower-level ownership commands
 
 - `bun run turbo:check` — run the full Turbo task graph.

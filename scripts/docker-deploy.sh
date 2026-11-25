@@ -22,6 +22,17 @@ EOF
 
 DOCKER_CMD="${DOCKER_COMPOSE_COMMAND:-docker compose}"
 
+acquire_lock() {
+  local deploy_dir="$1"
+  mkdir -p "$deploy_dir" || sudo -n mkdir -p "$deploy_dir"
+  local lock_file="$deploy_dir/.deploy.lock"
+  exec 200>"$lock_file"
+  if ! flock -n 200; then
+    printf 'Error: Concurrent deployment or rollback in progress (lock held on %s)\n' "$lock_file" >&2
+    return 1
+  fi
+}
+
 cmd_verify() {
   local archive="$1"
   local sha="$2"
@@ -43,7 +54,19 @@ cmd_deploy() {
   local current_link="$deploy_dir/current"
   local prev_release=""
 
+  acquire_lock "$deploy_dir"
   cmd_verify "$archive" "$sha"
+
+  # Pre-deployment hot SQLite backup with integrity verification
+  if [[ -f "$data_dir/operatoros.sqlite" ]]; then
+    local backup_dir="$data_dir/backups"
+    mkdir -p "$backup_dir" || sudo -n mkdir -p "$backup_dir"
+    local backup_file="$backup_dir/predeploy_$(date -u +%Y-%m-%dT%H-%M-%SZ).sqlite3"
+    printf 'Creating pre-deployment SQLite backup at %s...\n' "$backup_file"
+    python3 -c "import sqlite3, sys; s=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro', uri=True); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" "$data_dir/operatoros.sqlite" "$backup_file" || sudo -n python3 -c "import sqlite3, sys; s=sqlite3.connect('file:'+sys.argv[1]+'?mode=ro', uri=True); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" "$data_dir/operatoros.sqlite" "$backup_file"
+    printf 'Verifying pre-deployment SQLite backup integrity...\n'
+    python3 -c "import sqlite3, sys; con=sqlite3.connect(sys.argv[1]); res=con.execute('PRAGMA integrity_check').fetchone()[0]; con.close(); assert res == 'ok', f'Integrity check failed: {res}'" "$backup_file" || sudo -n python3 -c "import sqlite3, sys; con=sqlite3.connect(sys.argv[1]); res=con.execute('PRAGMA integrity_check').fetchone()[0]; con.close(); assert res == 'ok', f'Integrity check failed: {res}'" "$backup_file"
+  fi
 
   mkdir -p "$releases_dir"
   if [[ -L "$current_link" ]]; then
@@ -70,16 +93,28 @@ cmd_deploy() {
   # Atomic symlink switch
   ln -sfn "$target_release" "$current_link"
 
+  # Ensure web release symlink if web directory exists
+  if [[ -d "/mnt/podman-data/operatoros/web" ]]; then
+    ln -sfn "$target_release" "/mnt/podman-data/operatoros/web/current" || sudo -n ln -sfn "$target_release" "/mnt/podman-data/operatoros/web/current"
+  fi
+
   # Find compose file
-  local compose_file="$deploy_dir/docker-compose.yml"
-  if [[ ! -f "$compose_file" && -f "$target_release/deploy/docker/docker-compose.yml" ]]; then
-    compose_file="$target_release/deploy/docker/docker-compose.yml"
-  elif [[ ! -f "$compose_file" && -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
+  local compose_file=""
+  if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
+    compose_file="$deploy_dir/docker-compose.yml"
+  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
     compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
+  elif [[ -f "$target_release/deploy/docker/docker-compose.yml" ]]; then
+    compose_file="$target_release/deploy/docker/docker-compose.yml"
+  fi
+
+  if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
+    printf 'Error: No docker-compose.yml found in %s, /home/mikhailryu/docker/operatoros, or %s\n' "$deploy_dir" "$target_release" >&2
+    return 1
   fi
 
   printf 'Applying Docker Compose configuration from %s...\n' "$compose_file"
-  $DOCKER_CMD -f "$compose_file" up -d --remove-orphans || sudo -n $DOCKER_CMD -f "$compose_file" up -d --remove-orphans
+  $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans || sudo -n $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans
 
   # Verify health
   printf 'Waiting for services to become healthy...\n'
@@ -108,6 +143,8 @@ cmd_rollback() {
   local prev_file="$deploy_dir/.previous_release"
   local current_link="$deploy_dir/current"
 
+  acquire_lock "$deploy_dir"
+
   if [[ ! -f "$prev_file" ]]; then
     printf 'Error: No previous release recorded at %s\n' "$prev_file" >&2
     return 1
@@ -123,12 +160,23 @@ cmd_rollback() {
   printf 'Rolling back to previous release: %s\n' "$prev_release"
   ln -sfn "$prev_release" "$current_link"
 
-  local compose_file="$deploy_dir/docker-compose.yml"
-  if [[ ! -f "$compose_file" && -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
+  if [[ -d "/mnt/podman-data/operatoros/web" ]]; then
+    ln -sfn "$prev_release" "/mnt/podman-data/operatoros/web/current" || sudo -n ln -sfn "$prev_release" "/mnt/podman-data/operatoros/web/current"
+  fi
+
+  local compose_file=""
+  if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
+    compose_file="$deploy_dir/docker-compose.yml"
+  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
     compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
   fi
 
-  $DOCKER_CMD -f "$compose_file" up -d --remove-orphans || sudo -n $DOCKER_CMD -f "$compose_file" up -d --remove-orphans
+  if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
+    printf 'Error: No docker-compose.yml found for rollback\n' >&2
+    return 1
+  fi
+
+  $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans || sudo -n $DOCKER_CMD -p operatoros -f "$compose_file" up -d --remove-orphans
   printf 'Rollback complete. Checking health...\n'
   sleep 3
   curl -sf http://127.0.0.1:18088/health || sudo -n curl -sf http://127.0.0.1:18088/health
@@ -136,11 +184,17 @@ cmd_rollback() {
 
 cmd_status() {
   local deploy_dir="${1:-${OPERATOROS_DEPLOY_DIR:-/mnt/podman-data/operatoros/deploy}}"
-  local compose_file="$deploy_dir/docker-compose.yml"
-  if [[ ! -f "$compose_file" && -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
+  local compose_file=""
+  if [[ -f "$deploy_dir/docker-compose.yml" ]]; then
+    compose_file="$deploy_dir/docker-compose.yml"
+  elif [[ -f "/home/mikhailryu/docker/operatoros/docker-compose.yml" ]]; then
     compose_file="/home/mikhailryu/docker/operatoros/docker-compose.yml"
   fi
-  $DOCKER_CMD -f "$compose_file" ps || sudo -n $DOCKER_CMD -f "$compose_file" ps
+  if [[ -z "$compose_file" || ! -f "$compose_file" ]]; then
+    printf 'Error: No docker-compose.yml found for status\n' >&2
+    return 1
+  fi
+  $DOCKER_CMD -p operatoros -f "$compose_file" ps || sudo -n $DOCKER_CMD -p operatoros -f "$compose_file" ps
 }
 
 case "${1:-}" in
