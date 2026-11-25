@@ -2962,29 +2962,27 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "e6d8731c584b3c09eb5fd50d210e86abfe12957b6b3ee0d636c35aba0415c78a",
+      "fingerprint": "644b4c90423dae8fc4c44b179a2a042148dd4667a24c9556d60e398eabd60721",
       "snapshot": {
-        "CHANGELOG.md": "04a5b411b4292ba5a318247c09ab7a41915aa7197415f6c41c24729c1e6ad32e"
+        "CHANGELOG.md": "bedb868c16f7d852269fb8b836e2589ddc7853bddd5f479c2aef2a107fa0ec92"
       },
-      "head": "02828df658798cee867e73566c20c4b1dfa88b4a",
+      "head": "7768172198c76c610908b6781f19515c5141a51a",
       "outcome": "no-change",
-      "reason": "Docker consumer root persistence check",
+      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
       "evidence": [
-        "Changed: CHANGELOG.md at 02828df658798cee867e73566c20c4b1dfa88b4a"
+        "Changed: CHANGELOG.md at 7768172198c76c610908b6781f19515c5141a51a"
       ]
     },
     "source:COMMANDS.md": {
-      "fingerprint": "7f7ee7c1192af7e04499d62008a74b8af61813ab3ef3123892e9e3f65618e9b2",
+      "fingerprint": "a500fda9911b23ab8bf1f180cddcad5657b67b731db4dee4f7b9bd3c18d8dd24",
       "snapshot": {
-        "COMMANDS.md": "97b6a3c19ecc9550f75b868c102e24180642add337c4fd1a59139330994f2963"
+        "COMMANDS.md": "92e6521c0e1b73515f06e6c91a29b22697cae9ae002fbc0605cd62e79fe1e5ef"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
-      "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "head": "7768172198c76c610908b6781f19515c5141a51a",
+      "outcome": "no-change",
+      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
       "evidence": [
-        "COMMANDS.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: COMMANDS.md at 7768172198c76c610908b6781f19515c5141a51a"
       ]
     },
     "source:ERRORS.md": {
@@ -4841,15 +4839,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "f6bf095b4bbe8d63e5431d26b277ee75b425ccf73385ab3ad40d0cbea9c176b0",
+      "fingerprint": "44197c90c926158c2230d7ac5fce17d68dcd85d2a92232e47a84ecf372208df1",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "cc10bb69ebd8fa0eb0fe38de728453960031d860f1c4eff568873c1c568271fb"
+        "docs/runbooks/ubuntu-server-deployment.md": "f64f94cd1c196c4b114b571e407f9e51da27a674d064cb4b20b0299b0674360a"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "7768172198c76c610908b6781f19515c5141a51a",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 7768172198c76c610908b6781f19515c5141a51a"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -11416,15 +11414,15 @@
       ]
     },
     "source:scripts/docker-deploy.sh": {
-      "fingerprint": "ac0bb4791108b2a225372bdeb22811b1291eb3a1cb3caaf064bfae2335fcc3d2",
+      "fingerprint": "47766335eeea9842d7c2bcce5e8d308ec09dc1ed00cf0360e9280235a837ae90",
       "snapshot": {
-        "scripts/docker-deploy.sh": "acc0aaf00612c582418816c6d28e683fe1f52aef06515bd3e9523230ff51f2b5"
+        "scripts/docker-deploy.sh": "b6198432ae37d701f6b9bc62574e8c921e77916d627e0825d626210221e954c2"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "7768172198c76c610908b6781f19515c5141a51a",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Consolidate operational runbook and deployment script safeguards without impacting Elysia library skill",
       "evidence": [
-        "Changed: scripts/docker-deploy.sh at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "Changed: scripts/docker-deploy.sh at 7768172198c76c610908b6781f19515c5141a51a"
       ]
     },
     "source:scripts/podman-dev.sh": {
