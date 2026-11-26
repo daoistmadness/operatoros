@@ -2958,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "92fe7d76746a28201f19d0facd7d780ce3415ea289eed7dedd9783b60974acdc",
+      "fingerprint": "f8c584f41ca9153a753909bf0265526ecd289c5dd12517af3f6cfda84a52dc31",
       "snapshot": {
-        "CHANGELOG.md": "a4d6a1d61ba912b0b4918f7cb109d564b5f4124e05bed158d49bfe9148d8cbde"
+        "CHANGELOG.md": "b1f9214e58496e044a565345ac70ac945b74488bfa301ffa09b3749ea45f6a0b"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "567a198a2a77d35a2e2d38f8b535a970e0f6a188",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Changelog links the feature PR. Existing skill guidance applies.",
       "evidence": [
-        "Changed: CHANGELOG.md at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: CHANGELOG.md at 567a198a2a77d35a2e2d38f8b535a970e0f6a188"
       ]
     },
     "source:COMMANDS.md": {

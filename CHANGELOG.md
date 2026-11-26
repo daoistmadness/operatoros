@@ -3,7 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
-- Add Administrasi PTK to staff profiles with a Verval preparation checklist, private document history, and external outcome tracking.
+- Add Administrasi PTK to staff profiles with a Verval preparation checklist, private document history, and external outcome tracking. (#420)
 
 - Add sanctioned operational migration command (`migrate`) and Compose image tag synchronization to `scripts/docker-deploy.sh` with explicit target authorization in `db-cli.ts`.
 - Reconcile Labelindo No. 103 and No. 107 label geometry with official templates, add A4 Standard and A4 Compact presets with optional cutting guides, and unify label templates into an extensible registry with calibration PDFs.
