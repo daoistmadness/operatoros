@@ -2958,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d2c95c2f9b2f50d409ab4cfc3b50da0611f86cd65b8ff6cecced97134935e9cb",
+      "fingerprint": "1f94f231cb11750874af2c8ff6bbbdf9bcf793d6506501768902a4c8c3562484",
       "snapshot": {
-        "CHANGELOG.md": "b767d3186c71115635639ce621a0d770d411afa11ea1bef588203fe66f106f68"
+        "CHANGELOG.md": "85953b714a767df31e1166867e4a7bd2d1b5778c460b64665b6d668c97e3c7bd"
       },
-      "head": "9003c74707e8a6b356760a4b6d4c463df9ab3278",
+      "head": "3eadbec31df09d0c213aad575c06e1c54ceb9ee6",
       "outcome": "no-change",
-      "reason": "Operational deployment wrapper hardening and runbook updates do not alter Elysia library guidance",
+      "reason": "The required Unreleased entry documents the G12 storage-governance exception; it does not change skill guidance or planning scope.",
       "evidence": [
-        "Changed: CHANGELOG.md at 9003c74707e8a6b356760a4b6d4c463df9ab3278"
+        "Changed: CHANGELOG.md at 3eadbec31df09d0c213aad575c06e1c54ceb9ee6"
       ]
     },
     "source:COMMANDS.md": {
