@@ -138,6 +138,7 @@ export const queryKeys = {
     details: ["staff", "detail"] as const,
     detail: (id: string) => ["staff", "detail", id] as const,
     sensitive: (id: string) => ["staff", "sensitive", id] as const,
+    ptk: (id: string) => ["staff", "ptk", id] as const,
     histories: ["staff", "history"] as const,
     history: (id: string) => ["staff", "history", id] as const,
     schoolUnits: ["staff", "school-units"] as const,

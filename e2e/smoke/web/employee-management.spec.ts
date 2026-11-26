@@ -52,6 +52,21 @@ test("@employees @critical @release imports, updates, analyzes, and exports a sy
   await employeeRow.locator('a[href^="/staff/"]').first().click();
   await expect(page.getByRole("heading", { name: fullName, exact: true })).toBeVisible();
 
+  const ptk = page.getByRole("navigation", { name: "Bagian Administrasi PTK" });
+  await expect(ptk.getByRole("button")).toHaveCount(5);
+  await page.getByLabel("Nama Ibu Kandung").fill("Synthetic parent");
+  await ptk.getByRole("button", { name: /^Dokumen/ }).click();
+  await expect(page.getByText("Ijazah S1 Sederajat · Wajib")).toBeVisible();
+  await ptk.getByRole("button", { name: /^Penugasan/ }).click();
+  await page.getByLabel("Nama sekolah di Verval", { exact: true }).fill("Synthetic external school");
+  await page.getByRole("button", { name: "Periksa & Simpan" }).click();
+  const review = page.getByRole("dialog", { name: "Periksa & Simpan" });
+  await expect(review.getByText("Synthetic external school")).toBeVisible();
+  await review.getByRole("button", { name: "Simpan persiapan" }).click();
+  await expect(review).toBeHidden();
+  await page.reload();
+  await expect(page.getByLabel("Nama Ibu Kandung")).toHaveValue("Synthetic parent");
+
   await page.getByRole("link", { name: "Edit profile" }).click();
   await page.getByLabel("Position title").fill("E2E Operations Assistant");
   const update = page.waitForResponse((response) => response.url().includes("/api/staff/") && response.request().method() === "PATCH" && response.status() === 200);

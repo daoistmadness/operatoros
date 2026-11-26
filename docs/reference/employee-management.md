@@ -161,3 +161,20 @@ selections above 10,000 rows instead of truncating them.
 The source workbook was not present in this checkout during implementation.
 The importer has been checked with synthetic XLSX data only; do not use real
 employee values in repository fixtures, snapshots, logs, or documentation.
+
+## Administrasi PTK
+
+Open a staff profile to prepare one current WNI registration. Update existing
+identity fields through Edit Profile. Administrasi PTK saves the additional
+fields independently of employment and internal school assignments. Choose a
+matching school unit or enter the exact school name shown in Verval.
+
+Periksa & Simpan accepts incomplete records. Siap Verval indicates that the
+saved information and the five required files pass local checks. Changes to
+the school or academic year archive the previous task details and outcome.
+Upload a task letter for the new context. Diplomas and optional archive
+documents remain on the staff record.
+
+Uploads accept PDF, JPEG and PNG up to 5 MB. Replacement keeps earlier
+versions. All referenced versions are included in encrypted backups.
+Live files require the same disk encryption and account isolation as SQLite.

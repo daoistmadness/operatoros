@@ -193,15 +193,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "eee040fd3a571f8938cf1191e866c54ebb8019571cfa025945467e6ea29c9342",
+      "fingerprint": "8dd83f391aaabe222b00d20e959cd2feb25b4b29919f58449fca2845bf6f5a5e",
       "snapshot": {
-        "apps/api/src/app.ts": "0d24b8a95dd92b3ebf35bb8d1fb71a899c2ae6361850a821b2572636d173e10b"
+        "apps/api/src/app.ts": "7121c46a5074c675012c1442b487c36a0692e2449968f59cef7665443cf242ca"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/api/src/app.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -493,15 +493,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "ac74ec0206b96c7c6d38caa728a94c229e15f43bda7d3aff304bd22f4fd4dbb3",
+      "fingerprint": "5ecf98e2e473b4d3b69f22575805ac84388f03dbb4279be76f16b13b19067fbb",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "313521d2c2978dccbd66e6ae71da66c3c47126cdeb08af620bc8107cfd7fe58e"
+        "apps/web/src/generated/openapi/schema.ts": "19a328c91957e4945678dec7914e70cbc6cd21c7f6b90361dd5fc0e763985f3f"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/web/src/generated/openapi/schema.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -517,15 +517,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "052efda08fddae9898b353286f2ecb84df33f4fba9c852595f5123b1d08e19d8",
+      "fingerprint": "3e38b6cb6045868333078b8d19dededc0c2c59d16e75c889da78b3ff73b94ede",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "578e2d880333b596628401d2a59c78380ed0e090b38d188881a2e81524050a39"
+        "openapi/operatoros.openapi.json": "f5171537325cdc7483bf9109a3d2b184de79abeb7ff64f390bd07b01032a31c7"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: openapi/operatoros.openapi.json at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -2525,27 +2525,27 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.test.tsx": {
-      "fingerprint": "df9d6bc384f643641640e2279e7f3e85153f0b24c4c474977f1efb4ddcbbf857",
+      "fingerprint": "ca57029966863c6c41b03a216a8bad86243743a2aac995463e6de953e80d3d4f",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.test.tsx": "341cd9974ab6fc10cef99509f62adf74aeb5e07af5d6c04abcdae0fed759c800"
+        "apps/web/src/pages/StaffDetail.test.tsx": "76e75483dba7e3cd97dcee2dbb7d99725a44fad9cdb73a13b2e01e38169bd745"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/StaffDetail.test.tsx at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "0d3c18a69ada3d043f3a126a5c508e078bd42e779783a60c3660feb3c0555485",
+      "fingerprint": "04ad1f73602cd9cd292966e34ed567ce5a155101617798e53370c8d82e63d0c1",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "79cad9fce01d6ebd6014725a64b5858c3008d4cba3ce10ec90c04df2fbeb872f"
+        "apps/web/src/pages/StaffDetail.tsx": "6c1c8f8c5aae1fccab12ab49bc6b3c1c0dec8563c15f54cc9759c479e5e3ed41"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/StaffDetail.tsx at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
@@ -2958,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "a9e452ecbe9b53bc39776e5234691271df457514e3c669ac43bc301f7e343df5",
+      "fingerprint": "f8c584f41ca9153a753909bf0265526ecd289c5dd12517af3f6cfda84a52dc31",
       "snapshot": {
-        "CHANGELOG.md": "007fd7603d510ebb0e1c4f723ea6663122cf129f910a5260d7b8e7f355869311"
+        "CHANGELOG.md": "b1f9214e58496e044a565345ac70ac945b74488bfa301ffa09b3749ea45f6a0b"
       },
-      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
+      "head": "567a198a2a77d35a2e2d38f8b535a970e0f6a188",
       "outcome": "no-change",
-      "reason": "Operational migration wrapper and compose image tag sync",
+      "reason": "Changelog links the feature PR. Existing skill guidance applies.",
       "evidence": [
-        "Changed: CHANGELOG.md at e85eed8e45c2863deaf77a0b6be63f663997305d"
+        "Changed: CHANGELOG.md at 567a198a2a77d35a2e2d38f8b535a970e0f6a188"
       ]
     },
     "source:COMMANDS.md": {
@@ -3234,15 +3234,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "2c20bf0361bc5742df0fe7dbe990487f53cdd86483a7a3444ddb641f6448515e",
+      "fingerprint": "530ce9dd7463dd6392f088a6b10c264377a18083b632a9d239fd9e456fdd3b2c",
       "snapshot": {
-        "docs/architecture/database-schema.md": "519b046105618b28c135b0a1e68bd76f156970a2db9824b68505b7e6e9e35c4a"
+        "docs/architecture/database-schema.md": "392d8a15ae029d0f300a6c84d9e2efd17efcd1acc30193cb08a853bebd90e8be"
       },
-      "head": "711f1c8a4f0db650a5cbd391c7b712db3da4f5e1",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Schema-version documentation only; no Elysia guidance, skill mapping, or planning record changes are needed.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at 711f1c8a4f0db650a5cbd391c7b712db3da4f5e1"
+        "Changed: docs/architecture/database-schema.md at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -4484,15 +4484,15 @@
       ]
     },
     "source:docs/reference/employee-management.md": {
-      "fingerprint": "688de72a8b0ec1e90044d58f011d2b1038d0cdd5a6491888e3b1c8e219c3cf12",
+      "fingerprint": "2dc7aabdd3a4303f3181b7bcbd73c475a9392e8686d5939e154b0dd55739fdd5",
       "snapshot": {
-        "docs/reference/employee-management.md": "2da5dca626402cda85a8fbb6c1532c38529da7d8975498a958a1614939e14a17"
+        "docs/reference/employee-management.md": "88c6a5e4780e0e0dd33dc6a4186132639982ac818794e754175bed79130a16ae"
       },
-      "head": "bfb30cc7f3b0d0bb87db9487100986c2a462dc25",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 2 staff/unit changes, tests, contracts, migration, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: docs/reference/employee-management.md at bfb30cc7f3b0d0bb87db9487100986c2a462dc25"
+        "Changed: docs/reference/employee-management.md at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:docs/reference/first-run-admin-threat-model.md": {
@@ -5116,15 +5116,15 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "2000c43665c444e090c8ac5c44e578582b82a61a7303e4ab99e143ab5fa6a7ac",
+      "fingerprint": "07a9c5cd52482f04c64ec9d432a44348e7c0b31b5e29f7f04c4ba9cb5349c72f",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "8bfafcd2d66a042879d55558b014c791ece986929b754afd96b3f074f4ee29e8"
+        "apps/api/src/domains/core.ts": "fb0255e24a916eb297d1a1bf827554713468dcdbb42a7fde00a9cea187d169a5"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/api/src/domains/core.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -5178,27 +5178,27 @@
       ]
     },
     "source:apps/api/src/domains/data-reset.ts": {
-      "fingerprint": "a1472cf46fb4cb987a052543819a389bb295fe57898bb1b2bc07222d44b1543f",
+      "fingerprint": "8c96d66e294b04365d3bbf843cbf9fe94560b74f5dd631e12fb655d8421042f3",
       "snapshot": {
-        "apps/api/src/domains/data-reset.ts": "8433292db774e01359775cc7884f42790d339eefe30a94b5ff52986e423e31ad"
+        "apps/api/src/domains/data-reset.ts": "72f0b6c465b0b34c57eb1d7dfeafa9280617b1f3774e50e825f5795433b63051"
       },
-      "head": "e074b3be6f90fc3d97c1f3eac67957fc118da1bc",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Phase 5 adds student administration and uses existing Elysia, TypeBox, SQLite, and React patterns; no agent-skill guidance changed.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/data-reset.ts at e074b3be6f90fc3d97c1f3eac67957fc118da1bc"
+        "Changed: apps/api/src/domains/data-reset.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/src/domains/employee-management.ts": {
-      "fingerprint": "d0f824cb3c670f0704bd1e5d2263fb49236d68061f4d708ea91bd29634c9f869",
+      "fingerprint": "1db2ebc8f5c348e056b12800ae3cb7b322efb241c9398f4d33b4a2eee9f91a86",
       "snapshot": {
-        "apps/api/src/domains/employee-management.ts": "0b009ecd6cb5443d3df8208fac10e2073bd510e557a25e38143d2a3918236a7d"
+        "apps/api/src/domains/employee-management.ts": "afd8040b743fec41ee9a089bb7d47c11e0a4e446df4b18bc0ecafe52ff5a98e3"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/employee-management.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/employee-management.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/src/domains/staff-metrics.ts": {
@@ -5226,27 +5226,27 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "eb971122f8dcd2c23de4db401eb791e1432faf067d9edcc2f007ba223d98fc8d",
+      "fingerprint": "59575ab7c56d752f7bdc4368700c090e9e33f373a05729e2e7f8329a40fe8f02",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "c35e1b7ac662a331485a0e1890a8506c52b09980e71c0b7188c0c7bd8035795d"
+        "apps/api/tests/openapi-contract.test.ts": "5f45bb5987461206ce6f25771b13bc2d578051af65ff5b4c95bb2de548c5808d"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/api/tests/openapi-contract.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
-      "fingerprint": "c60c5e22e8e465a54b71953759fad90a7eb05365b2beb0fe5335367c2e2c622a",
+      "fingerprint": "d9810f6ed924550e159bc30f633466ceb82fd365fa0eae855f9498bbef2425b0",
       "snapshot": {
-        "apps/api/tests/staff-management.test.ts": "c1da2987a6143cf155e4480f954f2836114421a7333fb53d11a8da6480a8d090"
+        "apps/api/tests/staff-management.test.ts": "8d5e9ecc62b6321930b1dc5abaae0ce86242194367e555c586f1021a4a9d4ef6"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/tests/staff-management.test.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/api/tests/staff-management.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/tests/system.test.ts": {
@@ -5264,39 +5264,39 @@
       ]
     },
     "source:apps/web/src/api/staff.ts": {
-      "fingerprint": "8fbf2f215d04dd33bae73d95f677bf799884ecdf13136c4f1dc1d8978bf41b68",
+      "fingerprint": "8af99c9855116d1e3a3c6c2cf4124349815d1a95effbc6879af2ee215f8f1dd2",
       "snapshot": {
-        "apps/web/src/api/staff.ts": "8cfd96f6bba62dfbb41012e5085644dbcdb27dad27ff73b797a5db3d91c26b6c"
+        "apps/web/src/api/staff.ts": "7e8fd2d40142a8458ff77901b3451d6d1e6901b5ad72e80f599639f440ee71c8"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/web/src/api/staff.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/api/staff.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "581a80a2bac90fa81ad32315b026e4262a8d2674216df4af2a2d89a817bbf0ae",
+      "fingerprint": "a840413807ebd62feb5118a884d5cb50c23da27b09d9dc3d3f7bc06e2868884c",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "19459cacc8bf1dc8db37f02eaccb5fd169ef1f27519b4671fb0cbc6265236900"
+        "apps/web/src/lib/query/queryKeys.ts": "ff104390acfcb25c26c8ed91a21d1b6531c0fe7a20040f5a5886e378f2eb6bfd"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
-      "fingerprint": "bc61d1a5ca9b0f2bbd72498d2ab68161ae48165225bd27d329801bcf79c06503",
+      "fingerprint": "74d56e864b0c00c0614962162b3692dfbf051c0da6b49fa8fe08d8a06b21471b",
       "snapshot": {
-        "packages/contracts/src/staff.ts": "9a0e0e0dd32735fa6980baedfa2350a0b11c7c9ab3cbdebb0495b85cac7cf835"
+        "packages/contracts/src/staff.ts": "525719c3dd679456b4095a119cd253f291637b575a36e9d2abd6887850d373b9"
       },
-      "head": "573ccacb5f9c3b40f7d291f27dba6a847613743a",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Reviewed Phase 3 PTK routes, contracts, UI, S5.0 migration, tests, and docs; existing Elysia and planning guidance remains accurate.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/contracts/src/staff.ts at 573ccacb5f9c3b40f7d291f27dba6a847613743a"
+        "Changed: packages/contracts/src/staff.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/README.md": {
@@ -5312,15 +5312,15 @@
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "ddfdc6b1de13595882df74810ebf85c0fa7e7941b49ddb2b6a29a4957497e2f5",
+      "fingerprint": "333002ec2f2124f557550aaae1b6fdce16f6230dc4ef1a6b9165b4bfe78fe2b7",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "3f71508ec65c730ae7484bd8692fcf8d5850811425e55a338dcc9afcc7739e65"
+        "packages/db/src/bootstrap.ts": "ba6a4c1adc9f18185a1314cc12d30dd4d7a1c83339f5de36a1e5789e863cf4ec"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/src/bootstrap.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/src/index.ts": {
@@ -5336,27 +5336,27 @@
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "8c0fd4c582d9ada8dde70129661d7636b1f511df1f48ff32d81a959664a7d5ef",
+      "fingerprint": "ce672295742c5cdac3b5fb1f14a31b1b036c1d6a0a09be9cc0a2757a978bb44a",
       "snapshot": {
-        "packages/db/src/manifest.ts": "81204fd4808d761e999e8c46c48a2842c050ee77a6038d4c0a4b86c2ea5221d1"
+        "packages/db/src/manifest.ts": "ca2cbf035f9899ee0d44d92a32593a9c6439bb8c46860b35d1985c20c3900a88"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: packages/db/src/manifest.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "cfb0d17b3c73628baaa8b21fc63b632d77d32dc48a989e8c448c85f67e6bb674",
+      "fingerprint": "69ed267df1bbd5bb26ef90e1a4e3f0427b77cf4a50af7afd17302b7a3d64b944",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "125f748ceebc0c1055a344da2711c779fa2905fae074c33d85c90544c519cadb"
+        "packages/db/src/migrate-existing.ts": "e8394fbaa284d45c0373e195fcdce45c5ff206f0a2455ddbaa294247adfb76e1"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/src/migrate-existing.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5372,15 +5372,15 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "0ee40a163dfc079bc9a66d49ddd3f68e7cddefa5187faf2b58c856d93145fbdd",
+      "fingerprint": "08659e3df50d0c816ca1ebb16ece1c295e30b69ee4ea108af215ec962d81dabb",
       "snapshot": {
-        "packages/db/src/schema.ts": "4d1dd228b0e1b7b55df534009d5c9848b4588b8c4b848dc833a6708101754298"
+        "packages/db/src/schema.ts": "6835ad69439c9bb46b350c579382a17fa5625df9e7c937ebed25c0d7d99e08ab"
       },
-      "head": "cf975639cb950a3e2a9acf38be8d0a50e99237c9",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Inventory V1 acceptance enhancements and typecheck fixes",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at cf975639cb950a3e2a9acf38be8d0a50e99237c9"
+        "Changed: packages/db/src/schema.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
@@ -5396,27 +5396,27 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "7b7434371f5f55bf14d2c31a5cfe98467fa775ed4fc9fe1e4ff005540a1a8151",
+      "fingerprint": "37047472c956d3ac2e70dec08ce1fabb0270c0e5d98e0e7310142861562da4a2",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "9e42b19c7e2d793d45c557f956e99212a05a2e6a246b323687c8ec4a628f1acc"
+        "packages/db/tests/db.test.ts": "65c8e2326f6fd938a26069ed0a37353fdf2887fb4a70715a0f73a3f501bbc7e4"
       },
-      "head": "e85eed8e45c2863deaf77a0b6be63f663997305d",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Operational migration wrapper and compose image tag sync",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at e85eed8e45c2863deaf77a0b6be63f663997305d"
+        "Changed: packages/db/tests/db.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "26fb8da62d05191ea3a9b7f4e724743822a7763f925a4601104d8a87d0df9478",
+      "fingerprint": "caa441bde82054dcdff304af0afe18ce7931cbbb9e157f09745780c0ad9518ee",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "dcea03fe011a7701ba8df6146cac152d43ea5395bd3f1c04999cf46a07a71ac1"
+        "packages/db/tests/migrate-existing.test.ts": "5dedd5dbd0fe893ce3aab2ef46f22d41e984b61bf5b309ca9fcd80d853c6b4e5"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: packages/db/tests/migrate-existing.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -5666,15 +5666,15 @@
       ]
     },
     "source:apps/api/src/domains/upp-report-files.ts": {
-      "fingerprint": "7ac74e8998b75b53a5689ffdb86fd86badf2990593afc4437484d2fb79ce2a82",
+      "fingerprint": "4aa00c8b7a445e878bf362af1b6a1e7121eb6fc3f528f78c8e0be3371a4980b0",
       "snapshot": {
-        "apps/api/src/domains/upp-report-files.ts": "4e408496d504cf28d164492db6754804e2b7ca36965b14e6034cbf95e9635e87"
+        "apps/api/src/domains/upp-report-files.ts": "e9b83d52daa23d849c6877798f8630ae31fbb821fbb9bd706d03d77fbfd42792"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
       "evidence": [
-        "Changed: apps/api/src/domains/upp-report-files.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/upp-report-files.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     },
     "source:apps/api/src/domains/upp-reports.ts": {
@@ -8734,15 +8734,15 @@
       ]
     },
     "source:e2e/smoke/web/employee-management.spec.ts": {
-      "fingerprint": "5517ea492712623f55f13ebec8d0db8e6353f7536f39d741be863a96bd08e610",
+      "fingerprint": "3cb38faad2d4b9a1c57d21200b80f9e953b2c1d57d52bb70f1d71bed51a26e35",
       "snapshot": {
-        "e2e/smoke/web/employee-management.spec.ts": "68405c205bf1a2fdf10ee367c88e361e41c2edf2d6e17e4990de6eb8e303abb1"
+        "e2e/smoke/web/employee-management.spec.ts": "30f8721f0b10dc3b3b1172595549399cb1b8937dbb3855fb3d2c7826cde4f375"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "84025febcbf5aeaeac565d588e74782fc97df4bc",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "The Staff browser smoke exercises the existing authorized profile and its PTK API. No agent skill guidance changed.",
       "evidence": [
-        "Changed: e2e/smoke/web/employee-management.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/employee-management.spec.ts at 84025febcbf5aeaeac565d588e74782fc97df4bc"
       ]
     },
     "source:e2e/smoke/web/management-review-attendance-export.spec.ts": {
@@ -11618,6 +11618,42 @@
       "reason": "Operational migration wrapper and compose image tag sync",
       "evidence": [
         "Changed: packages/db/src/db-cli.ts at e85eed8e45c2863deaf77a0b6be63f663997305d"
+      ]
+    },
+    "source:apps/api/src/domains/staff-ptk.ts": {
+      "fingerprint": "8eeca0b660768bca74b0cf85ff42ff57e6cf0004a642ab505f342223043cc9f3",
+      "snapshot": {
+        "apps/api/src/domains/staff-ptk.ts": "20597c9145eb7401a0f7a16090159694135b8a6ee1caef56b304b2dd447ffdfe"
+      },
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "outcome": "no-change",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "evidence": [
+        "Changed: apps/api/src/domains/staff-ptk.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+      ]
+    },
+    "source:apps/web/src/pages/StaffPtk.tsx": {
+      "fingerprint": "c63156991f26dc030a8c5c3c2cc9a8afdfa881104e5667e9b4a3593be504b575",
+      "snapshot": {
+        "apps/web/src/pages/StaffPtk.tsx": "a66e42fc5d0d8c777f05c6dc54ab2d0255499e3cb1e393955d257640ef43bec2"
+      },
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "outcome": "no-change",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "evidence": [
+        "Changed: apps/web/src/pages/StaffPtk.tsx at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+      ]
+    },
+    "source:packages/db/src/s56-migration.sql": {
+      "fingerprint": "aad1b6c68867f45041d7a037cd1a9e9fc05498de3b76a2d63ab739fc5264b8ea",
+      "snapshot": {
+        "packages/db/src/s56-migration.sql": "3ef084ad55c14bbcb883609771b3af05851a48baa964d27d6beb48414b93c577"
+      },
+      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "outcome": "no-change",
+      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "evidence": [
+        "Changed: packages/db/src/s56-migration.sql at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
       ]
     }
   }

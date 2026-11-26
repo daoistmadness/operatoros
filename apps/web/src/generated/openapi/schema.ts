@@ -6731,6 +6731,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/{staff_id}/ptk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read staff Verval preparation */
+        get: operations["read_staff_ptk"];
+        /** Save staff Verval preparation */
+        put: operations["save_staff_ptk"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/ptk/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload or replace PTK document */
+        post: operations["upload_staff_ptk_document"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/{staff_id}/ptk/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a PTK document version */
+        get: operations["download_staff_ptk_document"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -26024,6 +26076,454 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    read_staff_ptk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        revision: number;
+                        contextId: string;
+                        preparation: {
+                            gender?: string;
+                            mother?: string;
+                            religion?: string;
+                            marital?: string;
+                            city?: string;
+                            district?: string;
+                            village?: string;
+                            citizenship?: string;
+                            postal?: string;
+                            street?: string;
+                            rt?: string;
+                            rw?: string;
+                            extraVillage?: string;
+                            employment?: string;
+                            title?: string;
+                            specialNeeds?: string;
+                            appointingBody?: string;
+                            appointmentNumber?: string;
+                            appointmentStart?: string;
+                            salarySource?: string;
+                            principalLicense?: "Ya" | "Tidak" | "";
+                            schoolUnitId?: number;
+                            externalSchool?: string;
+                            academicYearId?: number;
+                            taskNumber?: string;
+                            taskDate?: string;
+                            taskStart?: string;
+                            submission?: "Belum Diajukan" | "Diajukan" | "Perlu Perbaikan" | "Disetujui" | "Ditolak";
+                            submissionDate?: string;
+                            externalReference?: string;
+                            notes?: string;
+                        };
+                        documents: {
+                            id: string;
+                            slot: "task" | "sd" | "smp" | "sma" | "s1" | "ktp" | "kk" | "appointment" | "other";
+                            label: string;
+                            uploaded_at: string;
+                            version: number;
+                            current: boolean;
+                        }[];
+                        missing: string[][];
+                        ready: boolean;
+                        years: {
+                            id: number;
+                            label: string;
+                        }[];
+                        schools: {
+                            id: number;
+                            name: string;
+                            status: "ACTIVE" | "INACTIVE";
+                            version: number;
+                            created_at: string;
+                            updated_at: string;
+                        }[];
+                        priorContexts: {
+                            school: string;
+                            year: string;
+                            taskNumber: string;
+                            taskDate: string;
+                            taskStart: string;
+                            submission: string;
+                            submissionDate: string;
+                            externalReference: string;
+                            notes: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preparation changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    save_staff_ptk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    revision: number;
+                    preparation: {
+                        gender?: string;
+                        mother?: string;
+                        religion?: string;
+                        marital?: string;
+                        city?: string;
+                        district?: string;
+                        village?: string;
+                        citizenship?: string;
+                        postal?: string;
+                        street?: string;
+                        rt?: string;
+                        rw?: string;
+                        extraVillage?: string;
+                        employment?: string;
+                        title?: string;
+                        specialNeeds?: string;
+                        appointingBody?: string;
+                        appointmentNumber?: string;
+                        appointmentStart?: string;
+                        salarySource?: string;
+                        principalLicense?: "Ya" | "Tidak" | "";
+                        schoolUnitId?: number;
+                        externalSchool?: string;
+                        academicYearId?: number;
+                        taskNumber?: string;
+                        taskDate?: string;
+                        taskStart?: string;
+                        submission?: "Belum Diajukan" | "Diajukan" | "Perlu Perbaikan" | "Disetujui" | "Ditolak";
+                        submissionDate?: string;
+                        externalReference?: string;
+                        notes?: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        revision: number;
+                        contextId: string;
+                        preparation: {
+                            gender?: string;
+                            mother?: string;
+                            religion?: string;
+                            marital?: string;
+                            city?: string;
+                            district?: string;
+                            village?: string;
+                            citizenship?: string;
+                            postal?: string;
+                            street?: string;
+                            rt?: string;
+                            rw?: string;
+                            extraVillage?: string;
+                            employment?: string;
+                            title?: string;
+                            specialNeeds?: string;
+                            appointingBody?: string;
+                            appointmentNumber?: string;
+                            appointmentStart?: string;
+                            salarySource?: string;
+                            principalLicense?: "Ya" | "Tidak" | "";
+                            schoolUnitId?: number;
+                            externalSchool?: string;
+                            academicYearId?: number;
+                            taskNumber?: string;
+                            taskDate?: string;
+                            taskStart?: string;
+                            submission?: "Belum Diajukan" | "Diajukan" | "Perlu Perbaikan" | "Disetujui" | "Ditolak";
+                            submissionDate?: string;
+                            externalReference?: string;
+                            notes?: string;
+                        };
+                        documents: {
+                            id: string;
+                            slot: "task" | "sd" | "smp" | "sma" | "s1" | "ktp" | "kk" | "appointment" | "other";
+                            label: string;
+                            uploaded_at: string;
+                            version: number;
+                            current: boolean;
+                        }[];
+                        missing: string[][];
+                        ready: boolean;
+                        years: {
+                            id: number;
+                            label: string;
+                        }[];
+                        schools: {
+                            id: number;
+                            name: string;
+                            status: "ACTIVE" | "INACTIVE";
+                            version: number;
+                            created_at: string;
+                            updated_at: string;
+                        }[];
+                        priorContexts: {
+                            school: string;
+                            year: string;
+                            taskNumber: string;
+                            taskDate: string;
+                            taskStart: string;
+                            submission: string;
+                            submissionDate: string;
+                            externalReference: string;
+                            notes: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preparation changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upload_staff_ptk_document: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    contextId: string;
+                    slot: "task" | "sd" | "smp" | "sma" | "s1" | "ktp" | "kk" | "appointment" | "other";
+                    label?: string;
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        saved: boolean;
+                    };
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preparation changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    download_staff_ptk_document: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                staff_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Private document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Record not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Preparation changed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid data */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Storage unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -1,3 +1,4 @@
+import StaffPtk from "./StaffPtk";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLink as Link } from '../components/AppLink';
@@ -93,6 +94,7 @@ export default function StaffDetail() {
   return <div className="space-y-6">
     <Link to="/staff" className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline"><ArrowLeft className="size-4" />Back to Employee Directory</Link>
     <PageHeader eyebrow="Employee profile" title={member.full_name} description="Employment status and position changes are recorded in the employee history." actions={<div className="flex items-center gap-2"><Badge variant={member.employment_status === "ACTIVE" ? "success" : "secondary"}>{member.employment_status}</Badge>{can("manage_staff") && <Link className="inline-flex min-h-10 items-center rounded-md border border-border px-4 py-2 text-sm font-bold" to={`/staff/${id}/edit`}>Edit profile</Link>}</div>} />
+    {can("view_staff_sensitive") && <StaffPtk key={id} member={member} sensitive={sensitive.data} editable={can("manage_staff") && can("edit_sensitive_staff_fields")} editProfile={can("manage_staff") && can("edit_sensitive_staff_fields") ? <Link to={`/staff/${id}/edit`}>Edit data profil</Link> : null} />}
     {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">{(error as Error).message}</p>}
     <div className="grid gap-4 lg:grid-cols-2">
       <Card><CardHeader><CardTitle>Basic identity</CardTitle></CardHeader><CardContent><dl className="grid gap-4 sm:grid-cols-2"><FieldValue label="Source staff ID" value={member.source_staff_id} /><FieldValue label="Name" value={member.full_name} /><FieldValue label="NIP" value={member.identifiers.find((item) => item.identifier_type === "NIP")?.normalized_value} />{can("view_staff_sensitive") && <><FieldValue label="NIK" value={sensitive.data?.identifiers.find((item) => item.type === "NIK")?.normalized_value} /><FieldValue label="Birth place" value={sensitive.data?.birth_place} /><FieldValue label="Birth date" value={sensitive.data?.birth_date} /><FieldValue label="Age" value={sensitive.data?.age_years} /></>}</dl>{can("view_staff_sensitive") && sensitive.isError && <p role="alert" className="mt-3 text-sm text-rose-700">Sensitive identity information is unavailable.</p>}</CardContent></Card>

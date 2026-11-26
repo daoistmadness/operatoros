@@ -53,6 +53,7 @@ const SCHOOL_STRUCTURE_PLAN: readonly ResetGroup[] = [
   { domain: "School structure review data", tables: ["academic_master_import_previews"] },
   { domain: "Class assignments", tables: ["teacher_class_assignment_audit", "teacher_class_assignments"] },
   { domain: "Monthly PTK activity", tables: ["staff_monthly_activity_history", "staff_monthly_activities", "staff_monthly_activity_periods"] },
+  { domain: "Administrasi PTK", tables: ["staff_ptk_documents", "staff_ptk_administration"] },
   { domain: "Staff import history", tables: ["staff_employment_history", "staff_import_issues", "staff_import_rows", "staff_import_batches"] },
   { domain: "Staff profiles and school units", tables: [
     "staff_school_unit_assignment_versions", "staff_jenjang_assignments", "staff_identifiers", "staff_contact_details", "staff_education", "staff_members", "school_units",
@@ -205,9 +206,14 @@ function resetData(context: AuthContext, scope: DataResetScope, user: CurrentUse
 
   const groups = PLANS[scope];
   const tables = planTables(groups);
-  const iomFiles = tables.has("student_iom_documents")
-    ? client.query("SELECT file_sha256 AS sha256,file_size_bytes AS sizeBytes FROM student_iom_documents").all() as FileMetadata[]
-    : [];
+  const attachmentFiles = [
+    ...(tables.has("student_iom_documents")
+      ? client.query<FileMetadata, []>("SELECT file_sha256 AS sha256,file_size_bytes AS sizeBytes FROM student_iom_documents").all()
+      : []),
+    ...(tables.has("staff_ptk_documents")
+      ? client.query<FileMetadata, []>("SELECT file_sha256 AS sha256,file_size_bytes AS sizeBytes FROM staff_ptk_documents").all()
+      : []),
+  ];
   const guards = DELETE_GUARDS.filter(({ table }) => tables.has(table)).flatMap(({ name, table }) => {
     const trigger = client.query("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = ? AND tbl_name = ?").get(name, table) as Row | null;
     return trigger?.sql ? [{ name, sql: String(trigger.sql) }] : [];
@@ -225,12 +231,12 @@ function resetData(context: AuthContext, scope: DataResetScope, user: CurrentUse
       appendResetAudit(client, user, scope, true, counts, null, backupFilename);
       return counts;
     });
-    if (iomFiles.length && backupConfig.reportStorageDir) {
+    if (attachmentFiles.length && backupConfig.reportStorageDir) {
       try {
-        removeUnreferencedReportFiles(client, backupConfig.reportStorageDir, iomFiles);
+        removeUnreferencedReportFiles(client, backupConfig.reportStorageDir, attachmentFiles);
       } catch {
         recordFailedReset(client, user, scope, "DATA_RESET_ATTACHMENT_CLEANUP_FAILED", backupFilename);
-        throw Object.assign(new Error("Student records were reset, but one or more archived files could not be removed. The encrypted pre-reset backup is available."), { status: 503, code: "DATA_RESET_ATTACHMENT_CLEANUP_FAILED" });
+        throw Object.assign(new Error("Records were reset, but one or more archived files could not be removed. The encrypted pre-reset backup is available."), { status: 503, code: "DATA_RESET_ATTACHMENT_CLEANUP_FAILED" });
       }
     }
     return { scope, deleted_counts: deletedCounts, completed_at: new Date().toISOString(), backup_filename: backupFilename };

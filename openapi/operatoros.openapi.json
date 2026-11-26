@@ -40434,6 +40434,1214 @@
           }
         }
       }
+    },
+    "/api/staff/{staff_id}/ptk": {
+      "get": {
+        "operationId": "read_staff_ptk",
+        "summary": "Read staff Verval preparation",
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "revision",
+                    "contextId",
+                    "preparation",
+                    "documents",
+                    "missing",
+                    "ready",
+                    "years",
+                    "schools",
+                    "priorContexts"
+                  ],
+                  "properties": {
+                    "revision": {
+                      "type": "integer"
+                    },
+                    "contextId": {
+                      "type": "string"
+                    },
+                    "preparation": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "gender": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "mother": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "religion": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "marital": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "city": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "district": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "village": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "citizenship": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "postal": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "street": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "rt": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "rw": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "extraVillage": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "employment": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "title": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "specialNeeds": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointingBody": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointmentNumber": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointmentStart": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "salarySource": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "principalLicense": {
+                          "anyOf": [
+                            {
+                              "const": "Ya",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Tidak",
+                              "type": "string"
+                            },
+                            {
+                              "const": "",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "schoolUnitId": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "externalSchool": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "academicYearId": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "taskNumber": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "taskDate": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "taskStart": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "submission": {
+                          "anyOf": [
+                            {
+                              "const": "Belum Diajukan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Diajukan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Perlu Perbaikan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Disetujui",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Ditolak",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "submissionDate": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "externalReference": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "notes": {
+                          "maxLength": 2000,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "slot",
+                          "label",
+                          "uploaded_at",
+                          "version",
+                          "current"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slot": {
+                            "anyOf": [
+                              {
+                                "const": "task",
+                                "type": "string"
+                              },
+                              {
+                                "const": "sd",
+                                "type": "string"
+                              },
+                              {
+                                "const": "smp",
+                                "type": "string"
+                              },
+                              {
+                                "const": "sma",
+                                "type": "string"
+                              },
+                              {
+                                "const": "s1",
+                                "type": "string"
+                              },
+                              {
+                                "const": "ktp",
+                                "type": "string"
+                              },
+                              {
+                                "const": "kk",
+                                "type": "string"
+                              },
+                              {
+                                "const": "appointment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "other",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "uploaded_at": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "missing": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "ready": {
+                      "type": "boolean"
+                    },
+                    "years": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "schools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "status",
+                          "version",
+                          "created_at",
+                          "updated_at"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "const": "ACTIVE",
+                                "type": "string"
+                              },
+                              {
+                                "const": "INACTIVE",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "priorContexts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "school",
+                          "year",
+                          "taskNumber",
+                          "taskDate",
+                          "taskStart",
+                          "submission",
+                          "submissionDate",
+                          "externalReference",
+                          "notes"
+                        ],
+                        "properties": {
+                          "school": {
+                            "type": "string"
+                          },
+                          "year": {
+                            "type": "string"
+                          },
+                          "taskNumber": {
+                            "type": "string"
+                          },
+                          "taskDate": {
+                            "type": "string"
+                          },
+                          "taskStart": {
+                            "type": "string"
+                          },
+                          "submission": {
+                            "type": "string"
+                          },
+                          "submissionDate": {
+                            "type": "string"
+                          },
+                          "externalReference": {
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "409": {
+            "description": "Preparation changed"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        }
+      },
+      "put": {
+        "operationId": "save_staff_ptk",
+        "summary": "Save staff Verval preparation",
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "revision",
+                    "contextId",
+                    "preparation",
+                    "documents",
+                    "missing",
+                    "ready",
+                    "years",
+                    "schools",
+                    "priorContexts"
+                  ],
+                  "properties": {
+                    "revision": {
+                      "type": "integer"
+                    },
+                    "contextId": {
+                      "type": "string"
+                    },
+                    "preparation": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "gender": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "mother": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "religion": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "marital": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "city": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "district": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "village": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "citizenship": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "postal": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "street": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "rt": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "rw": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "extraVillage": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "employment": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "title": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "specialNeeds": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointingBody": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointmentNumber": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "appointmentStart": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "salarySource": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "principalLicense": {
+                          "anyOf": [
+                            {
+                              "const": "Ya",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Tidak",
+                              "type": "string"
+                            },
+                            {
+                              "const": "",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "schoolUnitId": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "externalSchool": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "academicYearId": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "taskNumber": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "taskDate": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "taskStart": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "submission": {
+                          "anyOf": [
+                            {
+                              "const": "Belum Diajukan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Diajukan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Perlu Perbaikan",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Disetujui",
+                              "type": "string"
+                            },
+                            {
+                              "const": "Ditolak",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "submissionDate": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "externalReference": {
+                          "maxLength": 255,
+                          "type": "string"
+                        },
+                        "notes": {
+                          "maxLength": 2000,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "slot",
+                          "label",
+                          "uploaded_at",
+                          "version",
+                          "current"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "slot": {
+                            "anyOf": [
+                              {
+                                "const": "task",
+                                "type": "string"
+                              },
+                              {
+                                "const": "sd",
+                                "type": "string"
+                              },
+                              {
+                                "const": "smp",
+                                "type": "string"
+                              },
+                              {
+                                "const": "sma",
+                                "type": "string"
+                              },
+                              {
+                                "const": "s1",
+                                "type": "string"
+                              },
+                              {
+                                "const": "ktp",
+                                "type": "string"
+                              },
+                              {
+                                "const": "kk",
+                                "type": "string"
+                              },
+                              {
+                                "const": "appointment",
+                                "type": "string"
+                              },
+                              {
+                                "const": "other",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "uploaded_at": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "current": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    },
+                    "missing": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "ready": {
+                      "type": "boolean"
+                    },
+                    "years": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "label"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "schools": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "name",
+                          "status",
+                          "version",
+                          "created_at",
+                          "updated_at"
+                        ],
+                        "properties": {
+                          "id": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "const": "ACTIVE",
+                                "type": "string"
+                              },
+                              {
+                                "const": "INACTIVE",
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "priorContexts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "school",
+                          "year",
+                          "taskNumber",
+                          "taskDate",
+                          "taskStart",
+                          "submission",
+                          "submissionDate",
+                          "externalReference",
+                          "notes"
+                        ],
+                        "properties": {
+                          "school": {
+                            "type": "string"
+                          },
+                          "year": {
+                            "type": "string"
+                          },
+                          "taskNumber": {
+                            "type": "string"
+                          },
+                          "taskDate": {
+                            "type": "string"
+                          },
+                          "taskStart": {
+                            "type": "string"
+                          },
+                          "submission": {
+                            "type": "string"
+                          },
+                          "submissionDate": {
+                            "type": "string"
+                          },
+                          "externalReference": {
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "409": {
+            "description": "Preparation changed"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "revision",
+                  "preparation"
+                ],
+                "properties": {
+                  "revision": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "preparation": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                      "gender": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "mother": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "religion": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "marital": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "city": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "district": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "village": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "citizenship": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "postal": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "street": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "rt": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "rw": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "extraVillage": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "employment": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "title": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "specialNeeds": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "appointingBody": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "appointmentNumber": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "appointmentStart": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "salarySource": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "principalLicense": {
+                        "anyOf": [
+                          {
+                            "const": "Ya",
+                            "type": "string"
+                          },
+                          {
+                            "const": "Tidak",
+                            "type": "string"
+                          },
+                          {
+                            "const": "",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "schoolUnitId": {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "externalSchool": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "academicYearId": {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "taskNumber": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "taskDate": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "taskStart": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "submission": {
+                        "anyOf": [
+                          {
+                            "const": "Belum Diajukan",
+                            "type": "string"
+                          },
+                          {
+                            "const": "Diajukan",
+                            "type": "string"
+                          },
+                          {
+                            "const": "Perlu Perbaikan",
+                            "type": "string"
+                          },
+                          {
+                            "const": "Disetujui",
+                            "type": "string"
+                          },
+                          {
+                            "const": "Ditolak",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "submissionDate": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "externalReference": {
+                        "maxLength": 255,
+                        "type": "string"
+                      },
+                      "notes": {
+                        "maxLength": 2000,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/{staff_id}/ptk/documents": {
+      "post": {
+        "operationId": "upload_staff_ptk_document",
+        "summary": "Upload or replace PTK document",
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "saved"
+                  ],
+                  "properties": {
+                    "saved": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "409": {
+            "description": "Preparation changed"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contextId",
+                  "slot",
+                  "file"
+                ],
+                "properties": {
+                  "contextId": {
+                    "type": "string"
+                  },
+                  "slot": {
+                    "anyOf": [
+                      {
+                        "const": "task",
+                        "type": "string"
+                      },
+                      {
+                        "const": "sd",
+                        "type": "string"
+                      },
+                      {
+                        "const": "smp",
+                        "type": "string"
+                      },
+                      {
+                        "const": "sma",
+                        "type": "string"
+                      },
+                      {
+                        "const": "s1",
+                        "type": "string"
+                      },
+                      {
+                        "const": "ktp",
+                        "type": "string"
+                      },
+                      {
+                        "const": "kk",
+                        "type": "string"
+                      },
+                      {
+                        "const": "appointment",
+                        "type": "string"
+                      },
+                      {
+                        "const": "other",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/{staff_id}/ptk/documents/{document_id}": {
+      "get": {
+        "operationId": "download_staff_ptk_document",
+        "summary": "Download a PTK document version",
+        "parameters": [
+          {
+            "name": "staff_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private document",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Record not found"
+          },
+          "409": {
+            "description": "Preparation changed"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "503": {
+            "description": "Storage unavailable"
+          }
+        }
+      }
     }
   },
   "components": {

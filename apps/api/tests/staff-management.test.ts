@@ -1,3 +1,8 @@
+import { Value } from "@sinclair/typebox/value";
+import { PtkResponse } from "@operatoros/contracts/staff";
+import { parseBackupEncryptionConfig } from "../src/security/backup-crypto";
+import { PDFDocument } from "pdf-lib";
+import { backupAttachmentSources, storedReportFile } from "../src/domains/upp-report-files";
 import { describe, expect, it } from "bun:test";
 import { createFreshDatabase, openDatabase } from "@operatoros/db";
 import { addWorksheet, appendRow, createWorkbook, loadXlsxWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
@@ -9,6 +14,7 @@ import { schoolLocalDate } from "../src/domains/attendance-submission-deadline";
 import { eligibleStaffBySchoolUnitForMonth } from "../src/domains/staff-school-units";
 
 const secret = "synthetic-staff-test-cookie-secret-32";
+const backupKey = Buffer.alloc(32, 86).toString("base64");
 const employeeHeaders = ["Id Staff", "STATUS", "Nama", "NIP", "NUPTK", "DAPODIK", "Tempat Lahir", "Tanggal Lahir", "Umur", "Jabatan", "Mulai Kerja", "Masa Kerja", "NIK", "Alamat", "Email", "No Hp"];
 
 function cookie(response: Response): string {
@@ -27,7 +33,11 @@ async function setup(label: string, clock: () => Date = () => new Date()) {
   const staffHash = await Bun.password.hash("synthetic-staff-password-123", "argon2id");
   database.client.run("INSERT INTO users (username,password_hash,role,is_active,created_at,updated_at,failed_login_attempts) VALUES (?,?,'admin',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0)", ["synthetic-admin", adminHash]);
   database.client.run("INSERT INTO users (username,password_hash,role,is_active,created_at,updated_at,failed_login_attempts) VALUES (?,?,'staff',1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,0)", ["synthetic-staff", staffHash]);
-  const app = createApp({ databaseHandle: database, clock, auth: { authCookieSecret: secret, auditDir, allowedOrigins: ["http://local"] } });
+  const app = createApp({ databaseHandle: database, clock,
+    ...(label === "ptk" ? { backupDir: join(root, "backups"), backupEncryption: parseBackupEncryptionConfig({
+      activeKey: backupKey, activeKeyId: "synthetic", authCookieSecret: secret,
+    }) } : {}),
+    auth: { authCookieSecret: secret, auditDir, allowedOrigins: ["http://local"] } });
   const adminLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "synthetic-admin", password: "synthetic-admin-password-123" }) }));
   const staffLogin = await app.handle(new Request("http://local/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "synthetic-staff", password: "synthetic-staff-password-123" }) }));
   return {
@@ -669,4 +679,105 @@ describe("employee master data", () => {
       expect(value.database.client.query("SELECT status FROM staff_import_batches WHERE id=?").get(pendingBody.batch_id)).toEqual({ status: "VALIDATED" });
     } finally { value.cleanup(); }
   });
+});
+
+it("prepares Verval data without changing Staff and retains protected document history", async () => {
+  const value = await setup("ptk");
+  try {
+    const db = value.database.client;
+    db.run("INSERT INTO staff_members (id,full_name,normalized_name,birth_place,birth_date) VALUES ('ptk-synthetic','Synthetic PTK','synthetic ptk','Example','1990-01-01')");
+    db.run("INSERT INTO staff_contact_details (staff_member_id,address,email) VALUES ('ptk-synthetic','Example street','example@example.test')");
+    db.run("INSERT INTO staff_identifiers (staff_member_id,identifier_type,normalized_value) VALUES ('ptk-synthetic','NIK','1234567890123456')");
+    const staffBefore = db.query("SELECT * FROM staff_members WHERE id='ptk-synthetic'").get();
+    const year = Number(db.run("INSERT INTO academic_years (label,start_date,end_date,status,is_default) VALUES ('Synthetic year','2026-07-01','2027-06-30','active',0)").lastInsertRowid);
+    const base = "/api/staff/ptk-synthetic/ptk";
+    const call = (method: string, path = base, body?: unknown, cookie = value.admin) =>
+      value.app.handle(jsonRequest(method, path, cookie, body));
+    expect((await call("GET", base, undefined, value.staff)).status).toBe(403);
+    const partial = await call("PUT", base, { revision: 0, preparation: { mother: "Synthetic parent" } });
+    expect(partial.status, await partial.clone().text()).toBe(200);
+    expect(await partial.json()).toMatchObject({ revision: 1, ready: false });
+    const contextResponse = await call("PUT", base, { revision: 1, preparation: {
+      mother: "Synthetic parent", gender: "Example", religion: "Example", marital: "Example",
+      city: "Example", district: "Example", village: "Example", citizenship: "WNI", employment: "Example",
+      title: "Example", specialNeeds: "Tidak Ada", appointingBody: "Example", appointmentNumber: "Example",
+      appointmentStart: "2026-01-01", salarySource: "Example", principalLicense: "Tidak",
+      externalSchool: "Synthetic school", academicYearId: year,
+    } });
+    expect(contextResponse.status, await contextResponse.clone().text()).toBe(200);
+    const context = Value.Parse(PtkResponse, await contextResponse.json());
+    const readyFields = { ...context.preparation, taskNumber: "Synthetic letter", taskDate: "2026-07-01",
+      taskStart: "2026-07-02", submission: "Disetujui", externalReference: "Synthetic approval" };
+    expect((await call("PUT", base, { revision: 1, preparation: readyFields })).status).toBe(409);
+    expect((await call("PUT", base, { revision: 2, preparation: readyFields })).status).toBe(200);
+    const makePdf = async (title: string) => {
+      const pdf = await PDFDocument.create();
+      pdf.setTitle(title);
+      pdf.addPage();
+      return pdf.save();
+    };
+    const first = await makePdf("Synthetic document");
+    const replacement = await makePdf("Synthetic replacement");
+    const upload = (slot: string, bytes: Uint8Array, name = "synthetic.pdf", session = value.admin) => {
+      const form = new FormData();
+      form.set("contextId", context.contextId);
+      form.set("slot", slot);
+      form.set("file", new File([bytes], name));
+      return value.app.handle(new Request("http://local" + base + "/documents", { method: "POST",
+        headers: { cookie: session, origin: "http://local" }, body: form }));
+    };
+    expect((await upload("sd", new Uint8Array([1, 2, 3]))).status).toBe(422);
+    expect((await upload("sd", first, "synthetic.gif")).status).toBe(422);
+    expect((await upload("sd", new Uint8Array(5_000_001))).status).toBe(400);
+    expect((await upload("sd", first, "synthetic.pdf", value.staff)).status).toBe(403);
+    for (const slot of ["task", "sd", "smp", "sma", "s1"]) {
+      const response = await upload(slot, first);
+      expect(response.status, await response.clone().text()).toBe(200);
+    }
+    expect((await upload("task", replacement)).status).toBe(200);
+    const profile = Value.Parse(PtkResponse, await (await call("GET")).json());
+    expect(profile.ready).toBe(true);
+    const old = profile.documents.find((doc: { slot: string; current: boolean }) => doc.slot === "task" && !doc.current);
+    if (!old) throw new Error("Missing old task letter");
+    const downloadPath = base + "/documents/" + old.id;
+    expect((await call("GET", downloadPath, undefined, value.staff)).status).toBe(403);
+    const download = await call("GET", downloadPath);
+    expect(download.headers.get("cache-control")).toContain("no-store");
+    expect(Buffer.from(await download.arrayBuffer())).toEqual(Buffer.from(first));
+    const moved = Value.Parse(PtkResponse, await (await call("PUT", base, { revision: 3, preparation: { ...readyFields, externalSchool: "Another synthetic school" } })).json());
+    expect(moved.ready).toBe(false);
+    expect(moved.preparation).toMatchObject({ submission: "Belum Diajukan" });
+    expect(moved.preparation.taskNumber).toBeUndefined();
+    expect(moved.priorContexts[0]).toMatchObject({ taskNumber: "Synthetic letter", submission: "Disetujui" });
+    expect(moved.documents.filter((doc: { slot: string; current: boolean }) => doc.slot === "task" && doc.current)).toHaveLength(0);
+    expect((await upload("task", first)).status).toBe(409);
+    expect(db.query("SELECT * FROM staff_members WHERE id='ptk-synthetic'").get()).toEqual(staffBefore);
+    expect(db.query("SELECT * FROM staff_school_unit_assignment_versions").all()).toHaveLength(0);
+    expect(db.query("SELECT * FROM staff_employment_history").all()).toHaveLength(0);
+    const attachments = backupAttachmentSources(db, value.root);
+    expect(attachments).toHaveLength(2);
+    const backup = await call("POST", "/api/admin/backups");
+    expect(backup.status, await backup.clone().text()).toBe(200);
+    const payload = await backup.json();
+    if (!payload || typeof payload !== "object" || !("filename" in payload) || typeof payload.filename !== "string") throw new Error("Missing backup filename");
+    const { filename } = payload;
+    const target = mkdtempSync(join(tmpdir(), "operatoros-ptk-restore-"));
+    try {
+      const restore = Bun.spawnSync([process.execPath, new URL("../src/backup-cli.ts", import.meta.url).pathname,
+        "restore-disposable", filename, target], { env: {
+        ...process.env, OPERATOROS_DATA_DIR: value.root, DATABASE_URL: "sqlite:///" + join(value.root, "operatoros.sqlite"),
+        BACKUP_ENCRYPTION_KEY: backupKey, BACKUP_ENCRYPTION_KEY_ID: "synthetic", AUTH_COOKIE_SECRET: secret,
+      } });
+      expect(restore.exitCode, restore.stderr.toString()).toBe(0);
+      const database = openDatabase(join(target, "operatoros.sqlite"));
+      try {
+        expect(database.client.query("SELECT * FROM staff_ptk_documents").all()).toEqual(db.query("SELECT * FROM staff_ptk_documents").all());
+        const restored = await Promise.all(attachments.map((entry) => Bun.file(storedReportFile(target, entry)).arrayBuffer()));
+        expect(restored.map((bytes) => Buffer.from(bytes).toString("base64")).sort())
+          .toEqual([first, replacement].map((bytes) => Buffer.from(bytes).toString("base64")).sort());
+      } finally { database.close(); }
+    } finally { rmSync(target, { recursive: true, force: true }); }
+  } finally {
+    value.cleanup();
+  }
 });

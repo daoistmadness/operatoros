@@ -152,3 +152,51 @@ export const StaffAnalyticsSummary = Type.Object({
   joining: Distribution,
 });
 export type StaffAnalyticsSummaryDto = Static<typeof StaffAnalyticsSummary>;
+
+export const PtkRequiredDocuments = {
+  task: "SK Penugasan",
+  sd: "Ijazah SD Sederajat",
+  smp: "Ijazah SMP Sederajat",
+  sma: "Ijazah SMA Sederajat",
+  s1: "Ijazah S1 Sederajat",
+};
+export const PtkDocumentSlot = Type.Union([
+  Type.Literal("task"), Type.Literal("sd"), Type.Literal("smp"), Type.Literal("sma"), Type.Literal("s1"),
+  Type.Literal("ktp"), Type.Literal("kk"), Type.Literal("appointment"), Type.Literal("other"),
+]);
+export const PtkSubmissionLabels = ["Belum Diajukan", "Diajukan", "Perlu Perbaikan", "Disetujui", "Ditolak"] as const;
+const PtkText = Type.String({ maxLength: 255 });
+export const PtkPreparation = Type.Partial(Type.Object({
+  gender: PtkText, mother: PtkText, religion: PtkText, marital: PtkText,
+  city: PtkText, district: PtkText, village: PtkText, citizenship: PtkText,
+  postal: PtkText, street: PtkText, rt: PtkText, rw: PtkText, extraVillage: PtkText,
+  employment: PtkText, title: PtkText, specialNeeds: PtkText, appointingBody: PtkText,
+  appointmentNumber: PtkText, appointmentStart: PtkText, salarySource: PtkText,
+  principalLicense: Type.Union([Type.Literal("Ya"), Type.Literal("Tidak"), Type.Literal("")]),
+  schoolUnitId: Type.Integer({ minimum: 1 }), externalSchool: PtkText,
+  academicYearId: Type.Integer({ minimum: 1 }),
+  taskNumber: PtkText, taskDate: PtkText, taskStart: PtkText,
+  submission: Type.Union([Type.Literal("Belum Diajukan"), Type.Literal("Diajukan"), Type.Literal("Perlu Perbaikan"), Type.Literal("Disetujui"), Type.Literal("Ditolak")]),
+  submissionDate: PtkText, externalReference: PtkText, notes: Type.String({ maxLength: 2000 }),
+}, { additionalProperties: false }));
+export const PtkSave = Type.Object({
+  revision: Type.Integer({ minimum: 0 }), preparation: PtkPreparation,
+}, { additionalProperties: false });
+const PtkDocument = Type.Object({
+  id: Type.String(), slot: PtkDocumentSlot, label: Type.String(), uploaded_at: Type.String(),
+  version: Type.Integer(), current: Type.Boolean(),
+});
+export const PtkResponse = Type.Object({
+  revision: Type.Integer(), contextId: Type.String(), preparation: PtkPreparation,
+  documents: Type.Array(PtkDocument), missing: Type.Array(Type.Array(Type.String())),
+  ready: Type.Boolean(),
+  years: Type.Array(Type.Object({ id: Type.Integer(), label: Type.String() })),
+  schools: SchoolUnitListResponse,
+  priorContexts: Type.Array(Type.Object({
+    school: Type.String(), year: Type.String(), taskNumber: Type.String(), taskDate: Type.String(), taskStart: Type.String(),
+    submission: Type.String(), submissionDate: Type.String(), externalReference: Type.String(), notes: Type.String(),
+  })),
+});
+export type PtkPreparationDto = Static<typeof PtkPreparation>;
+export type PtkResponseDto = Static<typeof PtkResponse>;
+export type PtkDocumentSlotDto = Static<typeof PtkDocumentSlot>;

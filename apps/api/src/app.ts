@@ -8,6 +8,7 @@ import { assertAuthCookieSecret, defaultAuthConfig } from "./auth/service";
 import { LoginRateLimiter } from "./auth/rate-limit";
 import { installHttpSecurity } from "./security/http";
 import { coreRoutes } from "./domains/core";
+import { staffPtkRoutes } from "./domains/staff-ptk";
 import { configRoutes, systemRoutes } from "./domains/config";
 import { readinessRoutes } from "./domains/readiness";
 import { attendanceRoutes } from "./domains/attendance";
@@ -93,6 +94,7 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
     staffMonthlyActivityRoutes(app, context);
     const databasePath = typeof context.database?.path === "string" ? context.database.path : undefined;
     const reportDataDir = _config.dataPaths?.dataDir ?? (databasePath && databasePath !== ":memory:" ? dirname(databasePath) : undefined);
+    app.use(staffPtkRoutes(context, reportDataDir));
     uppReportRoutes(app, context, {
       storageDir: reportDataDir,
       maxFileSizeBytes: _config.uppReportMaxFileSizeBytes ?? DEFAULT_UPP_REPORT_MAX_FILE_SIZE_BYTES,

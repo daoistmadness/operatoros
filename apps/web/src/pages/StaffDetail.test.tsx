@@ -8,6 +8,8 @@ import type { StaffHistory } from "../api/staff";
 
 const staffApi = vi.hoisted(() => ({
   fetchStaffDetail: vi.fn(),
+  fetchStaffPtk: vi.fn(),
+  saveStaffPtk: vi.fn(),
   fetchStaffHistory: vi.fn<() => Promise<StaffHistory>>(async () => []),
   fetchSchoolUnits: vi.fn(async () => [{ id: 4, name: "North Campus", status: "ACTIVE", version: 1, created_at: "2026-01-01", updated_at: "2026-01-01" }]),
   fetchSensitiveStaff: vi.fn(),
@@ -22,7 +24,11 @@ const staffApi = vi.hoisted(() => ({
   deleteStaffEducation: vi.fn(),
 }));
 vi.mock("../api/staff", () => staffApi);
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ can: (capability: string) => ["manage_staff", "view_staff", "view_staff_audit"].includes(capability) }) }));
+const auth = vi.hoisted(() => ({ ptk: false }));
+vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ can: (capability: string) =>
+  ["manage_staff", "view_staff", "view_staff_audit"].includes(capability) ||
+  (auth.ptk && ["view_staff_sensitive", "edit_sensitive_staff_fields"].includes(capability)),
+}) }));
 
 import StaffDetail from "./StaffDetail";
 
@@ -46,6 +52,7 @@ describe("Staff Detail education deletion", () => {
 
   beforeEach(() => {
     deleted = false;
+    auth.ptk = false;
     staffApi.fetchStaffDetail.mockImplementation(async () => ({
       ...member,
       education_history: deleted ? [] : [record],
@@ -99,6 +106,31 @@ describe("Staff Detail education deletion", () => {
     expect(remove).toBeTruthy();
     await act(async () => remove?.click());
   }
+
+  it("opens all five PTK sections directly on the staff detail and saves an incomplete preparation", async () => {
+    auth.ptk = true;
+    const preparation = { revision: 1, contextId: "synthetic-context", preparation: { mother: "Synthetic parent" },
+      missing: [["NIK"], ["Alamat Jalan"], ["Jabatan PTK"], ["Sekolah"], ["SK Penugasan"]],
+      ready: false, documents: [], years: [], schools: [], priorContexts: [] };
+    staffApi.fetchSensitiveStaff.mockResolvedValue({ birth_place: null, birth_date: null, identifiers: [], contact: null });
+    staffApi.fetchStaffPtk.mockResolvedValue(preparation);
+    staffApi.saveStaffPtk.mockResolvedValue({ ...preparation, revision: 2 });
+    await renderPage();
+    await vi.waitFor(() => expect(host.textContent).toContain("Belum Lengkap"));
+    expect(host.textContent).toContain("Nama Ibu Kandung");
+    const nav = host.querySelector('nav[aria-label="Bagian Administrasi PTK"]')!;
+    expect(nav.querySelectorAll("button")).toHaveLength(5);
+    for (const [section, text] of [["Dokumen", "Ijazah S1 Sederajat"], ["Penugasan", "Tahun Ajaran"],
+      ["Alamat", "Kabupaten/Kota"], ["Kepegawaian", "Lembaga Pengangkat"]]) {
+      const button = [...nav.querySelectorAll("button")].find((item) => item.textContent?.startsWith(section!));
+      await act(async () => button?.click());
+      expect(host.textContent).toContain(text);
+    }
+    await act(async () => buttonByText("Periksa & Simpan")?.click());
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain("SK Penugasan");
+    await act(async () => buttonByText("Simpan persiapan")?.click());
+    expect(staffApi.saveStaffPtk).toHaveBeenCalledWith("synthetic-staff-1", 1, { mother: "Synthetic parent" });
+  });
 
   it("opens an accessible confirmation without invoking delete", async () => {
     await renderPage();
