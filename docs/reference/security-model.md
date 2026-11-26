@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-22
+last_reviewed: 2026-11-26
 ---
 
 # Security model
@@ -107,10 +107,35 @@ advisory outside the two reviewed exceptions in
 same command on pull requests, main pushes, and weekly schedule. The audit job
 does not receive application data or secrets.
 
-## Scope limits
+## Scope limits, exception governance, and incident handling
 
 The application does not encrypt the live SQLite database and does not use JWT
 or localStorage authentication. Backup artifacts use a separate encrypted
 envelope. The protected operational database is never used by tests or
 security checks. Changes to these boundaries require a separate security and
 architecture review.
+
+### Policy scope separation
+
+Distinguish clearly between:
+
+- **Mandatory application deployment requirements:** Active SQLite/attachment storage on LUKS2-encrypted storage, UID/GID `1000:1000` (`0700`/`0600`) OS isolation, cookie/origin/CORS controls, and AES-256-GCM encrypted backups (`BACKUP_ENCRYPTION_KEY != AUTH_COOKIE_SECRET`).
+- **Established infrastructure prerequisites:** Valid LUKS header/recovery custody and isolated `docker-compose.yml` / Tailscale Serve loopback bindings.
+- **Recommended host-security hardening (separate from application releases):** Removing unattended boot LUKS unlock keyscripts (`passdev`/keyfiles), modifying `/etc/crypttab`/GRUB/initramfs, historical disk sanitization, unrelated container credential rotation, and host reboots. Do not expand an ordinary application deployment into host hardening without a confirmed dependency and explicit owner authorization.
+
+### Encrypted-storage and residual-risk clarifications
+
+- Encrypted active storage (`dm_crypt-0` LUKS2) paired with an unattended on-disk unlock keyfile (`passdev`) does **not** protect against whole-server physical disk possession; interactive passphrase-only boot unlock requires separately authorized LUKS remediation.
+- Encrypted backup artifacts do **not** establish encryption at rest of the live SQLite database.
+- Moving legacy data to a `0700` quarantine directory does **not** eliminate physical-media exposure of historical unencrypted partitions.
+- Deleting individual files does **not** establish physical-media sanitization.
+
+### Security exception governance
+
+1. Only the explicit system owner may authorize a temporary security exception.
+2. Any permitted exception MUST remain narrowly scoped to active LUKS2-backed runtime storage with OS `0600`/`0700` isolation and verified interactive recovery credentials intact.
+3. Exceptions MUST document exact scope, remaining physical/residual risks, and review conditions (such as a post-deploy hardening window), and MUST NOT silently convert a temporary operational exception (such as the S56 deferred-hardening exception) into permanent default policy.
+
+### Credential exposure incident handling
+
+Never place encryption keys, session secrets, personal records, or private document contents in commands, logs, chat messages, or reports. Record key identifiers (`key_id`), artifact filenames, and SHA-256 checksums instead. If an active credential is accidentally exposed, treat it as a targeted secret rotation incident under [the rotation runbook](../runbooks/secret-rotation.md) preserving `BACKUP_ENCRYPTION_PREVIOUS_KEYS` for historical backup recoverability, without triggering an unrelated infrastructure redesign.

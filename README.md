@@ -98,8 +98,8 @@ The table below delineates verified system capabilities, bounded partial feature
 | **CLI Restore Utility** | **Partial** | Encrypted CLI restore verifies artifact identity and authentication, SQLite integrity and schema, foreign keys, and an eligible administrator credential; it revokes restored sessions and uses a safety snapshot for rollback when an active database exists. Run it with all API writers stopped; CLI audit writes are best-effort. |
 | **Student Risk Classification** | **Not Implemented** | No automated At-Risk student score, classification, cutoff, or persisted risk state exists. Descriptive indicators are strictly informational and do not constitute risk labels (see [Risk Threshold Validation](docs/reference/risk-threshold-validation.md)). |
 | **Enterprise / Cloud Auth** | **Not Implemented** | No MFA, SSO, OAuth, LDAP, password-reset emails, or cloud identity integrations. |
-| **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is unencrypted; encryption applies solely to backup envelopes via `BACKUP_ENCRYPTION_KEY`. |
-| **Server Deployment** | **Proposal** | The draft single-host Podman and Quadlet implementation is not supported until architecture acceptance and an authorized Ubuntu rehearsal pass. No public or LAN access profile is approved. |
+| **Database At-Rest Encryption** | **Not Implemented** | Live SQLite database file is application-unencrypted (protected at rest via LUKS2 host volume + `0600` permissions); AES-256-GCM envelopes encrypt backup artifacts via `BACKUP_ENCRYPTION_KEY`. |
+| **Server Deployment** | **Implemented** | Deployed via Docker Engine and Docker Compose (`deploy/docker/docker-compose.yml`) consuming CI-qualified, attested artifacts and `scripts/docker-deploy.sh` (see [Ubuntu server deployment](docs/runbooks/ubuntu-server-deployment.md)). Podman and Quadlet alternatives are discontinued. |
 
 ---
 
@@ -332,8 +332,8 @@ flowchart TD
 - **Authentication Contracts**: Session state is managed strictly via server-side session tables and HttpOnly, `SameSite=Lax` cookies named `astyx_session`. No JSON Web Tokens (JWT), browser `localStorage` credentials, or token-reading client scripts are permitted. First-run setup cookies use `SameSite=Strict`.
 - **Authorization**: Backend roles are limited to `admin` and `staff`. Request authorization is evaluated solely from database-backed sessions and server-derived capabilities. Client-supplied headers or body fields (`request.role`, `reviewed_by`, `uploaded_by`) are untrusted audit metadata, never authorization proofs.
 - **Database Schema Management**:
-  - The current active application schema head is **S5.4** (`20261027_s54`).
-  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), followed by the S4.8 employee, S4.9 school-unit, S5.0 monthly PTK activity, S5.1 UPP workbook archive, S5.2 student administration, S5.3 student identity verification, and S5.4 BOSP reminder migrations.
+  - The current active application schema head is **S5.6** (`20261126_s56`).
+  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), followed by the S4.8–S5.6 migrations covering employee history, school units, monthly PTK activity, UPP workbook archive, student administration, student identity verification, BOSP reminder settings, inventory & label printing, and Administrasi PTK V1 (see [Database Schema Architecture](docs/architecture/database-schema.md)).
   - Historical baseline and rollback target is **S4.2** (`20260724_s42`).
   - The protected operational database remains **S4.3** (`20260725_s43`) until a separately authorized migration.
   - The API server opens databases with `create: false`, validates integrity and schema version on startup, and never automatically applies migrations.

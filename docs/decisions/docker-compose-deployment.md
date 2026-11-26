@@ -1,17 +1,17 @@
 ---
 status: current
-last_reviewed: 2026-11-24
+last_reviewed: 2026-11-26
 ---
 
 # Docker Compose deployment source-of-truth candidate
 
 ## Status
 
-Accepted on 2026-11-24. Docker Engine and Docker Compose are the single
+Accepted on 2026-11-24 and established in production on OPRSERVER with S56 (`20261126_s56`, release `5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6`, CI run `45779081840`). Docker Engine and Docker Compose are the single
 canonical production container deployment architecture for OperatorOS on OPRSERVER.
 Production runs under UID/GID 1000:1000 with Caddy reverse proxy, Tailscale HTTPS
-ingress, and persistent SQLite storage (schema S5.4). Podman and Quadlet alternatives
-are discontinued. Native Bun is the single canonical development runtime.
+ingress, and persistent LUKS2-backed SQLite storage (current schema `20261126_s56`). Podman and Quadlet alternatives
+are discontinued. Native Bun is the single canonical development runtime. Ongoing preflight, migration, and acceptance rules live in [the Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md).
 
 ## Candidate definition
 

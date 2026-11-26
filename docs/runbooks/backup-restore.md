@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-22
+last_reviewed: 2026-11-26
 ---
 
 # Backup and Restore Security
@@ -301,7 +301,21 @@ root is refused before it can publish or replace data. The CLI requires
 `flock` and `lsof` on `PATH`. The Linux API requires `flock` when using the
 canonical data root; startup fails closed if the lock cannot be acquired.
 
-The supported runtime is a single local API process. Docker/Compose and PostgreSQL are not supported runtimes; a multi-worker deployment is not a supported substitute. Do not claim multi-worker restore safety.
+The supported runtime is a single API process per SQLite data root (natively or inside the canonical single-replica Docker Compose topology in [Ubuntu server deployment](ubuntu-server-deployment.md)). PostgreSQL and multi-worker API deployments remain unsupported; do not claim multi-worker restore safety.
+
+## Backup and recovery applicability standard
+
+| Mechanism | Purpose & Artifact | When Required |
+| --- | --- | --- |
+| **Application backup** | Encrypted AES-256-GCM `.sqlite3` + `.meta.json` (`backup-cli.ts backup` / API) including referenced attachments | Routine scheduled retention; mandatory before schema migration and data reset |
+| **Supplemental SQLite snapshot** | Protected `0600` SQLite online backup in `<data-dir>/.snapshots/` (`docker-deploy.sh deploy`) | Created automatically during schema-compatible release activation outside `backups/` |
+| **Disposable restore verification** | Isolated decryption + integrity/schema/attachment check (`backup-cli.ts restore-disposable`) | Mandatory before operational schema migration; periodic operator DR checks |
+| **Off-host recovery custody** | Verified SHA-256 transfer of LUKS header, encrypted backup pair, and separately held `BACKUP_ENCRYPTION_*` / LUKS keys | Required before first cutover, infra/LUKS changes, or after key/header rotation; valid unchanged custody is reused across routine releases |
+| **Application rollback** | Re-pointing symlinks/Compose images (`docker-deploy.sh rollback`) | Permitted only after compatible-schema verification (`verify-rollback-schema.py`) |
+| **Database restoration** | In-place verified replacement (`restore` API/CLI) | Explicit admin/owner authorization only; never automatic during failed deployment |
+| **Disaster recovery** | Rebuild encrypted host + restore LUKS header/off-host encrypted backup + keys | Full host/disk loss only |
+
+Never log or paste raw key material (`BACKUP_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_PREVIOUS_KEYS`, `AUTH_COOKIE_SECRET`); record only filenames, `key_id`, sizes, and SHA-256 checksums.
 
 ## Legacy scripts
 

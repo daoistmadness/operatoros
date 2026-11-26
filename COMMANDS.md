@@ -57,11 +57,22 @@ style; do not run a whole-repository formatter.
 
 ## Production deployment
 
-- `scripts/docker-deploy.sh verify <candidate-archive.tar> <source-sha>` — verify release archive digest, manifest, SBOM, scan, and attestation.
-- `scripts/docker-deploy.sh migrate <candidate-archive.tar> <source-sha> <target-schema>` — execute fail-closed operational migration and release activation under continuous lock and writer exclusion, with attachment-aware encrypted backup and disposable restore verification.
-- `scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha>` — deploy verified release artifact with schema validation, protected pre-deploy SQLite snapshot, atomic symlink switch, and healthcheck validation.
-- `scripts/docker-deploy.sh rollback` — rollback to recorded previous release.
-- `scripts/docker-deploy.sh status` — report current Docker Compose container status.
+Canonical OPRSERVER production roots reside on LUKS2-encrypted storage (`OPERATOROS_DEPLOY_DIR=/var/lib/operatoros/deploy`, `OPERATOROS_DATA_DIR=/var/lib/operatoros/data`). Because `scripts/docker-deploy.sh` retains legacy `/mnt/podman-data/operatoros/...` defaults when omitted, production invocations MUST export `OPERATOROS_DEPLOY_DIR` and `OPERATOROS_DATA_DIR` explicitly (see [Ubuntu server deployment runbook](docs/runbooks/ubuntu-server-deployment.md)):
+
+- `scripts/docker-deploy.sh verify <candidate-archive.tar> <source-sha>` — verify release archive digest, manifest, SBOM, Trivy scan, and runtime evidence.
+- `scripts/docker-deploy.sh migrate <candidate-archive.tar> <source-sha> <target-schema> [deploy-dir]` — execute fail-closed operational migration and release activation under continuous `.deploy.lock` and `.maintenance_lock` writer exclusion, with `scripts/verify-writer-quiescence.py`, attachment-aware encrypted backup, and disposable restore verification.
+- `scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha> [deploy-dir]` — deploy a schema-compatible verified release artifact with SQLite validation, protected pre-deploy snapshot in `.snapshots/`, atomic symlink switch, and healthcheck verification.
+- `scripts/docker-deploy.sh rollback [deploy-dir]` — roll back to the recorded previous release after schema-compatibility verification (`scripts/verify-rollback-schema.py`).
+- `scripts/docker-deploy.sh status [deploy-dir]` — report current Docker Compose container status.
+
+## Release qualification and database CLI
+
+- `gh workflow run ci.yml --repo daoistmadness/operatoros --ref main -f docker_qualification=true` — run GitHub-hosted Docker candidate build, scans, isolated consumer check, and provenance attestation (see [CI release bundles](docs/runbooks/release-bundles.md)).
+- `gh attestation verify operatoros-docker-candidate.tar --repo daoistmadness/operatoros --signer-workflow daoistmadness/operatoros/.github/workflows/ci.yml --source-ref refs/heads/main --source-digest <source-sha> --deny-self-hosted-runners` — verify SLSA provenance on a downloaded candidate archive.
+- `python3 scripts/docker-candidate-release.py verify <candidate-archive.tar> <source-sha>` — verify archive digest, image config digests, SBOMs, Trivy scans, and SPA manifest.
+- `bun packages/db/src/db-cli.ts <bootstrap|migrate-existing|validate> --data-dir <absolute-directory>` — disposable database bootstrap, synthetic upgrade (OS temp root only), or read-only validation (`migrate-operational` requires `scripts/docker-deploy.sh migrate`; see [database operations](docs/runbooks/database-operations.md)).
+- `OPERATOROS_DATA_DIR=<absolute-directory> bun apps/api/src/backup-cli.ts <backup|restore-disposable <backup-file> <empty-temp-dir>>` — create an attachment-aware AES-256-GCM backup or verify an independent disposable restore (see [Backup and Restore Security](docs/runbooks/backup-restore.md)).
+- `bun scripts/check-backup-dir.ts <data-dir>/backups` — read-only containment check for complete encrypted backup pairs and audit files.
 
 ## Lower-level ownership commands
 

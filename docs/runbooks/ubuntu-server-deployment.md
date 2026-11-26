@@ -25,9 +25,9 @@ the configured `OPERATOROS_DATA_DIR` and ingress routed through Caddy and Tailsc
 | **Orchestration** | Docker Compose | Managed via `deploy/docker/docker-compose.yml` |
 | **Host identity** | UID/GID `1000:1000` (`mikhailryu`) | Canonical host user account; UID 1001/1002 migration removed |
 | **Container runtime user** | UID/GID `1000:1000` (`bun` / user 1000) | Matches host user `1000:1000` for seamless bind-mount access to persistent SQLite volume |
-| **Persistent storage** | Encrypted host data root (`OPERATOROS_DATA_DIR`) | Ext4 host directory on LUKS2-backed volume; mounted read-write to `/var/lib/operatoros/data` |
-| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Schema version verified by `packages/db/src/manifest.ts` |
-| **Deployment root** | `OPERATOROS_DEPLOY_DIR` | Houses releases, `current` symlink, `api.env` (`0600`), and active `docker-compose.yml` |
+| **Persistent storage** | Encrypted host data root (`OPERATOROS_DATA_DIR=/var/lib/operatoros/data`) | Ext4 host directory on LUKS2-backed volume (`dm_crypt-0`, `>= 10 GiB` reserve); mounted read-write to `/var/lib/operatoros/data` |
+| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Schema version verified by `packages/db/src/manifest.ts` (current `20261126_s56`) |
+| **Deployment root** | `OPERATOROS_DEPLOY_DIR=/var/lib/operatoros/deploy` | Houses releases, `current` symlink, `api.env` (`0600`), and active `docker-compose.yml` |
 | **Reverse proxy** | Caddy `2.11.9-alpine` | Binds to `127.0.0.1:18088` (loopback only) |
 | **API service** | Elysia backend (Bun 1.4.5) | Binds to `127.0.0.1:18090` (mapped to internal `8090`) |
 | **HTTPS ingress** | Tailscale Serve | Forwards `https://oprserver.taile856.ts.net:8447` to `http://127.0.0.1:18088` |
@@ -35,7 +35,28 @@ the configured `OPERATOROS_DATA_DIR` and ingress routed through Caddy and Tailsc
 
 ## Canonical deployment procedures
 
-Deployments are executed using the canonical deployment script: `scripts/docker-deploy.sh`.
+Deployments MUST use the canonical deployment script (`scripts/docker-deploy.sh`) executed from a clean trusted checkout matching or compatible with the release interface, with explicit OPRSERVER roots exported (`scripts/docker-deploy.sh` retains legacy `/mnt/podman-data/operatoros/...` defaults when omitted):
+
+```bash
+export OPERATOROS_DEPLOY_DIR=/var/lib/operatoros/deploy
+export OPERATOROS_DATA_DIR=/var/lib/operatoros/data
+```
+
+### Standard deployment preflight gate
+
+Before production mutation, verify only the checks applicable to the deployment scope:
+
+1. **Release requirements (Phase 3):** Approved exact source SHA; mandatory CI and `docker_qualification=true` completion; immutable archive SHA-256 and `gh attestation verify`; `scripts/docker-deploy.sh verify` `PASS` (matching API/Caddy image config digests, SPA `client/release.json`, SBOM, and 0 CRITICAL/HIGH Trivy scan); schema compatibility.
+2. **Production host requirements:** Correct host (`oprserver`); current live release symlink and live SQLite schema; authoritative Compose, `ALLOWED_ORIGINS`, and `0600` `api.env`; current `/health` and `/ready`; encrypted LUKS2 active storage + `1000:1000` permissions; minimum `10 GiB` free-space reserve on `/`; valid recovery custody; exclusive operational ownership (no active `.deploy.lock` / `.maintenance_lock`).
+3. **Migration-specific requirements (omit when schema is unchanged):** Verified direct upgrade path from current live schema; confirmed writer shutdown & quiescence; fresh consistent attachment-aware encrypted backup and independent `restore-disposable`; post-migration `integrity_check`, `foreign_key_check`, and existing record/attachment preservation.
+
+### Evidence lifecycle and reuse
+
+Reuse valid unchanged evidence (attested candidate archive, CI feature acceptance, synthetic migration tests, approved host baselines, unchanged LUKS header/key custody) across sessions without re-running qualification. Revalidate whenever release SHA, artifact identity, CI status, schema compatibility, production config, storage topology, security policy, recovery keys, or authorization scope changes.
+
+### Deployment exclusivity
+
+Only one execution context may hold `<deploy-dir>/.deploy.lock` and `<deploy-dir>/.maintenance_lock`. Operators MUST NOT run parallel production mutations, remove another active operation's locks, or restart `operatoros-api` while another maintenance operation holds it stopped under `--restart=no`.
 
 ### 1. Release artifact verification
 
@@ -102,18 +123,30 @@ curl -sf http://127.0.0.1:18088/ready
 curl -sf http://127.0.0.1:18090/health
 ```
 
-### 5. Emergency rollback
+### 5. Emergency rollback and recovery boundaries
 
 If an operational anomaly occurs on a schema-compatible deployment:
 
 ```bash
-scripts/docker-deploy.sh rollback
+scripts/docker-deploy.sh rollback /var/lib/operatoros/deploy
 ```
 
 Rollback checks `scripts/verify-rollback-schema.py` before mutating symlinks, refuses to
 roll back if the live database is newer than the previous release's expected schema, restores
 the `current` symlink and Compose configuration, restarts the previous containers, and
-validates endpoint health.
+validates endpoint health. Never automatically restore an older production database over committed records, discard committed data, destructively revert schema, delete attachments, or restart an incompatible prior release against a migrated database; preserve the database and report `RECOVERY REQUIRED` for explicit owner authorization.
+
+## Production acceptance
+
+Verify and report after activation:
+
+1. **Identity & Schema:** Deployed `/var/lib/operatoros/deploy/current`, `web/current`, `client/release.json`, loaded container image IDs, `operatoros_schema_migrations` version/fingerprint, `PRAGMA integrity_check = ok`, `PRAGMA foreign_key_check = []`, and preservation of existing rows/attachments.
+2. **Health, Auth, CORS & Ingress:** Loopback (`18088`, `18090`) and Tailscale HTTPS (`/health`, `/ready`); unauthenticated `401` on protected routes (e.g. `/api/auth/me`, `/api/staff`, `/api/inventory/*`, `/api/admin/backups*` — never infer auth enforcement from `200` on open SPA/read routes); exact `ALLOWED_ORIGINS` match and `403` on foreign origins.
+3. **Feature Smoke & Workloads:** Core SPA/feature asset availability without creating synthetic business records or dummy personnel documents; cleanup of `.maintenance_lock`; all unrelated OPRSERVER workloads (`adguard`, `beszel`, `beszel-agent`, `homarr`, `uptime-kuma`, `veraset-mysql`) healthy; DNS/Tailscale routes intact; `>= 10 GiB` free space on `/`; original repo working tree preserved.
+
+### Standard deployment prompt contract and reporting
+
+Routine production deployments require only: (1) approved exact release SHA, (2) target host (`oprserver`), (3) scope (`deploy` vs authorized non-destructive `migrate` to `<target-schema>`), and (4) any explicit exceptions. Reports MUST use one disposition (**`PRODUCTION ACCEPTED`**, **`DEPLOYMENT BLOCKED`**, or **`RECOVERY REQUIRED`**), separating deferred host-security limitations from application deployment acceptance.
 
 ## Database backup and recovery
 
