@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "fe694994d4abaf9b99a14626ad57f12d52661be458b635984ed6c4494db805d5",
+      "fingerprint": "204e91d597da7f3869f9a72a7f77a812bc4d989471969f14dcf210a174c549a5",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "92a77d8f177367c7dc63eb9263ffd45c2a2b330290b66d0e1dcc6ec1b4ec9b5c",
+        "AGENTS.md": "d4329d514e2ce6389f3109b73a9da3972bd467938dafc65f67286c11d416728f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
+      "head": "65dafc894348753054e51a90a01b4e8c06722579",
       "outcome": "no-change",
-      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
+      "reason": "The G12 exact-path dependency exception changes repository storage governance only; it does not change ElysiaJS guidance or planning-record scope. Verified both affected items against this policy-only diff.",
       "evidence": [
-        "Changed: AGENTS.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
+        "Changed: AGENTS.md at 65dafc894348753054e51a90a01b4e8c06722579"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "0205be8db3a5ad1f48963df12c8c0d6ccf11b06df832183cb23bfed99a18ac3d",
+      "fingerprint": "f00d7277f11fb7fc1ea476f01f5e1255d554310899a838f8cdd0d0a1fe267312",
       "snapshot": {
         ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "92a77d8f177367c7dc63eb9263ffd45c2a2b330290b66d0e1dcc6ec1b4ec9b5c",
+        "AGENTS.md": "d4329d514e2ce6389f3109b73a9da3972bd467938dafc65f67286c11d416728f",
         "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "235abada5677ea0f9da6ae83bc9a93fa79097f93",
+      "head": "65dafc894348753054e51a90a01b4e8c06722579",
       "outcome": "no-change",
-      "reason": "AGENTS.md policy consolidation and changelog update; elysiajs skill guidance and planning records unaffected",
+      "reason": "The G12 exact-path dependency exception changes repository storage governance only; it does not change ElysiaJS guidance or planning-record scope. Verified both affected items against this policy-only diff.",
       "evidence": [
-        "Changed: AGENTS.md at 235abada5677ea0f9da6ae83bc9a93fa79097f93"
+        "Changed: AGENTS.md at 65dafc894348753054e51a90a01b4e8c06722579"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
