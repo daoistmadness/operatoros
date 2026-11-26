@@ -1,9 +1,9 @@
 import { chmodSync, closeSync, existsSync, fsyncSync, mkdtempSync, openSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { assertDatabasePath, assertMigrationLedgerShape, assertOrdinarySchemaObjects, schemaFingerprint, validateDatabase } from "./connection";
-import { installS47Schema, installS47Triggers, installS48EmployeeSchema, installS49SchoolUnitSchema, installS49SchoolUnitTriggers, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema } from "./bootstrap";
+import { installS47Schema, installS47Triggers, installS48EmployeeSchema, installS49SchoolUnitSchema, installS49SchoolUnitTriggers, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema, installS56StaffPtkSchema } from "./bootstrap";
 import { legacySchemaFingerprint } from "./legacy-fingerprint";
-import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT, S54_SCHEMA_FINGERPRINT } from "./manifest";
+import { CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, SCHEMA_MIGRATIONS, S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT, S54_SCHEMA_FINGERPRINT, S55_SCHEMA_FINGERPRINT } from "./manifest";
 import { openSqliteConnection, type SqliteClient } from "./sqlite-client";
 
 const SOURCE_VERSION = "20260901_s46";
@@ -26,7 +26,7 @@ function date(value: unknown): string {
   return text;
 }
 
-function sourceVariant(client: SqliteClient): SourceVariant | "S47" | "S48" | "S49" | "S50" | "S51" | "S52" | "S53" | "S54" | "CURRENT" {
+function sourceVariant(client: SqliteClient): SourceVariant | "S47" | "S48" | "S49" | "S50" | "S51" | "S52" | "S53" | "S54" | "S55" | "CURRENT" {
   assertOrdinarySchemaObjects(client);
 
   const integrity = client.query("PRAGMA integrity_check").get() as { integrity_check: string };
@@ -42,6 +42,13 @@ function sourceVariant(client: SqliteClient): SourceVariant | "S47" | "S48" | "S
   if (current) {
     validateDatabase(client);
     return "CURRENT";
+  }
+  const s55 = rows.find((row) => row.version === "20261125_s55");
+  if (s55) {
+    if (s55.schema_fingerprint !== S55_SCHEMA_FINGERPRINT || schemaFingerprint(client) !== S55_SCHEMA_FINGERPRINT) {
+      throw new Error("DATABASE_MIGRATION_CHECKSUM_MISMATCH");
+    }
+    return "S55";
   }
   const s54 = rows.find((row) => row.version === "20261027_s54");
   if (s54) {
@@ -184,6 +191,13 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
     source.exec("BEGIN EXCLUSIVE");
     const variant = sourceVariant(source);
     if (variant === "CURRENT") { source.exec("ROLLBACK"); return "NOOP"; }
+    if (variant === "S55") {
+      installS56StaffPtkSchema(source);
+      source.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, '{}', 'S56_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, "20261125_s55", CURRENT_SCHEMA_FINGERPRINT, new Date().toISOString()]);
+      validateDatabase(source);
+      source.exec("COMMIT");
+      return "MIGRATED";
+    }
     temporary = mkdtempSync(join(dirname(path), ".operatoros-s54-"));
     chmodSync(temporary, 0o700);
     const snapshot = join(temporary, "source.sqlite");
@@ -232,11 +246,12 @@ export function migrateExistingDatabase(path: string): "MIGRATED" | "NOOP" {
         if (variant !== "S53" && variant !== "S54") installS53StudentVerificationSchema(target);
         if (variant !== "S54") installS54BospReminderSchema(target);
         installS55InventorySchema(target);
+        installS56StaffPtkSchema(target);
         if (schemaFingerprint(target) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("MIGRATION_SCHEMA_MISMATCH");
         const counts = Object.fromEntries(["students", "student_masters", "student_device_identities", "attendance", "student_enrollments", "staff_members", "staff_employment_history"].map((table) =>
           [table, (target.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count]));
         const predecessor = variant === "S54" ? "20261027_s54" : variant === "S53" ? "20261027_s53" : variant === "S52" ? "20261027_s52" : variant === "S51" ? "20261027_s51" : variant === "S50" ? "20261027_s50" : variant === "S49" ? "20261027_s49" : variant === "S48" ? "20261002_s48" : variant === "S47" ? S47_VERSION : SOURCE_VERSION;
-        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S55_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, predecessor, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ source_variant: variant, protected_counts: counts }), new Date().toISOString()]);
+        target.run("INSERT INTO operatoros_schema_migrations (version,predecessor,schema_fingerprint,protected_fingerprints,approved_by,applied_at) VALUES (?, ?, ?, ?, 'S56_TS_MIGRATION', ?)", [CURRENT_SCHEMA_VERSION, predecessor, CURRENT_SCHEMA_FINGERPRINT, JSON.stringify({ source_variant: variant, protected_counts: counts }), new Date().toISOString()]);
         validateDatabase(target);
       }).immediate();
       target.run("DETACH DATABASE previous");

@@ -1,3 +1,4 @@
+import type { PtkDocumentSlotDto, PtkPreparationDto, PtkResponseDto } from "@operatoros/contracts/staff";
 import type { SchoolUnitResponseDto, StaffAnalyticsSummaryDto, StaffSchoolUnitAssignmentDto } from "@operatoros/contracts/staff";
 import { apiRequest } from "../lib/api/client";
 
@@ -79,4 +80,23 @@ export async function commitStaffImport(batch_id: string, row_numbers: number[])
 }
 export async function downloadStaffExcel(params: StaffListParams & { include_sensitive?: boolean }): Promise<Blob> {
   return (await apiRequest({ path: "/api/staff/export-excel", params: { ...params, has_nuptk: params.has_nuptk === undefined ? undefined : String(params.has_nuptk) }, responseType: "blob", timeout: 60000, expectedBlobTypes: ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] })).data;
+}
+
+const ptkPath = (id: string) => `/api/staff/${encodeURIComponent(id)}/ptk`;
+export async function fetchStaffPtk(id: string, signal: AbortSignal) {
+  return (await apiRequest<PtkResponseDto>({ path: ptkPath(id), signal })).data;
+}
+export async function saveStaffPtk(id: string, revision: number, preparation: PtkPreparationDto) {
+  return (await apiRequest<PtkResponseDto>({ path: ptkPath(id), method: "PUT", body: { revision, preparation } })).data;
+}
+export async function uploadStaffPtk(id: string, contextId: string, slot: PtkDocumentSlotDto, file: File, label?: string) {
+  const body = new FormData();
+  body.set("contextId", contextId);
+  body.set("slot", slot);
+  body.set("file", file);
+  if (label) body.set("label", label);
+  await apiRequest({ path: ptkPath(id) + "/documents", method: "POST", body });
+}
+export async function downloadStaffPtk(id: string, documentId: string) {
+  return (await apiRequest({ path: ptkPath(id) + "/documents/" + encodeURIComponent(documentId), responseType: "blob" })).data;
 }

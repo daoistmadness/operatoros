@@ -1500,3 +1500,34 @@ export const inventory_asset_sequences = sqliteTable("inventory_asset_sequences"
     check("ck_inventory_sequences_last_seq", sql`${table.last_sequence} >= 0`),
 ]);
 
+
+export const staff_ptk_administration = sqliteTable("staff_ptk_administration", {
+  staff_member_id: text().notNull().primaryKey().references(() => staff_members.id, { onDelete: "restrict" }),
+  revision: integer().notNull(),
+  context_id: text().notNull(),
+  preparation: text().notNull(),
+  prior_contexts: text().notNull().default("[]"),
+}, (table) => [
+  check("staff_ptk_revision", sql`${table.revision} > 0`),
+  check("staff_ptk_preparation_json", sql`json_valid(${table.preparation})`),
+  check("staff_ptk_prior_contexts_json", sql`json_valid(${table.prior_contexts})`),
+]);
+
+export const staff_ptk_documents = sqliteTable("staff_ptk_documents", {
+  id: text().notNull().primaryKey(),
+  staff_member_id: text().notNull().references(() => staff_ptk_administration.staff_member_id, { onDelete: "restrict" }),
+  slot: text().notNull(),
+  context_id: text().notNull(),
+  label: text().notNull(),
+  media_type: text().notNull(),
+  file_sha256: text().notNull(),
+  file_size_bytes: integer().notNull(),
+  uploaded_at: text().notNull(),
+  version: integer().notNull(),
+}, (table) => [
+  unique().on(table.staff_member_id, table.context_id, table.slot, table.version),
+  check("staff_ptk_media", sql`${table.media_type} IN ('application/pdf', 'image/jpeg', 'image/png')`),
+  check("staff_ptk_hash", sql`length(${table.file_sha256}) = 64 AND ${table.file_sha256} NOT GLOB '*[^0-9a-f]*'`),
+  check("staff_ptk_size", sql`${table.file_size_bytes} BETWEEN 1 AND 5000000`),
+  check("staff_ptk_document_version", sql`${table.version} > 0`),
+]);

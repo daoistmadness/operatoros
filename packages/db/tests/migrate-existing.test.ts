@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createFreshDatabase, CURRENT_SCHEMA_VERSION, openDatabase, schemaFingerprint, validateMigrationSource } from "../src";
 import { legacySchemaFingerprint } from "../src/legacy-fingerprint";
-import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT, S54_SCHEMA_FINGERPRINT } from "../src/manifest";
+import { S46_SOURCE_VARIANTS, S47_SCHEMA_FINGERPRINT, S48_SCHEMA_FINGERPRINT, S49_SCHEMA_FINGERPRINT, S50_SCHEMA_FINGERPRINT, S51_SCHEMA_FINGERPRINT, S52_SCHEMA_FINGERPRINT, S53_SCHEMA_FINGERPRINT, S54_SCHEMA_FINGERPRINT, S55_SCHEMA_FINGERPRINT } from "../src/manifest";
 import { migrateExistingDatabase } from "../src/migrate-existing";
 import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
 
@@ -488,3 +488,30 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     expect(() => migrateExistingDatabase(path)).toThrow("UNAPPROVED_SOURCE_SCHEMA");
   }));
 });
+
+it("adds PTK preparation to S55 while preserving staff and Inventory records", () => withDatabases((_, path, freshPath) => {
+  const db = openSqliteConnection(path).client;
+  for (const sql of [s47Sql, s48Sql, s49Sql, s50Sql, s51Sql, s52Sql, s53Sql, s54Sql,
+    readFileSync(new URL("../src/s55-migration.sql", import.meta.url), "utf8")]) db.exec(sql);
+  expect(schemaFingerprint(db)).toBe(S55_SCHEMA_FINGERPRINT);
+  db.run("INSERT INTO operatoros_schema_migrations VALUES ('20261125_s55','20261027_s54',?,'{}','SYNTHETIC_FIXTURE','2026-11-25')", [S55_SCHEMA_FINGERPRINT]);
+  db.run("INSERT INTO staff_members (id,full_name,normalized_name) VALUES ('synthetic','Synthetic PTK','synthetic ptk')");
+  db.run("INSERT INTO school_units (id,name) VALUES (1,'Synthetic unit')");
+  db.run("INSERT INTO inventory_assets (id,asset_code,school_unit_id,category,item_name,funding_source,budget_year) VALUES ('synthetic','SYN',1,'IT','Synthetic item','BOS',2026)");
+  const staff = db.query("SELECT * FROM staff_members").all();
+  const assets = db.query("SELECT * FROM inventory_assets").all();
+  db.close();
+  expect(migrateExistingDatabase(path)).toBe("MIGRATED");
+  expect(migrateExistingDatabase(path)).toBe("NOOP");
+  createFreshDatabase(freshPath);
+  const migrated = openDatabase(path);
+  const fresh = openDatabase(freshPath);
+  try {
+    expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
+    expect(migrated.client.query("SELECT * FROM staff_members").all()).toEqual(staff);
+    expect(migrated.client.query("SELECT * FROM inventory_assets").all()).toEqual(assets);
+    expect(migrated.client.query("SELECT * FROM staff_ptk_administration").all()).toEqual([]);
+    expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
+    expect(migrated.client.query("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+  } finally { migrated.close(); fresh.close(); }
+}));

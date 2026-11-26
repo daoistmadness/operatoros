@@ -19,6 +19,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s53",
   "20261027_s54",
   "20261125_s55",
+  "20261126_s56",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -58,8 +59,10 @@ export const S53_SCHEMA_FINGERPRINT =
 export const S54_SCHEMA_FINGERPRINT =
   "4e469c743a4bd65eebe764488c96dcaed2ce913f65ebf9daff18f97e97449c25";
 
-export const CURRENT_SCHEMA_FINGERPRINT =
+export const S55_SCHEMA_FINGERPRINT =
   "67687ecb5653878d36b74207b78facaa2ce825dbb599ddef9b75711c62b6a05f";
+
+export const CURRENT_SCHEMA_FINGERPRINT = "5782b7247e1cf60d6b4b83b86cf8bb8fd193b3675e736270cd74b8c5992798dc";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",

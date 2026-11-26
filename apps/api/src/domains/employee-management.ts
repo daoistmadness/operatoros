@@ -395,7 +395,7 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
   app.get("/api/staff/:staff_id/history", ({ params, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "view_staff_audit" }); if (!user) return { detail: "Insufficient permissions" };
     if (!row(context, "SELECT id FROM staff_members WHERE id=?", [params.staff_id])) { set.status = 404; return { detail: "Staff member not found" }; }
-    const auditHistory = rows(context, "SELECT event_id,operation,actor_id,occurred_at,reason,changed_fields,metadata FROM operations_audit_events WHERE entity_type='STAFF' AND entity_reference=? AND operation IN ('STAFF_CREATE','STAFF_PROFILE_UPDATE','STAFF_UPDATE','STAFF_STATUS_CHANGE','STAFF_IMPORT_CREATE','STAFF_IMPORT_UPDATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CREATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CLOSE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CANCEL') ORDER BY occurred_at DESC,event_id DESC", [params.staff_id]).map((event) => {
+    const auditHistory = rows(context, "SELECT event_id,operation,actor_id,occurred_at,reason,changed_fields,metadata FROM operations_audit_events WHERE entity_type='STAFF' AND entity_reference=? AND operation IN ('STAFF_PTK_SAVE','STAFF_PTK_UPLOAD','STAFF_CREATE','STAFF_PROFILE_UPDATE','STAFF_UPDATE','STAFF_STATUS_CHANGE','STAFF_IMPORT_CREATE','STAFF_IMPORT_UPDATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CREATE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CLOSE','STAFF_SCHOOL_UNIT_ASSIGNMENT_CANCEL') ORDER BY occurred_at DESC,event_id DESC", [params.staff_id]).map((event) => {
       let metadata: Record<string, unknown> = {};
       try { metadata = JSON.parse(String(event.metadata ?? "{}")) as Record<string, unknown>; } catch { metadata = {}; }
       let fields: string[] = [];

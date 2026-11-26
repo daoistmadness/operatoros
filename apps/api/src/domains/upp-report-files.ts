@@ -98,6 +98,7 @@ export function referencedReportFiles(database: SqliteClient): FileMetadata[] {
   if (tableExists(database, "upp_report_versions")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_versions");
   if (tableExists(database, "upp_report_submission_evidence")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM upp_report_submission_evidence");
   if (tableExists(database, "student_iom_documents")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM student_iom_documents");
+  if (tableExists(database, "staff_ptk_documents")) parts.push("SELECT file_sha256 AS sha256, file_size_bytes AS sizeBytes FROM staff_ptk_documents");
   if (!parts.length) return [];
   const rows = database.query(parts.join(" UNION ")).all() as FileMetadata[];
   const entries = new Map<string, number>();
