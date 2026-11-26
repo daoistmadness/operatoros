@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-25
+last_reviewed: 2026-11-26
 ---
 
 # Ubuntu server deployment runbook
@@ -14,7 +14,7 @@ CI-built, verified, immutable artifacts attested by the canonical GitHub Actions
 The Docker Compose production architecture was formally accepted by owner directive on
 2026-11-24. Podman and Quadlet deployment paths are discontinued. Production operates under
 the host service identity UID/GID 1000:1000, with persistent SQLite storage mounted from
-`/mnt/podman-data/operatoros/data` and ingress routed through Caddy and Tailscale HTTPS
+the configured `OPERATOROS_DATA_DIR` and ingress routed through Caddy and Tailscale HTTPS
 (`https://oprserver.taile856.ts.net:8447`).
 
 ### Architectural parameters
@@ -25,9 +25,9 @@ the host service identity UID/GID 1000:1000, with persistent SQLite storage moun
 | **Orchestration** | Docker Compose | Managed via `deploy/docker/docker-compose.yml` |
 | **Host identity** | UID/GID `1000:1000` (`mikhailryu`) | Canonical host user account; UID 1001/1002 migration removed |
 | **Container runtime user** | UID/GID `1000:1000` (`bun` / user 1000) | Matches host user `1000:1000` for seamless bind-mount access to persistent SQLite volume |
-| **Persistent storage** | `/mnt/podman-data/operatoros/data` | Ext4 host directory; mounted read-write to `/var/lib/operatoros/data` |
-| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Schema head S5.4 (`20261027_s54`); WAL mode enabled |
-| **Deployment root** | `/mnt/podman-data/operatoros/deploy` | Houses releases, current symlink, and active compose configuration |
+| **Persistent storage** | Encrypted host data root (`OPERATOROS_DATA_DIR`) | Ext4 host directory on LUKS2-backed volume; mounted read-write to `/var/lib/operatoros/data` |
+| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Schema version verified by `packages/db/src/manifest.ts` |
+| **Deployment root** | `OPERATOROS_DEPLOY_DIR` | Houses releases, `current` symlink, `api.env` (`0600`), and active `docker-compose.yml` |
 | **Reverse proxy** | Caddy `2.11.9-alpine` | Binds to `127.0.0.1:18088` (loopback only) |
 | **API service** | Elysia backend (Bun 1.4.5) | Binds to `127.0.0.1:18090` (mapped to internal `8090`) |
 | **HTTPS ingress** | Tailscale Serve | Forwards `https://oprserver.taile856.ts.net:8447` to `http://127.0.0.1:18088` |
@@ -47,27 +47,45 @@ attestation:
 scripts/docker-deploy.sh verify <candidate-archive.tar> <source-sha>
 ```
 
-### 2. Executing production deployment
+### 2. Schema-compatible release deployment (no migration)
 
-To deploy a verified release archive:
+When the live database already matches the candidate release's target schema:
 
 ```bash
-scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha>
+scripts/docker-deploy.sh deploy <candidate-archive.tar> <source-sha> [deploy-dir]
 ```
 
 The automated deployment procedure executes the following steps:
-1. **Verification:** Verifies the archive envelope and inner checksums against the target source SHA.
-2. **Pre-deploy SQLite backup:** Automatically creates a consistent hot SQLite snapshot using SQLite's online backup API at `/mnt/podman-data/operatoros/data/backups/predeploy_<timestamp>.sqlite3`.
-3. **Extraction:** Unpacks release artifacts into `/mnt/podman-data/operatoros/deploy/releases/<source-sha>`.
-4. **Image loading:** Loads the embedded container image tarballs into the Docker daemon (`docker load`).
-5. **State preservation:** Records the previous active release directory in `/mnt/podman-data/operatoros/deploy/.previous_release`.
-6. **Atomic pointer switch:** Atomically points `/mnt/podman-data/operatoros/deploy/current` to the new release.
-7. **Web pointer synchronization:** Updates `/mnt/podman-data/operatoros/web/current` if present.
-8. **Service reconstitution:** Runs `docker compose -f <compose-file> up -d --remove-orphans`.
-9. **Health probe verification:** Polls `http://127.0.0.1:18088/health` and `http://127.0.0.1:18090/health` until healthy.
-10. **Automated rollback on failure:** Automatically invokes `cmd_rollback` if health probes fail within 60 seconds.
+1. **Lock and maintenance check:** Acquires the exclusive deployment lock (`<deploy-dir>/.deploy.lock`) and fails closed if an interrupted maintenance lock (`<deploy-dir>/.maintenance_lock`) exists.
+2. **Verification:** Verifies the archive envelope and inner checksums against the target source SHA.
+3. **Configuration resolution:** Resolves the authoritative `docker-compose.yml` and `api.env` (`0600` with mandatory secrets) and validates `docker compose config --quiet`.
+4. **Extraction & image loading:** Loads the embedded container image tarballs into Docker (`docker load`).
+5. **Pre-deploy schema compatibility validation:** Runs `db-cli.ts validate` inside the candidate API image; fails closed if a schema migration is required.
+6. **Protected pre-deploy SQLite snapshot:** Creates a `0600` SQLite online backup snapshot inside `<data-dir>/.snapshots/` (`0700`), leaving `<data-dir>/backups/` strictly for encrypted backups.
+7. **Atomic activation:** Updates `releases/<source-sha>`, `.previous_release`, `current` symlink, `web/current` symlink (if present), and active `docker-compose.yml` image tags.
+8. **Service reconstitution & verification:** Runs `docker compose up -d --remove-orphans` and polls `/health` and `/ready` on Caddy (`18088`) and `/health` on API (`18090`).
+9. **Automated rollback on failure:** Invokes `cmd_rollback` if health probes fail within the timeout window.
 
-### 3. Service status inspection
+### 3. Operational schema migration and release activation
+
+When upgrading to a release with a newer schema version (for example `20261126_s56`):
+
+```bash
+scripts/docker-deploy.sh migrate <candidate-archive.tar> <source-sha> <target-schema> [deploy-dir]
+```
+
+`migrate` runs the complete operational migration, validation, and release activation sequence
+under one continuous deployment lock and writer-exclusion boundary (fail-closed at every step):
+1. **Lock & verification:** Acquires `<deploy-dir>/.deploy.lock`, rejects any leftover `.maintenance_lock`, and verifies `<candidate-archive.tar>` against `<source-sha>`.
+2. **Authoritative configuration resolution:** Resolves `docker-compose.yml` and `api.env` (`0600`, required `BACKUP_ENCRYPTION_KEY`, `BACKUP_ENCRYPTION_KEY_ID`, `AUTH_COOKIE_SECRET`) and validates `docker compose config --quiet`.
+3. **Image loading & maintenance boundary:** Loads candidate images and creates `<deploy-dir>/.maintenance_lock` (`0600`).
+4. **Writer shutdown & restart exclusion:** Stops `operatoros-api` via `docker compose stop`, sets `--restart=no` on `operatoros-api` to prevent daemon restart during maintenance, and rejects any other running container mounting `<data-dir>`.
+5. **Independent writer quiescence verification:** Verifies via `scripts/verify-writer-quiescence.py` that zero processes hold open handles on `operatoros.sqlite*` (`lsof` and `/proc/*/fd`), no `-journal` or non-empty `-wal` sidecar exists, and a non-blocking `BEGIN EXCLUSIVE` SQLite lock probe succeeds.
+6. **Mandatory recovery prerequisite (attachment-aware encrypted backup + disposable restore):** Runs `apps/api/src/backup-cli.ts backup` inside the verified API image (`--env-file <api.env>`), verifies `0600` artifact/metadata permissions, and verifies independent decryption, schema, and attachment integrity via `apps/api/src/backup-cli.ts restore-disposable` into an ephemeral `0700` container-tmp directory.
+7. **Operational migration & validation:** Re-verifies quiescence, executes `packages/db/src/db-cli.ts migrate-operational --authorize-target <target-schema>`, and runs `db-cli.ts validate`. On migration failure, checks `scripts/verify-rollback-schema.py` before any restart and refuses to restart an incompatible application against a migrated or uncertain database.
+8. **Release activation & health verification:** Extracts the verified release, updates symlinks and Compose image tags, clears `.maintenance_lock`, starts the qualified containers via `docker compose up -d --remove-orphans`, and verifies `/health` and `/ready` before releasing the deployment lock.
+
+### 4. Service status inspection
 
 Inspect container states:
 
@@ -78,48 +96,50 @@ scripts/docker-deploy.sh status
 Or query the Docker daemon and health probes directly:
 
 ```bash
-docker compose -f /mnt/podman-data/operatoros/deploy/docker-compose.yml ps
+docker compose -f <deploy-dir>/docker-compose.yml ps
 curl -sf http://127.0.0.1:18088/health
 curl -sf http://127.0.0.1:18088/ready
 curl -sf http://127.0.0.1:18090/health
 ```
 
-### 4. Emergency rollback
+### 5. Emergency rollback
 
-If an operational anomaly occurs post-deployment:
+If an operational anomaly occurs on a schema-compatible deployment:
 
 ```bash
 scripts/docker-deploy.sh rollback
 ```
 
-Rollback restores the `current` symlink to the previous release recorded in
-`/mnt/podman-data/operatoros/deploy/.previous_release`, restarts the previous containers via
-Docker Compose, and validates endpoint health.
+Rollback checks `scripts/verify-rollback-schema.py` before mutating symlinks, refuses to
+roll back if the live database is newer than the previous release's expected schema, restores
+the `current` symlink and Compose configuration, restarts the previous containers, and
+validates endpoint health.
 
 ## Database backup and recovery
 
-### Automated pre-deploy backups
+### Encrypted attachment-aware backups
 
-The canonical deployment script automatically snapshots the live database prior to container
-recreation:
-- Backup location: `/mnt/podman-data/operatoros/data/backups/predeploy_<timestamp>.sqlite3`
-- Method: SQLite online backup API (`VACUUM INTO` / `s.backup(d)`), ensuring complete transactional consistency without stopping the API container.
-
-### Manual hot backup
-
-To take an on-demand snapshot:
+Production encrypted backups (`backup_<timestamp>.sqlite3` + `.meta.json`) are managed by
+`apps/api/src/backup-cli.ts` and the API backup scheduler in `<data-dir>/backups/` (`0700`
+directory, `0600` files). Containment is verified read-only with:
 
 ```bash
-python3 -c "import sqlite3; s=sqlite3.connect('file:/mnt/podman-data/operatoros/data/operatoros.sqlite?mode=ro', uri=True); d=sqlite3.connect('/mnt/podman-data/operatoros/data/backups/manual_$(date +%Y%m%d_%H%M%S).sqlite3'); s.backup(d); d.close(); s.close()"
+bun scripts/check-backup-dir.ts <data-dir>/backups
 ```
+
+### Protected supplemental snapshots
+
+Any supplemental plaintext SQLite snapshot created by `docker-deploy.sh deploy` is stored
+outside `<data-dir>/backups/` in `<data-dir>/.snapshots/` (mode `0700`, files `0600`) so it
+cannot pollute encrypted backup retention or expose plaintext data.
 
 ### Integrity verification
 
 Verify database integrity and foreign key constraints:
 
 ```bash
-sqlite3 /mnt/podman-data/operatoros/data/operatoros.sqlite "PRAGMA integrity_check;"
-sqlite3 /mnt/podman-data/operatoros/data/operatoros.sqlite "PRAGMA foreign_key_check;"
+sqlite3 <data-dir>/operatoros.sqlite "PRAGMA integrity_check;"
+sqlite3 <data-dir>/operatoros.sqlite "PRAGMA foreign_key_check;"
 ```
 
 ## Ingress and networking
