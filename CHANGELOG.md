@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Harden `scripts/docker-deploy.sh` operational migration wrapper to fail closed on missing Compose/config resolution, writer shutdown/exclusion, open database handles or locks, and encrypted backup/restore-disposable prerequisites, and unify migration, validation, and release activation under a continuous lock and maintenance boundary.
 - Add Administrasi PTK to staff profiles with a Verval preparation checklist, private document history, and external outcome tracking. (#420)
 
 - Add sanctioned operational migration command (`migrate`) and Compose image tag synchronization to `scripts/docker-deploy.sh` with explicit target authorization in `db-cli.ts`.
