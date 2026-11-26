@@ -2970,13 +2970,13 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "4bd51845171204fe236716c6afbea905d5256a9c6f52205e6b05080ce91a5d46",
+      "fingerprint": "2d38a86aaaf5d52d9c29cced751ea2ff4386bda7e1d5c531018476cad61e54bb",
       "snapshot": {
-        "CHANGELOG.md": "08bbdd3603e2410a498628066365b9ec071c00466fb2bbeab399abef859be53a"
+        "CHANGELOG.md": "fdaf658fb620b4c30262d321967ed58a6b5b117053c96910a64afe5d73ce11c4"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "e6514f3dfc12a489fbf71e3d26b871ef7ff0f82b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "Added PR #423 reference to CHANGELOG.md Unreleased entry without modifying Elysia skill guidance.",
       "evidence": [
         "bun .github/scripts/check-markdown-links.ts",
         "bun .github/scripts/check-markdown-organization.ts",
