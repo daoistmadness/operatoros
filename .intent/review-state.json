@@ -1777,7 +1777,7 @@
       },
       "head": "5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6",
       "outcome": "out-of-scope",
-      "reason": "This exact process-identity adjustment lets the managed development runtime recognize its backend from workspace-root CWD. It does not change Elysia APIs or the framework skill’s coverage.",
+      "reason": "This exact process-identity adjustment lets the managed development runtime recognize its backend from workspace-root CWD. It does not change Elysia APIs or the framework skill\u2019s coverage.",
       "evidence": [
         "scripts/operatoros-dev-runtime.ts; scripts/tests/dev-runtime.test.ts; 44/44 runtime matcher tests passed in prior prototype; commit 5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6."
       ]
@@ -10041,7 +10041,7 @@
       },
       "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "The follow-up workflow edit only retains the finalizer\u2019s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
       "evidence": [
         "Changed: scripts/tests/test_release_bundle.py at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
       ]
