@@ -66,6 +66,8 @@ that commit on the default branch, fetch it, and run the relevant checks again
 in a clean checkout. Confirm post-merge CI is green before starting another task.
 Delete a feature branch only after GitHub confirms its merge.
 
+Ordinary PR merge and post-merge CI complete Phase 2 only; production deployment requires separate Phase 3 release qualification (`gh workflow run ci.yml --repo daoistmadness/operatoros --ref main -f docker_qualification=true`), explicit deployment authorization, and the Phase 4–5 procedures in [AGENTS.md](AGENTS.md) and [docs/runbooks/ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md).
+
 If a required gate fails, investigate at most two focused corrections and keep
 the PR open with failure evidence if unresolved. If the merged default branch
 turns red, stop further tasks. When safe, create a recovery branch from the

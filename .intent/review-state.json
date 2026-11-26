@@ -3,18 +3,18 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "204e91d597da7f3869f9a72a7f77a812bc4d989471969f14dcf210a174c549a5",
+      "fingerprint": "09df70cdae9a11d2f539853a25e16f3dc5318f18e384f729fbaaef8da59347d9",
       "snapshot": {
-        ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
+        ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "d4329d514e2ce6389f3109b73a9da3972bd467938dafc65f67286c11d416728f",
-        "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
+        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
+        "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "8e85450aa32bad808bc907440ea6145d070ed752bb51390ae74c3675cca08b74",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
-        "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
+        "docs/reference/security-model.md": "10b523a46e1b9ac67e902dde1e8f8a832bca44fd5c2dc9312303e47fef0ae076",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -44,20 +44,20 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "65dafc894348753054e51a90a01b4e8c06722579",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "The G12 exact-path dependency exception changes repository storage governance only; it does not change ElysiaJS guidance or planning-record scope. Verified both affected items against this policy-only diff.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "Changed: AGENTS.md at 65dafc894348753054e51a90a01b4e8c06722579"
+        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "f00d7277f11fb7fc1ea476f01f5e1255d554310899a838f8cdd0d0a1fe267312",
+      "fingerprint": "1f312ef3c2a1d5487d639434fc8972889e24a0cb39fdf13298c3223032cc6e28",
       "snapshot": {
-        ".github/CI.md": "d6a8e4816ff70c70399e2631558bd009e6c21e7b7e15512a968dc274a5bab5c6",
+        ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "d4329d514e2ce6389f3109b73a9da3972bd467938dafc65f67286c11d416728f",
-        "CONTRIBUTING.md": "53ddb5d5a2cdb2e274a74f584bd90af558a882fbcad9b64a8b04814bdd60b17f",
+        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
+        "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
         "_artifacts/skill_tree.yaml": "c364815ab9297176cba0b463e499800e57951748eea0e44112832295cb155368",
@@ -66,7 +66,7 @@
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "8e85450aa32bad808bc907440ea6145d070ed752bb51390ae74c3675cca08b74",
         "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
-        "docs/reference/security-model.md": "10346b7549aca3b4661274f7fda52e71cb500b9a4beba475602dca977564b050",
+        "docs/reference/security-model.md": "10b523a46e1b9ac67e902dde1e8f8a832bca44fd5c2dc9312303e47fef0ae076",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "65dafc894348753054e51a90a01b4e8c06722579",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "The G12 exact-path dependency exception changes repository storage governance only; it does not change ElysiaJS guidance or planning-record scope. Verified both affected items against this policy-only diff.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "Changed: AGENTS.md at 65dafc894348753054e51a90a01b4e8c06722579"
+        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -589,15 +589,18 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "3fa88b0af0a0401a5fb53bcd36d6d4d3845e0b15fa49cf810bdbabd0c2aa4a7e",
+      "fingerprint": "c4bf4844ec0cb5538d7b2249319ea8432b6d81fae6def03f93c13f570dd0a671",
       "snapshot": {
-        "README.md": "d2c56fa295e8c0a67cce7bce92ba7cb5244cf512e38d84e02521e03a379ed618"
+        "README.md": "c268a99c12f739e741db317d92379450adac71d56f8b4c9b3c0cbfd343cc4758"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: README.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1733,15 +1736,18 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "1986d4c2d5d8e2619f9cd724afba3840031f403caead6b2d25ae6214e53a0763",
+      "fingerprint": "28917e012d8e21d70f70d2ed81a604acc1e09f90a7582d3c64b00218864f24bc",
       "snapshot": {
-        "docs/README.md": "ae480ec41b7c251be43a7db6a00a8c1a6fe8daedff5618e0a9acacdfecd5d065"
+        "docs/README.md": "8135511d565963e9349feb439b9e9b4ef9cbb80b9aa9ecd110067cf21a2f0193"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/README.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2958,27 +2964,30 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "1f94f231cb11750874af2c8ff6bbbdf9bcf793d6506501768902a4c8c3562484",
+      "fingerprint": "3df4f6ca299ab9eb57ecd933f25f4d83ea16b9c09da8acbee9d1a71bba12e2eb",
       "snapshot": {
-        "CHANGELOG.md": "85953b714a767df31e1166867e4a7bd2d1b5778c460b64665b6d668c97e3c7bd"
+        "CHANGELOG.md": "057717834693d5c0ad22a08c8f7b2ec987d42639414bcdac0e2e94f348b9214d"
       },
-      "head": "3eadbec31df09d0c213aad575c06e1c54ceb9ee6",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "The required Unreleased entry documents the G12 storage-governance exception; it does not change skill guidance or planning scope.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "Changed: CHANGELOG.md at 3eadbec31df09d0c213aad575c06e1c54ceb9ee6"
+        "Changed: CHANGELOG.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "source:COMMANDS.md": {
-      "fingerprint": "b38a72799f9fe408df400f516f2241c9cb241af71bd39b3b21f6b250403c826e",
+      "fingerprint": "fb0b632a7dcaac350ce3698c4f68ee9054666e471da42376d700941a1b91fabc",
       "snapshot": {
-        "COMMANDS.md": "a8e50973169af07a20773ee610f1df0288a377408f555380a1f94450874b9467"
+        "COMMANDS.md": "33d418b782fd4c15bb2b26cba35b4e911ec1fe0dc4c8a1d25c406a7395d425e7"
       },
-      "head": "9003c74707e8a6b356760a4b6d4c463df9ab3278",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Operational deployment wrapper hardening and runbook updates do not alter Elysia library guidance",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: COMMANDS.md at 9003c74707e8a6b356760a4b6d4c463df9ab3278"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:ERRORS.md": {
@@ -4594,15 +4603,18 @@
       ]
     },
     "source:docs/reference/production-profile.md": {
-      "fingerprint": "b847b27862e1b993099be2f52ced9ed6e24c4fdcdc8ef2f71d326a3c33d11059",
+      "fingerprint": "3b85028c74c5596b4e692c6a0426d881ade7319e9a7128b48cb00cedc64a03fc",
       "snapshot": {
-        "docs/reference/production-profile.md": "1bce1902e88786b910eec28e96cfa763b3f54a7bb3812ef64e924c0c343127ab"
+        "docs/reference/production-profile.md": "c85c4613bfbd3936d036e3c24e70ffe805182a6e9a12dca310ab5bcc9732d798"
       },
-      "head": "1cd6791e6289c09f9629f4ab1761f00092e360ba",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Docker Compose production convergence; no agent skill library changes apply.",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/reference/production-profile.md at 1cd6791e6289c09f9629f4ab1761f00092e360ba"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:docs/reference/risk-threshold-validation.md": {
@@ -4759,15 +4771,18 @@
       ]
     },
     "source:docs/runbooks/backup-restore.md": {
-      "fingerprint": "f29501a926cb42811d994040526e776e1da09bc11179eb002712b40716c8f597",
+      "fingerprint": "c89924489db8bb121ec110da87ad1c3c76d8993871baa202e52673dcd1e94870",
       "snapshot": {
-        "docs/runbooks/backup-restore.md": "da7937759cfbfb86d9000226ae70305d8e914ef20279a0e5b3ba2fef088447f6"
+        "docs/runbooks/backup-restore.md": "0951fbf70f7c98e076bc719a007aad5b4e7b625600c26320b02cf228fdc98de2"
       },
-      "head": "2976bc349ab4f94e7e89dd7fa746fef76060ff0c",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification implementation, test, or release documentation is outside the registered Elysia skill and Intent planning-record scope.",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "outcome": "no-change",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Reviewed the file diff and ran the complete local release validation plus focused Docker qualification and release-workflow tests."
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:docs/runbooks/data-reset.md": {
@@ -4783,15 +4798,18 @@
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "3977b18f36d0ac64a5e9cbb054718e964a75b938a475e165fe6681a1b4694ad9",
+      "fingerprint": "55013307c2b69ed9679c175e30c9435b1e7f194ef29e7a2681697bf14965e446",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "e939a5ea05cc3d6fc4d3ab5f33bfb16d4f6ad7cd172feda978edd71360432c51"
+        "docs/runbooks/database-operations.md": "7a20f964a80dd23e211cd4ae7d81913b339a1dad8a9cca2201dfc50cc842fab8"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/runbooks/database-operations.md at 039c44449118797c4f20b29419e63367722150d2"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4835,15 +4853,18 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "9865dc08b2991249d9d7e63832f27fc7cdf18fd4d778c087fcb2fde9ef3cb9ee",
+      "fingerprint": "7570634f85559427393d15cbce5d0d08fc158ebae2c2020d68fa7463fa7cd05f",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "9ebcd5bc0a10e9375931e4d3e72160bed5bb10183ed223ed06c77cf8ff0c09d4"
+        "docs/runbooks/ubuntu-server-deployment.md": "76d33a0619b3982f89969514193a824778657c8215f6bf95f989ae67e0d1e5d9"
       },
-      "head": "9003c74707e8a6b356760a4b6d4c463df9ab3278",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Operational deployment wrapper hardening and runbook updates do not alter Elysia library guidance",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 9003c74707e8a6b356760a4b6d4c463df9ab3278"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -9964,15 +9985,18 @@
       ]
     },
     "source:docs/runbooks/release-bundles.md": {
-      "fingerprint": "57e0f1c9deb93c5cab840377db89ae67f157241fcb8a9bdf19d30e505ef022aa",
+      "fingerprint": "4119a76dbbec5254a2fa45bd503e65da9e66eb46d628801e2e9ffe9cca450ac5",
       "snapshot": {
-        "docs/runbooks/release-bundles.md": "d9e45a8daf0cf3fd6a17c090eee9a4ad583d30199afb692f984c56f907ee0d36"
+        "docs/runbooks/release-bundles.md": "c4c522aad71a32a8ffb338010c528b6dedd4194c80473d576cbac8843e19c578"
       },
-      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/runbooks/release-bundles.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:scripts/release-bundle.py": {
@@ -10855,15 +10879,18 @@
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "0dcd6364d54172418e9b0d79b62d36cb0e5d44b7adb28078ed39a54e0a6ec1ff",
+      "fingerprint": "9d0fbf2ed31a3cda051d7f3fe4f73658a549badb86eaa4d9ab22540492fad09c",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "b19432c219f82c38b6144d95eaa1554fe3f5fd9bb17ed0daba8885f98813e3d6"
+        "docs/decisions/docker-compose-deployment.md": "9fcd32ac3cf8c23aca4bf3de6633ab340fd9bd1f95e75b352bf69d673d99d711"
       },
-      "head": "85a0ce0c4f811b50a0a78a9cf1f3746588167d6a",
+      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
       "outcome": "no-change",
-      "reason": "Pin Caddy 2.11.9-alpine with OS package vulnerability scanning to eliminate upstream Trivy findings",
+      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
       "evidence": [
-        "Changed: docs/decisions/docker-compose-deployment.md at 85a0ce0c4f811b50a0a78a9cf1f3746588167d6a"
+        "bun .github/scripts/check-markdown-links.ts",
+        "bun .github/scripts/check-markdown-organization.ts",
+        "bun .github/scripts/check-current-developer-docs.ts",
+        "bun run skills:validate"
       ]
     },
     "source:scripts/check-backup-dir.ts": {

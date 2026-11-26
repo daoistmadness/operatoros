@@ -113,7 +113,11 @@ qualification, and archive attestation for source
 SBOM, Trivy, and separate-consumer gates added in PR #400; it does not produce
 those results for the Docker archive. The candidate is not production
 acceptance. The new gates remain unverified until a hosted run completes on the
-merged protected-main source.
+merged protected-main source. Subsequently, protected-main run
+[45779081840](https://github.com/daoistmadness/operatoros/actions/runs/45779081840)
+completed all validation, E2E, Docker Compose rehearsal, Trivy/SBOM, isolated
+consumer, and attestation gates for S56 (`5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6`),
+consumed on OPRSERVER via `scripts/docker-deploy.sh`.
 
 The API job also runs the pinned Trivy OCI-layout compatibility test on a
 synthetic image in an isolated rootless store. It creates no release bundle.

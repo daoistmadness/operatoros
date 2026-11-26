@@ -182,7 +182,7 @@ Mandatory rules:
 
 - Prefer additive and backward-compatible schema changes.
 - Never rewrite a migration already released or applied to production.
-- Never reset, recreate, overwrite, truncate, or delete the production database at `/mnt/podman-data/operatoros/data/operatoros.sqlite`.
+- Never reset, recreate, overwrite, truncate, or delete the production database at `/var/lib/operatoros/data/operatoros.sqlite` (configured via `OPERATOROS_DATA_DIR`; legacy `/mnt/podman-data/...` quarantine storage MUST NOT be used as live production storage).
 - Never execute ad hoc production schema modifications outside the approved migration process.
 - Apply only pending migrations.
 - Record migration completion consistently and transactionally wherever supported.
@@ -222,7 +222,7 @@ Development and testing must use:
 - Disposable test databases where appropriate.
 - Existing managed development commands (`mise run dev`, `./start-dev.sh`).
 
-Agents must **never** write to the production database at `/mnt/podman-data/operatoros/data/operatoros.sqlite`. Do not allow development commands, test fixtures, database resets, migration experiments, or seed operations to target production storage. Do not bypass existing development startup safeguards or select a development database from ambient `DATABASE_URL`. Production changes require separate, explicit authorization.
+Agents MUST **never** write to the production database at `/var/lib/operatoros/data/operatoros.sqlite` (or any live path referenced by `OPERATOROS_DATA_DIR` / legacy `/mnt/podman-data/` quarantine). Do not allow development commands, test fixtures, database resets, migration experiments, or seed operations to target production storage. Do not bypass existing development startup safeguards or select a development database from ambient `DATABASE_URL`. Production changes require separate, explicit authorization.
 
 ### G06 — Security and authorization preservation
 
@@ -237,9 +237,11 @@ Do not weaken:
 - **Input Validation & Sanitization:** TypeBox DTO schemas at API boundaries; sanitized error messages.
 - **Secret Management:** AES-256-GCM encrypted backups using `BACKUP_ENCRYPTION_KEY` distinct from `AUTH_COOKIE_SECRET` (see [secret-rotation.md](docs/runbooks/secret-rotation.md)).
 - **Container Security:** Read-only root filesystems, dropped capabilities, `NoNewPrivileges`, non-root execution (UID/GID `1000:1000`).
-- **Database Access:** Local filesystem permissions and strict process boundary checks.
+- **Database Access:** Active SQLite storage MUST remain on LUKS2-encrypted storage with local filesystem permissions (`0700` dirs, `0600` files) and strict process boundary checks.
 
-Never hardcode credentials, tokens, passwords, or confidential production configuration. Do not disable security checks to make tests or CI pass. Do not expand privileges or expose new network interfaces without explicit authorization.
+An application deployment MUST NOT weaken mandatory application security controls, and MUST NOT silently expand into optional or deferred host-security hardening (such as LUKS auto-unlock/keyslot removal, `/etc/crypttab`, GRUB/initramfs rebuilds, historical media sanitization, unrelated service credential rotation, or host reboots) unless required by a confirmed prerequisite and explicitly authorized. Only the system owner may authorize a narrowly scoped, temporary security exception, recorded with explicit scope, remaining risk, and review condition; temporary exceptions MUST NOT become permanent default policy. Treat accidental secret or key exposure as a targeted rotation incident preserving `BACKUP_ENCRYPTION_PREVIOUS_KEYS`.
+
+Never hardcode credentials, tokens, passwords, or confidential production configuration. Never expose encryption keys, auth secrets, personal records, or document contents in commands, logs, chat messages, screenshots, or reports. Do not disable security checks to make tests or CI pass. Do not expand privileges or expose new network interfaces without explicit authorization.
 
 ### G07 — API and application compatibility
 
@@ -293,34 +295,33 @@ Do not introduce speculative abstractions, unnecessary dependencies, duplicated 
 
 ### G10 — Production deployment safety
 
-Production releases must use the existing canonical deployment process: `scripts/docker-deploy.sh` (see [ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md)).
+Production releases MUST use the canonical deployment process: `scripts/docker-deploy.sh` with explicit `OPERATOROS_DEPLOY_DIR=/var/lib/operatoros/deploy` and `OPERATOROS_DATA_DIR=/var/lib/operatoros/data` overrides (see [ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md)).
 
-Preserve the existing requirements for:
+Mandatory deployment requirements:
 
-- Explicit production authorization.
-- CI-qualified release artifacts built by `.github/workflows/ci.yml`.
-- Artifact authentication and verification (`scripts/docker-deploy.sh verify`).
-- Exclusive deployment locking (`flock -n 200 "$deploy_dir/.deploy.lock"`).
-- Integrity-verified SQLite pre-deployment backup (`PRAGMA integrity_check`).
-- OperatorOS-specific Docker Compose project isolation (`-p operatoros`).
-- Runtime health and readiness verification (`/health`).
-- Existing Caddy reverse proxy and Tailscale ingress.
-- Preservation of unrelated OPRSERVER services.
+- Explicit production authorization and single-execution-context ownership.
+- CI-qualified, attested, immutable artifacts built by `.github/workflows/ci.yml` (MUST NOT build on production or deploy unqualified development builds).
+- Artifact authentication, checksum, and digest verification (`scripts/docker-deploy.sh verify`).
+- Exclusive deployment locking (`flock -n 200 "$deploy_dir/.deploy.lock"`) and maintenance boundary (`.maintenance_lock`); an operation MUST NOT remove another active operation's locks or independently restart intentionally stopped writers.
+- Writer exclusion and quiescence verification (`scripts/verify-writer-quiescence.py` — MUST NOT treat mere absence of SQLite `-wal`/`-shm` files as proof of quiescence).
+- Fresh consistent attachment-aware encrypted backup and independent disposable restore verification before schema migration.
+- Supported direct migration (`scripts/docker-deploy.sh migrate`) verifying schema, fingerprint, `PRAGMA integrity_check`, and `PRAGMA foreign_key_check`.
+- Exact release activation with OperatorOS Compose project isolation (`-p operatoros`), health/readiness verification (`/health`, `/ready`), Caddy/Tailscale ingress checks, and preservation of unrelated OPRSERVER workloads.
 
-Database-changing releases must explicitly establish supported source and target schema versions and migration execution behavior. Where an exact pre-migration recovery point is necessary, establish write quiescence before creating the recovery snapshot. Do not rebuild production artifacts directly from an unqualified development checkout. Do not deploy automatically merely because a PR has merged.
+Do not silently substitute newer commits, skip required migration gates, or introduce unnecessary intermediate releases when a direct supported migration exists. Do not deploy automatically merely because a PR has merged.
 
 ### G11 — Rollback and recovery safety
 
 Application rollback and database recovery are separate operations (see [database-operations.md](docs/runbooks/database-operations.md)).
 
-- An application rollback (`scripts/docker-deploy.sh rollback`) is permitted only when the previous release is compatible with the current database state.
+- Application rollback (`scripts/docker-deploy.sh rollback`) is permitted ONLY when schema compatibility between the prior release and current live database is verified (`scripts/verify-rollback-schema.py`).
 - Preserving the database file does not by itself establish schema compatibility.
 - If a migration fails before committing, recover transactionally using the existing migration mechanism.
 - If a new application release fails after a committed migration:
-  1. Preserve the current database.
+  1. Preserve the current database and all committed records.
   2. Roll back the application only when compatibility is verified.
-  3. Otherwise, enter a safe failure state and report the required recovery decision.
-- Never automatically restore an older production database over newer committed data.
+  3. Otherwise, hold `.maintenance_lock`, enter a safe failure state, and report `RECOVERY REQUIRED` with the exact required decision.
+- An automated or recovery procedure MUST NOT automatically restore an older production database over newer committed data, discard committed records, replace production with synthetic data, destructively revert schema changes, delete production attachments, or restart an incompatible release against a migrated database.
 - Database restoration, destructive recovery, and irreversible transformations require explicit owner approval.
 
 ### G12 — Git and repository discipline
@@ -361,9 +362,9 @@ Rules (see [documentation-system.md](docs/decisions/documentation-system.md)):
 - Add one user-facing `CHANGELOG.md` bullet under `[Unreleased]` for every PR. Add the PR number after GitHub assigns it.
 - Agent skills must reference authoritative repository documentation rather than maintaining independent copies of engineering policy.
 
-### G14 — Validation efficiency and quota conservation
+### G14 — Validation efficiency, evidence reuse, and quota conservation
 
-Use the existing validation tiers according to the actual change:
+Use existing validation tiers proportionate to the change:
 
 - **Documentation-only changes:** `mise run test:fast`, `bun .github/scripts/check-markdown-links.ts`, `bun .github/scripts/check-markdown-organization.ts`, and `bun .github/scripts/check-current-developer-docs.ts`. Do not run full release gates for doc-only edits.
 - **Fast iteration:** `mise run test:fast` (changed-path classifier).
@@ -372,26 +373,25 @@ Use the existing validation tiers according to the actual change:
 - **Full release / pre-merge:** `mise run check:full` and `hk check --all`.
 - **E2E verification:** Local smoke `timeout 300 make e2e-smoke` and `./scripts/verify-browser.sh`. `make e2e-full` is CI-only without explicit owner approval.
 
-Conservation rules:
-- Do not repeatedly execute expensive validation suites when relevant inputs have not changed.
-- Do not trigger CI for read-only inspection.
-- Do not repeat completed audits without new evidence.
-- Do not launch recursive agent reviews, background improvement loops, or repeated qualification cycles without a concrete failure or authorized requirement.
-- Quota efficiency must not be achieved by skipping mandatory safety gates.
+Evidence lifecycle and conservation rules:
+- Previously established evidence (unchanged qualified artifacts, verified provenance, synthetic migration/acceptance tests, approved host baselines, unchanged LUKS/recovery custody) SHOULD be reused and MUST NOT be rerun merely because a task moved to a new session or execution context.
+- Agents MUST revalidate when underlying state changes (release SHA, artifact identity, CI status, schema compatibility, production config, storage topology, security policy, recovery keys, or authorization scope).
+- Agents MUST NOT treat historical deployment reports as proof that current production state is unchanged, trigger CI for read-only inspection, repeat completed audits, or launch recursive review loops without a concrete defect.
+- Quota efficiency MUST NOT skip mandatory safety gates.
 
-### G15 — Multi-agent consistency
+### G15 — Multi-agent consistency and execution-context verification
 
-Antigravity, Codex, OpenCode, and future coding assistants must follow the same authoritative engineering rules.
+Antigravity, Codex, OpenCode, and future coding assistants MUST follow the same authoritative engineering rules.
 
-- `AGENTS.md` at repository root is the single shared repository policy entry point.
-- Server-level rules in `~/AGENTS.md` govern the host, storage locations, and service protection; repository `AGENTS.md` governs repository work and refines conventions without weakening host safeguards.
-- Nested instructions may specialize root policy for specific packages or tools, but must never weaken mandatory safety requirements.
-- Do not create independent or conflicting versions of the same guardrails across agent configurations.
+- `AGENTS.md` at repository root is the single shared repository policy entry point; server-level rules in `~/AGENTS.md` govern host boundaries without weakening repository safeguards.
+- Nested instructions MAY specialize root policy for specific packages or tools, but MUST NOT weaken mandatory safety requirements or maintain conflicting copies of guardrails.
+- When a task requires a specific execution tier or model, agents MUST establish it from reliable runtime or harness evidence rather than thread configuration, model self-identification, or intended settings alone. If the required tier cannot be verified, report the exact limitation before relying on its judgment; do not treat an execution-context limitation as an application defect or run repetitive context audits once established.
+- Agents MUST NOT claim independent verification of evidence merely supplied by another agent.
 - Repository instructions are behavioral controls, not substitutes for executable tests, operating-system permissions, or CI enforcement.
 
-### G16 — Owner authorization boundaries
+### G16 — Owner authorization boundaries and fail-closed escalation
 
-Explicit owner authorization is required before:
+Explicit owner authorization MUST be obtained before:
 
 1. Production deployment, rollback, or runtime mutation.
 2. Production database modification, restore, or reset.
@@ -402,80 +402,67 @@ Explicit owner authorization is required before:
 7. Changes to production network exposure or ingress routes.
 8. Removal of existing supported functionality.
 9. Bypassing established safeguards or CI gates.
-10. Any operation affecting unrelated OPRSERVER services or containers.
+10. Operations affecting unrelated OPRSERVER services, LUKS/crypttab/boot config, `/dev/sda3` quarantine/sanitization, or host reboots.
 
-If the requested implementation requires an unauthorized operation, stop and report the specific blocker. Do not interpret a general feature request as authorization for production changes.
+Fail-closed escalation protocol: if a mandatory gate fails, agents MUST stop before unsafe continuation and: (1) identify the exact failed prerequisite, command, or missing access/permission; (2) preserve committed data; (3) hold or recover a verified safe compatible state; and (4) report the smallest corrective action and exact required authorization—never vague blockers.
 
 ### G17 — Finite execution and stop conditions
 
-Every task must have a finite scope and clear acceptance criteria.
+Every task MUST have finite scope and clear exit criteria. Agents MUST stop and report when:
 
-Stop when:
+- The requested feature, consolidation, or deployment satisfies all applicable acceptance criteria and exit conditions (`PRODUCTION ACCEPTED`, `RELEASE GOVERNANCE STANDARDIZED`, or task checklist).
+- Or a confirmed blocking defect/authorization boundary prevents safe continuation (`DEPLOYMENT BLOCKED`, `RECOVERY REQUIRED`, `READY WITH CONFIRMED BLOCKER`).
 
-- The requested feature or fix is implemented.
-- Relevant regression tests pass.
-- Required validation passes.
-- Documentation is updated where necessary.
-- No unresolved critical defect remains within the authorized scope.
-
-Do not continue searching for unrelated improvements or initiate another improvement cycle without a new owner directive. If a critical blocker cannot be resolved within the authorized scope, report it clearly and request a decision.
+Agents MUST NOT initiate another optimization, audit, refactoring, CI qualification, or engineering program once exit conditions pass.
 
 ---
 
-## 4. Mandatory Workflow for Every Future Feature
+## 4. Standard Five-Phase Release Lifecycle
 
-All agents and contributors must follow this sequence:
+Future OperatorOS delivery follows five finite phases governed by **maximum necessary assurance, minimum necessary complexity**. Detailed CLI invocations belong in [COMMANDS.md](COMMANDS.md), [ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md), [database-operations.md](docs/runbooks/database-operations.md), and [release-bundles.md](docs/runbooks/release-bundles.md).
 
 ```mermaid
-flowchart TD
-    S1["Step 1: Understand<br/>(Scope, code, tests, schema)"] --> S2["Step 2: Assess Impact<br/>(Classify change & safeguards)"]
-    S2 --> S3["Step 3: Implement<br/>(Smallest safe change, reuse)"]
-    S3 --> S4["Step 4: Verify<br/>(Tiered tests, regressions, parity)"]
-    S4 --> S5["Step 5: Deliver<br/>(Docs, changelog, focused PR)"]
-    S5 --> S6["Step 6: Stop<br/>(Finite execution, no endless loops)"]
+flowchart LR
+    P1["Phase 1: Develop Feature"] --> P2["Phase 2: Merge Protected PR"]
+    P2 --> P3["Phase 3: Qualify Exact Release"]
+    P3 --> P4["Phase 4: Canonical Deployment"]
+    P4 --> P5["Phase 5: Production Acceptance"]
+    P5 --> STOP["Declare PRODUCTION ACCEPTED & Stop"]
 ```
 
-### Step 1 — Understand
-- Read the applicable `AGENTS.md` instructions.
-- Understand the requested feature or fix.
-- Inspect existing implementations and relevant tests.
-- Identify affected interfaces, database structures, and callers.
-- Determine whether a database migration is necessary.
+### Phase 1 — Develop Feature
+- **Scope & Impact:** Read applicable instructions, inspect callers/schemas/tests, reuse existing modules (G01, G02, G07, G09), and isolate work in clean `codex/` worktrees while preserving unrelated working-tree changes (G12). Do not redesign unaffected subsystems or add speculative abstractions.
+- **Implement & Verify:** Write additive migrations (`packages/db/src/manifest.ts`) and verify `mise run db:fresh` + upgrade/integrity checks when schema changes (G03, G04). Add focused regression tests, preserve auth/security boundaries (G06), update affected docs and `CHANGELOG.md` (G13), and pass proportionate local validation (`mise run test:fast`, `check:affected`, `hk check --all`) (G08, G14).
+- **Exit condition:** Scoped change is implemented, required validation passes, and PR is ready for review.
 
-### Step 2 — Assess impact
-Classify the change:
-- **Ordinary compatible feature:** Standard implementation and test coverage.
-- **Database-changing feature:** Requires versioned migration, fresh-parity, and upgrade verification (G03, G04).
-- **Compatibility-sensitive feature:** API DTO, mapper, contract drift, and consumer validation (G02, G07).
-- **Security-sensitive feature:** Auth, cookie, origin, proxy, or secret handling; positive/negative tests required (G06).
-- **Production-sensitive operation:** Deployment, backup, or runtime changes; requires explicit authorization (G10, G16).
-- **Breaking or architectural change:** Requires explicit owner decision (ADR) before implementation (G01, G16).
+### Phase 2 — Merge Protected PR
+- Verify exact reviewed PR HEAD, resolve blocking findings, confirm all required ruleset checks (`preflight`, `api`, `frontend`, `Select E2E scope`, `E2E full regression`, `E2E regression result`, `CodeQL`), preserve `--match-head-commit` squash discipline without `--admin`/`--no-verify` bypass, and verify resulting protected-main commit and post-merge CI (G12).
+- **Note:** Ordinary PR merge and CI pass do **not** qualify a release candidate or authorize production deployment.
+- **Exit condition:** Accepted change exists on protected `main` with established SHA and passing post-merge checks.
 
-Apply only the additional safeguards relevant to that classification.
+### Phase 3 — Qualify Exact Release
+- Build one immutable candidate archive in CI for the approved main SHA (`gh workflow run ci.yml --ref main -f docker_qualification=true`)—MUST NOT build production artifacts on OPRSERVER or substitute newer main commits (G10, G16).
+- Verify archive SHA-256, API and Caddy image config digests, SPA `client/release.json` integrity, GitHub build provenance attestation, Trivy/SBOM evidence, isolated consumer consumption, and schema/migration compatibility (`scripts/docker-deploy.sh verify`). Reuse valid unchanged candidates without rerunning CI (G14).
+- **Exit condition:** An immutable CI-built artifact for the exact target SHA has passed all qualification gates.
 
-### Step 3 — Implement
-- Make the smallest sufficient change.
-- Reuse existing modules, components, and patterns.
-- Add versioned migrations when necessary (additive, expand-migrate-contract).
-- Preserve existing functionality.
-- Add or update focused tests.
+### Phase 4 — Canonical Deployment
+- Before mutation: complete the deployment preflight (release identity, live server/release/schema, `OPERATOROS_DEPLOY_DIR`/`OPERATOROS_DATA_DIR`, health, LUKS2 storage & UID `1000:1000` isolation, `>= 10 GiB` reserve, recovery prerequisites, and explicit owner authorization). See [ubuntu-server-deployment.md](docs/runbooks/ubuntu-server-deployment.md).
+- **Exclusivity:** Execute under one responsible context holding `.deploy.lock` (and `.maintenance_lock` during migration); MUST NOT run parallel mutations or restart stopped writers.
+- **Without schema migration:** Run `scripts/docker-deploy.sh deploy` (validates schema compatibility, saves `0600` pre-deploy snapshot in `.snapshots/`, switches release cleanly, verifies health). Do not run unnecessary migrations.
+- **With schema migration:** Run `scripts/docker-deploy.sh migrate` over the direct supported migration path (stops writers + `--restart=no`, checks `scripts/verify-writer-quiescence.py`, creates attachment-aware encrypted backup + independent `restore-disposable`, runs `migrate-operational` + `validate`, activates release, verifies health). MUST NOT bypass writer quiescence or encrypted backup/restore verification.
+- **Recovery:** Application rollback (`scripts/docker-deploy.sh rollback`) is allowed ONLY when schema compatibility is verified; on post-migration failure, preserve the database and report `RECOVERY REQUIRED` (G11).
+- **Exit condition:** Exact qualified artifact is active under `scripts/docker-deploy.sh`, expected schema is established, and `.maintenance_lock` is cleared.
 
-### Step 4 — Verify
-- Verify the requested new behavior.
-- Verify affected existing behavior.
-- Verify database migration and data preservation when applicable (`mise run db:fresh`).
-- Run the appropriate validation tier (`mise run test:fast`, `mise run check:affected`, etc.).
-- Fix failures attributable to the change.
+### Phase 5 — Production Acceptance
+- Verify exact deployed release SHA/digests, schema version/fingerprint, `PRAGMA integrity_check` & `foreign_key_check`, existing record/attachment preservation, auth vs unauthenticated API separation (MUST NOT infer authorization from a `200` on an unauthenticated read route), targeted feature checks, CORS, Tailscale ingress, backup containment, all unrelated OPRSERVER workloads, `>= 10 GiB` free space, and untouched repo working tree.
+- MUST NOT create synthetic business records, dummy documents, or test personnel in production; reuse synthetic CI evidence for mutation-heavy scenarios (G05, G08).
+- **Exit condition:** Acceptance criteria pass, report **PRODUCTION ACCEPTED** (reporting any deferred host-security limitations separately), and **STOP** (G17).
 
-### Step 5 — Deliver
-- Keep changes focused on explicit files.
-- Update affected documentation and add a `CHANGELOG.md` entry under `[Unreleased]`.
-- Follow the Git and PR workflow (`CONTRIBUTING.md`).
-- Report verification evidence and limitations.
-- Leave production untouched unless separately authorized.
+### Standard Deployment Prompt Contract
+Routine production deployments SHOULD require only: (1) exact approved release SHA, (2) target server, (3) deployment scope (`deploy` vs authorized non-destructive `migrate` to `<target-schema>`), and (4) any explicit exceptions/restrictions. All verification, backup, quiescence, smoke-test, and recovery rules are inherited automatically from `AGENTS.md` and canonical runbooks without authorizing unrelated host changes.
 
-### Step 6 — Stop
-Once the acceptance criteria are satisfied, stop. Do not search for speculative follow-ups or start unrequested refactoring.
+### Standard Operational Reporting Format
+Deployment reports MUST state: approved release SHA, previous release, qualified artifact & provenance verification, previous/resulting schema, backup & disposable restore evidence, migration outcome (or `NOT REQUIRED`), record/attachment preservation, health/auth/CORS/ingress & feature smoke checks, existing workload health, remaining storage reserve, repo preservation, deferred host-security limitations separately, and one exact final disposition: **`PRODUCTION ACCEPTED`**, **`DEPLOYMENT BLOCKED`**, or **`RECOVERY REQUIRED`**.
 
 ---
 
@@ -527,6 +514,7 @@ Guardrails are enforced through existing executable mechanisms in the repository
 
 ### Confirmed Enforcement Gaps
 
-- **Non-critical gap:** Automated cross-version API client schema diffing is partially handled by OpenAPI drift checks; contract version deprecation warnings currently rely on code review. (Deferred for future feature work).
-- **Non-critical gap:** Automated schema rollback simulation across arbitrary non-consecutive migration versions is covered by individual migration tests, but full multi-step rollback matrices rely on manual test execution when complex migrations are proposed. (Deferred for future migration-specific work).
-- **Critical gap:** None identified that would permit unauthorized production modification or data loss; all production mutation paths require explicit interactive authorization, exclusive locking, and verified pre-deploy backups.
+- **Runtime script default root gap:** `scripts/docker-deploy.sh` defaults `OPERATOROS_DEPLOY_DIR` and `OPERATOROS_DATA_DIR` to legacy `/mnt/podman-data/operatoros/{deploy,data}` when omitted; production operators MUST supply `/var/lib/operatoros/{deploy,data}` explicitly until defaults are separately updated.
+- **Host & external preflight checks:** `scripts/docker-deploy.sh` does not programmatically verify off-host backup/key custody, LUKS auto-unlock hardening state, `ALLOWED_ORIGINS` vs external Tailscale TLS, or non-OperatorOS containers; these rely on documented operator preflight and acceptance checks.
+- **Endpoint auth-profile nuance:** Unauthenticated probes MUST test explicit protected endpoints (such as `/api/auth/me`, `/api/staff`, `/api/inventory/*`, `/api/admin/backups`) and authenticated workflows separately rather than inferring global authorization from HTTP `200` responses on SPA shells or open read endpoints (e.g., `GET /api/students` observed at S56).
+- **Non-critical contract/matrix gaps:** Automated cross-version API client schema diffing is partially handled by OpenAPI drift checks (`bun run check:contracts`), and full non-consecutive schema rollback matrices rely on targeted migration tests when complex migrations are proposed.

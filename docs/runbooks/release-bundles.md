@@ -1,9 +1,12 @@
 ---
 status: current
-last_reviewed: 2026-11-22
+last_reviewed: 2026-11-26
 ---
 
 # CI release bundles
+
+> [!NOTE]
+> For canonical Docker Compose production releases (`Phase 3` in [AGENTS.md](../../AGENTS.md)), use `-f docker_qualification=true` on `main` and deploy via `scripts/docker-deploy.sh` ([Ubuntu server deployment](ubuntu-server-deployment.md)). Protected-main run [45779081840](https://github.com/daoistmadness/operatoros/actions/runs/45779081840) satisfied all full validation, E2E, Compose qualification, Trivy/SBOM scan, isolated consumer, and SLSA provenance gates for S56 (`5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6`). Legacy `release-bundle.py` and Podman `operatoros-deploy.sh` sections below are retained solely as superseded historical records.
 
 ## Create a candidate
 
@@ -126,9 +129,7 @@ authorization.
 
 ## Prepare a Docker host change
 
-Use this procedure only after Docker support is accepted and an operator has
-authorized a host change. The current branch and its candidate archive do not
-authorize production use.
+Use `scripts/docker-deploy.sh` ([Ubuntu server deployment](ubuntu-server-deployment.md)) as the single canonical Docker deployment interface after explicit production authorization. The manual lower-level commands below document the underlying verification steps performed by that wrapper.
 
 Download the archive and checksum sidecar from the same successful workflow
 run. Set `SOURCE_SHA` to that run's full source commit SHA. Verify the checksum

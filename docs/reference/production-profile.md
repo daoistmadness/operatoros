@@ -1,13 +1,13 @@
 ---
 status: current
-last_reviewed: 2026-11-24
+last_reviewed: 2026-11-26
 ---
 
 # Production origin and cookie profile
 
 Environment profile for the canonical Docker Compose production deployment on
 OPRSERVER with Elysia API and Caddy reverse proxy over Tailscale HTTPS.
-The application runtime is local-first SQLite S5.4 with persistent volume mounts.
+The application runtime is local-first SQLite (current schema S5.6, `20261126_s56`) with persistent volume mounts.
 
 The defaults in `apps/api/src/config.ts` are loopback-oriented. A LAN, hostname,
 or HTTPS deployment must set the variables below explicitly; the origin checks
