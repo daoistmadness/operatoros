@@ -3,11 +3,11 @@
   "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "3716ae3064bac9363fd7f65e30c964d6aaeb6811148b7055ed78556aa1b02aa9",
+      "fingerprint": "09df70cdae9a11d2f539853a25e16f3dc5318f18e384f729fbaaef8da59347d9",
       "snapshot": {
         ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "dac52da0105cc71d56cec7bccd189b88e683a967ba1835eda6153c70268bb4d6",
+        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
         "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
@@ -44,22 +44,19 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "Standardized release-lifecycle governance and runbook consolidation preserve existing Elysia framework guidance and link canonical AGENTS.md/security-model.md policies.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "42862cb60f1193714af5daec5444fa99f3f086e774fb6726961e8a781a0e0c6f",
+      "fingerprint": "1f312ef3c2a1d5487d639434fc8972889e24a0cb39fdf13298c3223032cc6e28",
       "snapshot": {
         ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "dac52da0105cc71d56cec7bccd189b88e683a967ba1835eda6153c70268bb4d6",
+        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
         "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -99,14 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "Governance and deployment runbook consolidation does not expand Elysia skill coverage or planning artifacts.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -1777,7 +1771,7 @@
       },
       "head": "5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6",
       "outcome": "out-of-scope",
-      "reason": "This exact process-identity adjustment lets the managed development runtime recognize its backend from workspace-root CWD. It does not change Elysia APIs or the framework skill\u2019s coverage.",
+      "reason": "This exact process-identity adjustment lets the managed development runtime recognize its backend from workspace-root CWD. It does not change Elysia APIs or the framework skill’s coverage.",
       "evidence": [
         "scripts/operatoros-dev-runtime.ts; scripts/tests/dev-runtime.test.ts; 44/44 runtime matcher tests passed in prior prototype; commit 5cd0f7b459ee19c8a20bb266cd3371b241f7ddd6."
       ]
@@ -2970,18 +2964,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "2d38a86aaaf5d52d9c29cced751ea2ff4386bda7e1d5c531018476cad61e54bb",
+      "fingerprint": "3df4f6ca299ab9eb57ecd933f25f4d83ea16b9c09da8acbee9d1a71bba12e2eb",
       "snapshot": {
-        "CHANGELOG.md": "fdaf658fb620b4c30262d321967ed58a6b5b117053c96910a64afe5d73ce11c4"
+        "CHANGELOG.md": "057717834693d5c0ad22a08c8f7b2ec987d42639414bcdac0e2e94f348b9214d"
       },
-      "head": "e6514f3dfc12a489fbf71e3d26b871ef7ff0f82b",
+      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
       "outcome": "no-change",
-      "reason": "Added PR #423 reference to CHANGELOG.md Unreleased entry without modifying Elysia skill guidance.",
+      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: CHANGELOG.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
       ]
     },
     "source:COMMANDS.md": {
@@ -10041,7 +10032,7 @@
       },
       "head": "deceb0c634491a649a3c1ec19e08bcb3d196cf86",
       "outcome": "no-change",
-      "reason": "The follow-up workflow edit only retains the finalizer\u2019s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
+      "reason": "The follow-up workflow edit only retains the finalizer’s bounded failure JSON in the existing seven-day diagnostic artifact; it does not change app behavior, developer guidance, or planning records.",
       "evidence": [
         "Changed: scripts/tests/test_release_bundle.py at deceb0c634491a649a3c1ec19e08bcb3d196cf86"
       ]
