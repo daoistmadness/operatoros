@@ -8734,15 +8734,15 @@
       ]
     },
     "source:e2e/smoke/web/employee-management.spec.ts": {
-      "fingerprint": "5517ea492712623f55f13ebec8d0db8e6353f7536f39d741be863a96bd08e610",
+      "fingerprint": "3cb38faad2d4b9a1c57d21200b80f9e953b2c1d57d52bb70f1d71bed51a26e35",
       "snapshot": {
-        "e2e/smoke/web/employee-management.spec.ts": "68405c205bf1a2fdf10ee367c88e361e41c2edf2d6e17e4990de6eb8e303abb1"
+        "e2e/smoke/web/employee-management.spec.ts": "30f8721f0b10dc3b3b1172595549399cb1b8937dbb3855fb3d2c7826cde4f375"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "84025febcbf5aeaeac565d588e74782fc97df4bc",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "The Staff browser smoke exercises the existing authorized profile and its PTK API. No agent skill guidance changed.",
       "evidence": [
-        "Changed: e2e/smoke/web/employee-management.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/employee-management.spec.ts at 84025febcbf5aeaeac565d588e74782fc97df4bc"
       ]
     },
     "source:e2e/smoke/web/management-review-attendance-export.spec.ts": {
