@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-28
 ---
 
 # Ingestion dependency strategy
@@ -46,9 +46,12 @@ in parse-only trials was 70 MiB (69 to 72) for direct XLSX and 47 MiB (47 to
 Worker. Sampling is process-wide and can miss brief peaks.
 
 The measured 100-row files were 9.7 KiB (`.xlsx`) and 20 KiB (`.xls`); the
-5,000-row files were 153 KiB and 791 KiB. A 64 KiB input threshold keeps the
-small path direct and sends the measured large path to a Worker. Files below
-the threshold do not pay Worker startup cost.
+5,000-row files were 153 KiB and 791 KiB. At the time of this benchmark, a
+64 KiB input threshold kept small files on the direct path and sent larger
+files to a Worker. That routing was superseded by PR #435: production `.xls`
+and `.xlsx` reads now use a short-lived parser subprocess regardless of input
+size. These parse and route timings are historical measurements and do not
+describe the current subprocess path.
 
 ## SQLite staging measurements
 
@@ -70,11 +73,14 @@ trials recorded 48 to 64 authenticated pings. Every preview and ping returned
 HTTP 200.
 
 The full preview measurements use the authenticated `/api/uploads/preview`
-route and include Worker parsing, staging, response serialization, body read,
-and client JSON parse. The response was 1,890,639 bytes for XLSX and 1,890,638
-bytes for XLS. Body read and JSON parse time did not materially change. Peak
-RSS growth for the isolated stage case increased by 2.2 MiB for XLSX and
-2.7 MiB for XLS.
+route and include the then-current Worker parsing, staging, response
+serialization, body read, and client JSON parse. The response was 1,890,639
+bytes for XLSX and 1,890,638 bytes for XLS. Body read and JSON parse time did
+not materially change. Peak RSS growth for the isolated stage case increased
+by 2.2 MiB for XLSX and 2.7 MiB for XLS. These route-level figures predate the
+current parser subprocess path and are not current route-latency or capacity
+evidence. The transaction batching and synthetic database staging measurements
+remain historical evidence for that isolated database operation.
 
 To attribute the stage stall, profile the 5,000-row stage cases over five trials with:
 
@@ -113,16 +119,15 @@ move parsing, approval, audit, retry, or commit work and adds no schema or
 service. The 10 ms sampler can miss brief memory or event-loop peaks; these are
 local synthetic measurements, not a latency guarantee.
 
-## Worker boundary and limits
+## Historical Worker boundary and current parser path
 
-Large attendance workbook parsing runs in a Bun Worker. Overlapping large
-requests share a Worker for that active burst; it is terminated when the
-burst finishes. The input `ArrayBuffer` is transferred after the route hashes
-it, and the returned row data is structured-cloned. A 30-second timeout
-terminates an unresponsive Worker and rejects its pending parses. No staging,
-SQLite, authorization, audit, retry, or commit work moved into the Worker.
+The measured implementation used a Bun Worker for large attendance workbook
+parses. Its behavior and measurements are historical: production parsing now
+uses the subprocess admission and watchdog path described in
+[`architecture/excel.md`](../architecture/excel.md). No staging, SQLite,
+authorization, audit, retry, or commit work moved into that parser boundary.
 
-Bun documents its Worker API as experimental, so runtime upgrades must rerun
-the benchmark and `.xls` and `.xlsx` parity tests. Revisit the 64 KiB boundary when
-representative import sizes change. The benchmark results are local
-measurements, not a latency guarantee.
+The benchmark results are local measurements, not a latency guarantee or an
+approved business-capacity envelope. Re-run the benchmark before using these
+figures to assess the current parser path. Keep `.xls` and `.xlsx` parity tests
+when changing their readers or runtime.

@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
 # Security model
@@ -21,6 +21,19 @@ database semantics.
   `Forwarded` are ignored unless `TRUSTED_PROXY_ADDRESSES` lists the exact
   direct peer IP. A limited login returns 429 and `Retry-After` without
   revealing account status.
+
+### Legacy student-route exception
+
+`GET /api/students` remains an explicit limited open-read endpoint for
+compatibility. It returns only the legacy student ID, name, jenjang, and class
+fields. Other routes in that legacy route family require the existing student
+or attendance capability. Staff attendance summaries and histories are
+restricted to enrollment and attendance dates inside the staff member's active
+class assignments. Summary totals for reported absence reasons are restricted
+to the recorded class and month when the enrollment and assignment overlap that
+month. Student creation and class mutations require their existing create/edit
+capabilities. A successful response from the limited directory route does not
+imply that other API routes are public.
 
 ## CSRF and CORS
 
@@ -139,3 +152,7 @@ Distinguish clearly between:
 ### Credential exposure incident handling
 
 Never place encryption keys, session secrets, personal records, or private document contents in commands, logs, chat messages, or reports. Record key identifiers (`key_id`), artifact filenames, and SHA-256 checksums instead. If an active credential is accidentally exposed, treat it as a targeted secret rotation incident under [the rotation runbook](../runbooks/secret-rotation.md) preserving `BACKUP_ENCRYPTION_PREVIOUS_KEYS` for historical backup recoverability, without triggering an unrelated infrastructure redesign.
+
+The previously recorded backup-encryption-key exposure concern remains deferred
+by the owner. The current key configuration is retained; this deferral does not
+resolve or reduce the concern. No key material belongs in this document.

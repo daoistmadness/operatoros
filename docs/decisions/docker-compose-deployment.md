@@ -1,19 +1,19 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
-# Docker Compose deployment source-of-truth candidate
+# Docker Compose deployment architecture
 
 ## Status
 
-Accepted on 2026-11-24 and established in production on OPRSERVER with S56 (`20261126_s56`, release `5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6`, CI run `45779081840`). Docker Engine and Docker Compose are the single
+Accepted on 2026-11-24 and established in production on OPRSERVER with S56 (`20261126_s56`, release `5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6`, CI run `45779081840`). This records the last documented production acceptance; current source targets S57 (`20261127_s57`) and does not imply production has migrated. Docker Engine and Docker Compose are the single
 canonical production container deployment architecture for OperatorOS on OPRSERVER.
 Production runs under UID/GID 1000:1000 with Caddy reverse proxy, Tailscale HTTPS
-ingress, and persistent LUKS2-backed SQLite storage (current schema `20261126_s56`). Podman and Quadlet alternatives
+ingress, and persistent LUKS2-backed SQLite storage (last documented production schema `20261126_s56`; current source target `20261127_s57`). Podman and Quadlet alternatives
 are discontinued. Native Bun is the single canonical development runtime. Ongoing preflight, migration, and acceptance rules live in [the Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md).
 
-## Candidate definition
+## Canonical source files
 
 The reviewed files are `deploy/docker/docker-compose.yml`,
 `deploy/docker/Caddyfile`, and `deploy/docker/api.env.example`. Compose is a
@@ -62,50 +62,20 @@ runner environment.
 
 Protected-main result: [CI run 44982611327](https://github.com/daoistmadness/operatoros/actions/runs/44982611327) qualified source `99574ecffe84d470e19ab374f3dc7804e158bf63`. Full release validation, full E2E, Docker Compose deployment/rollback, and protected-main attestation passed. Artifact `14738472380` is named `operatoros-docker-candidate-99574ecffe84d470e19ab374f3dc7804e158bf63-44982611327-1`; its archive SHA-256 is `6135be84f7ea683a4b106310a8b69ca8c92a6ce624f0bd2567119b0d9ae4e580`. The sanitized report records Bun 1.4.5, SQLite 3.54.1, FTS5 enabled, `RESOLVED_BY_FIXED_VERSION`, and verified cleanup. The exact archive checksum and GitHub provenance were also verified locally against the repository workflow, `refs/heads/main`, and the source SHA.
 
-The Docker selector skips the separate Manual release bundle job. PR #400 adds
-Docker-specific Trivy and CycloneDX reports for the exact API and Caddy image
-config digests, stores the report hashes in the checksummed Docker archive, and
-gates protected-main attestation on a separate GitHub-hosted Compose consumer.
-Feature-ref transfer archives expire after one day and receive no attestation.
-These new checks are not verified until the changed workflow passes on a
-protected-main run. The current candidate's rollback exercised synthetic S5.4
-data and did not establish recovery after a live process or host failure. No
-workflow run qualifies the target host or authorizes deployment.
+The qualification details and run above are historical evidence for their
+recorded source SHA. The current workflow and its required candidate evidence
+are defined by [CI](../../.github/workflows/ci.yml) and the
+[release-bundle runbook](../runbooks/release-bundles.md). A candidate qualifies
+only its exact source SHA and synthetic runner environment. It does not
+establish current target-host state or authorize deployment.
 
-## Acceptance still required
+## Operational boundary
 
-The repository template, candidate artifact, and CI rehearsal do not establish
-the target host image identity or production acceptance. Before any production
-use:
-
-1. The owner must explicitly accept Docker Compose and reconcile `AGENTS.md`,
-   this draft, the Podman proposal, and the Ubuntu runbook. Keep Docker
-   unsupported until that decision is recorded.
-2. An authorized operator must identify the Ubuntu host and verify the rendered
-   Compose configuration, exact API/Caddy image identities, loopback binds,
-   firewall, and HTTPS ingress. The current Caddyfile speaks HTTP; secure
-   cookies and exact `ALLOWED_ORIGINS` / proxy trust require a verified HTTPS
-   path.
-3. Verify host full-disk encryption, OS account isolation, private environment
-   file and data-directory modes, and Docker daemon access. The rootful Docker
-   socket is host-root-equivalent: do not expose it remotely or mount it into
-   application containers; limit host access to named operators.
-4. Authenticate a fresh encrypted backup and restore it into an independent
-   disposable root. Record key recovery, off-host custody, retention, RPO, RTO,
-   and a named restore owner. A checksum or backup status alone is insufficient.
-5. Record an authorized S4.3-to-S5.4 migration plan, fresh pre-change backup,
-   rollback criteria, and the separate migration approval. Startup validates
-   SQLite and does not migrate it.
-6. Pass an isolated Ubuntu rehearsal with synthetic data for boot/restart,
-   HTTPS and browser authentication, encrypted backup and independent restore,
-   cross-release rollback with a post-backup sentinel, and cleanup. Production
-   authentication requires an authorized operator session.
-7. Verify monitoring coverage, alert delivery, named alert ownership, disk and
-   log thresholds, and retention. Then record a separate change window and
-   explicit production GO.
-
-No target Docker daemon, production application, database, backup, listener,
-or monitoring state was inspected for this review. The hosted rehearsal used
-only synthetic data. It is not a backup/restore, full disaster-recovery, or
-production rollback test. Production resources remain outside this draft's
-authorization.
+Docker Compose acceptance was recorded in the status above. The older
+pre-acceptance checklist and candidate rehearsal are not current operational
+instructions. The [Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md)
+is the single authority for exact artifact verification, host preflight,
+backup and migration prerequisites, deployment, rollback, and production GO.
+Each release still requires its own applicable authorization and exact
+candidate qualification. This decision does not assert current host or
+production state.

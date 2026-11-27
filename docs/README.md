@@ -104,7 +104,7 @@ Dated session logs and the reusable session template are exempt from the index.
 - [Audit log rotation and retention](runbooks/log-rotation.md) — Draft.
 - [Elysia Runtime Operations](runbooks/runtime-operations.md).
 - [Secret rotation runbook](runbooks/secret-rotation.md).
-- [Ubuntu server deployment runbook](runbooks/ubuntu-server-deployment.md) — Canonical Docker Compose deployment, preflight, migration, and acceptance runbook (S5.6 / `20261126_s56` accepted on OPRSERVER).
+- [Ubuntu server deployment runbook](runbooks/ubuntu-server-deployment.md) — Canonical Docker Compose deployment, preflight, migration, and acceptance runbook; last documented production acceptance is S5.6 (`20261126_s56`), while current source targets S5.7.
 
 ## Audits
 

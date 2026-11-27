@@ -1,6 +1,6 @@
 ---
 status: draft
-last_reviewed: 2026-11-01
+last_reviewed: 2026-11-28
 ---
 
 # Offline install and start
@@ -75,8 +75,8 @@ repository. This sequence uses only local state.
 
    ```bash
    export OPERATOROS_DATA_DIR="$(mktemp -d /tmp/operatoros-offline.XXXXXX)"
-   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261027_s54
-   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261027_s54
+   bun run db:bootstrap --data-dir "$OPERATOROS_DATA_DIR"   # -> BOOTSTRAPPED 20261127_s57
+   bun run db:validate --data-dir "$OPERATOROS_DATA_DIR"    # -> VALID 20261127_s57
    ```
 
    The CLI usage is `<bootstrap|migrate-existing|validate> --data-dir

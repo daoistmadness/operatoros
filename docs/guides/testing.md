@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-23
+last_reviewed: 2026-11-28
 ---
 
 # Test strategy
@@ -60,7 +60,7 @@ their own temporary databases; Playwright also generates its XLSX fixtures,
 uses dynamic ports and readiness checks, and removes successful run artifacts.
 Failure artifacts are retained for diagnosis. Protected-path guards are tested
 with synthetic path strings; no tier reads, hashes, snapshots, or copies the
-protected S4.3 database.
+production database.
 
 Turbo tasks run with a strict environment. `TMPDIR` is passed through so test
 helpers that use Node's `tmpdir()` and the E2E launcher follow the caller's
@@ -98,7 +98,7 @@ Within that verified scope, tests may cover read-only health, authentication
 and logout using a synthetic account, browser E2E, security tests, SQLite
 bootstrap/validation, and restore of a synthetic fixture to a separate
 disposable destination. A disposable fresh database should report
-`BOOTSTRAPPED 20261027_s54` and `VALID 20261027_s54`. Never restore an
+`BOOTSTRAPPED 20261127_s57` and `VALID 20261127_s57`. Never restore an
 operational snapshot to staging or use real student data. Do not infer a remote
 test command from the local suite: `make e2e-smoke` creates and owns its own
 local stack, temporary database, credentials, ports, and cleanup; it is not a

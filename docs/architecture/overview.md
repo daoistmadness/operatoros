@@ -1,15 +1,16 @@
 ---
 status: current
-last_reviewed: 2026-10-31
+last_reviewed: 2026-11-28
 ---
 
 # Architecture overview
 
 OperatorOS is an offline-first school attendance and academic analytics system.
-Its current local runtime is a native Elysia API, a React application in the
-browser, and SQLite. PostgreSQL is unsupported. A single-host Podman deployment
-is proposed but remains unsupported until its decision and authorized Ubuntu
-rehearsal pass.
+Its local development runtime is a native Elysia API, a React application in
+the browser, and SQLite. PostgreSQL is unsupported. Production uses the
+accepted Docker Compose architecture documented in
+[`docker-compose-deployment.md`](../decisions/docker-compose-deployment.md)
+and the [Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md).
 
 ## Workspace ownership
 
@@ -29,8 +30,9 @@ mode. The Start Vite plugin builds the route tree from `apps/web/src/routes/`;
 The app remains client-rendered and proxies same-origin API calls to the
 separately supervised Elysia process. See the
 [TanStack Start SPA decision](../decisions/tanstack-start-spa.md) for the
-hosting and ownership boundaries. The [Podman deployment proposal](../decisions/podman-deployment.md)
-describes a draft server topology and does not authorize deployment.
+hosting and ownership boundaries. The historical
+[Podman deployment proposal](../decisions/podman-deployment.md) is superseded
+and does not describe a supported runtime.
 
 ## Request and data flow
 

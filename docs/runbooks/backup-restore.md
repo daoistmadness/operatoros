@@ -1,11 +1,11 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
 # Backup and Restore Security
 
-This document describes the supported backup and restore paths for local, file-backed SQLite deployments. The authenticated API and the local CLI share the encrypted backup format but use different authorization and audit flows. PostgreSQL and container-backed database restore are not supported.
+This document describes the supported backup and restore paths for file-backed SQLite deployments. The authenticated API and local CLI share the encrypted backup format but use different authorization and audit flows. PostgreSQL and database-server containers are unsupported. Production SQLite backup or restore must follow the canonical Docker deployment procedures in the [Ubuntu server runbook](ubuntu-server-deployment.md); this guide does not authorize an operational restore.
 
 ## Backup creation
 
@@ -240,10 +240,11 @@ The safeguards and streaming behavior above are the current supported baseline.
   request, and SQLite snapshot serialization still uses a database-sized
   buffer. The synthetic measurements above record observed performance; they
   are not thresholds or SLAs.
-- **Future, authorization-gated:** a production recovery rehearsal remains
-  unauthorized. The protected operational database stays at S4.3 pending its
-  separate authorization. This review performed no production restore or
-  migration.
+- **Historical as of 2026-10-23:** a production recovery rehearsal was
+  unauthorized and the operational database was recorded as S4.3. That dated
+  observation is not a current production-state claim; the latest documented
+  production acceptance is recorded in the [database operations runbook](database-operations.md).
+  This review performed no production restore or migration.
 - **Theoretical:** further caching or memory tuning has no reproducible workload
   evidence in this review and has no established threshold.
 - **Next:** no reproducible current backup/recovery defect surfaced in the

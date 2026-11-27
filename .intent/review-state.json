@@ -3,18 +3,18 @@
   "baseline": "90c9821e306f4de24112891dd01cfd5d8e8dc64e",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
-      "fingerprint": "09df70cdae9a11d2f539853a25e16f3dc5318f18e384f729fbaaef8da59347d9",
+      "fingerprint": "cd7e2b712bc851b11a095f29710b4222fe21bd49756a32abf843837072009829",
       "snapshot": {
         ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
+        "AGENTS.md": "1254ac7812e4d3f721bf079e974123d574867c29b207ad85ffaf27c85de26bc8",
         "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "apps/api/package.json": "313ec67a243563a781fa90f973f88dc712b35b3bd84d8a1e11f87ba108e2b769",
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "8e85450aa32bad808bc907440ea6145d070ed752bb51390ae74c3675cca08b74",
-        "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
-        "docs/reference/security-model.md": "10b523a46e1b9ac67e902dde1e8f8a832bca44fd5c2dc9312303e47fef0ae076",
+        "docs/guides/testing.md": "93fbf9f0197a55d594d69901ac4390ee5d33a3116887924afe7b7b4670d65ec3",
+        "docs/reference/security-model.md": "91c2037d81f4eceb114a243b215f3e19a99a910a7bdfc3f4a221290b449c2d52",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -44,19 +44,19 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
+        "Changed: docs/guides/testing.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "planning:_artifacts": {
-      "fingerprint": "1f312ef3c2a1d5487d639434fc8972889e24a0cb39fdf13298c3223032cc6e28",
+      "fingerprint": "5a94e9443b2ed8cbad5b8114d890ecc0794d51c40e18dbb8824f0110e47b8db3",
       "snapshot": {
         ".github/CI.md": "423974b535cfe19f95a42ab75d6c926e4b9fbe9a133a4eb3053ad72c8c766ee7",
         ".github/workflows/ci.yml": "a7fc3b831b519b9c378607b57ee25aab08fc3574455877d2c84c33a17f5271aa",
-        "AGENTS.md": "86a53dfe650adbf922f5deec3e69fa6d8cea500430bb5382e7b3a0477ef4c3ed",
+        "AGENTS.md": "1254ac7812e4d3f721bf079e974123d574867c29b207ad85ffaf27c85de26bc8",
         "CONTRIBUTING.md": "88578d2d4fc593d4bbb292a71adf10a7633eafce51eff3819e432785deb382c1",
         "_artifacts/domain_map.yaml": "bd53b60f161e84595ddbdb7693be47141c598e70e4bcd89472069bb3a8d620b2",
         "_artifacts/skill_spec.md": "55a607c4a2fc74129014c9026c2b96e23f3bcfd662a7d1e445727faef74ef90f",
@@ -65,8 +65,8 @@
         "bun.lock": "f1b2983ec21f67a1a55294e3985c25729188310ec93bbef8176b60b45736d6ef",
         "docs/architecture/change-safety-golden-path.md": "48a74183a9ab5d62e2a7bf1fad1439071422b35a63b47106876ebc837b86a87a",
         "docs/guides/development.md": "8e85450aa32bad808bc907440ea6145d070ed752bb51390ae74c3675cca08b74",
-        "docs/guides/testing.md": "d76ace00a6f01826810c5a571f25ab1b4ca29c661c840753928d25f6e8ac526c",
-        "docs/reference/security-model.md": "10b523a46e1b9ac67e902dde1e8f8a832bca44fd5c2dc9312303e47fef0ae076",
+        "docs/guides/testing.md": "93fbf9f0197a55d594d69901ac4390ee5d33a3116887924afe7b7b4670d65ec3",
+        "docs/reference/security-model.md": "91c2037d81f4eceb114a243b215f3e19a99a910a7bdfc3f4a221290b449c2d52",
         "package.json": "1affa1d69468002bd216f4874d9c2a93bc3f2cff6a8d29b63ff5cc89ab4b9456",
         "packages/agent-skills/README.md": "f25658071cbaebe6a4842139afbae9417829b24bdc1c72cd307c03091649c993",
         "packages/agent-skills/docs/elysiajs.md": "990fa58df5bb713c1f989f7ff3eba17b57a61c1df5138956e087bc52ddc3bb0a",
@@ -96,11 +96,11 @@
         "packages/agent-skills/package.json": "c0aa4e1f1c138924b9d710eca6f0539aaab70615f7e4507429a073bd30709933",
         "packages/agent-skills/skills/elysiajs/SKILL.md": "7f0b3103f9ffe9c0d68b9fc731ac6531a470781943de8b2a343c3afc577ae263"
       },
-      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Changed: AGENTS.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
+        "Changed: docs/guides/testing.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:packages/agent-skills/src/index.ts": {
@@ -589,18 +589,15 @@
       ]
     },
     "source:README.md": {
-      "fingerprint": "c4bf4844ec0cb5538d7b2249319ea8432b6d81fae6def03f93c13f570dd0a671",
+      "fingerprint": "8216c580d8a1fa9c2cd8de3aa6d5b00ebc3d47bea30aa6e99f8b8809b6544995",
       "snapshot": {
-        "README.md": "c268a99c12f739e741db317d92379450adac71d56f8b4c9b3c0cbfd343cc4758"
+        "README.md": "3e599c4f6397c031605a47bf3ae58e8da97ecfda1f086c6c134550f515b828c4"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: README.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:apps/api/src/backup-cli-runner.ts": {
@@ -1481,15 +1478,15 @@
       ]
     },
     "source:apps/api/src/domains/attendance.ts": {
-      "fingerprint": "ee5e94037b50ef14ebfa8ace93d753cd70fccd8f63228b280bb956172a7e9e84",
+      "fingerprint": "d02006504494c1c20354d786b037efb9250ded95694f3ab2969defb3e81574e4",
       "snapshot": {
-        "apps/api/src/domains/attendance.ts": "1b4445be8eebe115e2afb3cf74200a8822ec8e6d17d534a424d8373ea95a4d3e"
+        "apps/api/src/domains/attendance.ts": "bb9a3f92fe8a52e8523f5c3e21ca70df81b7dfdeedec06417856be8159f91cf1"
       },
-      "head": "0789fd9e78ed7c8786993080e5f0dd493860a6d5",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Gate 5C Excel resource containment closure does not alter Elysia v1 skill guidance.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: apps/api/src/domains/attendance.ts at 0789fd9e78ed7c8786993080e5f0dd493860a6d5"
+        "Changed: apps/api/src/domains/attendance.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:apps/api/tests/fixtures/attendance-reads.ts": {
@@ -1732,18 +1729,15 @@
       ]
     },
     "source:docs/README.md": {
-      "fingerprint": "28917e012d8e21d70f70d2ed81a604acc1e09f90a7582d3c64b00218864f24bc",
+      "fingerprint": "25ba6704e89c6d68a3944e3623cd7e78a860e40aaeef817b8e33daa796585287",
       "snapshot": {
-        "docs/README.md": "8135511d565963e9349feb439b9e9b4ef9cbb80b9aa9ecd110067cf21a2f0193"
+        "docs/README.md": "468585eab8b4d0415afc85af0cd203bc3cda0d4671349ebda2184157aeebfabc"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/README.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/development/tailscale.md": {
@@ -2956,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d8e83556c60200593f9dc0cb71a1db06415eb3f80de528e870754e7a331a1488",
+      "fingerprint": "c9960252a3218b6b9b4cd5c40d41b368269a5b170c3d14f3a9f88e6e4d865964",
       "snapshot": {
-        "CHANGELOG.md": "1d0e68763d92af8eb0b97c4307a1bf191bdf1010ed18b926991ef10676f259a3"
+        "CHANGELOG.md": "5c3d3cfed163ca601b866a40b82d8175528ebe01b815dd70e6a23f4c304c2b98"
       },
-      "head": "0789fd9e78ed7c8786993080e5f0dd493860a6d5",
+      "head": "0bb2a5dccd98d3efa07df1301f94a2b04e1df559",
       "outcome": "no-change",
-      "reason": "Gate 5C Excel resource containment closure does not alter Elysia v1 skill guidance.",
+      "reason": "Added the assigned PR number to the already reviewed Unreleased stabilization entry; no skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0789fd9e78ed7c8786993080e5f0dd493860a6d5"
+        "Changed: CHANGELOG.md at 0bb2a5dccd98d3efa07df1301f94a2b04e1df559"
       ]
     },
     "source:COMMANDS.md": {
@@ -3235,15 +3229,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "6194c5865b0ed8476532dd6a5fbb18fa707e129b781a6e1061264435ab7238ad",
+      "fingerprint": "1524199386f37e460385944579ff9cf8cb0748601ae4d10037a4d011f6bfcc0b",
       "snapshot": {
-        "docs/architecture/database-schema.md": "efab600316b318147098ba3a8e3dc80b4c01acc41564a847f676a01dd1d92cac"
+        "docs/architecture/database-schema.md": "fc5518f74fea340c80c6887af41752aa20ba20fae87eef5ddd9382c37d0d9b0b"
       },
-      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+        "Changed: docs/architecture/database-schema.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -3289,15 +3283,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "97c6883d1b056aa565c7b2716837e20b84c4648bb514570543b5ea0c49a02316",
+      "fingerprint": "07850ac9a38e409832b3ac385536c36ff3d14aac77a7ff3fdb551eb248f57945",
       "snapshot": {
-        "docs/architecture/excel.md": "197b94ee670c3cbdb959beb17e0fd710048657fbc2ffde91a0e2c6388e005c69"
+        "docs/architecture/excel.md": "a01081a34f2e40108b01dbc780696fa5b2705c2cdd2beaa159cdd7865d8ca9b7"
       },
-      "head": "0789fd9e78ed7c8786993080e5f0dd493860a6d5",
+      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
       "outcome": "no-change",
-      "reason": "Gate 5C Excel resource containment closure does not alter Elysia v1 skill guidance.",
+      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at 0789fd9e78ed7c8786993080e5f0dd493860a6d5"
+        "Changed: docs/architecture/excel.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -3353,15 +3347,15 @@
       ]
     },
     "source:docs/architecture/overview.md": {
-      "fingerprint": "e487e52ad93d9964bcb9ae85f3acabbff6d02b6f82326cc999db67b17000df90",
+      "fingerprint": "c25b1172698c2b688b2f05bc78f95faf4e3041d0941b90f806dbb0ca8e3f3e1b",
       "snapshot": {
-        "docs/architecture/overview.md": "6a75d13a7c2693392259b0be0f87e9a27e16867346170b8689eddb02efc12027"
+        "docs/architecture/overview.md": "68ab5d11010d36b1470353397e7a781c0612707897606709cf6ae4b6b2358019"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Changed: docs/architecture/overview.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/architecture/overview.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/architecture/phase-14-monorepo.md": {
@@ -3485,15 +3479,15 @@
       ]
     },
     "source:docs/decisions/ingestion-dependency-strategy.md": {
-      "fingerprint": "40248cc25387f5204682365c69655b958e93ca864131de3de23b166aea788bfc",
+      "fingerprint": "01cd774d8e1dc578aa7f63c5b8dd4802e8627ec6903c288310441c2b3ff21ad6",
       "snapshot": {
-        "docs/decisions/ingestion-dependency-strategy.md": "1d942913e5ca669200ff0d88ceed68a12fca51dd5d17c1eb13d9fedf084f4ec9"
+        "docs/decisions/ingestion-dependency-strategy.md": "96e22e8d97d3ff3442bc9c2dc9a64cde5817f7e4aed60984c8f16caa890c69e7"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: docs/decisions/ingestion-dependency-strategy.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: docs/decisions/ingestion-dependency-strategy.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/decisions/persistent-development-database.md": {
@@ -3525,15 +3519,15 @@
       ]
     },
     "source:docs/decisions/sqlite-only-runtime.md": {
-      "fingerprint": "927d12a7f3ecf968b0694217f5143ef83f2976dc474737b49d8185b7a983f1bf",
+      "fingerprint": "f8ec08c8b4eca8ba95d44df3c94e7f23f0ad12b5f680d8d4e014770c7719c674",
       "snapshot": {
-        "docs/decisions/sqlite-only-runtime.md": "a73c08465bdd9db3c2a09833c173e70fb50d3bd496a0f3880efef11d062445f4"
+        "docs/decisions/sqlite-only-runtime.md": "43d25ddcdb1311a35ba4650032413b3917155475b3ff15dc121fcce720a85b1c"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Changed: docs/decisions/sqlite-only-runtime.md at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: docs/decisions/sqlite-only-runtime.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/decisions/tauri-desktop-architecture.md": {
@@ -4025,15 +4019,15 @@
       ]
     },
     "source:docs/guides/offline-install.md": {
-      "fingerprint": "6d2d7a47dcb50c81d2ce60745145c86e8275f0e3c4e5fdabc5564af845b0903a",
+      "fingerprint": "23fb32c880fc3ee19d71d06e54366bdd9cd5c136187433f05c4d3b46e09018b7",
       "snapshot": {
-        "docs/guides/offline-install.md": "db1b5e230833e7e6c0b932a97e3acdf8980964cceaf0f88a7f980abc1f97cb4f"
+        "docs/guides/offline-install.md": "11156db12c5e0c54dd9426be49990a32fe4198d5565b0f5014373f250d971c5f"
       },
-      "head": "41705fa0748a92c0339165d1e9095b9069b9f636",
-      "outcome": "out-of-scope",
-      "reason": "This file is part of the Bun 1.4.5 toolchain, CI/release qualification, current documentation, or its regression tests; it introduces no reusable agent skill guidance.",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "outcome": "no-change",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Reviewed docs/guides/offline-install.md in the Bun 1.4.5 change; no Elysia skill or skill distribution update applies."
+        "Changed: docs/guides/offline-install.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/guides/real-case-review.md": {
@@ -4591,18 +4585,15 @@
       ]
     },
     "source:docs/reference/production-profile.md": {
-      "fingerprint": "3b85028c74c5596b4e692c6a0426d881ade7319e9a7128b48cb00cedc64a03fc",
+      "fingerprint": "e54dfd2fada212b06f979813255613905c8f2956c7ef3ed0b68c47f14058bc2f",
       "snapshot": {
-        "docs/reference/production-profile.md": "c85c4613bfbd3936d036e3c24e70ffe805182a6e9a12dca310ab5bcc9732d798"
+        "docs/reference/production-profile.md": "c160cfdc2b252dc16995151bdf5cef433b807bed461198f0415728dc5b065f9f"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/reference/production-profile.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/reference/risk-threshold-validation.md": {
@@ -4620,16 +4611,15 @@
       ]
     },
     "source:docs/reference/runtime-support.md": {
-      "fingerprint": "0c709531cdb85d362a8369a3def4d3d2efa8d1f6b5741e2999d261164fd6c236",
+      "fingerprint": "26e4a404f425d31ce9774faa935c4bd9edb2c43ab50a876809b5daae180dbcd6",
       "snapshot": {
-        "docs/reference/runtime-support.md": "31ba413a781eb66224deac1bec669c1f19ed2ef142ecaa5283670541d5af7404"
+        "docs/reference/runtime-support.md": "34fd37782fbf8d1beb9300e1dd8047583be0250f895f2cf64db3d9225cfde764"
       },
-      "head": "d5fc69965627dd52803a497b1d744e6fc4d3f7ec",
-      "outcome": "out-of-scope",
-      "reason": "This Docker qualification or backup-containment change is outside the registered Elysia framework skill scope.",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "outcome": "no-change",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "Diff: docs/reference/runtime-support.md",
-        "packages/agent-skills/skills/elysiajs/SKILL.md is unchanged"
+        "Changed: docs/reference/runtime-support.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/reference/student-data/academic-mapping-contract.md": {
@@ -4759,18 +4749,15 @@
       ]
     },
     "source:docs/runbooks/backup-restore.md": {
-      "fingerprint": "c89924489db8bb121ec110da87ad1c3c76d8993871baa202e52673dcd1e94870",
+      "fingerprint": "416f6f366735177be82e0040ef9a4b4de5b511f11c71aa5b34430aa6ec6fa5fc",
       "snapshot": {
-        "docs/runbooks/backup-restore.md": "0951fbf70f7c98e076bc719a007aad5b4e7b625600c26320b02cf228fdc98de2"
+        "docs/runbooks/backup-restore.md": "b0ab1fab510fff5a8af273cd91da420b59e3f17192e0b81f2e977c1129fc2c56"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/runbooks/backup-restore.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/runbooks/data-reset.md": {
@@ -4786,18 +4773,15 @@
       ]
     },
     "source:docs/runbooks/database-operations.md": {
-      "fingerprint": "55013307c2b69ed9679c175e30c9435b1e7f194ef29e7a2681697bf14965e446",
+      "fingerprint": "c064fa154aca03a9b9f826d954646983d5e7e19ffd21634ec7983ea242a06378",
       "snapshot": {
-        "docs/runbooks/database-operations.md": "7a20f964a80dd23e211cd4ae7d81913b339a1dad8a9cca2201dfc50cc842fab8"
+        "docs/runbooks/database-operations.md": "2640f653eec19ab8e336532895f73416fd88010d7ed17e017f3f8441e12d2fcf"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/runbooks/database-operations.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/runbooks/log-rotation.md": {
@@ -4841,18 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "7570634f85559427393d15cbce5d0d08fc158ebae2c2020d68fa7463fa7cd05f",
+      "fingerprint": "09d7095031fa7cacaa9e2fc6448d25f384a2a19e52e0c933868192f68964c749",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "76d33a0619b3982f89969514193a824778657c8215f6bf95f989ae67e0d1e5d9"
+        "docs/runbooks/ubuntu-server-deployment.md": "db3160b6352b79251044ebad9c770c96618d83f8b6a99facdec78fa489941456"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
@@ -5125,15 +5106,15 @@
       ]
     },
     "source:apps/api/src/domains/core.ts": {
-      "fingerprint": "07a9c5cd52482f04c64ec9d432a44348e7c0b31b5e29f7f04c4ba9cb5349c72f",
+      "fingerprint": "41c39e8404cb4b89fab3aa18b6522c1f9cf8595be0b97a569cb8361002f6b134",
       "snapshot": {
-        "apps/api/src/domains/core.ts": "fb0255e24a916eb297d1a1bf827554713468dcdbb42a7fde00a9cea187d169a5"
+        "apps/api/src/domains/core.ts": "941430bb651efc2c02b27a90b7b26821bbd844b63d4c25091e486b822d8d72ab"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: apps/api/src/domains/core.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/api/src/domains/core.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:apps/api/tests/student-nisn-filter.test.ts": {
@@ -10855,18 +10836,15 @@
       ]
     },
     "source:docs/decisions/docker-compose-deployment.md": {
-      "fingerprint": "9d0fbf2ed31a3cda051d7f3fe4f73658a549badb86eaa4d9ab22540492fad09c",
+      "fingerprint": "be1d30bb99bec2f1a5cbc673d401a7ca3bff25c466c37d21562aa0d5f2ecc44d",
       "snapshot": {
-        "docs/decisions/docker-compose-deployment.md": "9fcd32ac3cf8c23aca4bf3de6633ab340fd9bd1f95e75b352bf69d673d99d711"
+        "docs/decisions/docker-compose-deployment.md": "b7fa9bb907399889184a758bc590169a7cba27701b873df601ffe7171583b4ff"
       },
-      "head": "5f158ae7f1b14e4f26641ae0f9e8705a04d03ba6",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "Release-lifecycle and operational documentation consolidation outside Elysia skill mapping scope.",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
-        "bun .github/scripts/check-markdown-links.ts",
-        "bun .github/scripts/check-markdown-organization.ts",
-        "bun .github/scripts/check-current-developer-docs.ts",
-        "bun run skills:validate"
+        "Changed: docs/decisions/docker-compose-deployment.md at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:scripts/check-backup-dir.ts": {
@@ -11864,51 +11842,51 @@
       ]
     },
     "source:packages/excel/src/index.ts": {
-      "fingerprint": "b14a990f1eff7b85f1c205e1ffd4d38396074ca2a9514a3015d0aa445d59f6b4",
+      "fingerprint": "0c95de43f3bf5ae7336d45fc629413ce614d82693f8f2ab5907304b1549da3fe",
       "snapshot": {
-        "packages/excel/src/index.ts": "5e9459d065c68f4f93a53e4f840aaa0548eaec4360790f434a4b978b10df5894"
+        "packages/excel/src/index.ts": "3c748d08e9e7302872337406d3c5f2bc2770d22d2f405d8ccc0f6bd9ea568259"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: packages/excel/src/index.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: packages/excel/src/index.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:packages/excel/src/limits.ts": {
-      "fingerprint": "2138f7347737bb53fafe6523eed168793792f17724a0ba7da785bebf0196adde",
+      "fingerprint": "455365bfd6cbf5814a2679ecacb6256496c63f3bfbd8d70f7c8b85d3c8f2583f",
       "snapshot": {
-        "packages/excel/src/limits.ts": "fc468110e502b32c1dcb37bff96e774d9da4dd0765fac5024c2763dfdb527ffc"
+        "packages/excel/src/limits.ts": "e67d2b070a2e682229959c07fc06b4f1afc233c83b3888e9617320d6539a101c"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: packages/excel/src/limits.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: packages/excel/src/limits.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:packages/excel/src/workbook.ts": {
-      "fingerprint": "37f6829d4d735ee48bc8d7a96f986e804b2a269de0467d857833957ff4b61e02",
+      "fingerprint": "31aed92fd8c0bde917fd3b44825f53c40d3c67e985a14a78f11a4b61f07218a8",
       "snapshot": {
-        "packages/excel/src/workbook.ts": "bb25c7e523f5181cc22e546abeeb7d7f0131d5cd14490c39ffa5def912a801ed"
+        "packages/excel/src/workbook.ts": "2e16a27903d55e1a4da9223086e45c08483010bc1e57aaa8f287034652cc677f"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: packages/excel/src/workbook.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: packages/excel/src/workbook.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:packages/excel/tests/security-containment.test.ts": {
-      "fingerprint": "921bf4ae58d7108e261862468dabd329fd71220393bb2e7be1e0972e621a3da7",
+      "fingerprint": "876067a011427251ce25e500e81376c719e92b06e568f73095eb1dcbd1881956",
       "snapshot": {
-        "packages/excel/tests/security-containment.test.ts": "fd2ca9a4938bd8a1b9a0a0fb241d07b14c0a6e17a30677b2fc62bb4fdec5a192"
+        "packages/excel/tests/security-containment.test.ts": "f4cecdfadba4fc025ced42b827f4c051cf18dd35eb582291a87de2610ca05929"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
       "evidence": [
-        "Changed: packages/excel/tests/security-containment.test.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: packages/excel/tests/security-containment.test.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     },
     "source:apps/api/tests/excel-correctness.test.ts": {
@@ -12089,6 +12067,30 @@
       "reason": "Gate 5C Excel resource containment closure does not alter Elysia v1 skill guidance.",
       "evidence": [
         "Changed: packages/excel/src/machine-attendance.ts at 0789fd9e78ed7c8786993080e5f0dd493860a6d5"
+      ]
+    },
+    "source:apps/api/src/domains/attendance-access.ts": {
+      "fingerprint": "b9b7119680fcc2dba7117b560b3bb323b302f6a1fb9fcf9cf75e04def77b2b1d",
+      "snapshot": {
+        "apps/api/src/domains/attendance-access.ts": "2ec13a89a6479d1d579192e66b4b5f73e90c5d636824ecd56546b0dc8d639148"
+      },
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "outcome": "no-change",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
+      "evidence": [
+        "Changed: apps/api/src/domains/attendance-access.ts at f3e6c413ecef65a949e59562200be904b04d758b"
+      ]
+    },
+    "source:apps/api/tests/student-legacy-auth.test.ts": {
+      "fingerprint": "08e1450522f109836b02bef0c055dbc631ee4d135fb37c56f9dcdb54a49985a2",
+      "snapshot": {
+        "apps/api/tests/student-legacy-auth.test.ts": "ef11fcddef5281188629734f9262c2aad4132e52703fe4e04a86c3ab63bd5aa4"
+      },
+      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "outcome": "no-change",
+      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/student-legacy-auth.test.ts at f3e6c413ecef65a949e59562200be904b04d758b"
       ]
     }
   }

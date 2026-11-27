@@ -3,7 +3,8 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
-- Route all production Excel `.xls`/`.xlsx` reads regardless of size through the bounded `--smol` parser subprocess with independent parent-side RSS supervision, enforce streaming multipart upload byte bounds before buffering, and extend shared admission plus output-buffer accounting across all Excel export routes.
+- Protect legacy student routes with their existing capabilities and Staff class/date scope while preserving the documented limited open directory read; document current Excel resource limits, the unresolved capacity decision, and the feature-freeze boundary ([#436](https://github.com/daoistmadness/operatoros/pull/436)).
+- Route all production Excel `.xls`/`.xlsx` reads regardless of size through a short-lived `--smol` parser subprocess with parent-side RSS polling, enforce streaming multipart upload byte bounds before buffering, and extend shared admission plus output-buffer accounting across all Excel export routes ([#435](https://github.com/daoistmadness/operatoros/pull/435)).
 - Isolate heavy Excel parsing in a short-lived `--smol` subprocess with confirmed `SIGKILL` reaping and automatic recovery, enforce early upload admission before multipart parsing, and share Excel admission across heavy workbook exports ([#434](https://github.com/daoistmadness/operatoros/pull/434)).
 - Prevent an attendance workbook timeout from allowing overlapping Excel import work while parser completion is unconfirmed ([#433](https://github.com/daoistmadness/operatoros/pull/433)).
 - Replace quadratic duplicate grouping, per-row header maps, and column-sizing spread allocations with linear indexed processing in Excel import and export paths.

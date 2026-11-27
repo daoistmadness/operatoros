@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-21
+last_reviewed: 2026-11-28
 ---
 
 # Platform portability
@@ -13,20 +13,11 @@ fails configuration or database validation. The application does not read
 legacy `POSTGRES_*` variables. The Python/FastAPI backend is not a runtime
 dependency, and the Tauri desktop shell has been removed.
 
-Local development runs the Elysia API and React browser app on native Linux.
-The repository also has an optional rootless Podman development launcher. Neither
-workflow establishes production container support.
-
-A single-host Podman deployment is proposed in
-[the Podman deployment decision](../decisions/podman-deployment.md). It remains
-unsupported. The repository contains a proposed production image and service
-configuration, but they do not establish production support. Deployment
-requires architecture acceptance and a successful authorized Ubuntu rehearsal.
-
-A Docker Compose source-of-truth candidate is under review in
-[its draft decision](../decisions/docker-compose-deployment.md). It also remains
-unsupported and does not change the local runtime contract or authorize
-production use.
+Local development runs the Elysia API and React browser app natively with Bun.
+Container-based development is discontinued. Production uses the accepted
+Docker Engine and Docker Compose architecture in
+[the deployment decision](../decisions/docker-compose-deployment.md), with
+operations governed by the [Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md).
 
 Current application labels:
 
@@ -37,10 +28,8 @@ Current application labels:
 
 ## Database contract
 
-Fresh bootstrap installs the S4.7 base, then applies S4.8 employee, S4.9
-school-unit, S5.0 monthly PTK, S5.1 UPP archive, S5.2 student administration,
-S5.3 student identity verification, and S5.4 BOSP reminder extensions. The
-current schema head is `20261027_s54`, defined by
+Fresh bootstrap installs the S4.7 base and sequential migrations through S5.7.
+The current schema head is `20261127_s57`, defined by
 `packages/db/src/manifest.ts`.
 
 The connection layer enables `PRAGMA foreign_keys = ON` and uses `BEGIN
@@ -49,8 +38,9 @@ use SQLite's default rollback journal; an existing database may use WAL.
 Drizzle is the application data layer.
 
 Ordinary startup validates existing databases and never migrates them. The
-protected operational database remains S4.3 (`20260725_s43`) until a separately
-authorized migration. It is never a test target.
+latest documented production acceptance records S5.6
+(`20261126_s56`); verify the exact deployment receipt before an operational
+migration. Production data is never a test target.
 
 Historical PostgreSQL migrations and the PR #35 evaluation documents are audit
 evidence only. They do not establish current deployment or compatibility
