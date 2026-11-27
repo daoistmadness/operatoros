@@ -493,15 +493,15 @@
       ]
     },
     "source:apps/web/src/generated/openapi/schema.ts": {
-      "fingerprint": "5ecf98e2e473b4d3b69f22575805ac84388f03dbb4279be76f16b13b19067fbb",
+      "fingerprint": "db6b3bf37be0ed7718840ad905ee8c71837de5d6702f654e7f9f98f9b0ca86a0",
       "snapshot": {
-        "apps/web/src/generated/openapi/schema.ts": "19a328c91957e4945678dec7914e70cbc6cd21c7f6b90361dd5fc0e763985f3f"
+        "apps/web/src/generated/openapi/schema.ts": "9465706490ab041689769eebe3cf176149dfdb8f75f5d20bbeed99fc9417e575"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/web/src/generated/openapi/schema.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/web/src/generated/openapi/schema.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/web/src/pages/BackupManagement.test.tsx": {
@@ -517,15 +517,15 @@
       ]
     },
     "source:openapi/operatoros.openapi.json": {
-      "fingerprint": "3e38b6cb6045868333078b8d19dededc0c2c59d16e75c889da78b3ff73b94ede",
+      "fingerprint": "0ec801f57e944a51a2f7e8b317a42d346ba12443ea7a1df306b618b64812e90c",
       "snapshot": {
-        "openapi/operatoros.openapi.json": "f5171537325cdc7483bf9109a3d2b184de79abeb7ff64f390bd07b01032a31c7"
+        "openapi/operatoros.openapi.json": "9005344b26864d72917b1b116839c9dac5a4523439bc0f01d7f2ce3f8f034885"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: openapi/operatoros.openapi.json at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: openapi/operatoros.openapi.json at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/api/tests/backup-cli-migration.test.ts": {
@@ -1674,15 +1674,15 @@
       ]
     },
     "source:apps/api/tests/data-layer.test.ts": {
-      "fingerprint": "0b8ba659a49243aac23cc0669799fb4faad1d311ad90cda5103c0558732a801d",
+      "fingerprint": "62d838480703fe10a1338f2a2cf8ba4f353af94abec26f680c3100f0ef046182",
       "snapshot": {
-        "apps/api/tests/data-layer.test.ts": "59e340b8dd6269d27415607058d6452c7f20215d1493505ef156bdee7acdc625"
+        "apps/api/tests/data-layer.test.ts": "dba6c70cde27e62187ce8697cc1fd5c7459105df55646eb66373223d48dee627"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/api/tests/data-layer.test.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/tests/data-layer.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:docs/architecture/INGESTION_DEPENDENCY_STRATEGY.md": {
@@ -2964,15 +2964,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "3df4f6ca299ab9eb57ecd933f25f4d83ea16b9c09da8acbee9d1a71bba12e2eb",
+      "fingerprint": "bb803c0e066313f18135a545cbaac9f24f88df4a6622ece980606f1c2e5c9ac3",
       "snapshot": {
-        "CHANGELOG.md": "057717834693d5c0ad22a08c8f7b2ec987d42639414bcdac0e2e94f348b9214d"
+        "CHANGELOG.md": "2722f7f15d53053f83fda7c117da0a209afd704db7ec56ed2330d1b41d1f676c"
       },
-      "head": "7d319e1a9babd6ddcaf1334ab3bf70893be69401",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Reviewed the merge changes: AGENTS.md and CHANGELOG.md document release governance; they do not change Elysia guidance or planning artifact scope.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 7d319e1a9babd6ddcaf1334ab3bf70893be69401"
+        "Changed: CHANGELOG.md at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:COMMANDS.md": {
@@ -3243,15 +3243,15 @@
       ]
     },
     "source:docs/architecture/database-schema.md": {
-      "fingerprint": "530ce9dd7463dd6392f088a6b10c264377a18083b632a9d239fd9e456fdd3b2c",
+      "fingerprint": "6194c5865b0ed8476532dd6a5fbb18fa707e129b781a6e1061264435ab7238ad",
       "snapshot": {
-        "docs/architecture/database-schema.md": "392d8a15ae029d0f300a6c84d9e2efd17efcd1acc30193cb08a853bebd90e8be"
+        "docs/architecture/database-schema.md": "efab600316b318147098ba3a8e3dc80b4c01acc41564a847f676a01dd1d92cac"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: docs/architecture/database-schema.md at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: docs/architecture/database-schema.md at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:docs/architecture/decisions/ATTENDANCE_CONSOLIDATION_BOUNDARY.md": {
@@ -5247,15 +5247,15 @@
       ]
     },
     "source:apps/api/tests/openapi-contract.test.ts": {
-      "fingerprint": "59575ab7c56d752f7bdc4368700c090e9e33f373a05729e2e7f8329a40fe8f02",
+      "fingerprint": "a992760616e498f19d85a07333cd866076c3fde1be6a540bf5e8e2198e1dfa0c",
       "snapshot": {
-        "apps/api/tests/openapi-contract.test.ts": "5f45bb5987461206ce6f25771b13bc2d578051af65ff5b4c95bb2de548c5808d"
+        "apps/api/tests/openapi-contract.test.ts": "3d1001906c56ed82cb268eefce848417e4a5988cc203317fed17c0c0a0efede3"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/api/tests/openapi-contract.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/api/tests/openapi-contract.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/api/tests/staff-management.test.ts": {
@@ -5297,15 +5297,15 @@
       ]
     },
     "source:apps/web/src/lib/query/queryKeys.ts": {
-      "fingerprint": "a840413807ebd62feb5118a884d5cb50c23da27b09d9dc3d3f7bc06e2868884c",
+      "fingerprint": "1f5b815bcae11007db6a59a6822e55acb3cd75c26455b1ce38b5c1849c08aa15",
       "snapshot": {
-        "apps/web/src/lib/query/queryKeys.ts": "ff104390acfcb25c26c8ed91a21d1b6531c0fe7a20040f5a5886e378f2eb6bfd"
+        "apps/web/src/lib/query/queryKeys.ts": "01e230128fd5f254f2e497736aff98ef4fa50912f5d23d3973770a65173eb25e"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/web/src/lib/query/queryKeys.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/web/src/lib/query/queryKeys.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/contracts/src/staff.ts": {
@@ -5333,51 +5333,51 @@
       ]
     },
     "source:packages/db/src/bootstrap.ts": {
-      "fingerprint": "333002ec2f2124f557550aaae1b6fdce16f6230dc4ef1a6b9165b4bfe78fe2b7",
+      "fingerprint": "7d351948b61a622920f6b9910de4a0b1320495ecda36e6496cf57a5031644ca6",
       "snapshot": {
-        "packages/db/src/bootstrap.ts": "ba6a4c1adc9f18185a1314cc12d30dd4d7a1c83339f5de36a1e5789e863cf4ec"
+        "packages/db/src/bootstrap.ts": "106d2edc2763df7d20d1f43ecffab15548eb2bb3b8c3acd33ce791bf53bfad6e"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/src/bootstrap.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/src/bootstrap.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/src/index.ts": {
-      "fingerprint": "ee34f699c304b5a1da8dddc4c63ad3f192169ac2bc28c586bcca0e7091494544",
+      "fingerprint": "efaa0bf837cb65488ddb10a15f06c236c2f14dd76a2527f03119ea0921ffc44e",
       "snapshot": {
-        "packages/db/src/index.ts": "60df909716e5f43e07b6975a91d47748aaa45fa0f47e347432f839d921553cff"
+        "packages/db/src/index.ts": "0fafa5f5e0cfe8495c3f5784af0586c625466a6a397c35de70adb26cf2fd6017"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/src/index.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: packages/db/src/index.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/src/manifest.ts": {
-      "fingerprint": "ce672295742c5cdac3b5fb1f14a31b1b036c1d6a0a09be9cc0a2757a978bb44a",
+      "fingerprint": "132d0acccb7506ef19ed70ec932b7800071a88ce463d59ba7639ec74051684a6",
       "snapshot": {
-        "packages/db/src/manifest.ts": "ca2cbf035f9899ee0d44d92a32593a9c6439bb8c46860b35d1985c20c3900a88"
+        "packages/db/src/manifest.ts": "fc664536ccc57a963e13bfc569d889597b4e85bcdb29ca1381d3df050821b496"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/src/manifest.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/src/manifest.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/src/migrate-existing.ts": {
-      "fingerprint": "69ed267df1bbd5bb26ef90e1a4e3f0427b77cf4a50af7afd17302b7a3d64b944",
+      "fingerprint": "63ec12937effd8219d31698459d5fc83a28ec674387eb4fd5d375846e0c69e3b",
       "snapshot": {
-        "packages/db/src/migrate-existing.ts": "e8394fbaa284d45c0373e195fcdce45c5ff206f0a2455ddbaa294247adfb76e1"
+        "packages/db/src/migrate-existing.ts": "4886a928b93fa14f4917aeb0943001f46fff11a80da89efff912edc777f768d2"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/src/migrate-existing.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/src/migrate-existing.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/src/s49-migration.sql": {
@@ -5393,15 +5393,15 @@
       ]
     },
     "source:packages/db/src/schema.ts": {
-      "fingerprint": "08659e3df50d0c816ca1ebb16ece1c295e30b69ee4ea108af215ec962d81dabb",
+      "fingerprint": "4211268ffa9c9b2cb32c138b03cb635200703bc12492c76984b20bcd6125849a",
       "snapshot": {
-        "packages/db/src/schema.ts": "6835ad69439c9bb46b350c579382a17fa5625df9e7c937ebed25c0d7d99e08ab"
+        "packages/db/src/schema.ts": "5d6255dfb85f941fd9537dc57563d944599c7134f4eaf9630065a44addda4e15"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/src/schema.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/src/schema.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/tests/bootstrap.test.ts": {
@@ -5417,27 +5417,27 @@
       ]
     },
     "source:packages/db/tests/db.test.ts": {
-      "fingerprint": "37047472c956d3ac2e70dec08ce1fabb0270c0e5d98e0e7310142861562da4a2",
+      "fingerprint": "a7b6c2fc0a3c53e5ca72d309030d02618510b18f9e2af01035bceba520374c0c",
       "snapshot": {
-        "packages/db/tests/db.test.ts": "65c8e2326f6fd938a26069ed0a37353fdf2887fb4a70715a0f73a3f501bbc7e4"
+        "packages/db/tests/db.test.ts": "1f6418a37b08996bd9dcaf7c2e1b9018a09c3da97dbce013d57c8de06826be5a"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/tests/db.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/tests/db.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/tests/migrate-existing.test.ts": {
-      "fingerprint": "caa441bde82054dcdff304af0afe18ce7931cbbb9e157f09745780c0ad9518ee",
+      "fingerprint": "125451072483de83eed2cc0e5ef385b8fe70ea488518a82006b8e307134da9c9",
       "snapshot": {
-        "packages/db/tests/migrate-existing.test.ts": "5dedd5dbd0fe893ce3aab2ef46f22d41e984b61bf5b309ca9fcd80d853c6b4e5"
+        "packages/db/tests/migrate-existing.test.ts": "3a19eb55b71ddc38b6f008d999e5e1156e10ae791bf5eb39be03fb72e273bd3b"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/db/tests/migrate-existing.test.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: packages/db/tests/migrate-existing.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/api/src/domains/staff-monthly-activities.ts": {
@@ -11528,63 +11528,63 @@
       ]
     },
     "source:apps/api/src/domains/inventory.ts": {
-      "fingerprint": "ca3775be154711df56f20236dc6042eb2a17566a16e024ad55c132303b7dbef8",
+      "fingerprint": "080191a18b356ce1bacddcef343495054077d22b28d342663756a70988394d6f",
       "snapshot": {
-        "apps/api/src/domains/inventory.ts": "11baa5a47de75da41f3c204fc9b16a45641c67bcdc4369cb6f2ba6bac7bdf3d8"
+        "apps/api/src/domains/inventory.ts": "0b7dccf8f9c51a2092b8ef746140d9c89f143fe41dfc0abd3652b9c5757b4b74"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/api/src/domains/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/api/src/domains/inventory.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/api/tests/inventory.test.ts": {
-      "fingerprint": "0f6db626828af9f4822be2bc2008970ac2886f787f3c46e0b1b690937a0dc96c",
+      "fingerprint": "367ca32b95e0c47b043fe8526f1cbbca651136f62c4a23c26a8aa4c6098600ae",
       "snapshot": {
-        "apps/api/tests/inventory.test.ts": "52e6b912365e5a241847347d57f5d66289802e59ccdae1932dd57dce82a43476"
+        "apps/api/tests/inventory.test.ts": "576a0c815b9ded8826696cdbf60e7ff687ad57a22a178e05b5e15a0343ea9ddd"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/api/tests/inventory.test.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/api/tests/inventory.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/web/src/api/inventory.ts": {
-      "fingerprint": "06e3694d5b4ccb7fb310b1363f0211a405e53de8628abd5657fb4046a23fb047",
+      "fingerprint": "e3b4e9b404c5e26f907208157efbd3213534f4b6dd1cc63e64491ead32808711",
       "snapshot": {
-        "apps/web/src/api/inventory.ts": "00bce64f6d0484e93f5948dfa6c0f51072d03ba1d5c0abdcb357baa6ffc6cfaf"
+        "apps/web/src/api/inventory.ts": "ff6bbfc83c9e5ef0030735ccb104d73a644e9e13cc78fdd5eb01631c52a14cf4"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/web/src/api/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/web/src/api/inventory.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.test.tsx": {
-      "fingerprint": "bc720bba7b85517be8fb6f131b86a610579b2de4372dec5722243deb9c51df85",
+      "fingerprint": "6f70c84f868c20155e1f2c585da84aaabad535c536657161ccf254e259148d9b",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.test.tsx": "6c5f94e13f5f2087a4b54039cc1e538e7e9a914177db9d9066d4742ec67e0e6d"
+        "apps/web/src/pages/InventoryManagement.test.tsx": "104b68895fa10e2feee7e42157fde9d3f78965f10db243cc6a456c69d32098db"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/web/src/pages/InventoryManagement.test.tsx at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.tsx": {
-      "fingerprint": "975ab2dbc0667d68d4b046b350b89cb5ec3163cf0cf43d538c606b3c5ffb1dda",
+      "fingerprint": "b9c8ffd20f44f3c36aa13add21310d026a4d38f4fab25d9d29f08c918b992899",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.tsx": "592269cd6599528736f1bd12a562f860d1a2e5f76700122af7606e4a4b59f313"
+        "apps/web/src/pages/InventoryManagement.tsx": "4eab17884b2ff86a56af3869c4c87ce836deca14f2770144b9bb71de8c51b19b"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.tsx at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: apps/web/src/pages/InventoryManagement.tsx at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:apps/web/src/routes/_authenticated/inventory.tsx": {
@@ -11600,15 +11600,15 @@
       ]
     },
     "source:packages/contracts/src/inventory.ts": {
-      "fingerprint": "604150004c583dc561f97489043020d6cf830e4816ef8a7ebece87a66aa2aefd",
+      "fingerprint": "70842dc74b3ee30519883a8dd4cebc8c3b7cf52eb0b047199da5442165163d59",
       "snapshot": {
-        "packages/contracts/src/inventory.ts": "e78ddf5369940cd769df0b22bc48e8dde2cf2a07eac531b4731f7028fad59e96"
+        "packages/contracts/src/inventory.ts": "4f966f111f99514c2718f2b10b701751d01a48dbec63123717362f29162f45dd"
       },
-      "head": "0a817ad556353c777314da99f39a7613e37afe4a",
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
       "outcome": "no-change",
-      "reason": "Extensible label printing standards, official Labelindo geometry, A4 presets, and calibration PDF",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
-        "Changed: packages/contracts/src/inventory.ts at 0a817ad556353c777314da99f39a7613e37afe4a"
+        "Changed: packages/contracts/src/inventory.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     },
     "source:packages/db/src/s55-migration.sql": {
@@ -11693,6 +11693,66 @@
       "reason": "Operational deployment wrapper hardening and runbook updates do not alter Elysia library guidance",
       "evidence": [
         "Changed: scripts/verify-writer-quiescence.py at 9003c74707e8a6b356760a4b6d4c463df9ab3278"
+      ]
+    },
+    "source:apps/web/src/components/inventory/InventoryMasterDataDialog.tsx": {
+      "fingerprint": "9262382739b5a04ff2ee986eace3b209d7421b49c866d7aa4fb9a1f18da61575",
+      "snapshot": {
+        "apps/web/src/components/inventory/InventoryMasterDataDialog.tsx": "3125006beb4de334e3f0b31ee8955f6f11bcc7507d1214847fb2737c6d63ee40"
+      },
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "outcome": "no-change",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "evidence": [
+        "Changed: apps/web/src/components/inventory/InventoryMasterDataDialog.tsx at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+      ]
+    },
+    "source:docs/session/2026-11-27-inventory-master-data.md": {
+      "fingerprint": "01172935051c327276af36475a553de83023b344987110cc1807e4e56674c20b",
+      "snapshot": {
+        "docs/session/2026-11-27-inventory-master-data.md": "87293078c8f01423860e18720c6fc0b5258b15dbd74776d5bcd5d8704fb8ea67"
+      },
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "outcome": "no-change",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "evidence": [
+        "Changed: docs/session/2026-11-27-inventory-master-data.md at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+      ]
+    },
+    "source:e2e/smoke/web/inventory-master-data.spec.ts": {
+      "fingerprint": "c04a83d91ad7fa98e179d804c17b377d0871548d413c4bb6303601ffaf61d7ed",
+      "snapshot": {
+        "e2e/smoke/web/inventory-master-data.spec.ts": "8604f8ed243fbfe2af2c179f27fdbaffd74b8daba96c4bc38fe1c2429daa24f6"
+      },
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "outcome": "no-change",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "evidence": [
+        "Changed: e2e/smoke/web/inventory-master-data.spec.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+      ]
+    },
+    "source:packages/db/src/s57-migration.sql": {
+      "fingerprint": "6f32146d6d170784d14be26261b5108e466740a49ab347594ecb66f0749c8ccc",
+      "snapshot": {
+        "packages/db/src/s57-migration.sql": "25a82ef994023c00831df93dd00a0020e48dafdd7fdef22c1bf9a840e425d2a9"
+      },
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "outcome": "no-change",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "evidence": [
+        "Changed: packages/db/src/s57-migration.sql at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+      ]
+    },
+    "source:packages/db/tests/inventory-master-data-migration.test.ts": {
+      "fingerprint": "a547cfcb208bc1791fe9eb87d7195bf9eb7102831f2aba8f83f028d012644ab0",
+      "snapshot": {
+        "packages/db/tests/inventory-master-data-migration.test.ts": "42881e38c40f5c7c5ea53b3142f279e1838fa01c996e41655be70f129be2fcdf"
+      },
+      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "outcome": "no-change",
+      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "evidence": [
+        "Changed: packages/db/tests/inventory-master-data-migration.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
       ]
     }
   }
