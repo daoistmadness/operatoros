@@ -28,8 +28,8 @@ colors:
 typography:
   page-title:
     fontFamily: Inter, system-ui, sans-serif
-    fontSize: 1.875rem
-    fontWeight: 900
+    fontSize: 1.5rem
+    fontWeight: 600
     lineHeight: 1.2
     letterSpacing: -0.025em
   section-title:
@@ -57,9 +57,8 @@ typography:
   table-header:
     fontFamily: Inter, system-ui, sans-serif
     fontSize: 0.75rem
-    fontWeight: 900
+    fontWeight: 600
     lineHeight: 1.25
-    letterSpacing: 0.025em
 rounded:
   sm: 0.5rem
   md: 0.75rem

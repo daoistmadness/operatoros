@@ -143,15 +143,15 @@
       ]
     },
     "source:apps/web/src/pages/StudentManagement.tsx": {
-      "fingerprint": "2b8eb6d5dd8feedec9db91e4b149cf206484cb0e819cc5c69d16dcd6d81fbd1b",
+      "fingerprint": "d561a69d62180b9cd59e87f369023a0184885ba1d5992d7da2212cebd8b5f203",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.tsx": "45cd28b5db235fbca0e64e06b2cf172243c229e1123821979a92770dfc7b0362"
+        "apps/web/src/pages/StudentManagement.tsx": "e1b6571808934505c1e4e3d29515cd65812ec7d97222558906da2c153124554f"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/StudentManagement.tsx at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     },
     "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
@@ -2273,15 +2273,15 @@
       ]
     },
     "source:apps/web/src/pages/DailyAttendanceOperations.tsx": {
-      "fingerprint": "b1ba56e8c08850626f7a3a0f409c8a2e15f6cba32af63a56f5b936b2b966a854",
+      "fingerprint": "c519e623edfe94b992607458babe06fae2c8fdfab2391e4ab3b36d35b6ce3124",
       "snapshot": {
-        "apps/web/src/pages/DailyAttendanceOperations.tsx": "c4a4eb77ae9c7f36199cecb535401ad6c593f1e3f27a74888f903d56c125c6a4"
+        "apps/web/src/pages/DailyAttendanceOperations.tsx": "c7791885feefc38c118b1d50552d8dbe98a9a87fed151559859822cd46a8cba2"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
-        "Changed: apps/web/src/pages/DailyAttendanceOperations.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/DailyAttendanceOperations.tsx at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     },
     "source:apps/web/src/pages/DataPortability.test.tsx": {
@@ -2479,17 +2479,15 @@
       ]
     },
     "source:apps/web/src/pages/Settings.tsx": {
-      "fingerprint": "d078c9141489037754ecfcee2c2523aa49ddec0320ced895f5c13a0eec962005",
+      "fingerprint": "3faee6a224970d0f633cdff0c78704b819da4436bdd53b98e4350323f5d98d4e",
       "snapshot": {
-        "apps/web/src/pages/Settings.tsx": "0d4380a99ecb7a50f336a15143ba5e9031f79583ced2d8d10606ea27e3002111"
+        "apps/web/src/pages/Settings.tsx": "306724d958959cd5b290c88ff046e3193124d75aba2a38497189f9f051e804da"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
-        "Reviewed apps/web/src/pages/Settings.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/Settings.tsx at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     },
     "source:apps/web/src/pages/SetupAdmin.test.tsx": {
@@ -2962,15 +2960,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "00d30721aa6d1e43e2c777e7b2a3d7537b0cfd3e57ca45af6d54986a853631a0",
+      "fingerprint": "415c18545c54b167f159a7dbae2f79d74c131c82c013ace7a64f3b57bebf1b2d",
       "snapshot": {
-        "CHANGELOG.md": "2caca8071129d0e3d1cab34f91bb8a17061c1b2edad5674da0b260bd26b53d7d"
+        "CHANGELOG.md": "9d86fb20aa6b0b1ea85ac02733201d79e52240bffbafcdcebe3eaa59150fed2e"
       },
-      "head": "eeba93fa89379bb6f9a00a90c76ec86e16da6f62",
+      "head": "07cacca2c836070a06bb7606db4d34f4e86b11e9",
       "outcome": "no-change",
-      "reason": "Recorded PR #425 reference in CHANGELOG.md without changing any source or guidance.",
+      "reason": "Linked the assigned Phase 2 pull request from the release note. The link changes no guidance, source behavior, or skill mappings.",
       "evidence": [
-        "Changed: CHANGELOG.md at eeba93fa89379bb6f9a00a90c76ec86e16da6f62"
+        "Changed: CHANGELOG.md at 07cacca2c836070a06bb7606db4d34f4e86b11e9"
       ]
     },
     "source:COMMANDS.md": {
@@ -3399,17 +3397,15 @@
       ]
     },
     "source:docs/architecture/ui-styling.md": {
-      "fingerprint": "323080f2e487c5316c37cd6af2b818d9c6c9075812c1561a6e529607713830f2",
+      "fingerprint": "f46f973a859bf56be5862c728aef751b8c6082912ab6ecd09913f56e5b1f8d27",
       "snapshot": {
-        "docs/architecture/ui-styling.md": "24974bf431b5b9847a612d4b98b3425897e5f8a17622bfd9bf4e42375ce64931"
+        "docs/architecture/ui-styling.md": "7b8f3415a249925aa6228d9f6cb65ec947ac9f24b029858a40e7d939551dfe19"
       },
-      "head": "f4fb454312305d28188d352cc5ac529cf128ecd5",
-      "outcome": "out-of-scope",
-      "reason": "This file belongs to the repository-wide documentation cleanup but is outside the registered Elysia backend skill scope; no Elysia API behavior or skill recommendation depends on it.",
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
-        "The path and its keep/rewrite/merge/delete rationale are recorded in .audit/documentation-inventory.tsv",
-        "The registered skill covers Elysia backend implementation and review only",
-        "Repository documentation checks and mise run test:fast passed"
+        "Changed: docs/architecture/ui-styling.md at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     },
     "source:docs/authentication/README.md": {
@@ -7219,17 +7215,15 @@
       ]
     },
     "source:apps/web/DESIGN.md": {
-      "fingerprint": "faa569f0047d9e5a40b4aa99df6a7ad4335e5315e205276150fab7d7f1cd4f9d",
+      "fingerprint": "51022326b626807ef5d5a4a2be4c008b158d3e29887bec82a7841457f604ee5a",
       "snapshot": {
-        "apps/web/DESIGN.md": "5e74a3cf5023c85726721b3011e087cceeb16f4d28527fa74f9eebeed2689657"
+        "apps/web/DESIGN.md": "404227beb7fff23a258c7c160955dff49e4c46fe2e63f0ac68dd3f5435b332fe"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
-        "Reviewed apps/web/DESIGN.md in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/DESIGN.md at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     },
     "source:apps/web/src/api/attendanceCalendar.ts": {
@@ -11755,6 +11749,42 @@
       "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
         "Changed: apps/web/src/components/navigation/DomainSubNav.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
+      ]
+    },
+    "source:apps/web/src/components/common/data-table.tsx": {
+      "fingerprint": "eadbd01ea7dcdd9a04b3f53771f0cf4daba15ec00d4b9aba21dfd5ffd9a1d942",
+      "snapshot": {
+        "apps/web/src/components/common/data-table.tsx": "c72fe3599eeb7ae056105be211dd8235f8e6500838fbf262b0e672b9e1713a56"
+      },
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
+      "evidence": [
+        "Changed: apps/web/src/components/common/data-table.tsx at 8e0a4b4681a624946637074377a20d491040f221"
+      ]
+    },
+    "source:apps/web/src/components/common/page-header.tsx": {
+      "fingerprint": "d8235b510050b4921545c7ab8325350394e40982a651735d9e43d41a801e1617",
+      "snapshot": {
+        "apps/web/src/components/common/page-header.tsx": "6727e182904ed18fbb483a753d39b70e4e76098a64db89c9cf0d3344b774784e"
+      },
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
+      "evidence": [
+        "Changed: apps/web/src/components/common/page-header.tsx at 8e0a4b4681a624946637074377a20d491040f221"
+      ]
+    },
+    "source:e2e/smoke/web/z-data-reset.spec.ts": {
+      "fingerprint": "dc45df66637a4ca228741c0596cdeb1f94de23cfcd43c883d02945bc095634f4",
+      "snapshot": {
+        "e2e/smoke/web/z-data-reset.spec.ts": "b4ead88b98b71f282f6a158a989e3a21b06814f435722d35c904040f6b14a085"
+      },
+      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "outcome": "no-change",
+      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
+      "evidence": [
+        "Changed: e2e/smoke/web/z-data-reset.spec.ts at 8e0a4b4681a624946637074377a20d491040f221"
       ]
     }
   }

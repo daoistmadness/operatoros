@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Settings as SettingsIcon, ShieldAlert, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ShieldAlert, Trash2 } from "lucide-react";
 import type { DataResetPreviewResponse, DataResetResult, DataResetScope } from "@operatoros/contracts/system";
 import { AppLink as Link } from '../components/AppLink';
 import { previewDataReset, commitDataReset } from "../api/system";
@@ -10,9 +10,10 @@ import { getSystemHealth } from "../lib/api/endpoints";
 import { getPageApiError } from "../lib/api/errors";
 import { useAuth } from "../context/AuthContext";
 import { useUiPreferences } from "../context/UiPreferencesContext";
+import { PageHeader } from "../components/common/page-header";
 import { Alert } from "../components/ui/alert";
 import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
+import { Button, buttonVariants } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Checkbox } from "../components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "../components/ui/dialog";
@@ -76,6 +77,8 @@ function Settings() {
   const { preferences, setSidebarCollapsed, resetPreferences } = useUiPreferences();
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
+  const resetTrigger = useRef<HTMLButtonElement>(null);
+  const resetTitle = useRef<HTMLHeadingElement>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedScope, setSelectedScope] = useState<DataResetScope | null>(null);
   const [preview, setPreview] = useState<DataResetPreviewResponse | null>(null);
@@ -157,73 +160,65 @@ function Settings() {
   };
 
   return (
-    <div className="mx-auto min-w-0 max-w-3xl space-y-8 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
-      <header className="flex items-center gap-4">
-        <Link to="/" className="rounded-xl border border-slate-200 bg-white p-2 transition-colors hover:bg-slate-50" aria-label="Back to dashboard">
-          <ArrowLeft size={20} className="text-slate-600" />
+    <div className="mx-auto min-w-0 max-w-3xl space-y-5">
+      <PageHeader className="flex-row items-start justify-between" title="System Settings" description="Manage interface preferences, backups, and data integrity." actions={
+        <Link to="/" className={cn(buttonVariants({ variant: "outline", size: "icon" }), "shrink-0")} aria-label="Back to dashboard">
+          <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">System Settings</h1>
-          <p className="mt-1 text-slate-500">Manage global system configurations and data integrity.</p>
-        </div>
-      </header>
+      } />
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="min-w-0 p-5 sm:p-6">
-          <div className="mb-5 border-b border-border pb-4">
-            <h2 className="font-bold text-foreground">Interface preferences</h2>
+      <div className="grid grid-cols-1 gap-4">
+        <Card className="min-w-0 p-4">
+          <div className="mb-4 border-b border-border pb-3">
+            <h2 className="text-base font-semibold">Interface preferences</h2>
             <p className="mt-1 text-sm text-muted-foreground">These preferences stay in this browser and do not contain school or account data.</p>
           </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <label htmlFor="sidebar-collapsed" className="flex min-h-11 min-w-0 cursor-pointer items-start gap-3">
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-foreground">Use a compact sidebar on desktop</span>
-                <span id="sidebar-collapsed-description" className="mt-1 block text-sm text-muted-foreground">The mobile navigation drawer stays full width.</span>
-              </span>
-            </label>
+          <div className="flex items-start gap-3">
             <Checkbox
               id="sidebar-collapsed"
+              className="size-6 border-muted-foreground [&_span]:flex [&_span]:justify-center"
               aria-describedby="sidebar-collapsed-description"
               checked={preferences.sidebarCollapsed}
               onCheckedChange={(checked) => updateSidebarPreference(checked === true)}
             />
+            <div className="min-w-0">
+              <label htmlFor="sidebar-collapsed" className="block cursor-pointer text-sm font-semibold text-foreground">Use a compact sidebar on desktop</label>
+              <p id="sidebar-collapsed-description" className="mt-1 text-sm text-muted-foreground">The mobile navigation drawer stays full width.</p>
+            </div>
           </div>
-          <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3">
             <Button variant="outline" onClick={handleResetPreferences}>Restore defaults</Button>
             <p role="status" aria-live="polite" className="min-h-5 text-sm text-muted-foreground">{preferenceStatus}</p>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <div className="mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
-            <SettingsIcon size={20} className="text-brand" />
-            <h2 className="font-bold text-slate-800 underline decoration-brand/30 decoration-2 underline-offset-4">General Configuration</h2>
-          </div>
-          <div className="space-y-6">
-            <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+        <Card className="p-4">
+          <h2 className="mb-3 border-b border-border pb-3 text-base font-semibold">General Configuration</h2>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-sm bg-surface-muted p-3">
               <div>
-                <p className="text-sm font-bold text-slate-900">System Version</p>
-                <p className="text-xs font-medium text-slate-500">v1.2.4 stable</p>
+                <p className="text-sm font-semibold text-foreground">System Version</p>
+                <p className="text-xs text-muted-foreground">v1.2.4 stable</p>
               </div>
               <Badge variant="success">Active</Badge>
             </div>
-            {isAdmin && <Link to="/settings/backups" className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 font-bold text-slate-800 transition hover:border-brand hover:text-brand">
+            {isAdmin && <Link to="/settings/backups" className={buttonVariants({ variant: "outline" })}>
               <span>Backup Management</span><span aria-hidden="true">→</span>
             </Link>}
           </div>
         </Card>
 
-        <Card className={cn("border p-6", resetControlsVisible ? "border-rose-200 bg-rose-50/20" : "border-slate-200 bg-slate-50")}>
-          <div className="mb-6 flex items-center gap-3 border-b border-rose-100 pb-4">
-            <ShieldAlert size={20} className="text-rose-500" />
-            <h2 className="font-bold text-rose-900 underline decoration-rose-500/30 decoration-2 underline-offset-4">Danger Zone</h2>
+        <Card className="p-4">
+          <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
+            <ShieldAlert className="size-4 text-danger" aria-hidden="true" />
+            <h2 className="text-base font-semibold text-danger">Danger Zone</h2>
           </div>
 
           {resetControlsVisible ? (
             <div className="space-y-4">
               {RESET_ACTIONS.map((item, index) => (
-                <section key={item.scope} className={cn("rounded-2xl border bg-white p-5 shadow-sm transition-colors", item.cardClass, index === 3 && "border-2")}>
-                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <section key={item.scope} className={cn("rounded-sm border bg-surface p-3 transition-colors", item.cardClass, index === 3 && "border-2")}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className={cn("font-bold", index === 3 ? "text-rose-950" : "text-slate-900")}>{item.title}</h3>
@@ -232,15 +227,18 @@ function Settings() {
                       <p className="max-w-xl text-sm leading-relaxed text-slate-600">{item.description}</p>
                       <p className="max-w-xl text-xs leading-relaxed text-slate-500"><strong>Preserves:</strong> {item.preserves}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => void handlePreview(item.scope)}
+                    <Button
+                      variant="outline"
+                      onClick={(event) => {
+                        resetTrigger.current = event.currentTarget;
+                        void handlePreview(item.scope);
+                      }}
                       disabled={previewingScope !== null}
-                      className={cn("flex shrink-0 items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-bold transition disabled:cursor-wait disabled:opacity-60", item.buttonClass)}
+                      className={cn("shrink-0 disabled:cursor-wait", item.buttonClass)}
                     >
-                      <Trash2 size={17} />
+                      <Trash2 className="size-4" aria-hidden="true" />
                       {previewingScope === item.scope ? "Loading preview…" : "Preview reset"}
-                    </button>
+                    </Button>
                   </div>
                 </section>
               ))}
@@ -281,23 +279,32 @@ function Settings() {
         </Alert>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!isResetting) setDialogOpen(open); }}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <Dialog restoreFocus={false} open={dialogOpen} onOpenChange={(open) => { if (!isResetting) setDialogOpen(open); }}>
+        <DialogContent
+          className="max-w-2xl p-0"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            resetTitle.current?.focus();
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            resetTrigger.current?.focus();
+          }}
+        >
           {action && preview && (
             <>
-              <div className={cn("px-7 py-6 text-white", selectedScope === "ALL_SCHOOL_DATA" ? "bg-rose-800" : selectedScope === "STUDENTS" ? "bg-rose-600" : selectedScope === "ACADEMIC_RESULTS" ? "bg-orange-600" : "bg-amber-600")}>
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="rounded-full border border-white/30 bg-white/15 p-3"><AlertTriangle size={24} /></div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-white/75">Review before reset</p>
-                    <DialogTitle className="text-xl font-black">{action.title}</DialogTitle>
-                    <DialogDescription className="text-sm text-white/80">Review the exact deletion and preservation counts before confirming.</DialogDescription>
+              <div className="border-b border-border bg-danger-surface p-4 pr-12">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <DialogTitle ref={resetTitle} tabIndex={-1} className="text-lg font-semibold text-danger">{action.title}</DialogTitle>
+                    <DialogDescription className="mt-1">Review the exact deletion and preservation counts before confirming.</DialogDescription>
                   </div>
                 </div>
-                {selectedScope === "ALL_SCHOOL_DATA" && <p className="rounded-lg bg-black/15 p-3 text-sm font-semibold">This removes all school records and academic structure. Administrator and staff login access remain.</p>}
+                {selectedScope === "ALL_SCHOOL_DATA" && <p className="mt-2 text-sm font-semibold">This removes all school records and academic structure. Administrator and staff login access remain.</p>}
               </div>
 
-              <div className="space-y-6 p-7">
+              <div className="space-y-4 p-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <section className="rounded-xl border border-rose-200 bg-rose-50 p-4">
                     <h4 className="text-xs font-black uppercase tracking-wider text-rose-900">WILL DELETE</h4>
@@ -320,27 +327,25 @@ function Settings() {
                   <Input
                     id="reset-confirmation"
                     type="text"
-                    autoFocus
                     autoComplete="off"
                     value={confirmation}
                     onChange={(event) => setConfirmation(event.target.value)}
                     onKeyDown={(event) => { if (event.key === "Enter" && confirmation === action.confirmation) void handleReset(); }}
-                    className="h-12 font-bold"
+                    className="h-10 font-semibold"
                   />
                 </div>
 
                 {error && <p role="alert" className="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">{error}</p>}
 
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                  <button type="button" disabled={isResetting} onClick={() => setDialogOpen(false)} className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60">Cancel</button>
-                  <button
-                    type="button"
+                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                  <Button variant="outline" disabled={isResetting} onClick={() => setDialogOpen(false)}>Cancel</Button>
+                  <Button
+                    variant="danger"
                     disabled={confirmation !== action.confirmation || isResetting}
                     onClick={() => void handleReset()}
-                    className={cn("flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50", selectedScope === "ALL_SCHOOL_DATA" ? "bg-rose-800 hover:bg-rose-900" : selectedScope === "STUDENTS" ? "bg-rose-600 hover:bg-rose-700" : selectedScope === "ACADEMIC_RESULTS" ? "bg-orange-600 hover:bg-orange-700" : "bg-amber-600 hover:bg-amber-700")}
                   >
-                    <Trash2 size={17} />{isResetting ? "Creating backup and resetting…" : "Create backup and reset"}
-                  </button>
+                    <Trash2 className="size-4" aria-hidden="true" />{isResetting ? "Creating backup and resetting…" : "Create backup and reset"}
+                  </Button>
                 </div>
               </div>
             </>

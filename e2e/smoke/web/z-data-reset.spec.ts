@@ -24,6 +24,26 @@ test("@admin @data-reset @critical keeps reset actions hidden when the backend g
   await expect(page.getByRole("button", { name: "Preview reset" })).toHaveCount(0);
 });
 
+test("@admin @data-reset @critical reviews reset details before confirmation and restores keyboard focus", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await login(page);
+  await page.goto("/settings");
+
+  const trigger = page.getByRole("button", { name: "Preview reset" }).first();
+  await expect(trigger).toBeEnabled();
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+
+  const dialog = page.getByRole("dialog", { name: "Reset Attendance Data" });
+  const title = dialog.getByRole("heading", { name: "Reset Attendance Data" });
+  await expect(title).toBeFocused();
+  await expect(title).toBeInViewport();
+  await expect(dialog.getByRole("button", { name: "Create backup and reset" })).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test("@admin @data-reset @critical previews and safely executes attendance and student resets", async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on("console", (message) => {
