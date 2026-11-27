@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { assertDatabasePath, assertOrdinarySchemaObjects, CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inTransaction, openDatabase, PROTECTED_DATABASE_BASENAME, REQUIRED_TABLES, SCHEMA_MIGRATIONS, schemaFingerprint, validateDatabase } from "../src/index";
-import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema, installS56StaffPtkSchema } from "../src/bootstrap";
+import { installS47Schema, installS48EmployeeSchema, installS49SchoolUnitSchema, installS50StaffMonthlyActivitySchema, installS51UppReportsSchema, installS52StudentAdminSchema, installS53StudentVerificationSchema, installS54BospReminderSchema, installS55InventorySchema, installS56StaffPtkSchema, installS57InventoryMasterDataSchema } from "../src/bootstrap";
 import { REQUIRED_TRIGGERS } from "../src/manifest";
 import * as schema from "../src/schema";
 import { openSqliteConnection, type SqliteClient } from "../src/sqlite-client";
@@ -56,7 +56,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
       const value = (schema as Record<string, unknown>)[key];
       return value && typeof value === "object";
     });
-    expect(REQUIRED_TABLES.length).toBe(107);
+    expect(REQUIRED_TABLES.length).toBe(109);
     expect(new Set(REQUIRED_TABLES).size).toBe(REQUIRED_TABLES.length);
     for (const domain of ["staff_members", "school_units", "staff_school_unit_assignment_versions", "staff_monthly_activity_periods", "staff_monthly_activities", "staff_monthly_activity_history", "dismissal_policies", "teacher_class_assignments", "student_identity_verifications", "student_dapodik_registrations", "student_iom_documents", "bosp_annual_reminder_settings", "bosp_reminder_acknowledgments", "inventory_assets", "inventory_asset_sequences", "staff_ptk_administration", "staff_ptk_documents"]) {
       expect(REQUIRED_TABLES).toContain(domain);
@@ -90,6 +90,7 @@ describe("@operatoros/db existing-schema validation authority", () => {
     installS54BospReminderSchema(client);
     installS55InventorySchema(client);
     installS56StaffPtkSchema(client);
+    installS57InventoryMasterDataSchema(client);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, NULL, ?, '{}', 'test', ?)",
       ["20260724_s42", "baseline-fingerprint", "2026-08-29T10:11:17.184006+00:00"]);
     client.run("INSERT INTO operatoros_schema_migrations (version, predecessor, schema_fingerprint, protected_fingerprints, approved_by, applied_at) VALUES (?, ?, ?, '{}', 'test', ?)",

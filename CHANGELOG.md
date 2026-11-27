@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Add global inventory category and funding-source management with preserved asset codes, allocation history, and historical labels.
 - Permit owner-approved cleanup of individually verified reproducible dependency directories in registered development worktrees and validation checkouts.
 - Consolidate the five-phase OperatorOS release lifecycle, preflight gate, security-scope exception governance, backup/recovery matrix, and standard operational reporting across `AGENTS.md`, `COMMANDS.md`, and canonical deployment, database, and security runbooks. (#423)
 - Harden `scripts/docker-deploy.sh` operational migration wrapper to fail closed on missing Compose/config resolution, writer shutdown/exclusion, open database handles or locks, and encrypted backup/restore-disposable prerequisites, and unify migration, validation, and release activation under a continuous lock and maintenance boundary.

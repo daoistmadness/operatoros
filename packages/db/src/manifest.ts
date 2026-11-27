@@ -20,6 +20,7 @@ export const SCHEMA_MIGRATIONS = [
   "20261027_s54",
   "20261125_s55",
   "20261126_s56",
+  "20261127_s57",
 ] as const;
 
 export const S47_SCHEMA_FINGERPRINT =
@@ -62,7 +63,9 @@ export const S54_SCHEMA_FINGERPRINT =
 export const S55_SCHEMA_FINGERPRINT =
   "67687ecb5653878d36b74207b78facaa2ce825dbb599ddef9b75711c62b6a05f";
 
-export const CURRENT_SCHEMA_FINGERPRINT = "5782b7247e1cf60d6b4b83b86cf8bb8fd193b3675e736270cd74b8c5992798dc";
+export const S56_SCHEMA_FINGERPRINT = "5782b7247e1cf60d6b4b83b86cf8bb8fd193b3675e736270cd74b8c5992798dc";
+
+export const CURRENT_SCHEMA_FINGERPRINT = "c3be114da9dde6586e6a59c23e89266f32a311612b3830949c020df02f7a812b";
 
 export const REQUIRED_TRIGGERS = [
   "trg_academic_roster_batch_session_type",
@@ -141,6 +144,12 @@ export const REQUIRED_TRIGGERS = [
   "trg_inventory_assets_no_delete",
   "trg_inventory_assets_immutable_code",
   "trg_inventory_asset_sequences_no_delete",
+  "trg_inventory_asset_categories_code_immutable",
+  "trg_inventory_funding_sources_code_immutable",
+  "trg_inventory_assets_category_active_insert",
+  "trg_inventory_assets_category_active_update",
+  "trg_inventory_assets_funding_active_insert",
+  "trg_inventory_assets_funding_active_update",
 ] as const;
 
 export const PROTECTED_DATABASE_BASENAME = "attendance.db";

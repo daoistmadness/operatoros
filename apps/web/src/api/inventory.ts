@@ -5,6 +5,12 @@ import type {
   BatchCreateAssetRequestDto,
   CreateAssetRequestDto,
   InventorySummaryResponseDto,
+  InventoryMasterDataResponseDto,
+  InventoryMasterEntryDto,
+  CreateAssetCategoryRequestDto,
+  CreateFundingSourceRequestDto,
+  UpdateInventoryMasterEntryRequestDto,
+  ReorderInventoryMasterEntriesRequestDto,
   LabelCalibrationRequestDto,
   LabelPrintRequestDto,
   ResolvedLabelTemplate,
@@ -12,6 +18,60 @@ import type {
   UpdateAssetRequestDto,
 } from "@operatoros/contracts/inventory";
 import { apiRequest } from "../lib/api/client";
+
+export async function fetchInventoryMasterData(): Promise<InventoryMasterDataResponseDto> {
+  return (await apiRequest<InventoryMasterDataResponseDto>({
+    path: "/api/inventory/master-data",
+  })).data;
+}
+
+export async function createAssetCategory(body: CreateAssetCategoryRequestDto): Promise<InventoryMasterEntryDto> {
+  return (await apiRequest<InventoryMasterEntryDto>({
+    path: "/api/inventory/master-data/categories",
+    method: "POST",
+    body,
+  })).data;
+}
+
+export async function createFundingSource(body: CreateFundingSourceRequestDto): Promise<InventoryMasterEntryDto> {
+  return (await apiRequest<InventoryMasterEntryDto>({
+    path: "/api/inventory/master-data/funding-sources",
+    method: "POST",
+    body,
+  })).data;
+}
+
+export async function updateAssetCategory(code: string, body: UpdateInventoryMasterEntryRequestDto): Promise<InventoryMasterEntryDto> {
+  return (await apiRequest<InventoryMasterEntryDto>({
+    path: `/api/inventory/master-data/categories/${encodeURIComponent(code)}`,
+    method: "PATCH",
+    body,
+  })).data;
+}
+
+export async function updateFundingSource(code: string, body: UpdateInventoryMasterEntryRequestDto): Promise<InventoryMasterEntryDto> {
+  return (await apiRequest<InventoryMasterEntryDto>({
+    path: `/api/inventory/master-data/funding-sources/${encodeURIComponent(code)}`,
+    method: "PATCH",
+    body,
+  })).data;
+}
+
+export async function reorderAssetCategories(body: ReorderInventoryMasterEntriesRequestDto): Promise<void> {
+  await apiRequest({ path: "/api/inventory/master-data/categories/order", method: "PUT", body });
+}
+
+export async function reorderFundingSources(body: ReorderInventoryMasterEntriesRequestDto): Promise<void> {
+  await apiRequest({ path: "/api/inventory/master-data/funding-sources/order", method: "PUT", body });
+}
+
+export async function deleteAssetCategory(code: string): Promise<void> {
+  await apiRequest({ path: `/api/inventory/master-data/categories/${encodeURIComponent(code)}`, method: "DELETE" });
+}
+
+export async function deleteFundingSource(code: string): Promise<void> {
+  await apiRequest({ path: `/api/inventory/master-data/funding-sources/${encodeURIComponent(code)}`, method: "DELETE" });
+}
 
 export async function fetchInventorySummary(
   query: Record<string, any> = {},

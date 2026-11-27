@@ -11,6 +11,15 @@ import { AuthContext } from "../context/AuthContext";
 
 vi.mock("../api/inventory", () => ({
   fetchAssets: vi.fn(),
+  fetchInventoryMasterData: vi.fn(),
+  createAssetCategory: vi.fn(),
+  createFundingSource: vi.fn(),
+  updateAssetCategory: vi.fn(),
+  updateFundingSource: vi.fn(),
+  reorderAssetCategories: vi.fn(),
+  reorderFundingSources: vi.fn(),
+  deleteAssetCategory: vi.fn(),
+  deleteFundingSource: vi.fn(),
   fetchInventorySummary: vi.fn(),
   fetchAsset: vi.fn(),
   createAsset: vi.fn(),
@@ -37,12 +46,14 @@ const sampleAssets: AssetDtoType[] = [
     current_unit_id: 1,
     current_unit_name: "SD Edelweiss",
     category: "IT",
+    category_name: "Peralatan TI / Komputer",
     item_name: "Laptop Asus Guru",
     brand: "ASUS",
     model: "Vivobook",
     serial_number: "SN123",
     location: "Ruang Guru",
     funding_source: "BOS",
+    funding_source_name: "BOS (ARKAS)",
     budget_year: 2026,
     arkas_account_code: "5.1.02.01.01.0024",
     purchase_document_reference: "INV-001",
@@ -64,12 +75,14 @@ const sampleAssets: AssetDtoType[] = [
     current_unit_id: 1,
     current_unit_name: "SD Edelweiss",
     category: "FRN",
+    category_name: "Furnitur / Mebel",
     item_name: "Meja Guru Kayu Jati",
     brand: "Informa",
     model: null,
     serial_number: null,
     location: "Ruang 1A",
     funding_source: "YAYASAN",
+    funding_source_name: "Yayasan",
     budget_year: 2025,
     arkas_account_code: null,
     purchase_document_reference: null,
@@ -90,6 +103,19 @@ const mockAssetList: AssetListResponseDto = {
   total: 2,
   limit: 50,
   offset: 0,
+};
+
+const mockMasterData = {
+  categories: [
+    { code: "IT", name: "Peralatan TI / Komputer", is_active: true, sort_order: 0, can_delete: false },
+    { code: "FRN", name: "Furnitur / Mebel", is_active: true, sort_order: 1, can_delete: false },
+    { code: "CUS", name: "Peralatan Khusus", is_active: true, sort_order: 2, can_delete: true },
+  ],
+  funding_sources: [
+    { code: "BOS", name: "BOS (ARKAS)", is_active: true, sort_order: 0, can_delete: false },
+    { code: "YAYASAN", name: "Yayasan", is_active: true, sort_order: 1, can_delete: false },
+    { code: "CUSTOM_0123456789ABCDEF0123456789ABCDEF", name: "Dana Sponsor Lokal", is_active: true, sort_order: 2, can_delete: true },
+  ],
 };
 
 const mockSchoolUnits = [
@@ -124,14 +150,15 @@ describe("InventoryManagement Page", () => {
     vi.clearAllMocks();
     queryClient.clear();
     vi.mocked(api.fetchAssets).mockResolvedValue(mockAssetList);
+    vi.mocked(api.fetchInventoryMasterData).mockResolvedValue(mockMasterData);
     vi.mocked(api.fetchInventorySummary).mockResolvedValue({
       total_assets: 2,
       total_value: 9700000,
       active_count: 2,
       retired_count: 0,
       by_condition: { baik: 2, rusak_ringan: 0, rusak_berat: 0 },
-      by_category: [{ category: "IT", count: 1 }, { category: "FRN", count: 1 }],
-      by_funding: [{ funding_source: "BOS", count: 1 }, { funding_source: "YAYASAN", count: 1 }],
+      by_category: [{ category: "IT", category_name: "Peralatan TI / Komputer", count: 1 }, { category: "FRN", category_name: "Furnitur / Mebel", count: 1 }],
+      by_funding: [{ funding_source: "BOS", funding_source_name: "BOS (ARKAS)", count: 1 }, { funding_source: "YAYASAN", funding_source_name: "Yayasan", count: 1 }],
       by_unit: [{ unit_id: 1, unit_name: "SD Edelweiss", count: 2 }],
     });
     vi.mocked(staffApi.fetchSchoolUnits).mockResolvedValue(mockSchoolUnits);
@@ -201,6 +228,103 @@ describe("InventoryManagement Page", () => {
 
     expect(document.body.textContent).toContain("Tambah Aset Baru");
     expect(document.body.textContent).toContain("Nomor kode aset unik akan otomatis dialokasikan");
+    expect((document.querySelector("#reg-cat option[value='CUS']") as HTMLOptionElement)?.textContent).toBe("Peralatan Khusus");
+  });
+
+  it("opens master management without losing the registration draft", async () => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <AuthContext.Provider value={mockAuthValue}>
+            <InventoryManagement />
+          </AuthContext.Provider>
+        </QueryClientProvider>,
+      );
+    });
+    await flush();
+
+    await act(async () => {
+      Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Tambah Aset"))?.click();
+    });
+    await flush();
+
+    const itemName = document.querySelector("#reg-name") as HTMLInputElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    await act(async () => {
+      valueSetter?.call(itemName, "Draft laptop");
+      itemName.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    await act(async () => {
+      Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Kelola")?.click();
+    });
+    await flush();
+    expect(document.body.textContent).toContain("Kelola Data Inventaris");
+    expect(document.body.textContent).toContain("Kategori Aset");
+    expect(document.body.textContent).toContain("Sumber Dana");
+
+    await act(async () => {
+      Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Tutup")?.click();
+    });
+    await flush();
+
+    expect(document.body.textContent).not.toContain("Kelola Data Inventaris");
+    expect((document.querySelector("#reg-name") as HTMLInputElement)?.value).toBe("Draft laptop");
+  });
+
+  it("refreshes active dropdown options after creating a master entry", async () => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <AuthContext.Provider value={mockAuthValue}>
+            <InventoryManagement />
+          </AuthContext.Provider>
+        </QueryClientProvider>,
+      );
+    });
+    await flush();
+
+    await act(async () => {
+      Array.from(container.querySelectorAll("button")).find((button) => button.textContent?.includes("Tambah Aset"))?.click();
+    });
+    await flush();
+    await act(async () => {
+      Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Kelola")?.click();
+    });
+    await flush();
+
+    const newEntry = { code: "NEW", name: "Peralatan Baru", is_active: true, sort_order: 3, can_delete: true };
+    vi.mocked(api.createAssetCategory).mockResolvedValue(newEntry);
+    vi.mocked(api.fetchInventoryMasterData).mockResolvedValueOnce({
+      ...mockMasterData,
+      categories: [...mockMasterData.categories, newEntry],
+    });
+    const setValue = (input: HTMLInputElement, value: string) => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    await act(async () => {
+      setValue(document.querySelector("[aria-label='Kode kategori baru']") as HTMLInputElement, "new");
+      setValue(document.querySelector("[aria-label='Nama kategori baru']") as HTMLInputElement, "Peralatan Baru");
+    });
+    await act(async () => {
+      Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Tambah")?.click();
+    });
+    await flush();
+    await act(async () => {
+      Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.trim() === "Tutup")?.click();
+    });
+    await flush();
+
+    expect((document.querySelector("#reg-cat option[value='NEW']") as HTMLOptionElement)?.textContent).toBe("Peralatan Baru");
   });
 
   it("opens batch asset registration modal when clicking Tambah Massal", async () => {

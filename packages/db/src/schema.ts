@@ -1442,18 +1442,51 @@ export const bosp_reminder_acknowledgments = sqliteTable("bosp_reminder_acknowle
     check("ck_bosp_ack_notes", sql`${table.notes} IS NULL OR length(trim(${table.notes})) > 0`),
 ]);
 
+export const inventory_asset_categories = sqliteTable("inventory_asset_categories", {
+    "code": text().notNull().primaryKey(),
+    "display_name": text().notNull(),
+    "normalized_name": text().notNull(),
+    "is_active": integer().notNull().default(1),
+    "sort_order": integer().notNull().default(0),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("inventory_asset_categories_normalized_name_uc").on(table.normalized_name),
+    check("ck_inventory_asset_categories_code", sql`length(${table.code}) BETWEEN 2 AND 8 AND ${table.code} NOT GLOB '*[^A-Z0-9]*'`),
+    check("ck_inventory_asset_categories_display_name", sql`length(trim(${table.display_name})) BETWEEN 1 AND 80`),
+    check("ck_inventory_asset_categories_normalized_name", sql`length(trim(${table.normalized_name})) > 0`),
+    check("ck_inventory_asset_categories_is_active", sql`${table.is_active} IN (0, 1)`),
+    check("ck_inventory_asset_categories_sort_order", sql`${table.sort_order} >= 0`),
+]);
+
+export const inventory_funding_sources = sqliteTable("inventory_funding_sources", {
+    "code": text().notNull().primaryKey(),
+    "display_name": text().notNull(),
+    "normalized_name": text().notNull(),
+    "is_active": integer().notNull().default(1),
+    "sort_order": integer().notNull().default(0),
+    "created_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+    "updated_at": text().notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [
+    uniqueIndex("inventory_funding_sources_normalized_name_uc").on(table.normalized_name),
+    check("ck_inventory_funding_sources_display_name", sql`length(trim(${table.display_name})) BETWEEN 1 AND 80`),
+    check("ck_inventory_funding_sources_normalized_name", sql`length(trim(${table.normalized_name})) > 0`),
+    check("ck_inventory_funding_sources_is_active", sql`${table.is_active} IN (0, 1)`),
+    check("ck_inventory_funding_sources_sort_order", sql`${table.sort_order} >= 0`),
+]);
+
 export const inventory_assets = sqliteTable("inventory_assets", {
     "id": text().primaryKey(),
     "asset_code": text().notNull(),
     "school_unit_id": integer().notNull().references(() => school_units.id, { onDelete: "restrict" }),
     "current_unit_id": integer().references(() => school_units.id, { onDelete: "restrict" }),
-    "category": text().notNull(),
+    "category": text().notNull().references(() => inventory_asset_categories.code, { onDelete: "restrict" }),
     "item_name": text().notNull(),
     "brand": text(),
     "model": text(),
     "serial_number": text(),
     "location": text(),
-    "funding_source": text().notNull(),
+    "funding_source": text().notNull().references(() => inventory_funding_sources.code, { onDelete: "restrict" }),
     "budget_year": integer().notNull(),
     "arkas_account_code": text(),
     "purchase_document_reference": text(),
@@ -1476,8 +1509,6 @@ export const inventory_assets = sqliteTable("inventory_assets", {
     index("idx_inventory_assets_budget_year").on(table.budget_year),
     check("ck_inventory_assets_status", sql`${table.status} IN ('ACTIVE', 'RETIRED')`),
     check("ck_inventory_assets_condition", sql`${table.condition} IN ('BAIK', 'RUSAK_RINGAN', 'RUSAK_BERAT')`),
-    check("ck_inventory_assets_category", sql`${table.category} IN ('IT', 'FRN', 'ELK', 'LAB', 'LIB', 'SPT', 'EDU', 'OFF', 'OTH')`),
-    check("ck_inventory_assets_funding", sql`${table.funding_source} IN ('BOS', 'BOP', 'YAYASAN', 'KOMITE', 'HIBAH', 'LAINNYA')`),
     check("ck_inventory_assets_budget_year", sql`${table.budget_year} >= 2000 AND ${table.budget_year} <= 2100`),
     check("ck_inventory_assets_item_name", sql`length(trim(${table.item_name})) > 0`),
     check("ck_inventory_assets_brand", sql`${table.brand} IS NULL OR length(trim(${table.brand})) > 0`),
@@ -1493,10 +1524,9 @@ export const inventory_assets = sqliteTable("inventory_assets", {
 
 export const inventory_asset_sequences = sqliteTable("inventory_asset_sequences", {
     "school_unit_id": integer().primaryKey().references(() => school_units.id, { onDelete: "restrict" }),
-    "category": text().primaryKey(),
+    "category": text().primaryKey().references(() => inventory_asset_categories.code, { onDelete: "restrict" }),
     "last_sequence": integer().notNull().default(0),
 }, (table) => [
-    check("ck_inventory_sequences_category", sql`${table.category} IN ('IT', 'FRN', 'ELK', 'LAB', 'LIB', 'SPT', 'EDU', 'OFF', 'OTH')`),
     check("ck_inventory_sequences_last_seq", sql`${table.last_sequence} >= 0`),
 ]);
 

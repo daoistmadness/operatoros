@@ -10,6 +10,11 @@ import {
   RetireAssetRequest,
   LabelPrintRequest,
   LabelCalibrationRequest,
+  InventoryMasterDataResponse,
+  CreateAssetCategoryRequest,
+  CreateFundingSourceRequest,
+  UpdateInventoryMasterEntryRequest,
+  ReorderInventoryMasterEntriesRequest,
   getLabelTemplate,
   getRegisteredLabelTemplates,
   paginateLabelItems,
@@ -108,17 +113,19 @@ function audit(
   metadata: Record<string, any>,
   capability: string = "manage_inventory",
   riskLevel: "LOW" | "MEDIUM" | "HIGH" = "MEDIUM",
+  entityType: string = "INVENTORY_ASSET",
 ) {
   try {
     db.run(
       `INSERT INTO operations_audit_events
         (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, success, changed_fields, metadata, schema_version)
-        VALUES (?, ?, ?, ?, 'INVENTORY_ASSET', ?, ?, ?, 'API', 1, ?, ?, '1')`,
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'API', 1, ?, ?, '1')`,
       [
         randomUUID(),
         user.username,
         user.role,
         capability,
+        entityType,
         reference,
         operation,
         riskLevel,
@@ -131,6 +138,56 @@ function audit(
   }
 }
 
+function normalizeMasterName(value: string): { displayName: string; normalizedName: string } | null {
+  const displayName = value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+  if (!displayName || displayName.length > 80) return null;
+  return { displayName, normalizedName: displayName.toLowerCase() };
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return String((error as { message?: unknown })?.message ?? error).includes("UNIQUE constraint failed");
+}
+
+function masterRows(db: SqliteClient, table: "inventory_asset_categories" | "inventory_funding_sources") {
+  const referenceSql = table === "inventory_asset_categories"
+    ? "EXISTS (SELECT 1 FROM inventory_assets a WHERE a.category = m.code) OR EXISTS (SELECT 1 FROM inventory_asset_sequences s WHERE s.category = m.code)"
+    : "EXISTS (SELECT 1 FROM inventory_assets a WHERE a.funding_source = m.code)";
+  return db.query(
+    `SELECT m.code, m.display_name AS name, m.is_active, m.sort_order,
+            NOT (${referenceSql}) AS can_delete
+       FROM ${table} m
+      ORDER BY m.sort_order, m.display_name COLLATE NOCASE, m.code`,
+  ).all() as Array<{ code: string; name: string; is_active: number; sort_order: number; can_delete: number }>;
+}
+
+function masterDto(row: { code: string; name: string; is_active: number; sort_order: number; can_delete: number }) {
+  return {
+    code: String(row.code),
+    name: String(row.name),
+    is_active: Boolean(row.is_active),
+    sort_order: Number(row.sort_order),
+    can_delete: Boolean(row.can_delete),
+  };
+}
+
+function requireActiveMaster(
+  db: SqliteClient,
+  table: "inventory_asset_categories" | "inventory_funding_sources",
+  code: string,
+  currentCode?: string,
+): string {
+  const row = db.query(`SELECT display_name, is_active FROM ${table} WHERE code = ?`).get(code) as { display_name: string; is_active: number } | null;
+  if (!row || (!row.is_active && code !== currentCode)) {
+    throw new Error(table === "inventory_asset_categories" ? "CATEGORY_NOT_ACTIVE" : "FUNDING_SOURCE_NOT_ACTIVE");
+  }
+  return String(row.display_name);
+}
+
+function inactiveMasterError(error: unknown): boolean {
+  const message = String((error as { message?: unknown })?.message ?? error);
+  return message === "CATEGORY_NOT_ACTIVE" || message === "FUNDING_SOURCE_NOT_ACTIVE";
+}
+
 function mapRowToAssetDto(row: Row): AssetDtoType {
   return {
     id: String(row.id),
@@ -140,12 +197,14 @@ function mapRowToAssetDto(row: Row): AssetDtoType {
     current_unit_id: row.current_unit_id != null ? Number(row.current_unit_id) : Number(row.school_unit_id),
     current_unit_name: row.current_unit_name ? String(row.current_unit_name) : String(row.school_unit_name || ""),
     category: row.category as AssetCategoryDto,
+    category_name: String(row.category_name || row.category),
     item_name: String(row.item_name),
     brand: row.brand ? String(row.brand) : null,
     model: row.model ? String(row.model) : null,
     serial_number: row.serial_number ? String(row.serial_number) : null,
     location: row.location ? String(row.location) : null,
     funding_source: row.funding_source as FundingSourceDto,
+    funding_source_name: String(row.funding_source_name || row.funding_source),
     budget_year: Number(row.budget_year),
     arkas_account_code: row.arkas_account_code ? String(row.arkas_account_code) : null,
     purchase_document_reference: row.purchase_document_reference ? String(row.purchase_document_reference) : null,
@@ -162,6 +221,297 @@ function mapRowToAssetDto(row: Row): AssetDtoType {
 }
 
 export function inventoryRoutes(app: any, context: AuthContext) {
+  app.get("/api/inventory/master-data", ({ set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
+    if (!user) return { detail: "Authentication required" };
+
+    const db = context.database.client;
+    return {
+      categories: masterRows(db, "inventory_asset_categories").map(masterDto),
+      funding_sources: masterRows(db, "inventory_funding_sources").map(masterDto),
+    };
+  }, { response: InventoryMasterDataResponse });
+
+  app.post("/api/inventory/master-data/categories", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+
+    const name = normalizeMasterName(body.name);
+    if (!name) {
+      set.status = 400;
+      return { detail: "Category name must contain 1 to 80 characters" };
+    }
+
+    const db = context.database.client;
+    try {
+      let created: ReturnType<typeof masterDto> | null = null;
+      inTransaction(db, () => {
+        const order = db.query("SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM inventory_asset_categories").get() as { next_order: number };
+        db.run(
+          "INSERT INTO inventory_asset_categories (code, display_name, normalized_name, sort_order) VALUES (?, ?, ?, ?)",
+          [body.code, name.displayName, name.normalizedName, order.next_order],
+        );
+        audit(db, user, "CREATE_ASSET_CATEGORY", body.code, ["code", "display_name"], { display_name: name.displayName }, "manage_inventory", "LOW", "INVENTORY_ASSET_CATEGORY");
+        created = { code: body.code, name: name.displayName, is_active: true, sort_order: order.next_order, can_delete: true };
+      });
+      set.status = 201;
+      return created;
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        set.status = 409;
+        return { detail: "Category code or normalized name already exists" };
+      }
+      throw error;
+    }
+  }, { body: CreateAssetCategoryRequest });
+
+  app.post("/api/inventory/master-data/funding-sources", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+
+    const name = normalizeMasterName(body.name);
+    if (!name) {
+      set.status = 400;
+      return { detail: "Funding source name must contain 1 to 80 characters" };
+    }
+
+    const db = context.database.client;
+    const code = `CUSTOM_${randomUUID().replace(/-/g, "").toUpperCase()}`;
+    try {
+      let created: ReturnType<typeof masterDto> | null = null;
+      inTransaction(db, () => {
+        const order = db.query("SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_order FROM inventory_funding_sources").get() as { next_order: number };
+        db.run(
+          "INSERT INTO inventory_funding_sources (code, display_name, normalized_name, sort_order) VALUES (?, ?, ?, ?)",
+          [code, name.displayName, name.normalizedName, order.next_order],
+        );
+        audit(db, user, "CREATE_FUNDING_SOURCE", code, ["code", "display_name"], { display_name: name.displayName }, "manage_inventory", "LOW", "INVENTORY_FUNDING_SOURCE");
+        created = { code, name: name.displayName, is_active: true, sort_order: order.next_order, can_delete: true };
+      });
+      set.status = 201;
+      return created;
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        set.status = 409;
+        return { detail: "Funding source name already exists" };
+      }
+      throw error;
+    }
+  }, { body: CreateFundingSourceRequest });
+
+  app.patch("/api/inventory/master-data/categories/:code", ({ params, body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    if (body.name === undefined && body.is_active === undefined) {
+      set.status = 400;
+      return { detail: "At least one category field must be provided" };
+    }
+    const name = body.name === undefined ? undefined : normalizeMasterName(body.name);
+    if (body.name !== undefined && !name) {
+      set.status = 400;
+      return { detail: "Category name must contain 1 to 80 characters" };
+    }
+    const db = context.database.client;
+    try {
+      let updated: ReturnType<typeof masterDto> | null = null;
+      inTransaction(db, () => {
+        const before = db.query("SELECT code, display_name AS name, is_active, sort_order FROM inventory_asset_categories WHERE code = ?").get(params.code) as Row | null;
+        if (!before) throw new Error("MASTER_ENTRY_NOT_FOUND");
+        const displayName = name?.displayName ?? String(before.name);
+        const normalizedName = name?.normalizedName ?? displayName.toLowerCase();
+        const isActive = body.is_active ?? Boolean(before.is_active);
+        db.run(
+          `UPDATE inventory_asset_categories
+           SET display_name = ?, normalized_name = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE code = ?`,
+          [displayName, normalizedName, Number(isActive), params.code],
+        );
+        const changedFields = [
+          ...(name ? ["display_name"] : []),
+          ...(body.is_active !== undefined ? ["is_active"] : []),
+        ];
+        audit(
+          db,
+          user,
+          "UPDATE_ASSET_CATEGORY",
+          params.code,
+          changedFields,
+          {
+            before: { display_name: before.name, is_active: Boolean(before.is_active) },
+            after: { display_name: displayName, is_active: isActive },
+          },
+          "manage_inventory",
+          "LOW",
+          "INVENTORY_ASSET_CATEGORY",
+        );
+        const row = masterRows(db, "inventory_asset_categories").find((item) => item.code === params.code)!;
+        updated = masterDto(row);
+      });
+      return updated;
+    } catch (error) {
+      if (String((error as Error).message) === "MASTER_ENTRY_NOT_FOUND") {
+        set.status = 404;
+        return { detail: "Category not found" };
+      }
+      if (isUniqueConstraintError(error)) {
+        set.status = 409;
+        return { detail: "Category name already exists" };
+      }
+      throw error;
+    }
+  }, { body: UpdateInventoryMasterEntryRequest });
+
+  app.patch("/api/inventory/master-data/funding-sources/:code", ({ params, body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    if (body.name === undefined && body.is_active === undefined) {
+      set.status = 400;
+      return { detail: "At least one funding source field must be provided" };
+    }
+    const name = body.name === undefined ? undefined : normalizeMasterName(body.name);
+    if (body.name !== undefined && !name) {
+      set.status = 400;
+      return { detail: "Funding source name must contain 1 to 80 characters" };
+    }
+    const db = context.database.client;
+    try {
+      let updated: ReturnType<typeof masterDto> | null = null;
+      inTransaction(db, () => {
+        const before = db.query("SELECT code, display_name AS name, is_active, sort_order FROM inventory_funding_sources WHERE code = ?").get(params.code) as Row | null;
+        if (!before) throw new Error("MASTER_ENTRY_NOT_FOUND");
+        const displayName = name?.displayName ?? String(before.name);
+        const normalizedName = name?.normalizedName ?? displayName.toLowerCase();
+        const isActive = body.is_active ?? Boolean(before.is_active);
+        db.run(
+          `UPDATE inventory_funding_sources
+           SET display_name = ?, normalized_name = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+           WHERE code = ?`,
+          [displayName, normalizedName, Number(isActive), params.code],
+        );
+        const changedFields = [
+          ...(name ? ["display_name"] : []),
+          ...(body.is_active !== undefined ? ["is_active"] : []),
+        ];
+        audit(
+          db,
+          user,
+          "UPDATE_FUNDING_SOURCE",
+          params.code,
+          changedFields,
+          {
+            before: { display_name: before.name, is_active: Boolean(before.is_active) },
+            after: { display_name: displayName, is_active: isActive },
+          },
+          "manage_inventory",
+          "LOW",
+          "INVENTORY_FUNDING_SOURCE",
+        );
+        const row = masterRows(db, "inventory_funding_sources").find((item) => item.code === params.code)!;
+        updated = masterDto(row);
+      });
+      return updated;
+    } catch (error) {
+      if (String((error as Error).message) === "MASTER_ENTRY_NOT_FOUND") {
+        set.status = 404;
+        return { detail: "Funding source not found" };
+      }
+      if (isUniqueConstraintError(error)) {
+        set.status = 409;
+        return { detail: "Funding source name already exists" };
+      }
+      throw error;
+    }
+  }, { body: UpdateInventoryMasterEntryRequest });
+
+  app.put("/api/inventory/master-data/categories/order", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const db = context.database.client;
+    let invalidOrder = false;
+    inTransaction(db, () => {
+      const current = masterRows(db, "inventory_asset_categories");
+      if (new Set(body.codes).size !== body.codes.length || body.codes.length !== current.length || current.some((item) => !body.codes.includes(item.code))) {
+        invalidOrder = true;
+        return;
+      }
+      body.codes.forEach((code: string, index: number) => db.run(
+        "UPDATE inventory_asset_categories SET sort_order = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?",
+        [index, code],
+      ));
+      audit(db, user, "REORDER_ASSET_CATEGORIES", "ALL", ["sort_order"], { codes: body.codes }, "manage_inventory", "LOW", "INVENTORY_ASSET_CATEGORY");
+    });
+    if (invalidOrder) {
+      set.status = 400;
+      return { detail: "Category order must contain every current code exactly once" };
+    }
+    return { categories: masterRows(db, "inventory_asset_categories").map(masterDto) };
+  }, { body: ReorderInventoryMasterEntriesRequest });
+
+  app.put("/api/inventory/master-data/funding-sources/order", ({ body, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const db = context.database.client;
+    let invalidOrder = false;
+    inTransaction(db, () => {
+      const current = masterRows(db, "inventory_funding_sources");
+      if (new Set(body.codes).size !== body.codes.length || body.codes.length !== current.length || current.some((item) => !body.codes.includes(item.code))) {
+        invalidOrder = true;
+        return;
+      }
+      body.codes.forEach((code: string, index: number) => db.run(
+        "UPDATE inventory_funding_sources SET sort_order = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?",
+        [index, code],
+      ));
+      audit(db, user, "REORDER_FUNDING_SOURCES", "ALL", ["sort_order"], { codes: body.codes }, "manage_inventory", "LOW", "INVENTORY_FUNDING_SOURCE");
+    });
+    if (invalidOrder) {
+      set.status = 400;
+      return { detail: "Funding source order must contain every current code exactly once" };
+    }
+    return { funding_sources: masterRows(db, "inventory_funding_sources").map(masterDto) };
+  }, { body: ReorderInventoryMasterEntriesRequest });
+
+  app.delete("/api/inventory/master-data/categories/:code", ({ params, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const db = context.database.client;
+    let conflict = false;
+    inTransaction(db, () => {
+      const row = db.query("SELECT code, display_name FROM inventory_asset_categories WHERE code = ?").get(params.code) as Row | null;
+      if (!row) { set.status = 404; return; }
+      const refs = db.query(
+        `SELECT EXISTS (SELECT 1 FROM inventory_assets WHERE category = ?)
+           OR EXISTS (SELECT 1 FROM inventory_asset_sequences WHERE category = ?) AS referenced`,
+      ).get(params.code, params.code) as { referenced: number };
+      if (refs.referenced) { conflict = true; return; }
+      audit(db, user, "DELETE_ASSET_CATEGORY", params.code, ["code", "display_name"], { display_name: row.display_name }, "manage_inventory", "LOW", "INVENTORY_ASSET_CATEGORY");
+      db.run("DELETE FROM inventory_asset_categories WHERE code = ?", [params.code]);
+    });
+    if (set.status === 404) return { detail: "Category not found" };
+    if (conflict) { set.status = 409; return { detail: "Category has asset or sequence history and cannot be deleted" }; }
+    set.status = 204;
+    return null;
+  });
+
+  app.delete("/api/inventory/master-data/funding-sources/:code", ({ params, set, ...ctx }: Context) => {
+    const user = actor(context, { set, ...ctx }, { capability: "manage_inventory" });
+    if (!user) return { detail: "Insufficient permissions" };
+    const db = context.database.client;
+    let conflict = false;
+    inTransaction(db, () => {
+      const row = db.query("SELECT code, display_name FROM inventory_funding_sources WHERE code = ?").get(params.code) as Row | null;
+      if (!row) { set.status = 404; return; }
+      const refs = db.query("SELECT EXISTS (SELECT 1 FROM inventory_assets WHERE funding_source = ?) AS referenced").get(params.code) as { referenced: number };
+      if (refs.referenced) { conflict = true; return; }
+      audit(db, user, "DELETE_FUNDING_SOURCE", params.code, ["code", "display_name"], { display_name: row.display_name }, "manage_inventory", "LOW", "INVENTORY_FUNDING_SOURCE");
+      db.run("DELETE FROM inventory_funding_sources WHERE code = ?", [params.code]);
+    });
+    if (set.status === 404) return { detail: "Funding source not found" };
+    if (conflict) { set.status = 409; return { detail: "Funding source is referenced by assets and cannot be deleted" }; }
+    set.status = 204;
+    return null;
+  });
+
   // Summary statistics
   app.get("/api/inventory/summary", ({ query, set, ...ctx }: Context) => {
     const user = actor(context, { set, ...ctx }, { capability: "view_inventory" });
@@ -200,18 +550,20 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     ).get(...params) as any;
 
     const categoryRows = db.query(
-      `SELECT category, COUNT(*) AS count
+      `SELECT a.category, c.display_name AS category_name, COUNT(*) AS count
        FROM inventory_assets a
+       JOIN inventory_asset_categories c ON c.code = a.category
        WHERE ${whereClause}
-       GROUP BY category`,
-    ).all(...params) as { category: string; count: number }[];
+       GROUP BY a.category, c.display_name`,
+    ).all(...params) as { category: string; category_name: string; count: number }[];
 
     const fundingRows = db.query(
-      `SELECT funding_source, COUNT(*) AS count
+      `SELECT a.funding_source, f.display_name AS funding_source_name, COUNT(*) AS count
        FROM inventory_assets a
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        WHERE ${whereClause}
-       GROUP BY funding_source`,
-    ).all(...params) as { funding_source: string; count: number }[];
+       GROUP BY a.funding_source, f.display_name`,
+    ).all(...params) as { funding_source: string; funding_source_name: string; count: number }[];
 
     const unitRows = db.query(
       `SELECT u.id AS unit_id, u.name AS unit_name, COUNT(a.id) AS count
@@ -231,8 +583,8 @@ export function inventoryRoutes(app: any, context: AuthContext) {
         rusak_ringan: totalRow?.rusak_ringan_count ? Number(totalRow.rusak_ringan_count) : 0,
         rusak_berat: totalRow?.rusak_berat_count ? Number(totalRow.rusak_berat_count) : 0,
       },
-      by_category: categoryRows.map((r) => ({ category: r.category as AssetCategoryDto, count: Number(r.count) })),
-      by_funding: fundingRows.map((r) => ({ funding_source: r.funding_source as FundingSourceDto, count: Number(r.count) })),
+      by_category: categoryRows.map((r) => ({ category: r.category as AssetCategoryDto, category_name: r.category_name, count: Number(r.count) })),
+      by_funding: fundingRows.map((r) => ({ funding_source: r.funding_source as FundingSourceDto, funding_source_name: r.funding_source_name, count: Number(r.count) })),
       by_unit: unitRows.map((r) => ({ unit_id: Number(r.unit_id), unit_name: String(r.unit_name), count: Number(r.count) })),
     };
   });
@@ -292,9 +644,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const offset = Math.max(Number(query.offset ?? 0), 0);
 
     const assetRows = db.query(
-      `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+      `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+              u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        LEFT JOIN school_units cu ON cu.id = a.current_unit_id
        WHERE ${whereClause}
        ORDER BY a.created_at DESC, a.id DESC
@@ -315,9 +670,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
 
     const db = context.database.client;
     const assetRow = db.query(
-      `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+      `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+              u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        LEFT JOIN school_units cu ON cu.id = a.current_unit_id
        WHERE a.id = ?`,
     ).get(params.id) as Row | null;
@@ -360,7 +718,10 @@ export function inventoryRoutes(app: any, context: AuthContext) {
 
     let newAsset: AssetDtoType | null = null;
 
-    inTransaction(db, () => {
+    try {
+      inTransaction(db, () => {
+      requireActiveMaster(db, "inventory_asset_categories", body.category);
+      requireActiveMaster(db, "inventory_funding_sources", body.funding_source);
       const [seq] = allocateSequences(db, unit.id, body.category, 1);
       const assetCode = `${prefix}-${body.category}-${String(seq).padStart(4, "0")}`;
 
@@ -400,15 +761,25 @@ export function inventoryRoutes(app: any, context: AuthContext) {
       );
 
       const inserted = db.query(
-        `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+        `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+                u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
          FROM inventory_assets a
          JOIN school_units u ON u.id = a.school_unit_id
+         JOIN inventory_asset_categories c ON c.code = a.category
+         JOIN inventory_funding_sources f ON f.code = a.funding_source
          LEFT JOIN school_units cu ON cu.id = a.current_unit_id
          WHERE a.id = ?`,
       ).get(assetId) as Row;
 
       newAsset = mapRowToAssetDto(inserted);
-    });
+      });
+    } catch (error) {
+      if (inactiveMasterError(error)) {
+        set.status = 400;
+        return { detail: "Inactive categories or funding sources cannot be assigned to new assets" };
+      }
+      throw error;
+    }
 
     set.status = 201;
     return newAsset!;
@@ -443,7 +814,10 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const prefix = deriveSchoolUnitPrefix(unit.name);
     const createdItems: AssetDtoType[] = [];
 
-    inTransaction(db, () => {
+    try {
+      inTransaction(db, () => {
+      const categoryName = requireActiveMaster(db, "inventory_asset_categories", body.category);
+      const fundingSourceName = requireActiveMaster(db, "inventory_funding_sources", body.funding_source);
       const sequences = allocateSequences(db, unit.id, body.category, quantity);
 
       for (let i = 0; i < quantity; i++) {
@@ -485,12 +859,14 @@ export function inventoryRoutes(app: any, context: AuthContext) {
           current_unit_id: currentUnitId,
           current_unit_name: unit.name,
           category: body.category,
+          category_name: categoryName,
           item_name: body.item_name.trim(),
           brand: body.brand?.trim() || null,
           model: body.model?.trim() || null,
           serial_number: body.serial_number?.trim() || null,
           location: body.location?.trim() || null,
           funding_source: body.funding_source,
+          funding_source_name: fundingSourceName,
           budget_year: body.budget_year,
           arkas_account_code: body.arkas_account_code?.trim() || null,
           purchase_document_reference: body.purchase_document_reference?.trim() || null,
@@ -520,7 +896,14 @@ export function inventoryRoutes(app: any, context: AuthContext) {
           end_code: createdItems[createdItems.length - 1]?.asset_code,
         },
       );
-    });
+      });
+    } catch (error) {
+      if (inactiveMasterError(error)) {
+        set.status = 400;
+        return { detail: "Inactive categories or funding sources cannot be assigned to new assets" };
+      }
+      throw error;
+    }
 
     set.status = 201;
     return {
@@ -633,11 +1016,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
 
     values.push(params.id);
 
-    inTransaction(db, () => {
-      db.run(
-        `UPDATE inventory_assets SET ${updates.join(", ")} WHERE id = ?`,
-        values,
-      );
+    try {
+      inTransaction(db, () => {
+      const current = db.query("SELECT category, funding_source FROM inventory_assets WHERE id = ?").get(params.id) as Row;
+      if (body.category !== undefined) requireActiveMaster(db, "inventory_asset_categories", body.category, String(current.category));
+      if (body.funding_source !== undefined) requireActiveMaster(db, "inventory_funding_sources", body.funding_source, String(current.funding_source));
+      db.run(`UPDATE inventory_assets SET ${updates.join(", ")} WHERE id = ?`, values);
 
       audit(
         db,
@@ -651,12 +1035,22 @@ export function inventoryRoutes(app: any, context: AuthContext) {
           after_price: body.price !== undefined ? body.price : existing.price,
         },
       );
-    });
+      });
+    } catch (error) {
+      if (inactiveMasterError(error)) {
+        set.status = 400;
+        return { detail: "Inactive categories or funding sources cannot be assigned to assets" };
+      }
+      throw error;
+    }
 
     const updated = db.query(
-      `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+      `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+              u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        LEFT JOIN school_units cu ON cu.id = a.current_unit_id
        WHERE a.id = ?`,
     ).get(params.id) as Row;
@@ -701,9 +1095,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     });
 
     const updated = db.query(
-      `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+      `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+              u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        LEFT JOIN school_units cu ON cu.id = a.current_unit_id
        WHERE a.id = ?`,
     ).get(params.id) as Row;
@@ -754,9 +1151,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const whereClause = conditions.join(" AND ");
 
     const assetRows = db.query(
-      `SELECT a.*, u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
+      `SELECT a.*, c.display_name AS category_name, f.display_name AS funding_source_name,
+              u.name AS school_unit_name, COALESCE(cu.name, u.name) AS current_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        LEFT JOIN school_units cu ON cu.id = a.current_unit_id
        WHERE ${whereClause}
        ORDER BY a.asset_code ASC`,
@@ -798,12 +1198,12 @@ export function inventoryRoutes(app: any, context: AuthContext) {
       row.item_name,
       row.school_unit_name,
       row.current_unit_name,
-      row.category,
+      row.category_name,
       row.brand || "-",
       row.model || "-",
       row.serial_number || "-",
       row.location || "-",
-      row.funding_source,
+      row.funding_source_name,
       row.budget_year,
       row.arkas_account_code || "-",
       row.purchase_document_reference || "-",
@@ -889,9 +1289,11 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const db = context.database.client;
     const placeholders = body.asset_ids.map(() => "?").join(", ");
     const rows = db.query(
-      `SELECT a.id, a.asset_code, a.item_name, a.category, a.brand, a.location, a.funding_source, a.budget_year, a.condition, u.name AS school_unit_name
+      `SELECT a.id, a.asset_code, a.item_name, c.display_name AS category, a.brand, a.location, f.display_name AS funding_source, a.budget_year, a.condition, u.name AS school_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        WHERE a.id IN (${placeholders})`,
     ).all(...body.asset_ids) as Row[];
 
@@ -976,9 +1378,11 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     const db = context.database.client;
     const placeholders = body.asset_ids.map(() => "?").join(", ");
     const rows = db.query(
-      `SELECT a.id, a.asset_code, a.item_name, a.category, a.brand, a.location, a.funding_source, a.budget_year, a.condition, u.name AS school_unit_name
+      `SELECT a.id, a.asset_code, a.item_name, c.display_name AS category, a.brand, a.location, f.display_name AS funding_source, a.budget_year, a.condition, u.name AS school_unit_name
        FROM inventory_assets a
        JOIN school_units u ON u.id = a.school_unit_id
+       JOIN inventory_asset_categories c ON c.code = a.category
+       JOIN inventory_funding_sources f ON f.code = a.funding_source
        WHERE a.id IN (${placeholders})`,
     ).all(...body.asset_ids) as Row[];
 

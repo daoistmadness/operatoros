@@ -14,9 +14,14 @@ const studentVerificationSql = readFileSync(new URL("./s53-migration.sql", impor
 const bospReminderSql = readFileSync(new URL("./s54-migration.sql", import.meta.url), "utf8");
 const inventorySql = readFileSync(new URL("./s55-migration.sql", import.meta.url), "utf8");
 const staffPtkSql = readFileSync(new URL("./s56-migration.sql", import.meta.url), "utf8");
+const inventoryMasterDataSql = readFileSync(new URL("./s57-migration.sql", import.meta.url), "utf8");
 
 export function installS56StaffPtkSchema(client: SqliteClient): void {
   client.exec(staffPtkSql);
+}
+
+export function installS57InventoryMasterDataSchema(client: SqliteClient): void {
+  client.exec(inventoryMasterDataSql);
 }
 
 const triggerStart = schemaSql.indexOf("CREATE TRIGGER ");
@@ -90,6 +95,7 @@ export function createFreshDatabase(path: string): void {
       installS54BospReminderSchema(client!);
       installS55InventorySchema(client!);
       installS56StaffPtkSchema(client!);
+      installS57InventoryMasterDataSchema(client!);
       if (schemaFingerprint(client!) !== CURRENT_SCHEMA_FINGERPRINT) throw new Error("BOOTSTRAP_SCHEMA_MISMATCH");
       client!.run(
         "INSERT INTO operatoros_schema_migrations " +
