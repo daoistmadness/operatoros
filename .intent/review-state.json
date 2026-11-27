@@ -1237,15 +1237,15 @@
       ]
     },
     "source:apps/web/src/pages/Dashboard.tsx": {
-      "fingerprint": "4ca8205240590e447bd26180893175b04826aa00b1c38b593f39a218838ef784",
+      "fingerprint": "0eb07ed8fce15f6306f59003b072d6a6273a3cce298b7e985934be72c4b3d770",
       "snapshot": {
-        "apps/web/src/pages/Dashboard.tsx": "33df394f565b3a1e5ba760d038c1fb3e7e65f0d730794fb2b432f0844c94317c"
+        "apps/web/src/pages/Dashboard.tsx": "97f0567ad50555ef56180d3fb9b97da7dcd2bdb32b0f5f4405c2bed386256251"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: apps/web/src/pages/Dashboard.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/Dashboard.tsx at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:apps/api/src/domains/attendance-analytics.ts": {
@@ -2960,15 +2960,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "415c18545c54b167f159a7dbae2f79d74c131c82c013ace7a64f3b57bebf1b2d",
+      "fingerprint": "b731c250b42a80ea2e09bf129a0daf523d241d08d5630086104018907ac0bd40",
       "snapshot": {
-        "CHANGELOG.md": "9d86fb20aa6b0b1ea85ac02733201d79e52240bffbafcdcebe3eaa59150fed2e"
+        "CHANGELOG.md": "f6b7229a5d2d156e766d1a7fe231d86059c16dbd966fe8a56057c8a0f3bd4379"
       },
-      "head": "07cacca2c836070a06bb7606db4d34f4e86b11e9",
+      "head": "b41fef349762aa41a7855ea815566956fee4961c",
       "outcome": "no-change",
-      "reason": "Linked the assigned Phase 2 pull request from the release note. The link changes no guidance, source behavior, or skill mappings.",
+      "reason": "Added the assigned Phase 3 PR reference to the release note. The link changes no skill guidance or source behavior.",
       "evidence": [
-        "Changed: CHANGELOG.md at 07cacca2c836070a06bb7606db4d34f4e86b11e9"
+        "Changed: CHANGELOG.md at b41fef349762aa41a7855ea815566956fee4961c"
       ]
     },
     "source:COMMANDS.md": {
@@ -3385,15 +3385,15 @@
       ]
     },
     "source:docs/architecture/ui-and-routing.md": {
-      "fingerprint": "c68d51389decbe805315b84aaaba7cdbac1f2e163eea56c84b064385e0cc54dc",
+      "fingerprint": "26922d839fe8e464a3870bf1eee5f7e79cb6af2da7f9c68fb92d2d2f69fd6a8d",
       "snapshot": {
-        "docs/architecture/ui-and-routing.md": "843cec0564f640715a7ee77111a74a21de9ef35dfef7f23fc6beb80b03813212"
+        "docs/architecture/ui-and-routing.md": "5875deb6bd0d34a8a07581fdade8386b2684e5fc129d3921998bc140a925d02f"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: docs/architecture/ui-and-routing.md at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: docs/architecture/ui-and-routing.md at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:docs/architecture/ui-styling.md": {
@@ -5605,17 +5605,15 @@
       ]
     },
     "source:apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": {
-      "fingerprint": "a6fb9a170b151d6d36b2291b817db0c69cdb23ccc585f3fff33af94ff06353ad",
+      "fingerprint": "3759de391efc803d66f3f0311a39180e58e516ad9e92b66ec1f368d20bad74a0",
       "snapshot": {
-        "apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": "adc544f68a9d216263c25774e7ea0bb65100cfaec558dd57b36e6fa9e8372619"
+        "apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx": "1c4f3993deeb37661e4cb3bfd36db1fc3864905dba950e21cf450aa1acaca70b"
       },
-      "head": "9fbfe6e89a4997048684174a4be5c58346aeaccb",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "Extends the existing work-queue page with type filters and actionable navigation using existing UI primitives. Routes, fetching, and business forms remain in web as required; no guidance change.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Reviewed the #331 diff at 9fbfe6e8 for apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx.",
-        "Changed: apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx at 9fbfe6e8.",
-        "Verification: bun run turbo:check (410 api tests), e2e/run-smoke.sh PASS, check:architecture, check:contracts, check:typebox, check:ui, docs checkers."
+        "Changed: apps/web/src/features/operator-work-queue/pages/OperatorWorkQueue.tsx at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:apps/web/src/features/operator-work-queue/queries/useOperatorQueries.ts": {
@@ -5861,15 +5859,15 @@
       ]
     },
     "source:e2e/smoke/web/student-administration-phase56.spec.ts": {
-      "fingerprint": "88a715ad686e25f277083988961e2dbad746b35026875552434f5fa405c41691",
+      "fingerprint": "c824f5570d1da672d291bf5c81a8e970189d17df8008d42f4bdeeddea5a4cdc7",
       "snapshot": {
-        "e2e/smoke/web/student-administration-phase56.spec.ts": "b6520a9951f38e66a94fab2623bee295c3441ac1ee95f20d9c086d20acfb455b"
+        "e2e/smoke/web/student-administration-phase56.spec.ts": "a79159d74b814cac177e9be0a7339b682cced314d891052016f1b3bfc1b1b175"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/student-administration-phase56.spec.ts at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:packages/db/src/s54-migration.sql": {
@@ -5909,15 +5907,15 @@
       ]
     },
     "source:apps/web/src/lib/api/followups.ts": {
-      "fingerprint": "54aba90b2ce62d380e787c83bf8a546b42072d988999702bd3d92debd0e3d93d",
+      "fingerprint": "a5eb63de3c18a33dca5d14dc37261237e77f2a1382e96bfa9332e2e2527d7407",
       "snapshot": {
-        "apps/web/src/lib/api/followups.ts": "7a06ac66018037dab1370fbdf745a0dd2a7d8270f0dde642a9577029b6c64de8"
+        "apps/web/src/lib/api/followups.ts": "17862431143efe9fe47a902de9f6da8f92b543f9a792867484a8383b4897c6fc"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: apps/web/src/lib/api/followups.ts at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/lib/api/followups.ts at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:apps/api/src/auth/routes.ts": {
@@ -7829,15 +7827,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceFollowUpQueue.tsx": {
-      "fingerprint": "68ada2780accf1a6da4591072b07826e0a3d182c749c73ec946a61c514fa0161",
+      "fingerprint": "6f3034c27f3366212fe86d6e9f2bd40e2bc60979878e43525b1781d7ea6f4765",
       "snapshot": {
-        "apps/web/src/pages/AttendanceFollowUpQueue.tsx": "54aa9856fa4b3f2a438eca193fb4c536054bd2629652c16bb552793edf13a70b"
+        "apps/web/src/pages/AttendanceFollowUpQueue.tsx": "59d34bb7f0d327fc51affa21a2f0d185a25d261669a1ea646021ead02cac4037"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceFollowUpQueue.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/pages/AttendanceFollowUpQueue.tsx at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:apps/web/src/pages/OperationsAudit.tsx": {
@@ -7989,15 +7987,15 @@
       ]
     },
     "source:e2e/smoke/web/attendance-followup-table.spec.ts": {
-      "fingerprint": "e61301e78460b30c516a4fca4fc62fd2212a9c7166e637cdc41502df314b2eb0",
+      "fingerprint": "2f7016074cd7806c79467a7156d9f229245979f978426a3e622c59479a6f6be1",
       "snapshot": {
-        "e2e/smoke/web/attendance-followup-table.spec.ts": "092ac6764a59575893190e5cf75e8ecd4e5eba7db9629ae509c32ed756f2c3ca"
+        "e2e/smoke/web/attendance-followup-table.spec.ts": "7ba422b641d6f39c82a01b730c433a13696169ded1bd3f36bfc460f789662af9"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
-        "Changed: e2e/smoke/web/attendance-followup-table.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/attendance-followup-table.spec.ts at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     },
     "source:e2e/smoke/web/class-attendance-identity-visibility.spec.ts": {
@@ -8691,15 +8689,15 @@
       ]
     },
     "source:e2e/smoke/web/critical-paths.spec.ts": {
-      "fingerprint": "37e212dd1c8e9dc7c330d17b12231315205f5c3f11a74a967efadfce7145e2c1",
+      "fingerprint": "651c65872d19d7b4dedc4303705c85a03d0f2e954382d8c110e60b91b30990b4",
       "snapshot": {
-        "e2e/smoke/web/critical-paths.spec.ts": "7efff8740530505eb6e42540b5dbcf6b50b6d8ff3375b6b727aaec1c67166eb1"
+        "e2e/smoke/web/critical-paths.spec.ts": "73675a01374c5803b067474ec49d9b1e107cf3a4ebfde350c2f3d89c6ad078a3"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1d738d939068d44afeca50754fb1f3509b34e01d",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Scoped the existing Dashboard period smoke assertion to its exact label and added assertions for the new summary heading and recap link. This browser regression changes no Elysia source or skill guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/critical-paths.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/critical-paths.spec.ts at 1d738d939068d44afeca50754fb1f3509b34e01d"
       ]
     },
     "source:e2e/smoke/web/daily-attendance-operations.spec.ts": {
@@ -11785,6 +11783,30 @@
       "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
       "evidence": [
         "Changed: e2e/smoke/web/z-data-reset.spec.ts at 8e0a4b4681a624946637074377a20d491040f221"
+      ]
+    },
+    "source:apps/web/src/components/AttendanceFollowUpDetailModal.tsx": {
+      "fingerprint": "3656d0ad2ba0841d891a01743419bf49c5ba10c22fbafdbe406bc275aa1452b2",
+      "snapshot": {
+        "apps/web/src/components/AttendanceFollowUpDetailModal.tsx": "0bbd508251fd0b42367c61af1d6db5a041310f01d5f46ce2245f7a07f5a07685"
+      },
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
+      "outcome": "no-change",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
+      "evidence": [
+        "Changed: apps/web/src/components/AttendanceFollowUpDetailModal.tsx at 456a787bb2c11129ee22fa4cfada1a252b821b14"
+      ]
+    },
+    "source:e2e/smoke/web/operator-workspace.spec.ts": {
+      "fingerprint": "045fa8439a34205fe69acf29f5acdbbae387a4f5c7e8b32e5311e187235494f7",
+      "snapshot": {
+        "e2e/smoke/web/operator-workspace.spec.ts": "7a4725d87c8e9fb975494ce12b2b960ebd1f5ed0f7ab13b7c753ebc61b2c59c3"
+      },
+      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
+      "outcome": "no-change",
+      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
+      "evidence": [
+        "Changed: e2e/smoke/web/operator-workspace.spec.ts at 456a787bb2c11129ee22fa4cfada1a252b821b14"
       ]
     }
   }

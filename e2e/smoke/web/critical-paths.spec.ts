@@ -74,7 +74,9 @@ test("@analytics @release dashboard filters use the selected period", async ({ p
   await page.locator("#dashboard-month").selectOption("1");
   await page.locator("#dashboard-year").selectOption("2025");
   await refresh;
-  await expect(page.getByText("Januari 2025")).toBeVisible();
+  await expect(page.getByText("Januari 2025", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Attendance summary · Januari 2025", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open monthly recap" })).toHaveAttribute("href", "/attendance/monthly-recap?month=2025-01");
   await expect(page.getByRole("link", { name: "Open report" })).toHaveAttribute("href", "/analytics/attendance?view=recap");
 });
 

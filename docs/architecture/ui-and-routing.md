@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-31
+last_reviewed: 2026-11-27
 ---
 
 # UI and routing
@@ -85,6 +85,12 @@ independently authorizes every protected request.
 TanStack Query owns server data and mutation state. Pages call feature APIs
 through the shared client. Analytics formulas and export generation stay in the
 API. UI code formats and presents server results.
+
+## Operator workspace
+
+Home shows the selected attendance month and links to authorized operational destinations. The Operator Work Queue keeps its item type and due-state filters in the URL for browser Back and Forward. Free-text search stays in page memory.
+
+Links to an existing attendance follow-up case use `/attendance/followups?case_id=<id>`. They open the case dialog on the Follow-Up Queue. Closing the dialog retains the list filters. The existing detail and history endpoints independently authorize the requested case.
 
 ## UI components
 

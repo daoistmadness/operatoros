@@ -120,7 +120,7 @@ test("@attendance @table-benchmark @release virtualizes large follow-up tables w
   await expect(candidateTable.getByRole("columnheader", { name: "Ringkasan Bukti" })).toHaveCount(0);
   await expect(page.getByRole("checkbox", { name: "Tindakan" })).toHaveCount(0);
   await search.fill("No matching student");
-  await expect(candidateTable.getByText("Tidak ada kandidat pengecualian ditemukan.")).toBeVisible();
+  await expect(candidateTable.getByText("Tidak ada kandidat yang cocok dengan pencarian atau filter.")).toBeVisible();
   await expect(candidateTable).toHaveAttribute("aria-rowcount", "2");
   await expect(candidateTable.locator("tbody tr").last()).toHaveAttribute("aria-rowindex", "2");
 
