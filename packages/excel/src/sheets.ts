@@ -37,9 +37,22 @@ export function styleHeader(sheet: ExcelJS.Worksheet, rowNumber = 1): void {
 }
 
 export function autoSizeColumns(sheet: ExcelJS.Worksheet, min = 12, max = 60): void {
-  for (const column of sheet.columns) {
-    const lengths = (column.values ?? []).map((value) => String(value ?? "").length + 2);
-    column.width = Math.min(max, Math.max(min, ...lengths));
+  for (const column of sheet.columns ?? []) {
+    let width = min;
+    const values = column.values;
+    if (values) {
+      for (let i = 0; i < values.length; i += 1) {
+        const len = String(values[i] ?? "").length + 2;
+        if (len > width) {
+          width = len;
+          if (width >= max) {
+            width = max;
+            break;
+          }
+        }
+      }
+    }
+    column.width = Math.min(max, width);
   }
 }
 

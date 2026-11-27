@@ -1,6 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { createRequire } from "node:module";
-import { parseExcelDate, readLegacyXlsRows, writeLegacyXlsRows } from "@operatoros/excel";
+import {
+  addWorksheet,
+  appendRow,
+  autoSizeColumns,
+  createWorkbook,
+  parseExcelDate,
+  readLegacyXlsRows,
+  writeLegacyXlsRows,
+} from "@operatoros/excel";
 
 const req = createRequire(import.meta.url);
 
@@ -49,5 +57,21 @@ describe("@operatoros/excel correctness regression (PR-2)", () => {
     expect(parseExcelDate(Number.NaN, false)).toBeNull();
     expect(parseExcelDate(Number.POSITIVE_INFINITY, false)).toBeNull();
     expect(parseExcelDate("31/02/2026", false)).toBeNull();
+  });
+
+  it("computes column widths identically across empty, header-only, min, max, and wide worksheets", () => {
+    const emptyWb = createWorkbook();
+    const emptyWs = addWorksheet(emptyWb, "Empty");
+    autoSizeColumns(emptyWs, 12, 60);
+    expect(emptyWs.columns).toBeNull();
+
+    const wb = createWorkbook();
+    const ws = addWorksheet(wb, "Widths");
+    appendRow(ws, ["ID", "Short", "Very Long Header That Exceeds Max Width Limit Of Sixty Characters"]);
+    appendRow(ws, [1, "abc", "x".repeat(80)]);
+    autoSizeColumns(ws, 12, 60);
+    expect(ws.getColumn(1).width).toBe(12);
+    expect(ws.getColumn(2).width).toBe(12);
+    expect(ws.getColumn(3).width).toBe(60);
   });
 });

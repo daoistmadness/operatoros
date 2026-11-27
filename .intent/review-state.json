@@ -1632,15 +1632,15 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "48d36b45a39a34d3590a3d6e4f911ebdab040a3b86a221d8ec84f2d623d099ca",
+      "fingerprint": "c4b9fb4db2031fc22fe0323cce3a905cf0991556614f387423c3c7f51cd2df6d",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "3a5028e6eeb3fc2fa1908e391de3ddcf4461bc2f161373fdf11d39a8eb948263"
+        "apps/api/src/import/excel-reader.ts": "5215a6d021bbcea945011e9050ae679eba3a7d54e0bbb8ec232b72153195b172"
       },
-      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
       "outcome": "no-change",
-      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
+        "Changed: apps/api/src/import/excel-reader.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
@@ -2956,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d1b791c87f8ac2970252bbfcdc7f60d4e90ae4d654834c4deb1e238bfbef9548",
+      "fingerprint": "f26029a3cc36ae0fcc6d4d58b494f841367f359f6d6ffe597a4b5b79f5a10d12",
       "snapshot": {
-        "CHANGELOG.md": "47839181a534b8aa6045975a2b162a7f0248099596bc52e94b5342bbfbbda3b8"
+        "CHANGELOG.md": "29dad219a57e0bc5a732ebbfe51bab1249ab11d1a5d17dc9f588caab5cb3b072"
       },
-      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
       "outcome": "no-change",
-      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 47e4916eb86677ff4224df157217dbb55eaefc3d"
+        "Changed: CHANGELOG.md at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
       ]
     },
     "source:COMMANDS.md": {
@@ -11924,15 +11924,39 @@
       ]
     },
     "source:packages/excel/tests/correctness-remediation.test.ts": {
-      "fingerprint": "143a9bc646baaaa5176433b9a9c2f45f0e922195429e4613c9c501931d0f978d",
+      "fingerprint": "c526112a53b9143b3a8c2ad78141ce46dbc4ced9817a20ee73cd0be6f5f5e2fa",
       "snapshot": {
-        "packages/excel/tests/correctness-remediation.test.ts": "927e545eb3a079dd1e7714931fe4661e8d07a0d990b6b0f01b61e5a59ea3a35e"
+        "packages/excel/tests/correctness-remediation.test.ts": "a0409423a1e48d0f5fd2ee1a6da4066b7dac4d758fd2b2bce91f9cba5c0340e1"
       },
-      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
       "outcome": "no-change",
-      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: packages/excel/tests/correctness-remediation.test.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
+        "Changed: packages/excel/tests/correctness-remediation.test.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
+      ]
+    },
+    "source:apps/api/tests/excel-pr3-optimization.test.ts": {
+      "fingerprint": "671c01aecb5237a5afb695f2f55e6a7147ed8994cecfca915fac0b01715ca865",
+      "snapshot": {
+        "apps/api/tests/excel-pr3-optimization.test.ts": "6ac6f6785980820d9db713cf20cbeb38dc1a787d7c61646363166468b8b44756"
+      },
+      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
+      "outcome": "no-change",
+      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-pr3-optimization.test.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
+      ]
+    },
+    "source:packages/excel/src/sheets.ts": {
+      "fingerprint": "c95145b3c715b253f2eb276e209d145d0c3d839eb599dab0f73755bc8a91b509",
+      "snapshot": {
+        "packages/excel/src/sheets.ts": "b1ca6430ce849bfc4bfa86d767cc6e343b08f3cc9ca9e63e11fd9e9588cdf741"
+      },
+      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
+      "outcome": "no-change",
+      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/src/sheets.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
       ]
     }
   }
