@@ -2962,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "21c0ad3ef92408c117913c912faa857e993af82278bc775e3c7808fe1cac7908",
+      "fingerprint": "00d30721aa6d1e43e2c777e7b2a3d7537b0cfd3e57ca45af6d54986a853631a0",
       "snapshot": {
-        "CHANGELOG.md": "30bbdc7e40142cb70ca7c74c08e29ebcf60603fcb47c47a8b0a5d876b7c0ef52"
+        "CHANGELOG.md": "2caca8071129d0e3d1cab34f91bb8a17061c1b2edad5674da0b260bd26b53d7d"
       },
-      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "head": "eeba93fa89379bb6f9a00a90c76ec86e16da6f62",
       "outcome": "no-change",
-      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
+      "reason": "Recorded PR #425 reference in CHANGELOG.md without changing any source or guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
+        "Changed: CHANGELOG.md at eeba93fa89379bb6f9a00a90c76ec86e16da6f62"
       ]
     },
     "source:COMMANDS.md": {
