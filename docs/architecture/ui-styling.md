@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-27
 ---
 
 # OperatorOS CSS and Component Architecture
@@ -34,6 +34,12 @@ Semantic CSS variables live in `src/index.css` and are exposed to Tailwind throu
 ## Variants
 
 Buttons support `primary`, `secondary`, `success`, `warning`, `danger`, `outline`, and `ghost`. Danger is reserved for restore, delete, and destructive administration. Components use `class-variance-authority` for stable variants and the shared `cn` utility for conflict resolution.
+
+## Operational layouts
+
+Use the common PageHeader for 24 px semibold titles and brief supporting text. Wide action groups belong below the title when they would crowd it. Use the common DataTable primitives for compact headers and cells while preserving each workflow’s table semantics. Give independently scrollable tables an accessible name and a keyboard focus target when their data requires horizontal scrolling.
+
+For long confirmation dialogs, put initial focus on the title so operators can read the preview in order. Return focus to the action that opened the dialog.
 
 ## Migration rule
 

@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Improve Student Directory, Daily Attendance, and Settings with clearer page headings, denser tables, and keyboard focus that returns to the reset preview button.
 - Reorganize primary navigation into nine domains (`Home`, `Work Queue`, `Attendance`, `Students`, `Academics`, `Staff`, `Inventory`, `Insights & Reports`, `Settings`) with contextual domain sub-navigation, grouped Attendance workflows, sticky mobile navigation header, domain-aware breadcrumbs, and bilingual English/Indonesian `Ctrl+K`/`⌘K` command search ([#425](https://github.com/daoistmadness/operatoros/pull/425)).
 - Add global inventory category and funding-source management with preserved asset codes, allocation history, and historical labels ([#424](https://github.com/daoistmadness/operatoros/pull/424)).
 - Permit owner-approved cleanup of individually verified reproducible dependency directories in registered development worktrees and validation checkouts.
