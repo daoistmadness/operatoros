@@ -36144,17 +36144,9 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "IT",
-                "FRN",
-                "ELK",
-                "LAB",
-                "LIB",
-                "SPT",
-                "EDU",
-                "OFF",
-                "OTH"
-              ]
+              "minLength": 2,
+              "maxLength": 8,
+              "pattern": "^[A-Z0-9]+$"
             }
           },
           {
@@ -36163,14 +36155,9 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "BOS",
-                "BOP",
-                "YAYASAN",
-                "KOMITE",
-                "HIBAH",
-                "LAINNYA"
-              ]
+              "minLength": 2,
+              "maxLength": 48,
+              "pattern": "^[A-Z0-9_]+$"
             }
           },
           {
@@ -36265,17 +36252,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -36323,14 +36302,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -36426,17 +36400,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -36484,14 +36450,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -36587,17 +36548,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -36645,14 +36598,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -36763,17 +36711,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "current_unit_id": {
                     "anyOf": [
@@ -36828,14 +36768,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -36913,17 +36848,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "current_unit_id": {
                     "anyOf": [
@@ -36978,14 +36905,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -37063,17 +36985,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "current_unit_id": {
                     "anyOf": [
@@ -37128,14 +37042,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -37242,17 +37151,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -37305,14 +37206,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -37409,17 +37305,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -37472,14 +37360,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -37576,17 +37459,9 @@
                   },
                   "category": {
                     "type": "string",
-                    "enum": [
-                      "IT",
-                      "FRN",
-                      "ELK",
-                      "LAB",
-                      "LIB",
-                      "SPT",
-                      "EDU",
-                      "OFF",
-                      "OTH"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 8,
+                    "pattern": "^[A-Z0-9]+$"
                   },
                   "item_name": {
                     "minLength": 1,
@@ -37639,14 +37514,9 @@
                   },
                   "funding_source": {
                     "type": "string",
-                    "enum": [
-                      "BOS",
-                      "BOP",
-                      "YAYASAN",
-                      "KOMITE",
-                      "HIBAH",
-                      "LAINNYA"
-                    ]
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[A-Z0-9_]+$"
                   },
                   "budget_year": {
                     "minimum": 2000,
@@ -37815,17 +37685,9 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "IT",
-                "FRN",
-                "ELK",
-                "LAB",
-                "LIB",
-                "SPT",
-                "EDU",
-                "OFF",
-                "OTH"
-              ]
+              "minLength": 2,
+              "maxLength": 8,
+              "pattern": "^[A-Z0-9]+$"
             }
           },
           {
@@ -37834,14 +37696,9 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "BOS",
-                "BOP",
-                "YAYASAN",
-                "KOMITE",
-                "HIBAH",
-                "LAINNYA"
-              ]
+              "minLength": 2,
+              "maxLength": 48,
+              "pattern": "^[A-Z0-9_]+$"
             }
           },
           {
@@ -41639,6 +41496,319 @@
           },
           "503": {
             "description": "Storage unavailable"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data": {
+      "get": {
+        "operationId": "getApiInventoryMasterData",
+        "responses": {
+          "200": {
+            "description": "Shared inventory categories and funding sources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMasterDataResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/categories": {
+      "post": {
+        "operationId": "postApiInventoryMasterDataCategories",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMasterEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid category name or code"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "409": {
+            "description": "Category code or normalized name already exists"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/funding-sources": {
+      "post": {
+        "operationId": "postApiInventoryMasterDataFundingSources",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFundingSourceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created funding source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMasterEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid funding source name"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "409": {
+            "description": "Funding source name already exists"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/categories/{code}": {
+      "patch": {
+        "operationId": "patchApiInventoryMasterDataCategoriesByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryMasterEntryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMasterEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid update"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Category name already exists"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiInventoryMasterDataCategoriesByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted unused category"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Category not found"
+          },
+          "409": {
+            "description": "Category has asset or sequence history"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/funding-sources/{code}": {
+      "patch": {
+        "operationId": "patchApiInventoryMasterDataFundingSourcesByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryMasterEntryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated funding source",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryMasterEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid update"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Funding source not found"
+          },
+          "409": {
+            "description": "Funding source name already exists"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteApiInventoryMasterDataFundingSourcesByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted unused funding source"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          },
+          "404": {
+            "description": "Funding source not found"
+          },
+          "409": {
+            "description": "Funding source is referenced by assets"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/categories/order": {
+      "put": {
+        "operationId": "putApiInventoryMasterDataCategoriesOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderInventoryMasterEntriesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated display order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderAssetCategoriesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Order must contain every current code exactly once"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          }
+        }
+      }
+    },
+    "/api/inventory/master-data/funding-sources/order": {
+      "put": {
+        "operationId": "putApiInventoryMasterDataFundingSourcesOrder",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderInventoryMasterEntriesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated display order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReorderFundingSourcesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Order must contain every current code exactly once"
+          },
+          "403": {
+            "description": "Insufficient permissions"
           }
         }
       }
@@ -53464,6 +53634,144 @@
           "evidence": {
             "type": "string",
             "format": "binary"
+          }
+        }
+      },
+      "InventoryMasterEntry": {
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "is_active",
+          "sort_order",
+          "can_delete"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "can_delete": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InventoryMasterDataResponse": {
+        "type": "object",
+        "required": [
+          "categories",
+          "funding_sources"
+        ],
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryMasterEntry"
+            }
+          },
+          "funding_sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryMasterEntry"
+            }
+          }
+        }
+      },
+      "CreateAssetCategoryRequest": {
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 8,
+            "pattern": "^[A-Z0-9]+$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "CreateFundingSourceRequest": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "UpdateInventoryMasterEntryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReorderInventoryMasterEntriesRequest": {
+        "type": "object",
+        "required": [
+          "codes"
+        ],
+        "properties": {
+          "codes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReorderAssetCategoriesResponse": {
+        "type": "object",
+        "required": [
+          "categories"
+        ],
+        "properties": {
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryMasterEntry"
+            }
+          }
+        }
+      },
+      "ReorderFundingSourcesResponse": {
+        "type": "object",
+        "required": [
+          "funding_sources"
+        ],
+        "properties": {
+          "funding_sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InventoryMasterEntry"
+            }
           }
         }
       }

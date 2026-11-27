@@ -82,8 +82,8 @@ describe("full OpenAPI contract", () => {
         const operation = reference.paths[path]?.get as { parameters?: Array<{ name?: string; in?: string }> };
         expect(operation.parameters).toContainEqual(expect.objectContaining({ name: "school_unit_id", in: "query" }));
       }
-      expect(Object.keys(candidateOperations)).toHaveLength(450);
-      expect(Object.keys(operations(reference))).toHaveLength(451);
+      expect(Object.keys(candidateOperations)).toHaveLength(459);
+      expect(Object.keys(operations(reference))).toHaveLength(460);
       expect(reference.paths["/api/staff/{staff_id}/ptk"]?.get).toBeDefined();
       expect(reference.paths["/api/staff/{staff_id}/ptk"]?.put).toBeDefined();
       expect(reference.paths["/api/staff/{staff_id}/ptk/documents"]?.post).toBeDefined();
@@ -100,6 +100,15 @@ describe("full OpenAPI contract", () => {
       expect(reference.paths["/api/inventory/labels/preview"]?.post).toBeDefined();
       expect(reference.paths["/api/inventory/labels/pdf"]?.post).toBeDefined();
       expect(reference.paths["/api/inventory/labels/calibration-pdf"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data"]?.get).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/categories"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/categories/{code}"]?.patch).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/categories/{code}"]?.delete).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/categories/order"]?.put).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/funding-sources"]?.post).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/funding-sources/{code}"]?.patch).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/funding-sources/{code}"]?.delete).toBeDefined();
+      expect(reference.paths["/api/inventory/master-data/funding-sources/order"]?.put).toBeDefined();
       expect(reference.paths["/api/staff/{staff_id}/school-unit-assignments/{assignment_id}/cancel"]?.post).toBeDefined();
       for (const path of [
         "/api/staff/monthly-activities",

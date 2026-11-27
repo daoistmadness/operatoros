@@ -1,27 +1,47 @@
 import { Type, type Static } from "@sinclair/typebox";
 
-export const AssetCategory = Type.Union([
-  Type.Literal("IT"),   // Peralatan TI / Komputer
-  Type.Literal("FRN"),  // Furnitur / Mebel
-  Type.Literal("ELK"),  // Elektronik
-  Type.Literal("LAB"),  // Laboratorium
-  Type.Literal("LIB"),  // Pustaka / Buku
-  Type.Literal("SPT"),  // Olahraga
-  Type.Literal("EDU"),  // Alat Edukatif
-  Type.Literal("OFF"),  // Kantor
-  Type.Literal("OTH"),  // Lainnya
-]);
+export const AssetCategory = Type.String({ minLength: 2, maxLength: 8, pattern: "^[A-Z0-9]+$" });
 export type AssetCategoryDto = Static<typeof AssetCategory>;
 
-export const FundingSource = Type.Union([
-  Type.Literal("BOS"),      // Dana BOS (ARKAS)
-  Type.Literal("BOP"),      // Dana BOP
-  Type.Literal("YAYASAN"),  // Yayasan
-  Type.Literal("KOMITE"),   // Komite Sekolah
-  Type.Literal("HIBAH"),    // Hibah / Donasi
-  Type.Literal("LAINNYA"),  // Lainnya
-]);
+export const FundingSource = Type.String({ minLength: 2, maxLength: 48, pattern: "^[A-Z0-9_]+$" });
 export type FundingSourceDto = Static<typeof FundingSource>;
+
+export const InventoryMasterEntry = Type.Object({
+  code: Type.String(),
+  name: Type.String(),
+  is_active: Type.Boolean(),
+  sort_order: Type.Integer({ minimum: 0 }),
+  can_delete: Type.Boolean(),
+});
+export type InventoryMasterEntryDto = Static<typeof InventoryMasterEntry>;
+
+export const InventoryMasterDataResponse = Type.Object({
+  categories: Type.Array(InventoryMasterEntry),
+  funding_sources: Type.Array(InventoryMasterEntry),
+});
+export type InventoryMasterDataResponseDto = Static<typeof InventoryMasterDataResponse>;
+
+export const CreateAssetCategoryRequest = Type.Object({
+  code: AssetCategory,
+  name: Type.String({ minLength: 1, maxLength: 80 }),
+});
+export type CreateAssetCategoryRequestDto = Static<typeof CreateAssetCategoryRequest>;
+
+export const CreateFundingSourceRequest = Type.Object({
+  name: Type.String({ minLength: 1, maxLength: 80 }),
+});
+export type CreateFundingSourceRequestDto = Static<typeof CreateFundingSourceRequest>;
+
+export const UpdateInventoryMasterEntryRequest = Type.Object({
+  name: Type.Optional(Type.String({ minLength: 1, maxLength: 80 })),
+  is_active: Type.Optional(Type.Boolean()),
+});
+export type UpdateInventoryMasterEntryRequestDto = Static<typeof UpdateInventoryMasterEntryRequest>;
+
+export const ReorderInventoryMasterEntriesRequest = Type.Object({
+  codes: Type.Array(Type.String(), { minItems: 1 }),
+});
+export type ReorderInventoryMasterEntriesRequestDto = Static<typeof ReorderInventoryMasterEntriesRequest>;
 
 export const AssetCondition = Type.Union([
   Type.Literal("BAIK"),
@@ -47,12 +67,14 @@ export const AssetDto = Type.Object({
   current_unit_id: Type.Optional(Type.Union([Type.Integer({ minimum: 1 }), Type.Null()])),
   current_unit_name: Type.Optional(NullableString),
   category: AssetCategory,
+  category_name: Type.String(),
   item_name: Type.String(),
   brand: NullableString,
   model: NullableString,
   serial_number: NullableString,
   location: NullableString,
   funding_source: FundingSource,
+  funding_source_name: Type.String(),
   budget_year: Type.Integer({ minimum: 2000, maximum: 2100 }),
   arkas_account_code: NullableString,
   purchase_document_reference: NullableString,
@@ -168,10 +190,12 @@ export const InventorySummaryResponse = Type.Object({
   }),
   by_category: Type.Array(Type.Object({
     category: AssetCategory,
+    category_name: Type.String(),
     count: Type.Integer({ minimum: 0 }),
   })),
   by_funding: Type.Array(Type.Object({
     funding_source: FundingSource,
+    funding_source_name: Type.String(),
     count: Type.Integer({ minimum: 0 }),
   })),
   by_unit: Type.Array(Type.Object({

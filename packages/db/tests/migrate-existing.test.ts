@@ -374,7 +374,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     } finally { migrated.close(); fresh.close(); }
   }));
 
-  it("upgrades an S5.4 database to S5.5 and preserves reminder and inventory structure", () => withDatabases((_, path, freshPath) => {
+  it("upgrades an S5.4 database to S5.7 and preserves reminder and inventory structure", () => withDatabases((_, path, freshPath) => {
     const db = openSqliteConnection(path).client;
     db.exec("PRAGMA foreign_keys=ON");
     db.exec(s47Sql);
@@ -397,7 +397,7 @@ describe("Bun S4.6 through S5.4 migrations", () => {
     try {
       expect(schemaFingerprint(migrated.client)).toBe(schemaFingerprint(fresh.client));
       expect(migrated.client.query("SELECT version,predecessor FROM operatoros_schema_migrations ORDER BY rowid DESC LIMIT 1").get()).toEqual({ version: CURRENT_SCHEMA_VERSION, predecessor: "20261027_s54" });
-      expect(migrated.client.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND name LIKE 'inventory_%'").get()).toEqual({ count: 2 });
+      expect(migrated.client.query("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND name LIKE 'inventory_%'").get()).toEqual({ count: 4 });
       expect(migrated.client.query("PRAGMA foreign_key_check").all()).toEqual([]);
     } finally { migrated.close(); fresh.close(); }
   }), 20000);

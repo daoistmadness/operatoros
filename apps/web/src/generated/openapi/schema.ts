@@ -6783,6 +6783,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory/master-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiInventoryMasterData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/master-data/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryMasterDataCategories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/master-data/funding-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiInventoryMasterDataFundingSources"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/master-data/categories/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiInventoryMasterDataCategoriesByCode"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiInventoryMasterDataCategoriesByCode"];
+        trace?: never;
+    };
+    "/api/inventory/master-data/funding-sources/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiInventoryMasterDataFundingSourcesByCode"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiInventoryMasterDataFundingSourcesByCode"];
+        trace?: never;
+    };
+    "/api/inventory/master-data/categories/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiInventoryMasterDataCategoriesOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/master-data/funding-sources/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["putApiInventoryMasterDataFundingSourcesOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9996,6 +10108,37 @@ export interface components {
             submission_notes?: string | null;
             /** Format: binary */
             evidence?: string;
+        };
+        InventoryMasterEntry: {
+            code: string;
+            name: string;
+            is_active: boolean;
+            sort_order: number;
+            can_delete: boolean;
+        };
+        InventoryMasterDataResponse: {
+            categories: components["schemas"]["InventoryMasterEntry"][];
+            funding_sources: components["schemas"]["InventoryMasterEntry"][];
+        };
+        CreateAssetCategoryRequest: {
+            code: string;
+            name: string;
+        };
+        CreateFundingSourceRequest: {
+            name: string;
+        };
+        UpdateInventoryMasterEntryRequest: {
+            name?: string;
+            is_active?: boolean;
+        };
+        ReorderInventoryMasterEntriesRequest: {
+            codes: string[];
+        };
+        ReorderAssetCategoriesResponse: {
+            categories: components["schemas"]["InventoryMasterEntry"][];
+        };
+        ReorderFundingSourcesResponse: {
+            funding_sources: components["schemas"]["InventoryMasterEntry"][];
         };
     };
     responses: never;
@@ -24893,8 +25036,8 @@ export interface operations {
             query?: {
                 school_unit_id?: string;
                 current_unit_id?: string;
-                category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
-                funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                category?: string;
+                funding_source?: string;
                 condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
                 status?: "ACTIVE" | "RETIRED";
                 budget_year?: string;
@@ -24921,15 +25064,13 @@ export interface operations {
                 "application/json": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -24942,15 +25083,13 @@ export interface operations {
                 "application/x-www-form-urlencoded": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -24963,15 +25102,13 @@ export interface operations {
                 "multipart/form-data": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25010,15 +25147,13 @@ export interface operations {
             content: {
                 "application/json": {
                     item_name?: string;
-                    /** @enum {string} */
-                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category?: string;
                     current_unit_id?: number | null;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source?: string;
                     budget_year?: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25030,15 +25165,13 @@ export interface operations {
                 };
                 "application/x-www-form-urlencoded": {
                     item_name?: string;
-                    /** @enum {string} */
-                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category?: string;
                     current_unit_id?: number | null;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source?: string;
                     budget_year?: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25050,15 +25183,13 @@ export interface operations {
                 };
                 "multipart/form-data": {
                     item_name?: string;
-                    /** @enum {string} */
-                    category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category?: string;
                     current_unit_id?: number | null;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source?: string;
                     budget_year?: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25084,16 +25215,14 @@ export interface operations {
                 "application/json": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     quantity: number;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25106,16 +25235,14 @@ export interface operations {
                 "application/x-www-form-urlencoded": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     quantity: number;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25128,16 +25255,14 @@ export interface operations {
                 "multipart/form-data": {
                     school_unit_id: number;
                     current_unit_id?: number | null;
-                    /** @enum {string} */
-                    category: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
+                    category: string;
                     item_name: string;
                     quantity: number;
                     brand?: string | null;
                     model?: string | null;
                     serial_number?: string | null;
                     location?: string | null;
-                    /** @enum {string} */
-                    funding_source: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                    funding_source: string;
                     budget_year: number;
                     arkas_account_code?: string | null;
                     purchase_document_reference?: string | null;
@@ -25183,8 +25308,8 @@ export interface operations {
             query?: {
                 school_unit_id?: string;
                 current_unit_id?: string;
-                category?: "IT" | "FRN" | "ELK" | "LAB" | "LIB" | "SPT" | "EDU" | "OFF" | "OTH";
-                funding_source?: "BOS" | "BOP" | "YAYASAN" | "KOMITE" | "HIBAH" | "LAINNYA";
+                category?: string;
+                funding_source?: string;
                 condition?: "BAIK" | "RUSAK_RINGAN" | "RUSAK_BERAT";
                 status?: "ACTIVE" | "RETIRED";
                 budget_year?: string;
@@ -26524,6 +26649,396 @@ export interface operations {
             };
             /** @description Storage unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getApiInventoryMasterData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shared inventory categories and funding sources */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMasterDataResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiInventoryMasterDataCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created category */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMasterEntry"];
+                };
+            };
+            /** @description Invalid category name or code */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Category code or normalized name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiInventoryMasterDataFundingSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFundingSourceRequest"];
+            };
+        };
+        responses: {
+            /** @description Created funding source */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMasterEntry"];
+                };
+            };
+            /** @description Invalid funding source name */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Funding source name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteApiInventoryMasterDataCategoriesByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted unused category */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Category not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Category has asset or sequence history */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    patchApiInventoryMasterDataCategoriesByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInventoryMasterEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated category */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMasterEntry"];
+                };
+            };
+            /** @description Invalid update */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Category not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Category name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteApiInventoryMasterDataFundingSourcesByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted unused funding source */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Funding source not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Funding source is referenced by assets */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    patchApiInventoryMasterDataFundingSourcesByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInventoryMasterEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated funding source */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryMasterEntry"];
+                };
+            };
+            /** @description Invalid update */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Funding source not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Funding source name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putApiInventoryMasterDataCategoriesOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderInventoryMasterEntriesRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated display order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReorderAssetCategoriesResponse"];
+                };
+            };
+            /** @description Order must contain every current code exactly once */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putApiInventoryMasterDataFundingSourcesOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderInventoryMasterEntriesRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated display order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReorderFundingSourcesResponse"];
+                };
+            };
+            /** @description Order must contain every current code exactly once */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient permissions */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

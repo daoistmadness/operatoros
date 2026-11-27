@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PDFDocument } from "pdf-lib";
 import { openDatabase } from "@operatoros/db";
+import { loadXlsxWorkbook } from "@operatoros/excel";
 import {
   getLabelTemplate,
   getRegisteredLabelTemplates,
@@ -59,6 +60,189 @@ function setup() {
 }
 
 describe("Inventory & Asset Labels V1", () => {
+  it("manages shared categories and funding sources without changing asset keys", async () => {
+    const { root, database, app } = setup();
+    try {
+      const cookie = await login(app, "admin");
+      const mastersRes = await app.handle(request("GET", "/api/inventory/master-data", cookie));
+      expect(mastersRes.status).toBe(200);
+      const masters = await mastersRes.json() as any;
+      expect(masters.categories.find((item: any) => item.code === "IT")).toMatchObject({
+        name: "Peralatan TI / Komputer",
+        is_active: true,
+      });
+      expect(masters.funding_sources.find((item: any) => item.code === "BOS")).toMatchObject({
+        name: "BOS (ARKAS)",
+        is_active: true,
+      });
+
+      const categoryRes = await app.handle(request("POST", "/api/inventory/master-data/categories", cookie, {
+        code: "CUS",
+        name: "  Peralatan   Khusus  ",
+      }));
+      expect(categoryRes.status).toBe(201);
+      expect(await categoryRes.json()).toMatchObject({ code: "CUS", name: "Peralatan Khusus" });
+
+      const duplicateNameRes = await app.handle(request("POST", "/api/inventory/master-data/categories", cookie, {
+        code: "CS2",
+        name: "peralatan khusus",
+      }));
+      expect(duplicateNameRes.status).toBe(409);
+      const duplicateCodeRes = await app.handle(request("POST", "/api/inventory/master-data/categories", cookie, {
+        code: "CUS",
+        name: "A different category name",
+      }));
+      expect(duplicateCodeRes.status).toBe(409);
+
+      const fundingRes = await app.handle(request("POST", "/api/inventory/master-data/funding-sources", cookie, {
+        name: "Dana Sponsor Lokal",
+      }));
+      expect(fundingRes.status).toBe(201);
+      const funding = await fundingRes.json() as any;
+      expect(funding.code).toMatch(/^CUSTOM_[A-F0-9]{32}$/);
+      const fundingOrderRes = await app.handle(request("PUT", "/api/inventory/master-data/funding-sources/order", cookie, {
+        codes: [funding.code, ...masters.funding_sources.map((item: any) => item.code)],
+      }));
+      expect(fundingOrderRes.status).toBe(200);
+      expect((await fundingOrderRes.json() as any).funding_sources[0]).toMatchObject({ code: funding.code, sort_order: 0 });
+
+      const duplicateFundingRes = await app.handle(request("POST", "/api/inventory/master-data/funding-sources", cookie, {
+        name: "dana sponsor lokal",
+      }));
+      expect(duplicateFundingRes.status).toBe(409);
+
+      const createRes = await app.handle(request("POST", "/api/inventory/assets", cookie, {
+        school_unit_id: 1,
+        category: "CUS",
+        item_name: "Perangkat Khusus",
+        funding_source: funding.code,
+        budget_year: 2026,
+      }));
+      expect(createRes.status).toBe(201);
+      const created = await createRes.json() as any;
+      expect(created.asset_code).toBe("SD-CUS-0001");
+      expect(created.category_name).toBe("Peralatan Khusus");
+      expect(created.funding_source_name).toBe("Dana Sponsor Lokal");
+
+      const batchRes = await app.handle(request("POST", "/api/inventory/assets/batch", cookie, {
+        school_unit_id: 1,
+        category: "CUS",
+        item_name: "Perangkat Khusus Batch",
+        quantity: 2,
+        funding_source: funding.code,
+        budget_year: 2026,
+      }));
+      expect(batchRes.status).toBe(201);
+      const batch = await batchRes.json() as any;
+      expect(batch.items.map((item: any) => item.asset_code)).toEqual(["SD-CUS-0002", "SD-CUS-0003"]);
+      expect(batch.items[0]).toMatchObject({ category_name: "Peralatan Khusus", funding_source_name: "Dana Sponsor Lokal" });
+
+      const renameRes = await app.handle(request("PATCH", "/api/inventory/master-data/categories/CUS", cookie, {
+        name: "Peralatan Spesial",
+      }));
+      expect(renameRes.status).toBe(200);
+      expect(await renameRes.json()).toMatchObject({ code: "CUS", name: "Peralatan Spesial" });
+
+      const reorderRes = await app.handle(request("PUT", "/api/inventory/master-data/categories/order", cookie, {
+        codes: ["CUS", ...masters.categories.map((item: any) => item.code)],
+      }));
+      expect(reorderRes.status).toBe(200);
+      expect((await reorderRes.json() as any).categories[0]).toMatchObject({ code: "CUS", sort_order: 0 });
+
+      for (const [path, body] of [
+        ["/api/inventory/master-data/categories/CUS", { is_active: false }],
+        [`/api/inventory/master-data/funding-sources/${funding.code}`, { is_active: false }],
+      ] as const) {
+        const response = await app.handle(request("PATCH", path, cookie, body));
+        expect(response.status).toBe(200);
+      }
+
+      const inactiveAssignmentRes = await app.handle(request("POST", "/api/inventory/assets", cookie, {
+        school_unit_id: 1,
+        category: "CUS",
+        item_name: "Must be rejected",
+        funding_source: "BOS",
+        budget_year: 2026,
+      }));
+      expect(inactiveAssignmentRes.status).toBe(400);
+
+      const inactiveBatchRes = await app.handle(request("POST", "/api/inventory/assets/batch", cookie, {
+        school_unit_id: 1,
+        category: "IT",
+        item_name: "Must reject inactive source",
+        quantity: 1,
+        funding_source: funding.code,
+        budget_year: 2026,
+      }));
+      expect(inactiveBatchRes.status).toBe(400);
+
+      const existingEditRes = await app.handle(request("PUT", `/api/inventory/assets/${created.id}`, cookie, {
+        location: "Ruang Arsip",
+      }));
+      expect(existingEditRes.status).toBe(200);
+      expect(await existingEditRes.json()).toMatchObject({ category: "CUS", funding_source: funding.code, location: "Ruang Arsip" });
+
+      const listedRes = await app.handle(request("GET", "/api/inventory/assets?category=CUS", cookie));
+      const listed = await listedRes.json() as any;
+      expect(listed.items.find((item: any) => item.id === created.id)).toMatchObject({
+        asset_code: "SD-CUS-0001",
+        category_name: "Peralatan Spesial",
+        funding_source_name: "Dana Sponsor Lokal",
+      });
+
+      const summaryRes = await app.handle(request("GET", "/api/inventory/summary", cookie));
+      const summary = await summaryRes.json() as any;
+      expect(summary.by_category).toContainEqual({ category: "CUS", category_name: "Peralatan Spesial", count: 3 });
+      expect(summary.by_funding).toContainEqual({ funding_source: funding.code, funding_source_name: "Dana Sponsor Lokal", count: 3 });
+
+      const currentMasters = await (await app.handle(request("GET", "/api/inventory/master-data", cookie))).json() as any;
+      expect(currentMasters.categories.find((item: any) => item.code === "CUS")).toMatchObject({ is_active: false, can_delete: false });
+      expect(currentMasters.funding_sources.find((item: any) => item.code === funding.code)).toMatchObject({ is_active: false, can_delete: false });
+
+      const exportRes = await app.handle(request("GET", "/api/inventory/export/xlsx", cookie));
+      expect(exportRes.status).toBe(200);
+      const workbook = await loadXlsxWorkbook(new Uint8Array(await exportRes.arrayBuffer()));
+      const exportedRow = workbook.getWorksheet("Buku Inventaris")?.getRow(2);
+      expect(exportedRow?.getCell(6).value).toBe("Peralatan Spesial");
+      expect(exportedRow?.getCell(11).value).toBe("Dana Sponsor Lokal");
+
+      for (const path of [
+        "/api/inventory/master-data/categories/CUS",
+        `/api/inventory/master-data/funding-sources/${funding.code}`,
+      ]) {
+        const response = await app.handle(request("DELETE", path, cookie));
+        expect(response.status).toBe(409);
+      }
+
+      const unusedRes = await app.handle(request("POST", "/api/inventory/master-data/categories", cookie, {
+        code: "TMP",
+        name: "Temporary Category",
+      }));
+      expect(unusedRes.status).toBe(201);
+      expect((await app.handle(request("DELETE", "/api/inventory/master-data/categories/TMP", cookie))).status).toBe(204);
+      const masterAuditCount = database.client.query("SELECT COUNT(*) AS count FROM operations_audit_events WHERE entity_type IN ('INVENTORY_ASSET_CATEGORY', 'INVENTORY_FUNDING_SOURCE')").get() as { count: number };
+      expect(masterAuditCount.count).toBeGreaterThan(0);
+    } finally {
+      database.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("allows staff to read inventory masters but rejects master-data mutations", async () => {
+    const { root, database, app } = setup();
+    try {
+      const staffCookie = await login(app, "staff");
+      expect((await app.handle(request("GET", "/api/inventory/master-data", staffCookie))).status).toBe(200);
+      expect((await app.handle(request("POST", "/api/inventory/master-data/categories", staffCookie, {
+        code: "CUS",
+        name: "Unauthorized",
+      }))).status).toBe(403);
+    } finally {
+      database.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("registers single asset with sequential code and logs audit", async () => {
     const { root, database, app } = setup();
     try {

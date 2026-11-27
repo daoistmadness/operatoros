@@ -22,6 +22,7 @@ import {
   type BatchCreateAssetRequestDto,
   type UpdateAssetRequestDto,
   type ResolvedLabelTemplate,
+  type InventoryMasterEntryDto,
 } from "@operatoros/contracts/inventory";
 import { PageHeader } from "../components/common/page-header";
 import { EmptyState, ErrorState, LoadingState } from "../components/common/state-message";
@@ -47,27 +48,8 @@ import {
   downloadCalibrationPdf,
 } from "../api/inventory";
 import { useAuth } from "../context/AuthContext";
-
-const CATEGORIES: { value: AssetCategoryDto; label: string }[] = [
-  { value: "IT", label: "Peralatan TI / Komputer" },
-  { value: "FRN", label: "Furnitur / Mebel" },
-  { value: "ELK", label: "Elektronik" },
-  { value: "LAB", label: "Laboratorium" },
-  { value: "LIB", label: "Pustaka / Buku" },
-  { value: "SPT", label: "Olahraga" },
-  { value: "EDU", label: "Alat Edukatif" },
-  { value: "OFF", label: "Kantor" },
-  { value: "OTH", label: "Lainnya" },
-];
-
-const FUNDING_SOURCES: { value: FundingSourceDto; label: string }[] = [
-  { value: "BOS", label: "BOS (ARKAS)" },
-  { value: "BOP", label: "BOP" },
-  { value: "YAYASAN", label: "Yayasan" },
-  { value: "KOMITE", label: "Komite Sekolah" },
-  { value: "HIBAH", label: "Hibah / Donasi" },
-  { value: "LAINNYA", label: "Lainnya" },
-];
+import { fetchInventoryMasterData } from "../api/inventory";
+import { InventoryMasterDataDialog } from "../components/inventory/InventoryMasterDataDialog";
 
 const CONDITIONS: { value: AssetConditionDto; label: string; variant: "success" | "warning" | "danger" }[] = [
   { value: "BAIK", label: "Baik", variant: "success" },
@@ -106,12 +88,20 @@ export default function InventoryManagement() {
   const [editingAsset, setEditingAsset] = useState<AssetDtoType | null>(null);
   const [retiringAsset, setRetiringAsset] = useState<AssetDtoType | null>(null);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
+  const [isMasterDataOpen, setIsMasterDataOpen] = useState(false);
 
   // School units query
   const schoolUnitsQuery = useQuery({
     queryKey: ["staff", "school-units"],
     queryFn: fetchSchoolUnits,
   });
+
+  const masterDataQuery = useQuery({
+    queryKey: queryKeys.inventory.masterData(),
+    queryFn: fetchInventoryMasterData,
+  });
+  const categories = masterDataQuery.data?.categories ?? [];
+  const fundingSources = masterDataQuery.data?.funding_sources ?? [];
 
   const queryParams = useMemo(() => {
     const p: Record<string, any> = {
@@ -301,8 +291,8 @@ export default function InventoryManagement() {
                 }}
               >
                 <option value="">Semua Kategori</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                {categories.map((category) => (
+                  <option key={category.code} value={category.code}>{category.name}{category.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -320,8 +310,8 @@ export default function InventoryManagement() {
                 }}
               >
                 <option value="">Semua Sumber</option>
-                {FUNDING_SOURCES.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                {fundingSources.map((funding) => (
+                  <option key={funding.code} value={funding.code}>{funding.name}{funding.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -452,7 +442,7 @@ export default function InventoryManagement() {
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant="secondary" className="text-xs font-normal">
-                            {CATEGORIES.find((c) => c.value === asset.category)?.label ?? asset.category}
+                            {asset.category_name}
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -466,7 +456,7 @@ export default function InventoryManagement() {
                           <div className="text-muted-foreground">{asset.location || "-"}</div>
                         </td>
                         <td className="px-4 py-3 text-xs">
-                          <div>{asset.funding_source}</div>
+                          <div>{asset.funding_source_name}</div>
                           <div className="text-muted-foreground">{asset.budget_year}</div>
                         </td>
                         <td className="px-4 py-3 text-right text-xs font-mono">
@@ -560,6 +550,10 @@ export default function InventoryManagement() {
       {isRegisterOpen && (
         <SingleAssetRegisterModal
           schoolUnits={schoolUnitsQuery.data ?? []}
+          categories={categories}
+          fundingSources={fundingSources}
+          canManage={canManage}
+          onManageMasterData={() => setIsMasterDataOpen(true)}
           onClose={() => setIsRegisterOpen(false)}
           onSuccess={() => {
             setIsRegisterOpen(false);
@@ -571,6 +565,10 @@ export default function InventoryManagement() {
       {isBatchOpen && (
         <BatchAssetRegisterModal
           schoolUnits={schoolUnitsQuery.data ?? []}
+          categories={categories}
+          fundingSources={fundingSources}
+          canManage={canManage}
+          onManageMasterData={() => setIsMasterDataOpen(true)}
           onClose={() => setIsBatchOpen(false)}
           onSuccess={() => {
             setIsBatchOpen(false);
@@ -583,6 +581,10 @@ export default function InventoryManagement() {
         <EditAssetModal
           asset={editingAsset}
           schoolUnits={schoolUnitsQuery.data ?? []}
+          categories={categories}
+          fundingSources={fundingSources}
+          canManage={canManage}
+          onManageMasterData={() => setIsMasterDataOpen(true)}
           onClose={() => setEditingAsset(null)}
           onSuccess={() => {
             setEditingAsset(null);
@@ -608,27 +610,45 @@ export default function InventoryManagement() {
           onClose={() => setIsLabelModalOpen(false)}
         />
       )}
+
+      {isMasterDataOpen && canManage && (
+        <InventoryMasterDataDialog
+          data={masterDataQuery.data}
+          isPending={masterDataQuery.isPending}
+          isError={masterDataQuery.isError}
+          loadError={masterDataQuery.error}
+          onClose={() => setIsMasterDataOpen(false)}
+        />
+      )}
     </div>
   );
 }
 
 function SingleAssetRegisterModal({
   schoolUnits,
+  categories,
+  fundingSources,
+  canManage,
+  onManageMasterData,
   onClose,
   onSuccess,
 }: {
   schoolUnits: { id: number; name: string }[];
+  categories: InventoryMasterEntryDto[];
+  fundingSources: InventoryMasterEntryDto[];
+  canManage: boolean;
+  onManageMasterData: () => void;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [unitId, setUnitId] = useState<number>(schoolUnits[0]?.id ?? 1);
-  const [category, setCategory] = useState<AssetCategoryDto>("IT");
+  const [category, setCategory] = useState<AssetCategoryDto>("");
   const [itemName, setItemName] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [location, setLocation] = useState("");
-  const [fundingSource, setFundingSource] = useState<FundingSourceDto>("BOS");
+  const [fundingSource, setFundingSource] = useState<FundingSourceDto>("");
   const [budgetYear, setBudgetYear] = useState<number>(new Date().getFullYear());
   const [arkasCode, setArkasCode] = useState("");
   const [docRef, setDocRef] = useState("");
@@ -637,6 +657,17 @@ function SingleAssetRegisterModal({
   const [condition, setCondition] = useState<AssetConditionDto>("BAIK");
   const [notes, setNotes] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (!categories.some((entry) => entry.code === category)) {
+      setCategory(categories.find((entry) => entry.is_active)?.code ?? "");
+    }
+  }, [categories, category]);
+  useEffect(() => {
+    if (!fundingSources.some((entry) => entry.code === fundingSource)) {
+      setFundingSource(fundingSources.find((entry) => entry.is_active)?.code ?? "");
+    }
+  }, [fundingSources, fundingSource]);
 
   const createMutation = useMutation({
     mutationFn: createAsset,
@@ -648,6 +679,14 @@ function SingleAssetRegisterModal({
     e.preventDefault();
     if (!itemName.trim()) {
       setErrorMsg("Nama barang wajib diisi.");
+      return;
+    }
+    if (!categories.some((entry) => entry.code === category && entry.is_active)) {
+      setErrorMsg("Pilih kategori aset yang aktif.");
+      return;
+    }
+    if (!fundingSources.some((entry) => entry.code === fundingSource && entry.is_active)) {
+      setErrorMsg("Pilih sumber dana yang aktif.");
       return;
     }
     setErrorMsg("");
@@ -702,7 +741,10 @@ function SingleAssetRegisterModal({
             </div>
 
             <div>
-              <Label htmlFor="reg-cat">Kategori</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="reg-cat">Kategori</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="reg-cat"
                 aria-label="Pilih Kategori Aset"
@@ -710,8 +752,8 @@ function SingleAssetRegisterModal({
                 value={category}
                 onChange={(e) => setCategory(e.target.value as AssetCategoryDto)}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                {categories.filter((entry) => entry.is_active || entry.code === category).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -807,7 +849,10 @@ function SingleAssetRegisterModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="reg-fund">Sumber Dana</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="reg-fund">Sumber Dana</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="reg-fund"
                 aria-label="Pilih Sumber Dana"
@@ -815,8 +860,8 @@ function SingleAssetRegisterModal({
                 value={fundingSource}
                 onChange={(e) => setFundingSource(e.target.value as FundingSourceDto)}
               >
-                {FUNDING_SOURCES.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                {fundingSources.filter((entry) => entry.is_active || entry.code === fundingSource).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -882,21 +927,29 @@ function SingleAssetRegisterModal({
 
 function BatchAssetRegisterModal({
   schoolUnits,
+  categories,
+  fundingSources,
+  canManage,
+  onManageMasterData,
   onClose,
   onSuccess,
 }: {
   schoolUnits: { id: number; name: string }[];
+  categories: InventoryMasterEntryDto[];
+  fundingSources: InventoryMasterEntryDto[];
+  canManage: boolean;
+  onManageMasterData: () => void;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [unitId, setUnitId] = useState<number>(schoolUnits[0]?.id ?? 1);
-  const [category, setCategory] = useState<AssetCategoryDto>("FRN");
+  const [category, setCategory] = useState<AssetCategoryDto>("");
   const [quantity, setQuantity] = useState<number>(10);
   const [itemName, setItemName] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [location, setLocation] = useState("");
-  const [fundingSource, setFundingSource] = useState<FundingSourceDto>("BOS");
+  const [fundingSource, setFundingSource] = useState<FundingSourceDto>("");
   const [budgetYear, setBudgetYear] = useState<number>(new Date().getFullYear());
   const [arkasCode, setArkasCode] = useState("");
   const [docRef, setDocRef] = useState("");
@@ -904,6 +957,17 @@ function BatchAssetRegisterModal({
   const [condition, setCondition] = useState<AssetConditionDto>("BAIK");
   const [notes, setNotes] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (!categories.some((entry) => entry.code === category)) {
+      setCategory(categories.find((entry) => entry.is_active)?.code ?? "");
+    }
+  }, [categories, category]);
+  useEffect(() => {
+    if (!fundingSources.some((entry) => entry.code === fundingSource)) {
+      setFundingSource(fundingSources.find((entry) => entry.is_active)?.code ?? "");
+    }
+  }, [fundingSources, fundingSource]);
 
   const batchMutation = useMutation({
     mutationFn: batchCreateAssets,
@@ -919,6 +983,14 @@ function BatchAssetRegisterModal({
     }
     if (quantity < 1 || quantity > 100) {
       setErrorMsg("Jumlah barang harus antara 1 dan 100.");
+      return;
+    }
+    if (!categories.some((entry) => entry.code === category && entry.is_active)) {
+      setErrorMsg("Pilih kategori aset yang aktif.");
+      return;
+    }
+    if (!fundingSources.some((entry) => entry.code === fundingSource && entry.is_active)) {
+      setErrorMsg("Pilih sumber dana yang aktif.");
       return;
     }
     setErrorMsg("");
@@ -972,7 +1044,10 @@ function BatchAssetRegisterModal({
             </div>
 
             <div>
-              <Label htmlFor="batch-cat">Kategori</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="batch-cat">Kategori</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="batch-cat"
                 aria-label="Pilih Kategori Aset"
@@ -980,8 +1055,8 @@ function BatchAssetRegisterModal({
                 value={category}
                 onChange={(e) => setCategory(e.target.value as AssetCategoryDto)}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                {categories.filter((entry) => entry.is_active || entry.code === category).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -1081,7 +1156,10 @@ function BatchAssetRegisterModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="batch-fund">Sumber Dana</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="batch-fund">Sumber Dana</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="batch-fund"
                 aria-label="Pilih Sumber Dana"
@@ -1089,8 +1167,8 @@ function BatchAssetRegisterModal({
                 value={fundingSource}
                 onChange={(e) => setFundingSource(e.target.value as FundingSourceDto)}
               >
-                {FUNDING_SOURCES.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                {fundingSources.filter((entry) => entry.is_active || entry.code === fundingSource).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -1146,11 +1224,19 @@ function BatchAssetRegisterModal({
 function EditAssetModal({
   asset,
   schoolUnits,
+  categories,
+  fundingSources,
+  canManage,
+  onManageMasterData,
   onClose,
   onSuccess,
 }: {
   asset: AssetDtoType;
   schoolUnits: { id: number; name: string }[];
+  categories: InventoryMasterEntryDto[];
+  fundingSources: InventoryMasterEntryDto[];
+  canManage: boolean;
+  onManageMasterData: () => void;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -1246,7 +1332,10 @@ function EditAssetModal({
             </div>
 
             <div>
-              <Label htmlFor="edit-cat">Klasifikasi / Kategori</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="edit-cat">Klasifikasi / Kategori</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="edit-cat"
                 aria-label="Pilih Klasifikasi"
@@ -1254,8 +1343,8 @@ function EditAssetModal({
                 value={category}
                 onChange={(e) => setCategory(e.target.value as AssetCategoryDto)}
               >
-                {CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
+                {categories.filter((entry) => entry.is_active || entry.code === category).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
@@ -1344,7 +1433,10 @@ function EditAssetModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label htmlFor="edit-fund">Sumber Dana</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="edit-fund">Sumber Dana</Label>
+                {canManage && <Button type="button" size="sm" variant="ghost" className="h-7 px-2" onClick={onManageMasterData}>Kelola</Button>}
+              </div>
               <select
                 id="edit-fund"
                 aria-label="Pilih Sumber Dana"
@@ -1352,8 +1444,8 @@ function EditAssetModal({
                 value={fundingSource}
                 onChange={(e) => setFundingSource(e.target.value as FundingSourceDto)}
               >
-                {FUNDING_SOURCES.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                {fundingSources.filter((entry) => entry.is_active || entry.code === fundingSource).map((entry) => (
+                  <option key={entry.code} value={entry.code} disabled={!entry.is_active}>{entry.name}{entry.is_active ? "" : " (Nonaktif)"}</option>
                 ))}
               </select>
             </div>
