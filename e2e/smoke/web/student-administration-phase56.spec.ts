@@ -68,7 +68,7 @@ test("@student-admin @critical verifies identity, DAPODIK, IOM archive, dashboar
   await page.locator("select").first().selectOption("STUDENT_VERIFICATION");
   await page.getByPlaceholder("Cari berdasarkan nama siswa/staf, judul, atau ringkasan...").fill(name);
   await page.getByRole("button", { name: "Segarkan" }).click();
-  await expect(page.getByText("Semua Pekerjaan Selesai")).toBeVisible();
+  await expect(page.getByText("Tidak ada pekerjaan yang cocok")).toBeVisible();
 
   await page.goto(`/students/${studentId}`);
   await page.getByRole("tab", { name: "IOM Documents" }).click();

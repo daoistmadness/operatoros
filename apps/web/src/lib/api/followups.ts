@@ -53,9 +53,9 @@ export type FollowUpCase = Record<string, unknown> & {
 
 export type FollowUpMetrics = {
   open_cases?: number;
-  in_progress_count?: number;
+  unassigned_cases?: number;
   resolved_count?: number;
-  active_cases?: number;
+  overdue_cases?: number;
 };
 
 export type FollowUpNote = {

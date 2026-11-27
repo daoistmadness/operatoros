@@ -21,7 +21,6 @@ import {
   Filter,
   BarChart4,
   Activity,
-  FileText,
   BellRing,
   FileCheck2,
   FileSpreadsheet
@@ -94,7 +93,18 @@ export default function Dashboard() {
   const yearNumber = Number(selectedYear);
   const dashboardQuery = useDashboardSnapshotQuery(monthNumber, yearNumber);
   const snapshot = dashboardQuery.data;
-  const pageHeader = <PageHeader title="System Analytics" description="Real-time attendance overview and behavioral metrics." />;
+  const canOpenDaily = can("view_attendance");
+  const canOpenQueue = can("view_attendance_followups");
+  const pageHeader = (
+    <PageHeader
+      title="System Analytics"
+      description="Operational checks and attendance analytics."
+      actions={(canOpenDaily || canOpenQueue) && <>
+        {canOpenDaily && <Link to={`/attendance/daily?date=${today}`} className={buttonVariants({ variant: "primary" })}>Daily Attendance</Link>}
+        {canOpenQueue && <Link to="/operator/work-queue" className={buttonVariants({ variant: "outline" })}>Buka Antrean Kerja Operator</Link>}
+      </>}
+    />
+  );
   const monthlyData = snapshot?.monthlyData ?? [];
   const classData = snapshot?.classData ?? [];
   const offenders = snapshot?.offenders ?? [];
@@ -141,6 +151,9 @@ export default function Dashboard() {
     );
   }
 
+  const setupIsReady = readiness.data?.overall_status === "OPERATIONALLY_READY" && !readiness.isError;
+  const setupOverview = <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />;
+  const recapPath = `/attendance/monthly-recap?month=${selectedYear}-${selectedMonth.padStart(2, "0")}`;
   const absenceTotals = normalizeAbsenceTotals(absenceSummary);
 
   const totalClasses = Number(absenceTotals.total || 0);
@@ -148,12 +161,26 @@ export default function Dashboard() {
   const missingClasses = Math.max(0, totalClasses - enteredClasses);
 
   return (
-    <div aria-busy={dashboardQuery.isFetching} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
+    <div aria-busy={dashboardQuery.isFetching} className="space-y-5 pb-16">
       
       {pageHeader}
       {dashboardQuery.isFetching && snapshot && <p role="status" className="text-sm font-semibold text-muted-foreground">Updating dashboard data…</p>}
       {dashboardQuery.isError && snapshot && <ErrorState title="Dashboard refresh failed" description="Showing the last successful dashboard result."><Button onClick={() => void dashboardQuery.refetch()}>Retry</Button></ErrorState>}
-      <SetupOverview data={readiness.data} isLoading={readiness.isLoading} isError={readiness.isError} onRetry={() => void readiness.refetch()} />
+      <section aria-labelledby="dashboard-attendance-summary" className="space-y-2 rounded-sm border border-border bg-surface p-4">
+        <h2 id="dashboard-attendance-summary" className="text-base font-semibold">
+          Attendance summary · {formatMonthYearLabel(selectedMonth, selectedYear)}
+        </h2>
+        <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <li>Attendance Health: {monthlyData.length > 0 ? "GOOD" : "AWAITING DATA"}</li>
+          <li>{classData.length} class groups tracked</li>
+          <li>{incompleteSummary ? `${incompleteSummary.total_incomplete} data quality ${incompleteSummary.total_incomplete === 1 ? "issue" : "issues"}` : "Data quality summary unavailable"}</li>
+          <li>{totalClasses > 0 ? `${missingClasses} classes pending review` : "No classes in the monthly recap scope"}</li>
+        </ul>
+        {user?.role === "admin" && <Link to={recapPath} className="inline-flex min-h-9 items-center text-sm font-semibold text-brand hover:underline">
+          Open monthly recap
+        </Link>}
+      </section>
+      {!setupIsReady && setupOverview}
 
       {/* Annual BOSP Reminder Banner */}
       {bospQuery.data?.is_in_notice_window && (
@@ -213,14 +240,9 @@ export default function Dashboard() {
       {overviewQuery.isError && <ErrorState title="Ringkasan operasional tidak dapat dimuat" description="Data kehadiran tetap tersedia. Coba muat ulang ringkasan operasional."><Button onClick={() => void overviewQuery.refetch()}>Coba lagi</Button></ErrorState>}
       {overviewQuery.data && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Activity className="size-4 text-emerald-600" /> Ringkasan Operasional Sekolah & DAPODIK
-            </h3>
-            <Link to="/operator/work-queue" className="text-xs font-semibold text-brand hover:underline flex items-center gap-1">
-              Buka Antrean Kerja Operator <ChevronRight className="size-3" />
-            </Link>
-          </div>
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <Activity className="size-4 shrink-0 text-success" aria-hidden="true" /> Ringkasan Operasional Sekolah & DAPODIK
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Siswa Terdaftar / Aktif"
@@ -253,6 +275,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      {setupIsReady && setupOverview}
       <FilterBar className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
         <FormField id="dashboard-month"><FieldLabel>Month</FieldLabel><NativeSelect value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>{MONTH_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</NativeSelect></FormField>
         <FormField id="dashboard-year"><FieldLabel>Year</FieldLabel><NativeSelect value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>{Array.from({ length: 3 }, (_, i) => String(currentYear - i)).map(y => <option key={y} value={y}>{y}</option>)}</NativeSelect></FormField>
@@ -284,35 +307,6 @@ export default function Dashboard() {
           </Button> : <p className="text-sm font-bold text-amber-800">An administrator can update student enrollment.</p>}
         </div>
       )}
-
-      {/* 3. Executive Summary Strip */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center gap-y-4 gap-x-8 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 rounded-[9999px] bg-emerald-100 text-emerald-600">
-            <Check size={18} strokeWidth={3} />
-          </span>
-          <div className="font-bold text-slate-800 uppercase tracking-wide text-sm">Attendance Health: {monthlyData.length > 0 ? "GOOD" : "AWAITING DATA"}</div>
-        </div>
-        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-        <div className="flex items-center gap-2">
-          <Activity size={18} className="text-emerald-500" />
-          <div className="text-slate-600 font-medium"><span className="text-slate-900 font-bold">{classData.length}</span> class groups tracked</div>
-        </div>
-        <div className="h-6 w-px bg-slate-200 hidden md:block"></div>
-        <div className="flex items-center gap-2">
-          <AlertTriangle size={18} className={(incompleteSummary?.total_incomplete ?? 0) > 0 ? "text-amber-500" : "text-emerald-500"} />
-          <div className="text-slate-600 font-medium">
-            <span className="text-slate-900 font-bold">{incompleteSummary?.total_incomplete || 0}</span> data quality issues
-          </div>
-        </div>
-        <div className="h-6 w-px bg-slate-200 hidden lg:block"></div>
-        <div className="flex items-center gap-2">
-          <FileText size={18} className={missingClasses > 0 ? "text-amber-500" : "text-emerald-500"} />
-          <div className="text-slate-600 font-medium">
-            <span className="text-slate-900 font-bold">{missingClasses}</span> classes pending review
-          </div>
-        </div>
-      </div>
 
       {/* 4. KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -416,11 +410,7 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="mt-8 z-10 relative">
-            {user?.role === "admin" ? <Link to="/attendance/monthly-recap" className={cn(buttonVariants({variant:"primary"}), "w-full shadow-lg shadow-brand/20")}>
-              Complete Review
-            </Link> : <p className="text-sm font-semibold text-slate-300">An administrator manages monthly attendance recaps.</p>}
-          </div>
+          {user?.role !== "admin" && <p className="relative mt-8 text-sm font-semibold text-slate-300">An administrator manages monthly attendance recaps.</p>}
         </div>
       </div>
 

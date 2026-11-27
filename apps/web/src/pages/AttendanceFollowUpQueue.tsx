@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Eye,
-  Filter,
   Plus,
   RefreshCw,
 } from 'lucide-react';
@@ -17,6 +16,12 @@ import {
   type FollowUpMetrics,
 } from '../lib/api/followups';
 import AttendanceFollowUpDetailModal from '../components/AttendanceFollowUpDetailModal';
+import { FilterBar } from '../components/common/filter-bar';
+import { PageHeader } from '../components/common/page-header';
+import { LoadingState } from '../components/common/state-message';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { NativeSelect } from '../components/ui/native-select';
 import { DataTableColumnVisibility, DataTableToolbar } from '../components/common/data-table-toolbar';
 import { VirtualizedDataTable } from '../components/common/virtualized-data-table';
 import { useUrlSearchParams } from '../lib/router/search';
@@ -46,23 +51,23 @@ function oneOf<TOptions extends readonly string[]>(value: string, options: TOpti
 }
 
 function candidateCellClassName(columnId: string): string {
-  if (columnId === 'actions') return 'whitespace-nowrap p-3.5 text-right';
-  if (columnId === 'evidence_summary') return 'max-w-xs truncate whitespace-nowrap p-3.5 text-slate-600';
-  if (columnId === 'exception_kind') return 'whitespace-nowrap p-3.5 font-bold text-slate-800';
-  if (columnId === 'student_name') return 'whitespace-nowrap p-3.5 font-medium text-slate-900';
-  if (columnId === 'exception_date') return 'whitespace-nowrap p-3.5 font-mono text-slate-600';
-  if (columnId === 'class_name') return 'whitespace-nowrap p-3.5 text-slate-600';
-  return 'whitespace-nowrap p-3.5';
+  if (columnId === 'actions') return 'whitespace-nowrap px-3 py-2';
+  if (columnId === 'evidence_summary') return 'max-w-xs truncate whitespace-nowrap px-3 py-2 text-slate-600';
+  if (columnId === 'exception_kind') return 'whitespace-nowrap px-3 py-2 font-bold text-slate-800';
+  if (columnId === 'student_name') return 'whitespace-nowrap px-3 py-2 font-medium text-slate-900';
+  if (columnId === 'exception_date') return 'whitespace-nowrap px-3 py-2 font-mono text-slate-600';
+  if (columnId === 'class_name') return 'whitespace-nowrap px-3 py-2 text-slate-600';
+  return 'whitespace-nowrap px-3 py-2';
 }
 
 function caseCellClassName(columnId: string): string {
-  if (columnId === 'actions') return 'whitespace-nowrap p-3.5 text-right';
-  if (columnId === 'id') return 'whitespace-nowrap p-3.5 font-mono font-bold text-slate-900';
-  if (columnId === 'exception_kind') return 'whitespace-nowrap p-3.5 font-medium text-slate-800';
-  if (columnId === 'student_name') return 'whitespace-nowrap p-3.5 font-medium text-slate-900';
-  if (columnId === 'class_name' || columnId === 'assigned_to_user_id') return 'whitespace-nowrap p-3.5 text-slate-600';
-  if (columnId === 'priority') return 'whitespace-nowrap p-3.5 font-semibold text-slate-700';
-  return 'whitespace-nowrap p-3.5';
+  if (columnId === 'actions') return 'whitespace-nowrap px-3 py-2';
+  if (columnId === 'id') return 'whitespace-nowrap px-3 py-2 font-mono font-bold text-slate-900';
+  if (columnId === 'exception_kind') return 'whitespace-nowrap px-3 py-2 font-medium text-slate-800';
+  if (columnId === 'student_name') return 'whitespace-nowrap px-3 py-2 font-medium text-slate-900';
+  if (columnId === 'class_name' || columnId === 'assigned_to_user_id') return 'whitespace-nowrap px-3 py-2 text-slate-600';
+  if (columnId === 'priority') return 'whitespace-nowrap px-3 py-2 font-semibold text-slate-700';
+  return 'whitespace-nowrap px-3 py-2';
 }
 
 function getFollowUpError(error: unknown, fallback: string): string {
@@ -84,7 +89,9 @@ function getFollowUpError(error: unknown, fallback: string): string {
 
 export default function AttendanceFollowUpQueue() {
   const [searchParams, setSearchParams] = useUrlSearchParams();
-  const activeTab = oneOf(singleSearchValue(searchParams, 'tab'), tabs) || 'candidates';
+  const caseParam = singleSearchValue(searchParams, 'case_id');
+  const linkedCaseId = /^[1-9]\d*$/.test(caseParam) && Number.isSafeInteger(Number(caseParam)) ? Number(caseParam) : null;
+  const activeTab = oneOf(singleSearchValue(searchParams, 'tab'), tabs) || (linkedCaseId ? 'cases' : 'candidates');
   const kindFilter = oneOf(singleSearchValue(searchParams, 'exception_kind'), exceptionKinds);
   const statusFilter = oneOf(singleSearchValue(searchParams, 'status'), caseStatuses);
   const priorityFilter = oneOf(singleSearchValue(searchParams, 'priority'), priorities);
@@ -92,13 +99,28 @@ export default function AttendanceFollowUpQueue() {
   const [cases, setCases] = useState<FollowUpCase[]>([]);
   const [metrics, setMetrics] = useState<FollowUpMetrics>({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{ message: string; source: 'load' | 'action' } | null>(null);
+  const countsAvailable = !loading && error?.source !== 'load';
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
 
   // Selected Detail Modal
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
+  const caseId = linkedCaseId ?? selectedCaseId;
+  const caseTrigger = useRef<HTMLButtonElement>(null);
+  const casesTab = useRef<HTMLButtonElement>(null);
+
+  const closeCase = () => {
+    setSelectedCaseId(null);
+    if (linkedCaseId !== null) {
+      setSearchParams((params) => {
+        params.delete('case_id');
+        if (!params.has('tab')) params.set('tab', 'cases');
+        return params;
+      }, { replace: true });
+    }
+  };
   const [submittingKey, setSubmittingKey] = useState('');
   const loadController = useRef<AbortController | null>(null);
   const setUrlFilter = useCallback((key: string, value: string) => {
@@ -115,7 +137,7 @@ export default function AttendanceFollowUpQueue() {
     const controller = new AbortController();
     loadController.current = controller;
     setLoading(true);
-    setError('');
+    setError(null);
     try {
       const [candRes, caseRes, metricRes] = await Promise.all([
         fetchFollowUpCandidates(kindFilter ? { exception_kind: kindFilter } : {}, controller.signal),
@@ -131,7 +153,7 @@ export default function AttendanceFollowUpQueue() {
       setCases(Array.isArray(caseRes) ? caseRes : caseRes.items);
       setMetrics(metricRes);
     } catch (err: unknown) {
-      if (!controller.signal.aborted) setError(getFollowUpError(err, 'Gagal memuat data antrean pengecualian.'));
+      if (!controller.signal.aborted) setError({ message: getFollowUpError(err, 'Gagal memuat data antrean pengecualian.'), source: 'load' });
     } finally {
       if (loadController.current === controller) {
         loadController.current = null;
@@ -149,9 +171,10 @@ export default function AttendanceFollowUpQueue() {
     };
   }, [loadData]);
 
-  const handleMaterializeCandidate = useCallback(async (candidate: FollowUpCandidate) => {
+  const handleMaterializeCandidate = useCallback(async (candidate: FollowUpCandidate, trigger: HTMLButtonElement) => {
+    caseTrigger.current = trigger;
     setSubmittingKey(candidate.exception_key);
-    setError('');
+    setError(null);
     try {
       const created = await createFollowUpCase({
         exception_key: candidate.exception_key,
@@ -164,7 +187,7 @@ export default function AttendanceFollowUpQueue() {
       await loadData();
       setSelectedCaseId(created.id);
     } catch (err: unknown) {
-      setError(getFollowUpError(err, 'Gagal membuat kasus follow-up.'));
+      setError({ message: getFollowUpError(err, 'Gagal membuat kasus follow-up.'), source: 'action' });
     } finally {
       setSubmittingKey('');
     }
@@ -185,6 +208,31 @@ export default function AttendanceFollowUpQueue() {
   }), [cases, searchTerm]);
 
   const candidateColumns = useMemo(() => candidateColumn.columns([
+    candidateColumn.display({
+      id: 'actions',
+      header: 'Tindakan',
+      enableHiding: false,
+      cell: ({ row }) => {
+        const candidate = row.original;
+        return candidate.materialized_case ? (
+          <Button size="sm" variant="outline" className="min-h-9" onClick={(event) => {
+            caseTrigger.current = event.currentTarget;
+            setSelectedCaseId(candidate.materialized_case?.id ?? null);
+          }}>
+            <Eye className="size-3.5" aria-hidden="true" />
+            <span>Lihat Kasus #{candidate.materialized_case.id}</span>
+          </Button>
+        ) : (
+          <Button size="sm" className="min-h-9"
+            disabled={submittingKey === candidate.exception_key}
+            onClick={(event) => void handleMaterializeCandidate(candidate, event.currentTarget)}
+          >
+            <Plus className="size-3.5" aria-hidden="true" />
+            <span>Tangani Kasus</span>
+          </Button>
+        );
+      },
+    }),
     candidateColumn.accessor('exception_kind', { header: 'Jenis Pengecualian', cell: (info) => info.getValue() }),
     candidateColumn.accessor('student_name', { header: 'Nama Siswa', cell: (info) => info.getValue() || 'N/A' }),
     candidateColumn.accessor('class_name', { header: 'Kelas', cell: (info) => info.getValue() || '-' }),
@@ -193,42 +241,28 @@ export default function AttendanceFollowUpQueue() {
       header: 'Tingkat Severitas',
       cell: (info) => {
         const severity = info.getValue();
-        const className = severity === 'HIGH' ? 'bg-rose-100 text-rose-700' : severity === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700';
-        return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${className}`}>{severity || 'UNKNOWN'}</span>;
+        const variant = severity === 'HIGH' ? 'danger' : severity === 'MEDIUM' ? 'warning' : 'secondary';
+        return <Badge variant={variant} className="rounded-sm">{severity || 'UNKNOWN'}</Badge>;
       },
     }),
     candidateColumn.accessor('evidence_summary', { header: 'Ringkasan Bukti', cell: (info) => info.getValue() || '-' }),
-    candidateColumn.display({
-      id: 'actions',
-      header: 'Tindakan',
-      enableHiding: false,
-      cell: ({ row }) => {
-        const candidate = row.original;
-        return candidate.materialized_case ? (
-          <button
-            type="button"
-            onClick={() => setSelectedCaseId(candidate.materialized_case?.id ?? null)}
-            className="inline-flex items-center space-x-1 rounded-lg bg-slate-100 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-200"
-          >
-            <Eye className="size-3.5" />
-            <span>Lihat Kasus #{candidate.materialized_case.id}</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={submittingKey === candidate.exception_key}
-            onClick={() => void handleMaterializeCandidate(candidate)}
-            className="inline-flex items-center space-x-1 rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-white shadow-2xs transition-colors hover:bg-indigo-700 disabled:opacity-50"
-          >
-            <Plus className="size-3.5" />
-            <span>Tangani Kasus</span>
-          </button>
-        );
-      },
-    }),
   ]), [handleMaterializeCandidate, submittingKey]);
 
   const caseColumns = useMemo(() => caseColumn.columns([
+    caseColumn.display({
+      id: 'actions',
+      header: 'Aksi',
+      enableHiding: false,
+      cell: ({ row }) => (
+        <Button size="sm" variant="outline" className="min-h-9" onClick={(event) => {
+          caseTrigger.current = event.currentTarget;
+          setSelectedCaseId(row.original.id);
+        }}>
+          <Eye className="size-3.5" aria-hidden="true" />
+          <span>Detail</span>
+        </Button>
+      ),
+    }),
     caseColumn.accessor('id', { header: 'ID Kasus', cell: (info) => `#${info.getValue()}` }),
     caseColumn.accessor('exception_kind', { header: 'Jenis', cell: (info) => info.getValue() || '-' }),
     caseColumn.accessor('student_name', { header: 'Nama Siswa', cell: (info) => info.getValue() || 'N/A' }),
@@ -237,33 +271,15 @@ export default function AttendanceFollowUpQueue() {
       header: 'Status',
       cell: (info) => {
         const status = info.getValue() || 'UNKNOWN';
-        const className = status === 'OPEN' ? 'bg-amber-100 text-amber-800'
-          : status === 'ACKNOWLEDGED' ? 'bg-blue-100 text-blue-800'
-          : status === 'IN_PROGRESS' ? 'bg-indigo-100 text-indigo-800'
-          : status === 'MONITORING' ? 'bg-purple-100 text-purple-800'
-          : status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800'
-          : status === 'DISMISSED' ? 'bg-slate-100 text-slate-700'
-          : 'bg-rose-100 text-rose-800';
-        return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${className}`}>{status}</span>;
+        const variant = status === 'RESOLVED' ? 'success'
+          : status === 'OPEN' ? 'warning'
+          : status === 'DISMISSED' ? 'secondary'
+          : 'information';
+        return <Badge variant={variant} className="rounded-sm">{status}</Badge>;
       },
     }),
     caseColumn.accessor('priority', { header: 'Prioritas', cell: (info) => info.getValue() || '-' }),
     caseColumn.accessor('assigned_to_user_id', { header: 'Penanggung Jawab', cell: (info) => info.getValue() ? `User #${info.getValue()}` : 'Belum Ditugaskan' }),
-    caseColumn.display({
-      id: 'actions',
-      header: 'Aksi',
-      enableHiding: false,
-      cell: ({ row }) => (
-        <button
-          type="button"
-          onClick={() => setSelectedCaseId(row.original.id)}
-          className="inline-flex items-center space-x-1 rounded-lg bg-indigo-50 px-3 py-1.5 font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
-        >
-          <Eye className="size-3.5" />
-          <span>Detail</span>
-        </button>
-      ),
-    }),
   ]), []);
 
   const candidateTable = useTable({
@@ -295,86 +311,50 @@ export default function AttendanceFollowUpQueue() {
     }));
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Antrean Follow-Up Pengecualian Absensi
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Materialisasi kasus tindak lanjut absensi tanpa menduplikasi kalkulasi data utama.
-          </p>
-        </div>
-        <button
-          onClick={loadData}
-          disabled={loading}
-          className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
-          <span>Muat Ulang</span>
-        </button>
-      </div>
-
-      {/* Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <span className="text-xs font-semibold uppercase text-slate-400">Kandidat Pengecualian</span>
-          <p className="text-2xl font-black text-slate-800 mt-1">{candidates.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <span className="text-xs font-semibold uppercase text-slate-400">Kasus Terbuka (Open)</span>
-          <p className="text-2xl font-black text-amber-600 mt-1">{metrics.open_cases || 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <span className="text-xs font-semibold uppercase text-slate-400">Dalam Penanganan</span>
-          <p className="text-2xl font-black text-indigo-600 mt-1">{metrics.in_progress_count || 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <span className="text-xs font-semibold uppercase text-slate-400">Selesai (Resolved)</span>
-          <p className="text-2xl font-black text-emerald-600 mt-1">{metrics.resolved_count || 0}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <span className="text-xs font-semibold uppercase text-slate-400">Kasus Aktif Total</span>
-          <p className="text-2xl font-black text-purple-600 mt-1">{metrics.active_cases || 0}</p>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Antrean Follow-Up Pengecualian Absensi"
+        description="Tinjau temuan absensi dan lanjutkan kasus yang sudah dibuka."
+        actions={<Button variant="outline" onClick={loadData} disabled={loading}>
+          <RefreshCw className="size-4" aria-hidden="true" /> Muat Ulang
+        </Button>}
+      />
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm flex items-center space-x-2">
-          <AlertTriangle className="w-5 h-5 shrink-0" />
-          <span>{error}</span>
-        </div>
+        <p role="alert" className="flex items-start gap-2 rounded-sm border border-danger/20 bg-danger-surface p-3 text-sm text-danger">
+          <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+          {error.message}
+        </p>
       )}
 
-      {/* Controls & Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <FilterBar className="space-y-3 rounded-sm p-3">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
           {/* Tabs */}
-          <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="grid grid-cols-2 rounded-md bg-surface-muted p-1">
             <button
               type="button"
               aria-pressed={activeTab === 'candidates'}
               onClick={() => setUrlFilter('tab', 'candidates')}
-              className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
+              className={`min-h-9 rounded-sm px-2 py-1 text-xs font-semibold ${
                 activeTab === 'candidates'
-                  ? 'bg-white text-indigo-600 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-surface text-brand shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Kandidat Temuan ({candidates.length})
+              Kandidat Temuan ({countsAvailable ? candidates.length : '…'})
             </button>
             <button
               type="button"
+              ref={casesTab}
               aria-pressed={activeTab === 'cases'}
               onClick={() => setUrlFilter('tab', 'cases')}
-              className={`px-4 py-2 rounded-md text-xs font-bold transition-all ${
+              className={`min-h-9 rounded-sm px-2 py-1 text-xs font-semibold ${
                 activeTab === 'cases'
-                  ? 'bg-white text-indigo-600 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-surface text-brand shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Daftar Kasus ({cases.length})
+              Daftar Kasus ({countsAvailable ? cases.length : '…'})
             </button>
           </div>
 
@@ -397,17 +377,13 @@ export default function AttendanceFollowUpQueue() {
         </div>
 
         {/* Filter Dropdowns */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-1 text-slate-400 text-xs font-semibold uppercase mr-1">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Filter:</span>
-          </div>
+        <div className="grid gap-2 sm:grid-cols-3">
 
-          <select
+          <NativeSelect
             aria-label="Exception type filter"
             value={kindFilter}
             onChange={(e) => setUrlFilter('exception_kind', e.target.value)}
-            className="text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium text-slate-700"
+            className="h-10 min-w-0"
           >
             <option value="">Semua Jenis Pengecualian</option>
             <option value="UNEXPLAINED_ABSENCE">Unexplained Absence (Alfa)</option>
@@ -416,15 +392,15 @@ export default function AttendanceFollowUpQueue() {
             <option value="UNEXPLAINED_EARLY_DEPARTURE">Unexplained Early Departure</option>
             <option value="PENDING_CORRECTION">Pending Correction Request</option>
             <option value="UNMATCHED_DEVICE_IDENTITY">Unmatched Device Identity</option>
-          </select>
+          </NativeSelect>
 
           {activeTab === 'cases' && (
             <>
-              <select
+              <NativeSelect
                 aria-label="Case status filter"
                 value={statusFilter}
                 onChange={(e) => setUrlFilter('status', e.target.value)}
-                className="text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium text-slate-700"
+                className="h-10 min-w-0"
               >
                 <option value="">Semua Status Kasus</option>
                 <option value="OPEN">OPEN</option>
@@ -434,44 +410,55 @@ export default function AttendanceFollowUpQueue() {
                 <option value="RESOLVED">RESOLVED</option>
                 <option value="DISMISSED">DISMISSED</option>
                 <option value="REOPENED">REOPENED</option>
-              </select>
+              </NativeSelect>
 
-              <select
+              <NativeSelect
                 aria-label="Case priority filter"
                 value={priorityFilter}
                 onChange={(e) => setUrlFilter('priority', e.target.value)}
-                className="text-xs p-2 border border-slate-300 rounded-lg bg-white font-medium text-slate-700"
+                className="h-10 min-w-0"
               >
                 <option value="">Semua Prioritas</option>
                 <option value="HIGH">HIGH</option>
                 <option value="MEDIUM">MEDIUM</option>
                 <option value="LOW">LOW</option>
-              </select>
+              </NativeSelect>
             </>
           )}
         </div>
-      </div>
+      </FilterBar>
 
-      {/* Data Table Panel */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+      {countsAvailable && metrics.open_cases !== undefined && (
+        <dl aria-label="Ringkasan semua kasus" className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+          {[
+            ['Kasus aktif', metrics.open_cases],
+            ['Belum ditugaskan', metrics.unassigned_cases],
+            ['Terlambat', metrics.overdue_cases],
+            ['Selesai', metrics.resolved_count],
+          ].map(([label, count]) => count === undefined ? null : (
+            <div key={label} className="flex gap-1.5">
+              <dt>{label}</dt><dd className="font-semibold tabular-nums text-foreground">{count}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {error?.source !== 'load' && <div className="overflow-hidden rounded-sm border border-border bg-surface">
         {loading ? (
-          <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
-            <p className="text-sm font-medium">Memuat data antrean...</p>
-          </div>
+          <LoadingState title="Memuat data antrean" />
         ) : activeTab === 'candidates' ? (
           <VirtualizedDataTable
             caption="Attendance exception candidates"
             rows={candidateTable.getRowModel().rows}
             getRowId={(row) => row.id}
             columnCount={candidateTable.getVisibleLeafColumns().length}
-            emptyMessage="Tidak ada kandidat pengecualian ditemukan."
+            emptyMessage={searchTerm || kindFilter ? "Tidak ada kandidat yang cocok dengan pencarian atau filter." : "Tidak ada kandidat pengecualian ditemukan."}
             header={(
-              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-left font-semibold uppercase text-slate-500">
+              <thead className="sticky top-0 z-10 border-b border-border bg-surface-muted text-left font-semibold text-muted-foreground">
                 {candidateTable.getHeaderGroups().map((group) => (
                   <tr key={group.id} aria-rowindex={1}>
                     {group.headers.map((header) => (
-                      <th key={header.id} scope="col" className="p-3.5">
+                      <th key={header.id} scope="col" className="px-3 py-2">
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
@@ -491,13 +478,13 @@ export default function AttendanceFollowUpQueue() {
             rows={caseTable.getRowModel().rows}
             getRowId={(row) => row.id}
             columnCount={caseTable.getVisibleLeafColumns().length}
-            emptyMessage="Tidak ada kasus follow-up ditemukan."
+            emptyMessage={searchTerm || kindFilter || statusFilter || priorityFilter ? "Tidak ada kasus yang cocok dengan pencarian atau filter." : "Tidak ada kasus follow-up ditemukan."}
             header={(
-              <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-left font-semibold uppercase text-slate-500">
+              <thead className="sticky top-0 z-10 border-b border-border bg-surface-muted text-left font-semibold text-muted-foreground">
                 {caseTable.getHeaderGroups().map((group) => (
                   <tr key={group.id} aria-rowindex={1}>
                     {group.headers.map((header) => (
-                      <th key={header.id} scope="col" className="p-3.5">
+                      <th key={header.id} scope="col" className="px-3 py-2">
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
@@ -512,13 +499,18 @@ export default function AttendanceFollowUpQueue() {
             ))}
           />
         )}
-      </div>
+      </div>}
 
       {/* Case Detail Modal */}
-      {selectedCaseId && (
+      {caseId !== null && (
         <AttendanceFollowUpDetailModal
-          caseId={selectedCaseId}
-          onClose={() => setSelectedCaseId(null)}
+          key={caseId}
+          caseId={caseId}
+          onClose={closeCase}
+          restoreFocus={() => {
+            const trigger = caseTrigger.current;
+            (trigger?.isConnected ? trigger : casesTab.current)?.focus();
+          }}
           onRefresh={loadData}
         />
       )}

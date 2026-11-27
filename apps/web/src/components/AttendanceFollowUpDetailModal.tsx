@@ -8,7 +8,6 @@ import {
   MessageSquare,
   RefreshCw,
   UserCheck,
-  X,
   XCircle,
 } from 'lucide-react';
 import {
@@ -20,6 +19,8 @@ import {
   type FollowUpCaseId,
   type FollowUpHistoryItem,
 } from '../lib/api/followups';
+
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
 
 const RESOLUTION_CODES = [
   { value: 'EXCUSE_DOCUMENTED', label: 'Surat / Alasan Tervalidasi' },
@@ -33,6 +34,7 @@ const RESOLUTION_CODES = [
 type AttendanceFollowUpDetailModalProps = {
   caseId?: FollowUpCaseId | null;
   onClose: () => void;
+  restoreFocus: () => void;
   onRefresh?: () => void;
 };
 
@@ -57,6 +59,7 @@ function errorMessage(error: unknown, fallback: string): string {
 export default function AttendanceFollowUpDetailModal({
   caseId,
   onClose,
+  restoreFocus,
   onRefresh,
 }: AttendanceFollowUpDetailModalProps) {
   const [caseData, setCaseData] = useState<FollowUpCase | null>(null);
@@ -144,40 +147,25 @@ export default function AttendanceFollowUpDetailModal({
   if (!caseId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-slate-800">
-                Kasus Follow-Up #{caseId}
-              </h2>
-              <p className="text-xs text-slate-500 font-mono">
-                Key: {caseData?.exception_key || '...'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <Dialog open restoreFocus={false} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-3xl p-0" onCloseAutoFocus={(event) => {
+        event.preventDefault();
+        restoreFocus();
+      }}>
+        <header className="border-b border-border bg-surface-muted p-4 pr-12">
+          <DialogTitle className="text-lg font-semibold">Kasus Follow-Up #{caseId}</DialogTitle>
+          <DialogDescription className="mt-1 break-words">Key: {caseData?.exception_key || '…'}</DialogDescription>
+        </header>
 
         {/* Content Area */}
         {loading ? (
-          <div className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
-            <RefreshCw className="w-8 h-8 animate-spin text-indigo-500 mb-3" />
+          <div role="status" className="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+            <RefreshCw className="w-8 h-8 motion-safe:animate-spin text-brand mb-3" />
             <p className="text-sm font-medium">Memuat detail kasus...</p>
           </div>
         ) : !caseData ? (
           <div className="p-6 text-center">
-            <div className="p-4 bg-rose-50 text-rose-700 rounded-lg text-sm mb-4">
+            <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-lg text-sm mb-4">
               {error || 'Detail kasus follow-up tidak tersedia.'}
             </div>
             <button
@@ -188,9 +176,9 @@ export default function AttendanceFollowUpDetailModal({
             </button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="space-y-4 p-4">
             {error && (
-              <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-start space-x-2">
+              <div role="alert" className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm flex items-start space-x-2">
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -397,7 +385,7 @@ export default function AttendanceFollowUpDetailModal({
             )}
 
             {actionType === 'reopen' && (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-3">
+              <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-3">
                 <h4 className="text-xs font-bold text-rose-800 uppercase">Buka Kembali Kasus</h4>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">Alasan Pembukaan Kembali</label>
@@ -530,7 +518,7 @@ export default function AttendanceFollowUpDetailModal({
             )}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
