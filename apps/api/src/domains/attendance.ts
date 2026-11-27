@@ -25,6 +25,7 @@ import { classifyLateness, cutoffPolicyForDate, loadCutoffPolicies } from "./ter
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { earlyDepartureRoutes } from "./early-departure";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -376,31 +377,37 @@ function scopedRoutes(app: any, context: AuthContext): void {
     const jenjangRow = row(context, "SELECT j.name AS jenjang FROM academic_classes c JOIN academic_grades g ON g.id = c.grade_id JOIN jenjangs j ON j.id = g.jenjang_id WHERE c.id = ?", [ctx.params.class_id]);
     const jenjang = String(jenjangRow?.jenjang ?? "Unassigned");
     const rangeStart = `${year}-${month}-01`; const rangeEnd = `${year}-${month}-31`;
-    const values = rows(context, "SELECT e.student_id, s.name AS student_name, a.date, a.check_in, a.check_out, a.late_duration, a.status AS raw_status, o.override_status, o.override_check_in, o.override_check_out, o.note, o.reviewed_by FROM student_enrollments e JOIN students s ON s.id = e.student_id LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date >= ? AND a.date <= ? LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE e.academic_class_id = ? AND e.lifecycle_state = 'ACTIVE' AND (e.effective_from IS NULL OR e.effective_from <= ?) AND (e.effective_to IS NULL OR e.effective_to >= ?) ORDER BY s.name, a.date", [rangeStart, rangeEnd, ctx.params.class_id, rangeEnd, rangeStart]);
-    const hebOverride = row(context, "SELECT heb_value FROM heb_overrides WHERE jenjang = ? AND month = ? AND year = ?", [jenjang, Number(month), Number(year)]);
-    const heb = hebOverride ? Number(hebOverride.heb_value) : new Set(values.filter((v) => v.date).map((v) => String(v.date))).size;
-    const statusOf = (value: Row): string => { if (value.override_status) return String(value.override_status); if (value.raw_status) return String(value.raw_status); return "unrecorded"; };
-    const students = new Map<number, { name: string; days: Row[] }>();
-    for (const value of values) { const entry = students.get(Number(value.student_id)) ?? { name: String(value.student_name), days: [] }; if (value.date) entry.days.push(value); students.set(Number(value.student_id), entry); }
-    const workbook = createWorkbook({ exportType: "assigned-class-attendance" });
-    const recap = addWorksheet(workbook, "Rekap Siswa");
-    appendRow(recap, ["Siswa", "Hadir", "Terlambat", "Absen", "Tidak Lengkap", "Verified Sakit", "Verified Izin", "Verified Alfa", "Reported Sakit", "Reported Izin", "Reported Alfa", "HEB", "Kehadiran Tercatat / HEB"]);
-    for (const [studentId, entry] of students) {
-      const count = (target: string) => entry.days.filter((value) => statusOf(value) === target).length;
-      const attended = entry.days.filter((value) => statusOf(value) !== "absent" && statusOf(value) !== "unrecorded").length;
-      const reported = row(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id = ? AND month = ? AND year = ?", [studentId, Number(month), Number(year)]);
-      appendRow(recap, [entry.name, count("on-time"), count("late"), count("absent"), count("incomplete"), count("sakit"), count("izin"), count("alfa"), Number(reported?.sakit ?? 0), Number(reported?.izin ?? 0), Number(reported?.alfa ?? 0), heb, heb > 0 ? Number(((count("on-time") + count("late")) / heb).toFixed(3)) : ""]);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const values = rows(context, "SELECT e.student_id, s.name AS student_name, a.date, a.check_in, a.check_out, a.late_duration, a.status AS raw_status, o.override_status, o.override_check_in, o.override_check_out, o.note, o.reviewed_by FROM student_enrollments e JOIN students s ON s.id = e.student_id LEFT JOIN attendance a ON a.student_id = e.student_id AND a.date >= ? AND a.date <= ? LEFT JOIN attendance_overrides o ON o.attendance_id = a.id WHERE e.academic_class_id = ? AND e.lifecycle_state = 'ACTIVE' AND (e.effective_from IS NULL OR e.effective_from <= ?) AND (e.effective_to IS NULL OR e.effective_to >= ?) ORDER BY s.name, a.date", [rangeStart, rangeEnd, ctx.params.class_id, rangeEnd, rangeStart]);
+        const hebOverride = row(context, "SELECT heb_value FROM heb_overrides WHERE jenjang = ? AND month = ? AND year = ?", [jenjang, Number(month), Number(year)]);
+        const heb = hebOverride ? Number(hebOverride.heb_value) : new Set(values.filter((v) => v.date).map((v) => String(v.date))).size;
+        const statusOf = (value: Row): string => { if (value.override_status) return String(value.override_status); if (value.raw_status) return String(value.raw_status); return "unrecorded"; };
+        const students = new Map<number, { name: string; days: Row[] }>();
+        for (const value of values) { const entry = students.get(Number(value.student_id)) ?? { name: String(value.student_name), days: [] }; if (value.date) entry.days.push(value); students.set(Number(value.student_id), entry); }
+        const workbook = createWorkbook({ exportType: "assigned-class-attendance" });
+        const recap = addWorksheet(workbook, "Rekap Siswa");
+        appendRow(recap, ["Siswa", "Hadir", "Terlambat", "Absen", "Tidak Lengkap", "Verified Sakit", "Verified Izin", "Verified Alfa", "Reported Sakit", "Reported Izin", "Reported Alfa", "HEB", "Kehadiran Tercatat / HEB"]);
+        for (const [studentId, entry] of students) {
+          const count = (target: string) => entry.days.filter((value) => statusOf(value) === target).length;
+          const reported = row(context, "SELECT COALESCE(SUM(sakit),0) AS sakit, COALESCE(SUM(izin),0) AS izin, COALESCE(SUM(alfa),0) AS alfa FROM absence_reasons WHERE student_id = ? AND month = ? AND year = ?", [studentId, Number(month), Number(year)]);
+          appendRow(recap, [entry.name, count("on-time"), count("late"), count("absent"), count("incomplete"), count("sakit"), count("izin"), count("alfa"), Number(reported?.sakit ?? 0), Number(reported?.izin ?? 0), Number(reported?.alfa ?? 0), heb, heb > 0 ? Number(((count("on-time") + count("late")) / heb).toFixed(3)) : ""]);
+        }
+        styleHeader(recap); autoSizeColumns(recap, 13, 22);
+        const detail = addWorksheet(workbook, "Rincian Harian");
+        appendRow(detail, ["Siswa", "Tanggal", "Status", "Jam Masuk", "Jam Pulang", "Terlambat", "Koreksi Manual", "Catatan"]);
+        for (const value of values.filter((value) => value.date)) {
+          appendRow(detail, [value.student_name, value.date, statusOf(value), value.override_check_in ?? (value.check_in ? String(value.check_in).slice(0, 5) : null), value.override_check_out ?? (value.check_out ? String(value.check_out).slice(0, 5) : null), `${String(Math.floor(Number(value.late_duration ?? 0) / 60)).padStart(2, "0")}:${String(Number(value.late_duration ?? 0) % 60).padStart(2, "0")}`, value.override_status ? "Ya" : "Tidak", value.note ?? ""]);
+        }
+        styleHeader(detail); autoSizeColumns(detail, 10, 24);
+        const bytes = await writeXlsxWorkbook(workbook);
+        context.database.client.run("INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, export_scope, success, failure_code, metadata, schema_version) VALUES (?, ?, ?, 'export_assigned_class_attendance', 'ATTENDANCE_EXPORT', ?, 'EXPORT_ASSIGNED_CLASS_ATTENDANCE', 'MEDIUM', 'API', ?, 1, NULL, ?, '1')", [randomUUID(), user.username, user.role, `CLASS_ATTENDANCE/${ctx.params.class_id}`, `CLASS/${ctx.params.class_id}/${year}-${month}`, JSON.stringify({ class_id: Number(ctx.params.class_id), class_name: classRow.class_name, month: Number(month), year: Number(year), students_exported: students.size, rows_exported: values.filter((value) => value.date).length })]);
+        return { bytes, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`absensi_kelas_${classRow.class_name}_${year}-${month}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) return fail(ctx.set, error.status, error.message);
+      throw error;
     }
-    styleHeader(recap); autoSizeColumns(recap, 13, 22);
-    const detail = addWorksheet(workbook, "Rincian Harian");
-    appendRow(detail, ["Siswa", "Tanggal", "Status", "Jam Masuk", "Jam Pulang", "Terlambat", "Koreksi Manual", "Catatan"]);
-    for (const value of values.filter((value) => value.date)) {
-      appendRow(detail, [value.student_name, value.date, statusOf(value), value.override_check_in ?? (value.check_in ? String(value.check_in).slice(0, 5) : null), value.override_check_out ?? (value.check_out ? String(value.check_out).slice(0, 5) : null), `${String(Math.floor(Number(value.late_duration ?? 0) / 60)).padStart(2, "0")}:${String(Number(value.late_duration ?? 0) % 60).padStart(2, "0")}`, value.override_status ? "Ya" : "Tidak", value.note ?? ""]);
-    }
-    styleHeader(detail); autoSizeColumns(detail, 10, 24);
-    const bytes = await writeXlsxWorkbook(workbook);
-    context.database.client.run("INSERT INTO operations_audit_events (event_id, actor_id, actor_role, capability, entity_type, entity_reference, operation, risk_level, source, export_scope, success, failure_code, metadata, schema_version) VALUES (?, ?, ?, 'export_assigned_class_attendance', 'ATTENDANCE_EXPORT', ?, 'EXPORT_ASSIGNED_CLASS_ATTENDANCE', 'MEDIUM', 'API', ?, 1, NULL, ?, '1')", [randomUUID(), user.username, user.role, `CLASS_ATTENDANCE/${ctx.params.class_id}`, `CLASS/${ctx.params.class_id}/${year}-${month}`, JSON.stringify({ class_id: Number(ctx.params.class_id), class_name: classRow.class_name, month: Number(month), year: Number(year), students_exported: students.size, rows_exported: values.filter((value) => value.date).length })]);
-    return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`absensi_kelas_${classRow.class_name}_${year}-${month}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } });
   }, { params: t.Object({ class_id: t.Number({ minimum: 1 }) }), query: t.Object({ month: t.String(), year: t.String() }) });
   app.get("/api/attendance/classes/:class_id/dates/:date_val", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "view_attendance" }); if (!user) return { detail: "Insufficient permissions" };

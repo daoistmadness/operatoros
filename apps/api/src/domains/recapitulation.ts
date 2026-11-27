@@ -14,6 +14,7 @@ import {
 import { actor } from "./core";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -299,54 +300,62 @@ export function recapitulationRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/recapitulation/students/export-excel", async (ctx: Context) => {
     const user = actor(context, ctx, { capability: "export_student_data" });
     if (!user) return { detail: "Insufficient permissions" };
-    const scope = studentScope(context, ctx.query);
-    const values = studentRows(context, scope);
-    const today = schoolLocalDate(context.now?.() ?? new Date());
-    const workbook = createWorkbook({ exportType: "student-recapitulation" });
-    const summarySheet = addWorksheet(workbook, "Summary");
-    appendRow(summarySheet, ["Metric", "Value"]);
-    const genderCounts = new Map<string, number>();
-    const statusCounts = new Map<string, number>();
-    for (const value of values) {
-      const genderKey = categoryKey(value, "gender", today);
-      genderCounts.set(genderKey, (genderCounts.get(genderKey) ?? 0) + 1);
-      const statusKey = String(value.lifecycle_state ?? "Unknown");
-      statusCounts.set(statusKey, (statusCounts.get(statusKey) ?? 0) + 1);
-    }
-    appendRow(summarySheet, ["Total Students", values.length]);
-    for (const [key, count] of [...genderCounts.entries()].sort()) appendRow(summarySheet, [`Gender: ${key}`, count]);
-    for (const [key, count] of [...statusCounts.entries()].sort()) appendRow(summarySheet, [`Status: ${key}`, count]);
-    styleHeader(summarySheet);
-    autoSizeColumns(summarySheet, 12, 30);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const scope = studentScope(context, ctx.query);
+        const values = studentRows(context, scope);
+        const today = schoolLocalDate(context.now?.() ?? new Date());
+        const workbook = createWorkbook({ exportType: "student-recapitulation" });
+        const summarySheet = addWorksheet(workbook, "Summary");
+        appendRow(summarySheet, ["Metric", "Value"]);
+        const genderCounts = new Map<string, number>();
+        const statusCounts = new Map<string, number>();
+        for (const value of values) {
+          const genderKey = categoryKey(value, "gender", today);
+          genderCounts.set(genderKey, (genderCounts.get(genderKey) ?? 0) + 1);
+          const statusKey = String(value.lifecycle_state ?? "Unknown");
+          statusCounts.set(statusKey, (statusCounts.get(statusKey) ?? 0) + 1);
+        }
+        appendRow(summarySheet, ["Total Students", values.length]);
+        for (const [key, count] of [...genderCounts.entries()].sort()) appendRow(summarySheet, [`Gender: ${key}`, count]);
+        for (const [key, count] of [...statusCounts.entries()].sort()) appendRow(summarySheet, [`Status: ${key}`, count]);
+        styleHeader(summarySheet);
+        autoSizeColumns(summarySheet, 12, 30);
 
-    const dimensions: StudentRecapDimension[] = ["gender", "religion", "jenjang", "class", "age", "status"];
-    for (const dimension of dimensions) {
-      const counts = new Map<string, number>();
-      for (const value of values) {
-        const key = categoryKey(value, dimension, today);
-        counts.set(key, (counts.get(key) ?? 0) + 1);
-      }
-      const sheet = addWorksheet(workbook, dimensionLabel(dimension).slice(0, 30));
-      appendRow(sheet, ["Category", "Count", "Percentage"]);
-      for (const entry of recapRows(counts, values.length)) {
-        appendRow(sheet, [entry.label, entry.count, entry.percentage]);
-      }
-      styleHeader(sheet);
-      autoSizeColumns(sheet, 12, 24);
+        const dimensions: StudentRecapDimension[] = ["gender", "religion", "jenjang", "class", "age", "status"];
+        for (const dimension of dimensions) {
+          const counts = new Map<string, number>();
+          for (const value of values) {
+            const key = categoryKey(value, dimension, today);
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+          }
+          const sheet = addWorksheet(workbook, dimensionLabel(dimension).slice(0, 30));
+          appendRow(sheet, ["Category", "Count", "Percentage"]);
+          for (const entry of recapRows(counts, values.length)) {
+            appendRow(sheet, [entry.label, entry.count, entry.percentage]);
+          }
+          styleHeader(sheet);
+          autoSizeColumns(sheet, 12, 24);
+        }
+        const bytes = await writeXlsxWorkbook(workbook);
+        audit(context, user, "export_student_data", `STUDENT_RECAPITULATION/${scope.academicYearId}`, {
+          total: values.length,
+          academic_year_id: scope.academicYearId,
+          status: scope.status,
+        });
+        return {
+          bytes,
+          headers: {
+            "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content-disposition": `attachment; filename="${safeExportFilename("rekap_siswa", "xlsx")}"`,
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+          },
+        };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; }
+      throw error;
     }
-    const bytes = await writeXlsxWorkbook(workbook);
-    audit(context, user, "export_student_data", `STUDENT_RECAPITULATION/${scope.academicYearId}`, {
-      total: values.length,
-      academic_year_id: scope.academicYearId,
-      status: scope.status,
-    });
-    return new Response(bytes, {
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content-disposition": `attachment; filename="${safeExportFilename("rekap_siswa", "xlsx")}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      },
-    });
   }, {
     query: t.Object({
       academic_year_id: t.Optional(t.String()),
@@ -369,57 +378,65 @@ export function recapitulationRoutes(app: any, context: AuthContext): void {
       params.unshift(jenjangId);
       filters.push("sja.jenjang_id IS NOT NULL");
     }
-    const values = rows(
-      context,
-      `SELECT s.id, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT GROUP_CONCAT(DISTINCT j.name) FROM staff_jenjang_assignments sja JOIN jenjangs j ON j.id = sja.jenjang_id WHERE sja.staff_member_id = s.id) AS jenjang
-         FROM staff_members s
-         ${jenjangJoin}
-        WHERE ${filters.join(" AND ")}
-        GROUP BY s.id
-        ORDER BY s.id`,
-      params,
-    );
-    const workbook = createWorkbook({ exportType: "staff-recapitulation" });
-    const summarySheet = addWorksheet(workbook, "Summary");
-    appendRow(summarySheet, ["Metric", "Value"]);
-    appendRow(summarySheet, [`Staff (${employmentStatus})`, values.length]);
-    styleHeader(summarySheet);
-    autoSizeColumns(summarySheet, 12, 30);
-    const dimensions: StaffRecapDimension[] = ["employment", "job_title", "education", "jenjang"];
-    for (const dimension of dimensions) {
-      const exportRows = dimension === "jenjang"
-        ? staffJenjangRows(context, employmentStatus, values.length)
-        : (() => {
-            const counts = new Map<string, number>();
-            for (const value of values) {
-              const key = staffCategoryKey(value, dimension);
-              counts.set(key, (counts.get(key) ?? 0) + 1);
-            }
-            return recapRows(counts, values.length);
-          })();
-      const sheet = addWorksheet(workbook, dimensionLabel(dimension).slice(0, 30));
-      appendRow(sheet, ["Category", "Count", "Percentage"]);
-      for (const entry of exportRows) {
-        appendRow(sheet, [entry.label, entry.count, entry.percentage]);
-      }
-      styleHeader(sheet);
-      autoSizeColumns(sheet, 12, 24);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const values = rows(
+          context,
+          `SELECT s.id, s.employment_status, s.job_title_normalized, s.job_title_raw,
+                  (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
+                  (SELECT GROUP_CONCAT(DISTINCT j.name) FROM staff_jenjang_assignments sja JOIN jenjangs j ON j.id = sja.jenjang_id WHERE sja.staff_member_id = s.id) AS jenjang
+             FROM staff_members s
+             ${jenjangJoin}
+            WHERE ${filters.join(" AND ")}
+            GROUP BY s.id
+            ORDER BY s.id`,
+          params,
+        );
+        const workbook = createWorkbook({ exportType: "staff-recapitulation" });
+        const summarySheet = addWorksheet(workbook, "Summary");
+        appendRow(summarySheet, ["Metric", "Value"]);
+        appendRow(summarySheet, [`Staff (${employmentStatus})`, values.length]);
+        styleHeader(summarySheet);
+        autoSizeColumns(summarySheet, 12, 30);
+        const dimensions: StaffRecapDimension[] = ["employment", "job_title", "education", "jenjang"];
+        for (const dimension of dimensions) {
+          const exportRows = dimension === "jenjang"
+            ? staffJenjangRows(context, employmentStatus, values.length)
+            : (() => {
+                const counts = new Map<string, number>();
+                for (const value of values) {
+                  const key = staffCategoryKey(value, dimension);
+                  counts.set(key, (counts.get(key) ?? 0) + 1);
+                }
+                return recapRows(counts, values.length);
+              })();
+          const sheet = addWorksheet(workbook, dimensionLabel(dimension).slice(0, 30));
+          appendRow(sheet, ["Category", "Count", "Percentage"]);
+          for (const entry of exportRows) {
+            appendRow(sheet, [entry.label, entry.count, entry.percentage]);
+          }
+          styleHeader(sheet);
+          autoSizeColumns(sheet, 12, 24);
+        }
+        const bytes = await writeXlsxWorkbook(workbook);
+        audit(context, user, "export_staff", `STAFF_RECAPITULATION/${employmentStatus}`, {
+          total: values.length,
+          employment_status: employmentStatus,
+          jenjang_id: jenjangId,
+        });
+        return {
+          bytes,
+          headers: {
+            "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content-disposition": `attachment; filename="${safeExportFilename("rekap_staff", "xlsx")}"`,
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+          },
+        };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; }
+      throw error;
     }
-    const bytes = await writeXlsxWorkbook(workbook);
-    audit(context, user, "export_staff", `STAFF_RECAPITULATION/${employmentStatus}`, {
-      total: values.length,
-      employment_status: employmentStatus,
-      jenjang_id: jenjangId,
-    });
-    return new Response(bytes, {
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content-disposition": `attachment; filename="${safeExportFilename("rekap_staff", "xlsx")}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      },
-    });
   }, {
     query: t.Object({
       employment_status: t.Optional(t.String()),

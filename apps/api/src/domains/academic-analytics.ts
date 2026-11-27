@@ -12,6 +12,7 @@ import { roundHalfEven } from "../analytics/queries";
 import { hasAcademicTimelineTable } from "./academic-timeline";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -400,23 +401,25 @@ function addRows(sheet: any, headers: string[], values: Row[], fields: string[])
   styleHeader(sheet); autoSizeColumns(sheet, 12, 30);
 }
 
-async function exportWorkbook(context: AuthContext, user: { username: string; role: string }, scope: AcademicScope): Promise<Response> {
-  const value = overview(context, scope);
-  const students = studentRows(context, scope, { page: 1, page_size: 200 }, true);
-  const workbook = createWorkbook({ exportType: "academic-analytics" });
-  const summary = addWorksheet(workbook, "Summary");
-  appendRow(summary, ["Metric", "Value"]);
-  for (const item of [["Academic year", scope.academicYearLabel], ["Students", value.summary.students], ["Assessments", value.summary.assessments], ["Expected results", value.summary.expectedResults], ["Scored results", value.summary.scoredResults], ["Missing results", value.summary.missingResults], ["Participation %", value.summary.participationPercentage], ["Average score", value.summary.score.average], ["Formative average", value.summary.formative.average], ["Summative average", value.summary.summative.average], ["Meeting threshold results", value.summary.mastery.meetingResults], ["Below threshold results", value.summary.mastery.belowResults]] as const) appendRow(summary, item);
-  styleHeader(summary); autoSizeColumns(summary, 16, 34);
-  addRows(addWorksheet(workbook, "Subjects"), ["Subject", "Students", "Assessments", "Average", "Min", "Max", "Formative", "Summative", "Participation %", "Missing"], value.subjects, ["label", "students", "assessments", "average", "min", "max", "formativeAverage", "summativeAverage", "participationPercentage", "missingResults"]);
-  addRows(addWorksheet(workbook, "Classes"), ["Class", "Students", "Assessments", "Average", "Participation %", "Missing"], value.classes, ["label", "students", "assessments", "average", "participationPercentage", "missingResults"]);
-  addRows(addWorksheet(workbook, "Jenjang"), ["Jenjang", "Students", "Assessments", "Average", "Participation %", "Missing"], value.jenjang, ["label", "students", "assessments", "average", "participationPercentage", "missingResults"]);
-  addRows(addWorksheet(workbook, "Assessments"), ["Assessment", "Subject", "Type", "Participants", "Scored", "Missing", "Average", "Min", "Max"], value.assessments, ["label", "subjectName", "assessmentType", "participants", "scored", "missing", "average", "min", "max"]);
-  addRows(addWorksheet(workbook, "Students"), ["Student", "Class", "Subjects", "Assessments", "Average", "Formative", "Summative", "Missing"], students.rows, ["studentName", "className", "subjectsIncluded", "assessmentsIncluded", "average", "formativeAverage", "summativeAverage", "missingAssessments"]);
-  addRows(addWorksheet(workbook, "Distribution"), ["Range", "Minimum", "Maximum", "Count"], value.distribution, ["bucket", "min", "max", "count"]);
-  const bytes = await writeXlsxWorkbook(workbook);
-  auditExport(context, user, scope, students.total);
-  return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`academic_analytics_${scope.academicYearId}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } });
+async function exportWorkbook(context: AuthContext, user: { username: string; role: string }, scope: AcademicScope, signal?: AbortSignal): Promise<Response> {
+  return createAdmittedXlsxResponse(async () => {
+    const value = overview(context, scope);
+    const students = studentRows(context, scope, { page: 1, page_size: 200 }, true);
+    const workbook = createWorkbook({ exportType: "academic-analytics" });
+    const summary = addWorksheet(workbook, "Summary");
+    appendRow(summary, ["Metric", "Value"]);
+    for (const item of [["Academic year", scope.academicYearLabel], ["Students", value.summary.students], ["Assessments", value.summary.assessments], ["Expected results", value.summary.expectedResults], ["Scored results", value.summary.scoredResults], ["Missing results", value.summary.missingResults], ["Participation %", value.summary.participationPercentage], ["Average score", value.summary.score.average], ["Formative average", value.summary.formative.average], ["Summative average", value.summary.summative.average], ["Meeting threshold results", value.summary.mastery.meetingResults], ["Below threshold results", value.summary.mastery.belowResults]] as const) appendRow(summary, item);
+    styleHeader(summary); autoSizeColumns(summary, 16, 34);
+    addRows(addWorksheet(workbook, "Subjects"), ["Subject", "Students", "Assessments", "Average", "Min", "Max", "Formative", "Summative", "Participation %", "Missing"], value.subjects, ["label", "students", "assessments", "average", "min", "max", "formativeAverage", "summativeAverage", "participationPercentage", "missingResults"]);
+    addRows(addWorksheet(workbook, "Classes"), ["Class", "Students", "Assessments", "Average", "Participation %", "Missing"], value.classes, ["label", "students", "assessments", "average", "participationPercentage", "missingResults"]);
+    addRows(addWorksheet(workbook, "Jenjang"), ["Jenjang", "Students", "Assessments", "Average", "Participation %", "Missing"], value.jenjang, ["label", "students", "assessments", "average", "participationPercentage", "missingResults"]);
+    addRows(addWorksheet(workbook, "Assessments"), ["Assessment", "Subject", "Type", "Participants", "Scored", "Missing", "Average", "Min", "Max"], value.assessments, ["label", "subjectName", "assessmentType", "participants", "scored", "missing", "average", "min", "max"]);
+    addRows(addWorksheet(workbook, "Students"), ["Student", "Class", "Subjects", "Assessments", "Average", "Formative", "Summative", "Missing"], students.rows, ["studentName", "className", "subjectsIncluded", "assessmentsIncluded", "average", "formativeAverage", "summativeAverage", "missingAssessments"]);
+    addRows(addWorksheet(workbook, "Distribution"), ["Range", "Minimum", "Maximum", "Count"], value.distribution, ["bucket", "min", "max", "count"]);
+    const bytes = await writeXlsxWorkbook(workbook);
+    auditExport(context, user, scope, students.total);
+    return { bytes, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`academic_analytics_${scope.academicYearId}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } };
+  }, signal);
 }
 
 export function academicAnalyticsRoutes(app: any, context: AuthContext): void {
@@ -456,6 +459,11 @@ export function academicAnalyticsRoutes(app: any, context: AuthContext): void {
     if (!user) return { detail: "Insufficient permissions" };
     const scope = buildScope(context, ctx.query);
     if (!scope) return fail(ctx.set, 400, "The academic analytics scope is invalid.");
-    return exportWorkbook(context, user, scope);
+    try {
+      return await exportWorkbook(context, user, scope, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) return fail(ctx.set, error.status, error.message);
+      throw error;
+    }
   }, { query: AcademicAnalyticsQuerySchema });
 }

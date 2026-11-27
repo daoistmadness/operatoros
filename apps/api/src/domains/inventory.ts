@@ -42,6 +42,7 @@ import {
   XLSX_MIME_TYPE,
   safeExportFilename,
 } from "@operatoros/excel";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -1231,18 +1232,25 @@ export function inventoryRoutes(app: any, context: AuthContext) {
     );
 
     try {
-      const bytes = await writeXlsxWorkbook(workbook);
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-      const filename = safeExportFilename(`inventaris-aset-${dateStr}`, "xlsx");
+      return await createAdmittedXlsxResponse(async () => {
+        const bytes = await writeXlsxWorkbook(workbook);
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        const filename = safeExportFilename(`inventaris-aset-${dateStr}`, "xlsx");
 
-      return new Response(bytes, {
-        headers: {
-          "content-type": XLSX_MIME_TYPE,
-          "content-disposition": `attachment; filename="${filename}"`,
-          "cache-control": "no-store",
-        },
-      });
+        return {
+          bytes,
+          headers: {
+            "content-type": XLSX_MIME_TYPE,
+            "content-disposition": `attachment; filename="${filename}"`,
+            "cache-control": "no-store",
+          },
+        };
+      }, ctx.request?.signal);
     } catch (err: any) {
+      if (err instanceof ExcelAdmissionError) {
+        set.status = err.status;
+        return { detail: err.message };
+      }
       set.status = 500;
       return { detail: `Failed to generate Excel export: ${err.message}` };
     }

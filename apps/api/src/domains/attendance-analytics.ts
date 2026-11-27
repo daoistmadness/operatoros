@@ -14,6 +14,7 @@ import {
 } from "@operatoros/contracts/analytics";
 import { actor } from "./core";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -339,42 +340,49 @@ export function attendanceAnalyticsRoutes(app: any, context: AuthContext): void 
     if (!user) return { detail: "Insufficient permissions" };
     const scope = buildScope(context, ctx.query);
     if (!scope) return fail(ctx.set, "The attendance analytics scope is invalid.");
-    const value = aggregate(context, scope, "overview");
-    const counts = countsFrom(value);
-    const total = totalRecords(counts);
-    const workbook = createWorkbook({ exportType: "attendance-analytics" });
-    const summary = addWorksheet(workbook, "Summary");
-    appendRow(summary, ["Metric", "Value"]); appendRow(summary, ["Date range", `${scope.dateFrom} – ${scope.dateTo}`]); appendRow(summary, ["Academic year", scope.academicYearLabel]); appendRow(summary, ["Total records", total]);
-    for (const [label, amount] of [["Present", counts.present], ["Late", counts.late], ["Incomplete", counts.incomplete], ["Absent", counts.absent], ["Sakit", counts.sakit], ["Izin", counts.izin], ["Alfa", counts.alfa], ["Unrecorded", counts.unrecorded]] as const) appendRow(summary, [label, amount]);
-    appendRow(summary, ["Recorded Presence Rate %", attendanceRate(counts)]); appendRow(summary, ["Late Among Present %", tardinessRate(counts)]); appendRow(summary, ["Unexcused Absence Rate %", unexcusedAbsenceRate(counts)]); appendRow(summary, ["Override-corrected records", Number(value.overridden ?? 0)]); appendRow(summary, ["HEB total", hebTotal(context, scope)]);
-    styleHeader(summary); autoSizeColumns(summary, 16, 34);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const value = aggregate(context, scope, "overview");
+        const counts = countsFrom(value);
+        const total = totalRecords(counts);
+        const workbook = createWorkbook({ exportType: "attendance-analytics" });
+        const summary = addWorksheet(workbook, "Summary");
+        appendRow(summary, ["Metric", "Value"]); appendRow(summary, ["Date range", `${scope.dateFrom} – ${scope.dateTo}`]); appendRow(summary, ["Academic year", scope.academicYearLabel]); appendRow(summary, ["Total records", total]);
+        for (const [label, amount] of [["Present", counts.present], ["Late", counts.late], ["Incomplete", counts.incomplete], ["Absent", counts.absent], ["Sakit", counts.sakit], ["Izin", counts.izin], ["Alfa", counts.alfa], ["Unrecorded", counts.unrecorded]] as const) appendRow(summary, [label, amount]);
+        appendRow(summary, ["Recorded Presence Rate %", attendanceRate(counts)]); appendRow(summary, ["Late Among Present %", tardinessRate(counts)]); appendRow(summary, ["Unexcused Absence Rate %", unexcusedAbsenceRate(counts)]); appendRow(summary, ["Override-corrected records", Number(value.overridden ?? 0)]); appendRow(summary, ["HEB total", hebTotal(context, scope)]);
+        styleHeader(summary); autoSizeColumns(summary, 16, 34);
 
-    const classRows = groupedRows(context, scope, "class");
-    const classSheet = addWorksheet(workbook, "By Class");
-    appendRow(classSheet, ["Class", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
-    for (const value of classRows) appendRow(classSheet, [value.className, value.students, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
-    styleHeader(classSheet); autoSizeColumns(classSheet, 10, 22);
+        const classRows = groupedRows(context, scope, "class");
+        const classSheet = addWorksheet(workbook, "By Class");
+        appendRow(classSheet, ["Class", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
+        for (const rowItem of classRows) appendRow(classSheet, [rowItem.className, rowItem.students, rowItem.counts.present, rowItem.counts.late, rowItem.counts.incomplete, rowItem.counts.absent, rowItem.counts.sakit, rowItem.counts.izin, rowItem.counts.alfa, rowItem.attendanceRate, rowItem.tardinessRate, rowItem.unexcusedAbsenceRate]);
+        styleHeader(classSheet); autoSizeColumns(classSheet, 10, 22);
 
-    const jenjangRows = groupedRows(context, scope, "jenjang");
-    const jenjangSheet = addWorksheet(workbook, "By Jenjang");
-    appendRow(jenjangSheet, ["Jenjang", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
-    for (const value of jenjangRows) appendRow(jenjangSheet, [value.jenjang, value.students, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
-    styleHeader(jenjangSheet); autoSizeColumns(jenjangSheet, 10, 22);
+        const jenjangRows = groupedRows(context, scope, "jenjang");
+        const jenjangSheet = addWorksheet(workbook, "By Jenjang");
+        appendRow(jenjangSheet, ["Jenjang", "Students", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
+        for (const rowItem of jenjangRows) appendRow(jenjangSheet, [rowItem.jenjang, rowItem.students, rowItem.counts.present, rowItem.counts.late, rowItem.counts.incomplete, rowItem.counts.absent, rowItem.counts.sakit, rowItem.counts.izin, rowItem.counts.alfa, rowItem.attendanceRate, rowItem.tardinessRate, rowItem.unexcusedAbsenceRate]);
+        styleHeader(jenjangSheet); autoSizeColumns(jenjangSheet, 10, 22);
 
-    const dailyRows = groupedRows(context, scope, "daily");
-    const dailySheet = addWorksheet(workbook, "Daily");
-    appendRow(dailySheet, ["Date", "Records", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %"]);
-    for (const value of dailyRows) appendRow(dailySheet, [value.date, value.records, value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate]);
-    styleHeader(dailySheet); autoSizeColumns(dailySheet, 12, 20);
+        const dailyRows = groupedRows(context, scope, "daily");
+        const dailySheet = addWorksheet(workbook, "Daily");
+        appendRow(dailySheet, ["Date", "Records", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %"]);
+        for (const rowItem of dailyRows) appendRow(dailySheet, [rowItem.date, rowItem.records, rowItem.counts.present, rowItem.counts.late, rowItem.counts.incomplete, rowItem.counts.absent, rowItem.counts.sakit, rowItem.counts.izin, rowItem.counts.alfa, rowItem.attendanceRate]);
+        styleHeader(dailySheet); autoSizeColumns(dailySheet, 12, 20);
 
-    const students = studentRows(context, scope, "", "name", "ASC", 1, 200).rows;
-    const studentSheet = addWorksheet(workbook, "By Student");
-    appendRow(studentSheet, ["Student", "Class", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
-    for (const value of students) appendRow(studentSheet, [value.studentName, value.className ?? "No class", value.counts.present, value.counts.late, value.counts.incomplete, value.counts.absent, value.counts.sakit, value.counts.izin, value.counts.alfa, value.attendanceRate, value.tardinessRate, value.unexcusedAbsenceRate]);
-    styleHeader(studentSheet); autoSizeColumns(studentSheet, 12, 22);
+        const students = studentRows(context, scope, "", "name", "ASC", 1, 200).rows;
+        const studentSheet = addWorksheet(workbook, "By Student");
+        appendRow(studentSheet, ["Student", "Class", "Present", "Late", "Incomplete", "Absent", "Sakit", "Izin", "Alfa", "Recorded Presence Rate %", "Late Among Present %", "Unexcused Absence Rate %"]);
+        for (const rowItem of students) appendRow(studentSheet, [rowItem.studentName, rowItem.className ?? "No class", rowItem.counts.present, rowItem.counts.late, rowItem.counts.incomplete, rowItem.counts.absent, rowItem.counts.sakit, rowItem.counts.izin, rowItem.counts.alfa, rowItem.attendanceRate, rowItem.tardinessRate, rowItem.unexcusedAbsenceRate]);
+        styleHeader(studentSheet); autoSizeColumns(studentSheet, 12, 22);
 
-    const bytes = await writeXlsxWorkbook(workbook);
-    auditExport(context, user, scope, total);
-    return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`analytics_absensi_${scope.dateFrom}_${scope.dateTo}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } });
+        const bytes = await writeXlsxWorkbook(workbook);
+        auditExport(context, user, scope, total);
+        return { bytes, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${safeExportFilename(`analytics_absensi_${scope.dateFrom}_${scope.dateTo}`, "xlsx")}"`, "cache-control": "no-store, no-cache, must-revalidate, private" } };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; }
+      throw error;
+    }
   }, options);
 }

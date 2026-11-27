@@ -80,11 +80,77 @@ export function admitExcelUploadRequest(
     activeUploads = Math.max(0, activeUploads - 1);
     inFlightBytes = Math.max(0, inFlightBytes - reservedBytes);
     activeRequestReleases.delete(request);
+    request.signal.removeEventListener("abort", release);
   };
 
   request.signal.addEventListener("abort", release, { once: true });
   activeRequestReleases.set(request, release);
   return { admitted: true };
+}
+
+export class ExcelUploadLimitError extends Error {
+  constructor(
+    readonly status: 400 | 413,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ExcelUploadLimitError";
+  }
+}
+
+export async function readBoundedUploadFormData(
+  request: Request,
+  maxBytes: number,
+): Promise<Record<string, unknown>> {
+  const body = request.body;
+  if (!body) {
+    throw new ExcelUploadLimitError(400, "Missing multipart upload body.");
+  }
+
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  // Multipart envelope adds boundary/field headers around the uploaded file.
+  const envelopeAllowanceBytes = 256 * 1024;
+  const hardLimit = maxBytes + envelopeAllowanceBytes;
+
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (!value || value.byteLength === 0) continue;
+      totalBytes += value.byteLength;
+      if (totalBytes > hardLimit) {
+        await reader.cancel().catch(() => {});
+        throw new ExcelUploadLimitError(
+          413,
+          `Uploaded workbook exceeds maximum limit of ${maxBytes} bytes.`,
+        );
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const combined = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  const formData = await new Response(combined, { headers: request.headers }).formData();
+  const parsed: Record<string, unknown> = {};
+  for (const [key, value] of formData.entries()) {
+    if (key in parsed) {
+      const existing = parsed[key];
+      parsed[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+    } else {
+      parsed[key] = value;
+    }
+  }
+  return parsed;
 }
 
 export function releaseExcelUploadRequest(request: Request): void {

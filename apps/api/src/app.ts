@@ -56,7 +56,13 @@ import { uppReportRoutes } from "./domains/upp-reports";
 import { registerStudentAdmin } from "./domains/student-admin";
 import { inventoryRoutes } from "./domains/inventory";
 import { openApiDocumentation } from "./openapi-contract";
-import { admitExcelUploadRequest, releaseExcelUploadRequest } from "./import/excel-upload-admission";
+import {
+  admitExcelUploadRequest,
+  ExcelUploadLimitError,
+  excelUploadLimitForRequest,
+  readBoundedUploadFormData,
+  releaseExcelUploadRequest,
+} from "./import/excel-upload-admission";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -79,15 +85,26 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
         return { detail: decision.detail };
       }
     })
+    .onParse(async ({ request, contentType }) => {
+      if (!contentType?.includes("multipart/form-data")) return undefined;
+      const pathname = new URL(request.url).pathname;
+      const maxBytes = excelUploadLimitForRequest(request.method, pathname);
+      if (maxBytes === null) return undefined;
+      return readBoundedUploadFormData(request, maxBytes);
+    })
     .onAfterHandle(({ request }) => {
       releaseExcelUploadRequest(request);
     })
     .onAfterResponse(({ request }) => {
       releaseExcelUploadRequest(request);
     })
-    .onError(({ code, request, set }) => {
+    .onError(({ code, error, request, set }) => {
       releaseExcelUploadRequest(request);
       set.headers["content-type"] = "application/json";
+      if (error instanceof ExcelUploadLimitError) {
+        set.status = error.status;
+        return { detail: error.message };
+      }
       if (code === "VALIDATION") {
         set.status = 400;
         return errorBody("VALIDATION_ERROR", "Request failed schema validation.");

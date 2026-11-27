@@ -22,6 +22,7 @@ import type { AuthContext, CurrentUser } from "../auth/service";
 import { actor, staffMutationAudit } from "./core";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 import { eligibleStaffBySchoolUnitForMonth } from "./staff-school-units";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, unknown>;
 type Context = any;
@@ -437,11 +438,42 @@ export function staffMonthlyActivityRoutes(app: any, context: AuthContext | null
     if (schoolUnitId === null) return fail(ctx.set, 422, "INVALID_SCHOOL_UNIT_ID", "Choose a valid school unit.");
     if (schoolUnitId !== undefined && !row(context, "SELECT id FROM school_units WHERE id=?", [schoolUnitId])) return fail(ctx.set, 404, "SCHOOL_UNIT_NOT_FOUND", "School unit was not found.");
     const filters: Filters & { format: "xlsx" | "pdf" } = { month: ctx.query.month, school_unit_id: schoolUnitId, status: ctx.query.status, format: ctx.query.format };
+    const filename = safeExportFilename(`staff-monthly-activity-${filters.month}`, filters.format);
+    if (filters.format === "xlsx") {
+      try {
+        return await createAdmittedXlsxResponse(async () => {
+          const currentPeriod = period(context, filters.month);
+          const periodId = currentPeriod ? Number(currentPeriod.id) : null;
+          const summary = periodSummary(context, filters.month, periodId, filters.school_unit_id);
+          const items = periodId === null ? [] : listItems(context, periodId, filters);
+          const bytes = await activityWorkbook(filters.month, summary, items);
+          inTransaction(context.database.client, () => staffMutationAudit(context.database.client, user, "STAFF_MONTHLY_ACTIVITY_EXPORT", "STAFF_MONTHLY_ACTIVITY_PERIOD", filters.month, ["export"], {
+            month: filters.month,
+            school_unit_id: filters.school_unit_id ?? null,
+            status: filters.status ?? null,
+            format: filters.format,
+            row_count: items.length,
+          }, "export_staff"));
+          return {
+            bytes,
+            headers: {
+              "content-type": XLSX_MIME_TYPE,
+              "content-disposition": `attachment; filename="${filename}"`,
+              "cache-control": "no-store, no-cache, must-revalidate, private",
+              pragma: "no-cache",
+            },
+          };
+        }, ctx.request?.signal);
+      } catch (error) {
+        if (error instanceof ExcelAdmissionError) return fail(ctx.set, error.status, "EXCEL_ADMISSION_BUSY", error.message);
+        throw error;
+      }
+    }
     const currentPeriod = period(context, filters.month);
     const periodId = currentPeriod ? Number(currentPeriod.id) : null;
     const summary = periodSummary(context, filters.month, periodId, filters.school_unit_id);
     const items = periodId === null ? [] : listItems(context, periodId, filters);
-    const bytes = filters.format === "xlsx" ? await activityWorkbook(filters.month, summary, items) : await pdfSummary(filters.month, summary);
+    const bytes = await pdfSummary(filters.month, summary);
     inTransaction(context.database.client, () => staffMutationAudit(context.database.client, user, "STAFF_MONTHLY_ACTIVITY_EXPORT", "STAFF_MONTHLY_ACTIVITY_PERIOD", filters.month, ["export"], {
       month: filters.month,
       school_unit_id: filters.school_unit_id ?? null,
@@ -449,7 +481,6 @@ export function staffMonthlyActivityRoutes(app: any, context: AuthContext | null
       format: filters.format,
       row_count: items.length,
     }, "export_staff"));
-    const filename = safeExportFilename(`staff-monthly-activity-${filters.month}`, filters.format);
     return responseFile(bytes, filename, filters.format);
   }, { query: StaffMonthlyActivityExportQuery });
 }

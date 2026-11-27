@@ -1,18 +1,38 @@
-import { EXCEL_RESOURCE_LIMITS, type ParsedExcelWorkbook, type MachineWorkbookPreview } from "@operatoros/excel";
+import { readFileSync } from "node:fs";
+import {
+  EXCEL_RESOURCE_LIMITS,
+  ExcelWorkbookParseError,
+  MachineWorkbookError,
+  type ParsedExcelWorkbook,
+  type MachineWorkbookPreview,
+} from "@operatoros/excel";
 import { acquireExcelPermit } from "./excel-admission";
 import type { AttendanceSourceRow, InvalidSourceRow, WorkbookRows } from "./excel-reader";
 
 export const PARSER_SUBPROCESS_TIMEOUT_MS = 30_000;
 export const PARSER_SUBPROCESS_REAP_TIMEOUT_MS = 5_000;
+export const PARSER_SUBPROCESS_MAX_RSS_BYTES = 280 * 1024 * 1024;
+export const PARSER_SUBPROCESS_RSS_POLL_MS = 50;
 export const MAX_PARSER_IPC_OUTPUT_BYTES = 32 * 1024 * 1024;
 
 export type SubprocessProcessLike = {
+  pid?: number;
   stdin: { write(chunk: Uint8Array | string): unknown; end(): unknown };
   stdout: ReadableStream<Uint8Array>;
   stderr: ReadableStream<Uint8Array>;
   exited: Promise<number>;
   kill(signal?: number | NodeJS.Signals): void;
 };
+
+export function readProcPidRssBytes(pid: number): number | null {
+  try {
+    const statm = readFileSync(`/proc/${pid}/statm`, "utf8").trim().split(/\s+/);
+    const residentPages = Number(statm[1]);
+    return Number.isFinite(residentPages) && residentPages > 0 ? residentPages * 4096 : null;
+  } catch {
+    return null;
+  }
+}
 
 export type SubprocessSpawner = (cmd: string[]) => SubprocessProcessLike;
 
@@ -37,6 +57,7 @@ async function readBoundedStream(stream: ReadableStream<Uint8Array>, maxBytes: n
       if (!value || value.byteLength === 0) continue;
       total += value.byteLength;
       if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
         throw new Error("EXCEL_SUBPROCESS_OUTPUT_LIMIT_EXCEEDED");
       }
       chunks.push(value);
@@ -82,6 +103,9 @@ export async function runBoundedExcelSubprocess<T>(
     timeoutMs?: number;
     reapTimeoutMs?: number;
     maxOutputBytes?: number;
+    maxRssBytes?: number;
+    rssPollIntervalMs?: number;
+    readPidRssBytes?: (pid: number) => number | null;
     spawner?: SubprocessSpawner;
   },
 ): Promise<T> {
@@ -103,18 +127,24 @@ export async function runBoundedExcelSubprocess<T>(
   const timeoutMs = options?.timeoutMs ?? PARSER_SUBPROCESS_TIMEOUT_MS;
   const reapTimeoutMs = options?.reapTimeoutMs ?? PARSER_SUBPROCESS_REAP_TIMEOUT_MS;
   const maxOutputBytes = options?.maxOutputBytes ?? MAX_PARSER_IPC_OUTPUT_BYTES;
+  const maxRssBytes = options?.maxRssBytes ?? PARSER_SUBPROCESS_MAX_RSS_BYTES;
+  const rssPollIntervalMs = options?.rssPollIntervalMs ?? PARSER_SUBPROCESS_RSS_POLL_MS;
+  const readPidRssBytes = options?.readPidRssBytes ?? readProcPidRssBytes;
 
   let timedOut = false;
   let aborted = false;
+  let memoryExceeded = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let rssTimer: ReturnType<typeof setInterval> | undefined;
   let cleanupAbort: (() => void) | undefined;
   let rejectDeadline!: (error: Error) => void;
   const deadlinePromise = new Promise<never>((_, reject) => {
     rejectDeadline = reject;
   });
 
-  const killFor = (reason: "timeout" | "abort") => {
+  const killFor = (reason: "timeout" | "abort" | "memory") => {
     if (reason === "timeout") timedOut = true;
+    else if (reason === "memory") memoryExceeded = true;
     else aborted = true;
     try {
       proc.kill("SIGKILL");
@@ -122,7 +152,13 @@ export async function runBoundedExcelSubprocess<T>(
       // Ignore if already exited.
     }
     rejectDeadline(
-      new Error(reason === "timeout" ? "ATTENDANCE_WORKBOOK_PARSE_TIMEOUT" : "EXCEL_SUBPROCESS_ABORTED"),
+      new Error(
+        reason === "timeout"
+          ? "ATTENDANCE_WORKBOOK_PARSE_TIMEOUT"
+          : reason === "memory"
+            ? "EXCEL_SUBPROCESS_MEMORY_EXCEEDED"
+            : "EXCEL_SUBPROCESS_ABORTED",
+      ),
     );
   };
 
@@ -137,6 +173,16 @@ export async function runBoundedExcelSubprocess<T>(
   }
 
   timer = setTimeout(() => killFor("timeout"), timeoutMs);
+  if (typeof proc.pid === "number" && proc.pid > 0 && maxRssBytes > 0) {
+    const childPid = proc.pid;
+    rssTimer = setInterval(() => {
+      const rssBytes = readPidRssBytes(childPid);
+      if (rssBytes !== null && rssBytes > maxRssBytes) {
+        killFor("memory");
+      }
+    }, rssPollIntervalMs);
+    rssTimer.unref();
+  }
 
   let releasePermit = false;
   try {
@@ -165,6 +211,9 @@ export async function runBoundedExcelSubprocess<T>(
     if (aborted) {
       throw new Error("EXCEL_SUBPROCESS_ABORTED");
     }
+    if (memoryExceeded) {
+      throw new Error("EXCEL_SUBPROCESS_MEMORY_EXCEEDED");
+    }
     if (timedOut) {
       throw new Error("ATTENDANCE_WORKBOOK_PARSE_TIMEOUT");
     }
@@ -175,12 +224,30 @@ export async function runBoundedExcelSubprocess<T>(
 
     const parsed = JSON.parse(new TextDecoder().decode(stdoutBytes)) as
       | { ok: true; result: T }
-      | { ok: false; errorName?: string; errorMessage?: string };
+      | { ok: false; errorName?: string; errorCode?: string; errorMessage?: string };
 
     if (!parsed || typeof parsed !== "object" || !("ok" in parsed)) {
       throw new Error("Excel parser subprocess returned an unreadable result");
     }
     if (!parsed.ok) {
+      if (parsed.errorName === "MachineWorkbookError") {
+        const code =
+          parsed.errorCode === "FILE_TOO_LARGE"
+          || parsed.errorCode === "MALFORMED_WORKBOOK"
+          || parsed.errorCode === "UNSUPPORTED_FORMAT"
+          || parsed.errorCode === "UNSUPPORTED_STRUCTURE"
+            ? parsed.errorCode
+            : "MALFORMED_WORKBOOK";
+        throw new MachineWorkbookError(
+          code,
+          parsed.errorMessage || "The attendance-machine workbook could not be previewed safely.",
+        );
+      }
+      if (parsed.errorName === "ExcelWorkbookParseError") {
+        const parseErr = new ExcelWorkbookParseError();
+        if (parsed.errorMessage) parseErr.message = parsed.errorMessage;
+        throw parseErr;
+      }
       const err = new Error(parsed.errorMessage || "Excel parser subprocess failed.");
       err.name = parsed.errorName || "Error";
       throw err;
@@ -196,12 +263,16 @@ export async function runBoundedExcelSubprocess<T>(
     if (aborted) {
       throw new Error("EXCEL_SUBPROCESS_ABORTED");
     }
+    if (memoryExceeded) {
+      throw new Error("EXCEL_SUBPROCESS_MEMORY_EXCEEDED");
+    }
     if (timedOut) {
       throw new Error("ATTENDANCE_WORKBOOK_PARSE_TIMEOUT");
     }
     throw error;
   } finally {
     if (timer) clearTimeout(timer);
+    if (rssTimer) clearInterval(rssTimer);
     cleanupAbort?.();
     if (releasePermit) {
       release();
@@ -240,10 +311,26 @@ export function runMachineAttendanceSubprocess(
   return runBoundedExcelSubprocess<MachineWorkbookPreview>("machine", buffer, filename, options);
 }
 
-export function runXlsxReadSubprocess(
+const ISO_UTC_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+export async function runXlsxReadSubprocess(
   buffer: ArrayBuffer,
   filename: string,
   options?: Parameters<typeof runBoundedExcelSubprocess>[3],
 ): Promise<ParsedExcelWorkbook> {
-  return runBoundedExcelSubprocess<ParsedExcelWorkbook>("xlsx", buffer, filename, options);
+  const workbook = await runBoundedExcelSubprocess<ParsedExcelWorkbook>("xlsx", buffer, filename, options);
+  for (const sheet of workbook.sheets) {
+    for (const row of sheet.rows) {
+      for (let i = 0; i < row.values.length; i += 1) {
+        const value = row.values[i];
+        if (typeof value === "string" && ISO_UTC_DATE_PATTERN.test(value)) {
+          const date = new Date(value);
+          if (!Number.isNaN(date.getTime())) {
+            row.values[i] = date;
+          }
+        }
+      }
+    }
+  }
+  return workbook;
 }

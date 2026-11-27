@@ -66,10 +66,9 @@ try {
   }
   const header = JSON.parse(new TextDecoder().decode(raw.subarray(0, newlineIdx))) as ChildRequestHeader;
   const body = raw.subarray(newlineIdx + 1);
-  const buffer = Uint8Array.from(body).buffer;
 
   if (header.op === "attendance") {
-    const parsed = await parseAttendanceWorkbook(buffer, header.filename);
+    const parsed = await parseAttendanceWorkbook(body, header.filename);
     writeResponse({
       ok: true,
       result: {
@@ -81,10 +80,10 @@ try {
       },
     });
   } else if (header.op === "machine") {
-    const parsed = await parseMachineAttendanceWorkbook(buffer);
+    const parsed = await parseMachineAttendanceWorkbook(body);
     writeResponse({ ok: true, result: parsed });
   } else if (header.op === "xlsx") {
-    const parsed = await readXlsxWorkbook(buffer);
+    const parsed = await readXlsxWorkbook(body);
     writeResponse({ ok: true, result: parsed });
   } else {
     throw new Error("EXCEL_SUBPROCESS_UNKNOWN_OP");
@@ -93,6 +92,7 @@ try {
   writeResponse({
     ok: false,
     errorName: error instanceof Error ? error.name : "Error",
+    errorCode: error && typeof error === "object" && "code" in error && typeof error.code === "string" ? error.code : undefined,
     errorMessage: error instanceof Error ? error.message : "Excel parser subprocess failed.",
   });
 } finally {

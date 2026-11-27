@@ -15,7 +15,7 @@ import {
 } from "@operatoros/excel";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
-import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
+import { ExcelAdmissionError } from "../import/excel-admission";
 import { runMachineAttendanceSubprocess } from "../import/excel-subprocess";
 import { actor, legacyName } from "./core";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
@@ -559,9 +559,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
     try {
       const buffer = await scope.file.arrayBuffer();
       if (buffer.byteLength > MAX_MACHINE_WORKBOOK_BYTES) return fail(ctx.set, 413, "The attendance-machine workbook is too large.");
-      const parsed = buffer.byteLength >= 64 * 1024
-        ? await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal })
-        : await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer), ctx.request?.signal);
+      const parsed = await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal });
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
       const projection = buildProjection(context, parsed, scope.academicYearId, scope.jenjangId, scope.year, fingerprint(buffer), evaluatedOn, new Set(capabilitiesForRole(user.role)));
       const page = Math.max(1, positive(ctx.body?.page) ?? 1);
@@ -597,9 +595,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       if (buffer.byteLength > MAX_MACHINE_WORKBOOK_BYTES) return fail(ctx.set, 413, "The attendance-machine workbook is too large.");
       const fileFingerprint = fingerprint(buffer);
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
-      const previewParsed = buffer.byteLength >= 64 * 1024
-        ? await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal })
-        : await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer), ctx.request?.signal);
+      const previewParsed = await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal });
       const capabilities = new Set(capabilitiesForRole(user.role));
       const previewProjection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
       if (previewProjection.previewDigest !== expectedDigest) return stale(ctx.set);
