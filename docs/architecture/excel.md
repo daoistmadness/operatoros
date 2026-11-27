@@ -88,6 +88,12 @@ templates keep their current compatibility behavior.
   iteration in `readXlsxWorkbook()` to prevent rectangular empty-cell blowup.
 - Heavy Excel upload and parse routes share a bounded admission controller
   (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in `apps/api`.
+- An attendance parser worker owns its admission permit until it replies with
+  a result or a parser error. Timeout and worker failure reject the request
+  and request termination. If parser completion remains unconfirmed, the
+  permit stays reserved and other imports receive admission backpressure.
+  Bun's worker close notification can arrive before the worker fully exits.
+  An unresolved reservation lasts for the lifetime of the API process.
 - `@operatoros/sheetjs-fork` is a vendored `workspace:*` package skipped by
   `bun audit`; upstream SheetJS CE `v0.20.3` advisories are tracked manually
   per `packages/sheetjs-fork/UPSTREAM.md`.
