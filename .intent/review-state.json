@@ -2381,15 +2381,15 @@
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.test.tsx": {
-      "fingerprint": "bf0bbd0581f7e2d65224b5b67aad10e983ad74edde866ad9583309943603780d",
+      "fingerprint": "907da3490df97dde74a967d77594566330dca0e249f1685cfb7f2d91b23d982f",
       "snapshot": {
-        "apps/web/src/pages/ManagementAnalytics.test.tsx": "8c335b416f0fb5923213db8938156714125f95507c2c349ebf7e780ced40c130"
+        "apps/web/src/pages/ManagementAnalytics.test.tsx": "f142bce782803eca9baea56a3bf6ffc1704857c2768be84116c732b0a23cd2ab"
       },
-      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
+      "head": "fda6762a764aebcd2a0d9cda689b6bbb59ca29da",
       "outcome": "no-change",
-      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
+      "reason": "The Management Overview test waits for the existing lazy chart SVG and still asserts server values, the accessible legend, and canonical links. The registered Elysia guidance is unaffected.",
       "evidence": [
-        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
+        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at fda6762a764aebcd2a0d9cda689b6bbb59ca29da"
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.tsx": {

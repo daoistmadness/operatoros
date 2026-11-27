@@ -54,7 +54,6 @@ describe("ManagementAnalytics overview", () => {
   it("renders server values and canonical drill-through links", async () => {
     const view = await renderPage();
     await vi.waitFor(() => expect(view.textContent).toContain("Management Overview"));
-    await vi.waitFor(() => expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]')).toBeTruthy());
     await vi.waitFor(() => expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"] svg')).toBeTruthy(), { timeout: 5000 });
     expect(view.textContent).toContain("24");
     expect(view.textContent).toContain("92.5%");
