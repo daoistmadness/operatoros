@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Fix `date1904` epoch propagation in attendance duplicate detection and preserve physical Excel row numbers across blank rows and range offsets in legacy `.xls` imports.
 - Harden Excel import container preflight, sparse worksheet bounds, route upload limits, and shared parse admission control; document vendored SheetJS security review coverage.
 - Keep Management Overview filters available while results load, distinguish missing scores from zero, clarify Attendance view navigation and narrow-screen layout, and show monthly export actions with the generated report scope ([#429](https://github.com/daoistmadness/operatoros/pull/429)).
 - Preserve safe Student and Employee Directory filters when opening and returning from records, make employee results easier to find, and give Inventory filters more room ([#428](https://github.com/daoistmadness/operatoros/pull/428)).

@@ -63,7 +63,13 @@ templates keep their current compatibility behavior.
 
 ## Technical rules
 
-- `Date` values keep the existing UTC/date-only interpretation.
+- `Date` values keep the existing UTC/date-only interpretation. Note: for
+  historical 1900 serials `1..60` (including Excel's fictitious `1900-02-29` at
+  serial `60`), SheetJS (`cellDates: true`) and ExcelJS already convert
+  date-formatted cells to `Date` differently before `parseExcelDate()` runs, so
+  raw serial `60` rejection is deferred pending an explicit historical-date
+  policy decision (`APPROVAL_REQUIRED`). Modern school calendar dates (`>= 2020`)
+  and `date1904` epoch propagation are consistent across both engines.
 - Server DTO numeric values are written as supplied. Excel formatting does not
   recalculate business values.
 - Values beginning with `=`, `+`, `-`, or `@` are escaped when they are written

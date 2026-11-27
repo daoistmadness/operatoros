@@ -75,16 +75,16 @@ function comparable(value: CellValue): string {
   return String(value);
 }
 
-function sourceKey(row: RawRow): string | null {
+function sourceKey(row: RawRow, date1904: boolean): string | null {
   const studentId = parseInteger(row.values.get("No. ID"));
-  const date = parseExcelDate(row.values.get("Tanggal"));
+  const date = parseExcelDate(row.values.get("Tanggal"), date1904);
   return studentId !== null && date ? key(studentId, date) : null;
 }
 
-function buildDuplicateSets(rawRows: RawRow[]): { exact: Set<string>; divergent: Set<string> } {
+function buildDuplicateSets(rawRows: RawRow[], date1904: boolean): { exact: Set<string>; divergent: Set<string> } {
   const groups = new Map<string, string[]>();
   for (const raw of rawRows) {
-    const rowKey = sourceKey(raw);
+    const rowKey = sourceKey(raw, date1904);
     if (!rowKey) continue;
     const comparableRow = REQUIRED_COLUMNS.map((column) => comparable(raw.values.get(column))).join("\u0001");
     groups.set(rowKey, [...(groups.get(rowKey) ?? []), comparableRow]);
@@ -111,7 +111,7 @@ function readRawRows(sheet: ExcelWorksheet, headers: string[]): RawRow[] {
 function readLegacyRawRows(buffer: ArrayBuffer): { rows: RawRow[]; headers: string[]; date1904: boolean } {
   const legacy = readLegacyXlsRows(buffer);
   const rows = legacy.rows.map((values, index) => ({
-    excelRow: index + 2,
+    excelRow: legacy.rowNumbers[index] ?? index + 2,
     values: new Map(legacy.headers.map((header, column) => [header, values[column] ?? null])),
   })).filter((row) => [...row.values.values()].some((value) => !isBlank(value)));
   return { rows, headers: legacy.headers, date1904: legacy.date1904 };
@@ -139,7 +139,7 @@ export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: str
   }
   const missing = REQUIRED_COLUMNS.find((column) => !headers.includes(column));
   if (missing) throw new Error(`Missing required column: ${missing}`);
-  const duplicates = buildDuplicateSets(rawRows);
+  const duplicates = buildDuplicateSets(rawRows, date1904);
   const rows: AttendanceSourceRow[] = [];
   const invalidRows: InvalidSourceRow[] = [];
   const seen = new Map<string, AttendanceSourceRow>();
