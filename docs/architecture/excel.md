@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-10-26
+last_reviewed: 2026-11-27
 ---
 
 # OperatorOS Excel architecture
@@ -76,6 +76,15 @@ templates keep their current compatibility behavior.
   directories. Current exports use memory buffers.
 - Workbook tests reopen generated files and compare semantic values, sheets,
   metadata, and material styles. Byte equality is not required.
+- Workbook loaders enforce pre-parse container checks (OOXML ZIP central-directory
+  entry/size/macro/encryption limits and OLE2 magic-byte checks), post-load
+  worksheet/row/column/cell budgets (`EXCEL_RESOURCE_LIMITS`), and sparse row
+  iteration in `readXlsxWorkbook()` to prevent rectangular empty-cell blowup.
+- Heavy Excel upload and parse routes share a bounded admission controller
+  (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in `apps/api`.
+- `@operatoros/sheetjs-fork` is a vendored `workspace:*` package skipped by
+  `bun audit`; upstream SheetJS CE `v0.20.3` advisories are tracked manually
+  per `packages/sheetjs-fork/UPSTREAM.md`.
 
 Business formulas stay outside this package. Excel may display a supplied
 percentage or metric. It must not calculate that metric.

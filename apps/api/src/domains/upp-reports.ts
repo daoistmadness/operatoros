@@ -6,6 +6,7 @@ import { t } from "elysia";
 import { inTransaction } from "@operatoros/db";
 import { UppReportDetailResponse, UppReportListQuery, UppReportListResponse, UppReportStatusChangeRequest, UppReportSummary, type UppSubmissionStatusDto } from "@operatoros/contracts/upp-reports";
 import { loadXlsxWorkbook, safeExportFilename, XLSX_MIME_TYPE } from "@operatoros/excel";
+import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { actor } from "./core";
 import { storeReportFile, storedReportFile, type FileMetadata } from "./upp-report-files";
@@ -98,8 +99,12 @@ async function workbookUpload(file: unknown, maxBytes: number): Promise<Uploaded
   if (!/\.xlsx$/i.test(filename)) return { error: "Only XLSX workbooks are accepted." };
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (bytes.byteLength !== file.size) return { error: "The uploaded workbook changed while it was being read." };
-  try { await loadXlsxWorkbook(bytes); }
-  catch { return { error: "The XLSX workbook is unreadable or invalid." }; }
+  try {
+    await withExcelAdmission(bytes.byteLength, () => loadXlsxWorkbook(bytes));
+  } catch (error) {
+    if (error instanceof ExcelAdmissionError) return { error: error.message };
+    return { error: "The XLSX workbook is unreadable or invalid." };
+  }
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   return { bytes, filename, file: { sha256, sizeBytes: bytes.byteLength } };
 }

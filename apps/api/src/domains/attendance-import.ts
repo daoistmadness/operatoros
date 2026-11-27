@@ -7,8 +7,9 @@ import { actor } from "../domains/core";
 import { calculateLateMinutes, deriveAttendanceStatus, deriveJenjangFromClassName } from "./attendance-rules";
 import { cutoffPolicyForDate, loadCutoffPolicies } from "./term-lateness";
 import type { AuthContext } from "../auth/service";
+import { ExcelAdmissionError } from "../import/excel-admission";
 import { readAttendanceWorkbook, type AttendanceSourceRow, type WorkbookRows } from "../import/excel-reader";
-import { parseStoredDuration, secondsToTimeText } from "@operatoros/excel";
+import { EXCEL_RESOURCE_LIMITS, parseStoredDuration, secondsToTimeText } from "@operatoros/excel";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -290,21 +291,35 @@ function validFile(file: File): boolean {
   return name.endsWith(".xlsx") || name.endsWith(".xls");
 }
 
+const MAX_ATTENDANCE_UPLOAD_BYTES = EXCEL_RESOURCE_LIMITS.maxFileBytes;
+
 export function attendanceImportRoutes(app: any, context: AuthContext): void {
   app.post("/api/uploads/preview", async (ctx: Context) => {
     const user = actor(context, ctx, { capability: "import_attendance" });
     if (!user) return { detail: "Insufficient permissions" };
     const file = ctx.body?.file as File | undefined;
     if (!file || !validFile(file)) { ctx.set.status = 400; return { detail: `Invalid file type '${file?.type ?? "unknown"}'. Please upload a .xlsx or .xls file.` }; }
+    if (!file.size || file.size > MAX_ATTENDANCE_UPLOAD_BYTES) {
+      ctx.set.status = file.size > MAX_ATTENDANCE_UPLOAD_BYTES ? 413 : 400;
+      return { detail: `Attendance workbook must be between 1 byte and ${MAX_ATTENDANCE_UPLOAD_BYTES} bytes.` };
+    }
     try {
       const buffer = await file.arrayBuffer();
+      if (!buffer.byteLength || buffer.byteLength > MAX_ATTENDANCE_UPLOAD_BYTES) {
+        ctx.set.status = buffer.byteLength > MAX_ATTENDANCE_UPLOAD_BYTES ? 413 : 400;
+        return { detail: `Attendance workbook must be between 1 byte and ${MAX_ATTENDANCE_UPLOAD_BYTES} bytes.` };
+      }
       const checksum = createHash("sha256").update(Buffer.from(buffer)).digest("hex");
       return createPreview(context, await readAttendanceWorkbook(buffer, file.name), file.name, checksum, user.username);
     } catch (error) {
+      if (error instanceof ExcelAdmissionError) {
+        ctx.set.status = error.status;
+        return { detail: error.message };
+      }
       ctx.set.status = 400;
       return { detail: error instanceof Error ? error.message : "The server could not preview the workbook." };
     }
-  }, { body: t.Object({ file: t.File() }) });
+  }, { body: t.Object({ file: t.File({ maxSize: MAX_ATTENDANCE_UPLOAD_BYTES }) }) });
 
   app.post("/api/uploads/preview/:batch_id/commit", (ctx: Context) => {
     const user = actor(context, ctx, { capability: "import_attendance" });

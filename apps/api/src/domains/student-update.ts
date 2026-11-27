@@ -1,4 +1,5 @@
 import { addWorksheet, appendRow, createWorkbook, loadXlsxWorkbook, writeXlsxWorkbook, type ExcelWorkbook } from "@operatoros/excel";
+import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { inTransaction } from "@operatoros/db";
@@ -68,7 +69,13 @@ async function template(context: AuthContext): Promise<Uint8Array> {
 
 async function preview(context: AuthContext, file: File, user: Row, set: any): Promise<Row> {
   if (!file.name.toLowerCase().endsWith(".xlsx")) return fail(set, 400, "Student update file must be XLSX"); const bytes = await file.arrayBuffer(); if (!bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) return fail(set, 400, "Student update file must be between 1 byte and 25 MB");
-  let workbook: ExcelWorkbook; try { workbook = await loadXlsxWorkbook(bytes); } catch { return fail(set, 400, "The uploaded file is not a readable XLSX workbook"); } const sheet = workbook.getWorksheet("Student Data"); if (!sheet) return fail(set, 400, "Workbook must contain the 'Student Data' worksheet"); if (sheet.rowCount > 10001) return fail(set, 400, "Workbook exceeds the 10,000-row limit");
+  let workbook: ExcelWorkbook;
+  try {
+    workbook = await withExcelAdmission(bytes.byteLength, () => loadXlsxWorkbook(bytes));
+  } catch (error) {
+    if (error instanceof ExcelAdmissionError) return fail(set, error.status, error.message);
+    return fail(set, 400, "The uploaded file is not a readable XLSX workbook");
+  } const sheet = workbook.getWorksheet("Student Data"); if (!sheet) return fail(set, 400, "Workbook must contain the 'Student Data' worksheet"); if (sheet.rowCount > 10001) return fail(set, 400, "Workbook exceeds the 10,000-row limit");
   const values = (sheet.getRow(1).values as unknown[]).slice(1).map(clean); const missing = HEADERS.filter((header) => !values.includes(header)); if (missing.length) return fail(set, 400, { code: "MISSING_COLUMNS", columns: missing }); const index: Record<string, number> = Object.fromEntries(HEADERS.map((header) => [header, values.indexOf(header) + 1])); const checksum = digest(Buffer.from(bytes).toString("hex")); const sessionId = randomUUID(); const batchId = randomUUID(); const counts: Row = { UPDATE_EXISTING_MASTER: 0, NO_CHANGE: 0, CONFLICT: 0, INVALID: 0 };
   try {
     inTransaction(context.database.client, () => {
