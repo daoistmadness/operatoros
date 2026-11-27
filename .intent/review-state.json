@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "baseline": "4c855d2d14a1211a2c9d80488630da6fcaa3df7b",
+  "baseline": "90c9821e306f4de24112891dd01cfd5d8e8dc64e",
   "items": {
     "skill:packages/agent-skills/skills/elysiajs/SKILL.md": {
       "fingerprint": "09df70cdae9a11d2f539853a25e16f3dc5318f18e384f729fbaaef8da59347d9",
@@ -1632,15 +1632,15 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "c4b9fb4db2031fc22fe0323cce3a905cf0991556614f387423c3c7f51cd2df6d",
+      "fingerprint": "33bbc93f26af9d1b64037bd5177af4c674d04b9341f95518142e32f8ceaa7520",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "5215a6d021bbcea945011e9050ae679eba3a7d54e0bbb8ec232b72153195b172"
+        "apps/api/src/import/excel-reader.ts": "b74188beefe2f5a43d3b1f041800cd097920b2611ed5cd4474f475a69a851238"
       },
-      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
+      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
       "outcome": "no-change",
-      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
+      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
+        "Changed: apps/api/src/import/excel-reader.ts at 5294f747a680eadc0c53947c8db226886d6b0079"
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
@@ -2956,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "f26029a3cc36ae0fcc6d4d58b494f841367f359f6d6ffe597a4b5b79f5a10d12",
+      "fingerprint": "553a671ecc808532e77dbcd575d915b6282c93c6c12f1695ecc9d9facbb29ce9",
       "snapshot": {
-        "CHANGELOG.md": "29dad219a57e0bc5a732ebbfe51bab1249ab11d1a5d17dc9f588caab5cb3b072"
+        "CHANGELOG.md": "13ce225147bc9884c17d2ac956a60064b4693bb58727e976e7a641a18c961a26"
       },
-      "head": "c6724855d7a3d8cdb71dfa042f6adeed7685c7d2",
+      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
       "outcome": "no-change",
-      "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
+      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
       "evidence": [
-        "Changed: CHANGELOG.md at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
+        "Changed: CHANGELOG.md at 5294f747a680eadc0c53947c8db226886d6b0079"
       ]
     },
     "source:COMMANDS.md": {
@@ -3289,15 +3289,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "65c804fb658c9159a231e43262a2e4bd243628c123eab6311933462b93d097fa",
+      "fingerprint": "0084bde9b24ed845867f0ecffe0f4af7e99ffc5e7a2870b2ed5ec04e14a75b10",
       "snapshot": {
-        "docs/architecture/excel.md": "8c2f9c43270ebdc3b6175a5aa5f8265fda03a4fe7624791efacde3c141b37f74"
+        "docs/architecture/excel.md": "e80d9040648d978f42611a3cc7d27a3d2ddd72016b08dbeb7c6a334a517c97dc"
       },
-      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
       "outcome": "no-change",
-      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at 47e4916eb86677ff4224df157217dbb55eaefc3d"
+        "Changed: docs/architecture/excel.md at 5294f747a680eadc0c53947c8db226886d6b0079"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -11957,6 +11957,18 @@
       "reason": "PR-3 Excel algorithmic optimization does not alter Elysia v1 skill guidance.",
       "evidence": [
         "Changed: packages/excel/src/sheets.ts at c6724855d7a3d8cdb71dfa042f6adeed7685c7d2"
+      ]
+    },
+    "source:apps/api/tests/excel-worker-admission.test.ts": {
+      "fingerprint": "376266d979168593e386b1435825c7ab63c849dc578e163f1e3743c78e5e56f5",
+      "snapshot": {
+        "apps/api/tests/excel-worker-admission.test.ts": "b4c734c6be7c4434a3023dc8b43c5fa7dd60c9036c8208afeb8de1c9bd01c649"
+      },
+      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
+      "outcome": "no-change",
+      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-worker-admission.test.ts at 5294f747a680eadc0c53947c8db226886d6b0079"
       ]
     }
   }
