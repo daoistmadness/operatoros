@@ -1,4 +1,13 @@
 export {
+  EXCEL_RESOURCE_LIMITS,
+  hasOle2Signature,
+  hasXlsxZipSignature,
+  resolveExcelLimits,
+  validateLegacyXlsContainer,
+  validateXlsxContainer,
+} from "./limits";
+export type { ExcelResourceLimits } from "./limits";
+export {
   EXCEL_EXPORT_FORMAT_VERSION,
   XLSX_MIME_TYPE,
   appendWorksheetTable,

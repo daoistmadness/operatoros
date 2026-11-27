@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import type { ExcelWorksheetDto } from "@operatoros/contracts/excel";
 import { addWorksheet, appendRow, styleHeader, autoSizeColumns } from "./sheets";
 import { normalizeHeader } from "./normalization";
+import { resolveExcelLimits, validateXlsxContainer, type ExcelResourceLimits } from "./limits";
 
 export const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 export const EXCEL_EXPORT_FORMAT_VERSION = "operatoros-excel-v1";
@@ -59,7 +60,16 @@ function toBuffer(value: ArrayBuffer | Uint8Array): Buffer {
     : Buffer.from(value.buffer, value.byteOffset, value.byteLength);
 }
 
-export async function loadXlsxWorkbook(value: ArrayBuffer | Uint8Array): Promise<ExcelWorkbook> {
+export async function loadXlsxWorkbook(
+  value: ArrayBuffer | Uint8Array,
+  limits?: ExcelResourceLimits,
+): Promise<ExcelWorkbook> {
+  const resolved = resolveExcelLimits(limits);
+  try {
+    validateXlsxContainer(value, resolved);
+  } catch (cause) {
+    throw new ExcelWorkbookParseError(cause);
+  }
   const workbook = createWorkbook();
   const buffer = toBuffer(value) as unknown as Parameters<ExcelWorkbook["xlsx"]["load"]>[0];
   try {
@@ -67,21 +77,50 @@ export async function loadXlsxWorkbook(value: ArrayBuffer | Uint8Array): Promise
   } catch (cause) {
     throw new ExcelWorkbookParseError(cause);
   }
-  if (!workbook || !Array.isArray(workbook.worksheets)) throw new ExcelWorkbookParseError();
+  if (!workbook || !Array.isArray(workbook.worksheets) || !workbook.worksheets.length) {
+    throw new ExcelWorkbookParseError();
+  }
+  if (workbook.worksheets.length > resolved.maxSheets) {
+    throw new ExcelWorkbookParseError(new Error("EXCEL_SHEET_LIMIT_EXCEEDED"));
+  }
+  for (const sheet of workbook.worksheets) {
+    if (sheet.rowCount > resolved.maxRowsPerSheet || sheet.columnCount > resolved.maxColumnsPerSheet) {
+      throw new ExcelWorkbookParseError(new Error("EXCEL_WORKSHEET_DIMENSIONS_EXCEEDED"));
+    }
+  }
   return workbook;
 }
 
-export async function readXlsxWorkbook(value: ArrayBuffer | Uint8Array): Promise<ParsedExcelWorkbook> {
-  const workbook = await loadXlsxWorkbook(value);
+export async function readXlsxWorkbook(
+  value: ArrayBuffer | Uint8Array,
+  limits?: ExcelResourceLimits,
+): Promise<ParsedExcelWorkbook> {
+  const resolved = resolveExcelLimits(limits);
+  const workbook = await loadXlsxWorkbook(value, resolved);
+  let totalPopulatedCells = 0;
   const sheets = workbook.worksheets.map((sheet) => {
-    const headers = Array.from({ length: sheet.columnCount }, (_, index) => normalizeHeader(getCellValue(sheet.getRow(1).getCell(index + 1))));
-    const rows = Array.from({ length: Math.max(0, sheet.rowCount - 1) }, (_, index) => {
-      const rowNumber = index + 2;
-      const row = sheet.getRow(rowNumber);
-      return {
-        rowNumber,
-        values: Array.from({ length: sheet.columnCount }, (_, column) => getCellValue(row.getCell(column + 1))),
-      };
+    const columnCount = sheet.columnCount;
+    const headerRow = sheet.getRow(1);
+    const headers = Array.from({ length: columnCount }, (_, index) =>
+      normalizeHeader(getCellValue(headerRow.getCell(index + 1))),
+    );
+    const rows: Array<{ rowNumber: number; values: unknown[] }> = [];
+    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      if (rowNumber <= 1) return;
+      const values = new Array<unknown>(columnCount).fill(null);
+      let hasPopulated = false;
+      row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+        if (colNumber < 1 || colNumber > columnCount) return;
+        totalPopulatedCells += 1;
+        if (totalPopulatedCells > resolved.maxPopulatedCells) {
+          throw new ExcelWorkbookParseError(new Error("EXCEL_CELL_BUDGET_EXCEEDED"));
+        }
+        values[colNumber - 1] = getCellValue(cell);
+        hasPopulated = true;
+      });
+      if (hasPopulated) {
+        rows.push({ rowNumber, values });
+      }
     });
     return { name: sheet.name, headers, rows };
   });

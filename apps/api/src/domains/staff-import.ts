@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { SqliteBinding, SqliteClient } from "@operatoros/db";
 import { inTransaction } from "@operatoros/db";
 import { isBlank, parseExcelDate, readXlsxWorkbook, safeExportFilename } from "@operatoros/excel";
+import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, unknown>;
@@ -322,7 +323,12 @@ export async function previewStaffImport(db: SqliteClient, bytes: Uint8Array, fi
   expirePendingStaffImportData(db);
   if (!filename.toLowerCase().endsWith(".xlsx") || !bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) throw new StaffImportError(400, "Choose a non-empty XLSX file smaller than 25 MB.");
   let workbook;
-  try { workbook = await readXlsxWorkbook(bytes); } catch { throw new StaffImportError(400, "Workbook could not be read. Check that it is a valid XLSX file."); }
+  try {
+    workbook = await withExcelAdmission(bytes.byteLength, () => readXlsxWorkbook(bytes));
+  } catch (error) {
+    if (error instanceof ExcelAdmissionError) throw new StaffImportError(error.status, error.message);
+    throw new StaffImportError(400, "Workbook could not be read. Check that it is a valid XLSX file.");
+  }
   const sheet = workbook.sheets.find((value) => value.name === SOURCE_SHEET);
   if (!sheet) throw new StaffImportError(400, `Workbook must contain the '${SOURCE_SHEET}' worksheet.`);
   const { rows, mapping } = parseRows(db, sheet.headers, sheet.rows, workbook.date1904, today);

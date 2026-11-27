@@ -19,3 +19,8 @@
 OperatorOS only relies on SheetJS for reading legacy BIFF8 (`.xls`) attendance workbooks via `readLegacyXlsRows`.
 All browser bundles (`dist/xlsx.full.min.js`, `dist/xlsx.core.min.js`, etc.), ESM wrappers (`xlsx.mjs`), CLI scripts (`bin/`), web workers (`xlsxworker.js`), and sourcemaps were discarded.
 This reduces installed size from 7.8 MB to ~1.46 MB with zero code modifications to `xlsx.js` or `cpexcel.js`.
+
+## Security Review & Advisory Coverage
+- `bun audit` does not scan vendored `workspace:*` packages, and OSV provides incomplete coverage for SheetJS CE tarballs.
+- Therefore, zero `bun audit` findings does **not** imply `@operatoros/sheetjs-fork` is free of upstream advisories.
+- Maintenance obligation: review SheetJS CE (`v0.20.3`) upstream advisories during scheduled dependency security reviews and verify local SHA256 checksums against this manifest in `@operatoros/excel` tests.

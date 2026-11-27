@@ -1,4 +1,5 @@
 import {
+  EXCEL_RESOURCE_LIMITS,
   getCellValue,
   loadXlsxWorkbook,
   readLegacyXlsRows,
@@ -14,6 +15,7 @@ import {
   type CellValue,
   type ExcelWorksheet,
 } from "@operatoros/excel";
+import { withExcelAdmission } from "./excel-admission";
 
 export const REQUIRED_COLUMNS = [
   "No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang",
@@ -236,19 +238,24 @@ function getAttendanceParserWorker(): Worker {
 }
 
 export function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
-  if (buffer.byteLength < WORKER_PARSE_THRESHOLD) return parseAttendanceWorkbook(buffer, filename);
-  const worker = getAttendanceParserWorker();
-  const id = nextParseId++;
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => failAttendanceParserWorker(worker, new Error("ATTENDANCE_WORKBOOK_PARSE_TIMEOUT")), PARSER_WORKER_TIMEOUT_MS);
-    pendingParses.set(id, { resolve, reject, timeout });
-    try {
-      worker.postMessage({ id, buffer, filename } satisfies ParserWorkerRequest, [buffer]);
-    } catch (error) {
-      clearTimeout(timeout);
-      pendingParses.delete(id);
-      terminateIdleAttendanceParserWorker(worker);
-      reject(error instanceof Error ? error : new Error(String(error)));
-    }
+  if (buffer.byteLength === 0 || buffer.byteLength > EXCEL_RESOURCE_LIMITS.maxFileBytes) {
+    return Promise.reject(new Error("EXCEL_FILE_SIZE_OUT_OF_BOUNDS"));
+  }
+  return withExcelAdmission(buffer.byteLength, () => {
+    if (buffer.byteLength < WORKER_PARSE_THRESHOLD) return parseAttendanceWorkbook(buffer, filename);
+    const worker = getAttendanceParserWorker();
+    const id = nextParseId++;
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => failAttendanceParserWorker(worker, new Error("ATTENDANCE_WORKBOOK_PARSE_TIMEOUT")), PARSER_WORKER_TIMEOUT_MS);
+      pendingParses.set(id, { resolve, reject, timeout });
+      try {
+        worker.postMessage({ id, buffer, filename } satisfies ParserWorkerRequest, [buffer]);
+      } catch (error) {
+        clearTimeout(timeout);
+        pendingParses.delete(id);
+        terminateIdleAttendanceParserWorker(worker);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
+    });
   });
 }
