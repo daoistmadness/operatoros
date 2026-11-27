@@ -41,13 +41,13 @@ describe("AttendanceDestination", () => {
     ));
     await vi.waitFor(() => expect(container?.querySelector('[data-view="recap"]')).not.toBeNull());
     expect(container.querySelectorAll("[data-view]")).toHaveLength(1);
-    const reportTab = container.querySelector('a[role="tab"][href*="view=report"]') as HTMLAnchorElement;
-    expect(reportTab.href).toContain("academic_year_id=7");
-    expect(reportTab.href).toContain("class_id=12");
-    await act(async () => reportTab.click());
+    const reportLink = container.querySelector('nav[aria-label="Attendance views"] a[href*="view=report"]') as HTMLAnchorElement;
+    expect(reportLink.href).toContain("academic_year_id=7");
+    expect(reportLink.href).toContain("class_id=12");
+    await act(async () => reportLink.click());
     await vi.waitFor(() => expect(container?.querySelector('[data-view="report"]')).not.toBeNull());
     expect(container.querySelectorAll("[data-view]")).toHaveLength(1);
-    expect(container.querySelector('a[role="tab"][aria-selected="true"]')?.textContent).toContain("Report");
+    expect(container.querySelector('nav[aria-label="Attendance views"] a[aria-current="page"]')?.textContent).toContain("Report");
     expect(container.querySelector('a[href*="view=report"]')?.getAttribute("href")).toContain("academic_year_id=7");
   });
 });

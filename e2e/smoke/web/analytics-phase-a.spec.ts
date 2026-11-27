@@ -81,7 +81,12 @@ test("@analytics @critical attendance views share one destination and reuse repo
     }
     await expect(page.getByRole("heading", { name: route.title, exact: true }).first()).toBeVisible();
     if ("view" in route) {
-      await expect(page.getByRole("tab", { name: route.view, exact: true })).toHaveAttribute("aria-selected", "true");
+      if (path === "/analytics/attendance") {
+        const attendanceNavigation = page.getByRole("navigation", { name: "Attendance views" });
+        await expect(attendanceNavigation.getByRole("link", { name: route.view, exact: true })).toHaveAttribute("aria-current", "page");
+      } else {
+        await expect(page.getByRole("tab", { name: route.view, exact: true })).toHaveAttribute("aria-selected", "true");
+      }
       if (route.view === "Trends") await expect(page.getByText("Attendance Rate change", { exact: true })).toBeVisible();
       else if (route.view === "Indicators") await expect(page.getByRole("columnheader", { name: "Late Event Rate" })).toBeVisible();
     }
@@ -104,13 +109,23 @@ test("@analytics @critical attendance views share one destination and reuse repo
   await expect(page.getByRole("button", { name: "Buat Laporan" })).toBeEnabled();
   const attendanceFilterRequests = reportFilterRequests.length;
   expect(attendanceFilterRequests).toBeGreaterThan(0);
-  await page.getByRole("tab", { name: "Recap", exact: true }).click();
+  const attendanceNavigation = page.getByRole("navigation", { name: "Attendance views" });
+  const recapLink = attendanceNavigation.getByRole("link", { name: "Recap", exact: true });
+  await recapLink.focus();
+  await expect(recapLink).toBeFocused();
+  await recapLink.press("Enter");
   await expect(page.getByRole("heading", { name: "Rekap Absensi", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Buat Laporan" })).toBeEnabled();
   expect(reportFilterRequests).toHaveLength(attendanceFilterRequests);
+  await page.goBack();
+  await expect(attendanceNavigation.getByRole("link", { name: "Report", exact: true })).toHaveAttribute("aria-current", "page");
+  await page.goForward();
+  await expect(recapLink).toHaveAttribute("aria-current", "page");
+
 
   reportFilterRequests.length = 0;
   const monthlyQueries: string[] = [];
+  const exportQueries: URLSearchParams[] = [];
   await page.route((url) => new URL(url).pathname === "/api/reports/monthly", async (route) => {
     const url = new URL(route.request().url());
     monthlyQueries.push(url.toString());
@@ -119,7 +134,9 @@ test("@analytics @critical attendance views share one destination and reuse repo
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(monthlyReportFixture(academicYearId, month)) });
   });
   await page.route((url) => new URL(url).pathname === "/api/reports/monthly/export", async (route) => {
-    const format = new URL(route.request().url()).searchParams.get("format");
+    const params = new URL(route.request().url()).searchParams;
+    exportQueries.push(params);
+    const format = params.get("format");
     await route.fulfill({ status: 200, contentType: format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers: { "content-disposition": `attachment; filename="operatoros-monthly-management-synthetic.${format}"` }, body: format === "pdf" ? "%PDF-synthetic" : "synthetic-xlsx" });
   });
   await page.goto("/reports?view=monthly");
@@ -146,10 +163,13 @@ test("@analytics @critical attendance views share one destination and reuse repo
   await expect(notReportedRow.locator("td").nth(4)).toHaveText("—");
   expect(monthlyQueries).toHaveLength(1);
 
+  const preview = page.getByRole("region", { name: "Report preview" });
+  await expect(preview).toContainText(await monthSelect.inputValue());
   const otherMonth = await monthSelect.locator("option").evaluateAll((options, selected) => (options as HTMLOptionElement[]).map((option) => option.value).find((value) => value !== selected), await monthSelect.inputValue());
   expect(otherMonth).toBeTruthy();
   await monthSelect.selectOption(otherMonth!);
   await expect(page.getByText("Report scope changed", { exact: true })).toBeVisible();
+  await expect(preview).toHaveCount(0);
   await expect(page.getByRole("table", { name: "Monthly attendance by class, including source basis, coverage, and conflicts" })).toHaveCount(0);
   await page.getByRole("button", { name: "Generate Report" }).click();
   await expect(page.getByRole("table", { name: "Monthly attendance by class, including source basis, coverage, and conflicts" })).toBeVisible();
@@ -157,8 +177,16 @@ test("@analytics @critical attendance views share one destination and reuse repo
 
   for (const format of ["PDF", "Excel"] as const) {
     const download = page.waitForEvent("download");
-    await page.getByRole("button", { name: format, exact: true }).click();
+    await expect(preview).toContainText(otherMonth!);
+    await preview.getByRole("button", { name: format, exact: true }).click();
     expect((await download).suggestedFilename()).toBe(`operatoros-monthly-management-synthetic.${format === "PDF" ? "pdf" : "xlsx"}`);
+  }
+
+  const previewParams = new URL(monthlyQueries[1]!).searchParams;
+  expect(exportQueries.map((params) => params.get("format"))).toEqual(["pdf", "xlsx"]);
+  for (const params of exportQueries) {
+    params.delete("format");
+    expect(Object.fromEntries(params)).toEqual(Object.fromEntries(previewParams));
   }
 
   await reportNavigation.getByRole("link", { name: "Annual", exact: true }).click();

@@ -1287,15 +1287,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceAnalytics.tsx": {
-      "fingerprint": "fc7c58f500ef5aa70a3f1eba1eb5e64c7f9ddcd3f799b5fef8fe37c9cbe7229a",
+      "fingerprint": "2c6cb5ecf5a9e3dcf286dbb9bdcdd1bf4326277865b3464672b1e9ff74422e7b",
       "snapshot": {
-        "apps/web/src/pages/AttendanceAnalytics.tsx": "872b586a7688fc9e088c21aa517dfacbe56bec9893c62d0ca625ed7a58f688aa"
+        "apps/web/src/pages/AttendanceAnalytics.tsx": "2b4009b6dc12b759710d223a36198fc933063ba666e771d0d71f3555d922ca78"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "cad11976d88a2be75adbd10db663a5a490a1f883",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "The Attendance Overview reflow fix and viewport regression test stay in the web application. Elysia API behavior and owned skill guidance are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceAnalytics.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AttendanceAnalytics.tsx at cad11976d88a2be75adbd10db663a5a490a1f883"
       ]
     },
     "source:packages/ui/tests/ui.test.tsx": {
@@ -2141,27 +2141,27 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceDestination.test.tsx": {
-      "fingerprint": "2aec6705dbc764f831148264e132ab684684953062ee6651689bcd5a0280484e",
+      "fingerprint": "1dafb4f46ce75c87bb5d4582a81c9b30a8bb6c7402da2abd685fe0c1b2c98330",
       "snapshot": {
-        "apps/web/src/pages/AttendanceDestination.test.tsx": "4994d9887cc3d249199c2ba5ed675d7398b052636640b85c22177e2e67b3fe57"
+        "apps/web/src/pages/AttendanceDestination.test.tsx": "afd231a4675400ab5a09d5423c98a88218647960236f8d7bb65d8b68332b9c79"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceDestination.test.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AttendanceDestination.test.tsx at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:apps/web/src/pages/AttendanceDestination.tsx": {
-      "fingerprint": "68357f77e0ba9caf8b0b4ef93e3b4dd68e9a70a5797474c8e70fc510f6f7298d",
+      "fingerprint": "3b586aa1c79114d2f82f3ead9d95ad0c35336ce638efaf676f5e388fcad4f49a",
       "snapshot": {
-        "apps/web/src/pages/AttendanceDestination.tsx": "4d2bc7a2621ef793faf7c8be24e2e904fc01f5ad671492b00bdbef3a5f967914"
+        "apps/web/src/pages/AttendanceDestination.tsx": "eacec5fed47fd9a95238f4220480704fa38e4c66ed3673e42f7a8b4d9c1d0f07"
       },
-      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
       "outcome": "no-change",
-      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceDestination.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
+        "Changed: apps/web/src/pages/AttendanceDestination.tsx at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:apps/web/src/pages/AttendanceReconciliation.test.tsx": {
@@ -2381,29 +2381,27 @@
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.test.tsx": {
-      "fingerprint": "75f6a46f11734734f363af30968ad5db15dbc54d15501b60274d186177e03360",
+      "fingerprint": "907da3490df97dde74a967d77594566330dca0e249f1685cfb7f2d91b23d982f",
       "snapshot": {
-        "apps/web/src/pages/ManagementAnalytics.test.tsx": "dfa5062551c15f0681aeb59a1b0e5b31980fd5511224c01877b55f50fe27d0f2"
+        "apps/web/src/pages/ManagementAnalytics.test.tsx": "f142bce782803eca9baea56a3bf6ffc1704857c2768be84116c732b0a23cd2ab"
       },
-      "head": "b9f743615e4636dac0f045d6ecac38e26f73a963",
+      "head": "fda6762a764aebcd2a0d9cda689b6bbb59ca29da",
       "outcome": "no-change",
-      "reason": "Reviewed all three pending changes: scripts/test-tier.sh adds the existing @data-reset scenario to focused PR smoke selections because db-verify requires a completed reset; ManagementAnalytics.test.tsx now waits for the already-rendered lazy SVG before asserting it; the Unreleased entry documents that test-only change. These affect regression test selection and timing only, so the Elysia backend guidance and package skill mapping remain accurate and need no update. Evidence: make test-pr passed (API 420, DB 59, web 581, E2E backend 8 and web 43); focused ManagementAnalytics test passed 4/4; Excel package tests passed 9/9.",
+      "reason": "The Management Overview test waits for the existing lazy chart SVG and still asserts server values, the accessible legend, and canonical links. The registered Elysia guidance is unaffected.",
       "evidence": [
-        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at b9f743615e4636dac0f045d6ecac38e26f73a963"
+        "Changed: apps/web/src/pages/ManagementAnalytics.test.tsx at fda6762a764aebcd2a0d9cda689b6bbb59ca29da"
       ]
     },
     "source:apps/web/src/pages/ManagementAnalytics.tsx": {
-      "fingerprint": "081541299d848a58d217be93f1fc6b18168fb49abff21d38a9330dfe5fcfc89c",
+      "fingerprint": "3c76bd475aaeead609b89703cdcbbc207ec251c30f0e791b5762bc6d68f1db53",
       "snapshot": {
-        "apps/web/src/pages/ManagementAnalytics.tsx": "577da31b27125738f6c30e0d3a565945c8a944e1f76fa480a0adaff627249102"
+        "apps/web/src/pages/ManagementAnalytics.tsx": "d3c6954a5e51691db5a467bac5e396b9de8ced482b586cc86912c354f8a03a41"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
+      "outcome": "no-change",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Reviewed apps/web/src/pages/ManagementAnalytics.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/pages/ManagementAnalytics.tsx at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:apps/web/src/pages/ManagementReviewStudentProfile.tsx": {
@@ -2431,15 +2429,15 @@
       ]
     },
     "source:apps/web/src/pages/MonthlyReport.tsx": {
-      "fingerprint": "83ca88cb0705c743e15bff53228686ea252a75df23e7e297c17713488b6b5c59",
+      "fingerprint": "654c9b738e0e9eb554c198656733ebf329918926017809f87a1569588c54b278",
       "snapshot": {
-        "apps/web/src/pages/MonthlyReport.tsx": "398a43547bf4805b9fcfcef39a6f51f509061e8bd04b297b4d33e7e99ae94a8e"
+        "apps/web/src/pages/MonthlyReport.tsx": "40a46296d3a5bba7a17403baf105deb6552704082a8521adb6eb350e79d147f9"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/MonthlyReport.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/MonthlyReport.tsx at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:apps/web/src/pages/RekapAbsensi.tsx": {
@@ -2960,15 +2958,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "e2adc4185fbaef72655a4a36bbd9c03ae20eedef97e464e1e33f664dec7131a3",
+      "fingerprint": "fe1e670ba50b6238e6584e24a000f0fd9a50ab38829e799ba1371b42df9ee39a",
       "snapshot": {
-        "CHANGELOG.md": "f44f7a640e0e5a7273295c770d4bb83ae248e3010d5aa132021073eb732eadf3"
+        "CHANGELOG.md": "0792af07de25d87226a58fbf4c995b416743aa4914a12390cdb4beb6c97e0ed7"
       },
-      "head": "64ff92444f2d2e737422308201fbb38633f4853c",
+      "head": "9ca4a4e6d51e18f21af253cce00882507abae218",
       "outcome": "no-change",
-      "reason": "Added the assigned Phase 4 pull request reference to the changelog. Source behavior and skill guidance are unchanged.",
+      "reason": "The changelog links the assigned Phase 5 pull request. Elysia behavior and registered Intent guidance are unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 64ff92444f2d2e737422308201fbb38633f4853c"
+        "Changed: CHANGELOG.md at 9ca4a4e6d51e18f21af253cce00882507abae218"
       ]
     },
     "source:COMMANDS.md": {
@@ -5631,15 +5629,15 @@
       ]
     },
     "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
-      "fingerprint": "183546c8400e976e58a6226be13c11bf3ef4f73b3bb0c81f9d891c3caca690cf",
+      "fingerprint": "7e9e49bff6aa8f512416a6f276482d8ba7f17c5dd27536062698b3efc5ff4a06",
       "snapshot": {
-        "e2e/smoke/web/analytics-phase-a.spec.ts": "77179d5f10b3d061d41f3715e01a8670b3f6b9835f4e7e10e160a94347cf739a"
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "3d4427a0b45757950086418ff0e1afea8544e0e3801a3876e290ad5e8a60f976"
       },
-      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
       "outcome": "no-change",
-      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:e2e/smoke/web/upp-reports.spec.ts": {
@@ -8023,15 +8021,15 @@
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
-      "fingerprint": "aaec3e9d495433037cb080c68c5ebfa1ad397d2143dd49c5b9f36b1af1b37dfe",
+      "fingerprint": "c7e53c16eff946c111770fc522c5ec7bf19c087a170554f64e76481f0613c9f0",
       "snapshot": {
-        "e2e/smoke/web/management-analytics-overview.spec.ts": "4baa73b02dea6e90dc296d0932d7e6c711c5ff85162936c98448a6272e05d6d1"
+        "e2e/smoke/web/management-analytics-overview.spec.ts": "4dc06bede5f9bb1494524d732f76ab0917f22538b148bd1c0f2bce2e4fdb65d3"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "eedc76af02d74c2a2c96f35bd7d87f41b58f8cad",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Phase 5 changes only web analytics presentation, report controls, and their tests. The Elysia API, owned skill sources, and report contracts are unchanged.",
       "evidence": [
-        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/management-analytics-overview.spec.ts at eedc76af02d74c2a2c96f35bd7d87f41b58f8cad"
       ]
     },
     "source:e2e/smoke/web/navigation-command-search.spec.ts": {
@@ -8641,15 +8639,15 @@
       ]
     },
     "source:e2e/smoke/web/attendance-analytics.spec.ts": {
-      "fingerprint": "31743590a01f9fdd4b7550e3a60015c537d2e341bfba08b62f72fdf5eb45f183",
+      "fingerprint": "75246bf61ba24e469f1ce1f2dd7ca3b181657801f87ac675b07e38a441388391",
       "snapshot": {
-        "e2e/smoke/web/attendance-analytics.spec.ts": "56dcb52f2034b8ab181d46a237b4035666ab3fa598d0a8bed2e3e49d9323e768"
+        "e2e/smoke/web/attendance-analytics.spec.ts": "c8fe09aa9be4867a68146ba29d0bc3dce2efe3f082f23ed8e8bca6f41941aac7"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "cad11976d88a2be75adbd10db663a5a490a1f883",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "The Attendance Overview reflow fix and viewport regression test stay in the web application. Elysia API behavior and owned skill guidance are unchanged.",
       "evidence": [
-        "Changed: e2e/smoke/web/attendance-analytics.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/attendance-analytics.spec.ts at cad11976d88a2be75adbd10db663a5a490a1f883"
       ]
     },
     "source:e2e/smoke/web/attendance-machine-preview.spec.ts": {
