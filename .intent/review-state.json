@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c1cd582744d341e7b828cd1829f9c17a8065187895702791b9cfff8bd1585616",
+      "fingerprint": "71926d5391c3bea32df259b3bd4855797f27577fe84a374558a4247970359243",
       "snapshot": {
-        "CHANGELOG.md": "daa53928889ca2ba27b9dd8e2d4f607aac6a87927eeea3cdabc56c1a1c4a8dd4"
+        "CHANGELOG.md": "082e0ba0e95fb1ef7a8bcde2d13faab8d36c3c723034b062d9a5ba398e0bc519"
       },
-      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
       "outcome": "no-change",
-      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
+      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at f3e6c413ecef65a949e59562200be904b04d758b"
+        "Changed: CHANGELOG.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
       ]
     },
     "source:COMMANDS.md": {
@@ -3283,15 +3283,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "339c0ea09f97e18689de9393e209a95dc5c8940fab5fcb0cd18b97fb433f2f69",
+      "fingerprint": "07850ac9a38e409832b3ac385536c36ff3d14aac77a7ff3fdb551eb248f57945",
       "snapshot": {
-        "docs/architecture/excel.md": "60dcded50b71ae2bdde9b8a3cb2b96e2590e573c4cc2b726731e58bb5067f56b"
+        "docs/architecture/excel.md": "a01081a34f2e40108b01dbc780696fa5b2705c2cdd2beaa159cdd7865d8ca9b7"
       },
-      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
       "outcome": "no-change",
-      "reason": "Reviewed current route, Excel, security, and operations documentation changes: they use existing Elysia and Excel guidance, so no Elysia skill or skill plan update is required.",
+      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at f3e6c413ecef65a949e59562200be904b04d758b"
+        "Changed: docs/architecture/excel.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
