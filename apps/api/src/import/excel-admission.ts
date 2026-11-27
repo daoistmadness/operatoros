@@ -141,15 +141,72 @@ export function withExcelExportAdmission<T>(
   return withExcelAdmission(0, run, signal);
 }
 
+export const EXCEL_EXPORT_OUTPUT_LIMITS = {
+  maxRetainedOutputBytes: 50 * 1024 * 1024,
+} as const;
+
+let retainedExportOutputBytes = 0;
+const exportOutputRegistry = new FinalizationRegistry<() => void>((releaseOutput) => {
+  releaseOutput();
+});
+
+export function getExcelExportOutputStats() {
+  return {
+    retainedOutputBytes: retainedExportOutputBytes,
+  };
+}
+
+function reserveExportOutputBytes(bytes: number): () => void {
+  if (bytes <= 0) return () => {};
+  if (retainedExportOutputBytes + bytes > EXCEL_EXPORT_OUTPUT_LIMITS.maxRetainedOutputBytes) {
+    throw new ExcelAdmissionError(
+      "EXCEL_ADMISSION_BUSY",
+      "The server is currently transmitting too many workbook exports. Please retry shortly.",
+    );
+  }
+  retainedExportOutputBytes += bytes;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    retainedExportOutputBytes = Math.max(0, retainedExportOutputBytes - bytes);
+  };
+}
+
 export async function createAdmittedXlsxResponse(
-  build: () => Promise<{ bytes: Uint8Array; headers: Record<string, string> }>,
+  build: () => Promise<{ bytes: Uint8Array; headers: Record<string, string>; status?: number }>,
   signal?: AbortSignal,
 ): Promise<Response> {
-  const release = await acquireExcelPermit(0, signal);
+  const releasePermit = await acquireExcelPermit(0, signal);
+  let built: { bytes: Uint8Array; headers: Record<string, string>; status?: number };
   try {
-    const built = await build();
-    return new Response(built.bytes, { headers: built.headers });
+    built = await build();
   } finally {
-    release();
+    releasePermit();
   }
+
+  const releaseOutput = reserveExportOutputBytes(built.bytes.byteLength);
+  let sent = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (!sent) {
+        sent = true;
+        if (built.bytes.byteLength > 0) {
+          controller.enqueue(built.bytes);
+        }
+      }
+      controller.close();
+      releaseOutput();
+    },
+    cancel() {
+      releaseOutput();
+    },
+  }, { highWaterMark: 0 });
+
+  const response = new Response(stream, {
+    status: built.status ?? 200,
+    headers: built.headers,
+  });
+  exportOutputRegistry.register(response, releaseOutput);
+  return response;
 }

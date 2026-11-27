@@ -6,6 +6,7 @@ import { calculateHeb } from "./reports";
 import { deriveJenjangFromClassName } from "./attendance-rules";
 import type { AuthContext } from "../auth/service";
 import { schoolLocalDate } from "./attendance-submission-deadline";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -321,21 +322,28 @@ export function uploadHistoryRoutes(app: any, context: AuthContext): any {
     const user = actor(context, { set, ...ctx }, { capability: "import_attendance" });
     if (!user) return { detail: "Insufficient permissions" };
 
-    const now = context.now?.() ?? new Date();
-    const today = sampleSchoolDay(now);
-    const tomorrow = sampleSchoolDay(now, 1);
-    const workbook = createWorkbook({ exportType: "attendance-template" });
-    const sheet = addWorksheet(workbook, "Attendance");
-    appendRow(sheet, ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Absent", "Lembur", "Pengecualian", "week"]);
-    appendRows(sheet, [
-      [20000001, "Budi Santoso", today.date, "07:00", "14:30", "", "", "", "", today.weekday],
-      [20000002, "Siti Rahayu", today.date, "07:45", "14:30", "0:45:00", "", "", "", today.weekday],
-      [20000003, "Ahmad Fauzi", today.date, "", "", "", "True", "", "Sakit", today.weekday],
-      [20000004, "Dewi Kurniawati", tomorrow.date, "06:55", "15:00", "", "", "0:30:00", "", tomorrow.weekday],
-      [20000005, "Rizky Pratama", tomorrow.date, "08:10", "14:30", "1:10:00", "", "", "", tomorrow.weekday],
-    ]);
-    const bytes = await writeXlsxWorkbook(workbook);
-    return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": "attachment; filename=attendance_template.xlsx" } });
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const now = context.now?.() ?? new Date();
+        const today = sampleSchoolDay(now);
+        const tomorrow = sampleSchoolDay(now, 1);
+        const workbook = createWorkbook({ exportType: "attendance-template" });
+        const sheet = addWorksheet(workbook, "Attendance");
+        appendRow(sheet, ["No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang", "Terlambat", "Absent", "Lembur", "Pengecualian", "week"]);
+        appendRows(sheet, [
+          [20000001, "Budi Santoso", today.date, "07:00", "14:30", "", "", "", "", today.weekday],
+          [20000002, "Siti Rahayu", today.date, "07:45", "14:30", "0:45:00", "", "", "", today.weekday],
+          [20000003, "Ahmad Fauzi", today.date, "", "", "", "True", "", "Sakit", today.weekday],
+          [20000004, "Dewi Kurniawati", tomorrow.date, "06:55", "15:00", "", "", "0:30:00", "", tomorrow.weekday],
+          [20000005, "Rizky Pratama", tomorrow.date, "08:10", "14:30", "1:10:00", "", "", "", tomorrow.weekday],
+        ]);
+        const bytes = await writeXlsxWorkbook(workbook);
+        return { bytes, headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": "attachment; filename=attendance_template.xlsx" } };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { set.status = error.status; return { detail: error.message }; }
+      throw error;
+    }
   });
   return app;
 }

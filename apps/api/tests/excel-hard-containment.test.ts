@@ -1,10 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { addWorksheet, appendRow, createWorkbook, writeXlsxWorkbook } from "@operatoros/excel";
+import { addWorksheet, appendRow, createWorkbook, writeLegacyXlsRows, writeXlsxWorkbook } from "@operatoros/excel";
 import {
   createAdmittedXlsxResponse,
   getExcelAdmissionStats,
+  getExcelExportOutputStats,
   withExcelAdmission,
 } from "../src/import/excel-admission";
+import { readAttendanceWorkbook } from "../src/import/excel-reader";
 import {
   runAttendanceSubprocess,
   runBoundedExcelSubprocess,
@@ -12,7 +14,9 @@ import {
 } from "../src/import/excel-subprocess";
 import {
   admitExcelUploadRequest,
+  ExcelUploadLimitError,
   getExcelUploadAdmissionStats,
+  readBoundedUploadFormData,
   releaseExcelUploadRequest,
 } from "../src/import/excel-upload-admission";
 
@@ -166,5 +170,108 @@ describe("Gate 5B hard resource containment & automatic recovery", () => {
       { cwd: new URL("..", import.meta.url).pathname },
     );
     expect(res.exitCode).toBe(0);
+  });
+
+  it("terminates a synchronously blocked child via parent-side RSS supervision and recovers", async () => {
+    const buf = await makeValidXlsx(5);
+    let pollCount = 0;
+    const syncStuckSpawner = () =>
+      Bun.spawn([process.execPath, "-e", "while (true) {}"], {
+        stdin: "pipe",
+        stdout: "pipe",
+        stderr: "pipe",
+      }) as unknown as SubprocessProcessLike;
+
+    await expect(
+      runBoundedExcelSubprocess("attendance", buf, "sync-rss.xlsx", {
+        timeoutMs: 5000,
+        reapTimeoutMs: 2000,
+        maxRssBytes: 1024 * 1024,
+        rssPollIntervalMs: 15,
+        readPidRssBytes: () => {
+          pollCount += 1;
+          return pollCount >= 2 ? 2 * 1024 * 1024 : 512 * 1024;
+        },
+        spawner: syncStuckSpawner,
+      }),
+    ).rejects.toThrow("EXCEL_SUBPROCESS_MEMORY_EXCEEDED");
+
+    expect(pollCount).toBeGreaterThanOrEqual(2);
+    expect(getExcelAdmissionStats()).toEqual({ activeJobs: 0, queuedJobs: 0, queuedBytes: 0 });
+
+    const valid = await runAttendanceSubprocess(buf, "after-rss.xlsx");
+    expect(valid.totalRows).toBe(5);
+    expect(getExcelAdmissionStats()).toEqual({ activeJobs: 0, queuedJobs: 0, queuedBytes: 0 });
+  });
+
+  it("routes small (< 64 KiB) XLSX and XLS workbooks through the isolated subprocess", async () => {
+    const smallXlsx = await makeValidXlsx(3);
+    expect(smallXlsx.byteLength).toBeLessThan(64 * 1024);
+    const xlsxParsed = await readAttendanceWorkbook(smallXlsx, "small.xlsx");
+    expect(xlsxParsed.totalRows).toBe(3);
+
+    const xlsBytes = writeLegacyXlsRows(
+      [[9001, "Siswa 1", "17/06/2026", "07:30", "16:00", "", "", "", "25"]],
+      HEADERS,
+      "Attendance",
+    );
+    const smallXls = xlsBytes.slice().buffer;
+    expect(smallXls.byteLength).toBeLessThan(64 * 1024);
+    const xlsParsed = await readAttendanceWorkbook(smallXls, "small.xls");
+    expect(xlsParsed.totalRows).toBe(1);
+    expect(getExcelAdmissionStats()).toEqual({ activeJobs: 0, queuedJobs: 0, queuedBytes: 0 });
+  });
+
+  it("enforces actual streaming upload byte bounds even when Content-Length is missing or spoofed, with idempotent release", async () => {
+    const chunkSize = 128 * 1024;
+    let chunksServed = 0;
+    const oversizeStream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (chunksServed >= 10) {
+          controller.close();
+          return;
+        }
+        chunksServed += 1;
+        controller.enqueue(new Uint8Array(chunkSize));
+      },
+    });
+    const spoofedReq = new Request("http://localhost/api/uploads/preview", {
+      method: "POST",
+      headers: {
+        "content-type": "multipart/form-data; boundary=----test",
+        "content-length": "100",
+      },
+      body: oversizeStream,
+    });
+
+    expect(admitExcelUploadRequest(spoofedReq)).toEqual({ admitted: true });
+    await expect(readBoundedUploadFormData(spoofedReq, 128 * 1024)).rejects.toBeInstanceOf(ExcelUploadLimitError);
+    // Aborted before draining all 10 chunks (128 KiB limit + 256 KiB envelope = 384 KiB -> stops at <= 4 chunks)
+    expect(chunksServed).toBeLessThan(10);
+
+    releaseExcelUploadRequest(spoofedReq);
+    releaseExcelUploadRequest(spoofedReq);
+    expect(getExcelUploadAdmissionStats()).toEqual({ activeUploads: 0, inFlightBytes: 0 });
+  });
+
+  it("accounts for retained export output bytes until stream consumption or cancellation", async () => {
+    const res1 = await createAdmittedXlsxResponse(async () => ({
+      bytes: new Uint8Array(4096),
+      headers: { "content-type": "application/octet-stream" },
+    }));
+    expect(getExcelAdmissionStats().activeJobs).toBe(0);
+    expect(getExcelExportOutputStats().retainedOutputBytes).toBe(4096);
+
+    const res2 = await createAdmittedXlsxResponse(async () => ({
+      bytes: new Uint8Array(2048),
+      headers: { "content-type": "application/octet-stream" },
+    }));
+    expect(getExcelExportOutputStats().retainedOutputBytes).toBe(6144);
+
+    await res1.arrayBuffer();
+    expect(getExcelExportOutputStats().retainedOutputBytes).toBe(2048);
+
+    await res2.body?.cancel();
+    expect(getExcelExportOutputStats().retainedOutputBytes).toBe(0);
   });
 });

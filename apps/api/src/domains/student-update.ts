@@ -1,5 +1,6 @@
-import { addWorksheet, appendRow, createWorkbook, loadXlsxWorkbook, writeXlsxWorkbook, type ExcelWorkbook } from "@operatoros/excel";
-import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
+import { addWorksheet, appendRow, createWorkbook, writeXlsxWorkbook, type ParsedExcelWorkbook } from "@operatoros/excel";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
+import { runXlsxReadSubprocess } from "../import/excel-subprocess";
 import { createHash, randomUUID } from "node:crypto";
 import { t } from "elysia";
 import { inTransaction } from "@operatoros/db";
@@ -32,12 +33,12 @@ const IDENTITY_FIELDS = ["full_name", "preferred_name", "nipd", "nisn", "nik", "
 function rows(context: AuthContext, sql: string, params: any[] = []): Row[] { return context.database.client.query(sql).all(...params) as Row[]; }
 function row(context: AuthContext, sql: string, params: any[] = []): Row | null { return (context.database.client.query(sql).get(...params) as Row | null) ?? null; }
 function parsed(value: unknown): any { if (value == null || value === "") return null; if (typeof value !== "string") return value; try { return JSON.parse(value); } catch { return null; } }
-function clean(value: unknown): string | null { if (value == null || value === "") return null; if (value instanceof Date) return value.toISOString().slice(0, 10); const text = String(value).trim(); return text || null; }
+function clean(value: unknown): string | null { if (value == null || value === "") return null; if (value instanceof Date) return value.toISOString().slice(0, 10); const text = String(value).trim(); if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(text)) return text.slice(0, 10); return text || null; }
 function stable(value: any): string { if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`; if (value && typeof value === "object") return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`).join(",")}}`; return JSON.stringify(value); }
 function digest(value: string): string { return createHash("sha256").update(value).digest("hex"); }
 function recordVersion(value: Row): string { return digest([value.id, value.updated_at ? String(value.updated_at).replace(" ", "T") : "", ...IDENTITY_FIELDS.map((field) => value[field] || "")].join("|")); }
 function fail(set: any, status: number, detail: string | Row): Row { set.status = status; return { detail }; }
-function resultResponse(bytes: Uint8Array, filename: string): Response { return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${filename}"` } }); }
+function resultHeaders(filename: string): Record<string, string> { return { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${filename}"` }; }
 
 function currentFields(context: AuthContext, student: Row): Row {
   const address = row(context, "SELECT * FROM student_addresses WHERE student_master_id = ?", [student.id]);
@@ -69,21 +70,31 @@ async function template(context: AuthContext): Promise<Uint8Array> {
 
 async function preview(context: AuthContext, file: File, user: Row, set: any): Promise<Row> {
   if (!file.name.toLowerCase().endsWith(".xlsx")) return fail(set, 400, "Student update file must be XLSX"); const bytes = await file.arrayBuffer(); if (!bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) return fail(set, 400, "Student update file must be between 1 byte and 25 MB");
-  let workbook: ExcelWorkbook;
+  let parsedWorkbook: ParsedExcelWorkbook;
   try {
-    workbook = await withExcelAdmission(bytes.byteLength, () => loadXlsxWorkbook(bytes));
+    parsedWorkbook = await runXlsxReadSubprocess(bytes, file.name);
   } catch (error) {
     if (error instanceof ExcelAdmissionError) return fail(set, error.status, error.message);
     return fail(set, 400, "The uploaded file is not a readable XLSX workbook");
-  } const sheet = workbook.getWorksheet("Student Data"); if (!sheet) return fail(set, 400, "Workbook must contain the 'Student Data' worksheet"); if (sheet.rowCount > 10001) return fail(set, 400, "Workbook exceeds the 10,000-row limit");
-  const values = (sheet.getRow(1).values as unknown[]).slice(1).map(clean); const missing = HEADERS.filter((header) => !values.includes(header)); if (missing.length) return fail(set, 400, { code: "MISSING_COLUMNS", columns: missing }); const index: Record<string, number> = Object.fromEntries(HEADERS.map((header) => [header, values.indexOf(header) + 1])); const checksum = digest(Buffer.from(bytes).toString("hex")); const sessionId = randomUUID(); const batchId = randomUUID(); const counts: Row = { UPDATE_EXISTING_MASTER: 0, NO_CHANGE: 0, CONFLICT: 0, INVALID: 0 };
+  }
+  const sheet = parsedWorkbook.sheets.find((value) => value.name === "Student Data");
+  if (!sheet) return fail(set, 400, "Workbook must contain the 'Student Data' worksheet");
+  const maxRowNumber = sheet.rows.reduce((max, item) => Math.max(max, item.rowNumber), sheet.headers.length ? 1 : 0);
+  if (maxRowNumber > 10001) return fail(set, 400, "Workbook exceeds the 10,000-row limit");
+  const values = sheet.headers.map((header) => clean(header));
+  const missing = HEADERS.filter((header) => !values.includes(header));
+  if (missing.length) return fail(set, 400, { code: "MISSING_COLUMNS", columns: missing });
+  const index: Record<string, number> = Object.fromEntries(HEADERS.map((header) => [header, values.indexOf(header)]));
+  const checksum = digest(Buffer.from(bytes).toString("hex")); const sessionId = randomUUID(); const batchId = randomUUID(); const counts: Row = { UPDATE_EXISTING_MASTER: 0, NO_CHANGE: 0, CONFLICT: 0, INVALID: 0 };
   try {
     inTransaction(context.database.client, () => {
       context.database.client.run("INSERT INTO student_import_sessions (id, session_uuid, import_type, status, provenance_status, created_by, expires_at, source_filename, source_file_checksum, row_count, selected_row_count, applied_action_count, rollback_state, metadata, schema_version) VALUES (?, ?, 'STUDENT_DATA_UPDATE', 'PREVIEW_CREATED', 'PROVENANCE_FAILED', ?, datetime('now', '+24 hours'), ?, ?, 0, 0, 0, 'NOT_AVAILABLE', '{}', '1')", [sessionId, sessionId, user.username, file.name, checksum]);
       context.database.client.run("INSERT INTO student_import_batches (id, session_id, filename, file_checksum, source_sheet, status, total_rows, update_count, unchanged_count, conflict_count, invalid_count, created_by) VALUES (?, ?, ?, ?, 'student_update', 'preview', 0, 0, 0, 0, 0, ?)", [batchId, sessionId, file.name, checksum, user.username]);
       const importRows: Row[] = [];
-      for (let number = 2; number <= sheet.rowCount; number++) {
-        const valuesForRow = sheet.getRow(number).values as unknown[]; if (!valuesForRow.slice(1).some((value) => clean(value))) continue; const payload: Row = Object.fromEntries(HEADERS.map((header) => [header, clean(valuesForRow[index[header]!] as unknown)])); const errors: Row[] = []; const differences: Row = {}; const student = payload["OperatorOS Student UUID"] ? row(context, "SELECT * FROM student_masters WHERE id = ?", [payload["OperatorOS Student UUID"]]) : null; let classification = "INVALID";
+      for (const sheetRow of sheet.rows) {
+        const number = sheetRow.rowNumber;
+        if (!sheetRow.values.some((value) => clean(value))) continue;
+        const payload: Row = Object.fromEntries(HEADERS.map((header) => [header, clean(sheetRow.values[index[header]!] as unknown)])); const errors: Row[] = []; const differences: Row = {}; const student = payload["OperatorOS Student UUID"] ? row(context, "SELECT * FROM student_masters WHERE id = ?", [payload["OperatorOS Student UUID"]]) : null; let classification = "INVALID";
         if (!payload["OperatorOS Student UUID"]) errors.push({ code: "MISSING_UUID", message: "OperatorOS Student UUID is required" }); else if (!student) errors.push({ code: "UNKNOWN_UUID", message: "Student UUID was not found" }); else if (payload["Record Version"] !== recordVersion(student)) { classification = "CONFLICT"; errors.push({ code: "STALE_RECORD", message: "Student changed after this workbook was exported" }); } else {
           const current = currentFields(context, student);
           for (const [header, field] of Object.entries(PROFILE)) if (current[field] !== payload[header]) differences[field] = { current: current[field] ?? null, uploaded: payload[header], action: "update_profile" };
@@ -149,11 +160,11 @@ async function resultWorkbook(context: AuthContext, batch: Row): Promise<Uint8Ar
 }
 
 export function studentUpdateRoutes(app: any, context: AuthContext): any {
-  app.get("/api/student-masters/management/export-template", async ({ set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "export_student_data" }); if (!user) return { detail: "Insufficient permissions" }; return resultResponse(await template(context), "operatoros-student-update.xlsx"); });
+  app.get("/api/student-masters/management/export-template", async ({ set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "export_student_data" }); if (!user) return { detail: "Insufficient permissions" }; try { return await createAdmittedXlsxResponse(async () => ({ bytes: await template(context), headers: resultHeaders("operatoros-student-update.xlsx") }), ctx.request?.signal); } catch (error) { if (error instanceof ExcelAdmissionError) return fail(set, error.status, error.message); throw error; } });
   app.post("/api/student-masters/management/update-preview", async ({ body, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "import_student_updates" }); if (!user) return { detail: "Insufficient permissions" }; return preview(context, body.file as File, user, set); }, { body: t.Object({ file: t.File({ maxSize: 25 * 1024 * 1024 }) }), response: { 200: StudentUpdatePreviewSchema } });
   app.post("/api/student-masters/management/update-commit/:batch_id", ({ params, body, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "commit_student_updates" }); if (!user) return { detail: "Insufficient permissions" }; return commit(context, params.batch_id, body, user, set); }, { params: t.Object({ batch_id: t.String({ minLength: 1, maxLength: 36 }) }), body: StudentUpdateCommitRequestSchema, response: { 200: StudentUpdateCommitResponseSchema } });
   app.get("/api/student-masters/management/import-history", ({ query, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "view_student_audit" }); if (!user) return { detail: "Insufficient permissions" }; const page = Math.max(1, Number(query.page ?? 1)); const pageSize = Math.min(100, Math.max(1, Number(query.page_size ?? 25))); const total = Number((row(context, "SELECT COUNT(*) AS count FROM student_import_batches WHERE source_sheet = 'student_update'") as Row).count); return { items: rows(context, "SELECT * FROM student_import_batches WHERE source_sheet = 'student_update' ORDER BY created_at DESC LIMIT ? OFFSET ?", [pageSize, (page - 1) * pageSize]).map((value) => serialize(context, value)), total, page, page_size: pageSize }; }, { query: t.Object({ page: t.Optional(t.String()), page_size: t.Optional(t.String()) }), response: { 200: StudentUpdateHistoryResponseSchema } });
   app.get("/api/student-masters/management/imports/:batch_id", ({ params, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "view_student_audit" }); if (!user) return { detail: "Insufficient permissions" }; const batch = row(context, "SELECT * FROM student_import_batches WHERE id = ? AND source_sheet = 'student_update'", [params.batch_id]); return batch ? serialize(context, batch) : fail(set, 404, "Student update import not found"); }, { params: t.Object({ batch_id: t.String({ minLength: 1, maxLength: 36 }) }), response: { 200: StudentUpdateImportSchema } });
-  app.get("/api/student-masters/management/imports/:batch_id/result.xlsx", async ({ params, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "view_student_audit" }); if (!user) return { detail: "Insufficient permissions" }; const batch = row(context, "SELECT * FROM student_import_batches WHERE id = ? AND source_sheet = 'student_update'", [params.batch_id]); if (!batch) return fail(set, 404, "Student update import not found"); return resultResponse(await resultWorkbook(context, batch), `student-update-result-${batch.id}.xlsx`); }, { params: t.Object({ batch_id: t.String({ minLength: 1, maxLength: 36 }) }) });
+  app.get("/api/student-masters/management/imports/:batch_id/result.xlsx", async ({ params, set, ...ctx }: Context) => { const user = actor(context, { set, ...ctx }, { capability: "view_student_audit" }); if (!user) return { detail: "Insufficient permissions" }; const batch = row(context, "SELECT * FROM student_import_batches WHERE id = ? AND source_sheet = 'student_update'", [params.batch_id]); if (!batch) return fail(set, 404, "Student update import not found"); try { return await createAdmittedXlsxResponse(async () => ({ bytes: await resultWorkbook(context, batch), headers: resultHeaders(`student-update-result-${batch.id}.xlsx`) }), ctx.request?.signal); } catch (error) { if (error instanceof ExcelAdmissionError) return fail(set, error.status, error.message); throw error; } }, { params: t.Object({ batch_id: t.String({ minLength: 1, maxLength: 36 }) }) });
   return app;
 }

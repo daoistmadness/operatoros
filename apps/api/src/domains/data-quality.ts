@@ -18,6 +18,7 @@ import {
   type StudentDataQualityResponse,
 } from "@operatoros/contracts/analytics";
 import { actor } from "./core";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";
 
@@ -517,68 +518,76 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
   app.get("/api/analytics/data-quality/students/export-excel", async (ctx: Context) => {
     const user = actor(context, ctx, { capability: "export_student_data" });
     if (!user) return { detail: "Insufficient permissions" };
-    const scope = studentScope(context, ctx.query);
-    const values = studentQualityRows(context, scope);
-    const perRecord = values.map((value) => ({ value, issues: studentIssuesFor(value) }));
-    const workbook = createWorkbook({ exportType: "student-data-quality" });
-    const summarySheet = addWorksheet(workbook, "Summary");
-    appendRow(summarySheet, ["Metric", "Value"]);
-    appendRow(summarySheet, ["Students in scope", values.length]);
-    appendRow(summarySheet, ["Fully complete", perRecord.filter(({ issues }) => issues.length === 0).length]);
-    appendRow(summarySheet, ["With required issues", perRecord.filter(({ issues }) => requiredIssueCount(issues) > 0).length]);
-    appendRow(summarySheet, ["With optional-field gaps", perRecord.filter(({ issues }) => issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")).length]);
-    styleHeader(summarySheet);
-    autoSizeColumns(summarySheet, 14, 32);
-    const completenessSheet = addWorksheet(workbook, "Field Completeness");
-    appendRow(completenessSheet, ["Field", "Applicability", "Applicable", "Complete", "Missing", "Completeness %"]);
-    for (const field of ["gender", "religion", "birth_date"] as const) {
-      const populated = values.filter((value) => value[field] !== null && value[field] !== undefined && value[field] !== "").length;
-      appendRow(completenessSheet, [STUDENT_FIELD_LABELS[field], "OPTIONAL_BUT_TRACKED", values.length, populated, values.length - populated, percentage(populated, values.length)]);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const scope = studentScope(context, ctx.query);
+        const values = studentQualityRows(context, scope);
+        const perRecord = values.map((value) => ({ value, issues: studentIssuesFor(value) }));
+        const workbook = createWorkbook({ exportType: "student-data-quality" });
+        const summarySheet = addWorksheet(workbook, "Summary");
+        appendRow(summarySheet, ["Metric", "Value"]);
+        appendRow(summarySheet, ["Students in scope", values.length]);
+        appendRow(summarySheet, ["Fully complete", perRecord.filter(({ issues }) => issues.length === 0).length]);
+        appendRow(summarySheet, ["With required issues", perRecord.filter(({ issues }) => requiredIssueCount(issues) > 0).length]);
+        appendRow(summarySheet, ["With optional-field gaps", perRecord.filter(({ issues }) => issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")).length]);
+        styleHeader(summarySheet);
+        autoSizeColumns(summarySheet, 14, 32);
+        const completenessSheet = addWorksheet(workbook, "Field Completeness");
+        appendRow(completenessSheet, ["Field", "Applicability", "Applicable", "Complete", "Missing", "Completeness %"]);
+        for (const field of ["gender", "religion", "birth_date"] as const) {
+          const populated = values.filter((value) => value[field] !== null && value[field] !== undefined && value[field] !== "").length;
+          appendRow(completenessSheet, [STUDENT_FIELD_LABELS[field], "OPTIONAL_BUT_TRACKED", values.length, populated, values.length - populated, percentage(populated, values.length)]);
+        }
+        const activeValues = values.filter((value) => String(value.lifecycle_state ?? "") === "ACTIVE");
+        const withClass = activeValues.filter((value) => Boolean(value.class_name)).length;
+        appendRow(completenessSheet, [STUDENT_FIELD_LABELS.class_assignment, "CONDITIONALLY_REQUIRED", activeValues.length, withClass, activeValues.length - withClass, percentage(withClass, activeValues.length)]);
+        styleHeader(completenessSheet);
+        autoSizeColumns(completenessSheet, 14, 30);
+        const classes = new Map<string, { students: number; fullyComplete: number; withRequiredIssues: number; missingOptionalFields: number }>();
+        for (const { value, issues } of perRecord) {
+          const className = value.class_name ? String(value.class_name) : "Unknown";
+          const entry = classes.get(className) ?? { students: 0, fullyComplete: 0, withRequiredIssues: 0, missingOptionalFields: 0 };
+          entry.students += 1;
+          if (issues.length === 0) entry.fullyComplete += 1;
+          if (requiredIssueCount(issues) > 0) entry.withRequiredIssues += 1;
+          if (issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")) entry.missingOptionalFields += 1;
+          classes.set(className, entry);
+        }
+        const classSheet = addWorksheet(workbook, "Class Breakdown");
+        appendRow(classSheet, ["Class", "Students", "Fully Complete", "With Required Issues", "Missing Optional Fields", "Completeness %"]);
+        for (const [className, entry] of [...classes.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+          appendRow(classSheet, [className, entry.students, entry.fullyComplete, entry.withRequiredIssues, entry.missingOptionalFields, percentage(entry.fullyComplete, entry.students)]);
+        }
+        styleHeader(classSheet);
+        autoSizeColumns(classSheet, 14, 30);
+        const issueSheet = addWorksheet(workbook, "Issues");
+        appendRow(issueSheet, ["Student", "Jenjang", "Class", "Field", "Issue Type", "Label"]);
+        for (const { value, issues } of perRecord) {
+          for (const issue of issues) {
+            appendRow(issueSheet, [value.full_name, value.jenjang ?? "Unknown", value.class_name ?? "No class", issue.field, issue.type, issue.label]);
+          }
+        }
+        styleHeader(issueSheet);
+        autoSizeColumns(issueSheet, 14, 30);
+        const bytes = await writeXlsxWorkbook(workbook);
+        audit(context, user, "export_student_data", `STUDENT_DATA_QUALITY/${scope.academicYearId}`, {
+          students: values.length,
+          academic_year_id: scope.academicYearId,
+          status: scope.status,
+        });
+        return {
+          bytes,
+          headers: {
+            "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content-disposition": `attachment; filename="${safeExportFilename("kualitas_data_siswa", "xlsx")}"`,
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+          },
+        };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; }
+      throw error;
     }
-    const activeValues = values.filter((value) => String(value.lifecycle_state ?? "") === "ACTIVE");
-    const withClass = activeValues.filter((value) => Boolean(value.class_name)).length;
-    appendRow(completenessSheet, [STUDENT_FIELD_LABELS.class_assignment, "CONDITIONALLY_REQUIRED", activeValues.length, withClass, activeValues.length - withClass, percentage(withClass, activeValues.length)]);
-    styleHeader(completenessSheet);
-    autoSizeColumns(completenessSheet, 14, 30);
-    const classes = new Map<string, { students: number; fullyComplete: number; withRequiredIssues: number; missingOptionalFields: number }>();
-    for (const { value, issues } of perRecord) {
-      const className = value.class_name ? String(value.class_name) : "Unknown";
-      const entry = classes.get(className) ?? { students: 0, fullyComplete: 0, withRequiredIssues: 0, missingOptionalFields: 0 };
-      entry.students += 1;
-      if (issues.length === 0) entry.fullyComplete += 1;
-      if (requiredIssueCount(issues) > 0) entry.withRequiredIssues += 1;
-      if (issues.some((issue) => issue.type === "MISSING_OPTIONAL_FIELD")) entry.missingOptionalFields += 1;
-      classes.set(className, entry);
-    }
-    const classSheet = addWorksheet(workbook, "Class Breakdown");
-    appendRow(classSheet, ["Class", "Students", "Fully Complete", "With Required Issues", "Missing Optional Fields", "Completeness %"]);
-    for (const [className, entry] of [...classes.entries()].sort(([a], [b]) => a.localeCompare(b))) {
-      appendRow(classSheet, [className, entry.students, entry.fullyComplete, entry.withRequiredIssues, entry.missingOptionalFields, percentage(entry.fullyComplete, entry.students)]);
-    }
-    styleHeader(classSheet);
-    autoSizeColumns(classSheet, 14, 30);
-    const issueSheet = addWorksheet(workbook, "Issues");
-    appendRow(issueSheet, ["Student", "Jenjang", "Class", "Field", "Issue Type", "Label"]);
-    for (const { value, issues } of perRecord) {
-      for (const issue of issues) {
-        appendRow(issueSheet, [value.full_name, value.jenjang ?? "Unknown", value.class_name ?? "No class", issue.field, issue.type, issue.label]);
-      }
-    }
-    styleHeader(issueSheet);
-    autoSizeColumns(issueSheet, 14, 30);
-    const bytes = await writeXlsxWorkbook(workbook);
-    audit(context, user, "export_student_data", `STUDENT_DATA_QUALITY/${scope.academicYearId}`, {
-      students: values.length,
-      academic_year_id: scope.academicYearId,
-      status: scope.status,
-    });
-    return new Response(bytes, {
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content-disposition": `attachment; filename="${safeExportFilename("kualitas_data_siswa", "xlsx")}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      },
-    });
   }, {
     query: t.Object({
       academic_year_id: t.Optional(t.String()),
@@ -594,62 +603,70 @@ export function dataQualityRoutes(app: any, context: AuthContext): void {
     const employmentStatus = ctx.query.employment_status === undefined ? "ACTIVE" : String(ctx.query.employment_status).toUpperCase();
     const filters = ["s.employment_status = ?"];
     const params: unknown[] = [employmentStatus];
-    const values = rows(
-      context,
-      `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
-              (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
-              (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
-         FROM staff_members s
-        WHERE ${filters.join(" AND ")}
-        GROUP BY s.id
-        ORDER BY s.id`,
-      params,
-    );
-    const perRecord = values.map((value) => ({ value, issues: staffIssuesFor(value) }));
-    const workbook = createWorkbook({ exportType: "staff-data-quality" });
-    const summarySheet = addWorksheet(workbook, "Summary");
-    appendRow(summarySheet, ["Metric", "Value"]);
-    appendRow(summarySheet, [`Staff (${employmentStatus})`, values.length]);
-    appendRow(summarySheet, ["Fully complete", perRecord.filter(({ issues }) => issues.length === 0).length]);
-    appendRow(summarySheet, ["With issues", perRecord.filter(({ issues }) => issues.length > 0).length]);
-    styleHeader(summarySheet);
-    autoSizeColumns(summarySheet, 14, 32);
-    const completenessSheet = addWorksheet(workbook, "Field Completeness");
-    appendRow(completenessSheet, ["Field", "Applicability", "Applicable", "Complete", "Missing", "Unknown", "Unmapped", "Completeness %"]);
-    for (const metricRow of ["education", "jenjang_assignment", "job_title"] as const) {
-      let complete = 0; let missing = 0; let unknown = 0; let unmapped = 0;
-      for (const { issues } of perRecord) {
-        const fieldIssues = issues.filter((issue) => issue.field === metricRow);
-        if (fieldIssues.length === 0) complete += 1;
-        else if (fieldIssues.some((issue) => issue.type === "UNMAPPED_JOB_TITLE")) unmapped += 1;
-        else if (fieldIssues.some((issue) => issue.type === "UNKNOWN_CATEGORY_VALUE")) unknown += 1;
-        else missing += 1;
-      }
-      appendRow(completenessSheet, [STAFF_FIELD_LABELS[metricRow], "OPTIONAL_BUT_TRACKED", values.length, complete, missing, unknown, unmapped, percentage(complete, values.length)]);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const values = rows(
+          context,
+          `SELECT s.id, s.full_name, s.employment_status, s.job_title_normalized, s.job_title_raw,
+                  (SELECT MAX(se.education_level) FROM staff_education se WHERE se.staff_member_id = s.id) AS education_level,
+                  (SELECT COUNT(*) FROM staff_jenjang_assignments sja WHERE sja.staff_member_id = s.id) AS assignment_count
+             FROM staff_members s
+            WHERE ${filters.join(" AND ")}
+            GROUP BY s.id
+            ORDER BY s.id`,
+          params,
+        );
+        const perRecord = values.map((value) => ({ value, issues: staffIssuesFor(value) }));
+        const workbook = createWorkbook({ exportType: "staff-data-quality" });
+        const summarySheet = addWorksheet(workbook, "Summary");
+        appendRow(summarySheet, ["Metric", "Value"]);
+        appendRow(summarySheet, [`Staff (${employmentStatus})`, values.length]);
+        appendRow(summarySheet, ["Fully complete", perRecord.filter(({ issues }) => issues.length === 0).length]);
+        appendRow(summarySheet, ["With issues", perRecord.filter(({ issues }) => issues.length > 0).length]);
+        styleHeader(summarySheet);
+        autoSizeColumns(summarySheet, 14, 32);
+        const completenessSheet = addWorksheet(workbook, "Field Completeness");
+        appendRow(completenessSheet, ["Field", "Applicability", "Applicable", "Complete", "Missing", "Unknown", "Unmapped", "Completeness %"]);
+        for (const metricRow of ["education", "jenjang_assignment", "job_title"] as const) {
+          let complete = 0; let missing = 0; let unknown = 0; let unmapped = 0;
+          for (const { issues } of perRecord) {
+            const fieldIssues = issues.filter((issue) => issue.field === metricRow);
+            if (fieldIssues.length === 0) complete += 1;
+            else if (fieldIssues.some((issue) => issue.type === "UNMAPPED_JOB_TITLE")) unmapped += 1;
+            else if (fieldIssues.some((issue) => issue.type === "UNKNOWN_CATEGORY_VALUE")) unknown += 1;
+            else missing += 1;
+          }
+          appendRow(completenessSheet, [STAFF_FIELD_LABELS[metricRow], "OPTIONAL_BUT_TRACKED", values.length, complete, missing, unknown, unmapped, percentage(complete, values.length)]);
+        }
+        styleHeader(completenessSheet);
+        autoSizeColumns(completenessSheet, 14, 30);
+        const issueSheet = addWorksheet(workbook, "Issues");
+        appendRow(issueSheet, ["Staff", "Employment Status", "Job Title", "Field", "Issue Type", "Label"]);
+        for (const { value, issues } of perRecord) {
+          for (const issue of issues) {
+            appendRow(issueSheet, [value.full_name, value.employment_status, value.job_title_normalized ?? value.job_title_raw ?? "No job title", issue.field, issue.type, issue.label]);
+          }
+        }
+        styleHeader(issueSheet);
+        autoSizeColumns(issueSheet, 14, 30);
+        const bytes = await writeXlsxWorkbook(workbook);
+        audit(context, user, "export_staff", `STAFF_DATA_QUALITY/${employmentStatus}`, {
+          staff: values.length,
+          employment_status: employmentStatus,
+        });
+        return {
+          bytes,
+          headers: {
+            "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content-disposition": `attachment; filename="${safeExportFilename("kualitas_data_staff", "xlsx")}"`,
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+          },
+        };
+      }, ctx.request?.signal);
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; }
+      throw error;
     }
-    styleHeader(completenessSheet);
-    autoSizeColumns(completenessSheet, 14, 30);
-    const issueSheet = addWorksheet(workbook, "Issues");
-    appendRow(issueSheet, ["Staff", "Employment Status", "Job Title", "Field", "Issue Type", "Label"]);
-    for (const { value, issues } of perRecord) {
-      for (const issue of issues) {
-        appendRow(issueSheet, [value.full_name, value.employment_status, value.job_title_normalized ?? value.job_title_raw ?? "No job title", issue.field, issue.type, issue.label]);
-      }
-    }
-    styleHeader(issueSheet);
-    autoSizeColumns(issueSheet, 14, 30);
-    const bytes = await writeXlsxWorkbook(workbook);
-    audit(context, user, "export_staff", `STAFF_DATA_QUALITY/${employmentStatus}`, {
-      staff: values.length,
-      employment_status: employmentStatus,
-    });
-    return new Response(bytes, {
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content-disposition": `attachment; filename="${safeExportFilename("kualitas_data_staff", "xlsx")}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      },
-    });
   }, {
     query: t.Object({
       employment_status: t.Optional(t.String()),

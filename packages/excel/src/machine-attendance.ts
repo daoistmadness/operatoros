@@ -53,6 +53,7 @@ export type MachineWorkbookPreview = {
 export class MachineWorkbookError extends Error {
   constructor(readonly code: "UNSUPPORTED_FORMAT" | "MALFORMED_WORKBOOK" | "UNSUPPORTED_STRUCTURE" | "FILE_TOO_LARGE", message: string) {
     super(message);
+    this.name = "MachineWorkbookError";
   }
 }
 

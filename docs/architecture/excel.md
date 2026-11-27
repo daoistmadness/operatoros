@@ -86,14 +86,19 @@ templates keep their current compatibility behavior.
   entry/size/macro/encryption limits and OLE2 magic-byte checks), post-load
   worksheet/row/column/cell budgets (`EXCEL_RESOURCE_LIMITS`), and sparse row
   iteration in `readXlsxWorkbook()` to prevent rectangular empty-cell blowup.
-- Heavy Excel upload and parse routes share a bounded admission controller
-  (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in `apps/api`,
-  paired with early request admission (`maxActiveUploads=2`,
-  `maxInFlightBytes=50 MiB`) in `apps/api/src/import/excel-upload-admission.ts`,
-  shared export stream admission (`createAdmittedXlsxResponse`), and a
-  short-lived `--smol` parser subprocess (`excel-subprocess.ts` /
-  `excel-parser-child.ts`) with `SIGKILL` + `proc.exited` reaping before permit
-  release.
+- Heavy Excel upload, parse, and export routes share a bounded admission
+  controller (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in
+  `apps/api`, paired with early request admission (`maxActiveUploads=2`,
+  `maxInFlightBytes=50 MiB`) and streaming `onParse` body-byte enforcement in
+  `apps/api/src/import/excel-upload-admission.ts`, shared export admission plus
+  retained output-buffer byte accounting (`maxRetainedOutputBytes=50 MiB` in
+  `createAdmittedXlsxResponse`), and a short-lived `--smol` parser subprocess
+  (`excel-subprocess.ts` / `excel-parser-child.ts`) for all production `.xls`
+  and `.xlsx` reads regardless of compressed size, with parent-side
+  `/proc/<pid>/statm` RSS supervision, child-side RSS watchdog, and `SIGKILL` +
+  `proc.exited` reaping before permit release. Note: RSS polling is defense in
+  depth rather than hard OS memory isolation (which requires cgroup delegation or
+  a dedicated memory-limited parser container).
 - An attendance parser worker owns its admission permit until it replies with
   a result or a parser error. Timeout and worker failure reject the request
   and request termination. If parser completion remains unconfirmed, the

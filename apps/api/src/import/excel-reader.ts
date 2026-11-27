@@ -131,7 +131,7 @@ function readRawRows(sheet: ExcelWorksheet, headerCount: number, columnIndices: 
   return rows;
 }
 
-function readLegacyRawRows(buffer: ArrayBuffer): {
+function readLegacyRawRows(buffer: ArrayBuffer | Uint8Array): {
   rows: IndexedAttendanceRow[];
   headers: string[];
   columnIndices: number[];
@@ -163,7 +163,7 @@ function readLegacyRawRows(buffer: ArrayBuffer): {
   return { rows, headers: legacy.headers, columnIndices, date1904: legacy.date1904 };
 }
 
-export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
+export async function parseAttendanceWorkbook(buffer: ArrayBuffer | Uint8Array, filename: string): Promise<WorkbookRows> {
   const isLegacyXls = filename.toLowerCase().endsWith(".xls");
   if (!isLegacyXls && !filename.toLowerCase().endsWith(".xlsx")) throw new Error("ATTENDANCE_SOURCE_MUST_BE_EXCEL");
   let rawRows: IndexedAttendanceRow[];
@@ -274,17 +274,10 @@ export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: str
   return { rows, invalidRows, exactDuplicates, divergentDuplicates, totalRows: rawRows.length };
 }
 
-// shortcut: 64 KiB separates measured 100-row and 5,000-row files; revisit with new import-size benchmarks.
-const WORKER_PARSE_THRESHOLD = 64 * 1024;
-const PARSER_WORKER_TIMEOUT_MS = 30_000;
-
 export function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string, signal?: AbortSignal): Promise<WorkbookRows> {
   const bytes = buffer.byteLength;
   if (bytes === 0 || bytes > EXCEL_RESOURCE_LIMITS.maxFileBytes) {
     return Promise.reject(new Error("EXCEL_FILE_SIZE_OUT_OF_BOUNDS"));
-  }
-  if (bytes < WORKER_PARSE_THRESHOLD) {
-    return withExcelAdmission(bytes, () => parseAttendanceWorkbook(buffer, filename), signal);
   }
 
   return runAttendanceSubprocess(buffer, filename, { signal });
@@ -296,7 +289,7 @@ export async function readAttendanceInWorker(
   buffer: ArrayBuffer,
   filename: string,
   createWorker: () => AttendanceWorker,
-  timeoutMs = PARSER_WORKER_TIMEOUT_MS,
+  timeoutMs = 30_000,
 ): Promise<WorkbookRows> {
   const release = await acquireExcelPermit(buffer.byteLength);
   let worker: AttendanceWorker;

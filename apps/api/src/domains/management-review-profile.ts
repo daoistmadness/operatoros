@@ -3,6 +3,7 @@ import { addWorksheet, appendRow, autoSizeColumns, createWorkbook, safeExportFil
 import { ManagementReviewProfileQuerySchema, ManagementReviewProfileResponseSchema, type ManagementReviewProfileResponse } from "@operatoros/contracts/analytics";
 import type { AuthContext } from "../auth/service";
 import { actor } from "./core";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -143,6 +144,6 @@ function response(bytes: Uint8Array, format: "xlsx" | "pdf", report: ManagementR
 export function managementReviewProfileRoutes(app: any, context: AuthContext): void {
   const load = (ctx: Context, capability: string) => actor(context, ctx, { capability }) ? managementReviewProfile(context, ctx.query) : undefined;
   app.get("/api/analytics/management-review/student-profile", (ctx: Context) => { const value = load(ctx, "view_student"); if (value === undefined) return { detail: "Insufficient permissions" }; if (!value) { ctx.set.status = 422; return { detail: "Term belum memiliki konfigurasi periode yang valid." }; } return value; }, { query: ManagementReviewProfileQuerySchema, response: ManagementReviewProfileResponseSchema });
-  app.get("/api/analytics/management-review/student-profile/export.xlsx", async (ctx: Context) => { const value = load(ctx, "export_student_data"); if (value === undefined) return { detail: "Insufficient permissions" }; if (!value) { ctx.set.status = 422; return { detail: "Term belum memiliki konfigurasi periode yang valid." }; } return response(await managementReviewProfileWorkbook(value), "xlsx", value); }, { query: ManagementReviewProfileQuerySchema });
+  app.get("/api/analytics/management-review/student-profile/export.xlsx", async (ctx: Context) => { const value = load(ctx, "export_student_data"); if (value === undefined) return { detail: "Insufficient permissions" }; if (!value) { ctx.set.status = 422; return { detail: "Term belum memiliki konfigurasi periode yang valid." }; } try { return await createAdmittedXlsxResponse(async () => { const name = safeExportFilename(`management-review-student-profile-${value.context.academicYearLabel}-${value.context.termLabel}`, "xlsx"); return { bytes: await managementReviewProfileWorkbook(value), headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename="${name}"`, "cache-control": "no-store, private" } }; }, ctx.request?.signal); } catch (error) { if (error instanceof ExcelAdmissionError) { ctx.set.status = error.status; return { detail: error.message }; } throw error; } }, { query: ManagementReviewProfileQuerySchema });
   app.get("/api/analytics/management-review/student-profile/export.pdf", async (ctx: Context) => { const value = load(ctx, "export_student_data"); if (value === undefined) return { detail: "Insufficient permissions" }; if (!value) { ctx.set.status = 422; return { detail: "Term belum memiliki konfigurasi periode yang valid." }; } return response(await managementReviewProfilePdf(value), "pdf", value); }, { query: ManagementReviewProfileQuerySchema });
 }

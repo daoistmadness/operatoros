@@ -4,6 +4,7 @@ import { t } from "elysia";
 import { actor } from "./core";
 import { calculateHeb } from "./heb";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -133,51 +134,59 @@ export function studentAttendanceExportRoutes(app: any, context: AuthContext): v
       };
     });
 
-    const workbook = createWorkbook({ exportType: "student-attendance-history" });
-    const recapSheet = addWorksheet(workbook, "Rekap Bulanan");
-    appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Verified Sakit", "Verified Izin", "Verified Alfa", "Reported Sakit", "Reported Izin", "Reported Alfa", "HEB", "Recorded Presence / HEB"]);
-    for (const item of recap) {
-      appendRow(recapSheet, [item.month_label, item.present, item.late, item.incomplete, item.absent, item.sakit, item.izin, item.alfa, item.reported_sakit, item.reported_izin, item.reported_alfa, item.heb, item.attendance_rate ?? ""]);
-    }
-    styleHeader(recapSheet);
-    autoSizeColumns(recapSheet, 13, 22);
+    try {
+      return await createAdmittedXlsxResponse(async () => {
+        const workbook = createWorkbook({ exportType: "student-attendance-history" });
+        const recapSheet = addWorksheet(workbook, "Rekap Bulanan");
+        appendRow(recapSheet, ["Bulan", "Hadir", "Terlambat", "Tidak Lengkap", "Absen", "Verified Sakit", "Verified Izin", "Verified Alfa", "Reported Sakit", "Reported Izin", "Reported Alfa", "HEB", "Recorded Presence / HEB"]);
+        for (const item of recap) {
+          appendRow(recapSheet, [item.month_label, item.present, item.late, item.incomplete, item.absent, item.sakit, item.izin, item.alfa, item.reported_sakit, item.reported_izin, item.reported_alfa, item.heb, item.attendance_rate ?? ""]);
+        }
+        styleHeader(recapSheet);
+        autoSizeColumns(recapSheet, 13, 22);
 
-    if (month !== null && year !== null) {
-      const detailSheet = addWorksheet(workbook, "Rincian Harian");
-      appendRow(detailSheet, ["Tanggal", "Status", "Jam Masuk", "Jam Pulang", "Terlambat", "Koreksi Manual", "Catatan", "Direview Oleh"]);
-      for (const value of values) {
-        appendRow(detailSheet, [
-          value.date,
-          effectiveStatus(value),
-          clockText(value.override_check_in ?? value.check_in),
-          clockText(value.override_check_out ?? value.check_out),
-          lateText(value),
-          value.override_status ? "Ya" : "Tidak",
-          value.note ?? "",
-          value.reviewed_by ?? "",
-        ]);
-      }
-      styleHeader(detailSheet);
-      autoSizeColumns(detailSheet, 10, 24);
-    }
+        if (month !== null && year !== null) {
+          const detailSheet = addWorksheet(workbook, "Rincian Harian");
+          appendRow(detailSheet, ["Tanggal", "Status", "Jam Masuk", "Jam Pulang", "Terlambat", "Koreksi Manual", "Catatan", "Direview Oleh"]);
+          for (const value of values) {
+            appendRow(detailSheet, [
+              value.date,
+              effectiveStatus(value),
+              clockText(value.override_check_in ?? value.check_in),
+              clockText(value.override_check_out ?? value.check_out),
+              lateText(value),
+              value.override_status ? "Ya" : "Tidak",
+              value.note ?? "",
+              value.reviewed_by ?? "",
+            ]);
+          }
+          styleHeader(detailSheet);
+          autoSizeColumns(detailSheet, 10, 24);
+        }
 
-    const bytes = await writeXlsxWorkbook(workbook);
-    const periodLabel = month !== null && year !== null ? `${month}_${year}` : "semua";
-    audit(context, user, "EXPORT_STUDENT_ATTENDANCE_HISTORY", `STUDENT_ATTENDANCE_HISTORY/${String(params.student_master_id)}`, true, {
-      student_master_id: String(params.student_master_id),
-      student_name: studentName,
-      month: month,
-      year: year,
-      months_exported: recap.length,
-      rows_exported: values.length,
-    });
-    return new Response(bytes, {
-      headers: {
-        "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "content-disposition": `attachment; filename="${safeExportFilename(`absensi_${studentName}_${periodLabel}`, "xlsx")}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      },
-    });
+        const bytes = await writeXlsxWorkbook(workbook);
+        const periodLabel = month !== null && year !== null ? `${month}_${year}` : "semua";
+        audit(context, user, "EXPORT_STUDENT_ATTENDANCE_HISTORY", `STUDENT_ATTENDANCE_HISTORY/${String(params.student_master_id)}`, true, {
+          student_master_id: String(params.student_master_id),
+          student_name: studentName,
+          month: month,
+          year: year,
+          months_exported: recap.length,
+          rows_exported: values.length,
+        });
+        return {
+          bytes,
+          headers: {
+            "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "content-disposition": `attachment; filename="${safeExportFilename(`absensi_${studentName}_${periodLabel}`, "xlsx")}"`,
+            "cache-control": "no-store, no-cache, must-revalidate, private",
+          },
+        };
+      }, ctx.request?.signal);
+    } catch (cause) {
+      if (cause instanceof ExcelAdmissionError) return error(ctx.set, cause.status, cause.message);
+      throw cause;
+    }
   }, {
     params: t.Object({ student_master_id: t.String() }),
     query: t.Object({ month: t.Optional(t.String()), year: t.Optional(t.String()) }),
