@@ -1632,15 +1632,15 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "0958aaac4dba4dc11bc150300fe68511f171cb948890c2838197ea6997504157",
+      "fingerprint": "48d36b45a39a34d3590a3d6e4f911ebdab040a3b86a221d8ec84f2d623d099ca",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "5c80dd42878b958e0ac22a4cbaf5d4a8eda988ec12b03868cea056c79a1e84f8"
+        "apps/api/src/import/excel-reader.ts": "3a5028e6eeb3fc2fa1908e391de3ddcf4461bc2f161373fdf11d39a8eb948263"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/import/excel-reader.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
@@ -2956,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "fa3d8ba77879a36624b5e261ec1bf146228ffa0960377f81cdce8216ffdffdb4",
+      "fingerprint": "d1b791c87f8ac2970252bbfcdc7f60d4e90ae4d654834c4deb1e238bfbef9548",
       "snapshot": {
-        "CHANGELOG.md": "16bc9def21c5a1bd040297abaa7908ce093c9692fd43f6283246beb59f818ff2"
+        "CHANGELOG.md": "47839181a534b8aa6045975a2b162a7f0248099596bc52e94b5342bbfbbda3b8"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: CHANGELOG.md at 47e4916eb86677ff4224df157217dbb55eaefc3d"
       ]
     },
     "source:COMMANDS.md": {
@@ -3289,15 +3289,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "cc04e1d436da0edf2c24c14f7a0a4768c7629528698a5b3ea457a83c794d9c1b",
+      "fingerprint": "65c804fb658c9159a231e43262a2e4bd243628c123eab6311933462b93d097fa",
       "snapshot": {
-        "docs/architecture/excel.md": "336d4d6319034adc8eacf900817fb55212eb59f85271ee4b1f7659463ef41452"
+        "docs/architecture/excel.md": "8c2f9c43270ebdc3b6175a5aa5f8265fda03a4fe7624791efacde3c141b37f74"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: docs/architecture/excel.md at 47e4916eb86677ff4224df157217dbb55eaefc3d"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -8983,15 +8983,15 @@
       ]
     },
     "source:packages/excel/src/legacy.ts": {
-      "fingerprint": "acd7d3e5293a6bb19aea8caecce1594c899cb03602fdb4ab3f2ec44405603b0d",
+      "fingerprint": "2c4a4ffd11ccceedf881d19960da9abef4c3bf6d8d920ba6568ca0af855e310e",
       "snapshot": {
-        "packages/excel/src/legacy.ts": "4147c3424ab2234238067c6f4b0f6c613c071e7ec4829077783d64b6c964c14d"
+        "packages/excel/src/legacy.ts": "919de21c0268e4e99784fd86dc25ef8a16b6657e439125922843cf13fa5eb24d"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: packages/excel/src/legacy.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: packages/excel/src/legacy.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
       ]
     },
     "source:packages/excel/tests/excel.test.ts": {
@@ -11909,6 +11909,30 @@
       "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
         "Changed: packages/excel/tests/security-containment.test.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:apps/api/tests/excel-correctness.test.ts": {
+      "fingerprint": "0cf61710adced0f1a6f5553096fe1c19b1eca014a99bcf107d2cc6b07c4e9fa9",
+      "snapshot": {
+        "apps/api/tests/excel-correctness.test.ts": "c3a44fb07d0ef01509bd18e1a3c61e7d2685dee09867cbe1b19dec34a26ff569"
+      },
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "outcome": "no-change",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-correctness.test.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
+      ]
+    },
+    "source:packages/excel/tests/correctness-remediation.test.ts": {
+      "fingerprint": "143a9bc646baaaa5176433b9a9c2f45f0e922195429e4613c9c501931d0f978d",
+      "snapshot": {
+        "packages/excel/tests/correctness-remediation.test.ts": "927e545eb3a079dd1e7714931fe4661e8d07a0d990b6b0f01b61e5a59ea3a35e"
+      },
+      "head": "47e4916eb86677ff4224df157217dbb55eaefc3d",
+      "outcome": "no-change",
+      "reason": "PR-2 Excel correctness remediation does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/tests/correctness-remediation.test.ts at 47e4916eb86677ff4224df157217dbb55eaefc3d"
       ]
     }
   }
