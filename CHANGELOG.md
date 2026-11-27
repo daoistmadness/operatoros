@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Preserve safe Student and Employee Directory filters when opening and returning from records, make employee results easier to find, and give Inventory filters more room ([#428](https://github.com/daoistmadness/operatoros/pull/428)).
 - Put attendance checks and authorized actions at the top of Home, preserve Work Queue filters on return, and open linked attendance follow-up cases directly ([#427](https://github.com/daoistmadness/operatoros/pull/427)).
 - Improve Student Directory, Daily Attendance, and Settings with clearer page headings, denser tables, and keyboard focus that returns to the reset preview button ([#426](https://github.com/daoistmadness/operatoros/pull/426)).
 - Reorganize primary navigation into nine domains (`Home`, `Work Queue`, `Attendance`, `Students`, `Academics`, `Staff`, `Inventory`, `Insights & Reports`, `Settings`) with contextual domain sub-navigation, grouped Attendance workflows, sticky mobile navigation header, domain-aware breadcrumbs, and bilingual English/Indonesian `Ctrl+K`/`⌘K` command search ([#425](https://github.com/daoistmadness/operatoros/pull/425)).

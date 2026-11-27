@@ -241,8 +241,8 @@ export default function InventoryManagement() {
       {/* Filter and Search Bar */}
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
+            <div>
               <Label htmlFor="search-input" className="text-xs font-semibold text-muted-foreground">Pencarian</Label>
               <div className="relative mt-1">
                 <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
