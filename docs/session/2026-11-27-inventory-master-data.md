@@ -5,9 +5,9 @@ last_reviewed: 2026-11-27
 
 # Inventory master data implementation
 
-- Date / agent / branch / PR: 2026-11-27 / Codex / `codex/inventory-master-data-20261127` / pending
+- Date / agent / branch / PR: 2026-11-27 / Codex / `codex/inventory-master-data-pr-20261127` / [#424](https://github.com/daoistmadness/operatoros/pull/424)
 - Goal: Make inventory categories and funding sources persistent, globally managed master data while preserving asset identifiers and business rules.
-- What changed: Implemented S5.7 global inventory master tables and migration, authorized audited API management, dynamic labels and options across inventory operations, a shared management dialog, and a Chromium E2E flow. The PR is not open yet. Production was not accessed or changed.
+- What changed: Implemented S5.7 global inventory master tables and migration, authorized audited API management, dynamic labels and options across inventory operations, a shared management dialog, and a Chromium E2E flow. [PR #424](https://github.com/daoistmadness/operatoros/pull/424) is open. Production was not accessed or changed.
 - Decisions made (and why):
   - Protected-main baseline is `83e05560a3f112a2a3e4ed7439d4b672d0f8686e`; its latest main CI run succeeded (run `45900890530`). The shared checkout's unrelated `deploy/docker/Caddyfile` edit remains untouched.
   - Baseline checks passed before implementation: API inventory tests (11), DB migration tests (18), and inventory UI tests (4).
@@ -16,7 +16,7 @@ last_reviewed: 2026-11-27
   - Two storage shapes were considered. Replacing stored codes with new numeric IDs would rewrite asset category/funding values and complicate code/sequence continuity. Lookup tables keyed by the existing codes preserve values and API semantics. The latter is selected; a versioned migration will rebuild only the two tables whose fixed category checks prevent custom categories, copying their rows verbatim and adding restrictive master-data references.
   - API writes validate active assignments and normalized-name uniqueness. SQLite references and insert/update triggers protect deletion and stale inactive assignments at the write boundary. Master mutations use the existing `manage_inventory` capability and audit log.
   - Throughput checkpoint: blocking baseline and schema inspection precede implementation; independent workstreams are N/A because DB, API, contracts, and UI share one data shape; SQLite serializes changes to shared sequence/master state; one owner keeps the migration-to-form contract consistent.
-- Open issues / follow-ups: No implementation or acceptance issues remain. Create the focused PR and add its number here and to the changelog after GitHub assigns it. `agent-browser` is not installed, so the repository's Agent Browser script was unavailable; the new flow was exercised in the repository's real Chromium Playwright runner instead.
+- Open issues / follow-ups: No implementation or acceptance issues remain. `agent-browser` is not installed, so the repository's Agent Browser script was unavailable; the new flow was exercised in the repository's real Chromium Playwright runner instead.
 - Docs updated: This session-specific decision trail, canonical database-schema documentation, and the Unreleased changelog entry.
 
 ## Verification sequence
