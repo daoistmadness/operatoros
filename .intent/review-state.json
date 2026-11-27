@@ -1071,29 +1071,27 @@
       ]
     },
     "source:apps/web/src/components/SidebarNav.test.tsx": {
-      "fingerprint": "37aa1ea20777e2b5b8c98c81ed00263708bcabaf5926cccbd798da3c5781c3fd",
+      "fingerprint": "f9d84fa3713f7346a30983a98f1b0cbc5c490921f7d11accc0d77fef598549fc",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.test.tsx": "eac2b16df77f437b3cdf9988fa43912aff0bbd3c44a44224fe96648396c6f9df"
+        "apps/web/src/components/SidebarNav.test.tsx": "a4fd9c584550b5e981e4e0153838b570752b3a209d41505cd87fef73bd136614"
       },
-      "head": "33b5ed335686cf1fce183f23311bde8edcde8b41",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "SidebarNav test alignment for Asset Inventory navigation item",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: apps/web/src/components/SidebarNav.test.tsx at 33b5ed335686cf1fce183f23311bde8edcde8b41"
+        "Changed: apps/web/src/components/SidebarNav.test.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/components/SidebarNav.tsx": {
-      "fingerprint": "35b843cc51333fd786cb214f42b3faa7efa215929c6bc570b1bbbbc6291f234c",
+      "fingerprint": "728d1f888c738a1868186cb243c02e00da15fd66a79c23128f0939543b0c630e",
       "snapshot": {
-        "apps/web/src/components/SidebarNav.tsx": "3bcc4e9e6142a7cb3bc6db577640546591fbb3e5f1283f2bf55f7a26335711b1"
+        "apps/web/src/components/SidebarNav.tsx": "f8d00e2495cdf8a5179b630df59c875119d1515e7906f201a67d2dd3ec6b905e"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Reviewed apps/web/src/components/SidebarNav.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/SidebarNav.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/context/AuthContext.test.tsx": {
@@ -2155,15 +2153,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceDestination.tsx": {
-      "fingerprint": "17fd5b2d5ab225d465d84c67536bac2e508118617f6d5eaa4fcd1b69b727539f",
+      "fingerprint": "68357f77e0ba9caf8b0b4ef93e3b4dd68e9a70a5797474c8e70fc510f6f7298d",
       "snapshot": {
-        "apps/web/src/pages/AttendanceDestination.tsx": "2caef59e0d4b4a3498611ed694219f4253413484ebbf808ca7eb180231a7acbd"
+        "apps/web/src/pages/AttendanceDestination.tsx": "4d2bc7a2621ef793faf7c8be24e2e904fc01f5ad671492b00bdbef3a5f967914"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceDestination.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AttendanceDestination.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/pages/AttendanceReconciliation.test.tsx": {
@@ -2964,15 +2962,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "0cf4bd6a3039747f2e7ab6b79d63c366ffd25295ee1200cd7f28ae61b1d24caf",
+      "fingerprint": "00d30721aa6d1e43e2c777e7b2a3d7537b0cfd3e57ca45af6d54986a853631a0",
       "snapshot": {
-        "CHANGELOG.md": "6cec5faa19bce153ee78fb8c79cd7324c6c4248599d93b60c77b29be3b6f7ea7"
+        "CHANGELOG.md": "2caca8071129d0e3d1cab34f91bb8a17061c1b2edad5674da0b260bd26b53d7d"
       },
-      "head": "985b3dac018edd358f910ac9f697e663c38a2c9f",
+      "head": "eeba93fa89379bb6f9a00a90c76ec86e16da6f62",
       "outcome": "no-change",
-      "reason": "Reviewed the two PR metadata edits at working-tree HEAD 985b3dac018edd358f910ac9f697e663c38a2c9f against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e. The Unreleased inventory bullet now links PR #424; the session log records the PR branch and URL and removes the stale pending-PR statement. These edits document the completed feature and do not change Elysia behavior, skill recommendations, or planning artifact scope; all three planning records remain accurate. Evidence: Markdown link, organization, and current-developer-doc checks passed, as did git diff --check; feature test results are recorded in the session log.",
+      "reason": "Recorded PR #425 reference in CHANGELOG.md without changing any source or guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 985b3dac018edd358f910ac9f697e663c38a2c9f"
+        "Changed: CHANGELOG.md at eeba93fa89379bb6f9a00a90c76ec86e16da6f62"
       ]
     },
     "source:COMMANDS.md": {
@@ -5639,15 +5637,15 @@
       ]
     },
     "source:e2e/smoke/web/analytics-phase-a.spec.ts": {
-      "fingerprint": "5fd69f6bbfbc65b6d5beb84ac787e9dcf52f92e755cc111aabb3fbbb24ae8832",
+      "fingerprint": "183546c8400e976e58a6226be13c11bf3ef4f73b3bb0c81f9d891c3caca690cf",
       "snapshot": {
-        "e2e/smoke/web/analytics-phase-a.spec.ts": "fccc837fc6415d28394fdb5a9fb9efcf43f0e6e8ab204593a6f083afd177e587"
+        "e2e/smoke/web/analytics-phase-a.spec.ts": "77179d5f10b3d061d41f3715e01a8670b3f6b9835f4e7e10e160a94347cf739a"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/analytics-phase-a.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/upp-reports.spec.ts": {
@@ -6001,15 +5999,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.tsx": {
-      "fingerprint": "1b6ddeb209ec8b3cba788106d57eafb6552df1d31ffb3fb3d542694e0913a8f7",
+      "fingerprint": "bd5969e5a9288ff2aca6a52c4c650794e4cb0facb440c436d57ef429d7156026",
       "snapshot": {
-        "apps/web/src/components/AppShell.tsx": "4e6bad09528d92768ad55f4fe11b3ddc3502f2af05d251017b4acf26f91d9286"
+        "apps/web/src/components/AppShell.tsx": "0ed3b4139c68fa2a8523be1a4c4293c212d549534b3dace7cb80b237d4bf2793"
       },
-      "head": "dde04dc1d742cd91311c5d2a7f34383ccd75c6d5",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "No Elysia backend, API contract, TypeBox, database, or reusable Elysia guidance changed; the Start SPA migration preserves the supervised Elysia boundary. Other flagged files are application migration and project documentation, not a library skill batch; all behavior and boundary checks are recorded in docs/session/tanstack-start-migration.tsv.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: apps/web/src/components/AppShell.tsx at dde04dc1d742cd91311c5d2a7f34383ccd75c6d5"
+        "Changed: apps/web/src/components/AppShell.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/components/NotFoundPage.tsx": {
@@ -7027,15 +7025,15 @@
       ]
     },
     "source:e2e/smoke/web/data-management-import-export.spec.ts": {
-      "fingerprint": "9882b31ec439f69a0a9a29f5f4a9b82b38c1c71ad1081c780496e317779bd522",
+      "fingerprint": "018d0aadb4253a739861c559b4484a42a1e9e7741702124c6e881eafeadf1bfe",
       "snapshot": {
-        "e2e/smoke/web/data-management-import-export.spec.ts": "c69106ddda6a2bae6384445efb1e5b8accc4ec7aa1c2555a14fc798a93490c58"
+        "e2e/smoke/web/data-management-import-export.spec.ts": "d15331f2dd2017f8dcfb99c3dd5bd04f0268b26cd60d5cc84272c1d2e31b2b8c"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/data-management-import-export.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/student-360-overview.spec.ts": {
@@ -7277,17 +7275,15 @@
       ]
     },
     "source:apps/web/src/components/AppShell.navigation.test.tsx": {
-      "fingerprint": "bc4fb1dc941ff3d505541ba4445b7be3bddd1295ed76808ebe5b0ba82fb7cbe6",
+      "fingerprint": "7f6370ff80b88ea1776b29b2054416e8a50c754f1319327bf7c4641d7657817f",
       "snapshot": {
-        "apps/web/src/components/AppShell.navigation.test.tsx": "c7a42e7a564845d80bde56e40c45958ca927bcf26d3b5c24b1784f2294b10ac7"
+        "apps/web/src/components/AppShell.navigation.test.tsx": "c26d42f3d6cc7ca78389c27ec123a5005f9ea7f830cfdb95599b0260d9d1f683"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Reviewed apps/web/src/components/AppShell.navigation.test.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/AppShell.navigation.test.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/components/charts/AttendanceStatusChart.tsx": {
@@ -7445,29 +7441,27 @@
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": {
-      "fingerprint": "599b4d16560f614f190818e5a1fc1fa96d61c650d1d7d9ba8ac889ea444cfa78",
+      "fingerprint": "4b403b5c6c1fa8baf38b2ccf7052e592eddbd8fb74e357f786242a0b6f9c7746",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "3041bae8872038a2bd99d1edfc29a497f9a623c25e17599bf9dfd7063c481c14"
+        "apps/web/src/components/navigation/NavigationCommandSearch.test.tsx": "093238d009f669231e5494d58b77e854471708d8951f88d85a52cfbfbda06620"
       },
-      "head": "5b8b4c041a7d3d9841bd73485bc79677001e6471",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the pending frontend focus-test timing and Alpine zlib package pin; neither changes Elysia guidance or the existing skill set.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at 5b8b4c041a7d3d9841bd73485bc79677001e6471"
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.test.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/components/navigation/NavigationCommandSearch.tsx": {
-      "fingerprint": "a393a4e57e52939f40ffc5200d65a849083347c96f02135b98cb1c7f563c9370",
+      "fingerprint": "0d8990036c08f6c7a81f4ba0a7f19257f6043058c929f5ff7d09958e6257b5ec",
       "snapshot": {
-        "apps/web/src/components/navigation/NavigationCommandSearch.tsx": "33e220e48df3cfa8cf78928c2566fd70166a35dbb1c5ec92af761e247cb85043"
+        "apps/web/src/components/navigation/NavigationCommandSearch.tsx": "701570567a250b484c03933985ebdf2712a82a6d62a50dde9862bdb98c78f4be"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Reviewed apps/web/src/components/navigation/NavigationCommandSearch.tsx in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/components/navigation/NavigationCommandSearch.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/components/ui/dialog.tsx": {
@@ -7705,29 +7699,27 @@
       ]
     },
     "source:apps/web/src/lib/navigation/registry.test.ts": {
-      "fingerprint": "568e8e92594a3ab6609fbcd63f953d7756b5fa6e51f396586faa6cca3c8f864d",
+      "fingerprint": "27e32b9306892615eacde22e65589e29df45c3b5290fef90bbf0ded9a4e67a9b",
       "snapshot": {
-        "apps/web/src/lib/navigation/registry.test.ts": "29da5db8167ce2cef36fb0325b7816bae7ed51392ebede9a95b9259a9aeedea8"
+        "apps/web/src/lib/navigation/registry.test.ts": "60b6be7399b8743bc37664f369112ac32a79561859b346f037da3cbb6f7583f9"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Reviewed apps/web/src/lib/navigation/registry.test.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: apps/web/src/lib/navigation/registry.test.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/lib/navigation/registry.ts": {
-      "fingerprint": "4f1d1b039c2fc903e50394607e31426eebd5725113cfebd83e7002cf3003accc",
+      "fingerprint": "ff44a9c417dee19733ae9d09a8f80a45f87fb1509c7791793dbd583f5e89609f",
       "snapshot": {
-        "apps/web/src/lib/navigation/registry.ts": "c8da0cd552a89cddf92e25d7606b750e27e3b187ca7af81133de862b8a4f4c70"
+        "apps/web/src/lib/navigation/registry.ts": "52dc7bbfc236ae5ab8016579a44b32017055f984cad04387894bad35c0790c90"
       },
-      "head": "2abce0702f1109064495e60673de567771e44338",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Add inventory asset register and precision label printing v1",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: apps/web/src/lib/navigation/registry.ts at 2abce0702f1109064495e60673de567771e44338"
+        "Changed: apps/web/src/lib/navigation/registry.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:apps/web/src/lib/query/backupInvalidation.test.ts": {
@@ -8027,15 +8019,15 @@
       ]
     },
     "source:e2e/smoke/web/frontend-performance-baseline.spec.ts": {
-      "fingerprint": "26045b1f8af50ac6d854355df49b0975d7d9bd858149a04ffe5f9974ae9da9f6",
+      "fingerprint": "7447fe56f9753bfaaa2b40dae52d12f38eadf6eb3fc96e3c7c23c19016bdfe4c",
       "snapshot": {
-        "e2e/smoke/web/frontend-performance-baseline.spec.ts": "a31aa40f4c144296a42c8ec1ce08165e1e6ee5b262bd5da598c789b558ccf031"
+        "e2e/smoke/web/frontend-performance-baseline.spec.ts": "35c042df7aeba1b045dd34d01a7847fc729ef0acf751edae041a2ffd99aae502"
       },
-      "head": "484b124015997110dbf8692c99e7dc51727756b4",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "The two E2E spec edits replace arbitrary millisecond sleeps with two animation-frame callbacks so browser measurement and focus-revalidation requests can settle at a rendering boundary. They change no Elysia implementation or guidance; the registered skill remains backend-only.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/frontend-performance-baseline.spec.ts at 484b124015997110dbf8692c99e7dc51727756b4"
+        "Changed: e2e/smoke/web/frontend-performance-baseline.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/management-analytics-overview.spec.ts": {
@@ -8051,15 +8043,15 @@
       ]
     },
     "source:e2e/smoke/web/navigation-command-search.spec.ts": {
-      "fingerprint": "f83e66a81f0ae269aab5d6bdde70728283be51f9927e250cd8b0bc758cac9ea9",
+      "fingerprint": "6b1ef9b3c5c3879d8aabad0586b73beee947a9ad1c7d7519816e586fc17c6675",
       "snapshot": {
-        "e2e/smoke/web/navigation-command-search.spec.ts": "23a71f921661c881a4ebe63959243f2aaee7821be8c443d11c3d744196d71ef3"
+        "e2e/smoke/web/navigation-command-search.spec.ts": "d1cbeb1ab7af87119239d3be6deabad1b4eb4aa2bac2e82a7d9b8515ff9c899f"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/navigation-command-search.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/navigation-command-search.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/query-focus-revalidation.spec.ts": {
@@ -8075,41 +8067,39 @@
       ]
     },
     "source:e2e/smoke/web/redact-compatibility.spec.ts": {
-      "fingerprint": "5febda01e3318a7d6706c7ae8610c214cadb3be8da61a0fd43f74a1c916ac2d9",
+      "fingerprint": "a2cd25f6ac03bb6dbcb14577474e0f5e109eda1ca1ac5a554ba29f6fc118d37c",
       "snapshot": {
-        "e2e/smoke/web/redact-compatibility.spec.ts": "af5a8dc6f009bcd51bd0202a63a71d4347383d543f8ce94f442ee88bade3acfe"
+        "e2e/smoke/web/redact-compatibility.spec.ts": "b7ba3e11004bbd9573bbdfda5f619c158d7972503f60b2f704ee51adee990dd5"
       },
-      "head": "ddec4f5d1f36dd62e3198a7a1183f634f3805c0b",
-      "outcome": "out-of-scope",
-      "reason": "This changed file belongs to the React frontend optimization, its documentation, test fixtures, or frontend build tooling. The repository currently registers only Elysia backend guidance; this task did not request a new frontend skill, and no existing Elysia recommendation or task behavior is defined by this file.",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Reviewed e2e/smoke/web/redact-compatibility.spec.ts in the diff from 4c855d2d14a1211a2c9d80488630da6fcaa3df7b to ddec4f5d1f36dd62e3198a7a1183f634f3805c0b; it contains no Elysia backend implementation or recommendation.",
-        "_artifacts/skill_tree.yaml and intent list show the only registered skill is @operatoros/agent-skills#elysiajs; _artifacts/skill_spec.md records frontend domains as outside the assessed skill scope.",
-        "The completed release validation is recorded in docs/reference/frontend-release-validation.md; mise run check:full and Chromium and Firefox smoke suites passed."
+        "Changed: e2e/smoke/web/redact-compatibility.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/responsive-review.spec.ts": {
-      "fingerprint": "b25842c3e13930806fee1b762eab42b4ba4c6c46f619b6eb9689832939170aae",
+      "fingerprint": "6f4248ea7f3b997beefc9db8ea8e8675a75f3896fe2709fc1c58b8e3ff4f742d",
       "snapshot": {
-        "e2e/smoke/web/responsive-review.spec.ts": "4c74cfee59c8c125c5af4033263d0bdcdb8411bd5fb827334b6059eadf273c76"
+        "e2e/smoke/web/responsive-review.spec.ts": "777105a4f22cb3b756583b0cfc0c7876e448abcff6fc3b805047b6e82de4246a"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/responsive-review.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/responsive-review.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/ui-preferences.spec.ts": {
-      "fingerprint": "390a2eec7208f70b13f43b5f3771565dc808b1cec5aafabafe19fa60168efa93",
+      "fingerprint": "b32307a41e1cc82b6465c013292b85bfd9e69a9b167ded002b489cc10cbef240",
       "snapshot": {
-        "e2e/smoke/web/ui-preferences.spec.ts": "8660bf5fd67a5b915638974b7028f8f380fca668bf89bbda3b1fe3b075ecc7fb"
+        "e2e/smoke/web/ui-preferences.spec.ts": "d4b918b3d2ae7be759972d8de5e25c5e4fc55c87e085cd5d159b690211c23212"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/ui-preferences.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/ui-preferences.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/start-elysia-test-stack.sh": {
@@ -8815,15 +8805,15 @@
       ]
     },
     "source:e2e/smoke/web/student-indicator-insights.spec.ts": {
-      "fingerprint": "7599eeced534f28cd86e9b9db1fa780451570620f8230a51008199cf59ec924e",
+      "fingerprint": "b1556e67c0fd6540f4b8d48b615fc25e90407052b77124e4f04675c634e4bec8",
       "snapshot": {
-        "e2e/smoke/web/student-indicator-insights.spec.ts": "dc11831887685d6ecbe7f0a2fb0cae0cdf01fee155c3f205f039c8aa97b60b73"
+        "e2e/smoke/web/student-indicator-insights.spec.ts": "74b18c55c954b8db338f43f2af5b3d8c9c3805a79b0d22629c508c9a1ffa3542"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
       "evidence": [
-        "Changed: e2e/smoke/web/student-indicator-insights.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/student-indicator-insights.spec.ts at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     },
     "source:e2e/smoke/web/student-trend-insights.spec.ts": {
@@ -11753,6 +11743,18 @@
       "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
       "evidence": [
         "Changed: packages/db/tests/inventory-master-data-migration.test.ts at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+      ]
+    },
+    "source:apps/web/src/components/navigation/DomainSubNav.tsx": {
+      "fingerprint": "251234f421440ca0c91a2484595722732439bd77b61d6f394cb72fdb96804a84",
+      "snapshot": {
+        "apps/web/src/components/navigation/DomainSubNav.tsx": "71f3cd5041bc7472d643195fcf3f9fc8869e2db591805ab01fd9543d9103bfa1"
+      },
+      "head": "1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95",
+      "outcome": "no-change",
+      "reason": "Reviewed the 19 Phase 1 navigation UX modernization changes (apps/web navigation registry, AppShell, SidebarNav, DomainSubNav, NavigationCommandSearch, AttendanceDestination segmented tabs, unit tests, E2E smoke specs, and CHANGELOG.md) against base 2b41a14c384b2bae76e2e5c01e5ac70b5b9b30fd. Only frontend React/TanStack Router shell, unit tests, Playwright E2E specs, and CHANGELOG.md changed; no Elysia backend, Drizzle schema, or packaged agent-skill guidance is affected. Recorded verified checks: lint, check:typescript, check:typebox, check:architecture, test:architecture (37 pass), check:contracts, check:ui, all package typechecks, @operatoros/web build and bundle budget, @operatoros/web Vitest suite (127 files / 600 tests + 2 bundle report tests), Markdown checks, and targeted Playwright E2E smoke (8 backend + 26 web tests).",
+      "evidence": [
+        "Changed: apps/web/src/components/navigation/DomainSubNav.tsx at 1dea2e4ccd61757b5477b1bfdfd58e6f93e11f95"
       ]
     }
   }

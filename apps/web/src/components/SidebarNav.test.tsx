@@ -8,8 +8,8 @@ import { ApiError } from '../lib/api/errors';
 import { AuthContext, type AuthContextValue } from '../context/AuthContext';
 import SidebarNav from './SidebarNav';
 import {
+  activeNavigationEntry,
   navigationGroups,
-  navigationItemIsActive,
   visibleNavigationGroups,
 } from '../lib/navigation/registry';
 import { routeAuthorizations } from '../lib/router/access';
@@ -19,8 +19,33 @@ vi.mock('../hooks/useServerStatusQuery', () => ({
 }));
 
 const users: Record<'admin' | 'staff', AuthUser> = {
-  admin: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_student_audit', 'view_staff', 'view_staff_analytics', 'manage_staff', 'export_staff', 'manage_enrollment', 'enter_assigned_class_attendance', 'view_attendance_followups', 'view_early_departure', 'view_attendance', 'view_attendance_corrections', 'view_inventory'] },
-  staff: { id: 2, username: 'staff', role: 'staff', capabilities: ['view_student'] },
+  admin: {
+    id: 1,
+    username: 'admin',
+    role: 'admin',
+    capabilities: [
+      'view_student',
+      'view_student_audit',
+      'view_staff',
+      'view_staff_analytics',
+      'manage_staff',
+      'import_staff',
+      'export_staff',
+      'manage_enrollment',
+      'enter_assigned_class_attendance',
+      'view_attendance_followups',
+      'view_early_departure',
+      'view_attendance',
+      'view_attendance_corrections',
+      'view_inventory',
+    ],
+  },
+  staff: {
+    id: 2,
+    username: 'staff',
+    role: 'staff',
+    capabilities: ['view_student', 'view_attendance_followups', 'view_attendance', 'view_inventory'],
+  },
 };
 
 function authFor(user: AuthUser | null): AuthContextValue {
@@ -89,21 +114,38 @@ describe('role-aware sidebar navigation', () => {
     });
   }
 
-  it('shows the complete administrator inventory with one current destination', async () => {
+  it('renders the nine primary domains for administrators with one active domain on nested detail routes', async () => {
     await renderSidebar({ path: '/students/42?month=7#attendance' });
-    expect(container.querySelectorAll('nav a')).toHaveLength(navigationGroups.reduce((count, group) => count + group.items.length, 0));
+    const links = Array.from(container.querySelectorAll('nav a'));
+    expect(links.map((link) => link.textContent)).toEqual([
+      'Home',
+      'Work Queue',
+      'Attendance',
+      'Students',
+      'Academics',
+      'Staff',
+      'Inventory',
+      'Insights & Reports',
+      'Settings',
+    ]);
     expect(container.querySelector('a[href="/students"]')?.getAttribute('aria-current')).toBe('page');
-    expect(container.querySelector('a[href="/inventory"]')?.textContent).toContain('Asset Inventory');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
   });
 
-  it('removes restricted links and empty groups for staff and anonymous states', () => {
-    const staff = visibleNavigationGroups({ auth: authFor(users.staff), isSingleUserMode: false });
-    const staffNames = staff.flatMap((group) => group.items.map((item) => item.name));
-    expect(staffNames).toContain('Student Directory');
-    expect(staffNames).not.toContain('Data Import & Export');
-    expect(staffNames).not.toContain('Operations Audit');
-    expect(staff.every((group) => group.items.length > 0)).toBe(true);
+  it('omits empty domains for staff and places Grade Level Cutoff under Settings', async () => {
+    await renderSidebar({ user: users.staff, path: '/config/jenjang' });
+    const links = Array.from(container.querySelectorAll('nav a'));
+    const labels = links.map((link) => link.textContent);
+    expect(labels).toEqual([
+      'Home',
+      'Work Queue',
+      'Attendance',
+      'Students',
+      'Inventory',
+      'Insights & Reports',
+      'Settings',
+    ]);
+    expect(container.querySelector('a[href="/settings"]')?.getAttribute('aria-current')).toBe('page');
     expect(visibleNavigationGroups({ auth: authFor(null), isSingleUserMode: false })).toEqual([]);
   });
 
@@ -116,20 +158,23 @@ describe('role-aware sidebar navigation', () => {
     expect(routeAuthorizations['/teacher-class-assignments']).toEqual({ type: 'role', role: 'admin' });
   });
 
-  it('matches exact, nested, query-safe, and canonical redirect destinations without duplicates', () => {
-    const items = navigationGroups.flatMap((group) => group.items);
-    const activeNames = (path: string) => items.filter((item) => navigationItemIsActive(item, path)).map((item) => item.name);
-    expect(activeNames('/')).toEqual(['Dashboard']);
-    expect(activeNames('/students/42')).toEqual(['Student Directory']);
-    expect(activeNames('/students/operations')).toEqual(['Operations Audit']);
-    expect(activeNames('/reports/monthly')).toEqual(['Reports & Reviews']);
-    expect(activeNames('/reports/management/monthly')).toEqual(['Reports & Reviews']);
-    expect(activeNames('/analytics/management-review/student-profile')).toEqual(['Reports & Reviews']);
-    expect(activeNames('/analytics/trends')).toEqual(['Student Insights']);
-    expect(activeNames('/analytics/indicators')).toEqual(['Student Insights']);
-    expect(activeNames('/analytics/attendance')).toEqual(['Attendance']);
-    expect(activeNames('/enrollment')).toEqual(['Student Enrollment']);
-    expect(activeNames('/inventory')).toEqual(['Asset Inventory']);
+  it('matches exact, nested, detail, and compatibility routes to a single domain without duplicates', () => {
+    const activeDomain = (path: string) => activeNavigationEntry(navigationGroups, path)?.group.title;
+    expect(activeDomain('/')).toBe('Home');
+    expect(activeDomain('/attendance/followups')).toBe('Work Queue');
+    expect(activeDomain('/config/jenjang')).toBe('Settings');
+    expect(activeDomain('/attendance/departure-policies')).toBe('Settings');
+    expect(activeDomain('/students/42')).toBe('Students');
+    expect(activeDomain('/students/operations')).toBe('Students');
+    expect(activeDomain('/reports/monthly')).toBe('Insights & Reports');
+    expect(activeDomain('/reports/management/monthly')).toBe('Insights & Reports');
+    expect(activeDomain('/analytics/management-review/student-profile')).toBe('Insights & Reports');
+    expect(activeDomain('/analytics/trends')).toBe('Insights & Reports');
+    expect(activeDomain('/analytics/indicators')).toBe('Insights & Reports');
+    expect(activeDomain('/analytics/attendance')).toBe('Insights & Reports');
+    expect(activeDomain('/enrollment')).toBe('Students');
+    expect(activeDomain('/staff/42')).toBe('Staff');
+    expect(activeDomain('/inventory')).toBe('Inventory');
   });
 
   it.each([
@@ -158,7 +203,7 @@ describe('role-aware sidebar navigation', () => {
   it('keeps collapsed links named and exposes a usable expand control', async () => {
     const onToggleCollapsed = vi.fn();
     await renderSidebar({ collapsed: true, onToggleCollapsed, open: false });
-    expect(container.querySelector('a[href="/analytics/attendance"]')?.textContent).toContain('Attendance');
+    expect(container.querySelector('a[href="/analytics"]')?.textContent).toContain('Insights & Reports');
     const expand = container.querySelector('button[aria-label="Expand sidebar"]');
     expect(expand).not.toBeNull();
     await act(async () => (expand as HTMLButtonElement).click());
@@ -170,9 +215,7 @@ describe('role-aware sidebar navigation', () => {
 
     const sidebar = container.querySelector('aside');
     expect(sidebar?.className).toContain('w-64');
-    const analyticsGroup = Array.from(sidebar?.querySelectorAll('nav button') ?? []).find((button) => button.textContent?.includes('Analytics & Reports'));
-    expect(analyticsGroup?.hasAttribute('disabled')).toBe(false);
-    expect(container.querySelector('a[href="/analytics/attendance"]')?.textContent).toContain('Attendance');
+    expect(container.querySelector('a[href="/analytics"]')?.textContent).toContain('Insights & Reports');
   });
 
   it('provides a close control inside the open navigation dialog', async () => {
@@ -185,45 +228,29 @@ describe('role-aware sidebar navigation', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  it('operates disclosure groups by keyboard-compatible native buttons and preserves the active group', async () => {
-    await renderSidebar({ path: '/analytics' });
-    const workflowButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent?.includes('Attendance'));
-    const analyticsButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent?.includes('Analytics & Reports'));
-    expect(workflowButton).toBeDefined();
-    expect(analyticsButton).toBeDefined();
-    if (!workflowButton || !analyticsButton) throw new Error('Expected navigation disclosure buttons.');
-    await act(async () => workflowButton.click());
-    expect(workflowButton.getAttribute('aria-expanded')).toBe('false');
-    expect(analyticsButton.getAttribute('aria-expanded')).toBe('true');
-    expect(container.querySelector('a[href="/analytics"]')?.getAttribute('aria-current')).toBe('page');
+  it('supports arrow-key navigation across primary domain links', async () => {
+    await renderSidebar({ path: '/' });
+    const homeLink = container.querySelector<HTMLAnchorElement>('a[href="/"]');
+    const queueLink = container.querySelector<HTMLAnchorElement>('a[href="/operator/work-queue"]');
+    const settingsLink = container.querySelector<HTMLAnchorElement>('a[href="/settings"]');
+    expect(homeLink).not.toBeNull();
+    expect(queueLink).not.toBeNull();
+    expect(settingsLink).not.toBeNull();
+
+    homeLink?.focus();
+    await act(async () => {
+      homeLink?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(queueLink);
+
+    await act(async () => {
+      queueLink?.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(settingsLink);
   });
 
-  it('keeps navigation authorization identical to the canonical route contract', () => {
-    for (const item of navigationGroups.flatMap((group) => group.items)) expect(routeAuthorizations[item.path]).toBeDefined();
-  });
-
-  it('uses the reviewed six-group hierarchy and keeps configured links unique', () => {
-    expect(navigationGroups.map((group) => group.title)).toEqual([
-      'Overview', 'Attendance', 'Academic & Students', 'Analytics & Reports', 'Data Management', 'Administration',
-    ]);
-    expect(navigationGroups.map((group) => group.items.map((item) => item.name))).toEqual([
-      ['Dashboard', 'Setup & Readiness'],
-      ['Operator Work Queue', 'Class Attendance', 'Daily Attendance', 'Attendance Calendar', 'Monthly Recap Input', 'Monthly Reconciliation', 'Early Departures', 'Attendance Review', 'Attendance Corrections', 'Correction Review', 'Follow-Up Queue'],
-      ['Student Directory', 'Student Enrollment', 'Academic Management', 'Teacher Assignments', 'Grade Ledger', 'Assessment Operations'],
-      ['Management Analytics', 'Population Overview', 'Data Quality', 'Attendance', 'Academic Analytics', 'Student Insights', 'Reports & Reviews'],
-      ['Data Import & Export'],
-      ['Departure Policies', 'Grade Level Cutoff', 'HEB Overrides', 'Operations Audit', 'Employee Directory', 'Staff Monthly Activity', 'Monthly UPP Reports', 'Asset Inventory', 'Settings'],
-    ]);
-    for (const group of navigationGroups) expect(new Set(group.items.map((item) => item.icon)).size).toBe(group.items.length);
-  });
-
-  it('keeps every configured sidebar destination in the authenticated route table', () => {
+  it('keeps every configured sidebar and sub-domain destination in the authenticated route table', () => {
     const routePaths = new Set(Object.keys(routeAuthorizations));
     for (const item of navigationGroups.flatMap((group) => group.items)) expect(routePaths.has(item.path)).toBe(true);
-  });
-
-  it('filters Attendance Review using the same capability as its route', () => {
-    expect(visibleNavigationGroups({ auth: authFor(users.admin), isSingleUserMode: false }).flatMap((group) => group.items).map((item) => item.name)).toContain('Attendance Review');
-    expect(visibleNavigationGroups({ auth: authFor(users.staff), isSingleUserMode: false }).flatMap((group) => group.items).map((item) => item.name)).not.toContain('Attendance Review');
   });
 });

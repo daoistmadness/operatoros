@@ -16,6 +16,9 @@ test("@redact-compat @error-recovery a failed lazy route keeps the router error 
 
   await page.route(/\/assets\/AcademicAnalytics-[^/]+\.js$/, (route) => route.abort());
   await page.getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Insights & Reports", exact: true })
+    .click();
+  await page.getByRole("navigation", { name: "Insights & Reports navigation" })
     .getByRole("link", { name: "Academic Analytics", exact: true })
     .click();
 

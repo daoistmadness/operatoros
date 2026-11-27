@@ -25,21 +25,23 @@ export default function AttendanceDestination() {
   const ActiveView = selected.page;
 
   return <div className="space-y-5">
-    <nav aria-label="Attendance views" className="flex flex-wrap gap-2 border-b border-slate-200" role="tablist">
-      {VIEWS.map(({ id, label, icon: Icon }) => {
-        const params = new URLSearchParams(searchParams);
-        params.set("view", id);
-        return <Link
-          key={id}
-          to={`/analytics/attendance?${params.toString()}`}
-          role="tab"
-          aria-selected={selected.id === id}
-          aria-controls="attendance-view-panel"
-          className={cn("inline-flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm font-semibold", selected.id === id ? "border-brand text-brand" : "border-transparent text-slate-500 hover:text-slate-800")}
-        ><Icon aria-hidden="true" size={16} />{label}</Link>;
-      })}
-      {user?.role === "admin" && <Link to="/attendance/monthly-recap" className="ml-auto inline-flex min-h-11 items-center px-3 text-sm font-semibold text-slate-600 underline underline-offset-4">Monthly Recap Input</Link>}
-    </nav>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+      <nav aria-label="Attendance views" className="inline-flex flex-wrap items-center gap-1 rounded-lg bg-surface-muted p-1" role="tablist">
+        {VIEWS.map(({ id, label, icon: Icon }) => {
+          const params = new URLSearchParams(searchParams);
+          params.set("view", id);
+          return <Link
+            key={id}
+            to={`/analytics/attendance?${params.toString()}`}
+            role="tab"
+            aria-selected={selected.id === id}
+            aria-controls="attendance-view-panel"
+            className={cn("inline-flex min-h-9 items-center gap-2 rounded-md px-3 py-1.5 text-xs font-bold transition-colors sm:text-sm", selected.id === id ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+          ><Icon aria-hidden="true" size={16} />{label}</Link>;
+        })}
+      </nav>
+      {user?.role === "admin" && <Link to="/attendance/monthly-recap" className="inline-flex min-h-9 items-center px-2 text-xs font-semibold text-muted-foreground underline underline-offset-4 hover:text-foreground sm:text-sm">Monthly Recap Input</Link>}
+    </div>
     <section id="attendance-view-panel" role="tabpanel" aria-label={`${selected.label} attendance view`}>
       <Suspense fallback={<RouteLoadingFallback />}><ActiveView /></Suspense>
     </section>

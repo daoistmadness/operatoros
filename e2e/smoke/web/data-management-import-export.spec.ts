@@ -49,7 +49,8 @@ test("@data-management @legacy-routes @critical @release consolidates import and
   });
   await loginForFeature(page, { home: true });
 
-  await page.getByRole("link", { name: "Data Import & Export", exact: true }).click();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Settings", exact: true }).click();
+  await page.getByRole("navigation", { name: "Settings navigation" }).getByRole("link", { name: "Data Import & Export", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Data Import & Export" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Data Import & Export", exact: true })).toHaveCount(1);
 
@@ -172,7 +173,7 @@ test("@data-management @permissions @critical @release guards protected deep lin
     return response.status;
   });
   expect(expiredSessionStatus).toBe(204);
-  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Home", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("heading", { name: "System Analytics" })).toHaveCount(0);
 });

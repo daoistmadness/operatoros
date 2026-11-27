@@ -266,7 +266,7 @@ test('@error-recovery @release mobile navigation manages focus, dismissal, histo
   await expect(opener).toBeFocused();
 
   await opener.click();
-  await drawer.getByRole('link', { name: 'Management Analytics' }).click();
+  await drawer.getByRole('link', { name: 'Insights & Reports' }).click();
   await expect(page).toHaveURL(/\/analytics$/);
   await expect(drawer).toBeHidden();
   await expect(page.locator('#main-content')).toBeFocused();
@@ -274,7 +274,7 @@ test('@error-recovery @release mobile navigation manages focus, dismissal, histo
   await page.goBack();
   await expect(page).toHaveURL(/\/$/);
   await opener.click();
-  await expect(drawer.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+  await expect(drawer.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
   await drawer.getByRole('button', { name: 'Close navigation' }).click();
   await expect(opener).toBeFocused();
   const skipLink = page.getByRole('link', { name: 'Skip to main content' });

@@ -42,13 +42,16 @@ test("@analytics @critical attendance views share one destination and reuse repo
   }
 
   const navigation = page.getByRole("navigation", { name: "Primary navigation" });
-  await expect(navigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(8);
-  await expect(navigation.getByRole("link", { name: "Attendance", exact: true })).toHaveAttribute("href", "/analytics/attendance");
-  await expect(navigation.getByRole("link", { name: "Population Overview", exact: true })).toHaveAttribute("href", "/analytics/recapitulation");
-  await expect(navigation.getByRole("link", { name: "Reports & Reviews", exact: true })).toHaveAttribute("href", "/reports");
-  await expect(navigation.getByRole("link", { name: "Student Profile Review", exact: true })).toHaveCount(0);
-  await expect(navigation.getByRole("link", { name: "Executive Reports", exact: true })).toHaveCount(0);
-  await expect(navigation.getByRole("link", { name: "Monthly Management Report", exact: true })).toHaveCount(0);
+  await expect(navigation.getByRole("link", { name: "Insights & Reports", exact: true })).toHaveAttribute("href", "/analytics");
+  await navigation.getByRole("link", { name: "Insights & Reports", exact: true }).click();
+  const domainNavigation = page.getByRole("navigation", { name: "Insights & Reports navigation" });
+  await expect(domainNavigation.locator('a[href^="/analytics"]:visible, a[href^="/reports"]:visible')).toHaveCount(8);
+  await expect(domainNavigation.getByRole("link", { name: "Attendance Analytics", exact: true })).toHaveAttribute("href", "/analytics/attendance");
+  await expect(domainNavigation.getByRole("link", { name: "Population Overview", exact: true })).toHaveAttribute("href", "/analytics/recapitulation");
+  await expect(domainNavigation.getByRole("link", { name: "Reports & Reviews", exact: true })).toHaveAttribute("href", "/reports");
+  await expect(domainNavigation.getByRole("link", { name: "Student Profile Review", exact: true })).toHaveCount(0);
+  await expect(domainNavigation.getByRole("link", { name: "Executive Reports", exact: true })).toHaveCount(0);
+  await expect(domainNavigation.getByRole("link", { name: "Monthly Management Report", exact: true })).toHaveCount(0);
 
   const routes = [
     { path: "/analytics", title: "Management Overview" },
