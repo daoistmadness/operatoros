@@ -5,6 +5,7 @@ import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { inTransaction } from "@operatoros/db";
 import { addWorksheet, appendRows, autoSizeColumns, createWorkbook, safeExportFilename, styleHeader, writeXlsxWorkbook, XLSX_MIME_TYPE } from "@operatoros/excel";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 import { SchoolUnitCreateRequest, SchoolUnitListResponse, SchoolUnitResponse, SchoolUnitUpdateRequest, StaffAnalyticsSummary, StaffCreateRequest, StaffHistoryResponse, StaffImportCommitRequest, StaffImportCommitResponse, StaffImportPreviewResponse, StaffPositionMappingResponse, StaffPositionMappingUpdate, StaffProfileResponse, StaffSchoolUnitAssignmentCancelRequest, StaffSchoolUnitAssignmentCloseRequest, StaffSchoolUnitAssignmentCreateRequest, StaffStatusChangeRequest, StaffStatusChangeResponse, StaffUpdateRequest } from "@operatoros/contracts/staff";
 import { commitStaffImport, expirePendingStaffImportData, previewStaffImport, StaffImportError } from "./staff-import";
 import { staffAnalytics } from "./staff-metrics";
@@ -457,7 +458,7 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
     const user = auth(context, { set, ...ctx }, { capability: "import_staff" }); if (!user) return { detail: "Insufficient permissions" };
     try { return await previewStaffImport(context.database.client, new Uint8Array(await body.file.arrayBuffer()), body.file.name, user, today(context)); }
     catch (error) { const failure = error instanceof StaffImportError ? error : new StaffImportError(400, "Employee import preview failed."); set.status = failure.status; return { detail: failure.message }; }
-  }, { body: t.Object({ file: t.File() }), response: StaffImportPreviewResponse });
+  }, { body: t.Object({ file: t.File({ maxSize: 25 * 1024 * 1024 }) }), response: StaffImportPreviewResponse });
 
   app.post("/api/staff/import/commit", ({ body, set, ...ctx }: Context) => {
     const user = auth(context, { set, ...ctx }, { capability: "commit_staff_import" }); if (!user) return { detail: "Insufficient permissions" };
@@ -492,27 +493,35 @@ export function registerEmployeeManagementRoutes(app: any, context: AuthContext,
         )) AS school_unit_names
         FROM staff_members s ${where} ORDER BY s.full_name,s.id`, [unitAsOfDate, unitAsOfDate, ...filters.params]);
       const asOfDate = schoolLocalDate(context.now?.() ?? new Date());
-      const analytics = staffAnalytics(context.database.client, asOfDate, where, filters.params, asOfDate);
-      const workbook = createWorkbook({ exportType: "Employee directory" });
-      const employees = addWorksheet(workbook, "Employees");
-      const headers = ["Staff ID", "Name", "Status", "Position", "Unit", "NIP", "NUPTK", "DAPODIK", "Start Date", "End Date", "Tenure Months"];
-      if (includeSensitive) headers.push("NIK", "Birth Place", "Birth Date", "Email", "Phone", "Address");
-      appendRows(employees, [headers, ...members.map((member) => {
-        const tenure = calculateTenureMonths(member.employment_start_date, member.employment_end_date, member.employment_status, asOfDate);
-        const basic = [member.source_staff_id, member.full_name, member.employment_status, member.job_title_normalized ?? member.job_title_raw, member.school_unit_names, member.nip, member.nuptk, member.dapodik_status_normalized, member.employment_start_date, member.employment_end_date, tenure];
-        return includeSensitive ? [...basic, member.nik, member.birth_place, member.birth_date, member.email, member.phone, member.address] : basic;
-      })]);
-      styleHeader(employees); autoSizeColumns(employees);
-      const summary = addWorksheet(workbook, "Summary");
-      appendRows(summary, [["Metric", "Value"], ["As of date", asOfDate], ["Filter scope", JSON.stringify(filters.visible)], ["Total employees", analytics.workforce.total], ["Active", analytics.workforce.active], ["Former", analytics.workforce.former], ["Teaching", analytics.workforce.teaching], ["Non-teaching", analytics.workforce.non_teaching], ["NUPTK coverage (%)", analytics.nuptk.coverage.percentage], ["DAPODIK coverage (%)", analytics.dapodik.coverage.percentage]]);
-      styleHeader(summary); autoSizeColumns(summary);
-      const quality = addWorksheet(workbook, "Data Quality");
-      appendRows(quality, [["Field", "Present", "Missing", "Coverage (%)"], ...analytics.data_quality.fields.map((field) => [field.field, field.present, field.missing, field.coverage])]);
-      styleHeader(quality); autoSizeColumns(quality);
-      const bytes = await writeXlsxWorkbook(workbook);
-      inTransaction(context.database.client, () => audit(context.database.client, exportUser, "STAFF_EXCEL_EXPORT", "STAFF_IMPORT_BATCH", "EXPORT", ["export"], { row_count: members.length, filters: filters.visible, sensitive: includeSensitive }, includeSensitive ? "export_sensitive_staff_fields" : "export_staff"));
       const filename = safeExportFilename(`employee-directory-${asOfDate}.xlsx`);
-      return new Response(bytes, { headers: { "content-type": XLSX_MIME_TYPE, "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" } });
-    } catch (error) { set.status = error instanceof StaffImportError ? error.status : 409; return { detail: error instanceof StaffImportError ? error.message : "Employee export failed." }; }
+      return await createAdmittedXlsxResponse(
+        async () => {
+          const analytics = staffAnalytics(context.database.client, asOfDate, where, filters.params, asOfDate);
+          const workbook = createWorkbook({ exportType: "Employee directory" });
+          const employees = addWorksheet(workbook, "Employees");
+          const headers = ["Staff ID", "Name", "Status", "Position", "Unit", "NIP", "NUPTK", "DAPODIK", "Start Date", "End Date", "Tenure Months"];
+          if (includeSensitive) headers.push("NIK", "Birth Place", "Birth Date", "Email", "Phone", "Address");
+          appendRows(employees, [headers, ...members.map((member) => {
+            const tenure = calculateTenureMonths(member.employment_start_date, member.employment_end_date, member.employment_status, asOfDate);
+            const basic = [member.source_staff_id, member.full_name, member.employment_status, member.job_title_normalized ?? member.job_title_raw, member.school_unit_names, member.nip, member.nuptk, member.dapodik_status_normalized, member.employment_start_date, member.employment_end_date, tenure];
+            return includeSensitive ? [...basic, member.nik, member.birth_place, member.birth_date, member.email, member.phone, member.address] : basic;
+          })]);
+          styleHeader(employees); autoSizeColumns(employees);
+          const summary = addWorksheet(workbook, "Summary");
+          appendRows(summary, [["Metric", "Value"], ["As of date", asOfDate], ["Filter scope", JSON.stringify(filters.visible)], ["Total employees", analytics.workforce.total], ["Active", analytics.workforce.active], ["Former", analytics.workforce.former], ["Teaching", analytics.workforce.teaching], ["Non-teaching", analytics.workforce.non_teaching], ["NUPTK coverage (%)", analytics.nuptk.coverage.percentage], ["DAPODIK coverage (%)", analytics.dapodik.coverage.percentage]]);
+          styleHeader(summary); autoSizeColumns(summary);
+          const quality = addWorksheet(workbook, "Data Quality");
+          appendRows(quality, [["Field", "Present", "Missing", "Coverage (%)"], ...analytics.data_quality.fields.map((field) => [field.field, field.present, field.missing, field.coverage])]);
+          styleHeader(quality); autoSizeColumns(quality);
+          const bytes = await writeXlsxWorkbook(workbook);
+          inTransaction(context.database.client, () => audit(context.database.client, exportUser, "STAFF_EXCEL_EXPORT", "STAFF_IMPORT_BATCH", "EXPORT", ["export"], { row_count: members.length, filters: filters.visible, sensitive: includeSensitive }, includeSensitive ? "export_sensitive_staff_fields" : "export_staff"));
+          return { bytes, headers: { "content-type": XLSX_MIME_TYPE, "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" } };
+        },
+        (ctx as any).request?.signal,
+      );
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) { set.status = error.status; return { detail: error.message }; }
+      set.status = error instanceof StaffImportError ? error.status : 409; return { detail: error instanceof StaffImportError ? error.message : "Employee export failed." };
+    }
   }, { query: t.Object({ status: t.Optional(t.String()), search: t.Optional(t.String()), job_title: t.Optional(t.String()), position_id: t.Optional(t.String()), joined_from: t.Optional(t.String()), joined_to: t.Optional(t.String()), dapodik_status: t.Optional(t.String()), jenjang_id: t.Optional(t.String()), school_unit_id: t.Optional(t.String()), has_nuptk: t.Optional(t.String()), include_sensitive: t.Optional(t.String()) }) });
 }

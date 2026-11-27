@@ -133,3 +133,23 @@ export async function withExcelAdmission<T>(
     release();
   }
 }
+
+export function withExcelExportAdmission<T>(
+  run: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  return withExcelAdmission(0, run, signal);
+}
+
+export async function createAdmittedXlsxResponse(
+  build: () => Promise<{ bytes: Uint8Array; headers: Record<string, string> }>,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const release = await acquireExcelPermit(0, signal);
+  try {
+    const built = await build();
+    return new Response(built.bytes, { headers: built.headers });
+  } finally {
+    release();
+  }
+}

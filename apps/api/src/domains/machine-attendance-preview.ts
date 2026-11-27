@@ -16,6 +16,7 @@ import {
 import type { AuthContext, CurrentUser } from "../auth/service";
 import { capabilitiesForRole } from "../auth/capabilities";
 import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
+import { runMachineAttendanceSubprocess } from "../import/excel-subprocess";
 import { actor, legacyName } from "./core";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
 import { canonicalMachineLateness, cutoffPolicyForDate, loadCutoffPolicies, type MachineLateness } from "./term-lateness";
@@ -558,7 +559,9 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
     try {
       const buffer = await scope.file.arrayBuffer();
       if (buffer.byteLength > MAX_MACHINE_WORKBOOK_BYTES) return fail(ctx.set, 413, "The attendance-machine workbook is too large.");
-      const parsed = await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer));
+      const parsed = buffer.byteLength >= 64 * 1024
+        ? await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal })
+        : await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer), ctx.request?.signal);
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
       const projection = buildProjection(context, parsed, scope.academicYearId, scope.jenjangId, scope.year, fingerprint(buffer), evaluatedOn, new Set(capabilitiesForRole(user.role)));
       const page = Math.max(1, positive(ctx.body?.page) ?? 1);
@@ -594,7 +597,9 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       if (buffer.byteLength > MAX_MACHINE_WORKBOOK_BYTES) return fail(ctx.set, 413, "The attendance-machine workbook is too large.");
       const fileFingerprint = fingerprint(buffer);
       const evaluatedOn = schoolLocalDate(context.now?.() ?? new Date());
-      const previewParsed = await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer));
+      const previewParsed = buffer.byteLength >= 64 * 1024
+        ? await runMachineAttendanceSubprocess(buffer, scope.file.name, { signal: ctx.request?.signal })
+        : await withExcelAdmission(buffer.byteLength, () => parseMachineAttendanceWorkbook(buffer), ctx.request?.signal);
       const capabilities = new Set(capabilitiesForRole(user.role));
       const previewProjection = buildProjection(context, previewParsed, scope.academicYearId, scope.jenjangId, scope.year, fileFingerprint, evaluatedOn, capabilities);
       if (previewProjection.previewDigest !== expectedDigest) return stale(ctx.set);
@@ -668,7 +673,7 @@ export function machineAttendancePreviewRoutes(app: any, context: AuthContext): 
       return { detail: "The machine attendance import could not be applied. No attendance records were changed." };
     }
   }, {
-    body: t.Object({ file: t.File(), academic_year_id: t.String({ pattern: "^[1-9]\\d*$" }), jenjang_id: t.String({ pattern: "^[1-9]\\d*$" }), expected_preview_digest: t.String({ pattern: "^[a-f0-9]{64}$" }), confirmation: t.Literal(CONFIRMATION) }),
+    body: t.Object({ file: t.File({ maxSize: MAX_MACHINE_WORKBOOK_BYTES }), academic_year_id: t.String({ pattern: "^[1-9]\\d*$" }), jenjang_id: t.String({ pattern: "^[1-9]\\d*$" }), expected_preview_digest: t.String({ pattern: "^[a-f0-9]{64}$" }), confirmation: t.Literal(CONFIRMATION) }),
     response: MachineImportApplyResponseSchema,
   });
 }

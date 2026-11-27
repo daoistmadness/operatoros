@@ -3,6 +3,7 @@ import type { SqliteBinding, SqliteClient } from "@operatoros/db";
 import { inTransaction } from "@operatoros/db";
 import { isBlank, parseExcelDate, readXlsxWorkbook, safeExportFilename } from "@operatoros/excel";
 import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
+import { runXlsxReadSubprocess } from "../import/excel-subprocess";
 import { schoolLocalDate } from "./attendance-submission-deadline";
 
 type Row = Record<string, unknown>;
@@ -324,7 +325,9 @@ export async function previewStaffImport(db: SqliteClient, bytes: Uint8Array, fi
   if (!filename.toLowerCase().endsWith(".xlsx") || !bytes.byteLength || bytes.byteLength > 25 * 1024 * 1024) throw new StaffImportError(400, "Choose a non-empty XLSX file smaller than 25 MB.");
   let workbook;
   try {
-    workbook = await withExcelAdmission(bytes.byteLength, () => readXlsxWorkbook(bytes));
+    workbook = bytes.byteLength >= 64 * 1024
+      ? await runXlsxReadSubprocess(bytes.slice().buffer, filename)
+      : await withExcelAdmission(bytes.byteLength, () => readXlsxWorkbook(bytes));
   } catch (error) {
     if (error instanceof ExcelAdmissionError) throw new StaffImportError(error.status, error.message);
     throw new StaffImportError(400, "Workbook could not be read. Check that it is a valid XLSX file.");

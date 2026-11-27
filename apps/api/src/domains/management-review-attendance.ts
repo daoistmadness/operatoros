@@ -10,6 +10,7 @@ import {
   type TermLatenessResponse,
 } from "@operatoros/contracts/analytics";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 import { actor } from "./core";
 import { effectiveAcademicTerms } from "./academic-timeline";
 import { termAttendance } from "./term-attendance";
@@ -351,15 +352,27 @@ export function managementReviewAttendanceRoutes(app: any, context: AuthContext)
     const user = actor(context, ctx, { capability: "export_student_data" });
     if (!user) return { detail: "Insufficient permissions" };
     try {
-      const report = buildManagementReviewAttendanceReport(context, ctx.query);
-      const bytes = await managementReviewAttendanceWorkbook(report);
-      auditExport(context, user, report);
-      return new Response(bytes, { headers: {
-        "content-type": XLSX_MIME_TYPE,
-        "content-disposition": `attachment; filename="${report.filename}"`,
-        "cache-control": "no-store, no-cache, must-revalidate, private",
-      } });
+      return await createAdmittedXlsxResponse(
+        async () => {
+          const report = buildManagementReviewAttendanceReport(context, ctx.query);
+          const bytes = await managementReviewAttendanceWorkbook(report);
+          auditExport(context, user, report);
+          return {
+            bytes,
+            headers: {
+              "content-type": XLSX_MIME_TYPE,
+              "content-disposition": `attachment; filename="${report.filename}"`,
+              "cache-control": "no-store, no-cache, must-revalidate, private",
+            },
+          };
+        },
+        ctx.request?.signal,
+      );
     } catch (cause) {
+      if (cause instanceof ExcelAdmissionError) {
+        ctx.set.status = cause.status;
+        return { detail: { code: cause.code, message: cause.message } };
+      }
       const status = cause instanceof Error && "status" in cause ? Number(cause.status) : 500;
       ctx.set.status = status;
       const code = cause instanceof Error && "code" in cause ? String(cause.code) : "MANAGEMENT_REVIEW_EXPORT_FAILED";

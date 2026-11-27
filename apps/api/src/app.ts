@@ -56,6 +56,7 @@ import { uppReportRoutes } from "./domains/upp-reports";
 import { registerStudentAdmin } from "./domains/student-admin";
 import { inventoryRoutes } from "./domains/inventory";
 import { openApiDocumentation } from "./openapi-contract";
+import { admitExcelUploadRequest, releaseExcelUploadRequest } from "./import/excel-upload-admission";
 
 export interface AppError { error: { code: string; message: string } }
 
@@ -70,7 +71,22 @@ export function createApp(_config: Partial<BackendConfig> = {}) {
   const context = database && _config.auth?.authCookieSecret ? { database, config: securityConfig, passwordVerifier: _config.passwordVerifier, loginRateLimiter: new LoginRateLimiter(securityConfig.rateLimit), now: _config.clock ?? (() => new Date()) } : null;
   let applicationRoutesRegistered = false;
   const app = new Elysia({ name: "operatoros-api" })
-    .onError(({ code, set }) => {
+    .onRequest(({ request, set }) => {
+      const decision = admitExcelUploadRequest(request);
+      if (!decision.admitted) {
+        set.status = decision.status;
+        set.headers["content-type"] = "application/json";
+        return { detail: decision.detail };
+      }
+    })
+    .onAfterHandle(({ request }) => {
+      releaseExcelUploadRequest(request);
+    })
+    .onAfterResponse(({ request }) => {
+      releaseExcelUploadRequest(request);
+    })
+    .onError(({ code, request, set }) => {
+      releaseExcelUploadRequest(request);
       set.headers["content-type"] = "application/json";
       if (code === "VALIDATION") {
         set.status = 400;

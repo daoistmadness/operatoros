@@ -87,7 +87,13 @@ templates keep their current compatibility behavior.
   worksheet/row/column/cell budgets (`EXCEL_RESOURCE_LIMITS`), and sparse row
   iteration in `readXlsxWorkbook()` to prevent rectangular empty-cell blowup.
 - Heavy Excel upload and parse routes share a bounded admission controller
-  (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in `apps/api`.
+  (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in `apps/api`,
+  paired with early request admission (`maxActiveUploads=2`,
+  `maxInFlightBytes=50 MiB`) in `apps/api/src/import/excel-upload-admission.ts`,
+  shared export stream admission (`createAdmittedXlsxResponse`), and a
+  short-lived `--smol` parser subprocess (`excel-subprocess.ts` /
+  `excel-parser-child.ts`) with `SIGKILL` + `proc.exited` reaping before permit
+  release.
 - An attendance parser worker owns its admission permit until it replies with
   a result or a parser error. Timeout and worker failure reject the request
   and request termination. If parser completion remains unconfirmed, the
