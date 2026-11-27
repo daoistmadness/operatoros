@@ -1287,15 +1287,15 @@
       ]
     },
     "source:apps/web/src/pages/AttendanceAnalytics.tsx": {
-      "fingerprint": "fc7c58f500ef5aa70a3f1eba1eb5e64c7f9ddcd3f799b5fef8fe37c9cbe7229a",
+      "fingerprint": "2c6cb5ecf5a9e3dcf286dbb9bdcdd1bf4326277865b3464672b1e9ff74422e7b",
       "snapshot": {
-        "apps/web/src/pages/AttendanceAnalytics.tsx": "872b586a7688fc9e088c21aa517dfacbe56bec9893c62d0ca625ed7a58f688aa"
+        "apps/web/src/pages/AttendanceAnalytics.tsx": "2b4009b6dc12b759710d223a36198fc933063ba666e771d0d71f3555d922ca78"
       },
-      "head": "1b71806c52b51b40fafcd139dab11dc7ed91e4e2",
+      "head": "cad11976d88a2be75adbd10db663a5a490a1f883",
       "outcome": "no-change",
-      "reason": "Reviewed all pending changes against the repository's registered Intent guidance and planning artifacts. This branch is the authorized React Router to TanStack Router web migration, its auth/calendar/navigation regression coverage, and supporting docs/tooling. The repository exposes only the Elysia skill; no Elysia API behavior, skill content, or planning artifact was changed, and AGENTS.md explicitly permits TanStack Router while docs/architecture/ui-and-routing.md documents the routing architecture. No Intent guidance update is warranted.",
+      "reason": "The Attendance Overview reflow fix and viewport regression test stay in the web application. Elysia API behavior and owned skill guidance are unchanged.",
       "evidence": [
-        "Changed: apps/web/src/pages/AttendanceAnalytics.tsx at 1b71806c52b51b40fafcd139dab11dc7ed91e4e2"
+        "Changed: apps/web/src/pages/AttendanceAnalytics.tsx at cad11976d88a2be75adbd10db663a5a490a1f883"
       ]
     },
     "source:packages/ui/tests/ui.test.tsx": {
@@ -8639,15 +8639,15 @@
       ]
     },
     "source:e2e/smoke/web/attendance-analytics.spec.ts": {
-      "fingerprint": "31743590a01f9fdd4b7550e3a60015c537d2e341bfba08b62f72fdf5eb45f183",
+      "fingerprint": "75246bf61ba24e469f1ce1f2dd7ca3b181657801f87ac675b07e38a441388391",
       "snapshot": {
-        "e2e/smoke/web/attendance-analytics.spec.ts": "56dcb52f2034b8ab181d46a237b4035666ab3fa598d0a8bed2e3e49d9323e768"
+        "e2e/smoke/web/attendance-analytics.spec.ts": "c8fe09aa9be4867a68146ba29d0bc3dce2efe3f082f23ed8e8bca6f41941aac7"
       },
-      "head": "df94b6c1760669c8a67f318abcca050625081157",
+      "head": "cad11976d88a2be75adbd10db663a5a490a1f883",
       "outcome": "no-change",
-      "reason": "Reviewed the pending snapshots. The branch changes application auth, dependency remediation, E2E coverage, and test guidance, but does not change the Elysia skill or require new authoring or planning guidance.",
+      "reason": "The Attendance Overview reflow fix and viewport regression test stay in the web application. Elysia API behavior and owned skill guidance are unchanged.",
       "evidence": [
-        "Changed: e2e/smoke/web/attendance-analytics.spec.ts at df94b6c1760669c8a67f318abcca050625081157"
+        "Changed: e2e/smoke/web/attendance-analytics.spec.ts at cad11976d88a2be75adbd10db663a5a490a1f883"
       ]
     },
     "source:e2e/smoke/web/attendance-machine-preview.spec.ts": {

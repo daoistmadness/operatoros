@@ -8,6 +8,12 @@ test("@attendance @analytics @release attendance analytics keeps filter scope ac
   await expect(page.getByRole("heading", { name: "By Class" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Students" })).toBeVisible();
 
+  const desktop = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: 844 });
+  await expect(page.getByRole("table", { name: "Student attendance totals" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  await page.setViewportSize(desktop);
+
   const refresh = page.waitForResponse((response) => {
     if (!response.url().includes("/api/analytics/attendance/overview")) return false;
     return new URL(response.url()).searchParams.get("date_from") === "2026-07-02";
