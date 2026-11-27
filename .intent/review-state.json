@@ -1632,17 +1632,15 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "587221fed3a286b330a3b89dc356539436250921beab5fc7ee917babbe4eb0de",
+      "fingerprint": "0958aaac4dba4dc11bc150300fe68511f171cb948890c2838197ea6997504157",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "ea4b9b3b677caafe76dc5c0aad186af2fa4046e404fcaa117d4d0dafbe2511f6"
+        "apps/api/src/import/excel-reader.ts": "5c80dd42878b958e0ac22a4cbaf5d4a8eda988ec12b03868cea056c79a1e84f8"
       },
-      "head": "32821473657e657bb1ca34bcda483bbc340419ec",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "The API change restores Bun at the runtime boundary while preserving existing route, authorization, hash compatibility, backup, and worker behavior; no new framework or domain skill task is needed beyond the updated project runtime note.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "bun run --filter @operatoros/api typecheck passed; full API suite 441/441 passed twice; focused security suite 14/14 passed.",
-        "The full synthetic release run also exercised worker imports, backup/restore, and server restart behavior.",
-        "packages/agent-skills/docs/elysiajs.md records the Bun-specific source guidance."
+        "Changed: apps/api/src/import/excel-reader.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
@@ -1722,15 +1720,15 @@
       ]
     },
     "source:apps/api/src/domains/attendance-import.ts": {
-      "fingerprint": "defb23f425c99ded17cb661f24dda16afaa5a058dc1b2cfa68afdefbd7ad2ffe",
+      "fingerprint": "c532b8c1e60f6801df5541be9fa86a88f1bbc3934640013dbcc8a386ba6d5d12",
       "snapshot": {
-        "apps/api/src/domains/attendance-import.ts": "b353b0d834024f33c614ccf72641d0524cd84b2d423b33cf50dcec3514a83f5e"
+        "apps/api/src/domains/attendance-import.ts": "3aa67a1618b2f1d7aad0fa33b2aac76ce37c94d4e0d24abc7467ee1335d17c01"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/attendance-import.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/attendance-import.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:docs/README.md": {
@@ -2958,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "fe1e670ba50b6238e6584e24a000f0fd9a50ab38829e799ba1371b42df9ee39a",
+      "fingerprint": "fa3d8ba77879a36624b5e261ec1bf146228ffa0960377f81cdce8216ffdffdb4",
       "snapshot": {
-        "CHANGELOG.md": "0792af07de25d87226a58fbf4c995b416743aa4914a12390cdb4beb6c97e0ed7"
+        "CHANGELOG.md": "16bc9def21c5a1bd040297abaa7908ce093c9692fd43f6283246beb59f818ff2"
       },
-      "head": "9ca4a4e6d51e18f21af253cce00882507abae218",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "The changelog links the assigned Phase 5 pull request. Elysia behavior and registered Intent guidance are unchanged.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 9ca4a4e6d51e18f21af253cce00882507abae218"
+        "Changed: CHANGELOG.md at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:COMMANDS.md": {
@@ -3291,17 +3289,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "24455ed82c2c0cf98b09fcbd3994e9e38a656fcd3d025e8655dd87d6a9891878",
+      "fingerprint": "cc04e1d436da0edf2c24c14f7a0a4768c7629528698a5b3ea457a83c794d9c1b",
       "snapshot": {
-        "docs/architecture/excel.md": "12ebb8f02d04e804e13a7cc6c7f9cc591003c2983fd60fdcd472978b17887821"
+        "docs/architecture/excel.md": "336d4d6319034adc8eacf900817fb55212eb59f85271ee4b1f7659463ef41452"
       },
-      "head": "e4223763eff9b070a61b4cf1950256cd467f86e1",
-      "outcome": "out-of-scope",
-      "reason": "This repository-local toolchain, CI, documentation, or validation change serves the OperatorOS development workflow; it does not add or change an Elysia framework behavior or a distinct reusable library skill.",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "docs/architecture/excel.md was reviewed in the proposed change at e4223763eff9b070a61b4cf1950256cd467f86e1.",
-        "The registered skill is limited to Elysia backend implementation and route testing; its testing reference continues to describe Bun tests and app.handle().",
-        "Relevant API verification passed: 442 tests, 0 failures; clean affected Turbo graph passed against fd7634fd59b71cc44ce3ce4a431b3cc9b3ec6ac9."
+        "Changed: docs/architecture/excel.md at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -5689,15 +5685,15 @@
       ]
     },
     "source:apps/api/src/domains/upp-reports.ts": {
-      "fingerprint": "267215b271182d013f204d52ba283d4f6b05b98f33b4214899bdf6faa4392582",
+      "fingerprint": "696206e3d91332dcb3ed02c1bdde45cad01981f32d796b467225a626aff5ff2b",
       "snapshot": {
-        "apps/api/src/domains/upp-reports.ts": "4dff61d6325aadc12815a63bea7a2b648eb79ed5d34fda185b3262bdfe849072"
+        "apps/api/src/domains/upp-reports.ts": "82facdfe8cbd58d404c9d1949f06dddc40b723cc5a6dc2b3e5115f7179554cc5"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/upp-reports.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/upp-reports.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:apps/api/src/security/backup-payload.ts": {
@@ -8273,15 +8269,15 @@
       ]
     },
     "source:apps/api/src/domains/roster.ts": {
-      "fingerprint": "44824d8728ed9054c216bdb66c2e3b7ba3ab43613080af374b1fed4729615512",
+      "fingerprint": "2d7376694a17d06a3d59fd84b3cd760040686dd8e520ad3004098d487f9d6b6c",
       "snapshot": {
-        "apps/api/src/domains/roster.ts": "fb56c2d1f473d47993422b8e05e17635ee2bd607d775db83c4ae5829e4a304fe"
+        "apps/api/src/domains/roster.ts": "e12c473deb54f725756cd7b0a1950545de622a727946e9f0a9a00f357d54f904"
       },
-      "head": "a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "Reviewed changed API, contract, frontend, and permission-test source against existing workspace ownership and Elysia v1 guidance. DTOs match current successful route payloads and do not require guidance updates. Contract, API, and web typechecks, architecture check, and diff check passed; authored behavior suites were not run.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/roster.ts at a2bcb1dc3c27f62fefc7bd9d584bcd63cd22d812"
+        "Changed: apps/api/src/domains/roster.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:apps/api/src/domains/student-import-sessions.ts": {
@@ -8297,15 +8293,15 @@
       ]
     },
     "source:apps/api/src/domains/student-update.ts": {
-      "fingerprint": "99eabfddf774249ed511ef12c77b8f4ed6bda4d62342a213b8dc149b95702b2b",
+      "fingerprint": "530fea1798bb6e55a0a180b23ca785f71928a47b0231b8ca1ea5778990b753c1",
       "snapshot": {
-        "apps/api/src/domains/student-update.ts": "f30c78d3507fd397df216e940735eab75666c41c8bcdd0eb22dea1413e8c93ce"
+        "apps/api/src/domains/student-update.ts": "fac9bbf6bc190ba4c69c9f0fef7cb851330a2c1e1054fd731f1a862cb039e43f"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/student-update.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/api/src/domains/student-update.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:apps/web/src/api/jenjangConfig.ts": {
@@ -8987,15 +8983,15 @@
       ]
     },
     "source:packages/excel/src/legacy.ts": {
-      "fingerprint": "49a959f0bb4a8c5dc09ab53b438ce18fa541893a743376530c7f797713582d5b",
+      "fingerprint": "acd7d3e5293a6bb19aea8caecce1594c899cb03602fdb4ab3f2ec44405603b0d",
       "snapshot": {
-        "packages/excel/src/legacy.ts": "7b942154f4f2ea8c10ff023f21cac151477ccf2bcdf11fd19601c517a3ec596e"
+        "packages/excel/src/legacy.ts": "4147c3424ab2234238067c6f4b0f6c613c071e7ec4829077783d64b6c964c14d"
       },
-      "head": "3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "Update lazy loader and test path resolution",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: packages/excel/src/legacy.ts at 3e9555aac80f7e1c492e0431e2fe4ef57cb9b4d6"
+        "Changed: packages/excel/src/legacy.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:packages/excel/tests/excel.test.ts": {
@@ -9071,15 +9067,15 @@
       ]
     },
     "source:packages/sheetjs-fork/UPSTREAM.md": {
-      "fingerprint": "2bd730882ede325142a40c13f8ee0bd22d3fec59b6a3859447a689c38988b21a",
+      "fingerprint": "e97db398bcf14e9394a0da3e1f971ed7552873d274f47c2c2b5019d0da0330ed",
       "snapshot": {
-        "packages/sheetjs-fork/UPSTREAM.md": "317aeb429cfbf13738ff95aaa93d0177d6773e3cae4658c23138b0e297f23b72"
+        "packages/sheetjs-fork/UPSTREAM.md": "95fc5b8343998527586c5b733f190e41a7c62926a1dfb656e1596740f163baf7"
       },
-      "head": "80c86ce66bbbd73fede6addf3624944cae7bf7d3",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "Vendor trimmed SheetJS fork and implement lazy loading (#352)",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: packages/sheetjs-fork/UPSTREAM.md at 80c86ce66bbbd73fede6addf3624944cae7bf7d3"
+        "Changed: packages/sheetjs-fork/UPSTREAM.md at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:packages/sheetjs-fork/dist/cpexcel.js": {
@@ -9467,15 +9463,15 @@
       ]
     },
     "source:apps/api/src/domains/staff-import.ts": {
-      "fingerprint": "82d524b470ad25b25080d029aa549e4cca4d6a68a7a0c0d99fe37fbd6abca5ae",
+      "fingerprint": "c24d1fdb5d9ce79733327005fb5c5a4c27a5764dd1d015cfe54fdc7c3c7443d2",
       "snapshot": {
-        "apps/api/src/domains/staff-import.ts": "3556ea4e07df4c54e01fdca6ec93e5aa00f5163b63150239dfac6990449478f8"
+        "apps/api/src/domains/staff-import.ts": "657aa3e83f65b5fa24b6e377cc50447e7ade76a167ee67a88529533dbcf5fd11"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/staff-import.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/staff-import.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     },
     "source:apps/api/src/domains/student-overview.ts": {
@@ -11829,6 +11825,90 @@
       "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
         "Changed: e2e/smoke/web/record-directory-context.spec.ts at c0a35ed3010d20adbac18874a993f37e9087488e"
+      ]
+    },
+    "source:apps/api/src/domains/machine-attendance-preview.ts": {
+      "fingerprint": "19a41ad87df57e53ae6a22bd56e74cab938118102fa79dfdb88efeb06af8608f",
+      "snapshot": {
+        "apps/api/src/domains/machine-attendance-preview.ts": "ff161cf3348f400987b5fd78a0f506268ba52216d107e1360840f3a852af6a6d"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/domains/machine-attendance-preview.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:apps/api/src/import/excel-admission.ts": {
+      "fingerprint": "1d0c4a44f52dc06aa122c684083f56faa64b9e8a32b1f493e279be7a521d757a",
+      "snapshot": {
+        "apps/api/src/import/excel-admission.ts": "ff16c4cdec507ee9952241c8d2d0268851bf08ed2cd480c08db924e43d57e132"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-admission.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:apps/api/tests/excel-admission.test.ts": {
+      "fingerprint": "d358c8e8b6081b48058ab0797d9f12aa205f44f4f76c0c1700c11b7a5160c5be",
+      "snapshot": {
+        "apps/api/tests/excel-admission.test.ts": "bd40449372b5ee0e9fa3cc6043ecd77a76764b149769383c812f630e6324d30d"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-admission.test.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:packages/excel/src/index.ts": {
+      "fingerprint": "b14a990f1eff7b85f1c205e1ffd4d38396074ca2a9514a3015d0aa445d59f6b4",
+      "snapshot": {
+        "packages/excel/src/index.ts": "5e9459d065c68f4f93a53e4f840aaa0548eaec4360790f434a4b978b10df5894"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/src/index.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:packages/excel/src/limits.ts": {
+      "fingerprint": "2138f7347737bb53fafe6523eed168793792f17724a0ba7da785bebf0196adde",
+      "snapshot": {
+        "packages/excel/src/limits.ts": "fc468110e502b32c1dcb37bff96e774d9da4dd0765fac5024c2763dfdb527ffc"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/src/limits.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:packages/excel/src/workbook.ts": {
+      "fingerprint": "37f6829d4d735ee48bc8d7a96f986e804b2a269de0467d857833957ff4b61e02",
+      "snapshot": {
+        "packages/excel/src/workbook.ts": "bb25c7e523f5181cc22e546abeeb7d7f0131d5cd14490c39ffa5def912a801ed"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/src/workbook.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+      ]
+    },
+    "source:packages/excel/tests/security-containment.test.ts": {
+      "fingerprint": "921bf4ae58d7108e261862468dabd329fd71220393bb2e7be1e0972e621a3da7",
+      "snapshot": {
+        "packages/excel/tests/security-containment.test.ts": "fd2ca9a4938bd8a1b9a0a0fb241d07b14c0a6e17a30677b2fc62bb4fdec5a192"
+      },
+      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "outcome": "no-change",
+      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: packages/excel/tests/security-containment.test.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
       ]
     }
   }
