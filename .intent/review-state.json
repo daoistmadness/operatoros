@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "71926d5391c3bea32df259b3bd4855797f27577fe84a374558a4247970359243",
+      "fingerprint": "c9960252a3218b6b9b4cd5c40d41b368269a5b170c3d14f3a9f88e6e4d865964",
       "snapshot": {
-        "CHANGELOG.md": "082e0ba0e95fb1ef7a8bcde2d13faab8d36c3c723034b062d9a5ba398e0bc519"
+        "CHANGELOG.md": "5c3d3cfed163ca601b866a40b82d8175528ebe01b815dd70e6a23f4c304c2b98"
       },
-      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
+      "head": "0bb2a5dccd98d3efa07df1301f94a2b04e1df559",
       "outcome": "no-change",
-      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
+      "reason": "Added the assigned PR number to the already reviewed Unreleased stabilization entry; no skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
+        "Changed: CHANGELOG.md at 0bb2a5dccd98d3efa07df1301f94a2b04e1df559"
       ]
     },
     "source:COMMANDS.md": {
