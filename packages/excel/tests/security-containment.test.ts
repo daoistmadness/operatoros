@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { deflateRawSync } from "node:zlib";
 import {
   addWorksheet,
   appendRow,
@@ -11,13 +12,20 @@ import {
   loadXlsxWorkbook,
   readLegacyXlsRows,
   readXlsxWorkbook,
+  validateXlsxActualUncompressedBytes,
   validateLegacyXlsContainer,
   validateXlsxContainer,
   writeLegacyXlsRows,
   writeXlsxWorkbook,
 } from "@operatoros/excel";
 
-function buildSyntheticZip(entries: Array<{ name: string; data?: Uint8Array; flags?: number; uncompressedSizeOverride?: number }>): Uint8Array {
+function buildSyntheticZip(entries: Array<{
+  name: string;
+  data?: Uint8Array;
+  flags?: number;
+  compressionMethod?: 0 | 8;
+  uncompressedSizeOverride?: number;
+}>): Uint8Array {
   const localChunks: Uint8Array[] = [];
   const cdChunks: Uint8Array[] = [];
   let offset = 0;
@@ -27,18 +35,21 @@ function buildSyntheticZip(entries: Array<{ name: string; data?: Uint8Array; fla
     const nameBytes = encoder.encode(entry.name);
     const data = entry.data ?? new Uint8Array(0);
     const flags = entry.flags ?? 0;
+    const compressionMethod = entry.compressionMethod ?? 0;
+    const compressedData = compressionMethod === 8 ? deflateRawSync(data) : data;
     const uncompressedSize = entry.uncompressedSizeOverride ?? data.length;
 
-    const local = new Uint8Array(30 + nameBytes.length + data.length);
+    const local = new Uint8Array(30 + nameBytes.length + compressedData.length);
     const lv = new DataView(local.buffer);
     lv.setUint32(0, 0x04034b50, true);
     lv.setUint16(4, 20, true);
     lv.setUint16(6, flags, true);
-    lv.setUint32(18, data.length, true);
+    lv.setUint16(8, compressionMethod, true);
+    lv.setUint32(18, compressedData.length, true);
     lv.setUint32(22, uncompressedSize, true);
     lv.setUint16(26, nameBytes.length, true);
     local.set(nameBytes, 30);
-    local.set(data, 30 + nameBytes.length);
+    local.set(compressedData, 30 + nameBytes.length);
     localChunks.push(local);
 
     const cd = new Uint8Array(46 + nameBytes.length);
@@ -47,7 +58,8 @@ function buildSyntheticZip(entries: Array<{ name: string; data?: Uint8Array; fla
     cv.setUint16(4, 20, true);
     cv.setUint16(6, 20, true);
     cv.setUint16(8, flags, true);
-    cv.setUint32(20, data.length, true);
+    cv.setUint16(10, compressionMethod, true);
+    cv.setUint32(20, compressedData.length, true);
     cv.setUint32(24, uncompressedSize, true);
     cv.setUint16(28, nameBytes.length, true);
     cv.setUint32(42, offset, true);
@@ -133,6 +145,25 @@ describe("@operatoros/excel security & resource containment", () => {
       Array.from({ length: 10 }, (_, i) => ({ name: `xl/item${i}.xml` })),
     );
     expect(() => validateXlsxContainer(manyEntries, { maxZipEntries: 5 })).toThrow("EXCEL_ZIP_ENTRY_LIMIT_EXCEEDED");
+  });
+
+  it("enforces actual streamed ZIP output when central-directory sizes underreport it", async () => {
+    const misleadingSizeBomb = buildSyntheticZip([{
+      name: "xl/worksheets/sheet1.xml",
+      data: new Uint8Array(1024 * 1024).fill(0x41),
+      compressionMethod: 8,
+      uncompressedSizeOverride: 1,
+    }]);
+
+    expect(() => validateXlsxContainer(misleadingSizeBomb, { maxUncompressedBytes: 64 * 1024 })).not.toThrow();
+    await expect(
+      validateXlsxActualUncompressedBytes(misleadingSizeBomb, { maxUncompressedBytes: 64 * 1024 }),
+    ).rejects.toThrow("EXCEL_UNCOMPRESSED_SIZE_LIMIT_EXCEEDED");
+    const parseError = await loadXlsxWorkbook(misleadingSizeBomb, { maxUncompressedBytes: 64 * 1024 })
+      .then(() => null, (error: unknown) => error);
+    expect(parseError).toBeInstanceOf(ExcelWorkbookParseError);
+    expect((parseError as { cause?: { message?: string } } | null)?.cause?.message)
+      .toBe("EXCEL_UNCOMPRESSED_SIZE_LIMIT_EXCEEDED");
   });
 
   it("rejects invalid or oversized legacy XLS containers", () => {

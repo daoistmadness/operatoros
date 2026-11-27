@@ -1,13 +1,15 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
 # Production origin and cookie profile
 
 Environment profile for the canonical Docker Compose production deployment on
 OPRSERVER with Elysia API and Caddy reverse proxy over Tailscale HTTPS.
-The application runtime is local-first SQLite (current schema S5.6, `20261126_s56`) with persistent volume mounts.
+The application runtime is local-first SQLite. The current source schema is S5.7
+(`20261127_s57`). The latest documented production acceptance records S5.6
+(`20261126_s56`); verify the exact deployment receipt before migration.
 
 The defaults in `apps/api/src/config.ts` are loopback-oriented. A LAN, hostname,
 or HTTPS deployment must set the variables below explicitly; the origin checks
@@ -94,36 +96,17 @@ The profile is enforced by the API test suite. Relevant tests by name:
   from the canonical root"; "fails fast when DATABASE_URL disagrees with the
   canonical root"; "two apps use their own config values".
 
-## Podman deployment status
+## Deployment reference
 
-A single-host Podman deployment is proposed in
-[the Podman deployment decision](../decisions/podman-deployment.md). It is not
-supported or approved until production image and Quadlet inputs exist and an
-authorized Ubuntu rehearsal passes. The current rootless Podman workflow is for
-local development only.
-
-For a later approved deployment, use the designated rootless account to inspect
-the approved Podman services. Treat observed host values as facts only after
-checking the host inventory and release record.
-
-For an authorized, non-invasive review, list container names, states, and
-published ports. Inspect only explicitly selected metadata fields. Compare
-observed listeners and routes with the approved exposure plan. A read-only
-`GET` to a verified health URL may confirm service response; the direct API
-`/health` contract is HTTP 200 with `{"status":"ok"}`. This does not establish
-host-firewall or upstream reachability. Inspect TLS certificate subject,
-issuer, validity, and fingerprint without exporting private keys. Review only a
-bounded log window and sanitize it before recording.
-
-Do not trigger a health check, log in, or send another state-changing request
-without approval for that operation. Do not copy, hash, snapshot, or run
-integrity checks on a production database. Never place credentials, cookies,
-student data, database material, or unredacted logs in evidence. Record only
-sanitized results and SHA-256 hashes of permitted evidence artifacts.
+Production uses Docker Engine and Docker Compose with Caddy and Tailscale HTTPS.
+Follow the [canonical Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md)
+and [release-bundle qualification procedure](../runbooks/release-bundles.md).
+Historical Podman and Quadlet deployment guidance is superseded and is not an
+operational path.
 
 ## Related
 
-- [Ubuntu server deployment proposal](../runbooks/ubuntu-server-deployment.md) (draft).
+- [Ubuntu server deployment runbook](../runbooks/ubuntu-server-deployment.md) (canonical Docker Compose operations).
 - [Offline install procedure](../guides/offline-install.md) (draft).
 - [Log rotation procedure](../runbooks/log-rotation.md) (draft).
 - [Backup and restore](../runbooks/backup-restore.md), [Secret rotation](../runbooks/secret-rotation.md), [Security model](security-model.md).

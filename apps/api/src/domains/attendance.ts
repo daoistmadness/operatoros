@@ -20,6 +20,7 @@ import {
 } from "@operatoros/contracts/attendance";
 import { inTransaction } from "@operatoros/db";
 import { actor } from "./core";
+import { hasAttendanceClassAccess, hasAttendanceRecordAccess } from "./attendance-access";
 import { insertCanonicalAttendanceRecord } from "./attendance-rules";
 import { classifyLateness, cutoffPolicyForDate, loadCutoffPolicies } from "./term-lateness";
 import { capabilitiesForRole } from "../auth/capabilities";
@@ -272,37 +273,6 @@ function correctionReviewRoutes(app: any, context: AuthContext): void {
     };
     return response;
   }, { query: AttendanceCorrectionReviewQuerySchema, response: AttendanceCorrectionReviewResponseSchema });
-}
-
-function hasAttendanceClassAccess(context: AuthContext, userId: number, classId: number, date?: string | null): boolean {
-  const where = ["user_id = ?", "academic_class_id = ?", "active = 1"];
-  const params: any[] = [userId, classId];
-  if (date) {
-    where.push("(effective_from IS NULL OR effective_from <= ?)", "(effective_to IS NULL OR effective_to >= ?)");
-    params.push(date, date);
-  }
-  return Boolean(row(context, `SELECT id FROM teacher_class_assignments WHERE ${where.join(" AND ")}`, params));
-}
-
-function hasAttendanceRecordAccess(context: AuthContext, user: CurrentUser, attendanceId: number): boolean {
-  if (user.role === "admin") return true;
-  const attendance = row(context, "SELECT a.id, a.date, a.student_id FROM attendance a WHERE a.id = ?", [attendanceId]);
-  if (!attendance) return false;
-  return Boolean(row(context, `
-    SELECT 1
-      FROM student_enrollments e
-      JOIN academic_classes c ON (c.id = e.academic_class_id OR (e.academic_class_id IS NULL AND c.class_name = e.class_name))
-      JOIN teacher_class_assignments ta ON ta.academic_class_id = c.id
-     WHERE e.student_id = ?
-       AND ta.user_id = ?
-       AND ta.active = 1
-       AND (ta.effective_from IS NULL OR ta.effective_from <= ?)
-       AND (ta.effective_to IS NULL OR ta.effective_to >= ?)
-       AND (e.effective_from IS NULL OR e.effective_from <= ?)
-       AND (e.effective_to IS NULL OR e.effective_to >= ?)
-       AND e.lifecycle_state = 'ACTIVE'
-     LIMIT 1
-  `, [attendance.student_id, user.id, attendance.date, attendance.date, attendance.date, attendance.date]));
 }
 
 function reviewRoutes(app: any, context: AuthContext): void {

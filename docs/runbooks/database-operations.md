@@ -1,18 +1,21 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
 # Database operations
 
-`backend/attendance.db` is the protected historical operational database and remains S4.3
-(`20260725_s43`) until a separately authorized operational migration. Do not use
-it in tests, E2E, development startup, fixtures, or deployment rehearsal.
+Production SQLite storage is resolved under `OPERATOROS_DATA_DIR` (canonical
+production root `/var/lib/operatoros/data`); legacy `backend/attendance.db` and
+old `/mnt/podman-data` paths are not the current production storage contract.
+The latest documented production acceptance records schema S5.6
+(`20261126_s56`). Never use production storage in tests, E2E, development,
+fixtures, or deployment rehearsal.
 
-The current application schema is S5.6 (`20261126_s56`). Ordinary startup
+The current application schema is S5.7 (`20261127_s57`). Ordinary startup
 validates existing databases and never migrates them automatically.
 
-The schema history builds sequentially from S4.4–S5.4 (academic timeline, attendance calendar, submission deadlines, attendance consolidation, employee history, school units and staff assignments, monthly PTK activity, UPP workbook archive, student administration, student identity verification, BOSP reminder settings) through S5.5 (Inventory & Asset Management and Extensible Label Printing) and S5.6 (Administrasi PTK V1). The upgrade runner (`packages/db/src/migrate-existing.ts`) supports direct non-destructive upgrades from recognized S4.6 variants and S4.7–S5.5 databases to `20261126_s56`; intermediate release deployments are unnecessary. See [schema architecture](../architecture/database-schema.md) for current schema details.
+The schema history builds through S5.6 (Administrasi PTK V1) and S5.7 (global inventory master data). The upgrade runner (`packages/db/src/migrate-existing.ts`) supports direct non-destructive upgrades from recognized S4.6 variants and S4.7–S5.6 databases to `20261127_s57`; intermediate release deployments are unnecessary. See [schema architecture](../architecture/database-schema.md) for current schema details.
 
 ## Production operational migration
 

@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import type { ExcelWorksheetDto } from "@operatoros/contracts/excel";
 import { addWorksheet, appendRow, styleHeader, autoSizeColumns } from "./sheets";
 import { normalizeHeader } from "./normalization";
-import { resolveExcelLimits, validateXlsxContainer, type ExcelResourceLimits } from "./limits";
+import { resolveExcelLimits, validateXlsxActualUncompressedBytes, type ExcelResourceLimits } from "./limits";
 
 export const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 export const EXCEL_EXPORT_FORMAT_VERSION = "operatoros-excel-v1";
@@ -66,7 +66,7 @@ export async function loadXlsxWorkbook(
 ): Promise<ExcelWorkbook> {
   const resolved = resolveExcelLimits(limits);
   try {
-    validateXlsxContainer(value, resolved);
+    await validateXlsxActualUncompressedBytes(value, resolved);
   } catch (cause) {
     throw new ExcelWorkbookParseError(cause);
   }

@@ -1,3 +1,7 @@
+import { Readable, Writable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { createInflateRaw } from "node:zlib";
+
 export const EXCEL_RESOURCE_LIMITS = {
   maxFileBytes: 25 * 1024 * 1024,
   maxSheets: 50,
@@ -74,15 +78,28 @@ const DISALLOWED_OOXML_ENTRY_PATTERNS = [
   /(?:^|\/)xl\/externalLinks\//i,
 ];
 
+type XlsxZipEntry = {
+  compressionMethod: number;
+  compressedSize: number;
+  localHeaderOffset: number;
+};
+
+type XlsxContainerInspection = {
+  entryCount: number;
+  totalUncompressedBytes: number;
+  centralDirectoryOffset: number;
+  entries: XlsxZipEntry[];
+};
+
 /**
  * Pre-parse ZIP central-directory inspection for OOXML (.xlsx) containers.
  * Note: Central-directory headers are untrusted metadata; this acts as a fast
  * preflight layer in addition to post-load workbook dimension and cell budgets.
  */
-export function validateXlsxContainer(
+function inspectXlsxContainer(
   value: ArrayBuffer | Uint8Array,
   overrides?: ExcelResourceLimits,
-): { entryCount: number; totalUncompressedBytes: number } {
+): XlsxContainerInspection & { bytes: Uint8Array } {
   const limits = resolveExcelLimits(overrides);
   const bytes = toUint8Array(value);
   if (bytes.byteLength === 0 || bytes.byteLength > limits.maxFileBytes) {
@@ -114,6 +131,7 @@ export function validateXlsxContainer(
 
   let cursor = cdOffset;
   let totalUncompressedBytes = 0;
+  const entries: XlsxZipEntry[] = [];
   const decoder = new TextDecoder();
 
   for (let idx = 0; idx < totalEntries; idx += 1) {
@@ -134,12 +152,15 @@ export function validateXlsxContainer(
       throw new Error("EXCEL_ENCRYPTED_WORKBOOK_UNSUPPORTED");
     }
 
+    const compressionMethod = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
     const uncompressedSize = view.getUint32(cursor + 24, true);
     const nameLen = view.getUint16(cursor + 28, true);
     const extraLen = view.getUint16(cursor + 30, true);
     const commentLen = view.getUint16(cursor + 32, true);
+    const localHeaderOffset = view.getUint32(cursor + 42, true);
 
-    if (uncompressedSize === 0xffffffff) {
+    if (compressedSize === 0xffffffff || uncompressedSize === 0xffffffff || localHeaderOffset === 0xffffffff) {
       throw new Error("EXCEL_ZIP64_ENTRY_NOT_SUPPORTED");
     }
     const headerEnd = cursor + 46 + nameLen + extraLen + commentLen;
@@ -159,6 +180,7 @@ export function validateXlsxContainer(
     if (totalUncompressedBytes > limits.maxUncompressedBytes) {
       throw new Error("EXCEL_UNCOMPRESSED_SIZE_LIMIT_EXCEEDED");
     }
+    entries.push({ compressionMethod, compressedSize, localHeaderOffset });
 
     cursor = headerEnd;
   }
@@ -170,7 +192,101 @@ export function validateXlsxContainer(
     throw new Error("EXCEL_COMPRESSION_RATIO_EXCEEDED");
   }
 
-  return { entryCount: totalEntries, totalUncompressedBytes };
+  return {
+    bytes,
+    entryCount: totalEntries,
+    totalUncompressedBytes,
+    centralDirectoryOffset: cdOffset,
+    entries,
+  };
+}
+
+export function validateXlsxContainer(
+  value: ArrayBuffer | Uint8Array,
+  overrides?: ExcelResourceLimits,
+): { entryCount: number; totalUncompressedBytes: number } {
+  const { entryCount, totalUncompressedBytes } = inspectXlsxContainer(value, overrides);
+  return { entryCount, totalUncompressedBytes };
+}
+
+/**
+ * Streams each OOXML ZIP entry through a raw DEFLATE decoder before a workbook
+ * parser can expand it, so limits do not rely only on untrusted size metadata.
+ */
+export async function validateXlsxActualUncompressedBytes(
+  value: ArrayBuffer | Uint8Array,
+  overrides?: ExcelResourceLimits,
+): Promise<number> {
+  const limits = resolveExcelLimits(overrides);
+  const { bytes, centralDirectoryOffset, entries } = inspectXlsxContainer(value, limits);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let actualUncompressedBytes = 0;
+
+  for (const entry of entries) {
+    const localOffset = entry.localHeaderOffset;
+    if (localOffset + 30 > centralDirectoryOffset) {
+      throw new Error("EXCEL_INVALID_ZIP_ENTRY_BOUNDS");
+    }
+    if (
+      bytes[localOffset] !== 0x50
+      || bytes[localOffset + 1] !== 0x4b
+      || bytes[localOffset + 2] !== 0x03
+      || bytes[localOffset + 3] !== 0x04
+    ) {
+      throw new Error("EXCEL_INVALID_ZIP_ENTRY_HEADER");
+    }
+
+    const localFlags = view.getUint16(localOffset + 6, true);
+    const localCompressionMethod = view.getUint16(localOffset + 8, true);
+    const localNameLength = view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    if ((localFlags & 0x01) !== 0) {
+      throw new Error("EXCEL_ENCRYPTED_WORKBOOK_UNSUPPORTED");
+    }
+    if (localCompressionMethod !== entry.compressionMethod) {
+      throw new Error("EXCEL_INVALID_ZIP_ENTRY_HEADER");
+    }
+
+    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+    const dataEnd = dataStart + entry.compressedSize;
+    if (dataEnd > centralDirectoryOffset || dataEnd > bytes.byteLength) {
+      throw new Error("EXCEL_INVALID_ZIP_ENTRY_BOUNDS");
+    }
+
+    if (entry.compressionMethod === 0) {
+      actualUncompressedBytes += entry.compressedSize;
+    } else if (entry.compressionMethod === 8) {
+      await pipeline(
+        Readable.from([bytes.subarray(dataStart, dataEnd)]),
+        createInflateRaw({ chunkSize: 16 * 1024 }),
+        new Writable({
+          write(chunk: Uint8Array, _encoding, callback) {
+            actualUncompressedBytes += chunk.byteLength;
+            callback(
+              actualUncompressedBytes > limits.maxUncompressedBytes
+                ? new Error("EXCEL_UNCOMPRESSED_SIZE_LIMIT_EXCEEDED")
+                : undefined,
+            );
+          },
+        }),
+      );
+    } else {
+      throw new Error("EXCEL_UNSUPPORTED_ZIP_COMPRESSION_METHOD");
+    }
+
+    if (actualUncompressedBytes > limits.maxUncompressedBytes) {
+      throw new Error("EXCEL_UNCOMPRESSED_SIZE_LIMIT_EXCEEDED");
+    }
+  }
+
+  if (
+    actualUncompressedBytes >= limits.compressionRatioMinUncompressedBytes
+    && actualUncompressedBytes / bytes.byteLength > limits.maxCompressionRatio
+  ) {
+    throw new Error("EXCEL_COMPRESSION_RATIO_EXCEEDED");
+  }
+
+  return actualUncompressedBytes;
 }
 
 export function validateLegacyXlsContainer(

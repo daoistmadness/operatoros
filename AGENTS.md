@@ -415,6 +415,8 @@ Every task MUST have finite scope and clear exit criteria. Agents MUST stop and 
 
 Agents MUST NOT initiate another optimization, audit, refactoring, CI qualification, or engineering program once exit conditions pass.
 
+After an explicitly authorized stabilization or feature scope passes its acceptance criteria and its material documentation is synchronized, freeze feature work and stop. New features, phases, optimizations, or broad cleanup require a separate owner request. A feature freeze does not establish release qualification, production acceptance, or deployment authorization.
+
 ---
 
 ## 4. Standard Five-Phase Release Lifecycle
@@ -516,5 +518,5 @@ Guardrails are enforced through existing executable mechanisms in the repository
 
 - **Runtime script default root gap:** `scripts/docker-deploy.sh` defaults `OPERATOROS_DEPLOY_DIR` and `OPERATOROS_DATA_DIR` to legacy `/mnt/podman-data/operatoros/{deploy,data}` when omitted; production operators MUST supply `/var/lib/operatoros/{deploy,data}` explicitly until defaults are separately updated.
 - **Host & external preflight checks:** `scripts/docker-deploy.sh` does not programmatically verify off-host backup/key custody, LUKS auto-unlock hardening state, `ALLOWED_ORIGINS` vs external Tailscale TLS, or non-OperatorOS containers; these rely on documented operator preflight and acceptance checks.
-- **Endpoint auth-profile nuance:** Unauthenticated probes MUST test explicit protected endpoints (such as `/api/auth/me`, `/api/staff`, `/api/inventory/*`, `/api/admin/backups`) and authenticated workflows separately rather than inferring global authorization from HTTP `200` responses on SPA shells or open read endpoints (e.g., `GET /api/students` observed at S56).
+- **Endpoint auth-profile nuance:** The limited `GET /api/students` directory read is an explicit open-read exception; its response contains only the legacy ID, name, jenjang, and class fields. This does not make adjacent student routes public: full-list reads and class lookups require `view_student`, attendance histories require `view_attendance` plus existing Staff class/date scope, and student creation/class mutations require their existing capabilities. Unauthenticated probes MUST test explicit protected endpoints (such as `/api/auth/me`, `/api/staff`, `/api/inventory/*`, `/api/admin/backups`) rather than infer global authorization from SPA shells or this documented exception.
 - **Non-critical contract/matrix gaps:** Automated cross-version API client schema diffing is partially handled by OpenAPI drift checks (`bun run check:contracts`), and full non-consecutive schema rollback matrices rely on targeted migration tests when complex migrations are proposed.

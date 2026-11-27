@@ -3,6 +3,7 @@ export {
   hasOle2Signature,
   hasXlsxZipSignature,
   resolveExcelLimits,
+  validateXlsxActualUncompressedBytes,
   validateLegacyXlsContainer,
   validateXlsxContainer,
 } from "./limits";

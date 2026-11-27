@@ -218,24 +218,6 @@ bun install --frozen-lockfile
 > [!NOTE]
 > On a fresh database, open `http://127.0.0.1:5173` to initialize the first administrator account. The setup form permanently closes upon creation. There are no default credentials.
 
-### Optional: Rootless Podman Development
-
-On Linux, run the same managed development launcher in a container with
-rootless Podman, Git, and `sha256sum`. This alternative uses its pinned Bun
-image instead of the host Bun/mise toolchain.
-
-```bash
-./scripts/podman-dev.sh
-```
-
-Open `http://127.0.0.1:5174`. The API stays private inside the container, and
-the frontend port is bound to host loopback. Press `Ctrl+C` to stop. Development
-data persists in the `operatoros-podman-dev-data` Podman volume and is isolated
-from the native launcher. Set `OPERATOROS_PODMAN_PORT` to change the host port
-(1024–65535).
-This path uses synthetic local development data only; it does not support
-production or hosted Podman deployments.
-
 ### Diagnostic & Operational Commands
 
 | Command | Purpose |
@@ -332,10 +314,10 @@ flowchart TD
 - **Authentication Contracts**: Session state is managed strictly via server-side session tables and HttpOnly, `SameSite=Lax` cookies named `astyx_session`. No JSON Web Tokens (JWT), browser `localStorage` credentials, or token-reading client scripts are permitted. First-run setup cookies use `SameSite=Strict`.
 - **Authorization**: Backend roles are limited to `admin` and `staff`. Request authorization is evaluated solely from database-backed sessions and server-derived capabilities. Client-supplied headers or body fields (`request.role`, `reviewed_by`, `uploaded_by`) are untrusted audit metadata, never authorization proofs.
 - **Database Schema Management**:
-  - The current active application schema head is **S5.6** (`20261126_s56`).
-  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), followed by the S4.8–S5.6 migrations covering employee history, school units, monthly PTK activity, UPP workbook archive, student administration, student identity verification, BOSP reminder settings, inventory & label printing, and Administrasi PTK V1 (see [Database Schema Architecture](docs/architecture/database-schema.md)).
+  - The current active application schema head is **S5.7** (`20261127_s57`).
+  - Fresh SQLite bootstrap applies the S4.7 base schema from [`packages/db/src/s47-schema.sql`](packages/db/src/s47-schema.sql), followed by the S4.8–S5.7 migrations covering employee history, school units, monthly PTK activity, UPP workbook archive, student administration, student identity verification, BOSP reminder settings, inventory & label printing, Administrasi PTK V1, and global inventory master data (see [Database Schema Architecture](docs/architecture/database-schema.md)).
   - Historical baseline and rollback target is **S4.2** (`20260724_s42`).
-  - The protected operational database remains **S4.3** (`20260725_s43`) until a separately authorized migration.
+  - The latest documented production acceptance records **S5.6** (`20261126_s56`); source now targets S5.7. Verify the exact deployment receipt before any operational migration. Production schema changes require the canonical, separately authorized migration process.
   - The API server opens databases with `create: false`, validates integrity and schema version on startup, and never automatically applies migrations.
 - **Backup & Restore Lifecycle**:
   - Backups are encrypted with AES-256-GCM envelopes containing authenticated headers and SHA-256 integrity digests. Unencrypted plaintext backups are rejected unless explicit legacy opt-in is enabled.
@@ -429,7 +411,7 @@ bun --filter @operatoros/web api:check
 
 - **Desktop Shell Retirement**: The experimental Tauri desktop wrapper and its Phase 9.6/11 acceptance gates were deprecated and completely removed on 2026-08-20. The application runs exclusively as a local web service in standard modern browsers.
 - **Python / FastAPI Backend Retirement**: The legacy Python runtime was replaced by the Bun/Elysia TypeScript implementation. The retained `backend/` directory holds migration, fixture, and operations tooling; it is not the production backend.
-- **Operational Database Compatibility**: The live operational database remains pinned at schema **S4.3** (`20260725_s43`) until an authorized migration window. Restoring an S4.2 database pairs with the documented rollback commit `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`).
+- **Operational Database Compatibility**: The latest documented production acceptance records schema **S5.6** (`20261126_s56`); current source targets S5.7 (`20261127_s57`). Verify the exact deployment receipt and schema compatibility before operational migration or rollback. Production changes require the canonical authorized deployment process. Historical S4.2 rollback evidence pairs with commit `c06a6220c2c0c2059521c1a396d1b914635aacff` (`maintenance/s42-rollback`).
 
 ---
 

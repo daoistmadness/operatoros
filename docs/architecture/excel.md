@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-27
+last_reviewed: 2026-11-28
 ---
 
 # OperatorOS Excel architecture
@@ -83,9 +83,18 @@ templates keep their current compatibility behavior.
 - Workbook tests reopen generated files and compare semantic values, sheets,
   metadata, and material styles. Byte equality is not required.
 - Workbook loaders enforce pre-parse container checks (OOXML ZIP central-directory
-  entry/size/macro/encryption limits and OLE2 magic-byte checks), post-load
-  worksheet/row/column/cell budgets (`EXCEL_RESOURCE_LIMITS`), and sparse row
-  iteration in `readXlsxWorkbook()` to prevent rectangular empty-cell blowup.
+  entry/declared-size/macro/encryption limits and OLE2 magic-byte checks), actual
+  ZIP entry-output limits, post-load worksheet/row/column/cell budgets
+  (`EXCEL_RESOURCE_LIMITS`), and sparse row iteration in `readXlsxWorkbook()` to
+  prevent rectangular empty-cell blowup.
+- Before ExcelJS loads an OOXML workbook, `validateXlsxActualUncompressedBytes()`
+  streams each stored or DEFLATE ZIP entry and counts the emitted bytes. The
+  actual cumulative output is checked against `maxUncompressedBytes` even when
+  central-directory sizes underreport the contents. A DEFLATE stream is
+  cancelled at the first output chunk that crosses this byte limit; the actual
+  aggregate compression ratio is checked after the bounded scan. This bounds
+  parser input expansion but is not an OS memory ceiling or an independent
+  parser container.
 - Heavy Excel upload, parse, and export routes share a bounded admission
   controller (`maxActiveJobs=1`, `maxQueuedJobs=2`, `maxQueuedBytes=50 MiB`) in
   `apps/api`, paired with early request admission (`maxActiveUploads=2`,
@@ -95,16 +104,32 @@ templates keep their current compatibility behavior.
   `createAdmittedXlsxResponse`), and a short-lived `--smol` parser subprocess
   (`excel-subprocess.ts` / `excel-parser-child.ts`) for all production `.xls`
   and `.xlsx` reads regardless of compressed size, with parent-side
-  `/proc/<pid>/statm` RSS supervision, child-side RSS watchdog, and `SIGKILL` +
+  `/proc/<pid>/statm` RSS polling, child-side RSS watchdog, and `SIGKILL` +
   `proc.exited` reaping before permit release. Note: RSS polling is defense in
-  depth rather than hard OS memory isolation (which requires cgroup delegation or
-  a dedicated memory-limited parser container).
-- An attendance parser worker owns its admission permit until it replies with
-  a result or a parser error. Timeout and worker failure reject the request
-  and request termination. If parser completion remains unconfirmed, the
-  permit stays reserved and other imports receive admission backpressure.
-  Bun's worker close notification can arrive before the worker fully exits.
-  An unresolved reservation lasts for the lifetime of the API process.
+  depth rather than a hard OS memory limit. The child remains in the API
+  container's resource domain; polling can overshoot or miss short-lived peaks.
+  A 512 MiB cgroup synthetic mixed-load run reached 489,525,248 bytes
+  (466.85 MiB), so it demonstrates bounded tested behavior, not an approved
+  business-capacity envelope or independent parser memory isolation.
+  No owner-approved representative business workload or capacity envelope is
+  recorded. Before making a production-capacity claim, the owner must either
+  approve a representative synthetic workload and accept these same-cgroup
+  limits, or separately authorize a parser process/cgroup resource boundary.
+  Until then, the current controls do not claim hard parser-memory isolation
+  or approved production capacity.
+- The parser subprocess holds its shared admission permit through confirmed
+  termination and reaping. Timeout, abort, RSS threshold, or oversized IPC
+  output requests `SIGKILL`; the permit is released only after `proc.exited`
+  confirms reaping. If reaping remains unconfirmed after the bounded wait, the
+  reservation remains fail-closed for the API process lifetime. Input and IPC
+  output have byte limits, and parent decoding is bounded by the IPC cap; these
+  limits do not establish a separate parent-process memory ceiling.
+- Multipart upload admission is reserved before Elysia parses the body. The
+  streaming reader counts actual received request-body bytes, including the
+  multipart envelope, and cancels above the per-route cap plus its fixed
+  envelope allowance. Request abort, completion, parse failure, and response
+  completion release the reservation idempotently. This bounds request bodies
+  and active upload count; it is not an OS-level memory limit.
 - `@operatoros/sheetjs-fork` is a vendored `workspace:*` package skipped by
   `bun audit`; upstream SheetJS CE `v0.20.3` advisories are tracked manually
   per `packages/sheetjs-fork/UPSTREAM.md`.

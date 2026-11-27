@@ -1,6 +1,6 @@
 ---
 status: current
-last_reviewed: 2026-11-26
+last_reviewed: 2026-11-28
 ---
 
 # Ubuntu server deployment runbook
@@ -26,7 +26,7 @@ the configured `OPERATOROS_DATA_DIR` and ingress routed through Caddy and Tailsc
 | **Host identity** | UID/GID `1000:1000` (`mikhailryu`) | Canonical host user account; UID 1001/1002 migration removed |
 | **Container runtime user** | UID/GID `1000:1000` (`bun` / user 1000) | Matches host user `1000:1000` for seamless bind-mount access to persistent SQLite volume |
 | **Persistent storage** | Encrypted host data root (`OPERATOROS_DATA_DIR=/var/lib/operatoros/data`) | Ext4 host directory on LUKS2-backed volume (`dm_crypt-0`, `>= 10 GiB` reserve); mounted read-write to `/var/lib/operatoros/data` |
-| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Schema version verified by `packages/db/src/manifest.ts` (current `20261126_s56`) |
+| **Database** | SQLite 3.54.1 `operatoros.sqlite` | Current source target is `20261127_s57`; latest documented production acceptance is S56 (`20261126_s56`). Verify the exact deployment receipt before migration. |
 | **Deployment root** | `OPERATOROS_DEPLOY_DIR=/var/lib/operatoros/deploy` | Houses releases, `current` symlink, `api.env` (`0600`), and active `docker-compose.yml` |
 | **Reverse proxy** | Caddy `2.11.9-alpine` | Binds to `127.0.0.1:18088` (loopback only) |
 | **API service** | Elysia backend (Bun 1.4.5) | Binds to `127.0.0.1:18090` (mapped to internal `8090`) |
@@ -89,7 +89,7 @@ The automated deployment procedure executes the following steps:
 
 ### 3. Operational schema migration and release activation
 
-When upgrading to a release with a newer schema version (for example `20261126_s56`):
+When upgrading to a release with a newer schema version (current source target `20261127_s57`):
 
 ```bash
 scripts/docker-deploy.sh migrate <candidate-archive.tar> <source-sha> <target-schema> [deploy-dir]
