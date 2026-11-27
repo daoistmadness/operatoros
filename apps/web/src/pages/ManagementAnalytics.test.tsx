@@ -12,7 +12,7 @@ import { AuthContext, type AuthContextValue } from "../context/AuthContext";
 import { createTestQueryClient } from "../lib/query/queryClient";
 import { queryKeys } from "../lib/query/queryKeys";
 
-vi.mock("react-chartjs-2", () => ({ Bar: () => <div data-testid="bar-chart" /> }));
+vi.mock("react-chartjs-2", () => ({ Bar: ({ data }: { data: { datasets: { data: (number | null)[] }[] } }) => <div data-testid="bar-chart" data-values={JSON.stringify(data.datasets[0]?.data)} /> }));
 vi.mock("../api/analytics", () => ({ fetchAnalyticsFilters: vi.fn() }));
 vi.mock("../api/managementOverview", () => ({ fetchManagementOverview: vi.fn() }));
 vi.mock("../api/academicAnalytics", () => ({ fetchAcademicAnalyticsOptions: vi.fn() }));
@@ -77,6 +77,30 @@ describe("ManagementAnalytics overview", () => {
     expect(overviewRequest?.[1]).toBeInstanceOf(AbortSignal);
   });
 
+  it("shows report dates and leaves unavailable averages out of the chart while preserving zero", async () => {
+    vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue({
+      ...overview,
+      academic: { ...overview.academic, byJenjang: [
+        { label: "Primary", average: null, students: 1 },
+        { label: "Secondary", average: 0, students: 1 },
+      ] },
+    } as never);
+    const view = await renderPage();
+    await vi.waitFor(() => expect(view.querySelector('[data-testid="bar-chart"]')?.getAttribute("data-values")).toBe("[null,0]"));
+    expect(Array.from(view.querySelectorAll("time"), (time) => time.dateTime)).toEqual(["2026-07-01", "2027-06-30"]);
+    expect(view.querySelector('[aria-label="Academic averages by jenjang: Primary unavailable, Secondary 0"]')).toBeTruthy();
+  });
+
+  it("explains when there are no academic averages to chart", async () => {
+    vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue({
+      ...overview,
+      academic: { ...overview.academic, average: null, byJenjang: [{ label: "Primary", average: null, students: 1 }] },
+    } as never);
+    const view = await renderPage();
+    await vi.waitFor(() => expect(view.textContent).toContain("No score averages are available for this scope."));
+    expect(view.querySelector('[data-testid="bar-chart"]')).toBeNull();
+  });
+
   it("aborts an in-flight overview request when its query is cancelled", async () => {
     let signal: AbortSignal | undefined;
     vi.mocked(overviewApi.fetchManagementOverview).mockImplementation((_filters, requestSignal) => {
@@ -96,8 +120,7 @@ describe("ManagementAnalytics overview", () => {
   it("shows section-level authorization without exposing unavailable metrics", async () => {
     vi.mocked(overviewApi.fetchManagementOverview).mockResolvedValue({ ...overview, school: { ...overview.school, staff: { status: "unavailable", reason: "unauthorized" } }, attendance: { status: "unavailable", reason: "unauthorized" }, dataQuality: { ...overview.dataQuality, staff: { status: "unavailable", reason: "unauthorized" } } } as never);
     const view = await renderPage({ ...auth, user: { ...auth.user!, capabilities: ["view_student"] }, can: (capability) => capability === "view_student" });
-    await vi.waitFor(() => expect(view.textContent).toContain("Management Overview"));
-    expect(view.textContent).toContain("Staff snapshot is not available for this account.");
+    await vi.waitFor(() => expect(view.textContent).toContain("Staff snapshot is not available for this account."));
     expect(view.textContent).toContain("Attendance summary is not available for this account.");
     expect(view.querySelector('[role="img"][aria-label^="Attendance status distribution:"]')).toBeNull();
     expect(view.textContent).toContain("Staff quality is not available for this account.");

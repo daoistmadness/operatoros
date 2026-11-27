@@ -33,7 +33,7 @@ function AttendanceSection({ report }: { report: MonthlyReportResponse }) {
         <SummaryCard label="Late Event Rate" value={value(summary.lateness.late_event_rate, "%")} note={`${summary.lateness.availability.toLowerCase()} · ${value(summary.lateness.coverage_rate, "%")} coverage`} />
         <SummaryCard label="Conflicts" value={summary.conflict_count} />
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring" role="region" aria-label="Monthly attendance by class" tabIndex={0}>
         <table className="min-w-full text-sm">
           <caption className="sr-only">Monthly attendance by class, including source basis, coverage, and conflicts</caption>
           <thead><tr className="border-b text-left text-xs uppercase text-muted-foreground">
@@ -132,8 +132,7 @@ export default function MonthlyReport() {
   const actions = <div className="flex flex-wrap gap-2 print:hidden"><Button variant="outline" disabled={!report || Boolean(exporting)} onClick={() => window.print()}><Printer className="mr-2 size-4" />Print</Button><Button variant="outline" disabled={!report || Boolean(exporting)} onClick={() => void runExport("pdf")}>{exporting === "pdf" ? "Exporting…" : <><Download className="mr-2 size-4" />PDF</>}</Button><Button disabled={!report || Boolean(exporting)} onClick={() => void runExport("xlsx")}>{exporting === "xlsx" ? "Exporting…" : <><Download className="mr-2 size-4" />Excel</>}</Button></div>;
   const error = filtersQuery.error ? "Report filters could not be loaded." : reportQuery.error ? "The report could not be generated. Review the selected scope and try again." : null;
   return <div className="space-y-6 pb-12 print:p-0">
-    <PageHeader title="Monthly Report" description="Management review for one selected calendar month." actions={actions} />
-    {exportError && <Alert variant="danger"><AlertTitle>Export unavailable</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
+    <PageHeader title="Monthly Report" description="Management review for one selected calendar month." />
     <FilterBar className="space-y-4"><h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">Report Filters</h2>
       {filtersQuery.isPending ? <LoadingState title="Loading report filters" /> : filtersQuery.error ? <ErrorState title="Report filters unavailable" description="The report scope could not be selected." action={<Button onClick={() => void filtersQuery.refetch()}>Retry</Button>} /> : <>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -147,9 +146,24 @@ export default function MonthlyReport() {
       </>}
     </FilterBar>
     {isStale && <Alert variant="warning"><AlertTitle>Report scope changed</AlertTitle><AlertDescription>Generate again to update the report and its export scope.</AlertDescription></Alert>}
-    {report && <MonthlyReportView report={report} />}
+    {report && <section aria-labelledby="monthly-report-preview" className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 print:hidden">
+        <div>
+          <h2 id="monthly-report-preview" className="text-lg font-semibold">Report preview</h2>
+          <p className="text-sm text-muted-foreground">
+            {report.report_period.sections.attendance.label} · {report.report_period.academic_year_label}
+            {" · "}{filters?.scopes.find((item) => item.value === report.meta.scope)?.label ?? report.meta.scope}
+            {" · "}{generatedQuery?.class_id == null ? "All classes" : filters?.class_options.find((item) => item.id === generatedQuery.class_id)?.name ?? "Selected class"}
+            {" · "}{generatedQuery?.subject_id == null ? "All subjects" : filters?.subjects.find((item) => item.id === generatedQuery.subject_id)?.name ?? "Selected subject"}
+          </p>
+        </div>
+        {actions}
+      </div>
+      {exportError && <Alert variant="danger"><AlertTitle>Export unavailable</AlertTitle><AlertDescription>{exportError}</AlertDescription></Alert>}
+      <MonthlyReportView report={report} />
+    </section>}
     {generatedQuery && !isStale && (reportQuery.isPending || reportQuery.isFetching) && <LoadingState title="Generating monthly report" description="Reading canonical attendance, academic, and data-quality sources." />}
-    {!report && !generatedQuery && !filtersQuery.isPending && !error && <EmptyState title="Generate a monthly report" description="Select a valid Academic Year and month, then generate the report." />}
+    {!report && !generatedQuery && !filtersQuery.isPending && !error && <EmptyState title="Generate a monthly report" description="Select an academic year and month, then generate the report to preview, print, or download it." />}
     {!report && error && <ErrorState title="The report could not be generated" description={error} action={generatedQuery ? <Button onClick={() => void reportQuery.refetch()}>Retry</Button> : undefined} />}
   </div>;
 }

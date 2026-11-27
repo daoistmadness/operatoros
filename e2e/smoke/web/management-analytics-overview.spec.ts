@@ -80,8 +80,25 @@ test("@management @analytics @release management overview preserves scope throug
     if (!response.url().includes("/api/analytics/management-overview")) return false;
     return new URL(response.url()).searchParams.get("jenjang_id") === jenjangId;
   });
-  await jenjang.selectOption({ label: "Primary" });
+  let releaseOverview!: () => void;
+  const overviewGate = new Promise<void>((resolve) => { releaseOverview = resolve; });
+  const filteredRequest = (url: URL) => url.pathname === "/api/analytics/management-overview" && url.searchParams.get("jenjang_id") === jenjangId;
+  await page.route(filteredRequest, async (route) => {
+    await overviewGate;
+    await route.continue();
+  });
+  await jenjang.focus();
+  try {
+    await jenjang.selectOption({ label: "Primary" });
+    await expect(page.getByRole("status").filter({ hasText: "Loading management overview" })).toBeVisible();
+    await expect(jenjang).toBeFocused();
+    await expect(page.getByRole("region", { name: "School Snapshot" })).toHaveCount(0);
+  } finally {
+    releaseOverview();
+  }
   await filteredOverview;
+  await page.unroute(filteredRequest);
+  await expect(jenjang).toBeFocused();
 
   const attendanceLink = page.getByRole("link", { name: "View Attendance Analytics" });
   await expect(attendanceLink).toHaveAttribute("href", new RegExp(`academic_year_id=.*jenjang_id=${jenjangId}`));
