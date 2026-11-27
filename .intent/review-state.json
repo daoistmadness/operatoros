@@ -2956,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "553a671ecc808532e77dbcd575d915b6282c93c6c12f1695ecc9d9facbb29ce9",
+      "fingerprint": "9910d3e8db565b50249944d4b7de420fd20e003862e4c016438ccb94a1cdb7e1",
       "snapshot": {
-        "CHANGELOG.md": "13ce225147bc9884c17d2ac956a60064b4693bb58727e976e7a641a18c961a26"
+        "CHANGELOG.md": "9c6a7aa157e19b517a09a3f38b908b8f6baf1f41a8d3384127be3a2b1073a3e5"
       },
-      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
+      "head": "7b1d8f33b629cf3f45efd3a730a67dd2096ce311",
       "outcome": "no-change",
-      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
+      "reason": "The changelog references the assigned PR number. The reviewed implementation and skill guidance are unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 5294f747a680eadc0c53947c8db226886d6b0079"
+        "Changed: CHANGELOG.md at 7b1d8f33b629cf3f45efd3a730a67dd2096ce311"
       ]
     },
     "source:COMMANDS.md": {
