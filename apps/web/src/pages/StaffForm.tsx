@@ -3,6 +3,8 @@ import { Type, type Static } from "@sinclair/typebox";
 import { useForm, useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLink as Link } from '../components/AppLink';
+import { directoryHref, staffDirectorySearch } from "../lib/router/directory-search";
+import { useUrlSearchParams } from "../lib/router/search";
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { ArrowLeft } from "lucide-react";
 import { createStaff, fetchSensitiveStaff, fetchStaffDetail, updateStaff, type StaffDetail, type StaffPayload, type StaffSensitive } from "../api/staff";
@@ -100,6 +102,9 @@ export default function StaffForm() {
   const isEdit = Boolean(id);
   const { can } = useAuth();
   const navigate = useNavigate();
+  const [params] = useUrlSearchParams();
+  const directory = staffDirectorySearch(params);
+  const search = Object.fromEntries(directory);
   const client = useQueryClient();
   const submissionInFlight = useRef(false);
   const allowNextNavigation = useRef<() => void>(() => {});
@@ -154,7 +159,7 @@ export default function StaffForm() {
           ] : []),
         ]);
         allowNextNavigation.current();
-        await navigate({ to: '/staff/$id', params: { id: saved.id } });
+        await navigate({ to: '/staff/$id', params: { id: saved.id }, search });
       } finally {
         submissionInFlight.current = false;
       }
@@ -189,7 +194,7 @@ export default function StaffForm() {
 
   return (
     <div className="space-y-6">
-      <Link to={isEdit ? `/staff/${id}` : "/staff"} className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline">
+      <Link to={directoryHref(isEdit ? `/staff/${id}` : "/staff", directory)} className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline">
         <ArrowLeft className="size-4" />{isEdit ? "Back to profile" : "Back to Employees"}
       </Link>
       <PageHeader eyebrow="Employee management" title={isEdit ? "Edit employee" : "Add employee"} description="Identifiers remain text. Age and tenure are calculated from their source dates." />
@@ -268,7 +273,7 @@ export default function StaffForm() {
             <FormErrorSummary message={submitError} />
             <div className="flex gap-2">
               <SubmitButton pending={pending}>Save employee</SubmitButton>
-              <Button type="button" variant="outline" onClick={() => isEdit ? navigate({ to: '/staff/$id', params: { id } }) : navigate({ to: '/staff' })} disabled={pending}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => isEdit ? navigate({ to: '/staff/$id', params: { id }, search }) : navigate({ to: '/staff', search })} disabled={pending}>Cancel</Button>
             </div>
           </>}
         </form.Subscribe>

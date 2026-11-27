@@ -16,13 +16,15 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { NativeSelect } from "../components/ui/native-select";
 import { queryKeys } from "../lib/query/queryKeys";
+import { directoryHref, staffDirectorySearch } from "../lib/router/directory-search";
+import { useUrlSearchParams } from "../lib/router/search";
 import { schoolLocalDate } from "../lib/school-date";
 
 const EDUCATION_LEVELS = ["SD", "SMP", "SMA", "SMK", "D1", "D2", "D3", "D4", "S1", "S2", "S3"];
 
 function FieldValue({ label, value }: { label: string; value: unknown }) {
   const display = value === null || value === undefined || value === "" ? "—" : String(value);
-  return <div><dt className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="mt-1 text-sm">{display}</dd></div>;
+  return <div><dt className="text-xs font-black uppercase tracking-wide text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm">{display}</dd></div>;
 }
 
 function educationPayload(record: Partial<EducationRecord>) {
@@ -36,6 +38,8 @@ function educationPayload(record: Partial<EducationRecord>) {
 }
 
 export default function StaffDetail() {
+  const [params] = useUrlSearchParams();
+  const directory = staffDirectorySearch(params);
   const { id = "" } = useParams({ strict: false });
   const { can } = useAuth();
   const queryClient = useQueryClient();
@@ -92,9 +96,9 @@ export default function StaffDetail() {
   const assignmentHistory = history.data?.filter((event) => event.action === "STAFF_SCHOOL_UNIT_ASSIGNMENT_PERIOD") ?? [];
   const otherHistory = history.data?.filter((event) => event.action !== "STAFF_SCHOOL_UNIT_ASSIGNMENT_PERIOD") ?? [];
   return <div className="space-y-6">
-    <Link to="/staff" className="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline"><ArrowLeft className="size-4" />Back to Employee Directory</Link>
-    <PageHeader eyebrow="Employee profile" title={member.full_name} description="Employment status and position changes are recorded in the employee history." actions={<div className="flex items-center gap-2"><Badge variant={member.employment_status === "ACTIVE" ? "success" : "secondary"}>{member.employment_status}</Badge>{can("manage_staff") && <Link className="inline-flex min-h-10 items-center rounded-md border border-border px-4 py-2 text-sm font-bold" to={`/staff/${id}/edit`}>Edit profile</Link>}</div>} />
-    {can("view_staff_sensitive") && <StaffPtk key={id} member={member} sensitive={sensitive.data} editable={can("manage_staff") && can("edit_sensitive_staff_fields")} editProfile={can("manage_staff") && can("edit_sensitive_staff_fields") ? <Link to={`/staff/${id}/edit`}>Edit data profil</Link> : null} />}
+    <Link to={directoryHref("/staff", directory)} className="inline-flex min-h-9 items-center gap-2 text-sm font-semibold text-brand hover:underline"><ArrowLeft className="size-4" />Back to Employee Directory</Link>
+    <PageHeader eyebrow="Employee profile" title={member.full_name} className="break-words" description={member.job_title || "Position not recorded"} actions={<div className="flex flex-wrap items-center gap-2"><Badge variant={member.employment_status === "ACTIVE" ? "success" : "secondary"}>{member.employment_status}</Badge>{can("manage_staff") && <Link className="inline-flex min-h-10 items-center rounded-md border border-border px-4 py-2 text-sm font-bold" to={directoryHref(`/staff/${id}/edit`, directory)}>Edit profile</Link>}</div>} />
+    {can("view_staff_sensitive") && <StaffPtk key={id} member={member} sensitive={sensitive.data} editable={can("manage_staff") && can("edit_sensitive_staff_fields")} editProfile={can("manage_staff") && can("edit_sensitive_staff_fields") ? <Link to={directoryHref(`/staff/${id}/edit`, directory)}>Edit data profil</Link> : null} />}
     {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">{(error as Error).message}</p>}
     <div className="grid gap-4 lg:grid-cols-2">
       <Card><CardHeader><CardTitle>Basic identity</CardTitle></CardHeader><CardContent><dl className="grid gap-4 sm:grid-cols-2"><FieldValue label="Source staff ID" value={member.source_staff_id} /><FieldValue label="Name" value={member.full_name} /><FieldValue label="NIP" value={member.identifiers.find((item) => item.identifier_type === "NIP")?.normalized_value} />{can("view_staff_sensitive") && <><FieldValue label="NIK" value={sensitive.data?.identifiers.find((item) => item.type === "NIK")?.normalized_value} /><FieldValue label="Birth place" value={sensitive.data?.birth_place} /><FieldValue label="Birth date" value={sensitive.data?.birth_date} /><FieldValue label="Age" value={sensitive.data?.age_years} /></>}</dl>{can("view_staff_sensitive") && sensitive.isError && <p role="alert" className="mt-3 text-sm text-rose-700">Sensitive identity information is unavailable.</p>}</CardContent></Card>

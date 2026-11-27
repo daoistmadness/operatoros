@@ -143,15 +143,15 @@
       ]
     },
     "source:apps/web/src/pages/StudentManagement.tsx": {
-      "fingerprint": "d561a69d62180b9cd59e87f369023a0184885ba1d5992d7da2212cebd8b5f203",
+      "fingerprint": "529db6909279dd5301214574dffebff2816d0e40e601bed6e858e18bdeb900e1",
       "snapshot": {
-        "apps/web/src/pages/StudentManagement.tsx": "e1b6571808934505c1e4e3d29515cd65812ec7d97222558906da2c153124554f"
+        "apps/web/src/pages/StudentManagement.tsx": "55cee33b6844f8323128deb371230062251a4aa95d14790ddb4e70835e203e59"
       },
-      "head": "8e0a4b4681a624946637074377a20d491040f221",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Reviewed the Phase 2 frontend source, visual conventions, and keyboard regression. The diff changes browser presentation and reset-dialog focus only. It touches no Elysia routes, middleware, framework examples, or backend guidance references, so the registered Elysia skill and its domain map, skill specification, and skill tree still describe their existing scope.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StudentManagement.tsx at 8e0a4b4681a624946637074377a20d491040f221"
+        "Changed: apps/web/src/pages/StudentManagement.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/pages/StudentTrendInsights.test.tsx": {
@@ -2213,15 +2213,15 @@
       ]
     },
     "source:apps/web/src/pages/CanonicalStudentProfile.tsx": {
-      "fingerprint": "8439db2ec9bebcbdeeddd0875c4d09c6b24ff6452240c3dd62cbcfd44fada9a2",
+      "fingerprint": "de0fe21d205e3524978c92588bca7325f68dc6a916bb1476780295255b6a8fa4",
       "snapshot": {
-        "apps/web/src/pages/CanonicalStudentProfile.tsx": "c4dcb1684babc6a067975370942cca1585fff0851f743492e3d8c9a8213a3183"
+        "apps/web/src/pages/CanonicalStudentProfile.tsx": "2500f5c0f27bdda5bee645d413797510ad43a891fa1d94df7b6b684e5469d77f"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/CanonicalStudentProfile.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/pages/ClassAttendanceEntry.tsx": {
@@ -2539,27 +2539,27 @@
       ]
     },
     "source:apps/web/src/pages/StaffDetail.tsx": {
-      "fingerprint": "04ad1f73602cd9cd292966e34ed567ce5a155101617798e53370c8d82e63d0c1",
+      "fingerprint": "b41ed56dd0bdeae23c891240427b7dda44cf54e47ed20764c462a09c3639e84e",
       "snapshot": {
-        "apps/web/src/pages/StaffDetail.tsx": "6c1c8f8c5aae1fccab12ab49bc6b3c1c0dec8563c15f54cc9759c479e5e3ed41"
+        "apps/web/src/pages/StaffDetail.tsx": "f4e3c05c6a6e6ba5a52de4f651d3e4097ead85d812919aa9f8247111b8687b1b"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffDetail.tsx at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/web/src/pages/StaffDetail.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/pages/StaffForm.tsx": {
-      "fingerprint": "a0e0c0063da3ff4bc0bfb387885949dd7c36af34eb458e1dfbd9d88273b30274",
+      "fingerprint": "58d0ea01dc616138efd1bf4665de00dea4f2325b94e57f2b06d54c061b08fd8f",
       "snapshot": {
-        "apps/web/src/pages/StaffForm.tsx": "fd419562be3dbc7fb56b034f41980cb9b8c450c61b3e6aeb5fd933726e2026ee"
+        "apps/web/src/pages/StaffForm.tsx": "b1c737f041c9f39ab3bb2b95cfae9d6594b8e21e3cf0a70a7a449161f3f5d729"
       },
-      "head": "035df8d5f51b17e7ab55ee3cb9875308e1110df5",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "This change is limited to the React web client, its tests, frontend architecture guidance, and the frontend section of AGENTS.md. It changes no Elysia API or skill guidance and no planning records; no registered skill or planning artifact needs updating.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffForm.tsx at 035df8d5f51b17e7ab55ee3cb9875308e1110df5"
+        "Changed: apps/web/src/pages/StaffForm.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/pages/StaffImport.tsx": {
@@ -2587,15 +2587,15 @@
       ]
     },
     "source:apps/web/src/pages/StaffManagement.tsx": {
-      "fingerprint": "99d269d287ba39552e1e511e6e406e02d041b70d23a7a2399ae710a238e8105d",
+      "fingerprint": "7a9a23871414e5c2f0eb4b12d3d80c0974bbb10e72b04bfb26686620e27e46c3",
       "snapshot": {
-        "apps/web/src/pages/StaffManagement.tsx": "f42663dc3a3a29c9cea7d61b1941ddef0d4aefe16f9b31ea94c168d7b179cdd7"
+        "apps/web/src/pages/StaffManagement.tsx": "9b7a59d35e40248938bb9e599b3c9f515d46f514d7c189f3c03bdf41bd2a165e"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/StaffManagement.tsx at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: apps/web/src/pages/StaffManagement.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/pages/StaffWorkflows.test.tsx": {
@@ -2960,15 +2960,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "b731c250b42a80ea2e09bf129a0daf523d241d08d5630086104018907ac0bd40",
+      "fingerprint": "60f6017bacba9b92aaf495245ff151736fa0254c313bacd364f80a8ec9eaf33f",
       "snapshot": {
-        "CHANGELOG.md": "f6b7229a5d2d156e766d1a7fe231d86059c16dbd966fe8a56057c8a0f3bd4379"
+        "CHANGELOG.md": "f619d753a9d1271842bd76864ae86b38b2822441ec67277c8349a2e4450c4463"
       },
-      "head": "b41fef349762aa41a7855ea815566956fee4961c",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Added the assigned Phase 3 PR reference to the release note. The link changes no skill guidance or source behavior.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: CHANGELOG.md at b41fef349762aa41a7855ea815566956fee4961c"
+        "Changed: CHANGELOG.md at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:COMMANDS.md": {
@@ -3385,15 +3385,15 @@
       ]
     },
     "source:docs/architecture/ui-and-routing.md": {
-      "fingerprint": "26922d839fe8e464a3870bf1eee5f7e79cb6af2da7f9c68fb92d2d2f69fd6a8d",
+      "fingerprint": "7429aabb747c53a9454a55e3cead5ec09a8ce99ea4af406cf6cdc14bc9875aa7",
       "snapshot": {
-        "docs/architecture/ui-and-routing.md": "5875deb6bd0d34a8a07581fdade8386b2684e5fc129d3921998bc140a925d02f"
+        "docs/architecture/ui-and-routing.md": "ccd6da98d537d4bddb0406299a02de29658e5ed10cce18fe126898cc2a9e9d04"
       },
-      "head": "456a787bb2c11129ee22fa4cfada1a252b821b14",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: docs/architecture/ui-and-routing.md at 456a787bb2c11129ee22fa4cfada1a252b821b14"
+        "Changed: docs/architecture/ui-and-routing.md at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:docs/architecture/ui-styling.md": {
@@ -8737,15 +8737,15 @@
       ]
     },
     "source:e2e/smoke/web/employee-management.spec.ts": {
-      "fingerprint": "3cb38faad2d4b9a1c57d21200b80f9e953b2c1d57d52bb70f1d71bed51a26e35",
+      "fingerprint": "4e9c0f7e117668e2f9e9b62ae82a54fcd657be6bad21745c58ae5d6ed451d0b6",
       "snapshot": {
-        "e2e/smoke/web/employee-management.spec.ts": "30f8721f0b10dc3b3b1172595549399cb1b8937dbb3855fb3d2c7826cde4f375"
+        "e2e/smoke/web/employee-management.spec.ts": "3f9e53e732ee35d921927fad8ca11043e76a9c9b9d2dae6aeb3202f6359ed5d4"
       },
-      "head": "84025febcbf5aeaeac565d588e74782fc97df4bc",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "The Staff browser smoke exercises the existing authorized profile and its PTK API. No agent skill guidance changed.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: e2e/smoke/web/employee-management.spec.ts at 84025febcbf5aeaeac565d588e74782fc97df4bc"
+        "Changed: e2e/smoke/web/employee-management.spec.ts at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:e2e/smoke/web/management-review-attendance-export.spec.ts": {
@@ -11558,15 +11558,15 @@
       ]
     },
     "source:apps/web/src/pages/InventoryManagement.tsx": {
-      "fingerprint": "b9c8ffd20f44f3c36aa13add21310d026a4d38f4fab25d9d29f08c918b992899",
+      "fingerprint": "715a3aeedf7ecab7f78a2ca1c772eca91a106aa05b2dafef8f538e20705a07a8",
       "snapshot": {
-        "apps/web/src/pages/InventoryManagement.tsx": "4eab17884b2ff86a56af3869c4c87ce836deca14f2770144b9bb71de8c51b19b"
+        "apps/web/src/pages/InventoryManagement.tsx": "e8844474887b414321e196cc4a1830632beb3f0583095ecdd4124c05972975b0"
       },
-      "head": "8931d763f357ab7f180dc7aeecf8d750c4caeb85",
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
       "outcome": "no-change",
-      "reason": "Reviewed the 25 feature paths at HEAD 8931d763f357ab7f180dc7aeecf8d750c4caeb85 against protected main 83e05560a3f112a2a3e4ed7439d4b672d0f8686e, including the Elysia inventory routes, S5.7 migration and data-preservation tests, contracts/OpenAPI, and React inventory forms. The API follows existing OperatorOS Elysia v1.4.29 patterns; the registered Elysia skill explicitly directs v1 tasks to local sources, and this feature adds no reusable framework guidance. The feature-specific DB, contracts, and UI changes do not justify new skill/domain coverage because the existing domain map and skill spec intentionally assess only the Elysia backend and disclose broader areas as unassessed. Reviewed _artifacts/domain_map.yaml, _artifacts/skill_spec.md, and _artifacts/skill_tree.yaml; all three remain accurate with prior scope, decisions, and remaining work preserved. Recorded implementation evidence: mise run check:full passed before the final targeted E2E and formatting-only edits; OPERATOROS_E2E_GREP='@inventory-master-data|@data-reset' make e2e-smoke passed (8 backend and 3 Chromium tests); mise run test:fast passed (228 repository tests, DB 10 tests/126 expectations); focused inventory API (13), UI Vitest (6), API and web typechecks, api:check, architecture/hk, Markdown checks, and git diff --check passed.",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
       "evidence": [
-        "Changed: apps/web/src/pages/InventoryManagement.tsx at 8931d763f357ab7f180dc7aeecf8d750c4caeb85"
+        "Changed: apps/web/src/pages/InventoryManagement.tsx at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     },
     "source:apps/web/src/routes/_authenticated/inventory.tsx": {
@@ -11807,6 +11807,30 @@
       "reason": "Reviewed Home and queue presentation, existing route links, browser regression coverage, and UI documentation. The changes reuse the existing Elysia responses without touching the API, and no registered Elysia skill or planning artifact requires revision.",
       "evidence": [
         "Changed: e2e/smoke/web/operator-workspace.spec.ts at 456a787bb2c11129ee22fa4cfada1a252b821b14"
+      ]
+    },
+    "source:apps/web/src/lib/router/directory-search.ts": {
+      "fingerprint": "73841ccf6cff46121fbd4ae23c9c5b091bcd5a4c705b993eafd6e5a9fb9fbdd9",
+      "snapshot": {
+        "apps/web/src/lib/router/directory-search.ts": "69e0dcd6328fb4dfa049470aea0e07f1e6d1c31d69a644ba8fd25a113f0cfea6"
+      },
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
+      "outcome": "no-change",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
+      "evidence": [
+        "Changed: apps/web/src/lib/router/directory-search.ts at c0a35ed3010d20adbac18874a993f37e9087488e"
+      ]
+    },
+    "source:e2e/smoke/web/record-directory-context.spec.ts": {
+      "fingerprint": "2b7a9484ef62cf590ee7cf83a9031f522dac21c804448154b01d14a77e6459d2",
+      "snapshot": {
+        "e2e/smoke/web/record-directory-context.spec.ts": "07fda231efdb755d5c8eb08bdc90f85996aec2c361a347c6e71201b98c3f5f96"
+      },
+      "head": "c0a35ed3010d20adbac18874a993f37e9087488e",
+      "outcome": "no-change",
+      "reason": "Reviewed the directory filter allowlists, record links, visual refinements, and browser regression. No Elysia source or registered backend skill guidance changed.",
+      "evidence": [
+        "Changed: e2e/smoke/web/record-directory-context.spec.ts at c0a35ed3010d20adbac18874a993f37e9087488e"
       ]
     }
   }

@@ -72,7 +72,7 @@ test("@employees @critical @release imports, updates, analyzes, and exports a sy
   const update = page.waitForResponse((response) => response.url().includes("/api/staff/") && response.request().method() === "PATCH" && response.status() === 200);
   await page.getByRole("button", { name: "Save employee" }).click();
   await update;
-  await expect(page.getByText("E2E Operations Assistant", { exact: true })).toBeVisible();
+  await expect(page.getByRole("definition").filter({ hasText: /^E2E Operations Assistant$/ })).toBeVisible();
 
   await page.goto("/staff/analytics");
   await expect(page.getByRole("heading", { name: "Workforce analytics" })).toBeVisible();

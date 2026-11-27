@@ -2,14 +2,16 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, flexRender, rowPaginationFeature, columnVisibilityFeature, tableFeatures, useTable } from "@tanstack/react-table";
 import { AppLink as Link } from '../components/AppLink';
+import { directoryHref, studentDirectorySearch } from "../lib/router/directory-search";
+import { useUrlSearchParams } from "../lib/router/search";
 import { Download, Plus, Search, Upload } from "lucide-react";
-import type { ManagedStudent, NisnStatusFilter, StudentFilters } from "../api/students";
+import type { ManagedStudent, StudentFilters } from "../api/students";
 import { fetchAcademicClasses, fetchAcademicGrades, fetchAcademicPrograms, fetchJenjangs } from "../api/enrollment";
 import { fetchAcademicYears } from "../api/grades";
 import { useCreateStudent, useStudentQuality, useStudents, useStudentTemplateExport, useStudentsCsvExport } from "../hooks/useStudentQueries";
 import { PageHeader } from "../components/common/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
+import { Button, buttonVariants } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -115,18 +117,31 @@ function AddStudentDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
 export default function StudentManagement() {
   const { can } = useAuth();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [nisnStatus, setNisnStatus] = useState<NisnStatusFilter | "">("");
-  const [nikStatus, setNikStatus] = useState("");
-  const [kkStatus, setKkStatus] = useState("");
-  const [dapodikStatus, setDapodikStatus] = useState("");
-  const [device, setDevice] = useState("");
-  const [jenjangId, setJenjangId] = useState("");
-  const [programId, setProgramId] = useState("");
-  const [gradeId, setGradeId] = useState("");
-  const [academicYearId, setAcademicYearId] = useState("");
-  const [classId, setClassId] = useState("");
-  const [page, setPage] = useState(1);
+  const [params, setParams] = useUrlSearchParams();
+  const context = useMemo(() => studentDirectorySearch(params), [params]);
+  const status = context.get("status") ?? "";
+  const nisn = context.get("nisn_status");
+  const nisnStatus = nisn === "inputted" || nisn === "not_inputted" ? nisn : "";
+  const nikStatus = context.get("nik_verification_status") ?? "";
+  const kkStatus = context.get("kk_verification_status") ?? "";
+  const dapodikStatus = context.get("dapodik_status") ?? "";
+  const device = context.get("device_linked") ?? "";
+  const jenjangId = context.get("jenjang_id") ?? "";
+  const programId = context.get("program_id") ?? "";
+  const gradeId = context.get("grade_id") ?? "";
+  const academicYearId = context.get("academic_year_id") ?? "";
+  const classId = context.get("class_id") ?? "";
+  const page = Number(context.get("page") ?? "1");
+  const hasFilters = Boolean(search.trim()) || Array.from(context.keys()).some((key) => key !== "page");
+
+  const setFilter = (key: string, value: string, reset: string[] = []) => {
+    const next = new URLSearchParams(context);
+    reset.forEach((dependent) => next.delete(dependent));
+    if (key !== "page") next.delete("page");
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setParams(next);
+  };
   const [addOpen, setAddOpen] = useState(false);
   const filters: StudentFilters = { nisn_status: nisnStatus || undefined, nik_verification_status: nikStatus || undefined, kk_verification_status: kkStatus || undefined, dapodik_status: dapodikStatus || undefined, search: search || undefined, status: status || undefined, academic_year_id: Number(academicYearId) || undefined, jenjang_id: Number(jenjangId) || undefined, program_id: Number(programId) || undefined, grade_id: Number(gradeId) || undefined, class_id: Number(classId) || undefined, device_linked: device === "linked" ? true : device === "unlinked" ? false : undefined, page, page_size: 25 };
   const students = useStudents(filters);
@@ -142,7 +157,7 @@ export default function StudentManagement() {
   const visibleGrades = (grades.data || []).filter((item) => item.active && (!jenjangId || item.jenjang_id === Number(jenjangId)) && (!programId || item.program_id === Number(programId)));
   const visibleClasses = (classes.data || []).filter((item) => item.active && (!academicYearId || item.academic_year_id === Number(academicYearId)) && (!gradeId || item.grade_id === Number(gradeId)));
   const columns = useMemo(() => column.columns([
-    column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-semibold text-brand hover:underline" to={`/students/${row.original.id}`}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
+    column.accessor("full_name", { header: "Student", cell: ({ row }) => <div><Link className="font-semibold text-brand hover:underline" to={directoryHref(`/students/${row.original.id}`, context)}>{row.original.full_name}</Link>{row.original.preferred_name && <p className="text-xs text-muted-foreground">{row.original.preferred_name}</p>}</div> }),
     column.accessor("nipd_masked", { header: "NIPD", cell: (info) => info.getValue() || "—" }),
     column.accessor("nisn_masked", { header: "NISN", cell: (info) => info.getValue() || "—" }),
     column.accessor("current_jenjang", { header: "Jenjang", cell: (info) => info.getValue() || "—" }),
@@ -156,8 +171,8 @@ export default function StudentManagement() {
     column.accessor("kk_verification_status", { header: "KK Verif", cell: (info) => { const v = info.getValue() || "UNVERIFIED"; return <Badge variant={v === "VERIFIED" ? "success" : v === "NEEDS_CORRECTION" ? "danger" : "secondary"}>{v.replaceAll("_", " ")}</Badge>; } }),
     column.accessor("dapodik_status", { header: "DAPODIK", cell: (info) => { const v = info.getValue() || "NOT_STARTED"; return <Badge variant={v === "SYNCHRONIZED" ? "success" : v === "NEEDS_CORRECTION" ? "danger" : v === "ENTERED" ? "information" : "secondary"}>{v.replaceAll("_", " ")}</Badge>; } }),
     column.accessor("quality_flags", { header: "Data quality", cell: (info) => info.getValue().length ? <Badge variant="warning">{info.getValue().length} item(s)</Badge> : <Badge variant="success">Complete</Badge> }),
-    column.display({ id: "actions", header: "Actions", cell: ({ row }) => <Button variant="outline" size="sm" onClick={() => { window.location.href = `/students/${row.original.id}`; }}>Open profile</Button> }),
-  ]), []);
+    column.display({ id: "actions", header: "Actions", cell: ({ row }) => <Link className={buttonVariants({ variant: "outline", size: "sm" })} to={directoryHref(`/students/${row.original.id}`, context)}>Open profile</Link> }),
+  ]), [context]);
   const table = useTable({ features, data: students.data?.items || [], columns, manualPagination: true, pageCount: students.data?.total_pages || 0 });
   const exportTemplate = async () => { const blob = await exporter.mutateAsync(); saveBlob(blob, "operatoros-student-update.xlsx"); };
   const exportCsv = async () => { const blob = await csvExporter.mutateAsync(filters); saveBlob(blob, "operatoros-students.csv"); };
@@ -168,22 +183,22 @@ export default function StudentManagement() {
       <TabsList className="max-w-full overflow-x-auto"><TabsTrigger value="all">All Students</TabsTrigger><TabsTrigger value="quality">Data Quality</TabsTrigger><TabsTrigger value="history">Import / Update History</TabsTrigger></TabsList>
       <TabsContent value="all" className="space-y-4">
         <Card><CardContent className="grid grid-cols-2 items-end gap-3 p-3 sm:grid-cols-3 lg:grid-cols-4 [&_input]:h-10 [&_select]:h-10">
-          <div className="relative col-span-2 sm:col-span-1"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Label className="sr-only" htmlFor="student-search">Search students</Label><Input id="student-search" className="pl-9" placeholder="Name, NIPD, NISN, Device ID" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div>
-          <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
-          <div><Label htmlFor="student-nisn-status-filter">NISN input status</Label><NativeSelect id="student-nisn-status-filter" aria-label="NISN input status" value={nisnStatus} onChange={(event) => { setNisnStatus(event.target.value === "inputted" || event.target.value === "not_inputted" ? event.target.value : ""); setPage(1); }}><option value="">All</option><option value="inputted">Inputted</option><option value="not_inputted">Not Inputted</option></NativeSelect></div>
-          <div><Label htmlFor="student-nik-filter">NIK Verification</Label><NativeSelect id="student-nik-filter" aria-label="NIK verification status" value={nikStatus} onChange={(event) => { setNikStatus(event.target.value); setPage(1); }}><option value="">All NIK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
-          <div><Label htmlFor="student-kk-filter">KK Verification</Label><NativeSelect id="student-kk-filter" aria-label="KK verification status" value={kkStatus} onChange={(event) => { setKkStatus(event.target.value); setPage(1); }}><option value="">All KK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
-          <div><Label htmlFor="student-dapodik-filter">DAPODIK status</Label><NativeSelect id="student-dapodik-filter" aria-label="DAPODIK status" value={dapodikStatus} onChange={(event) => { setDapodikStatus(event.target.value); setPage(1); }}><option value="">All DAPODIK</option><option value="SYNCHRONIZED">Synchronized</option><option value="ENTERED">Entered</option><option value="PENDING_EXTERNAL_PROCESSING">Pending Processing</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="NOT_STARTED">Not Started</option></NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setDevice(event.target.value); setPage(1); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-year-filter">Academic year</Label><NativeSelect id="student-year-filter" value={academicYearId} onChange={(event) => { setAcademicYearId(event.target.value); setClassId(""); setPage(1); }}><option value="">All academic years</option>{(years.data || []).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-jenjang-filter">Jenjang</Label><NativeSelect id="student-jenjang-filter" value={jenjangId} onChange={(event) => { setJenjangId(event.target.value); setProgramId(""); setGradeId(""); setPage(1); }}><option value="">All Jenjang</option>{(jenjangs.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-program-filter">Programme</Label><NativeSelect id="student-program-filter" value={programId} onChange={(event) => { setProgramId(event.target.value); setGradeId(""); setPage(1); }}><option value="">All programmes</option>{visiblePrograms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-grade-filter">Grade</Label><NativeSelect id="student-grade-filter" value={gradeId} onChange={(event) => { setGradeId(event.target.value); setPage(1); }}><option value="">All grades</option>{visibleGrades.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
-          <div><Label className="sr-only" htmlFor="student-class-filter">Class</Label><NativeSelect id="student-class-filter" value={classId} onChange={(event) => { setClassId(event.target.value); setPage(1); }}><option value="">All classes</option>{visibleClasses.map((item) => <option key={item.id} value={item.id}>{item.class_name}</option>)}</NativeSelect></div>
+          <div className="relative col-span-2 sm:col-span-1"><Search aria-hidden="true" className="absolute left-3 top-3 size-4 text-muted-foreground" /><Label className="sr-only" htmlFor="student-search">Search students</Label><Input id="student-search" className="pl-9" placeholder="Name, NIPD, NISN, Device ID" value={search} onChange={(event) => { setSearch(event.target.value); if (context.has("page")) setParams((current) => { current.delete("page"); return current; }, { replace: true }); }} /></div>
+          <div><Label className="sr-only" htmlFor="student-status-filter">Student status</Label><NativeSelect id="student-status-filter" value={status} onChange={(event) => { setFilter("status", event.target.value); }}><option value="">All statuses</option><option value="active">Active</option><option value="pending_review">Pending review</option><option value="inactive">Inactive</option><option value="graduated">Graduated</option></NativeSelect></div>
+          <div><Label htmlFor="student-nisn-status-filter">NISN input status</Label><NativeSelect id="student-nisn-status-filter" aria-label="NISN input status" value={nisnStatus} onChange={(event) => { setFilter("nisn_status", event.target.value); }}><option value="">All</option><option value="inputted">Inputted</option><option value="not_inputted">Not Inputted</option></NativeSelect></div>
+          <div><Label htmlFor="student-nik-filter">NIK Verification</Label><NativeSelect id="student-nik-filter" aria-label="NIK verification status" value={nikStatus} onChange={(event) => { setFilter("nik_verification_status", event.target.value); }}><option value="">All NIK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
+          <div><Label htmlFor="student-kk-filter">KK Verification</Label><NativeSelect id="student-kk-filter" aria-label="KK verification status" value={kkStatus} onChange={(event) => { setFilter("kk_verification_status", event.target.value); }}><option value="">All KK</option><option value="VERIFIED">Verified</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="UNVERIFIED">Unverified</option></NativeSelect></div>
+          <div><Label htmlFor="student-dapodik-filter">DAPODIK status</Label><NativeSelect id="student-dapodik-filter" aria-label="DAPODIK status" value={dapodikStatus} onChange={(event) => { setFilter("dapodik_status", event.target.value); }}><option value="">All DAPODIK</option><option value="SYNCHRONIZED">Synchronized</option><option value="ENTERED">Entered</option><option value="PENDING_EXTERNAL_PROCESSING">Pending Processing</option><option value="NEEDS_CORRECTION">Needs Correction</option><option value="NOT_STARTED">Not Started</option></NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-device-filter">Device link status</Label><NativeSelect id="student-device-filter" value={device} onChange={(event) => { setFilter("device_linked", event.target.value); }}><option value="">All device links</option><option value="linked">Device linked</option><option value="unlinked">Device unlinked</option></NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-year-filter">Academic year</Label><NativeSelect id="student-year-filter" value={academicYearId} onChange={(event) => { setFilter("academic_year_id", event.target.value, ["class_id"]); }}><option value="">All academic years</option>{(years.data || []).map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-jenjang-filter">Jenjang</Label><NativeSelect id="student-jenjang-filter" value={jenjangId} onChange={(event) => { setFilter("jenjang_id", event.target.value, ["program_id", "grade_id"]); }}><option value="">All Jenjang</option>{(jenjangs.data || []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-program-filter">Programme</Label><NativeSelect id="student-program-filter" value={programId} onChange={(event) => { setFilter("program_id", event.target.value, ["grade_id"]); }}><option value="">All programmes</option>{visiblePrograms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-grade-filter">Grade</Label><NativeSelect id="student-grade-filter" value={gradeId} onChange={(event) => { setFilter("grade_id", event.target.value); }}><option value="">All grades</option>{visibleGrades.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></div>
+          <div><Label className="sr-only" htmlFor="student-class-filter">Class</Label><NativeSelect id="student-class-filter" value={classId} onChange={(event) => { setFilter("class_id", event.target.value); }}><option value="">All classes</option>{visibleClasses.map((item) => <option key={item.id} value={item.id}>{item.class_name}</option>)}</NativeSelect></div>
         </CardContent></Card>
-        {students.isPending ? <LoadingState title="Loading students" /> : students.isError ? <ErrorState title="Students could not be loaded" description={students.error.message} /> : !students.data?.items.length ? <EmptyState title={search.trim() ? "No matching students" : "No students found"} description={search.trim() ? "Try a different search or adjust the filters." : can("create_student") ? "Adjust the filters or add a student." : "Adjust the filters, or ask an administrator to add or import students."} /> : <>
+        {students.isPending ? <LoadingState title="Loading students" /> : students.isError ? <ErrorState title="Students could not be loaded" description={students.error.message} /> : !students.data?.items.length ? <EmptyState title={hasFilters ? "No matching students" : "No students found"} description={hasFilters ? "Try a different search or adjust the filters." : can("create_student") ? "Adjust the filters or add a student." : "Adjust the filters, or ask an administrator to add or import students."} /> : <>
           <DataTableContainer role="region" aria-label="Student directory results" tabIndex={0} className="focus-visible:outline-offset-2"><DataTable><DataTableHeader>{table.getHeaderGroups().map((group) => <DataTableRow key={group.id}>{group.headers.map((header) => <DataTableHead key={header.id}>{header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}</DataTableHead>)}</DataTableRow>)}</DataTableHeader><DataTableBody>{table.getRowModel().rows.map((row) => <DataTableRow key={row.id}>{row.getVisibleCells().map((cell) => <DataTableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</DataTableCell>)}</DataTableRow>)}</DataTableBody></DataTable></DataTableContainer>
-          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Page {students.data.page} of {Math.max(1, students.data.total_pages)} · {students.data.total} students</p><div className="flex gap-2"><Button variant="outline" disabled={page <= 1 || students.isFetching} onClick={() => setPage((value) => value - 1)}>Previous</Button><Button variant="outline" disabled={page >= students.data.total_pages || students.isFetching} onClick={() => setPage((value) => value + 1)}>Next</Button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Page {students.data.page} of {Math.max(1, students.data.total_pages)} · {students.data.total} students</p><div className="flex gap-2"><Button variant="outline" disabled={page <= 1 || students.isFetching} onClick={() => setFilter("page", String(page - 1))}>Previous</Button><Button variant="outline" disabled={page >= students.data.total_pages || students.isFetching} onClick={() => setFilter("page", String(page + 1))}>Next</Button></div></div>
         </>}
       </TabsContent>
       <TabsContent value="quality">{quality.isPending ? <LoadingState title="Calculating data quality" /> : quality.isError ? <ErrorState title="Data quality could not be loaded" /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{Object.entries(quality.data || {}).map(([key, value]) => <Card key={key}><CardHeader><CardTitle className="text-sm capitalize">{key.replaceAll("_", " ")}</CardTitle></CardHeader><CardContent><p className="text-3xl font-black tabular-nums">{value}</p></CardContent></Card>)}</div>}</TabsContent>

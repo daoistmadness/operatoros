@@ -92,6 +92,10 @@ Home shows the selected attendance month and links to authorized operational des
 
 Links to an existing attendance follow-up case use `/attendance/followups?case_id=<id>`. They open the case dialog on the Follow-Up Queue. Closing the dialog retains the list filters. The existing detail and history endpoints independently authorize the requested case.
 
+## Record return links
+
+Student and Employee Directory links carry an allowlist of existing filters, sorting, and pagination through record links and back to the directory. Employee editing keeps that context on cancel and save. Free-text student search, employee search, and typed job-title filters stay in page memory. Record routes and API capability checks remain authoritative.
+
 ## UI components
 
 The web application owns product routes, page layouts, and domain forms.
