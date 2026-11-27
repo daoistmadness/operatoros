@@ -8689,15 +8689,15 @@
       ]
     },
     "source:e2e/smoke/web/critical-paths.spec.ts": {
-      "fingerprint": "37e212dd1c8e9dc7c330d17b12231315205f5c3f11a74a967efadfce7145e2c1",
+      "fingerprint": "651c65872d19d7b4dedc4303705c85a03d0f2e954382d8c110e60b91b30990b4",
       "snapshot": {
-        "e2e/smoke/web/critical-paths.spec.ts": "7efff8740530505eb6e42540b5dbcf6b50b6d8ff3375b6b727aaec1c67166eb1"
+        "e2e/smoke/web/critical-paths.spec.ts": "73675a01374c5803b067474ec49d9b1e107cf3a4ebfde350c2f3d89c6ad078a3"
       },
-      "head": "039c44449118797c4f20b29419e63367722150d2",
+      "head": "1d738d939068d44afeca50754fb1f3509b34e01d",
       "outcome": "no-change",
-      "reason": "Reviewed the C9 changes against current skill and planning guidance. Elysia remains v1.4.29; the C9 changes do not introduce new Elysia API patterns, and the existing skill directs v1 users to the v1 docs. The included examples validated. No new skill batch or planning artifact update is required; no guidance change is indicated.",
+      "reason": "Scoped the existing Dashboard period smoke assertion to its exact label and added assertions for the new summary heading and recap link. This browser regression changes no Elysia source or skill guidance.",
       "evidence": [
-        "Changed: e2e/smoke/web/critical-paths.spec.ts at 039c44449118797c4f20b29419e63367722150d2"
+        "Changed: e2e/smoke/web/critical-paths.spec.ts at 1d738d939068d44afeca50754fb1f3509b34e01d"
       ]
     },
     "source:e2e/smoke/web/daily-attendance-operations.spec.ts": {
