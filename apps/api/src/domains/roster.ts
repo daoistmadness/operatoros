@@ -10,6 +10,7 @@ import {
   type ParsedExcelWorkbook,
 } from "@operatoros/excel";
 import { ExcelAdmissionError, withExcelAdmission } from "../import/excel-admission";
+import { runXlsxReadSubprocess } from "../import/excel-subprocess";
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { t } from "elysia";
 import { actor } from "./core";
@@ -171,7 +172,9 @@ async function rosterPreview(context: AuthContext, file: File, owner: string, da
     if (!file.size || file.size > MAX_ROSTER_UPLOAD_BYTES) throw Object.assign(new Error(`Roster workbook must be between 1 byte and ${MAX_ROSTER_UPLOAD_BYTES} bytes.`), { status: file.size > MAX_ROSTER_UPLOAD_BYTES ? 413 : 400 });
     const buffer = await file.arrayBuffer();
     if (!buffer.byteLength || buffer.byteLength > MAX_ROSTER_UPLOAD_BYTES) throw Object.assign(new Error(`Roster workbook must be between 1 byte and ${MAX_ROSTER_UPLOAD_BYTES} bytes.`), { status: buffer.byteLength > MAX_ROSTER_UPLOAD_BYTES ? 413 : 400 });
-    const parsed = await withExcelAdmission(buffer.byteLength, () => readXlsxWorkbook(buffer));
+    const parsed = buffer.byteLength >= 64 * 1024
+      ? await runXlsxReadSubprocess(buffer, file.name)
+      : await withExcelAdmission(buffer.byteLength, () => readXlsxWorkbook(buffer));
     const result = planRoster(context, rosterRows(parsed));
     const summary: Row = { total: result.length }; for (const name of ["CREATE_ENROLLMENT", "CREATE_NEW_MASTER", "POSSIBLE_DUPLICATE", "CLASS_NOT_FOUND", "CLASS_INACTIVE", "CLASS_CONTEXT_CONFLICT", "AMBIGUOUS_CLASS", "INVALID"]) summary[name.toLowerCase()] = result.filter((value) => value.classification === name).length;
     const batchId = randomUUID(); const checksum = createHash("sha256").update(Buffer.from(buffer)).digest("hex"); const previewChecksum = digest(result);

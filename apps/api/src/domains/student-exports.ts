@@ -4,6 +4,7 @@ import { t } from "elysia";
 import { actor } from "./core";
 import { capabilitiesForRole } from "../auth/capabilities";
 import type { AuthContext } from "../auth/service";
+import { createAdmittedXlsxResponse, ExcelAdmissionError } from "../import/excel-admission";
 
 type Row = Record<string, any>;
 type Context = any;
@@ -59,10 +60,6 @@ function validate(scope: string, profile: string, set: any): boolean {
   return true;
 }
 
-function sendXlsx(bytes: Uint8Array, filename: string): Response {
-  return new Response(bytes, { headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename=${filename}`, "cache-control": "no-store, no-cache, must-revalidate, private" } });
-}
-
 export function studentExportRoutes(app: any, context: AuthContext): any {
   const previewBody = t.Object({ scope: t.String(), field_profile: t.String(), filters: t.Optional(t.Record(t.String(), t.Any())), selected_student_ids: t.Optional(t.Array(t.String())) });
   const downloadBody = t.Object({ scope: t.String(), field_profile: t.String(), filters: t.Optional(t.Record(t.String(), t.Any())), selected_student_ids: t.Optional(t.Array(t.String())), preview_checksum: t.Optional(t.String()) });
@@ -87,17 +84,31 @@ export function studentExportRoutes(app: any, context: AuthContext): any {
     try { values = exportRows(context, scope, filters, ctx.body.selected_student_ids ?? null); } catch (error) { return fail(ctx.set, (error as any).status ?? 400, (error as Error).message); }
     if (!values.length) { audit(context, user, required, "EXPORT_DOWNLOAD", scope, false, { reason: "No matching records found" }, "EMPTY_EXPORT"); return fail(ctx.set, 400, "Cannot generate empty export. No matching records found."); }
     if (values.length > maxRows) return fail(ctx.set, 400, `Export row count exceeds maximum limit of ${maxRows} rows.`);
-    const workbook = createWorkbook({ exportType: "student-export" }); const sheet = addWorksheet(workbook, "Student Records");
-    const headers = profile === "STANDARD_OPERATIONAL" ? ["ID", "Nama Lengkap", "Status", "Jenis Kelamin", "Tempat Lahir", "Tanggal Lahir", "Agama"] : profile === "SENSITIVE_IDENTIFIERS" ? ["ID", "Nama Lengkap", "Status", "NIK", "NISN", "NIPD", "Jenis Kelamin", "Device ID Active"] : ["ID", "Nama Lengkap", "Status", "Alamat", "No Telp / HP", "Nama Wali", "No HP Wali"];
-    appendRow(sheet, headers); styleHeader(sheet); sheet.getRow(1).font = { color: { argb: "FFFFFFFF" }, bold: true }; sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
-    for (const value of values) {
-      if (profile === "STANDARD_OPERATIONAL") appendRow(sheet, [value.id, value.full_name, value.student_status, value.gender ?? "-", value.birth_place ?? "-", value.birth_date ?? "-", value.religion ?? "-"]);
-      else if (profile === "SENSITIVE_IDENTIFIERS") { const device = rows(context, "SELECT device_identifier FROM student_device_identities WHERE student_master_id = ? AND is_active = 1 ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, String(value.nik ?? "-"), String(value.nisn ?? "-"), String(value.nipd ?? "-"), value.gender ?? "-", String(device?.device_identifier ?? "-")]); }
-      else { const address = rows(context, "SELECT address FROM student_addresses WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const contact = rows(context, "SELECT student_phone FROM student_contacts WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const guardian = rows(context, "SELECT name, phone FROM student_parent_guardians WHERE student_master_id = ? ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, address?.address ?? "-", String(contact?.student_phone ?? "-"), guardian?.name ?? "-", String(guardian?.phone ?? "-")]); }
+    const filename = safeExportFilename(`student_export_${scope.toLowerCase()}_${new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14)}`);
+    try {
+      return await createAdmittedXlsxResponse(
+        async () => {
+          const workbook = createWorkbook({ exportType: "student-export" }); const sheet = addWorksheet(workbook, "Student Records");
+          const headers = profile === "STANDARD_OPERATIONAL" ? ["ID", "Nama Lengkap", "Status", "Jenis Kelamin", "Tempat Lahir", "Tanggal Lahir", "Agama"] : profile === "SENSITIVE_IDENTIFIERS" ? ["ID", "Nama Lengkap", "Status", "NIK", "NISN", "NIPD", "Jenis Kelamin", "Device ID Active"] : ["ID", "Nama Lengkap", "Status", "Alamat", "No Telp / HP", "Nama Wali", "No HP Wali"];
+          appendRow(sheet, headers); styleHeader(sheet); sheet.getRow(1).font = { color: { argb: "FFFFFFFF" }, bold: true }; sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+          for (const value of values) {
+            if (profile === "STANDARD_OPERATIONAL") appendRow(sheet, [value.id, value.full_name, value.student_status, value.gender ?? "-", value.birth_place ?? "-", value.birth_date ?? "-", value.religion ?? "-"]);
+            else if (profile === "SENSITIVE_IDENTIFIERS") { const device = rows(context, "SELECT device_identifier FROM student_device_identities WHERE student_master_id = ? AND is_active = 1 ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, String(value.nik ?? "-"), String(value.nisn ?? "-"), String(value.nipd ?? "-"), value.gender ?? "-", String(device?.device_identifier ?? "-")]); }
+            else { const address = rows(context, "SELECT address FROM student_addresses WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const contact = rows(context, "SELECT student_phone FROM student_contacts WHERE student_master_id = ? LIMIT 1", [value.id])[0]; const guardian = rows(context, "SELECT name, phone FROM student_parent_guardians WHERE student_master_id = ? ORDER BY id LIMIT 1", [value.id])[0]; appendRow(sheet, [value.id, value.full_name, value.student_status, address?.address ?? "-", String(contact?.student_phone ?? "-"), guardian?.name ?? "-", String(guardian?.phone ?? "-")]); }
+          }
+          const bytes = await writeXlsxWorkbook(workbook);
+          audit(context, user, required, "EXPORT_DOWNLOAD", scope, true, { actual_row_count: values.length, sensitive, field_profile: profile, filename });
+          return {
+            bytes,
+            headers: { "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "content-disposition": `attachment; filename=${filename}`, "cache-control": "no-store, no-cache, must-revalidate, private" },
+          };
+        },
+        ctx.request?.signal,
+      );
+    } catch (error) {
+      if (error instanceof ExcelAdmissionError) return fail(ctx.set, error.status, error.message);
+      throw error;
     }
-    const bytes = await writeXlsxWorkbook(workbook); const filename = safeExportFilename(`student_export_${scope.toLowerCase()}_${new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14)}`);
-    audit(context, user, required, "EXPORT_DOWNLOAD", scope, true, { actual_row_count: values.length, sensitive, field_profile: profile, filename });
-    return sendXlsx(bytes, filename);
   }, { body: downloadBody });
   return app;
 }

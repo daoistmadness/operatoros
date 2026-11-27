@@ -193,15 +193,15 @@
       ]
     },
     "source:apps/api/src/app.ts": {
-      "fingerprint": "8dd83f391aaabe222b00d20e959cd2feb25b4b29919f58449fca2845bf6f5a5e",
+      "fingerprint": "5748f602eace09ae7599c32d2855cc23213cfec3563036d367cbcffbf234765f",
       "snapshot": {
-        "apps/api/src/app.ts": "7121c46a5074c675012c1442b487c36a0692e2449968f59cef7665443cf242ca"
+        "apps/api/src/app.ts": "5d9f8784d4444a658b2e5f48442432c454ce782cd5e54a85f24642a63e7216fd"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/app.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/api/src/app.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/config.ts": {
@@ -1632,15 +1632,15 @@
       ]
     },
     "source:apps/api/src/import/excel-reader.ts": {
-      "fingerprint": "33bbc93f26af9d1b64037bd5177af4c674d04b9341f95518142e32f8ceaa7520",
+      "fingerprint": "c4edb4ef86da4bda9607dd0f38e1a9d87e20b12c94e5c89ace28425b26521344",
       "snapshot": {
-        "apps/api/src/import/excel-reader.ts": "b74188beefe2f5a43d3b1f041800cd097920b2611ed5cd4474f475a69a851238"
+        "apps/api/src/import/excel-reader.ts": "fad66d5be6ea898153ebcf89b4921e10eb2e6ca84e575a7f9f99836404acdea4"
       },
-      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-reader.ts at 5294f747a680eadc0c53947c8db226886d6b0079"
+        "Changed: apps/api/src/import/excel-reader.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/import/excel-reader.worker.ts": {
@@ -2956,15 +2956,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "9910d3e8db565b50249944d4b7de420fd20e003862e4c016438ccb94a1cdb7e1",
+      "fingerprint": "b3dc79f09cbe48fff12fc5896b1d9af28c7f22d965021da0cce41f6800676aea",
       "snapshot": {
-        "CHANGELOG.md": "9c6a7aa157e19b517a09a3f38b908b8f6baf1f41a8d3384127be3a2b1073a3e5"
+        "CHANGELOG.md": "8dfe8d400dc38decfe0ca3707e11a6421f19341691d9f3d18f7aab0981b7b180"
       },
-      "head": "7b1d8f33b629cf3f45efd3a730a67dd2096ce311",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "The changelog references the assigned PR number. The reviewed implementation and skill guidance are unchanged.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: CHANGELOG.md at 7b1d8f33b629cf3f45efd3a730a67dd2096ce311"
+        "Changed: CHANGELOG.md at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:COMMANDS.md": {
@@ -3289,15 +3289,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "0084bde9b24ed845867f0ecffe0f4af7e99ffc5e7a2870b2ed5ec04e14a75b10",
+      "fingerprint": "d007604832619d1163e41511830b950bf2d38d037726c6773212a2693dcf6ab8",
       "snapshot": {
-        "docs/architecture/excel.md": "e80d9040648d978f42611a3cc7d27a3d2ddd72016b08dbeb7c6a334a517c97dc"
+        "docs/architecture/excel.md": "053a9d7f4d50883d2c2a83243b374cb9b0ea64bb61f4e6c6c61839064def796b"
       },
-      "head": "5294f747a680eadc0c53947c8db226886d6b0079",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at 5294f747a680eadc0c53947c8db226886d6b0079"
+        "Changed: docs/architecture/excel.md at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -5199,15 +5199,15 @@
       ]
     },
     "source:apps/api/src/domains/employee-management.ts": {
-      "fingerprint": "1db2ebc8f5c348e056b12800ae3cb7b322efb241c9398f4d33b4a2eee9f91a86",
+      "fingerprint": "aaa2018921cf9654a9512a811f3de5ec102c5e3f683313502a90d61648f9423e",
       "snapshot": {
-        "apps/api/src/domains/employee-management.ts": "afd8040b743fec41ee9a089bb7d47c11e0a4e446df4b18bc0ecafe52ff5a98e3"
+        "apps/api/src/domains/employee-management.ts": "19930bbb2ccf604091df206e841b7cd919d1b1fdc216a9cfb209dd7eedb2057a"
       },
-      "head": "dcafae19b07b1677c5c82c46eedaa2d38f4349c0",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "Administrasi PTK follows existing Elysia v1 route composition, Staff capability checks, TypeBox DTOs, and disposable SQLite test guidance. No packaged skill changes are needed.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/employee-management.ts at dcafae19b07b1677c5c82c46eedaa2d38f4349c0"
+        "Changed: apps/api/src/domains/employee-management.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/domains/staff-metrics.ts": {
@@ -8269,15 +8269,15 @@
       ]
     },
     "source:apps/api/src/domains/roster.ts": {
-      "fingerprint": "2d7376694a17d06a3d59fd84b3cd760040686dd8e520ad3004098d487f9d6b6c",
+      "fingerprint": "7172de3cca45f9579d65a4058f667f1921ffe558d44eb87649fc5f844ea22a7d",
       "snapshot": {
-        "apps/api/src/domains/roster.ts": "e12c473deb54f725756cd7b0a1950545de622a727946e9f0a9a00f357d54f904"
+        "apps/api/src/domains/roster.ts": "a535f418d11bb5b58b50988e68adb3b18a7303f04f26eae0281334c7e183b157"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/roster.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/domains/roster.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/domains/student-import-sessions.ts": {
@@ -8293,15 +8293,15 @@
       ]
     },
     "source:apps/api/src/domains/student-update.ts": {
-      "fingerprint": "530fea1798bb6e55a0a180b23ca785f71928a47b0231b8ca1ea5778990b753c1",
+      "fingerprint": "c0cbe82801d13f4bac76c0c75a78a550fa0b69ac03d97da2bf9319e0e4b21061",
       "snapshot": {
-        "apps/api/src/domains/student-update.ts": "fac9bbf6bc190ba4c69c9f0fef7cb851330a2c1e1054fd731f1a862cb039e43f"
+        "apps/api/src/domains/student-update.ts": "455ca2ea1fe1af568fa7f99a4d86666fa3ef0143851883a2bb8ad5aa123aeca8"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/student-update.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/domains/student-update.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/web/src/api/jenjangConfig.ts": {
@@ -9463,15 +9463,15 @@
       ]
     },
     "source:apps/api/src/domains/staff-import.ts": {
-      "fingerprint": "c24d1fdb5d9ce79733327005fb5c5a4c27a5764dd1d015cfe54fdc7c3c7443d2",
+      "fingerprint": "3565032ea5ea46372ca9dc73db37c911224e693f3879d0949770b70cecac0fad",
       "snapshot": {
-        "apps/api/src/domains/staff-import.ts": "657aa3e83f65b5fa24b6e377cc50447e7ade76a167ee67a88529533dbcf5fd11"
+        "apps/api/src/domains/staff-import.ts": "4502819621dce9d70ddf6111dd7b145e150ecf6fdc054f444444917ccf993c64"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/staff-import.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/domains/staff-import.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/domains/student-overview.ts": {
@@ -10370,15 +10370,15 @@
       ]
     },
     "source:apps/api/src/domains/student-exports.ts": {
-      "fingerprint": "5ac6df75abae4b282b0cd54823d3ca5864c72639407deb0989c4e511ffb73223",
+      "fingerprint": "48846d3e6d92a3ff2c34fa50225b125eb6a25cd8e41ff3901eeefc51f97a2e6e",
       "snapshot": {
-        "apps/api/src/domains/student-exports.ts": "42d8f7b86f21eb8f01398fbfb2377079adf6e632ec9bb26fe6a76c6998820bb1"
+        "apps/api/src/domains/student-exports.ts": "405ba3af6f3c096fd6e0341963635952ebd3f8154d61e9456c79f71ba0ee72d5"
       },
-      "head": "4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "The Node OCI runtime remains a proposal and does not change the supported Bun/Elysia v1 guidance. The server fix uses Elysia app.stop(true) to run lifecycle hooks and is covered by the lifecycle test and exact-image Node smoke; no installed guidance is inaccurate.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/student-exports.ts at 4c2ccb4fb73e8a08ca3694b3d39f3234b2a247c8"
+        "Changed: apps/api/src/domains/student-exports.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/tests/admin-recovery.test.ts": {
@@ -11828,27 +11828,27 @@
       ]
     },
     "source:apps/api/src/domains/machine-attendance-preview.ts": {
-      "fingerprint": "19a41ad87df57e53ae6a22bd56e74cab938118102fa79dfdb88efeb06af8608f",
+      "fingerprint": "06893fd4ba23094e2c874cb7ea945917e41653da89d8df090db2c506310e49dd",
       "snapshot": {
-        "apps/api/src/domains/machine-attendance-preview.ts": "ff161cf3348f400987b5fd78a0f506268ba52216d107e1360840f3a852af6a6d"
+        "apps/api/src/domains/machine-attendance-preview.ts": "eb5bcf6c843d0f1eb551450fcbd4d9b00eed604d4e9d3ab40c89031d847ed537"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/domains/machine-attendance-preview.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/domains/machine-attendance-preview.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/src/import/excel-admission.ts": {
-      "fingerprint": "1d0c4a44f52dc06aa122c684083f56faa64b9e8a32b1f493e279be7a521d757a",
+      "fingerprint": "6c8493374d0f9a7d85724e99ff0b3da1a49cd18a0573301c10748f00227124f1",
       "snapshot": {
-        "apps/api/src/import/excel-admission.ts": "ff16c4cdec507ee9952241c8d2d0268851bf08ed2cd480c08db924e43d57e132"
+        "apps/api/src/import/excel-admission.ts": "8615e7676362e49b65678f55ce7bb90bd7e2b67df1dcccbe25f7df655438af0d"
       },
-      "head": "f990c7f5be9d449bdf1c553299f9d62535a9669a",
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
       "outcome": "no-change",
-      "reason": "PR-1 Excel security and resource containment changes do not alter Elysia v1 skill guidance.",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
       "evidence": [
-        "Changed: apps/api/src/import/excel-admission.ts at f990c7f5be9d449bdf1c553299f9d62535a9669a"
+        "Changed: apps/api/src/import/excel-admission.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     },
     "source:apps/api/tests/excel-admission.test.ts": {
@@ -11969,6 +11969,66 @@
       "reason": "Excel worker permit ownership and its runtime test change only an internal parser lifecycle. Elysia route composition, middleware, API contracts, package versions, and skill examples are unaffected. The architecture page and changelog document the verified behavior.",
       "evidence": [
         "Changed: apps/api/tests/excel-worker-admission.test.ts at 5294f747a680eadc0c53947c8db226886d6b0079"
+      ]
+    },
+    "source:apps/api/src/domains/management-review-attendance.ts": {
+      "fingerprint": "f05992f692fed661badb4a4a7262a62132adac8414cedc6585fa7dcb5458d520",
+      "snapshot": {
+        "apps/api/src/domains/management-review-attendance.ts": "1518b56556820f1036a61fdcd1e79fd690fd47e3ebd4337772ec5a3e66d9520b"
+      },
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
+      "outcome": "no-change",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/domains/management-review-attendance.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
+      ]
+    },
+    "source:apps/api/src/import/excel-parser-child.ts": {
+      "fingerprint": "3dc9e86aff0e82d8290dfe6d182811985f18158525b2b5138de34cc4dfd1026f",
+      "snapshot": {
+        "apps/api/src/import/excel-parser-child.ts": "453e7f7d396d61fa84bcaf980050a1b1f49a02fe4ad96c7cfea1c92be5fc3f17"
+      },
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
+      "outcome": "no-change",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-parser-child.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
+      ]
+    },
+    "source:apps/api/src/import/excel-subprocess.ts": {
+      "fingerprint": "85422301cc5f29eb0f5a71a961fe0566c17d2eaf153cf16c48dda2d716ad0dda",
+      "snapshot": {
+        "apps/api/src/import/excel-subprocess.ts": "edc80a06bf624d443cf538c4214ecd21ab236736c32f399ae1e7103842505a58"
+      },
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
+      "outcome": "no-change",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-subprocess.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
+      ]
+    },
+    "source:apps/api/src/import/excel-upload-admission.ts": {
+      "fingerprint": "51554ae39a6ee4a1ac71021fe7f3990c7c5eae0548b40827d4a615130351f285",
+      "snapshot": {
+        "apps/api/src/import/excel-upload-admission.ts": "1f4f142c8cee53dcfa26509ef9b1f6293b994a7db3c5549129c5836044aba355"
+      },
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
+      "outcome": "no-change",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/src/import/excel-upload-admission.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
+      ]
+    },
+    "source:apps/api/tests/excel-hard-containment.test.ts": {
+      "fingerprint": "b43142c882969e9539d5f872934cbad9614a1d3e682851b560b2f083860a6ba2",
+      "snapshot": {
+        "apps/api/tests/excel-hard-containment.test.ts": "79a2873450cc08f5818a160c3c9d0b2eed62e35f5fc68b23c25208cc0c393704"
+      },
+      "head": "1706e82548c5fb080ed8ee33c4e87163ec1df2a4",
+      "outcome": "no-change",
+      "reason": "Gate 5B Excel hard resource containment does not alter Elysia v1 skill guidance.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-hard-containment.test.ts at 1706e82548c5fb080ed8ee33c4e87163ec1df2a4"
       ]
     }
   }

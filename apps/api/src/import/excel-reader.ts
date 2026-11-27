@@ -16,6 +16,7 @@ import {
   type ExcelWorksheet,
 } from "@operatoros/excel";
 import { acquireExcelPermit, withExcelAdmission } from "./excel-admission";
+import { runAttendanceSubprocess } from "./excel-subprocess";
 
 export const REQUIRED_COLUMNS = [
   "No. ID", "Nama", "Tanggal", "Scan Masuk", "Scan Pulang",
@@ -277,16 +278,16 @@ export async function parseAttendanceWorkbook(buffer: ArrayBuffer, filename: str
 const WORKER_PARSE_THRESHOLD = 64 * 1024;
 const PARSER_WORKER_TIMEOUT_MS = 30_000;
 
-export function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string): Promise<WorkbookRows> {
+export function readAttendanceWorkbook(buffer: ArrayBuffer, filename: string, signal?: AbortSignal): Promise<WorkbookRows> {
   const bytes = buffer.byteLength;
   if (bytes === 0 || bytes > EXCEL_RESOURCE_LIMITS.maxFileBytes) {
     return Promise.reject(new Error("EXCEL_FILE_SIZE_OUT_OF_BOUNDS"));
   }
   if (bytes < WORKER_PARSE_THRESHOLD) {
-    return withExcelAdmission(bytes, () => parseAttendanceWorkbook(buffer, filename));
+    return withExcelAdmission(bytes, () => parseAttendanceWorkbook(buffer, filename), signal);
   }
 
-  return readAttendanceInWorker(buffer, filename, () => new Worker(new URL("./excel-reader.worker.ts", import.meta.url)));
+  return runAttendanceSubprocess(buffer, filename, { signal });
 }
 
 type AttendanceWorker = Pick<Worker, "addEventListener" | "postMessage" | "terminate">;
