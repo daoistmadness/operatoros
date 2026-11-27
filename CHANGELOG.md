@@ -3,6 +3,7 @@
 Notable user-facing changes are recorded here.
 
 ## [Unreleased]
+- Reorganize primary navigation into nine domains (`Home`, `Work Queue`, `Attendance`, `Students`, `Academics`, `Staff`, `Inventory`, `Insights & Reports`, `Settings`) with contextual domain sub-navigation, grouped Attendance workflows, sticky mobile navigation header, domain-aware breadcrumbs, and bilingual English/Indonesian `Ctrl+K`/`⌘K` command search.
 - Add global inventory category and funding-source management with preserved asset codes, allocation history, and historical labels ([#424](https://github.com/daoistmadness/operatoros/pull/424)).
 - Permit owner-approved cleanup of individually verified reproducible dependency directories in registered development worktrees and validation checkouts.
 - Consolidate the five-phase OperatorOS release lifecycle, preflight gate, security-scope exception governance, backup/recovery matrix, and standard operational reporting across `AGENTS.md`, `COMMANDS.md`, and canonical deployment, database, and security runbooks. (#423)

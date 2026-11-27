@@ -1,8 +1,9 @@
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useLocation } from '@tanstack/react-router';
-import { Menu, X } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
 import SidebarNav from './SidebarNav';
+import { DomainSubNav } from './navigation/DomainSubNav';
 import { NavigationCommandSearch } from './navigation/NavigationCommandSearch';
 import { AppLink } from './AppLink';
 import { AccessDenied } from './auth/RouteGuards';
@@ -12,6 +13,7 @@ import { useDeploymentMode } from '../context/DeploymentModeContext';
 import { UiPreferencesProvider, useUiPreferences } from '../context/UiPreferencesContext';
 import { isRouteAuthorized } from '../lib/router/access';
 import {
+  activeNavigationEntry,
   canSelectNavigationItem,
   navigationPresentationForPath,
   visibleNavigationGroups,
@@ -55,6 +57,7 @@ function AppShellContent() {
   const accessDenied = !isRouteAuthorized(pathname, auth);
   const navigationContext = useMemo(() => ({ auth, isSingleUserMode }), [auth, isSingleUserMode]);
   const groups = useMemo(() => visibleNavigationGroups(navigationContext), [navigationContext]);
+  const activeEntry = useMemo(() => activeNavigationEntry(groups, pathname), [groups, pathname]);
   const presentation = useMemo(() => navigationPresentationForPath(groups, pathname), [groups, pathname]);
   const pageTitle = accessDenied ? 'Access denied' : presentation?.title;
 
@@ -182,18 +185,40 @@ function AppShellContent() {
     <>
       <div className="app-shell min-h-screen bg-background xl:flex" inert={verifyingSession || undefined} aria-hidden={verifyingSession || undefined}>
         <a href="#main-content" inert={navigationOpen || undefined} tabIndex={navigationOpen ? -1 : undefined} className="fixed left-4 top-2 z-[80] -translate-y-16 rounded-lg bg-slate-950 px-4 py-2 font-bold text-white transition-transform focus:translate-y-0 motion-reduce:transition-none">Skip to main content</a>
-        <button
-          ref={openerRef}
-          type="button"
-          aria-label="Open navigation"
-          aria-expanded={navigationOpen}
-          aria-controls="navigation-drawer"
-          inert={navigationOpen || undefined}
-          onClick={() => setNavigationOpen((open) => !open)}
-          className="fixed left-4 top-4 z-[30] inline-flex size-11 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-foreground shadow-sm xl:hidden"
-        >
-          {navigationOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </button>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-sidebar-border bg-surface/95 px-4 backdrop-blur-sm no-print xl:hidden" inert={navigationOpen || undefined}>
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              ref={openerRef}
+              type="button"
+              aria-label="Open navigation"
+              aria-expanded={navigationOpen}
+              aria-controls="navigation-drawer"
+              onClick={() => setNavigationOpen((open) => !open)}
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            >
+              {navigationOpen ? <X aria-hidden="true" className="size-5" /> : <Menu aria-hidden="true" className="size-5" />}
+            </button>
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-brand text-xs font-bold text-white">O</div>
+              <span className="truncate text-sm font-bold text-foreground">
+                {presentation && !accessDenied ? presentation.domainTitle : 'OperatorOS'}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            aria-label="Quick search"
+            aria-keyshortcuts="Control+K Meta+K"
+            onClick={(event) => {
+              setCommandReturnFocusTarget(event.currentTarget);
+              setNavigationOpen(false);
+              setCommandSearchOpen(true);
+            }}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-sidebar-border bg-surface text-muted-foreground hover:bg-surface-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <Search aria-hidden="true" className="size-4" />
+          </button>
+        </header>
         {navigationOpen && (
           <button
             type="button"
@@ -217,11 +242,11 @@ function AppShellContent() {
             setCommandSearchOpen(true);
           }}
         />
-        <main ref={mainRef} id="main-content" tabIndex={-1} aria-hidden={navigationOpen ? 'true' : undefined} className={`app-main min-w-0 flex-1 px-4 pb-8 pt-20 outline-none sm:px-6 xl:p-8 ${navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'}`}>
+        <main ref={mainRef} id="main-content" tabIndex={-1} aria-hidden={navigationOpen ? 'true' : undefined} className={`app-main min-w-0 flex-1 px-4 pb-8 pt-4 outline-none sm:px-6 sm:pt-6 xl:p-8 ${navigationCollapsed ? 'xl:ml-20' : 'xl:ml-64'}`}>
           <div className="mx-auto max-w-7xl">
             {presentation && !accessDenied && (
-              <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
-                <ol className="flex min-h-6 items-center gap-2">
+              <nav aria-label="Breadcrumb" className="mb-3 text-sm text-muted-foreground no-print">
+                <ol className="flex min-h-6 flex-wrap items-center gap-x-2 gap-y-1">
                   {presentation.breadcrumbs.map((breadcrumb, index) => (
                     <li key={`${breadcrumb.label}-${index}`} aria-current={index === presentation.breadcrumbs.length - 1 ? 'page' : undefined}>
                       {breadcrumb.href
@@ -232,6 +257,9 @@ function AppShellContent() {
                   ))}
                 </ol>
               </nav>
+            )}
+            {!accessDenied && activeEntry && (
+              <DomainSubNav domain={activeEntry.group} pathname={pathname} activeItemPath={activeEntry.item.path} />
             )}
             {accessDenied ? <AccessDenied /> : <SuspendedOutlet key={protectedContentKey} />}
           </div>

@@ -1,4 +1,4 @@
-import { act, useRef, useState } from 'react';
+import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { useLocation } from '@tanstack/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,11 +8,11 @@ import { visibleNavigationGroups, type NavigationItem } from '../../lib/navigati
 import { NavigationCommandSearch } from './NavigationCommandSearch';
 
 const auth: AuthContextValue = {
-  user: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student'] },
+  user: { id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_inventory'] },
   loading: false,
   authenticated: true,
-  can: (capability) => capability === 'view_student',
-  login: async () => ({ id: 1, username: 'admin', role: 'admin', capabilities: ['view_student'] }),
+  can: (capability) => ['view_student', 'view_inventory'].includes(capability),
+  login: async () => ({ id: 1, username: 'admin', role: 'admin', capabilities: ['view_student', 'view_inventory'] }),
   logout: async () => undefined,
 };
 
@@ -63,7 +63,7 @@ describe('navigation command search', () => {
     await act(async () => root.render(<SearchHarness canSelect={canSelect} />));
   }
 
-  it('focuses the search field, finds navigation aliases, and announces empty results', async () => {
+  it('focuses the search field, finds English and Indonesian aliases, and announces empty results', async () => {
     await render();
     const input = document.querySelector<HTMLInputElement>('#navigation-search-input');
     expect(input).not.toBeNull();
@@ -75,9 +75,30 @@ describe('navigation command search', () => {
     await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
     expect(document.querySelector('[role="dialog"]')?.querySelector('a[href="/students"]')?.textContent).toContain('Student Directory');
 
+    setInputValue?.call(input, 'inventaris');
+    await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
+    expect(document.querySelector('[role="dialog"]')?.querySelector('a[href="/inventory"]')?.textContent).toContain('Asset Inventory');
+
     setInputValue?.call(input, 'nothing matches');
     await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
     expect(document.querySelector('[role="status"]')?.textContent).toContain('No pages found');
+  });
+
+  it('navigates command results with arrow keys and Enter', async () => {
+    await render();
+    const input = document.querySelector<HTMLInputElement>('#navigation-search-input');
+    expect(input).not.toBeNull();
+    if (!input) throw new Error('Expected the command search field.');
+
+    const setInputValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    setInputValue?.call(input, 'inventaris');
+    await act(async () => input.dispatchEvent(new Event('input', { bubbles: true })));
+    expect(input.getAttribute('aria-activedescendant')).toBe('navigation-command-item-0');
+
+    await act(async () => {
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    });
+    expect(document.querySelector('[data-testid="current-path"]')?.textContent).toBe('/inventory');
   });
 
   it('rechecks eligibility when a result is selected and returns focus on dismissal', async () => {

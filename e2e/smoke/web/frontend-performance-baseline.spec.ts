@@ -244,7 +244,11 @@ test("@frontend-baseline opt-in local baseline covers representative frontend wo
     const authenticatedNavigationTiming = await navigationTiming(page);
     const dashboardVitals = await labMetrics(page);
 
-    const firstAcademicSpaNavigationMs = await visitLink(page, "Academic Analytics", "Academic Analytics");
+    await visitLink(page, "Insights & Reports", "Management Overview");
+    const firstAcademicStartedAt = Date.now();
+    await page.getByRole("navigation", { name: "Insights & Reports navigation" }).getByRole("link", { name: "Academic Analytics", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Academic Analytics", exact: true })).toBeVisible();
+    const firstAcademicSpaNavigationMs = Date.now() - firstAcademicStartedAt;
     const afterFirstAcademicResources = await scriptResources(page);
     const firstAcademicJsResources = afterFirstAcademicResources.slice(initialJsResources.length);
 
@@ -278,12 +282,18 @@ test("@frontend-baseline opt-in local baseline covers representative frontend wo
     const chartHoverMs = Date.now() - chartHoverStartedAt;
     const academicDomNodeCount = await page.evaluate(() => document.getElementsByTagName("*").length);
 
-    await visitLink(page, "Dashboard", "System Analytics");
-    const repeatSpaNavigationMs = await visitLink(page, "Academic Analytics", "Academic Analytics");
+    await visitLink(page, "Home", "System Analytics");
+    await visitLink(page, "Insights & Reports", "Management Overview");
+    const repeatAcademicStartedAt = Date.now();
+    await page.getByRole("navigation", { name: "Insights & Reports navigation" }).getByRole("link", { name: "Academic Analytics", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Academic Analytics", exact: true })).toBeVisible();
+    const repeatSpaNavigationMs = Date.now() - repeatAcademicStartedAt;
     const scriptsAfterRepeat = await scriptResources(page);
     const repeatAcademicJsResources = scriptsAfterRepeat.slice(afterFirstAcademicResources.length);
 
-    await visitLink(page, "Attendance Calendar", "Attendance Calendar");
+    await visitLink(page, "Attendance", "Daily Attendance");
+    await page.getByRole("navigation", { name: "Attendance navigation" }).getByRole("link", { name: "Attendance Calendar", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Attendance Calendar", exact: true })).toBeVisible();
     const weekday = page.locator("#weekday-2");
     const originalWeekday = await weekday.inputValue();
     const changedWeekday = originalWeekday === "EXPECTED" ? "NOT_EXPECTED" : "EXPECTED";

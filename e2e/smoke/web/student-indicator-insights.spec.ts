@@ -3,7 +3,8 @@ import { loginForFeature as login } from "../../helpers/feature-login";
 
 test("@indicators @analytics @release student indicators show neutral measurements and preserve filters", async ({ page }) => {
   await login(page, { home: true });
-  await page.getByRole("link", { name: "Student Insights", exact: true }).click();
+  await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Insights & Reports", exact: true }).click();
+  await page.getByRole("navigation", { name: "Insights & Reports navigation" }).getByRole("link", { name: "Student Insights", exact: true }).click();
   const initial = page.waitForResponse((response) => response.url().includes("/api/analytics/student-indicators") && response.status() === 200);
   await page.getByRole("tab", { name: "Indicators", exact: true }).click();
   await initial;

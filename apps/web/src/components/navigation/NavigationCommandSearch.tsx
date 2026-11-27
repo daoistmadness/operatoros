@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { AppLink } from '../AppLink';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from '../ui/dialog';
 import { Input } from '../ui/input';
+import { cn } from '../../lib/cn';
 import {
   searchNavigationGroups,
   type NavigationGroup,
@@ -33,22 +34,64 @@ export function NavigationCommandSearch({
 }: NavigationCommandSearchProps) {
   const [query, setQuery] = useState('');
   const [unavailable, setUnavailable] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const openedPathnameRef = useRef(pathname);
   const results = useMemo(() => searchNavigationGroups(groups, query), [groups, query]);
-  const resultCount = results.reduce((count, group) => count + group.items.length, 0);
+  const flatItems = useMemo(() => results.flatMap((group) => group.items), [results]);
+  const resultCount = flatItems.length;
+  const boundedActiveIndex = resultCount > 0 ? Math.min(activeIndex, resultCount - 1) : -1;
 
   useEffect(() => {
     if (open) return;
     setQuery('');
     setUnavailable(false);
+    setActiveIndex(0);
   }, [open]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query]);
+
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (resultCount === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((current) => (current + 1) % resultCount);
+      return;
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((current) => (current - 1 + resultCount) % resultCount);
+      return;
+    }
+    if (event.key === 'Home') {
+      event.preventDefault();
+      setActiveIndex(0);
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      setActiveIndex(resultCount - 1);
+      return;
+    }
+    if (event.key === 'Enter' && boundedActiveIndex >= 0) {
+      event.preventDefault();
+      const target = document.getElementById(`navigation-command-item-${boundedActiveIndex}`);
+      if (target instanceof HTMLAnchorElement) {
+        target.click();
+      }
+    }
+  };
+
+  let runningIndex = 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} restoreFocus={false}>
       <DialogContent
         aria-describedby="navigation-search-description"
-        className="max-h-[min(70dvh,36rem)] p-0"
+        className="max-h-[min(75dvh,38rem)] p-0"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           openedPathnameRef.current = pathname;
@@ -67,7 +110,7 @@ export function NavigationCommandSearch({
         <DialogHeader className="border-b border-border px-5 py-4 pr-12">
           <DialogTitle>Search navigation</DialogTitle>
           <DialogDescription id="navigation-search-description">
-            Search available pages. Use Tab and Enter to choose a destination.
+            Search available pages in English or Indonesian. Use Arrow keys or Tab, and Enter to open.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 px-5 py-4">
@@ -77,8 +120,10 @@ export function NavigationCommandSearch({
             id="navigation-search-input"
             type="search"
             autoComplete="off"
-            placeholder="Search pages…"
+            aria-activedescendant={boundedActiveIndex >= 0 ? `navigation-command-item-${boundedActiveIndex}` : undefined}
+            placeholder="Search pages (e.g. attendance, absensi, siswa, inventaris)…"
             value={query}
+            onKeyDown={handleInputKeyDown}
             onChange={(event) => {
               setQuery(event.currentTarget.value);
               setUnavailable(false);
@@ -98,10 +143,14 @@ export function NavigationCommandSearch({
                   <ul className="space-y-1">
                     {group.items.map((item) => {
                       const Icon = item.icon;
+                      const itemIndex = runningIndex++;
+                      const isActive = itemIndex === boundedActiveIndex;
                       return (
                         <li key={item.path}>
                           <AppLink
+                            id={`navigation-command-item-${itemIndex}`}
                             to={item.path}
+                            onMouseEnter={() => setActiveIndex(itemIndex)}
                             onClick={(event) => {
                               if (!canSelect(item)) {
                                 event.preventDefault();
@@ -110,7 +159,10 @@ export function NavigationCommandSearch({
                               }
                               setUnavailable(false);
                             }}
-                            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className={cn(
+                              'flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-foreground hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                              isActive && 'bg-surface-muted ring-1 ring-brand/30',
+                            )}
                           >
                             <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                             <span className="min-w-0 flex-1 truncate">{item.name}</span>
