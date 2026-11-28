@@ -136,6 +136,64 @@ roll back if the live database is newer than the previous release's expected sch
 the `current` symlink and Compose configuration, restarts the previous containers, and
 validates endpoint health. Never automatically restore an older production database over committed records, discard committed data, destructively revert schema, delete attachments, or restart an incompatible prior release against a migrated database; preserve the database and report `RECOVERY REQUIRED` for explicit owner authorization.
 
+## Excel Admission Lockout and Interrupted Import Recovery
+## Excel Admission Lockout and Interrupted Import Recovery
+
+1. **Separate queue pressure from lockout.** One heavy Excel job runs at a time.
+   A busy response or queue timeout during active work can be normal. Pause new
+   Excel requests and let the current operation finish. A parser timeout,
+   supported cancellation, or resource-limit error can trigger child
+   termination. The permit returns only after the API confirms reaping.
+   Unconfirmed reaping can keep the permit held for the API process lifetime.
+   A closed browser tab does not establish cancellation of a staged upload.
+   If health and readiness pass but Excel requests still cannot proceed after
+   known work has drained, treat this as suspected lockout. A timeout or a
+   missing child PID alone does not identify the permit state.
+   See [Excel parser lifecycle](../architecture/excel.md#technical-rules).
+2. **Capture evidence before changing service state.** Set the canonical
+   production roots above and use `scripts/docker-deploy.sh status` and the
+   [health and readiness probes](#4-service-status-inspection). Record UTC
+   times, HTTP statuses, sanitized error categories, whether a known job still
+   runs, and any available child PID, exit, or reap evidence. Use authorized
+   runtime inspection for process evidence. Health and readiness do not report
+   the Excel queue. Keep credentials, workbook contents, and student records
+   out of incident notes.
+3. **Reconcile an interrupted write before replay.** Identify the operation and
+   batch ID from the original preview or response. In **Upload History**, use
+   the authorized detail, **Timeline**, and **Rows** views to check the batch,
+   checksum prefix, commit or rollback evidence, and selected rows where
+   recorded. Compare the selection to the original preview and verify affected
+   attendance in the authorized application views. An identifier or checksum
+   prefix is only for correlation. The legacy staged attendance commit accepts
+   an exact replay of the same batch, full preview checksum, and selected row
+   ID set, and returns the stored result for an already committed batch.
+   A different selection returns `ATTENDANCE_COMMIT_REPLAY_MISMATCH`.
+   Other conflicts, including source or record changes, require review before
+   a fresh preview. If you cannot establish the persisted outcome, stop and
+   escalate to the owner. See the
+   [commit implementation](../../apps/api/src/domains/attendance-import.ts)
+   and [Upload History evidence](../../apps/api/src/domains/upload-history.ts).
+4. **Recover at the smallest scope.** If reaping returns the permit and a
+   single authorized read-only Excel export completes, continue without a
+   restart. If admission stays locked, escalate for separate owner
+   authorization of an API-only restart of the active, schema-compatible
+   release. This runbook grants no restart authority. Follow
+   [deployment exclusivity](#deployment-exclusivity). Confirm that you own
+   the operation, no maintenance or deployment owns the writer, and no second
+   writer can start. Use the active OperatorOS Compose configuration and
+   target only `operatoros-api` under the approved procedure. The
+   [deployment script](../../scripts/docker-deploy.sh) uses Compose
+   `stop` and `start` for that service within its controlled recovery
+   paths. It has no standalone restart command. If no safe authorized
+   procedure exists, hold the service state and escalate.
+5. **Verify recovery.** Check service status, API and proxy health, and
+   readiness. Confirm a single authorized read-only Excel export completes
+   and that the affected batch and attendance records still match the
+   reconciled state. If the writer cannot be isolated, persisted state
+   remains ambiguous, or recovery requires a schema or release compatibility
+   decision, report `RECOVERY REQUIRED` and follow
+   [database operations](database-operations.md#rollback-and-recovery-boundaries).
+
 ## Production acceptance
 
 Verify and report after activation:

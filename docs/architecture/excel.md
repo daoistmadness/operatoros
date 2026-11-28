@@ -108,15 +108,19 @@ templates keep their current compatibility behavior.
   `proc.exited` reaping before permit release. Note: RSS polling is defense in
   depth rather than a hard OS memory limit. The child remains in the API
   container's resource domain; polling can overshoot or miss short-lived peaks.
-  A 512 MiB cgroup synthetic mixed-load run reached 489,525,248 bytes
-  (466.85 MiB), so it demonstrates bounded tested behavior, not an approved
-  business-capacity envelope or independent parser memory isolation.
-  No owner-approved representative business workload or capacity envelope is
-  recorded. Before making a production-capacity claim, the owner must either
-  approve a representative synthetic workload and accept these same-cgroup
-  limits, or separately authorize a parser process/cgroup resource boundary.
-  Until then, the current controls do not claim hard parser-memory isolation
-  or approved production capacity.
+  The owner approved verification of an attendance-only workload: a
+  5,000-row XLSX import, two import and assigned-class export pairs with
+  authenticated reads, a separate 1,000-row BIFF8 import, and controlled parser
+  cancellation and recovery. The [synthetic campaign][excel-capacity-run]
+  reported four passes on source `13291d43b20d5fb9e93e0386a9fb5812a04f7650`
+  at 512 MiB and one CPU. The peak was 188,604,416 bytes with zero cgroup
+  maximum events, OOMs, OOM kills, or unexpected API errors.
+  The [evidence bundle][excel-capacity-evidence] contains the manifest,
+  fixture identities, raw counters, and checksums.
+  Final owner residual-risk acceptance remains pending for feature-freeze
+  closure. Larger workbooks, other Excel workflows, sustained load, and
+  API survival after a shared-cgroup OOM are outside this evidence.
+  See [Excel recovery](../runbooks/ubuntu-server-deployment.md#excel-admission-lockout-and-interrupted-import-recovery).
 - The parser subprocess holds its shared admission permit through confirmed
   termination and reaping. Timeout, abort, RSS threshold, or oversized IPC
   output requests `SIGKILL`; the permit is released only after `proc.exited`
@@ -157,3 +161,6 @@ the required workbook features remain compatible.
 Analytics values and report data are computed by the API. Excel may display
 server-supplied values but does not calculate business metrics. Export workbooks
 are created by the server and downloaded by the browser.
+
+[excel-capacity-run]: https://github.com/daoistmadness/operatoros/actions/runs/46113936522
+[excel-capacity-evidence]: https://github.com/daoistmadness/operatoros/actions/runs/46113936522/artifacts/15250372753

@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c9960252a3218b6b9b4cd5c40d41b368269a5b170c3d14f3a9f88e6e4d865964",
+      "fingerprint": "d315542c0d89dbe15678670c9cb835750ad46792b5977d98a0e96714ee12c3d4",
       "snapshot": {
-        "CHANGELOG.md": "5c3d3cfed163ca601b866a40b82d8175528ebe01b815dd70e6a23f4c304c2b98"
+        "CHANGELOG.md": "85b3cb10c130cae14298832dc83d6a795d7217ed087c7135696375db21cc47ef"
       },
-      "head": "0bb2a5dccd98d3efa07df1301f94a2b04e1df559",
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
       "outcome": "no-change",
-      "reason": "Added the assigned PR number to the already reviewed Unreleased stabilization entry; no skill guidance changed.",
+      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0bb2a5dccd98d3efa07df1301f94a2b04e1df559"
+        "Changed: CHANGELOG.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     },
     "source:COMMANDS.md": {
@@ -3283,15 +3283,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "07850ac9a38e409832b3ac385536c36ff3d14aac77a7ff3fdb551eb248f57945",
+      "fingerprint": "44e5db94a4b70885cd43d2e78e5d4b86da1d1e78db0eef816f47f93bb49dff23",
       "snapshot": {
-        "docs/architecture/excel.md": "a01081a34f2e40108b01dbc780696fa5b2705c2cdd2beaa159cdd7865d8ca9b7"
+        "docs/architecture/excel.md": "2dd25006f4c96a528fd7548fe30a93b6c8ea042b75658c9e26d1d512987b3bb0"
       },
-      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
       "outcome": "no-change",
-      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
+      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
+        "Changed: docs/architecture/excel.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -4825,15 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "09d7095031fa7cacaa9e2fc6448d25f384a2a19e52e0c933868192f68964c749",
+      "fingerprint": "305d05eea946a0c1ce266aacc3e82785db2e93f172d41d4a6d714ff9560c6f54",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "db3160b6352b79251044ebad9c770c96618d83f8b6a99facdec78fa489941456"
+        "docs/runbooks/ubuntu-server-deployment.md": "53bd9fc1893a6824f3802d1aeb1a07933036a8718f374bdb56b576bdb8f4091e"
       },
-      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
       "outcome": "no-change",
-      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
+      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at f3e6c413ecef65a949e59562200be904b04d758b"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
