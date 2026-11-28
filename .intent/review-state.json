@@ -4825,15 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "9cc132a9fe735fce9e04789da2d244e90ddfb88043a8d07a1099b17fafb07f0b",
+      "fingerprint": "5c624433e9551bd6e0667d0a5146b2353f645eab7081025deb732e4b5bef4477",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "e14c06f6f23466ff6cacbe3695b801707872b84a71b5b8340a0e6e92e9f41d15"
+        "docs/runbooks/ubuntu-server-deployment.md": "0d0c1e04670d69953594ba35c1af7aca8e7038a3beac88374bdbfa1c240f2f04"
       },
-      "head": "aeeef5562440117534fcdff876c57c6d7b55098f",
+      "head": "9f8ab3a72bbec8513712c2023b202ef0962cac5f",
       "outcome": "no-change",
-      "reason": "Use the existing Upload History panel labels. Elysia guidance is unchanged.",
+      "reason": "Remove the duplicate heading in the Excel recovery section. Elysia guidance is unchanged.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at aeeef5562440117534fcdff876c57c6d7b55098f"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 9f8ab3a72bbec8513712c2023b202ef0962cac5f"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {

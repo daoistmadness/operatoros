@@ -137,7 +137,6 @@ the `current` symlink and Compose configuration, restarts the previous container
 validates endpoint health. Never automatically restore an older production database over committed records, discard committed data, destructively revert schema, delete attachments, or restart an incompatible prior release against a migrated database; preserve the database and report `RECOVERY REQUIRED` for explicit owner authorization.
 
 ## Excel Admission Lockout and Interrupted Import Recovery
-## Excel Admission Lockout and Interrupted Import Recovery
 
 1. **Separate queue pressure from lockout.** One heavy Excel job runs at a time.
    A busy response or queue timeout during active work can be normal. Pause new
