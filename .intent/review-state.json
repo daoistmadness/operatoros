@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "d315542c0d89dbe15678670c9cb835750ad46792b5977d98a0e96714ee12c3d4",
+      "fingerprint": "f3a9c9bb5523ef1f27c1d96edb4f1cbf74e967cc13af093eb25708cc668233ef",
       "snapshot": {
-        "CHANGELOG.md": "85b3cb10c130cae14298832dc83d6a795d7217ed087c7135696375db21cc47ef"
+        "CHANGELOG.md": "29d0ddfed030bc54dec7c4298ed69e53d3413644eb7ec3af7d31a23007cf81c9"
       },
-      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "head": "e7d8fe35b6a2c23e4e5e75c7d61da360e5841c45",
       "outcome": "no-change",
-      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
+      "reason": "Link the reviewed changelog entry to its assigned PR. Elysia guidance is unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
+        "Changed: CHANGELOG.md at e7d8fe35b6a2c23e4e5e75c7d61da360e5841c45"
       ]
     },
     "source:COMMANDS.md": {
