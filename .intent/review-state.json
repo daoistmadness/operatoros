@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c9960252a3218b6b9b4cd5c40d41b368269a5b170c3d14f3a9f88e6e4d865964",
+      "fingerprint": "b123b9c3e9e4857f4eced349ab3dce4a4482df4e8a1ffe9bcca67894864a7b6f",
       "snapshot": {
-        "CHANGELOG.md": "5c3d3cfed163ca601b866a40b82d8175528ebe01b815dd70e6a23f4c304c2b98"
+        "CHANGELOG.md": "e503aae37e345ad322052c29820f4af9fbf5be97f530e964dbb045e9c8d3e0bc"
       },
-      "head": "0bb2a5dccd98d3efa07df1301f94a2b04e1df559",
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
       "outcome": "no-change",
-      "reason": "Added the assigned PR number to the already reviewed Unreleased stabilization entry; no skill guidance changed.",
+      "reason": "Temporary synthetic capacity verification only. It reuses existing Elysia routes and parser contracts; the repository-owned skill guidance is unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0bb2a5dccd98d3efa07df1301f94a2b04e1df559"
+        "Changed: CHANGELOG.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     },
     "source:COMMANDS.md": {
@@ -12091,6 +12091,54 @@
       "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
       "evidence": [
         "Changed: apps/api/tests/student-legacy-auth.test.ts at f3e6c413ecef65a949e59562200be904b04d758b"
+      ]
+    },
+    "source:.github/excel-capacity/attendance.xls": {
+      "fingerprint": "97381eef82fec223a3fc0b680bfc3ea755d7213c4113099ceb76dca289e1d99b",
+      "snapshot": {
+        ".github/excel-capacity/attendance.xls": "778ee003d9e091c3657525d5f2e90fdd1f5b0928bccb1cd4b298ff9f28ba82eb"
+      },
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "outcome": "no-change",
+      "reason": "Temporary synthetic capacity verification only. It reuses existing Elysia routes and parser contracts; the repository-owned skill guidance is unchanged.",
+      "evidence": [
+        "Changed: .github/excel-capacity/attendance.xls at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
+      ]
+    },
+    "source:.github/excel-capacity/run.sh": {
+      "fingerprint": "74eb502ad7b5236f3f21b3e86b893305d12d33e71b786f0635b2296191c65d24",
+      "snapshot": {
+        ".github/excel-capacity/run.sh": "39c7b138c8620fa0a3f520b6bb87e4f6ba3cc59cf833dc7c8559ff522e22f16c"
+      },
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "outcome": "no-change",
+      "reason": "Temporary synthetic capacity verification only. It reuses existing Elysia routes and parser contracts; the repository-owned skill guidance is unchanged.",
+      "evidence": [
+        "Changed: .github/excel-capacity/run.sh at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
+      ]
+    },
+    "source:.github/workflows/excel-capacity-once.yml": {
+      "fingerprint": "39c0ff3d814ab9cdb0472bc4ca1fc7752286aebf15be64f720833d969ead638d",
+      "snapshot": {
+        ".github/workflows/excel-capacity-once.yml": "9bad6ba69e0e87a07b8ae0e9f9fdcaf4277bd91971346012dc69afc5e703c772"
+      },
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "outcome": "no-change",
+      "reason": "Temporary synthetic capacity verification only. It reuses existing Elysia routes and parser contracts; the repository-owned skill guidance is unchanged.",
+      "evidence": [
+        "Changed: .github/workflows/excel-capacity-once.yml at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
+      ]
+    },
+    "source:apps/api/tests/excel-capacity-once.ts": {
+      "fingerprint": "e072a3c096c046c5487e73d0be5e77a3315e4299433e3c39bb81869c913a4dcf",
+      "snapshot": {
+        "apps/api/tests/excel-capacity-once.ts": "5ced1cf8501c44d68a679bd244cfb33b020975001abbe0be9b77261288a2d6ef"
+      },
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "outcome": "no-change",
+      "reason": "Temporary synthetic capacity verification only. It reuses existing Elysia routes and parser contracts; the repository-owned skill guidance is unchanged.",
+      "evidence": [
+        "Changed: apps/api/tests/excel-capacity-once.ts at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     }
   }

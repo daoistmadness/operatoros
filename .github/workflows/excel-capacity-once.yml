@@ -1,0 +1,35 @@
+name: One-off synthetic Excel capacity
+on:
+  push:
+    branches: [codex/excel-capacity-once]
+
+permissions:
+  contents: read
+
+jobs:
+  capacity:
+    if: github.repository == 'daoistmadness/operatoros' && github.event.created
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: ./.github/actions/setup-bun
+        with:
+          cache-write: "false"
+      - name: Revalidate protected main before execution
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: test "$(gh api repos/daoistmadness/operatoros/git/ref/heads/main --jq .object.sha)" = 13291d43b20d5fb9e93e0386a9fb5812a04f7650
+      - name: Verify and run isolated synthetic campaign
+        run: bash .github/excel-capacity/run.sh
+      - name: Retain sanitized evidence
+        if: always() && env.EXCEL_EVIDENCE_PATH != ''
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: excel-capacity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.EXCEL_EVIDENCE_PATH }}
+          retention-days: 7
+          if-no-files-found: error
