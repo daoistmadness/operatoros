@@ -160,7 +160,7 @@ validates endpoint health. Never automatically restore an older production datab
    out of incident notes.
 3. **Reconcile an interrupted write before replay.** Identify the operation and
    batch ID from the original preview or response. In **Upload History**, use
-   the authorized detail, **Timeline**, and **Rows** views to check the batch,
+   the authorized detail, **Timeline**, and **Row Outcomes** views to check the batch,
    checksum prefix, commit or rollback evidence, and selected rows where
    recorded. Compare the selection to the original preview and verify affected
    attendance in the authorized application views. An identifier or checksum

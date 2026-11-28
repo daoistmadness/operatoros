@@ -4825,15 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "305d05eea946a0c1ce266aacc3e82785db2e93f172d41d4a6d714ff9560c6f54",
+      "fingerprint": "9cc132a9fe735fce9e04789da2d244e90ddfb88043a8d07a1099b17fafb07f0b",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "53bd9fc1893a6824f3802d1aeb1a07933036a8718f374bdb56b576bdb8f4091e"
+        "docs/runbooks/ubuntu-server-deployment.md": "e14c06f6f23466ff6cacbe3695b801707872b84a71b5b8340a0e6e92e9f41d15"
       },
-      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
+      "head": "aeeef5562440117534fcdff876c57c6d7b55098f",
       "outcome": "no-change",
-      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
+      "reason": "Use the existing Upload History panel labels. Elysia guidance is unchanged.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at aeeef5562440117534fcdff876c57c6d7b55098f"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
