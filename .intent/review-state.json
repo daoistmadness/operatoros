@@ -2950,15 +2950,15 @@
       ]
     },
     "source:CHANGELOG.md": {
-      "fingerprint": "c9960252a3218b6b9b4cd5c40d41b368269a5b170c3d14f3a9f88e6e4d865964",
+      "fingerprint": "f3a9c9bb5523ef1f27c1d96edb4f1cbf74e967cc13af093eb25708cc668233ef",
       "snapshot": {
-        "CHANGELOG.md": "5c3d3cfed163ca601b866a40b82d8175528ebe01b815dd70e6a23f4c304c2b98"
+        "CHANGELOG.md": "29d0ddfed030bc54dec7c4298ed69e53d3413644eb7ec3af7d31a23007cf81c9"
       },
-      "head": "0bb2a5dccd98d3efa07df1301f94a2b04e1df559",
+      "head": "e7d8fe35b6a2c23e4e5e75c7d61da360e5841c45",
       "outcome": "no-change",
-      "reason": "Added the assigned PR number to the already reviewed Unreleased stabilization entry; no skill guidance changed.",
+      "reason": "Link the reviewed changelog entry to its assigned PR. Elysia guidance is unchanged.",
       "evidence": [
-        "Changed: CHANGELOG.md at 0bb2a5dccd98d3efa07df1301f94a2b04e1df559"
+        "Changed: CHANGELOG.md at e7d8fe35b6a2c23e4e5e75c7d61da360e5841c45"
       ]
     },
     "source:COMMANDS.md": {
@@ -3283,15 +3283,15 @@
       ]
     },
     "source:docs/architecture/excel.md": {
-      "fingerprint": "07850ac9a38e409832b3ac385536c36ff3d14aac77a7ff3fdb551eb248f57945",
+      "fingerprint": "44e5db94a4b70885cd43d2e78e5d4b86da1d1e78db0eef816f47f93bb49dff23",
       "snapshot": {
-        "docs/architecture/excel.md": "a01081a34f2e40108b01dbc780696fa5b2705c2cdd2beaa159cdd7865d8ca9b7"
+        "docs/architecture/excel.md": "2dd25006f4c96a528fd7548fe30a93b6c8ea042b75658c9e26d1d512987b3bb0"
       },
-      "head": "bf5549cb6e3aec47af32942e7e64b3db9c926722",
+      "head": "13291d43b20d5fb9e93e0386a9fb5812a04f7650",
       "outcome": "no-change",
-      "reason": "The late CHANGELOG and Excel architecture edits document existing behavior and residual limits; no Intent skill source or package guidance changed.",
+      "reason": "The recovery runbook and Excel evidence note document existing routes, parser behavior, and operational boundaries. No Elysia skill changes are needed.",
       "evidence": [
-        "Changed: docs/architecture/excel.md at bf5549cb6e3aec47af32942e7e64b3db9c926722"
+        "Changed: docs/architecture/excel.md at 13291d43b20d5fb9e93e0386a9fb5812a04f7650"
       ]
     },
     "source:docs/architecture/first-run-admin.md": {
@@ -4825,15 +4825,15 @@
       ]
     },
     "source:docs/runbooks/ubuntu-server-deployment.md": {
-      "fingerprint": "09d7095031fa7cacaa9e2fc6448d25f384a2a19e52e0c933868192f68964c749",
+      "fingerprint": "5c624433e9551bd6e0667d0a5146b2353f645eab7081025deb732e4b5bef4477",
       "snapshot": {
-        "docs/runbooks/ubuntu-server-deployment.md": "db3160b6352b79251044ebad9c770c96618d83f8b6a99facdec78fa489941456"
+        "docs/runbooks/ubuntu-server-deployment.md": "0d0c1e04670d69953594ba35c1af7aca8e7038a3beac88374bdbfa1c240f2f04"
       },
-      "head": "f3e6c413ecef65a949e59562200be904b04d758b",
+      "head": "9f8ab3a72bbec8513712c2023b202ef0962cac5f",
       "outcome": "no-change",
-      "reason": "No Intent skill source or package guidance changed; documentation and implementation corrections are within existing guidance.",
+      "reason": "Remove the duplicate heading in the Excel recovery section. Elysia guidance is unchanged.",
       "evidence": [
-        "Changed: docs/runbooks/ubuntu-server-deployment.md at f3e6c413ecef65a949e59562200be904b04d758b"
+        "Changed: docs/runbooks/ubuntu-server-deployment.md at 9f8ab3a72bbec8513712c2023b202ef0962cac5f"
       ]
     },
     "source:docs/security/ROTATION_RUNBOOK.md": {
